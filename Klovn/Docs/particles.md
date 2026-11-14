@@ -9,7 +9,7 @@ client only. Issue #446.
 | Piece | Where | Role |
 | --- | --- | --- |
 | `KsParticlesPrototype` (`type: ksParticles`) | `Content.Shared/_KS14/Particles/` | The effect: what spawns, how each particle moves and looks, where it draws. |
-| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `rotation`, `scale`. Nothing else crosses the network. |
+| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `rotation`, `speed`, `scale`. Nothing else crosses the network. |
 | `KsSharedParticlesSystem` | shared | The spawn helpers and the setters. |
 | `KsParticleEmitterComponent` | `Content.Client/_KS14/Particles/` | The client's simulation: the live particles, a struct array. Added to any entity carrying the shared component. |
 | `KsParticlesSystem` (client) | client | Steps every emitter in `FrameUpdate`, at the prototype's fixed tick rate. |
@@ -23,6 +23,7 @@ particles are made and owned by each client that can see it. So all three ways o
 | An effect only this client sees | `SpawnLocal(prototype, coordinates)` | Client: a client-side entity. Server: nothing, returns null. |
 | An effect from a player's own input, in shared code | `SpawnPredicted(prototype, coordinates, user)` | The user's client spawns and keeps its own copy at once; the server's copy is hidden on that client and shown to everyone else (`KsSharedPredictedSpawnSystem`). With no user, only the server spawns. |
 | An effect everyone in range sees | `SpawnPvs(prototype, coordinates)` | Server: a networked entity. Client: nothing, returns null. |
+| A short effect from shared code both sides run, whoever caused it (a hit's spray) | `SpawnPredictedEffect(prototype, coordinates, source)` | Server: a networked entity. A predicting client: its own copy at once, once per tick however often re-predicted, and the server's copy hidden when it arrives (same prototype, within 1.5 m and 2 s). A client that predicted nothing shows the server's. |
 | A thing that smokes | `- type: KsParticles` in its prototype, or `EnsureComp` on the server | The component rides on the thing itself. |
 
 `SpawnPredicted` has the rule every user-mode spawn has: call it only on the user's own predicted path. From a
@@ -154,8 +155,9 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 | `drift` | 0 | m/s, sampled afresh every step: a random walk. |
 
 The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
-whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `scale` that
-scales positions, velocities and sizes together, and `emitting`.
+whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `speed` that
+multiplies starting velocities alone (a harder throw), a `scale` that scales positions, velocities and sizes
+together, and `emitting`.
 
 ## Porting a /tg/ particle
 

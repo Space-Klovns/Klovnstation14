@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Content.Client._KS14.Particles;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Particles;
@@ -33,6 +34,8 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
     private static readonly ProtoId<KsParticlesPrototype> SplatterSprite = "KsBloodSplatterSprite";
     private static readonly ProtoId<KsParticlesPrototype> GibExplosion = "KsBloodExplosion";
     private static readonly ProtoId<KsParticlesPrototype> GibSplatter = "KsGibSplatter";
+    private static readonly ProtoId<KsParticlesPrototype> DismemberExplosion = "KsDismemberBloodExplosion";
+    private static readonly ProtoId<KsParticlesPrototype> DismemberSplatter = "KsDismemberGibSplatter";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -62,6 +65,30 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
         return emitters;
     }
 
+    private List<EntityUid> ClientEmitters(ProtoId<KsParticlesPrototype> prototype, bool clientSide)
+    {
+        var emitters = new List<EntityUid>();
+        var query = CEntMan.EntityQueryEnumerator<KsParticlesComponent>();
+        while (query.MoveNext(out var uid, out var particlesComponent))
+        {
+            if (particlesComponent.Prototype == prototype && CEntMan.IsClientSide(uid) == clientSide)
+                emitters.Add(uid);
+        }
+
+        return emitters;
+    }
+
+    /// <summary>
+    ///     Where an emitter sends its particles: its -y, turned by its grid and its own rotation.
+    /// </summary>
+    private Vector2 ServerTravel(EntityUid emitterUid)
+    {
+        var transformSystem = SEntMan.System<SharedTransformSystem>();
+        var gridRotation = SEntMan.GetComponent<TransformComponent>(emitterUid).GridUid is { } gridUid ? transformSystem.GetWorldRotation(gridUid) : Angle.Zero;
+        var emitterRotation = gridRotation + SEntMan.GetComponent<KsParticlesComponent>(emitterUid).Rotation;
+        return emitterRotation.RotateVec(new Vector2(0f, -1f));
+    }
+
     private Color BloodColor(EntityUid mobUid)
     {
         var bloodstreamComponent = SEntMan.GetComponent<BloodstreamComponent>(mobUid);
@@ -87,7 +114,6 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
             emitters = ServerEmitters();
 
             var bloodColor = BloodColor(mobUid);
-            var transformSystem = SEntMan.System<SharedTransformSystem>();
             Assert.Multiple(() =>
             {
                 foreach (var prototype in new[] { SplatterMist, SplatterSprite })
@@ -95,11 +121,7 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
                     Assert.That(emitters.TryGetValue(prototype.Id, out var emitterUid), $"{prototype} spawned");
                     Assert.That(SEntMan.GetComponent<KsParticlesComponent>(emitterUid).Color, Is.EqualTo(bloodColor), $"{prototype} is the blood's colour");
 
-                    // The prototypes fly along their emitter's -y; the emitter is square to its grid, then turned.
-                    var gridRotation = SEntMan.GetComponent<TransformComponent>(emitterUid).GridUid is { } gridUid ? transformSystem.GetWorldRotation(gridUid) : Angle.Zero;
-                    var emitterRotation = gridRotation + SEntMan.GetComponent<KsParticlesComponent>(emitterUid).Rotation;
-                    var travel = emitterRotation.RotateVec(new Vector2(0f, -1f));
-                    Assert.That(Vector2.Distance(travel, exitDirection), Is.LessThan(0.001f), $"{prototype} sprays out of the exit wound, not back at the attacker");
+                    Assert.That(Vector2.Distance(ServerTravel(emitterUid), exitDirection), Is.LessThan(0.001f), $"{prototype} sprays out of the exit wound, not back at the attacker");
                     Assert.That(SEntMan.HasComponent<TimedDespawnComponent>(emitterUid), $"{prototype} is one-shot");
                 }
             });
@@ -109,7 +131,11 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
         await Client.WaitAssertion(() =>
         {
             foreach (var emitterUid in emitters.Values)
-                Assert.That(CEntMan.EntityExists(ToClientUid(emitterUid)), "the client is sent the emitters");
+            {
+                var clientUid = ToClientUid(emitterUid);
+                Assert.That(CEntMan.EntityExists(clientUid), "the client is sent the emitters");
+                Assert.That(CEntMan.System<KsParticlesSystem>().IsHiddenHere(clientUid), Is.False, "and shows them: it predicted nothing");
+            }
         });
 
         await RunSeconds(2f);
@@ -158,6 +184,102 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
                     Assert.That(SEntMan.GetComponent<KsParticlesComponent>(emitterUid).Color, Is.EqualTo(bloodColor), $"{prototype} is the blood's colour");
                     Assert.That(SEntMan.GetComponent<TransformComponent>(emitterUid).ParentUid, Is.Not.EqualTo(mobUid), $"{prototype} stays behind when the mob is deleted");
                     Assert.That(Vector2.Distance(transformSystem.GetWorldPosition(emitterUid), new Vector2(2f, 3f)), Is.LessThan(0.001f), $"{prototype} is where the mob was");
+                }
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A client that predicts the hit (running the shared bleed on its own) sprays at once, once however often
+    ///         the tick is re-predicted, and hides the server's copy when it arrives instead of showing it twice.
+    /// </summary>
+    [Test]
+    public async Task PredictedSprayShowsAtOnceAndHidesTheServersCopy()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var exitDirection = new Vector2(0f, 1f);
+
+        EntityUid mobUid = default;
+        await Server.WaitPost(() => mobUid = SEntMan.SpawnEntity(_mob, new MapCoordinates(Vector2.Zero, testMap.MapId)));
+        await RunTicksSync(5);
+
+        var clientMobUid = ToClientUid(mobUid);
+        await Client.WaitAssertion(() =>
+        {
+            var bloodstreamComponent = CEntMan.GetComponent<BloodstreamComponent>(clientMobUid);
+            var bloodSpraySystem = CEntMan.System<BloodSpraySystem>();
+
+            // Twice in one tick, as a re-prediction runs it again.
+            bloodSpraySystem.HandleBleedEffects((clientMobUid, bloodstreamComponent), 20f, exitDirection);
+            bloodSpraySystem.HandleBleedEffects((clientMobUid, bloodstreamComponent), 20f, exitDirection);
+
+            Assert.That(ClientEmitters(SplatterMist, clientSide: true), Has.Count.EqualTo(1), "the client sprays its own at once, and only once");
+            Assert.That(ClientEmitters(SplatterSprite, clientSide: true), Has.Count.EqualTo(1));
+        });
+
+        await Server.WaitPost(() =>
+        {
+            var bloodstreamComponent = SEntMan.GetComponent<BloodstreamComponent>(mobUid);
+            SEntMan.System<BloodSpraySystem>().HandleBleedEffects((mobUid, bloodstreamComponent), 20f, exitDirection);
+        });
+        await RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var particlesSystem = CEntMan.System<KsParticlesSystem>();
+            Assert.Multiple(() =>
+            {
+                foreach (var prototype in new[] { SplatterMist, SplatterSprite })
+                {
+                    var serverCopies = ClientEmitters(prototype, clientSide: false);
+                    Assert.That(serverCopies, Has.Count.EqualTo(1), $"{prototype}: the server's copy arrived");
+                    Assert.That(particlesSystem.IsHiddenHere(serverCopies[0]), $"{prototype}: and is hidden, as the client shows its own");
+                    Assert.That(particlesSystem.IsHiddenHere(ClientEmitters(prototype, clientSide: true)[0]), Is.False, $"{prototype}: the client's own still shows");
+                }
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A lost limb's gore is thrown after the limb, faster for a harder throw, within limits.
+    /// </summary>
+    [Test]
+    public async Task DismemberGoreFollowsTheThrow()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var throwDirection = new Vector2(-1f, 0f);
+
+        await Server.WaitAssertion(() =>
+        {
+            var bloodSpraySystem = SEntMan.System<BloodSpraySystem>();
+            var bloodColor = Color.White;
+
+            (float ThrowSpeed, float ExpectedSpeed)[] cases =
+            [
+                (BloodSpraySystem.DismemberReferenceThrowSpeed, 1f),
+                (BloodSpraySystem.DismemberReferenceThrowSpeed * 100f, BloodSpraySystem.MaxDismemberSpeedMultiplier),
+                (BloodSpraySystem.DismemberReferenceThrowSpeed * 0.01f, BloodSpraySystem.MinDismemberSpeedMultiplier),
+            ];
+
+            Assert.Multiple(() =>
+            {
+                foreach (var (throwSpeed, expectedSpeed) in cases)
+                {
+                    // A mob of its own each time: one tick's spawns on one mob are one effect.
+                    var mobUid = SEntMan.SpawnEntity(_mob, new MapCoordinates(Vector2.Zero, testMap.MapId));
+                    bloodColor = BloodColor(mobUid);
+                    bloodSpraySystem.SpawnDismemberParticles(mobUid, throwDirection, throwSpeed);
+
+                    var emitters = ServerEmitters();
+                    foreach (var prototype in new[] { DismemberExplosion, DismemberSplatter })
+                    {
+                        Assert.That(emitters.TryGetValue(prototype.Id, out var emitterUid), $"{prototype} spawned");
+                        var particlesComponent = SEntMan.GetComponent<KsParticlesComponent>(emitterUid);
+                        Assert.That(particlesComponent.Color, Is.EqualTo(bloodColor), $"{prototype} is the blood's colour");
+                        Assert.That(Vector2.Distance(ServerTravel(emitterUid), throwDirection), Is.LessThan(0.001f), $"{prototype} flies after the limb");
+                        Assert.That(particlesComponent.Speed, Is.EqualTo(expectedSpeed).Within(0.001f), $"{prototype} at throw speed {throwSpeed}");
+                        SEntMan.DeleteEntity(emitterUid);
+                    }
                 }
             });
         });

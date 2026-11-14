@@ -42,6 +42,17 @@ public sealed partial class BloodSpraySystem : EntitySystem
     private static readonly ProtoId<KsParticlesPrototype> SplatterSpriteParticles = "KsBloodSplatterSprite";
     private static readonly ProtoId<KsParticlesPrototype> GibExplosionParticles = "KsBloodExplosion";
     private static readonly ProtoId<KsParticlesPrototype> GibSplatterParticles = "KsGibSplatter";
+    private static readonly ProtoId<KsParticlesPrototype> DismemberExplosionParticles = "KsDismemberBloodExplosion";
+    private static readonly ProtoId<KsParticlesPrototype> DismemberSplatterParticles = "KsDismemberGibSplatter";
+
+    /// <summary>
+    ///     The limb throw speed, in metres per second, at which a dismemberment's burst flies at its prototype's own
+    ///         speed. Faster throws spray faster, up to <see cref="MaxDismemberSpeedMultiplier"/> times.
+    /// </summary>
+    public const float DismemberReferenceThrowSpeed = 10f;
+
+    public const float MinDismemberSpeedMultiplier = 0.5f;
+    public const float MaxDismemberSpeedMultiplier = 2f;
 
     private static readonly SpriteSpecifier.Rsi[] Textures =
     {
@@ -164,41 +175,73 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
     /// <summary>
     ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter, both flying out along
-    ///         <paramref name="worldDeltaUnit"/>. Server only; the client is sent the emitters.
+    ///         <paramref name="worldDeltaUnit"/>. Predicted: the client that predicted the hit shows its own at once.
     /// </summary>
     private void SpawnSplatterParticles(EntityUid uid, Color bloodColor, Vector2 worldDeltaUnit)
     {
         // The prototypes spray along their emitter's -y, which FromWorldVec turns onto the direction.
         var worldRotation = Angle.FromWorldVec(worldDeltaUnit);
-        SpawnBloodParticles(SplatterMistParticles, uid, bloodColor, worldRotation);
-        SpawnBloodParticles(SplatterSpriteParticles, uid, bloodColor, worldRotation);
+        SpawnBloodParticles(SplatterMistParticles, uid, bloodColor, worldRotation, speed: 1f);
+        SpawnBloodParticles(SplatterSpriteParticles, uid, bloodColor, worldRotation, speed: 1f);
     }
 
     /// <summary>
-    ///     A burst of blood and gore, TGMC's gib_particles, at <paramref name="entity"/> in its blood colour: for a
-    ///         gibbing or a lost limb. Does nothing for something without blood, or on the client.
+    ///     A burst of blood and gore, TGMC's gib_particles, at <paramref name="entity"/> in its blood colour, every way
+    ///         at once: for a gibbing. Does nothing for something without blood.
     /// </summary>
     public void SpawnGibParticles(Entity<BloodstreamComponent?> entity)
     {
-        if (!Resolve(entity, ref entity.Comp, logMissing: false) ||
-            !_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
+        if (!TryGetBloodColor(entity, out var bloodColor))
             return;
 
-        var bloodColor = bloodSolution.GetColor(ProtoMan);
-        SpawnBloodParticles(GibExplosionParticles, entity.Owner, bloodColor, worldRotation: null);
-        SpawnBloodParticles(GibSplatterParticles, entity.Owner, bloodColor, worldRotation: null);
+        SpawnBloodParticles(GibExplosionParticles, entity.Owner, bloodColor, worldRotation: null, speed: 1f);
+        SpawnBloodParticles(GibSplatterParticles, entity.Owner, bloodColor, worldRotation: null, speed: 1f);
+    }
+
+    /// <summary>
+    ///     The gib burst for a lost limb: thrown after the limb, along <paramref name="worldDirection"/>, faster the
+    ///         harder it was thrown (<paramref name="throwSpeed"/>, metres per second), within limits.
+    /// </summary>
+    public void SpawnDismemberParticles(Entity<BloodstreamComponent?> entity, Vector2 worldDirection, float throwSpeed)
+    {
+        if (worldDirection.LengthSquared() <= float.Epsilon)
+        {
+            SpawnGibParticles(entity);
+            return;
+        }
+
+        if (!TryGetBloodColor(entity, out var bloodColor))
+            return;
+
+        var worldRotation = Angle.FromWorldVec(Vector2.Normalize(worldDirection));
+        var speed = Math.Clamp(throwSpeed / DismemberReferenceThrowSpeed, MinDismemberSpeedMultiplier, MaxDismemberSpeedMultiplier);
+        SpawnBloodParticles(DismemberExplosionParticles, entity.Owner, bloodColor, worldRotation, speed);
+        SpawnBloodParticles(DismemberSplatterParticles, entity.Owner, bloodColor, worldRotation, speed);
+    }
+
+    private bool TryGetBloodColor(Entity<BloodstreamComponent?> entity, out Color bloodColor)
+    {
+        bloodColor = default;
+        if (!Resolve(entity, ref entity.Comp, logMissing: false) ||
+            !_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
+            return false;
+
+        bloodColor = bloodSolution.GetColor(ProtoMan);
+        return true;
     }
 
     /// <summary>
     ///     Spawns a one-shot emitter where <paramref name="uid"/> stands, rather than on it, so it stays behind
-    ///         when the mob moves or is deleted, as TGMC's temp_visuals do.
+    ///         when the mob moves or is deleted, as TGMC's temp_visuals do. <paramref name="worldRotation"/> aims the
+    ///         prototype's -y; <paramref name="speed"/> multiplies its velocities.
     /// </summary>
-    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid uid, Color bloodColor, Angle? worldRotation)
+    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid uid, Color bloodColor, Angle? worldRotation, float speed)
     {
-        if (_particlesSystem.SpawnPvs(prototype, Transform(uid).Coordinates) is not { } emitterUid)
+        if (_particlesSystem.SpawnPredictedEffect(prototype, Transform(uid).Coordinates, uid) is not { } emitterUid)
             return;
 
         _particlesSystem.SetColor(emitterUid, bloodColor);
+        _particlesSystem.SetSpeed(emitterUid, speed);
         if (worldRotation is not { } rotation)
             return;
 

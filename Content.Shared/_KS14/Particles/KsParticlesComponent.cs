@@ -46,6 +46,12 @@ public sealed partial class KsParticlesComponent : Component
     public Angle Rotation;
 
     /// <summary>
+    ///     Multiplies every particle's starting velocity, and nothing else: a harder throw, a faster spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Speed = 1f;
+
+    /// <summary>
     ///     Scales the whole effect: positions, velocities and sizes alike.
     /// </summary>
     [DataField, AutoNetworkedField]

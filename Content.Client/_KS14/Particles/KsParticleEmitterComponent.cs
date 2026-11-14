@@ -23,6 +23,13 @@ public sealed partial class KsParticleEmitterComponent : Component
     public KsParticleSpriteSet? Sprites;
 
     /// <summary>
+    ///     Whether this is the server's copy of an effect this client already shows its own predicted copy of
+    ///         (<see cref="KsParticlesSystem.SpawnPredictedEffect"/>), so it is neither stepped nor drawn here.
+    /// </summary>
+    [ViewVariables]
+    public bool SupersededByPrediction;
+
+    /// <summary>
     ///     Live particles occupy <c>[0, Alive)</c>. Grows by doubling up to the prototype's count.
     /// </summary>
     public KsParticle[] Particles = Array.Empty<KsParticle>();

@@ -16,6 +16,8 @@ namespace Content.Shared._KS14.Particles;
 ///         <item><see cref="SpawnPredicted"/>: from a user's own predicted input. Their client keeps a copy of its
 ///             own; the server's copy is shown to everyone else (see <see cref="KsSharedPredictedSpawnSystem"/>).</item>
 ///         <item><see cref="SpawnPvs"/>: a server entity, for everyone in range. Does nothing on the client.</item>
+///         <item><see cref="SpawnPredictedEffect"/>: from shared code both sides run, whoever caused it (a hit's
+///             spray). The client that predicted it shows its own copy at once and hides the server's.</item>
 ///     </list>
 ///     An existing entity can carry the component itself instead, in its prototype or by <c>EnsureComp</c> on the
 ///         server.
@@ -72,6 +74,20 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
         SetPrototype(uid, prototype);
         return uid;
     }
+
+    /// <summary>
+    ///     Spawns a short effect from shared code that both sides run, such as the reaction to a predicted hit,
+    ///         without knowing whose input caused it. The server spawns it for everyone in range. A client predicting
+    ///         that code spawns its own copy at once, only once however often the tick is re-predicted, and hides the
+    ///         server's copy when it arrives (the same prototype, close by, soon after). A client that did not predict
+    ///         it shows the server's, a round trip later, so the effect is never lost.
+    /// </summary>
+    /// <param name="source">
+    ///     What the effect is about (the mob that was hit): with the prototype and the tick, it tells a re-prediction
+    ///         of this spawn from a second spawn.
+    /// </param>
+    /// <returns>The new emitter, or null on a client re-predicting a spawn it already made.</returns>
+    public abstract EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source);
 
     #endregion
 
@@ -157,6 +173,15 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
             return;
 
         entity.Comp.Rotation = rotation;
+        Dirty(entity);
+    }
+
+    public void SetSpeed(Entity<KsParticlesComponent?> entity, float speed)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Speed.Equals(speed))
+            return;
+
+        entity.Comp.Speed = speed;
         Dirty(entity);
     }
 

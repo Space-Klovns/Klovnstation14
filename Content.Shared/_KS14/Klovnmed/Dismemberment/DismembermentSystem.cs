@@ -84,7 +84,6 @@ public sealed partial class DismembermentSystem : EntitySystem
 
         var partTransform = Transform(partUid);
         _containerSystem.Remove(partUid, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp.Coordinates);
-        _bloodSpraySystem.SpawnGibParticles(bodyEntity.Owner);
 
         if (throwSpeed != 0f)
         {
@@ -95,6 +94,12 @@ public sealed partial class DismembermentSystem : EntitySystem
 
             _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
+
+        // The gore follows the limb; one that falls where it was still bursts, every way at once.
+        if (direction is { } sprayDirection && throwSpeed != 0f)
+            _bloodSpraySystem.SpawnDismemberParticles(bodyEntity.Owner, sprayDirection, throwSpeed);
+        else
+            _bloodSpraySystem.SpawnGibParticles(bodyEntity.Owner);
     }
 
     public void DoFixedEmote(EntityUid victimUid)
