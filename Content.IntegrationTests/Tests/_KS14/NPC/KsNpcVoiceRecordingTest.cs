@@ -34,6 +34,17 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
     private const string VoicedMob = "KsVoiceRecordingTestMob";
     private const string RedactedSpawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
+    private static readonly ProtoId<NpcVoiceRecordingPrototype> RedactedSpeaker = "KsRedactedSpeakerA";
+
+    /// <summary>
+    ///     Whether the Redacted's speakers have their clips. The speakers are public and mute; the clips are a private
+    ///         partial of them (<see cref="NpcVoiceRecordingPrototype"/>), so without the _KsModule submodule, as on CI
+    ///         for a pull request, a line is spoken and nothing plays.
+    /// </summary>
+    private bool HasVoiceClips => Server.ProtoMan.Index(RedactedSpeaker).Lines.Count > 0;
+
+    private const string NoVoiceClips = "the Redacted's voice clips are in the private _KsModule submodule, which is not present";
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -54,6 +65,9 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
     [Test]
     public async Task TestEverySpokenLineHasOneClipPerSpeaker()
     {
+        if (!HasVoiceClips)
+            Assert.Ignore(NoVoiceClips);
+
         var protoManager = Server.ResolveDependency<IPrototypeManager>();
         var resourceManager = Server.ResolveDependency<IResourceManager>();
 
@@ -115,6 +129,7 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
         var map = await Pair.CreateTestMap();
         var mobs = new List<EntityUid>();
         var rolled = new List<(string? Speaker, float Pitch)>();
+        var hasVoiceClips = HasVoiceClips;
 
         await Server.WaitAssertion(() =>
         {
@@ -134,7 +149,8 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
             Assert.That(new HashSet<float>(rolled.ConvertAll(roll => roll.Pitch)).Count, Is.GreaterThan(1), "mobs should not all share a pitch");
 
             var mob0 = mobs[0];
-            Assert.That(voiceSystem.TryPlayLine(mob0, "ks-operative-redacted-line-execution-1"), "a voiced string plays its clip");
+            Assert.That(voiceSystem.TryPlayLine(mob0, "ks-operative-redacted-line-execution-1"), Is.EqualTo(hasVoiceClips),
+                "a voiced string plays its clip, where there are clips");
             Assert.That(voiceSystem.TryPlayLine(mob0, "ks-not-a-line"), Is.False, "a string with no clip plays nothing");
         });
 
