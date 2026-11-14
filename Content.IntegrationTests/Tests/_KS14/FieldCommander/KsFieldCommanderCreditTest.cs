@@ -43,13 +43,13 @@ public sealed class KsFieldCommanderCreditTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId NanotrasenObjective = "KsScenarioObjectiveNanotrasen";
-    private static readonly EntProtoId Flatpack = "KsFlatpackBallisticTurretNanotrasenRequisition";
-    private static readonly EntProtoId UnpackTool = "Multitool";
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _commanderRule = "KsTestFieldCommanderCreditRule";
     private readonly EntProtoId _defender = "KsTestFieldCommanderCreditDefender";
     private readonly EntProtoId _turret = "KsTestFieldCommanderCreditTurret";
+    private readonly EntProtoId _flatpack = "KsFlatpackBallisticTurretNanotrasenRequisition";
+    private readonly EntProtoId _unpackTool = "Multitool";
     private readonly EntProtoId _bullet = "KsTestFieldCommanderCreditBullet";
     private readonly EntProtoId _signaller = "KsTestFieldCommanderCreditSignaller";
     private readonly EntProtoId _charge = "KsTestFieldCommanderCreditCharge";
@@ -334,8 +334,8 @@ public sealed class KsFieldCommanderCreditTest : GameTest
     {
         var server = Pair.Server;
         var coordinates = new EntityCoordinates(testMap.Grid, 6.5f, 0.5f);
-        var flatpackUid = server.EntMan.SpawnAtPosition(Flatpack, coordinates);
-        var toolUid = server.EntMan.SpawnAtPosition(UnpackTool, coordinates);
+        var flatpackUid = server.EntMan.SpawnAtPosition(_flatpack, coordinates);
+        var toolUid = server.EntMan.SpawnAtPosition(_unpackTool, coordinates);
         Assert.That(server.System<SharedInteractionSystem>().InteractUsing(playerBody, toolUid, flatpackUid, coordinates, checkCanUse: false),
             Is.True, "the tool should have unpacked the flatpack");
 
@@ -412,7 +412,7 @@ public sealed class KsFieldCommanderCreditTest : GameTest
             server.EntMan.EventBus.RaiseLocalEvent(turretUid, ref emptyGunShotEvent);
         });
 
-        await RunUntilDead(unitUid);
+        await Pair.RunTicksSync(60);
 
         await server.WaitAssertion(() =>
         {
@@ -547,24 +547,6 @@ public sealed class KsFieldCommanderCreditTest : GameTest
     }
 
     /// <summary>
-    ///     Runs the server until <paramref name="uid"/> is dead, however long the explosion that is to kill it takes to
-    ///         reach it, up to a cap. Whether it died is for the caller to assert.
-    /// </summary>
-    private async Task RunUntilDead(EntityUid uid)
-    {
-        var server = Pair.Server;
-        var dead = false;
-        for (var i = 0; i < 60 && !dead; i++)
-        {
-            await Pair.RunTicksSync(10);
-            await server.WaitPost(() => dead = server.EntMan.GetComponent<MobStateComponent>(uid).CurrentState == MobState.Dead);
-        }
-
-        // The kill is paid as the mob dies; this lets whatever else the explosion sets off settle.
-        await Pair.RunTicksSync(5);
-    }
-
-    /// <summary>
     ///     A signal names the signaller that sent it; whatever it sets off is credited to the person who pressed it.
     /// </summary>
     [Test]
@@ -589,7 +571,7 @@ public sealed class KsFieldCommanderCreditTest : GameTest
             Assert.That(useEvent.Handled, Is.True);
         });
 
-        await RunUntilDead(unitUid);
+        await Pair.RunTicksSync(60);
 
         await server.WaitAssertion(() =>
         {
