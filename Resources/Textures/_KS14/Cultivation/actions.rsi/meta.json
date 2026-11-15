@@ -8,6 +8,69 @@
   },
   "states": [
     {
+      "name": "body_blood_boil"
+    },
+    {
+      "name": "body_bone_setting"
+    },
+    {
+      "name": "body_breath"
+    },
+    {
+      "name": "body_bull_charge"
+    },
+    {
+      "name": "body_disciple"
+    },
+    {
+      "name": "body_falling_mountain"
+    },
+    {
+      "name": "body_fist"
+    },
+    {
+      "name": "body_forge"
+    },
+    {
+      "name": "body_hundred_fists"
+    },
+    {
+      "name": "body_hurl"
+    },
+    {
+      "name": "body_iron_shirt"
+    },
+    {
+      "name": "body_leap"
+    },
+    {
+      "name": "body_mountain"
+    },
+    {
+      "name": "body_quake"
+    },
+    {
+      "name": "body_remold"
+    },
+    {
+      "name": "body_roar"
+    },
+    {
+      "name": "body_sky_palm"
+    },
+    {
+      "name": "body_stomp"
+    },
+    {
+      "name": "body_thunderclap"
+    },
+    {
+      "name": "body_tribulation"
+    },
+    {
+      "name": "body_vajra"
+    },
+    {
       "name": "breakthrough"
     },
     {

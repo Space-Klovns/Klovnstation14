@@ -69,7 +69,34 @@ ACTIONS.update({
     "dugu_counter": ("独", "silver"),
 })
 
+# Body Molding arts.
+ACTIONS.update({
+    "body_forge": ("锻", "orange"),
+    "body_tribulation": ("劫", "crimson"),
+    "body_breath": ("息", "jade"),
+    "body_iron_shirt": ("铁", "silver"),
+    "body_leap": ("跃", "tan"),
+    "body_stomp": ("震", "brown"),
+    "body_fist": ("拳", "red"),
+    "body_hundred_fists": ("百", "orange"),
+    "body_bone_setting": ("骨", "tan"),
+    "body_thunderclap": ("雷", "gold"),
+    "body_mountain": ("岳", "brown"),
+    "body_disciple": ("徒", "jade"),
+    "body_remold": ("塑", "tan"),
+    "body_bull_charge": ("牛", "red"),
+    "body_blood_boil": ("沸", "crimson"),
+    "body_falling_mountain": ("坠", "brown"),
+    "body_hurl": ("掷", "tan"),
+    "body_sky_palm": ("裂", "teal"),
+    "body_vajra": ("刚", "gold"),
+    "body_quake": ("撼", "brown"),
+    "body_roar": ("吼", "red"),
+})
+
 ART_MANUALS = {
+    "body_primer": ("铜", "orange"),
+    "body_molding_art": ("塑", "brown"),
     "art_dragon_palm": ("龙", "gold"),
     "art_six_meridians": ("脉", "teal"),
     "art_northern_darkness": ("冥", "violet"),
@@ -196,6 +223,19 @@ def qi_alert():
     return image
 
 
+def meter_plate(glyph, colour, font_path):
+    """Base for a counter alert: a dark plate with a small glyph above the digits."""
+    face, rim = PALETTE[colour]
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.rounded_rectangle((1, 1, 30, 30), radius=5, fill=(30, 26, 24, 230), outline=rim + (255,))
+    mask = glyph_layer(glyph, font_path, 12, 32, threshold=70)
+    shifted = Image.new("L", (32, 32), 0)
+    shifted.paste(mask, (0, -8))
+    image.paste(Image.new("RGBA", (32, 32), face + (255,)), (0, 0), shifted)
+    return image
+
+
 def injury_alert(stacks, font_path):
     image = medallion("伤", PALETTE["crimson"], font_path)
     draw = ImageDraw.Draw(image)
@@ -233,6 +273,14 @@ def main():
     write_rsi(os.path.join(TEXTURES, "manuals.rsi"),
               {name: manual(glyph, PALETTE[colour], args.font)
                for name, (glyph, colour) in {**MANUALS, **ART_MANUALS}.items()})
+    for name, glyph, colour in (("body_exhaustion.rsi", "疲", "orange"), ("body_tempering.rsi", "锻", "gold")):
+        meter_path = os.path.join(TEXTURES, name)
+        os.makedirs(meter_path, exist_ok=True)
+        for digit in range(10):
+            shutil.copy(os.path.join("Resources/Textures/Interface/Alerts/essence_counter.rsi", f"{digit}.png"),
+                        os.path.join(meter_path, f"{digit}.png"))
+        write_rsi(meter_path, {"base": meter_plate(glyph, colour, args.font)},
+                  extra_copyright="; digits from essence_counter.rsi: Created by EmoGarbage404")
     write_rsi(os.path.join(TEXTURES, "internal_injury.rsi"),
               {f"injury{stacks}": injury_alert(stacks, args.font) for stacks in range(1, 4)})
 
