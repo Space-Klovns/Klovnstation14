@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Materials;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.SalvageTablet;
@@ -58,6 +59,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
     /// </summary>
     public event Action? OnShowOrders;
 
+    private readonly KsTguiButton _orderButton;
     private readonly List<KsSalvageTabletTaskCard> _taskCards = [];
     private readonly Dictionary<ProtoId<MaterialPrototype>, KsSalvageTabletMaterialRow> _materialRows = [];
     private KsSalvageTabletBuiState _state = new();
@@ -75,14 +77,29 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
+        _orderButton = new KsTguiButton
+        {
+            Icon = KsTguiIcons.Cart,
+            Text = Loc.GetString("ks-salvage-tablet-order-open-button"),
+            VerticalAlignment = VAlignment.Center,
+        };
+        PointsItem.Buttons = _orderButton;
+
         LoginButton.OnPressed += _ =>
         {
             _bootStart = _gameTiming.RealTime;
+
+            // The fill runs from empty to full once per boot, eased as tgui's is.
+            LoginProgressBar.Value = 0f;
+            LoginProgressBar.Advance(KsTguiProgressBar.TransitionSeconds);
+            LoginProgressBar.Value = 1f;
+            LoginProgressBar.Text = Loc.GetString(BootLines[0]);
+
             OnLogin?.Invoke();
             RefreshScreen();
         };
         LogoutButton.OnPressed += _ => OnLogout?.Invoke();
-        OrderButton.OnPressed += _ => ShowOrders();
+        _orderButton.OnPressed += _ => ShowOrders();
     }
 
     /// <summary>
@@ -104,9 +121,9 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         if (!state.LoggedIn)
             return;
 
-        OwnerNameLabel.Text = state.OwnerName;
-        JobLabel.Text = state.JobTitle;
-        PointsLabel.Text = Loc.GetString("ks-salvage-tablet-profile-points", ("points", state.Points));
+        OwnerNameItem.Text = state.OwnerName;
+        JobItem.Text = state.JobTitle;
+        PointsItem.Text = Loc.GetString("ks-salvage-tablet-number", ("number", state.Points));
         OwnerView.SetEntity(_entityManager.GetEntity(state.Owner));
 
         var rank = UpdateRank(state.Reputation);
@@ -122,19 +139,19 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
             return 0;
 
         var rank = ladderPrototype.GetRank(reputation);
-        RankLabel.Text = Loc.GetString("ks-salvage-tablet-profile-rank", ("rank", Loc.GetString(ladderPrototype.Ranks[rank].Title)));
+        RankItem.Text = Loc.GetString(ladderPrototype.Ranks[rank].Title);
 
         if (rank + 1 >= ladderPrototype.Ranks.Count)
         {
             ReputationBar.Value = 1f;
-            ReputationLabel.Text = Loc.GetString("ks-salvage-tablet-profile-reputation-max", ("reputation", reputation));
+            ReputationBar.Text = Loc.GetString("ks-salvage-tablet-profile-reputation-max", ("reputation", reputation));
             return rank;
         }
 
         var rankStart = ladderPrototype.Ranks[rank].Reputation;
         var nextRank = ladderPrototype.Ranks[rank + 1].Reputation;
         ReputationBar.Value = nextRank > rankStart ? (reputation - rankStart) / (float)(nextRank - rankStart) : 1f;
-        ReputationLabel.Text = Loc.GetString("ks-salvage-tablet-profile-reputation", ("reputation", reputation), ("next", nextRank));
+        ReputationBar.Text = Loc.GetString("ks-salvage-tablet-profile-reputation", ("reputation", reputation), ("next", nextRank));
         return rank;
     }
 
@@ -176,7 +193,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
 
     private void UpdateTasks(KsSalvageTabletBuiState state)
     {
-        NoTasksLabel.Visible = state.Tasks.Count == 0;
+        NoTasksNotice.Visible = state.Tasks.Count == 0;
         TaskScroll.Visible = state.Tasks.Count > 0;
         TrackedLabel.Text = Loc.GetString("ks-salvage-tablet-tasks-tracked", ("tracked", TrackedCount(state)), ("max", _maxTrackedTasks));
 
@@ -203,7 +220,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
 
     private void UpdateMaterials(KsSalvageTabletBuiState state)
     {
-        NoSiloLabel.Visible = state.Materials.Count == 0;
+        NoSiloNotice.Visible = state.Materials.Count == 0;
 
         var spriteSystem = _entityManager.System<SpriteSystem>();
         var materialStorageSystem = _entityManager.System<MaterialStorageSystem>();
@@ -262,10 +279,8 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         MainBox.Visible = _state.LoggedIn && !booting;
         LoginBox.Visible = !MainBox.Visible;
         LoginButton.Visible = !booting;
+        LoginStatusLabel.Visible = !booting;
         LoginProgressBar.Visible = booting;
-
-        if (!booting)
-            LoginStatusLabel.Text = Loc.GetString("ks-salvage-tablet-login-prompt");
     }
 
     /// <summary>
@@ -309,7 +324,6 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
             return;
         }
 
-        LoginProgressBar.Value = progress;
-        LoginStatusLabel.Text = Loc.GetString(BootLines[Math.Min((int)(progress * BootLines.Length), BootLines.Length - 1)]);
+        LoginProgressBar.Text = Loc.GetString(BootLines[Math.Min((int)(progress * BootLines.Length), BootLines.Length - 1)]);
     }
 }

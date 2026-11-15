@@ -1034,7 +1034,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
         }
 
         string Expected(int points) => tgui
-            ? points.ToString()
+            ? Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-number", ("number", points))
             : Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
 
         await SetPoints(42f);

@@ -333,7 +333,8 @@ public sealed partial class LatheMenu : FancyWindow
         KsQueueScroll.Visible = false;
         KsSmelterContainer.Visible = true;
         KsSmelterPointsLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
-        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"), defaultColor: Color.FromHex("#A0A0A0"));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"),
+            defaultColor: Content.Client._KS14.Tgui.KsTguiPalettes.Label /* KS14: #A0A0A0 -> tgui label colour; a RichTextLabel takes no colour from the sheet */);
     }
     // KS14 end
 

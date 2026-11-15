@@ -5,8 +5,12 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.SalvageTablet;
+using Content.Client._KS14.Tgui;
+using Content.Client._KS14.Tgui.Controls;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.SalvageTablet;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.SalvageTablet;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Access.Components;
@@ -14,12 +18,14 @@ using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Materials;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 
@@ -105,7 +111,8 @@ public sealed class KsSalvageTabletUiTest : GameTest
     }
 
     /// <summary>
-    ///     A task's X, pressed as a player would: the card opens the task, and its X throws it away on the server.
+    ///     A task's X, pressed as a player would: the card opens the task, and its X throws it away on the server once the
+    ///         second press confirms it. The first press only asks.
     /// </summary>
     [Test]
     public async Task TheXOnATaskDropsIt()
@@ -142,14 +149,24 @@ public sealed class KsSalvageTabletUiTest : GameTest
         });
         await Press(card!);
 
-        Button? dropButton = null;
+        KsTguiConfirmButton? dropButton = null;
         await Client.WaitAssertion(() =>
         {
             var taskWindows = OpenWindows<KsSalvageTabletTaskWindow>();
             Assert.That(taskWindows, Has.Length.EqualTo(1), "precondition: pressing the card opens the task");
-            dropButton = taskWindows[0].FindControl<Button>("DropButton");
+            dropButton = taskWindows[0].FindControl<KsTguiConfirmButton>("DropButton");
             Assert.That(dropButton.Disabled, Is.False, "precondition: nothing has been dropped yet");
         });
+        await Press(dropButton!);
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.GetComponent<KsMinerAccountComponent>(cardUid).NextDropTime, Is.EqualTo(TimeSpan.Zero),
+                "The first press must only ask, not drop the task.");
+        });
+        await Client.WaitAssertion(() => Assert.That(dropButton!.Armed, Is.True, "The first press must arm the X."));
+
         await Press(dropButton!);
         await Pair.RunTicksSync(10);
 
@@ -255,6 +272,78 @@ public sealed class KsSalvageTabletUiTest : GameTest
 
             var enoughPopup = new KsLatheRequestPopup(canRequest: false, () => { });
             Assert.That(enoughPopup.RequestButton.Disabled, Is.True, "A recipe that can be made has nothing to ask for.");
+        });
+    }
+
+    /// <summary>
+    ///     The tablet's state colours and its bare - and + are style classes, so each theme's sheet must carry them: a class
+    ///         only one sheet styles is unstyled under the other, with nothing to say so.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task EachThemeStylesTheTabletsClasses(bool tgui)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        var requestedColor = tgui ? KsTguiPalettes.Average : Color.FromHex("#E8A33D");
+        var trackedColor = tgui ? KsTguiPalettes.Good : Color.FromHex("#5BA85B");
+
+        PanelContainer? requestedRow = null;
+        Label? requestedText = null;
+        PanelContainer? trackedOutline = null;
+        KsTguiButton? amountButton = null;
+        Control? root = null;
+        await Client.WaitPost(() =>
+        {
+            root = new BoxContainer
+            {
+                Children =
+                {
+                    (requestedRow = new PanelContainer
+                    {
+                        StyleClasses = { KsSalvageTabletStyleClasses.MaterialRow, KsSalvageTabletStyleClasses.Requested },
+                    }),
+                    (requestedText = new Label { StyleClasses = { KsSalvageTabletStyleClasses.Requested } }),
+                    (trackedOutline = new PanelContainer
+                    {
+                        StyleClasses = { KsSalvageTabletStyleClasses.CardOutline, KsSalvageTabletStyleClasses.Tracked },
+                    }),
+                    (amountButton = new KsTguiButton
+                    {
+                        Color = KsTguiColor.Transparent,
+                        StyleClasses = { KsSalvageTabletStyleClasses.AmountButton },
+                    }),
+                },
+            };
+            Client.ResolveDependency<IUserInterfaceManager>().PopupRoot.AddChild(root);
+        });
+
+        await Client.WaitAssertion(() =>
+        {
+            root!.ForceRunStyleUpdate();
+
+            Color? Border(Control control) =>
+                control.TryGetStyleProperty<StyleBox>(PanelContainer.StylePropertyPanel, out var box) && box is StyleBoxFlat flat
+                    ? flat.BorderColor
+                    : null;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Border(requestedRow!), Is.EqualTo(requestedColor), "An asked-for material must be outlined in the theme's colour.");
+                Assert.That(requestedText!.TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var textColor) ? textColor : (Color?)null,
+                    Is.EqualTo(requestedColor), "An asked-for material's text must be in the theme's colour.");
+                Assert.That(Border(trackedOutline!), Is.EqualTo(trackedColor), "A tracked task must be outlined in the theme's colour.");
+
+                // Under tgui it is a transparent tgui button; under Baron its class takes the plate away.
+                if (!tgui)
+                {
+                    Assert.That(amountButton!.TryGetStyleProperty<StyleBox>(ContainerButton.StylePropertyStyleBox, out var buttonBox) ? buttonBox : null,
+                        Is.TypeOf<StyleBoxEmpty>(), "Baron must give the cart's - and + no plate.");
+                }
+            });
+
+            root.Orphan();
         });
     }
 

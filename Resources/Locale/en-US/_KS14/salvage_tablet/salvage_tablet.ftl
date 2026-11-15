@@ -1,4 +1,6 @@
 ks-salvage-tablet-window-title = S.P.A.M.
+ks-salvage-tablet-confirm = Confirm?
+ks-salvage-tablet-number = { $number }
 ks-salvage-tablet-footer = Nanotrasen Salvage Division. Property of the company, like the ore.
 
 ks-salvage-tablet-login-prompt = Carry your ID and log in.
@@ -30,7 +32,10 @@ ks-salvage-tablet-task-complete = Task done: { $points } mining points, { $reput
 ks-salvage-tablet-rank-up = You have been promoted!
 
 ks-salvage-tablet-profile-header = Salvager
-ks-salvage-tablet-profile-rank = Rank: { $rank }
+ks-salvage-tablet-profile-name-label = Name
+ks-salvage-tablet-profile-job-label = Job
+ks-salvage-tablet-profile-rank-label = Rank
+ks-salvage-tablet-profile-points-label = Mining points
 ks-salvage-tablet-profile-reputation = Reputation: { $reputation } / { $next }
 ks-salvage-tablet-profile-reputation-max = Reputation: { $reputation }
 ks-salvage-tablet-profile-points = Mining points: { $points }
@@ -83,10 +88,12 @@ ks-salvage-tablet-order-locked = Rank { $rank }
 ks-salvage-tablet-order-total = Total: { $total } points
 ks-salvage-tablet-order-clear = Clear
 ks-salvage-tablet-order-tab-catalogue = Catalogue
-ks-salvage-tablet-order-tab-cart = Cart ({ $count })
+ks-salvage-tablet-order-tab-cart = Cart
 ks-salvage-tablet-order-cart-empty = The cart is empty. Add something from the catalogue.
 ks-salvage-tablet-order-add = Add to cart
 ks-salvage-tablet-order-remove = Remove
+ks-salvage-tablet-order-amount-less = -
+ks-salvage-tablet-order-amount-more = +
 ks-salvage-tablet-order-wait = The last pod is still on its way. Try again in a moment.
 ks-salvage-tablet-order-refused = That order can't be made.
 ks-salvage-tablet-order-button = Order by drop pod

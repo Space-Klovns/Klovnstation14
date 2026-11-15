@@ -600,7 +600,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             RefreshQueueSection();
         }
 
-        _smelterPointsItem.Text = points.ToString();
+        _smelterPointsItem.Text = Loc.GetString("ks-salvage-tablet-number", ("number", points));
     }
 
     private Control GetRecipeDisplayControl(LatheRecipePrototype recipe)

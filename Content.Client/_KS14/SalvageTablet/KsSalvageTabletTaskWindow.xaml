@@ -1,14 +1,16 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       MinWidth="320"
                       Resizable="False">
-    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="6">
+    <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
         <!-- The plaques are made in code, as the task cards make theirs -->
         <Control Name="IconHost"/>
         <Control Name="TextHost"/>
         <BoxContainer Orientation="Horizontal" SeparationOverride="6">
             <Button Name="TrackButton" HorizontalExpand="True"/>
-            <Button Name="DropButton" StyleClasses="negative" MinWidth="40" ToolTip="{Loc 'ks-salvage-tablet-task-drop-tooltip'}"/>
+            <!-- Throwing a task away can't be undone, so it asks first -->
+            <ksTgui:KsTguiConfirmButton Name="DropButton" StyleClasses="negative" MinWidth="40" ToolTip="{Loc 'ks-salvage-tablet-task-drop-tooltip'}"/>
         </BoxContainer>
     </BoxContainer>
 </controls:FancyWindow>

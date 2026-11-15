@@ -6,60 +6,60 @@
                       Resizable="False">
     <BoxContainer Orientation="Vertical">
         <!-- Logged out: the prompt, then the boot sequence once Log in is pressed -->
-        <BoxContainer Name="LoginBox" Orientation="Vertical" Margin="20 60 20 60" SeparationOverride="10">
+        <!-- The boot sequence's lines are the bar's own text -->
+        <BoxContainer Name="LoginBox" Orientation="Vertical" Margin="18 60 18 60" SeparationOverride="6">
             <Label Name="LoginStatusLabel" Text="{Loc 'ks-salvage-tablet-login-prompt'}" HorizontalAlignment="Center"/>
-            <ProgressBar Name="LoginProgressBar" MinValue="0" MaxValue="1" MinHeight="12" MinWidth="320"
-                         HorizontalAlignment="Center" Visible="False"/>
+            <ksTgui:KsTguiProgressBar Name="LoginProgressBar" MinValue="0" MaxValue="1" MinWidth="320"
+                                      HorizontalAlignment="Center" Visible="False"/>
             <Button Name="LoginButton" Text="{Loc 'ks-salvage-tablet-login-button'}" HorizontalAlignment="Center" MinWidth="160"/>
         </BoxContainer>
 
-        <BoxContainer Name="MainBox" Orientation="Vertical" Margin="10 6 10 10" SeparationOverride="6" Visible="False">
-            <!-- Top right corner: out -->
+        <BoxContainer Name="MainBox" Orientation="Vertical" Margin="6" SeparationOverride="6" Visible="False">
+            <!-- Top right corner: out. The panels below have no title row to hold it -->
             <Button Name="LogoutButton" Text="{Loc 'ks-salvage-tablet-logout-button'}" StyleClasses="negative" HorizontalAlignment="Right"/>
 
-            <BoxContainer Orientation="Horizontal" SeparationOverride="10">
+            <BoxContainer Orientation="Horizontal" SeparationOverride="6">
                 <!-- Left: what the silo holds, with what the lathes have asked for and what is running low marked -->
                 <ksTgui:KsSectionPanel MinWidth="250" BaronColor="#1B1B1E">
-                    <BoxContainer Orientation="Vertical" Margin="8">
+                    <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
                         <Label Text="{Loc 'ks-salvage-tablet-silo-header'}" StyleClasses="LabelHeading"/>
-                        <Label Name="NoSiloLabel" Text="{Loc 'ks-salvage-tablet-silo-empty'}" StyleClasses="LabelWeak" Visible="False"/>
-                        <BoxContainer Name="MaterialContainer" Orientation="Vertical" SeparationOverride="2" Margin="0 6 0 0"/>
+                        <ksTgui:KsTguiNoticeBox Name="NoSiloNotice" Text="{Loc 'ks-salvage-tablet-silo-empty'}" Visible="False"/>
+                        <BoxContainer Name="MaterialContainer" Orientation="Vertical" SeparationOverride="2"/>
                     </BoxContainer>
                 </ksTgui:KsSectionPanel>
 
-                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="10">
+                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="6">
                     <!-- Top right: the tasks, in a row that scrolls sideways -->
                     <ksTgui:KsSectionPanel BaronColor="#1B1B1E">
-                        <BoxContainer Orientation="Vertical" Margin="8">
+                        <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
                             <BoxContainer Orientation="Horizontal">
                                 <Label Text="{Loc 'ks-salvage-tablet-tasks-header'}" StyleClasses="LabelHeading" HorizontalExpand="True"/>
                                 <Label Name="TrackedLabel" StyleClasses="LabelWeak" VerticalAlignment="Center"/>
                             </BoxContainer>
-                            <Label Name="NoTasksLabel" Text="{Loc 'ks-salvage-tablet-tasks-empty'}" StyleClasses="LabelWeak" Visible="False"/>
+                            <ksTgui:KsTguiNoticeBox Name="NoTasksNotice" Text="{Loc 'ks-salvage-tablet-tasks-empty'}" NoticeColor="Info" Visible="False"/>
                             <!-- Its height is the cards', its width is capped so the window doesn't grow to hold them all -->
-                            <ScrollContainer Name="TaskScroll" HScrollEnabled="True" VScrollEnabled="False"
-                                             ReturnMeasure="True" MaxWidth="510" Margin="0 6 0 0">
-                                <BoxContainer Name="TaskContainer" Orientation="Horizontal" SeparationOverride="8"/>
-                            </ScrollContainer>
+                            <ksTgui:KsTguiScrollContainer Name="TaskScroll" HScrollEnabled="True" VScrollEnabled="False"
+                                                          ReturnMeasure="True" MaxWidth="510">
+                                <BoxContainer Name="TaskContainer" Orientation="Horizontal" SeparationOverride="6"/>
+                            </ksTgui:KsTguiScrollContainer>
                         </BoxContainer>
                     </ksTgui:KsSectionPanel>
 
                     <!-- Bottom right: the salvager, their rank and what they can spend -->
                     <ksTgui:KsSectionPanel BaronColor="#1B1B1E">
-                        <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6">
-                            <BoxContainer Orientation="Horizontal" SeparationOverride="12">
+                        <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="6">
                                 <SpriteView Name="OwnerView" SetSize="96 96" Scale="2 2" OverrideDirection="South"/>
-                                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="2">
-                                    <Label Name="OwnerNameLabel" StyleClasses="LabelHeading"/>
-                                    <Label Name="JobLabel" StyleClasses="LabelWeak"/>
-                                    <Label Name="RankLabel"/>
-                                    <ProgressBar Name="ReputationBar" MinValue="0" MaxValue="1" MinHeight="10"/>
-                                    <Label Name="ReputationLabel"/>
+                                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="6">
+                                    <!-- The order button sits on the points row, the row it spends -->
+                                    <ksTgui:KsTguiLabeledList>
+                                        <ksTgui:KsTguiLabeledListItem Name="OwnerNameItem" Label="{Loc 'ks-salvage-tablet-profile-name-label'}"/>
+                                        <ksTgui:KsTguiLabeledListItem Name="JobItem" Label="{Loc 'ks-salvage-tablet-profile-job-label'}"/>
+                                        <ksTgui:KsTguiLabeledListItem Name="RankItem" Label="{Loc 'ks-salvage-tablet-profile-rank-label'}"/>
+                                        <ksTgui:KsTguiLabeledListItem Name="PointsItem" Label="{Loc 'ks-salvage-tablet-profile-points-label'}" VerticalAlign="Middle"/>
+                                    </ksTgui:KsTguiLabeledList>
+                                    <ksTgui:KsTguiProgressBar Name="ReputationBar" MinValue="0" MaxValue="1"/>
                                 </BoxContainer>
-                            </BoxContainer>
-                            <BoxContainer Orientation="Horizontal" SeparationOverride="12">
-                                <Label Name="PointsLabel" HorizontalExpand="True" VerticalAlignment="Center"/>
-                                <Button Name="OrderButton" Text="{Loc 'ks-salvage-tablet-order-open-button'}" VerticalAlignment="Center" MinWidth="170"/>
                             </BoxContainer>
                             <RichTextLabel Name="NextUnlocksLabel" MaxWidth="500"/>
                         </BoxContainer>

@@ -1,9 +1,9 @@
 using System.Numerics;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Materials;
 using Content.Shared._KS14.SalvageTablet;
 using Content.Shared.Materials;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -13,29 +13,12 @@ namespace Content.Client._KS14.SalvageTablet;
 /// <summary>
 ///     One material of the silo on the S.P.A.M. screen, written as a lathe writes it: the icon, then the name and how
 ///         much there is. Outlined in orange while the lathes have asked for it, and in red with a mark while the silo
-///         is low on it.
+///         is low on it. The colours are the theme's, through <see cref="KsSalvageTabletStyleClasses"/>.
 /// </summary>
 public sealed class KsSalvageTabletMaterialRow : PanelContainer
 {
-    private static readonly Color RequestedColor = Color.FromHex("#E8A33D");
-    private static readonly Color LowColor = Color.FromHex("#D9443B");
-
-    // Not Color.Transparent, which is white.
-    private static readonly Color Clear = Color.Black.WithAlpha(0f);
-
-    private readonly StyleBoxFlat _outline = new()
-    {
-        BackgroundColor = Clear,
-        BorderColor = Clear,
-        BorderThickness = new Thickness(1),
-        ContentMarginLeftOverride = 3,
-        ContentMarginRightOverride = 5,
-        ContentMarginTopOverride = 2,
-        ContentMarginBottomOverride = 2,
-    };
-
     private readonly Label _textLabel;
-    private readonly Label _lowLabel;
+    private readonly KsTguiIcon _lowIcon;
 
     public readonly ProtoId<MaterialPrototype> Material;
 
@@ -52,7 +35,7 @@ public sealed class KsSalvageTabletMaterialRow : PanelContainer
     public KsSalvageTabletMaterialRow(MaterialPrototype materialPrototype, SpriteSystem spriteSystem)
     {
         Material = materialPrototype.ID;
-        PanelOverride = _outline;
+        AddStyleClass(KsSalvageTabletStyleClasses.MaterialRow);
         HorizontalExpand = true;
 
         var box = new BoxContainer
@@ -74,16 +57,16 @@ public sealed class KsSalvageTabletMaterialRow : PanelContainer
         _textLabel = new Label { HorizontalExpand = true, VerticalAlignment = VAlignment.Center };
         box.AddChild(_textLabel);
 
-        _lowLabel = new Label
+        _lowIcon = new KsTguiIcon
         {
-            Text = "!",
-            FontColorOverride = LowColor,
+            Glyph = KsTguiIcons.Exclamation,
             VerticalAlignment = VAlignment.Center,
             ToolTip = Loc.GetString("ks-salvage-tablet-silo-low"),
             MouseFilter = MouseFilterMode.Pass,
             Visible = false,
+            StyleClasses = { KsSalvageTabletStyleClasses.LowIcon },
         };
-        box.AddChild(_lowLabel);
+        box.AddChild(_lowIcon);
 
         AddChild(box);
     }
@@ -106,8 +89,10 @@ public sealed class KsSalvageTabletMaterialRow : PanelContainer
             : Loc.GetString("lathe-menu-material-display", ("material", name), ("amount", amount));
 
         // Asked for matters more to a salvager than low, so its colour wins the outline. The mark stays either way.
-        _outline.BorderColor = Requested ? RequestedColor : Low ? LowColor : Clear;
-        _textLabel.FontColorOverride = Requested ? RequestedColor : null;
-        _lowLabel.Visible = Low;
+        KsSalvageTabletStyleClasses.Toggle(this, KsSalvageTabletStyleClasses.Requested, Requested);
+        KsSalvageTabletStyleClasses.Toggle(this, KsSalvageTabletStyleClasses.Low, Low && !Requested);
+        KsSalvageTabletStyleClasses.Toggle(_textLabel, KsSalvageTabletStyleClasses.Requested, Requested);
+        _lowIcon.Visible = Low;
     }
+
 }

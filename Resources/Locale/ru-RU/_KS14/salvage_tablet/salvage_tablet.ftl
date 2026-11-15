@@ -1,4 +1,6 @@
 ks-salvage-tablet-window-title = S.P.A.M.
+ks-salvage-tablet-confirm = Подтвердить?
+ks-salvage-tablet-number = { $number }
 ks-salvage-tablet-footer = Утилизационный отдел Nanotrasen. Собственность компании, как и руда.
 
 ks-salvage-tablet-login-prompt = Возьмите с собой ID и войдите.
@@ -30,7 +32,10 @@ ks-salvage-tablet-task-complete = Задание выполнено. Шахтё�
 ks-salvage-tablet-rank-up = Вас повысили!
 
 ks-salvage-tablet-profile-header = Утилизатор
-ks-salvage-tablet-profile-rank = Ранг: { $rank }
+ks-salvage-tablet-profile-name-label = Имя
+ks-salvage-tablet-profile-job-label = Должность
+ks-salvage-tablet-profile-rank-label = Ранг
+ks-salvage-tablet-profile-points-label = Шахтёрские очки
 ks-salvage-tablet-profile-reputation = Репутация: { $reputation } / { $next }
 ks-salvage-tablet-profile-reputation-max = Репутация: { $reputation }
 ks-salvage-tablet-profile-points = Шахтёрские очки: { $points }
@@ -83,10 +88,12 @@ ks-salvage-tablet-order-locked = Ранг { $rank }
 ks-salvage-tablet-order-total = Итого: { $total } оч.
 ks-salvage-tablet-order-clear = Очистить
 ks-salvage-tablet-order-tab-catalogue = Каталог
-ks-salvage-tablet-order-tab-cart = Корзина ({ $count })
+ks-salvage-tablet-order-tab-cart = Корзина
 ks-salvage-tablet-order-cart-empty = Корзина пуста. Добавьте что-нибудь из каталога.
 ks-salvage-tablet-order-add = В корзину
 ks-salvage-tablet-order-remove = Убрать
+ks-salvage-tablet-order-amount-less = -
+ks-salvage-tablet-order-amount-more = +
 ks-salvage-tablet-order-wait = Прошлая капсула ещё в пути. Попробуйте чуть позже.
 ks-salvage-tablet-order-refused = Такой заказ сделать нельзя.
 ks-salvage-tablet-order-button = Заказать капсулой

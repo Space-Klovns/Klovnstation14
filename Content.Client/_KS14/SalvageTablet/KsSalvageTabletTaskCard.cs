@@ -1,7 +1,7 @@
 using System.Numerics;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Shared._KS14.SalvageTablet;
-using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
@@ -13,6 +13,11 @@ namespace Content.Client._KS14.SalvageTablet;
 ///     One task on the S.P.A.M. screen: its picture on a plaque, and on another its name, reward, progress and time.
 ///         Pressing it opens the details. A tracked task is outlined.
 /// </summary>
+/// <remarks>
+///     Not a <see cref="KsTguiImageButton"/>: that card has room for one line of text in its bar and two corner labels, and
+///         this one needs a wrapping name, the reward, a progress bar and the time. Its colours come from
+///         <see cref="KsSalvageTabletStyleClasses"/>, so each theme gives its own.
+/// </remarks>
 public sealed class KsSalvageTabletTaskCard : ContainerButton
 {
     /// <summary>
@@ -22,24 +27,11 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
 
     private const float TextWidth = CardWidth - 28f;
 
-    private static readonly Color PlaqueColor = Color.Black.WithAlpha(0.35f);
-    private static readonly Color TrackedColor = Color.FromHex("#5BA85B");
-
-    // Not Color.Transparent, which is white.
-    private static readonly Color Clear = Color.Black.WithAlpha(0f);
-
-    private readonly StyleBoxFlat _outline = new()
-    {
-        BackgroundColor = Clear,
-        BorderColor = Clear,
-        BorderThickness = new Thickness(2),
-    };
-
+    private readonly PanelContainer _outline;
     private readonly EntityPrototypeView _iconView;
     private readonly RichTextLabel _nameLabel;
     private readonly Label _rewardLabel;
-    private readonly ProgressBar _progressBar;
-    private readonly Label _progressLabel;
+    private readonly KsTguiProgressBar _progressBar;
     private readonly Label _timeLabel;
 
     private TimeSpan? _endTime;
@@ -65,13 +57,7 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
         // Wraps: task names run long, and longer still in Russian. Two lines are kept for it so the cards line up.
         _nameLabel = new RichTextLabel { MaxWidth = TextWidth, MinHeight = 36, HorizontalAlignment = HAlignment.Center };
         _rewardLabel = new Label { HorizontalAlignment = HAlignment.Center, StyleClasses = { StyleClass.LabelWeak } };
-
-        _progressBar = new ProgressBar { MinValue = 0, MaxValue = 1, MinHeight = 18 };
-        _progressLabel = new Label { HorizontalAlignment = HAlignment.Center, VerticalAlignment = VAlignment.Center };
-        var progress = new Control();
-        progress.AddChild(_progressBar);
-        progress.AddChild(_progressLabel);
-
+        _progressBar = new KsTguiProgressBar { MinValue = 0, MaxValue = 1 };
         _timeLabel = new Label { HorizontalAlignment = HAlignment.Center, StyleClasses = { StyleClass.LabelWeak } };
 
         var text = new BoxContainer
@@ -81,7 +67,7 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
         };
         text.AddChild(_nameLabel);
         text.AddChild(_rewardLabel);
-        text.AddChild(progress);
+        text.AddChild(_progressBar);
         text.AddChild(_timeLabel);
 
         var box = new BoxContainer
@@ -93,9 +79,9 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
         box.AddChild(iconPlaque);
         box.AddChild(MakePlaque(text));
 
-        var outline = new PanelContainer { PanelOverride = _outline };
-        outline.AddChild(box);
-        AddChild(outline);
+        _outline = new PanelContainer { StyleClasses = { KsSalvageTabletStyleClasses.CardOutline } };
+        _outline.AddChild(box);
+        AddChild(_outline);
     }
 
     /// <summary>
@@ -103,17 +89,7 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
     /// </summary>
     public static PanelContainer MakePlaque(Control content)
     {
-        var plaque = new PanelContainer
-        {
-            PanelOverride = new StyleBoxFlat
-            {
-                BackgroundColor = PlaqueColor,
-                ContentMarginLeftOverride = 6,
-                ContentMarginRightOverride = 6,
-                ContentMarginTopOverride = 4,
-                ContentMarginBottomOverride = 4,
-            },
-        };
+        var plaque = new PanelContainer { StyleClasses = { KsSalvageTabletStyleClasses.Plaque } };
         plaque.AddChild(content);
         return plaque;
     }
@@ -124,9 +100,9 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
         Tracked = task.Tracked;
         _endTime = task.EndTime;
         _shownSeconds = -1;
-        _outline.BorderColor = task.Tracked ? TrackedColor : Clear;
+        KsSalvageTabletStyleClasses.Toggle(_outline, KsSalvageTabletStyleClasses.Tracked, task.Tracked);
         _progressBar.Value = task.Amount > 0 ? task.Progress / (float)task.Amount : 0f;
-        _progressLabel.Text = Loc.GetString("ks-salvage-tablet-task-progress", ("progress", task.Progress), ("amount", task.Amount));
+        _progressBar.Text = Loc.GetString("ks-salvage-tablet-task-progress", ("progress", task.Progress), ("amount", task.Amount));
 
         if (!prototypeManager.TryIndex(task.Task, out var taskPrototype))
             return;
