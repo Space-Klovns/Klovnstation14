@@ -253,6 +253,7 @@ public sealed class CultivationTest : GameTest
     public async Task TestDefensiveTechniques()
     {
         var map = await Pair.CreateTestMap();
+        EntityUid controlUid = default;
         EntityUid wardedUid = default;
         EntityUid rootedUid = default;
         var baseWalkSpeed = 0f;
@@ -260,6 +261,7 @@ public sealed class CultivationTest : GameTest
         await Server.WaitPost(() =>
         {
             var stanceSystem = SEntMan.System<CultivationStanceSystem>();
+            controlUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
             wardedUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
             rootedUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
             baseWalkSpeed = SEntMan.GetComponent<MovementSpeedModifierComponent>(rootedUid).CurrentWalkSpeed;
@@ -270,14 +272,21 @@ public sealed class CultivationTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
+            // Resistances on: the stances work by modifying damage, which ignoring resistances skips entirely.
+            //      The control takes the same blow, so the body's own resistances cancel out.
             var damageableSystem = SEntMan.System<DamageableSystem>();
-            damageableSystem.TryChangeDamage(wardedUid, Blunt(10), ignoreResistances: true);
-            damageableSystem.TryChangeDamage(rootedUid, Blunt(10), ignoreResistances: true);
+            foreach (var uid in new[] { controlUid, wardedUid, rootedUid })
+                damageableSystem.TryChangeDamage(uid, Blunt(10));
+
+            var control = damageableSystem.GetTotalDamage(controlUid).Float();
+            Assert.That(control, Is.GreaterThan(0f), "The control took no damage; the comparison would prove nothing.");
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(damageableSystem.GetTotalDamage(wardedUid), Is.EqualTo(FixedPoint2.New(5)), "Still Water Ward did not halve the blow.");
-                Assert.That(damageableSystem.GetTotalDamage(rootedUid), Is.EqualTo(FixedPoint2.New(7.5)), "Rooted Mountain Stance did not soften the blow.");
+                Assert.That(damageableSystem.GetTotalDamage(wardedUid).Float(), Is.EqualTo(control * 0.5f).Within(0.01f),
+                    "Still Water Ward did not halve the blow.");
+                Assert.That(damageableSystem.GetTotalDamage(rootedUid).Float(), Is.EqualTo(control * 0.75f).Within(0.01f),
+                    "Rooted Mountain Stance did not soften the blow.");
                 Assert.That(SEntMan.GetComponent<MovementSpeedModifierComponent>(rootedUid).CurrentWalkSpeed,
                     Is.EqualTo(baseWalkSpeed * 0.6f).Within(0.01f), "Rooted Mountain Stance did not slow its user.");
             }
@@ -301,10 +310,15 @@ public sealed class CultivationTest : GameTest
     public async Task TestNewCultivatorGetsActionsAndManual()
     {
         var map = await Pair.CreateTestMap();
+        EntityUid cultivatorUid = default;
+
+        await Server.WaitPost(() => cultivatorUid = SEntMan.SpawnEntity("KsTestCultivatorWithManual", map.GridCoords));
+
+        // The manual is handed over on the next tick, once the hands exist.
+        await RunTicksSync(2);
 
         await Server.WaitAssertion(() =>
         {
-            var cultivatorUid = SEntMan.SpawnEntity("KsTestCultivatorWithManual", map.GridCoords);
             var cultivatorComponent = SEntMan.GetComponent<CultivatorComponent>(cultivatorUid);
             var held = SEntMan.System<SharedHandsSystem>().EnumerateHeld(cultivatorUid).ToList();
 
@@ -312,7 +326,8 @@ public sealed class CultivationTest : GameTest
             {
                 Assert.That(cultivatorComponent.MeditateActionEntity, Is.Not.Null, "No meditate action was granted.");
                 Assert.That(cultivatorComponent.BreakthroughActionEntity, Is.Not.Null, "No breakthrough action was granted.");
-                Assert.That(held.Any(SEntMan.HasComponent<CultivationManualComponent>), Is.True, "The starting manual was not put in hand.");
+                Assert.That(held.Count(SEntMan.HasComponent<CultivationManualComponent>), Is.EqualTo(1),
+                    "Exactly one starting manual was not put in hand.");
             }
         });
     }

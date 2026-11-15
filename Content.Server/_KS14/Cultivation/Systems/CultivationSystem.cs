@@ -47,9 +47,17 @@ public sealed partial class CultivationSystem : EntitySystem
 
     private readonly HashSet<Entity<CultivationQiSourceComponent>> _qiSources = new();
 
+    /// <summary>
+    ///     New cultivators still owed a starting manual.
+    /// </summary>
+    private readonly HashSet<EntityUid> _pendingManuals = new();
+    private readonly List<EntityUid> _drainedManuals = new();
+
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
+
+        HandOutStartingManuals();
 
         var currentTime = _gameTiming.CurTime;
         var cultivatorEnumerator = EntityQueryEnumerator<CultivatorComponent>();
@@ -103,10 +111,29 @@ public sealed partial class CultivationSystem : EntitySystem
         GrantTechniques(entity);
         _cultivationSystem.UpdateAlerts(entity);
 
+        // Handed over next tick: a mob spawned already a cultivator may not have its hands set up yet.
         if (entity.Comp.StartingManuals.Count > 0)
+            _pendingManuals.Add(entity.Owner);
+    }
+
+    private void HandOutStartingManuals()
+    {
+        if (_pendingManuals.Count == 0)
+            return;
+
+        // Drained into a scratch list first: spawning and picking up can raise events that queue more.
+        _drainedManuals.Clear();
+        _drainedManuals.AddRange(_pendingManuals);
+        _pendingManuals.Clear();
+
+        foreach (var uid in _drainedManuals)
         {
-            var manualUid = Spawn(_robustRandom.Pick(entity.Comp.StartingManuals), Transform(entity).Coordinates);
-            _handsSystem.PickupOrDrop(entity, manualUid, checkActionBlocker: false);
+            if (TerminatingOrDeleted(uid) || !_cultivatorQuery.TryComp(uid, out var cultivatorComponent)
+                || cultivatorComponent.StartingManuals.Count == 0)
+                continue;
+
+            var manualUid = Spawn(_robustRandom.Pick(cultivatorComponent.StartingManuals), Transform(uid).Coordinates);
+            _handsSystem.PickupOrDrop(uid, manualUid, checkActionBlocker: false);
         }
     }
 
@@ -332,8 +359,12 @@ public sealed partial class CultivationSystem : EntitySystem
     public void Deviate(Entity<CultivatorComponent> entity)
     {
         _cultivationSystem.ScaleInsight(entity.AsNullable(), 0.5f);
-        _cultivationSystem.AddInternalInjury(entity.AsNullable());
+
+        // The backlash is a heavy blow in its own right; only add the stack ourselves if it didn't already.
+        var injuryBefore = entity.Comp.InternalInjury;
         _damageableSystem.TryChangeDamage(entity.Owner, Damage("Blunt", 20), ignoreResistances: true, interruptsDoAfters: false);
+        if (entity.Comp.InternalInjury == injuryBefore)
+            _cultivationSystem.AddInternalInjury(entity.AsNullable());
 
         _audioSystem.PlayPvs(DeviationSound, entity);
         _popupSystem.PopupEntity(Loc.GetString("cultivation-deviation", ("user", entity.Owner)), entity, PopupType.LargeCaution);
