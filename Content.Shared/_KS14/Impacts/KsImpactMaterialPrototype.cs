@@ -33,7 +33,7 @@ public sealed partial class KsImpactMaterialPrototype : IPrototype
     public SoundSpecifier? Sound;
 
     [DataField]
-    public float SoundChance = 0.5f;
+    public float SoundChance = 0.75f;
 
     /// <summary>
     ///     The chance a hit throws the full burst: TGMC's, as <see cref="Debris"/> and <see cref="Smoke"/> are written.
