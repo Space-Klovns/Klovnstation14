@@ -1,0 +1,137 @@
+using Content.Shared._KS14.Cultivation.Prototypes;
+using Content.Shared._KS14.Cultivation.Systems;
+using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+
+namespace Content.Shared._KS14.Cultivation.Components;
+
+/// <summary>
+///     Someone walking the path of cultivation: they gather qi, sit in meditation to gain insight, and break through
+///         from realm to realm. The first law they learn is their Root Law and shapes one of its techniques; from
+///         Foundation Establishment they may hold a second, Complementary Law.
+/// </summary>
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
+[Access(typeof(SharedCultivationSystem))]
+public sealed partial class CultivatorComponent : Component
+{
+    /// <summary>
+    ///     Qi currently held in the dantian. Techniques spend it.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Qi = 50f;
+
+    [DataField, AutoNetworkedField]
+    public CultivationRealm Realm = CultivationRealm.QiCondensation;
+
+    /// <summary>
+    ///     Progress towards the next breakthrough.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Insight;
+
+    /// <summary>
+    ///     Laws known, the Root Law first.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public List<ProtoId<CultivationLawPrototype>> Laws = new();
+
+    /// <summary>
+    ///     Stacks of internal injury from heavy blows. Each one slows qi recovery and risks a backlash when spending qi.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public int InternalInjury;
+
+    [DataField]
+    public int MaxInternalInjury = 3;
+
+    /// <summary>
+    ///     A single blow at or above this much damage bruises the meridians.
+    /// </summary>
+    [DataField]
+    public float HeavyBlowThreshold = 15f;
+
+    /// <summary>
+    ///     Qi capacity at each realm, indexed by <see cref="CultivationRealm"/>.
+    /// </summary>
+    [DataField]
+    public List<float> MaxQiByRealm = new() { 100f, 200f, 350f, 500f };
+
+    /// <summary>
+    ///     Insight needed to break out of each realm, indexed by <see cref="CultivationRealm"/>. The last realm has no entry.
+    /// </summary>
+    [DataField]
+    public List<float> InsightByRealm = new() { 100f, 200f, 350f };
+
+    [DataField]
+    public float QiRegenPerSecond = 1f;
+
+    /// <summary>
+    ///     Fraction of qi recovery lost per stack of internal injury.
+    /// </summary>
+    [DataField]
+    public float InjuryRegenPenalty = 0.25f;
+
+    /// <summary>
+    ///     Chance per stack of internal injury that spending qi twists the meridians.
+    /// </summary>
+    [DataField]
+    public float BacklashChancePerInjury = 0.1f;
+
+    [DataField]
+    public TimeSpan MeditateDuration = TimeSpan.FromSeconds(8);
+
+    [DataField]
+    public float MeditateInsight = 20f;
+
+    [DataField]
+    public float MeditateQi = 25f;
+
+    /// <summary>
+    ///     Every this many completed meditations, one stack of internal injury heals.
+    /// </summary>
+    [DataField]
+    public int MeditationsPerInjuryHeal = 2;
+
+    [DataField]
+    public int MeditationsSinceHeal;
+
+    [DataField]
+    public TimeSpan BreakthroughDuration = TimeSpan.FromSeconds(15);
+
+    [DataField]
+    public float BaseDeviationChance = 0.1f;
+
+    [DataField]
+    public float DeviationChancePerInjury = 0.2f;
+
+    [DataField]
+    public TimeSpan ReadManualDuration = TimeSpan.FromSeconds(5);
+
+    [DataField]
+    public EntProtoId MeditateAction = "ActionCultivationMeditate";
+
+    [DataField]
+    public EntProtoId BreakthroughAction = "ActionCultivationBreakthrough";
+
+    [DataField]
+    public EntityUid? MeditateActionEntity;
+
+    [DataField]
+    public EntityUid? BreakthroughActionEntity;
+
+    /// <summary>
+    ///     Technique actions granted by laws, keyed by the action prototype so each is granted once.
+    /// </summary>
+    [DataField]
+    public Dictionary<EntProtoId, EntityUid> TechniqueActions = new();
+
+    /// <summary>
+    ///     A manual of one of these is handed over when someone first becomes a cultivator. Empty for none.
+    /// </summary>
+    [DataField]
+    public List<EntProtoId> StartingManuals = new();
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan NextRegen;
+}
