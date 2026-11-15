@@ -164,7 +164,7 @@ together, and `emitting`.
 ## Collision
 
 Off by default: particles fly through everything, as BYOND's do, and an emitter without `collision` tests nothing
-and keeps nothing. With it, particles stop at walls, client-side only, approximately:
+and keeps nothing. With it, particles stop at walls, client-side only:
 
 ```yaml
 - type: ksParticles
@@ -179,11 +179,11 @@ and keeps nothing. With it, particles stop at walls, client-side only, approxima
 | What | How |
 | --- | --- |
 | What stops a particle | Hard fixtures on `Impassable` or `HighImpassable` (`FlyingMobMask`) of static bodies anchored to a grid: walls, windows, grilles, closed airlocks, windoors, firelocks. Not tables, machines, crates, mobs or items: low or loose things, which particles pass over. Nothing off a grid. |
-| Shape | Each fixture's bounding box in its grid's frame, inflated by `radius`, so it is exact for tile walls on a turned grid; a diagonal wall counts as its whole box. |
+| Shape | Each fixture's own shape in its grid's frame, grown by `radius`: a polygon (or `PhysShapeAabb`) as its edges' planes plus a bevel at each corner, a circle as a circle. Exact at the faces, without the physics polygon skin, so a particle meets the face drawn; within about a fifth of `radius` of round at the corners. A diagonal wall is its triangle. Edges and chains, not used for walls, fall back to their bounding box. |
 | Broadphase | Per emitter, every 0.5 s of simulation or when the particles leave the gathered region: the grids about the particles' swept bounds plus 1 m, and their anchored entities there. Never a lookup per particle. Particles spread over more than 32 m don't collide. |
-| Each step | Each particle's segment from its last position to its new one, in the map frame, against the gathered boxes: the first face entered reflects the velocity and the rest of the motion (`bounce` on the normal part, `friction` on the tangential), up to three bounces a step. Under 0.05 m/s outward it stops bouncing and slides, so gravity rests it against a wall. |
+| Each step | Each particle's segment from its last position to its new one, in the map frame, against the gathered shapes (Cyrus-Beck clipping against a polygon's planes, a quadratic for a circle): the first surface entered reflects the velocity and the rest of the motion (`bounce` on the normal part, `friction` on the tangential), up to three bounces a step. Under 0.05 m/s outward it stops bouncing and slides, so gravity rests it against a wall. |
 | Inside a wall | A particle that starts a step in one (spawned in it, a door closed on it) is put out through the nearest face that isn't in another wall, or dies if there is none. |
-| `space: Local` | The segment is mapped through the emitter's matrix, resolved in the map frame and mapped back, rotation and scale included. Both ends use this frame's matrix, so the emitter's own motion is not swept, and a stuck particle stays put in the emitter's frame, moving with it. |
+| `space: Local` | The segment starts where the particle was in the world, through the emitter's matrix as of the last step, and ends through this step's, so the emitter's own motion is swept: an emitter carried into or through a wall leaves its particles at it. Resolved in the map frame and mapped back, rotation and scale included. A stuck particle stays where it stuck in the world while its emitter moves. |
 | Z | Untouched: collision is in the plane, z only orders particles. |
 
 A child prototype that restates `collision` replaces the parent's whole, as `gradient` does; `enabled: false` turns

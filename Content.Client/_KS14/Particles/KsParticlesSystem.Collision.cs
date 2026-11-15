@@ -4,15 +4,18 @@ using Content.Shared.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Client._KS14.Particles;
 
 /// <summary>
-///     Opt-in collision of particles with walls (<see cref="KsParticlesPrototype.Collision"/>). Approximate on
-///         purpose: each particle is a point of some radius, each step's motion is a segment in the map frame, and
-///         the walls are the bounding boxes, in their grid's frame, of the hard fixtures anchored near the emitter.
+///     Opt-in collision of particles with walls (<see cref="KsParticlesPrototype.Collision"/>). Each particle is a
+///         point of some radius, each step's motion a segment in the map frame (a local particle's swept with its
+///         emitter's own motion), and the walls the real shapes, in their grid's frame, of the hard fixtures anchored
+///         near the emitter: convex polygons and circles grown by the radius, exactly at their faces, approximately
+///         (by bevels) at their corners.
 /// </summary>
 public sealed partial class KsParticlesSystem
 {
@@ -63,6 +66,11 @@ public sealed partial class KsParticlesSystem
     private List<Entity<MapGridComponent>> _collisionGrids = new();
 
     /// <summary>
+    ///     Below this, a corner's bevel is all but one of its edges and is left out, as is a degenerate edge.
+    /// </summary>
+    private const float CollisionPlaneEpsilon = 1e-4f;
+
+    /// <summary>
     ///     After a step has moved every particle, moves those whose motion crossed a wall back out of it.
     /// </summary>
     private void Collide(
@@ -74,12 +82,20 @@ public sealed partial class KsParticlesSystem
         float dt)
     {
         if (emitterComponent.Alive == 0 || emitterComponent.MapId == MapId.Nullspace)
+        {
+            cache.HasPreviousMatrix = false;
             return;
+        }
 
-        // A local particle lives in the emitter's frame: the segment is mapped through the emitter's matrix (as of
-        //      this frame, for both ends, so the emitter's own motion is not swept) and the result mapped back.
+        // A local particle lives in the emitter's frame. Its segment starts where it was in the world, through the
+        //      emitter's matrix as of the last step, and ends through this one: the emitter's own motion is swept, so
+        //      an emitter carried into a wall does not drag its particles in with it. The result is mapped back.
         var local = prototype.Space == KsParticleSpace.Local;
         var matrix = local ? emitterComponent.Matrix : Matrix3x2.Identity;
+        var previousMatrix = local && cache.HasPreviousMatrix ? cache.PreviousMatrix : matrix;
+        cache.PreviousMatrix = matrix;
+        cache.HasPreviousMatrix = local;
+
         var inverse = Matrix3x2.Identity;
         if (local && !Matrix3x2.Invert(matrix, out inverse))
             return;
@@ -102,8 +118,21 @@ public sealed partial class KsParticlesSystem
             var end = new Vector2(particle.Position.X, particle.Position.Y);
             if (local)
             {
-                start = Vector2.Transform(start, matrix);
-                end = Vector2.Transform(end, matrix);
+                if (particle.Stuck)
+                {
+                    // Stuck to a wall, it stays on the wall in the world, not with the emitter as it moves.
+                    var stuck = Vector2.Transform(end, previousMatrix);
+                    var held = Vector2.Transform(stuck, inverse);
+                    particle.Position = new Vector3(held, particle.Position.Z);
+                    particle.PrevPosition = particle.Position;
+                    start = stuck;
+                    end = stuck;
+                }
+                else
+                {
+                    start = Vector2.Transform(start, previousMatrix);
+                    end = Vector2.Transform(end, matrix);
+                }
             }
 
             cache.Starts[i] = start;
@@ -131,7 +160,7 @@ public sealed partial class KsParticlesSystem
             RefreshColliders(cache, emitterComponent.MapId, swept.Enlarged(CollisionRegionMargin), radius);
         }
 
-        if (cache.BoxCount == 0)
+        if (cache.ColliderCount == 0)
             return;
 
         for (var i = 0; i < emitterComponent.Alive; i++)
@@ -168,7 +197,7 @@ public sealed partial class KsParticlesSystem
 
     /// <summary>
     ///     Gathers the walls in <paramref name="region"/>: on every grid it touches, the hard fixtures on
-    ///         <see cref="ParticleCollisionMask"/> of static bodies anchored there, as boxes in the grid's frame.
+    ///         <see cref="ParticleCollisionMask"/> of static bodies anchored there, as their shapes in the grid's frame.
     /// </summary>
     private void RefreshColliders(KsParticleCollisionCache cache, MapId mapId, Box2 region, float radius)
     {
@@ -191,7 +220,7 @@ public sealed partial class KsParticlesSystem
             if (!Matrix3x2.Invert(localToWorld, out var worldToLocal))
                 continue;
 
-            var boxStart = cache.BoxCount;
+            var colliderStart = cache.ColliderCount;
             var anchored = _mapSystem.GetLocalAnchoredEntities(gridUid, gridComponent, worldToLocal.TransformBox(region));
             while (anchored.MoveNext())
             {
@@ -212,14 +241,11 @@ public sealed partial class KsParticlesSystem
                     if (!fixture.Hard || (fixture.CollisionLayer & ParticleCollisionMask) == 0)
                         continue;
 
-                    if (cache.BoxCount >= cache.Boxes.Length)
-                        Array.Resize(ref cache.Boxes, Math.Max(16, cache.Boxes.Length * 2));
-
-                    cache.Boxes[cache.BoxCount++] = fixture.Shape.ComputeAABB(shapeTransform, 0).Enlarged(radius);
+                    AddCollider(cache, fixture.Shape, shapeTransform, radius);
                 }
             }
 
-            if (cache.BoxCount == boxStart)
+            if (cache.ColliderCount == colliderStart)
                 continue;
 
             if (cache.GridCount >= cache.Grids.Length)
@@ -228,12 +254,153 @@ public sealed partial class KsParticlesSystem
             cache.Grids[cache.GridCount++] = new KsParticleColliderGrid
             {
                 Uid = gridUid,
-                BoxStart = boxStart,
-                BoxCount = cache.BoxCount - boxStart,
+                ColliderStart = colliderStart,
+                ColliderCount = cache.ColliderCount - colliderStart,
                 LocalToWorld = localToWorld,
                 WorldToLocal = worldToLocal,
             };
         }
+    }
+
+    /// <summary>
+    ///     One fixture's shape, in the grid's frame, grown by <paramref name="radius"/>. Its own vertices, not its
+    ///         bounding box: a diagonal wall is its triangle, and the physics polygon skin is left out, so particles
+    ///         meet the faces drawn, not a centimetre short of them. A shape that is neither a polygon nor a circle
+    ///         (an edge or chain, not used for walls) falls back to its bounding box.
+    /// </summary>
+    private static void AddCollider(KsParticleCollisionCache cache, IPhysShape shape, in Robust.Shared.Physics.Transform shapeTransform, float radius)
+    {
+        if (shape is PhysShapeCircle circleShape)
+        {
+            var center = Robust.Shared.Physics.Transform.Mul(shapeTransform, circleShape.Position);
+            var circleRadius = circleShape.Radius + radius;
+            AddColliderEntry(cache, new KsParticleCollider
+            {
+                Bounds = Box2.CenteredAround(center, new Vector2(circleRadius * 2f)),
+                Center = center,
+                CircleRadius = circleRadius,
+            });
+            return;
+        }
+
+        var corners = cache.Corners;
+        int count;
+        switch (shape)
+        {
+            case PolygonShape polygonShape when polygonShape.VertexCount >= 3:
+                count = polygonShape.VertexCount;
+                if (corners.Length < count)
+                    cache.Corners = corners = new Vector2[Math.Max(count, corners.Length * 2)];
+
+                for (var i = 0; i < count; i++)
+                    corners[i] = Robust.Shared.Physics.Transform.Mul(shapeTransform, polygonShape.Vertices[i]);
+                break;
+
+            case PhysShapeAabb aabbShape:
+                count = 4;
+                var bounds = aabbShape.LocalBounds;
+                corners[0] = Robust.Shared.Physics.Transform.Mul(shapeTransform, bounds.BottomLeft);
+                corners[1] = Robust.Shared.Physics.Transform.Mul(shapeTransform, bounds.BottomRight);
+                corners[2] = Robust.Shared.Physics.Transform.Mul(shapeTransform, bounds.TopRight);
+                corners[3] = Robust.Shared.Physics.Transform.Mul(shapeTransform, bounds.TopLeft);
+                break;
+
+            default:
+                count = 4;
+                var box = shape.ComputeAABB(shapeTransform, 0);
+                corners[0] = box.BottomLeft;
+                corners[1] = box.BottomRight;
+                corners[2] = box.TopRight;
+                corners[3] = box.TopLeft;
+                break;
+        }
+
+        AddPolygon(cache, corners, count, radius);
+    }
+
+    /// <summary>
+    ///     A convex polygon's planes, grown by <paramref name="radius"/>: one per edge, then one per corner between its
+    ///         two edges' normals, which cuts the grown corner back to within about a fifth of the radius of round.
+    /// </summary>
+    private static void AddPolygon(KsParticleCollisionCache cache, Vector2[] corners, int count, float radius)
+    {
+        // Either winding: the normals point away from the polygon's middle.
+        var area = 0f;
+        for (var i = 0; i < count; i++)
+        {
+            var next = corners[(i + 1) % count];
+            area += corners[i].X * next.Y - next.X * corners[i].Y;
+        }
+
+        var winding = area >= 0f ? 1f : -1f;
+        var planeStart = cache.PlaneCount;
+        var min = new Vector2(float.MaxValue);
+        var max = new Vector2(float.MinValue);
+        var firstEdge = -1;
+        var previousNormal = Vector2.Zero;
+
+        for (var i = 0; i < count; i++)
+        {
+            var corner = corners[i];
+            var edge = corners[(i + 1) % count] - corner;
+            min = Vector2.Min(min, corner);
+            max = Vector2.Max(max, corner);
+            if (edge.LengthSquared() < CollisionPlaneEpsilon * CollisionPlaneEpsilon)
+                continue;
+
+            var normal = Vector2.Normalize(new Vector2(edge.Y, -edge.X) * winding);
+
+            // The bevel at this edge's first corner, between it and the edge before.
+            if (firstEdge >= 0)
+                AddBevel(cache, previousNormal, normal, corner, radius);
+            else
+                firstEdge = i;
+
+            AddPlane(cache, normal, Vector2.Dot(normal, corner) + radius);
+            previousNormal = normal;
+        }
+
+        if (cache.PlaneCount - planeStart < 3)
+        {
+            cache.PlaneCount = planeStart;
+            return;
+        }
+
+        // And the bevel at the first edge's corner, closing the loop.
+        AddBevel(cache, previousNormal, cache.Planes[planeStart].Normal, corners[firstEdge], radius);
+
+        AddColliderEntry(cache, new KsParticleCollider
+        {
+            Bounds = new Box2(min, max).Enlarged(radius),
+            PlaneStart = planeStart,
+            PlaneCount = cache.PlaneCount - planeStart,
+        });
+    }
+
+    private static void AddBevel(KsParticleCollisionCache cache, Vector2 previousNormal, Vector2 normal, Vector2 corner, float radius)
+    {
+        var sum = previousNormal + normal;
+        if (radius <= 0f || sum.LengthSquared() < CollisionPlaneEpsilon || Vector2.Dot(previousNormal, normal) > 1f - CollisionPlaneEpsilon)
+            return;
+
+        var bevel = Vector2.Normalize(sum);
+        AddPlane(cache, bevel, Vector2.Dot(bevel, corner) + radius);
+    }
+
+    private static void AddPlane(KsParticleCollisionCache cache, Vector2 normal, float offset)
+    {
+        if (cache.PlaneCount >= cache.Planes.Length)
+            Array.Resize(ref cache.Planes, Math.Max(32, cache.Planes.Length * 2));
+
+        cache.Planes[cache.PlaneCount++] = new KsParticleColliderPlane { Normal = normal, Offset = offset };
+    }
+
+    private static void AddColliderEntry(KsParticleCollisionCache cache, in KsParticleCollider collider)
+    {
+        if (cache.ColliderCount >= cache.Colliders.Length)
+            Array.Resize(ref cache.Colliders, Math.Max(16, cache.Colliders.Length * 2));
+
+        cache.Colliders[cache.ColliderCount++] = collider;
     }
 
     /// <summary>
@@ -261,8 +428,8 @@ public sealed partial class KsParticlesSystem
 
         var hit = TryRaycast(cache, start, displacement, out var fraction, out var normal, out var inside);
 
-        // Already inside a wall: spawned in one, carried into one by the emitter, or a door closed on it. Out by the
-        //      shortest way that is not into another, keeping only the motion away from the face.
+        // Already inside a wall: spawned in one, or a door closed on it. Out by the shortest way that is not into
+        //      another, keeping only the motion away from the face.
         if (inside)
         {
             if (collision.OnHit == KsParticleHitResponse.Die || !TryPushOut(cache, start, out var pushed, out var pushNormal))
@@ -364,8 +531,8 @@ public sealed partial class KsParticlesSystem
 
     /// <summary>
     ///     The first wall the segment from <paramref name="start"/> by <paramref name="displacement"/> enters: the
-    ///         fraction along it and the face's outward normal in the map frame. A segment that starts inside a wall
-    ///         sets <paramref name="inside"/> and hits nothing.
+    ///         fraction along it and the surface's outward normal in the map frame. A segment that starts inside a
+    ///         wall sets <paramref name="inside"/> and hits nothing.
     /// </summary>
     private static bool TryRaycast(KsParticleCollisionCache cache, Vector2 start, Vector2 displacement, out float fraction, out Vector2 normal, out bool inside)
     {
@@ -374,7 +541,7 @@ public sealed partial class KsParticlesSystem
         inside = false;
         var moving = displacement.LengthSquared() > 0f;
 
-        var boxes = cache.Boxes;
+        var colliders = cache.Colliders;
         var grids = cache.Grids;
         for (var g = 0; g < cache.GridCount; g++)
         {
@@ -385,26 +552,27 @@ public sealed partial class KsParticlesSystem
             var segmentMin = Vector2.Min(localStart, localEnd);
             var segmentMax = Vector2.Max(localStart, localEnd);
 
-            var end = grid.BoxStart + grid.BoxCount;
-            for (var b = grid.BoxStart; b < end; b++)
+            var end = grid.ColliderStart + grid.ColliderCount;
+            for (var c = grid.ColliderStart; c < end; c++)
             {
-                ref var box = ref boxes[b];
-                // Cheapest first: most boxes are nowhere near this particle.
-                if (box.Left > segmentMax.X || box.Right < segmentMin.X || box.Bottom > segmentMax.Y || box.Top < segmentMin.Y)
+                ref var collider = ref colliders[c];
+                var bounds = collider.Bounds;
+                // Cheapest first: most walls are nowhere near this particle.
+                if (bounds.Left > segmentMax.X || bounds.Right < segmentMin.X || bounds.Bottom > segmentMax.Y || bounds.Top < segmentMin.Y)
                     continue;
 
-                if (localStart.X > box.Left && localStart.X < box.Right && localStart.Y > box.Bottom && localStart.Y < box.Top)
+                if (SignedDistance(cache, collider, localStart) < 0f)
                 {
                     inside = true;
                     return false;
                 }
 
                 if (!moving ||
-                    !TrySegmentBox(box, localStart, localDisplacement, out var boxFraction, out var localNormal) ||
-                    boxFraction >= fraction)
+                    !TrySegment(cache, collider, localStart, localDisplacement, out var colliderFraction, out var localNormal) ||
+                    colliderFraction >= fraction)
                     continue;
 
-                fraction = boxFraction;
+                fraction = colliderFraction;
                 normal = Vector2.TransformNormal(localNormal, grid.LocalToWorld);
             }
         }
@@ -413,73 +581,96 @@ public sealed partial class KsParticlesSystem
     }
 
     /// <summary>
-    ///     Slab test of a segment against an axis-aligned box: the fraction at which it enters, from outside, and the
-    ///         entered face's outward normal.
+    ///     How far <paramref name="point"/> is outside the grown shape, negative inside. For a polygon, the largest
+    ///         distance past any of its planes: exact at the faces, conservative at the bevelled corners.
     /// </summary>
-    private static bool TrySegmentBox(in Box2 box, Vector2 start, Vector2 displacement, out float fraction, out Vector2 normal)
+    private static float SignedDistance(KsParticleCollisionCache cache, in KsParticleCollider collider, Vector2 point)
+    {
+        if (collider.PlaneCount == 0)
+            return Vector2.Distance(point, collider.Center) - collider.CircleRadius;
+
+        var distance = float.MinValue;
+        var end = collider.PlaneStart + collider.PlaneCount;
+        for (var p = collider.PlaneStart; p < end; p++)
+        {
+            ref var plane = ref cache.Planes[p];
+            distance = MathF.Max(distance, Vector2.Dot(plane.Normal, point) - plane.Offset);
+        }
+
+        return distance;
+    }
+
+    /// <summary>
+    ///     Where a segment from outside enters the grown shape: the fraction along it and the outward normal there.
+    ///         A polygon is clipped against each of its planes (Cyrus-Beck); a circle solved directly.
+    /// </summary>
+    private static bool TrySegment(KsParticleCollisionCache cache, in KsParticleCollider collider, Vector2 start, Vector2 displacement, out float fraction, out Vector2 normal)
     {
         fraction = 0f;
         normal = Vector2.Zero;
 
+        if (collider.PlaneCount == 0)
+        {
+            // |start + t d - c| = r: a t² + 2 b t + k = 0, entering at the smaller root.
+            var offset = start - collider.Center;
+            var a = displacement.LengthSquared();
+            var b = Vector2.Dot(offset, displacement);
+            var k = offset.LengthSquared() - collider.CircleRadius * collider.CircleRadius;
+            var discriminant = b * b - a * k;
+            if (a <= 0f || k < 0f || b >= 0f || discriminant < 0f)
+                return false;
+
+            var t = (-b - MathF.Sqrt(discriminant)) / a;
+            if (t < 0f || t > 1f)
+                return false;
+
+            fraction = t;
+            normal = Vector2.Normalize(offset + displacement * t);
+            return true;
+        }
+
         var enter = float.MinValue;
         var exit = float.MaxValue;
-        var enterNormal = Vector2.Zero;
-
-        // X slab. Parallel and outside it misses; the skin keeps a particle sliding along a face just outside it.
-        if (MathF.Abs(displacement.X) < 1e-9f)
+        var end = collider.PlaneStart + collider.PlaneCount;
+        for (var p = collider.PlaneStart; p < end; p++)
         {
-            if (start.X <= box.Left || start.X >= box.Right)
+            ref var plane = ref cache.Planes[p];
+            var outside = Vector2.Dot(plane.Normal, start) - plane.Offset;
+            var rate = Vector2.Dot(plane.Normal, displacement);
+
+            // Parallel to this side: outside it, it never gets in; inside it, this side does not limit it.
+            if (MathF.Abs(rate) < 1e-9f)
+            {
+                if (outside >= 0f)
+                    return false;
+
+                continue;
+            }
+
+            var t = -outside / rate;
+            if (rate < 0f)
+            {
+                // Moving in through this side.
+                if (t > enter)
+                {
+                    enter = t;
+                    normal = plane.Normal;
+                }
+            }
+            else
+            {
+                exit = MathF.Min(exit, t);
+            }
+
+            if (enter > exit)
                 return false;
-        }
-        else
-        {
-            var inverse = 1f / displacement.X;
-            var near = (box.Left - start.X) * inverse;
-            var far = (box.Right - start.X) * inverse;
-            var nearNormal = new Vector2(-1f, 0f);
-            if (near > far)
-            {
-                (near, far) = (far, near);
-                nearNormal = new Vector2(1f, 0f);
-            }
-
-            enter = near;
-            exit = far;
-            enterNormal = nearNormal;
-        }
-
-        if (MathF.Abs(displacement.Y) < 1e-9f)
-        {
-            if (start.Y <= box.Bottom || start.Y >= box.Top)
-                return false;
-        }
-        else
-        {
-            var inverse = 1f / displacement.Y;
-            var near = (box.Bottom - start.Y) * inverse;
-            var far = (box.Top - start.Y) * inverse;
-            var nearNormal = new Vector2(0f, -1f);
-            if (near > far)
-            {
-                (near, far) = (far, near);
-                nearNormal = new Vector2(0f, 1f);
-            }
-
-            if (near > enter)
-            {
-                enter = near;
-                enterNormal = nearNormal;
-            }
-
-            exit = MathF.Min(exit, far);
         }
 
         // Entering from outside, within this step's segment.
-        if (enter > exit || enter < 0f || enter > 1f)
+        if (enter < 0f || enter > 1f || enter > exit)
             return false;
 
         fraction = enter;
-        normal = enterNormal;
         return true;
     }
 
@@ -489,10 +680,11 @@ public sealed partial class KsParticlesSystem
         {
             ref var grid = ref cache.Grids[g];
             var localPoint = Vector2.Transform(point, grid.WorldToLocal);
-            var end = grid.BoxStart + grid.BoxCount;
-            for (var b = grid.BoxStart; b < end; b++)
+            var end = grid.ColliderStart + grid.ColliderCount;
+            for (var c = grid.ColliderStart; c < end; c++)
             {
-                if (cache.Boxes[b].ContainsOpen(localPoint))
+                ref var collider = ref cache.Colliders[c];
+                if (collider.Bounds.Contains(localPoint) && SignedDistance(cache, collider, localPoint) < 0f)
                     return true;
             }
         }
@@ -501,8 +693,8 @@ public sealed partial class KsParticlesSystem
     }
 
     /// <summary>
-    ///     The nearest point just outside every box that <paramref name="point"/> is inside, through one of their
-    ///         faces, and that face's outward normal in the map frame. False if each way out lands in another wall:
+    ///     The nearest point just outside every wall that <paramref name="point"/> is inside, through one of their
+    ///         sides, and that side's outward normal in the map frame. False if each way out lands in another wall:
     ///         the particle is buried.
     /// </summary>
     private static bool TryPushOut(KsParticleCollisionCache cache, Vector2 point, out Vector2 pushed, out Vector2 normal)
@@ -515,37 +707,53 @@ public sealed partial class KsParticlesSystem
         {
             ref var grid = ref cache.Grids[g];
             var localPoint = Vector2.Transform(point, grid.WorldToLocal);
-            var end = grid.BoxStart + grid.BoxCount;
-            for (var b = grid.BoxStart; b < end; b++)
+            var end = grid.ColliderStart + grid.ColliderCount;
+            for (var c = grid.ColliderStart; c < end; c++)
             {
-                var box = cache.Boxes[b];
-                if (!box.ContainsOpen(localPoint))
+                ref var collider = ref cache.Colliders[c];
+                if (!collider.Bounds.Contains(localPoint) || SignedDistance(cache, collider, localPoint) >= 0f)
                     continue;
 
-                for (var face = 0; face < 4; face++)
+                if (collider.PlaneCount == 0)
                 {
-                    var (distance, localNormal) = face switch
-                    {
-                        0 => (localPoint.X - box.Left, new Vector2(-1f, 0f)),
-                        1 => (box.Right - localPoint.X, new Vector2(1f, 0f)),
-                        2 => (localPoint.Y - box.Bottom, new Vector2(0f, -1f)),
-                        _ => (box.Top - localPoint.Y, new Vector2(0f, 1f)),
-                    };
+                    var offset = localPoint - collider.Center;
+                    var length = offset.Length();
+                    var outward = length > CollisionPlaneEpsilon ? offset / length : new Vector2(1f, 0f);
+                    TryPushCandidate(cache, grid, collider.CircleRadius - length, localPoint, outward, ref best, ref pushed, ref normal);
+                    continue;
+                }
 
-                    if (distance >= best)
-                        continue;
-
-                    var candidate = Vector2.Transform(localPoint + localNormal * (distance + CollisionSkin), grid.LocalToWorld);
-                    if (IsInsideAny(cache, candidate))
-                        continue;
-
-                    best = distance;
-                    pushed = candidate;
-                    normal = Vector2.TransformNormal(localNormal, grid.LocalToWorld);
+                var planeEnd = collider.PlaneStart + collider.PlaneCount;
+                for (var p = collider.PlaneStart; p < planeEnd; p++)
+                {
+                    ref var plane = ref cache.Planes[p];
+                    TryPushCandidate(cache, grid, plane.Offset - Vector2.Dot(plane.Normal, localPoint), localPoint, plane.Normal, ref best, ref pushed, ref normal);
                 }
             }
         }
 
         return best < float.MaxValue;
+    }
+
+    private static void TryPushCandidate(
+        KsParticleCollisionCache cache,
+        in KsParticleColliderGrid grid,
+        float distance,
+        Vector2 localPoint,
+        Vector2 localNormal,
+        ref float best,
+        ref Vector2 pushed,
+        ref Vector2 normal)
+    {
+        if (distance < 0f || distance >= best)
+            return;
+
+        var candidate = Vector2.Transform(localPoint + localNormal * (distance + CollisionSkin), grid.LocalToWorld);
+        if (IsInsideAny(cache, candidate))
+            return;
+
+        best = distance;
+        pushed = candidate;
+        normal = Vector2.TransformNormal(localNormal, grid.LocalToWorld);
     }
 }

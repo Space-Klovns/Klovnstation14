@@ -44,6 +44,10 @@ public sealed class KsParticleCollisionTest : GameTest
     private readonly ProtoId<KsParticlesPrototype> _stick = "KsParticleCollisionTestStick";
     private readonly ProtoId<KsParticlesPrototype> _swarm = "KsParticleCollisionTestSwarm";
     private readonly ProtoId<KsParticlesPrototype> _swarmPlain = "KsParticleCollisionTestSwarmPlain";
+    private readonly EntProtoId _diagonalWall = "KsParticleCollisionTestDiagonalWall";
+    private readonly ProtoId<KsParticlesPrototype> _narrow = "KsParticleCollisionTestNarrow";
+    private readonly ProtoId<KsParticlesPrototype> _restingLocal = "KsParticleCollisionTestRestingLocal";
+    private readonly ProtoId<KsParticlesPrototype> _stickLocal = "KsParticleCollisionTestStickLocal";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -63,6 +67,52 @@ public sealed class KsParticleCollisionTest : GameTest
         layer:
         - WallLayer
         hard: true
+
+# The lower-right half of its tile, as a diagonal wall is: its slope faces up and west.
+- type: entity
+  id: KsParticleCollisionTestDiagonalWall
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PolygonShape
+          vertices:
+          - -0.5,-0.5
+          - 0.5,-0.5
+          - 0.5,0.5
+        layer:
+        - WallLayer
+        hard: true
+
+- type: ksParticles
+  id: KsParticleCollisionTestNarrow
+  count: 5
+  burst: 5
+  spawning: 0
+  lifespan: 0
+  space: World
+  velocity: [ 6, 0 ]
+  tickRate: 20
+  collision:
+    bounce: 1
+    friction: 0
+    radius: 0.05
+
+- type: ksParticles
+  id: KsParticleCollisionTestRestingLocal
+  count: 5
+  burst: 5
+  spawning: 0
+  lifespan: 0
+  space: Local
+  tickRate: 20
+  collision:
+    radius: 0.1
 
 - type: ksParticles
   id: KsParticleCollisionTestBounceWorld
@@ -105,6 +155,11 @@ public sealed class KsParticleCollisionTest : GameTest
   collision:
     onHit: Stick
     radius: 0.1
+
+- type: ksParticles
+  parent: KsParticleCollisionTestStick
+  id: KsParticleCollisionTestStickLocal
+  space: Local
 
 - type: ksParticles
   id: KsParticleCollisionTestSwarm
@@ -361,10 +416,121 @@ public sealed class KsParticleCollisionTest : GameTest
                 Assert.Multiple(() =>
                 {
                     Assert.That(particle.Stuck, $"particle {i} stuck");
-                    // The wall's own shape is a little larger than its tile, by the physics polygon skin.
-                    Assert.That(GridPosition(emitter.Comp2, i, clientGridUid).X, Is.InRange(EastFace - radius - 0.03f, EastFace - radius + 1e-3f), $"particle {i} on the wall's face");
+                    // On the face as drawn, not short of it by the physics polygon skin.
+                    Assert.That(GridPosition(emitter.Comp2, i, clientGridUid).X, Is.InRange(EastFace - radius - 3e-3f, EastFace - radius + 1e-3f), $"particle {i} on the wall's face");
                     Assert.That(particle.Velocity.Length(), Is.Zero, $"particle {i} still");
                 });
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A diagonal wall is its triangle, not its tile: particles fly into the empty half of the tile, meet the
+    ///         slope, and are turned along it, never getting inside the triangle.
+    /// </summary>
+    [Test]
+    public async Task ParticlesMeetADiagonalWallsSlope()
+    {
+        var clientGridUid = await SetUpRoomAsync(Angle.Zero);
+        await Server.WaitPost(() =>
+        {
+            var serverGridUid = SEntMan.GetEntity(CEntMan.GetNetEntity(clientGridUid));
+            SEntMan.SpawnAttachedTo(_diagonalWall, new EntityCoordinates(serverGridUid, 2.5f, 0.5f));
+        });
+        await RunTicksSync(10);
+
+        await Client.WaitAssertion(() =>
+        {
+            // Through the tile's empty upper half: its bounding box would stop them at x = 2.
+            var emitter = SpawnEmitter(_narrow, clientGridUid, new Vector2(0.5f, 0.8f));
+            var radius = emitter.Comp2.Prototype!.Collision!.Radius;
+            var furthest = float.MinValue;
+            var turned = false;
+
+            for (var frame = 0; frame < 20; frame++)
+            {
+                ClientSystem.FrameUpdate(Dt);
+                for (var i = 0; i < emitter.Comp2.Alive; i++)
+                {
+                    var position = GridPosition(emitter.Comp2, i, clientGridUid);
+                    furthest = Math.Max(furthest, position.X);
+                    turned |= GridVelocity(emitter.Comp2, i, clientGridUid).Y > 1f;
+
+                    // In the tile's frame the wall is x >= y; the particle keeps its radius off the slope.
+                    var local = position - new Vector2(2.5f, 0.5f);
+                    if (local.X > -0.5f - radius && local.X < 0.5f + radius && local.Y > -0.5f - radius && local.Y < 0.5f + radius)
+                    {
+                        Assert.That((local.Y - local.X) / MathF.Sqrt(2f), Is.GreaterThanOrEqualTo(radius - 2e-3f),
+                            $"frame {frame} particle {i} at {position}: inside the diagonal wall");
+                    }
+                }
+            }
+
+            Assert.That(furthest, Is.GreaterThan(2f), "the particles were stopped by the diagonal wall's tile, not its slope");
+            Assert.That(turned, "no particle was turned up along the slope");
+        });
+    }
+
+    /// <summary>
+    ///     A local emitter carried through a wall in one step does not take its particles with it: their motion is
+    ///         swept with the emitter's, and they stop at the wall.
+    /// </summary>
+    [Test]
+    public async Task ALocalEmitterCarriedThroughAWallLeavesItsParticlesAtIt()
+    {
+        var clientGridUid = await SetUpRoomAsync(Angle.Zero);
+
+        await Client.WaitAssertion(() =>
+        {
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+            var emitter = SpawnEmitter(_restingLocal, clientGridUid, new Vector2(2.5f, 0.5f));
+            var radius = emitter.Comp2.Prototype!.Collision!.Radius;
+            ClientSystem.FrameUpdate(Dt);
+            Assert.That(emitter.Comp2.Alive, Is.EqualTo(5));
+
+            // Past the east wall (x 3 to 4), out of the room, in one step.
+            transformSystem.SetLocalPosition(emitter.Owner, new Vector2(4.5f, 0.5f));
+            ClientSystem.FrameUpdate(Dt);
+
+            for (var i = 0; i < emitter.Comp2.Alive; i++)
+            {
+                var position = GridPosition(emitter.Comp2, i, clientGridUid);
+                Assert.That(position.X, Is.LessThanOrEqualTo(EastFace - radius + 1e-3f), $"particle {i} at {position}: carried through the wall");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A local particle stuck to a wall stays on the wall when its emitter moves away.
+    /// </summary>
+    [Test]
+    public async Task StuckLocalParticlesStayWhenTheEmitterMoves()
+    {
+        var clientGridUid = await SetUpRoomAsync(Angle.Zero);
+
+        await Client.WaitAssertion(() =>
+        {
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+            var emitter = SpawnEmitter(_stickLocal, clientGridUid);
+            for (var frame = 0; frame < 30; frame++)
+                ClientSystem.FrameUpdate(Dt);
+
+            Assert.That(emitter.Comp2.Alive, Is.EqualTo(20));
+            var before = new Vector2[emitter.Comp2.Alive];
+            for (var i = 0; i < before.Length; i++)
+            {
+                Assert.That(emitter.Comp2.Particles[i].Stuck, $"particle {i} stuck");
+                before[i] = GridPosition(emitter.Comp2, i, clientGridUid);
+            }
+
+            transformSystem.SetLocalPosition(emitter.Owner, EmitterPosition + new Vector2(-1.5f, 1f));
+            for (var frame = 0; frame < 3; frame++)
+                ClientSystem.FrameUpdate(Dt);
+
+            for (var i = 0; i < before.Length; i++)
+            {
+                var after = GridPosition(emitter.Comp2, i, clientGridUid);
+                Assert.That(Vector2.Distance(after, before[i]), Is.LessThan(1e-3f), $"stuck particle {i} moved from {before[i]} to {after} with its emitter");
             }
         });
     }
@@ -390,7 +556,7 @@ public sealed class KsParticleCollisionTest : GameTest
                 ClientSystem.FrameUpdate(Dt);
 
             Assert.That(colliding.Comp2.Alive, Is.EqualTo(500));
-            Assert.That(colliding.Comp2.Collision!.BoxCount, Is.GreaterThan(0), "the room's walls were gathered");
+            Assert.That(colliding.Comp2.Collision!.ColliderCount, Is.GreaterThan(0), "the room's walls were gathered");
 
             // Every particle, every step, inside the room.
             const int steps = 200;
@@ -433,7 +599,7 @@ public sealed class KsParticleCollisionTest : GameTest
             }
 
             TestContext.Out.WriteLine(
-                $"{colliding.Comp2.Alive} particles, {colliding.Comp2.Collision.BoxCount} wall boxes: {collidingBest:F1} µs per step with collision, " +
+                $"{colliding.Comp2.Alive} particles, {colliding.Comp2.Collision.ColliderCount} walls: {collidingBest:F1} µs per step with collision, " +
                 $"{plainBest:F1} µs without; {allocated} bytes allocated over {steps} warm steps");
 
             Assert.That(allocated, Is.Zero, "a warm colliding step, gathers included, allocates nothing");
