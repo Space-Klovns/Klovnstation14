@@ -27,7 +27,7 @@ public sealed partial class KsBaronUiSheetlet
     public static readonly Color Track = Color.FromHex("#2D3033");
     public static readonly Color InputBackground = Color.FromHex("#1F2226");
     public static readonly Color InputBorder = Color.FromHex("#4A5056");
-    public static readonly Color Label = Color.FromHex("#A9B0B6");
+    public static readonly Color LabelColor = Color.FromHex("#A9B0B6");
     public static readonly Color Brown = Color.FromHex("#6E6153");
 
     /// <summary>
@@ -74,6 +74,10 @@ public sealed partial class KsBaronUiSheetlet
 
         rules.Add(E<KsTguiButton>().Class(ContainerButton.StyleClassButton).Class(KsTguiButton.StyleClassCompact)
             .ParentOf(E<Label>()).Font(smallFont));
+
+        // tgui's text sits at the left of a button; upstream centres every button label.
+        rules.Add(E<Label>().Class(Button.StyleClassButton).Class(KsTguiSheetlet.StyleClassButtonLabelLeft)
+            .AlignMode(Label.AlignMode.Left));
 
         // Coloured: button_3 tinted towards the tgui colour's hue, so the chrome stays Baron's and the meaning stays tgui's.
         for (var i = 0; i < KsTguiColors.Count; i++)
@@ -140,14 +144,26 @@ public sealed partial class KsBaronUiSheetlet
 
     private static void AddFlatButtonRules(List<StyleRule> rules, string styleClass, Color normal, Color hovered, Color pressed)
     {
-        rules.AddRange(new StyleRule[]
+        // Above the box rules for plain and compact buttons, which would otherwise put button_3 back under the text.
+        foreach (var compact in new[] { false, true })
         {
-            // ModulateSelf would tint the flat box, so each state puts it back to white.
-            E<KsTguiButton>().Class(styleClass).PseudoNormal().Box(FlatBox(normal)).Modulate(Color.White),
-            E<KsTguiButton>().Class(styleClass).PseudoHovered().Box(FlatBox(hovered)).Modulate(Color.White),
-            E<KsTguiButton>().Class(styleClass).PseudoPressed().Box(FlatBox(pressed)).Modulate(Color.White),
-            E<KsTguiButton>().Class(styleClass).PseudoDisabled().Box(FlatBox(normal)).Modulate(Color.White),
-        });
+            var horizontal = compact ? CompactMarginHorizontal : ButtonMarginHorizontal;
+            foreach (var (pseudo, color) in new[]
+                     {
+                         (ContainerButton.StylePseudoClassNormal, normal),
+                         (ContainerButton.StylePseudoClassHover, hovered),
+                         (ContainerButton.StylePseudoClassPressed, pressed),
+                         (ContainerButton.StylePseudoClassDisabled, normal),
+                     })
+            {
+                var selector = E<KsTguiButton>().Class(ContainerButton.StyleClassButton).Class(styleClass);
+                if (compact)
+                    selector = selector.Class(KsTguiButton.StyleClassCompact);
+
+                // ModulateSelf would tint the flat box, so each state puts it back to white.
+                rules.Add(selector.Pseudo(pseudo).Box(FlatBox(color, horizontal)).Modulate(Color.White));
+            }
+        }
     }
 
     /// <summary>
@@ -207,7 +223,7 @@ public sealed partial class KsBaronUiSheetlet
         foreach (var striped in new[] { typeof(KsTguiCandystripe), typeof(KsTguiLabeledList), typeof(KsTguiTable), typeof(KsTguiTabs) })
         {
             rules.Add(new MutableSelectorElement { Type = striped }.Class(KsTguiSheetlet.StyleClassCandystripe)
-                .Prop(KsTguiSheetlet.StylePropertyCandystripe, Color.White.WithAlpha(0.045f))
+                .Prop(KsTguiSheetlet.StylePropertyCandystripe, Color.White.WithAlpha(0.012f))
                 .Prop(KsTguiSheetlet.StylePropertyCandystripeEven, Clear));
         }
     }
@@ -242,8 +258,8 @@ public sealed partial class KsBaronUiSheetlet
                 .Prop(KsTguiSheetlet.StylePropertyGaugeRing, InputBorder)
                 .Prop(KsTguiSheetlet.StylePropertyInputBackground, InputBackground),
             E<KsTguiRoundGauge>().Prop(KsTguiSheetlet.StylePropertyGaugeRing, InputBorder),
-            E<KsTguiLabeledListItem>().Prop(KsTguiSheetlet.StylePropertyLabelColor, Label),
-            E<KsTguiBlockQuote>().Prop(KsTguiSheetlet.StylePropertyLabelColor, Label),
+            E<KsTguiLabeledListItem>().Prop(KsTguiSheetlet.StylePropertyLabelColor, LabelColor),
+            E<KsTguiBlockQuote>().Prop(KsTguiSheetlet.StylePropertyLabelColor, LabelColor),
         });
     }
 
@@ -255,11 +271,11 @@ public sealed partial class KsBaronUiSheetlet
         return box;
     }
 
-    private static StyleBoxFlat FlatBox(Color color)
+    private static StyleBoxFlat FlatBox(Color color, float horizontal)
     {
         var box = new StyleBoxFlat(color);
         box.SetContentMarginOverride(StyleBox.Margin.Vertical, ButtonMarginVertical);
-        box.SetContentMarginOverride(StyleBox.Margin.Horizontal, ButtonMarginHorizontal);
+        box.SetContentMarginOverride(StyleBox.Margin.Horizontal, horizontal);
         return box;
     }
 
