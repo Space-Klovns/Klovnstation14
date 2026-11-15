@@ -22,6 +22,11 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Alligators;
 
+/// <summary>
+///     Wears down standing humanoids with bites and knocks them over once they have enough stamina damage.
+///     A bite against a prone victim can buckle them to the alligator for a death roll.
+///     The roll severs the grabbed leg only if the alligator holds on for the full duration.
+/// </summary>
 public sealed partial class KsAlligatorSystem : EntitySystem
 {
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
@@ -84,7 +89,7 @@ public sealed partial class KsAlligatorSystem : EntitySystem
             return false;
         }
 
-        // CanBuckle raises StrapAttemptEvent, which permits only the victim selected by this bite.
+        // The strap checks the target during TryBuckle, so record it before the attempt.
         alligator.Comp.Victim = victimUid;
         if (!_buckleSystem.TryBuckle(victimUid, null, alligator.Owner, buckleComp: buckle, popup: false))
         {
@@ -114,6 +119,7 @@ public sealed partial class KsAlligatorSystem : EntitySystem
                 continue;
 
             var alligator = (uid, component);
+            // The victim can be freed or lose the selected leg before the timer expires.
             if (!_mobStateSystem.IsAlive(uid) ||
                 !TryComp<BuckleComponent>(victimUid, out var buckle) || buckle.BuckledTo != uid ||
                 _gravitySystem.IsWeightless(uid) ||
@@ -145,6 +151,7 @@ public sealed partial class KsAlligatorSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnUnstrapAttempt(Entity<KsAlligatorComponent> alligator, ref UnstrapAttemptEvent args)
     {
+        // A bystander can pull the victim free using the normal unbuckle interaction.
         if (args.User != alligator.Comp.Victim || args.Buckle.Owner != alligator.Comp.Victim)
             return;
 
@@ -192,6 +199,7 @@ public sealed partial class KsAlligatorSystem : EntitySystem
         if (alligator.Comp.Victim is not { } victimUid)
             return;
 
+        // Clear the latch before unbuckling, which can raise UnstrappedEvent here again.
         alligator.Comp.Victim = null;
         alligator.Comp.Leg = null;
 

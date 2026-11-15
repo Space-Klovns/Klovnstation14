@@ -1,4 +1,4 @@
-# Resources/Prototypes/_KS14/Entities/Mobs/Animals/alligator.yml
+# KsMobSpaceAlligator
 ent-KsMobSpaceAlligator = космический аллигатор
     .desc = Крупная, некогда водная рептилия с отвратительным характером.
 
