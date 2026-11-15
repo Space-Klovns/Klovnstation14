@@ -291,6 +291,7 @@ public sealed partial class SharedCultivationSystem : EntitySystem
             return;
 
         args.PushMarkup(Loc.GetString("cultivation-examine-aura",
+            ("target", entity.Owner),
             ("realm", Loc.GetString($"cultivation-realm-{entity.Comp.Realm}"))));
     }
 }

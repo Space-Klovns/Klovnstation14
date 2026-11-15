@@ -1,0 +1,57 @@
+- type: antag
+  id: KsCultivator
+  name: roles-antag-ks-cultivator-name
+  antagonist: true
+  setPreference: true
+  objective: roles-antag-ks-cultivator-objective
+  requirements:
+  - !type:OverallPlaytimeRequirement
+    time: 1h
+
+- type: antagSpecifier
+  parent: RestrictedAntag
+  id: KsCultivator
+  prefRoles:
+  - KsCultivator
+  briefing:
+    text: ks-cultivator-role-greeting
+    color: "#5cba96"
+    sound: /Audio/Effects/church_bell2.ogg
+  blacklist:
+    components:
+    - AntagImmune
+  components:
+  - type: Cultivator
+    startingManuals:
+    - CultivationManualMetal
+    - CultivationManualWood
+    - CultivationManualWater
+    - CultivationManualFire
+    - CultivationManualEarth
+  mindRoles:
+  - MindRoleKsCultivator
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsCultivator
+  name: Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsCultivator
+  - type: CultivatorRole
+
+- type: entity
+  parent: [ BaseGameRule, BaseRoundstartAntagRule ]
+  id: KsCultivators
+  components:
+  - type: GameRule
+    minPlayers: 10
+  - type: CultivatorRule
+  - type: AntagSelection
+    agentName: ks-cultivator-round-end-agent-name
+    antags:
+    - !type:LinearAntagCount
+      proto: KsCultivator
+      range:
+        min: 1
+        max: 3

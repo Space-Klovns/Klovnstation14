@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Generated for Klovnstation 14 by Tools/_KS14/cultivation_icons.py",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "breakthrough"
+    },
+    {
+      "name": "burning_palm"
+    },
+    {
+      "name": "flying_sword"
+    },
+    {
+      "name": "meditate"
+    },
+    {
+      "name": "mountain_collapse"
+    },
+    {
+      "name": "myriad_spring"
+    },
+    {
+      "name": "rooted_stance"
+    },
+    {
+      "name": "sea_of_flames"
+    },
+    {
+      "name": "spring_mending"
+    },
+    {
+      "name": "still_water"
+    },
+    {
+      "name": "sword_rain"
+    },
+    {
+      "name": "tidal_surge"
+    }
+  ]
+}

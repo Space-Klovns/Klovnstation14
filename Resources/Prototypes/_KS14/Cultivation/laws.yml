@@ -1,0 +1,64 @@
+- type: cultivationLaw
+  id: KsMetal
+  name: cultivation-law-metal-name
+  description: cultivation-law-metal-desc
+  rootDescription: cultivation-law-metal-root
+  element: Metal
+  color: "#ced4e2"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationFlyingSword
+  - realm: GoldenCore
+    action: ActionCultivationSwordRain
+
+- type: cultivationLaw
+  id: KsWood
+  name: cultivation-law-wood-name
+  description: cultivation-law-wood-desc
+  rootDescription: cultivation-law-wood-root
+  element: Wood
+  color: "#6ec460"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationSpringMending
+  - realm: GoldenCore
+    action: ActionCultivationMyriadSpring
+
+- type: cultivationLaw
+  id: KsWater
+  name: cultivation-law-water-name
+  description: cultivation-law-water-desc
+  rootDescription: cultivation-law-water-root
+  element: Water
+  color: "#5496e2"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationStillWaterWard
+  - realm: GoldenCore
+    action: ActionCultivationTidalSurge
+
+- type: cultivationLaw
+  id: KsFire
+  name: cultivation-law-fire-name
+  description: cultivation-law-fire-desc
+  rootDescription: cultivation-law-fire-root
+  element: Fire
+  color: "#de5436"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationBurningPalm
+  - realm: GoldenCore
+    action: ActionCultivationSeaOfFlames
+
+- type: cultivationLaw
+  id: KsEarth
+  name: cultivation-law-earth-name
+  description: cultivation-law-earth-desc
+  rootDescription: cultivation-law-earth-root
+  element: Earth
+  color: "#b0804e"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationRootedStance
+  - realm: GoldenCore
+    action: ActionCultivationMountainCollapse
