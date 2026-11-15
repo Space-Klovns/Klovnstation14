@@ -111,11 +111,16 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         coordinates = GetEntryPoint(target, coordinates, worldDirection);
         var localRotation = GetLocalRotation(coordinates, -worldDirection);
-        SpawnImpactParticles(material.Smoke, coordinates, localRotation);
+        // Mostly a light hit, now and then the full burst.
+        var dense = _random.Prob(material.DenseChance);
+        var amount = dense ? 1f : material.LightAmount;
+        var speed = dense ? 1f : material.LightSpeed;
+
+        SpawnImpactParticles(material.Smoke, coordinates, localRotation, amount, speed);
         if (!ballistic)
             return;
 
-        SpawnImpactParticles(material.Debris, coordinates, localRotation);
+        SpawnImpactParticles(material.Debris, coordinates, localRotation, amount, speed);
         if (material.Sound != null && _random.Prob(material.SoundChance))
             PlayHere(material.Sound, coordinates, RicochetParams);
     }
@@ -261,13 +266,15 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         return Angle.FromWorldVec(Vector2.Normalize(worldDirection)) - parentRotation;
     }
 
-    private void SpawnImpactParticles(ProtoId<KsParticlesPrototype>? prototype, EntityCoordinates coordinates, Angle localRotation)
+    private void SpawnImpactParticles(ProtoId<KsParticlesPrototype>? prototype, EntityCoordinates coordinates, Angle localRotation, float amount, float speed)
     {
         if (prototype is not { } prototypeId ||
             _particlesSystem.SpawnLocal(prototypeId, coordinates, once: true) is not { } emitterUid)
             return;
 
         _particlesSystem.SetRotation(emitterUid, localRotation);
+        _particlesSystem.SetAmount(emitterUid, amount);
+        _particlesSystem.SetSpeed(emitterUid, speed);
     }
 
     #region Storage fill

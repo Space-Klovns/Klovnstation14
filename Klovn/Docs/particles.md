@@ -250,7 +250,8 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
 
 TGMC's debris element is `KsImpactSurfaceSystem` (`Content.Shared/_KS14/Impacts/`). A surface names a
 `ksImpactMaterial` (`Resources/Prototypes/_KS14/Impacts/materials.yml`: its smoke, its debris, a sound and its
-chance) with `- type: KsImpactSurface`; upstream surfaces get theirs by partial in `Impacts/Partials/surfaces.yml`.
+chance, and how often a hit throws the full burst rather than a light one: `denseChance`, `lightAmount`,
+`lightSpeed`) with `- type: KsImpactSurface`; upstream surfaces get theirs by partial in `Impacts/Partials/surfaces.yml`.
 A non-mob without one only smokes. `KsImpactSurfaceStorageFill` swaps in another material with a chance of how
 full the entity's storage is (bookshelves: paper), worked out as items go in and out. The impact plays on each
 client for itself, `SpawnLocal`, from the hit it predicted or from the server's `KsPredictedSpawnImpactEvent`:

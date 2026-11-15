@@ -35,6 +35,8 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private readonly EntProtoId _testWall = TestWall;
     private readonly EntProtoId _testMob = "KsImpactTestMob";
     private readonly EntProtoId _testBulletproofMob = "KsImpactTestBulletproofMob";
+    private readonly EntProtoId _testLightWall = "KsImpactTestLightWall";
+    private readonly EntProtoId _testDenseWall = "KsImpactTestDenseWall";
     private readonly EntProtoId _testShelf = "KsImpactTestShelf";
     private readonly EntProtoId _testBook = "KsImpactTestBook";
     private readonly ProtoId<KsParticlesPrototype> _testSmoke = "KsImpactTestSmoke";
@@ -66,6 +68,36 @@ public sealed class KsImpactSurfaceTest : InteractionTest
   id: KsImpactTestMaterial
   smoke: KsImpactTestSmoke
   debris: KsImpactTestDebris
+
+- type: ksImpactMaterial
+  id: KsImpactTestLight
+  smoke: KsImpactTestSmoke
+  debris: KsImpactTestDebris
+  denseChance: 0
+  lightAmount: 0.5
+  lightSpeed: 0.25
+
+- type: ksImpactMaterial
+  id: KsImpactTestDense
+  smoke: KsImpactTestSmoke
+  debris: KsImpactTestDebris
+  denseChance: 1
+  lightAmount: 0.5
+  lightSpeed: 0.25
+
+- type: entity
+  parent: {TestWall}
+  id: KsImpactTestLightWall
+  components:
+  - type: KsImpactSurface
+    material: KsImpactTestLight
+
+- type: entity
+  parent: {TestWall}
+  id: KsImpactTestDenseWall
+  components:
+  - type: KsImpactSurface
+    material: KsImpactTestDense
 
 - type: ksImpactMaterial
   id: KsImpactTestPaper
@@ -624,6 +656,35 @@ public sealed class KsImpactSurfaceTest : InteractionTest
             using (clientTiming.StartPastPredictionArea())
                 gunSystem.PlayImpactSound(mobUid, null, sound, forceWeaponSound: true, once: true);
             Assert.That(AudioCount(), Is.GreaterThan(audioBefore), "a kept projectile's hit on a re-predicted tick played no sound");
+        });
+    }
+
+    /// <summary>
+    ///     Most hits are light: fewer, slower particles. With the material's dense chance, the full burst instead.
+    /// </summary>
+    [Test]
+    public async Task MostHitsAreLightSomeDense([Values] bool dense)
+    {
+        NetEntity wallNetEntity = default;
+        await Server.WaitPost(() => wallNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(dense ? _testDenseWall : _testLightWall, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var piercing = new DamageSpecifier();
+        piercing.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
+            CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(wallNetEntity), coordinates, new Vector2(1f, 0f), piercing, piercing);
+
+            var emitters = ClientEmitters([_testSmoke, _testDebris]);
+            Assert.That(emitters, Has.Count.EqualTo(2));
+            foreach (var (uid, prototype) in emitters)
+            {
+                var particlesComponent = CEntMan.GetComponent<KsParticlesComponent>(uid);
+                Assert.That(particlesComponent.Amount, Is.EqualTo(dense ? 1f : 0.5f), $"{prototype}'s amount on a {(dense ? "dense" : "light")} hit");
+                Assert.That(particlesComponent.Speed, Is.EqualTo(dense ? 1f : 0.25f), $"{prototype}'s speed on a {(dense ? "dense" : "light")} hit");
+            }
         });
     }
 

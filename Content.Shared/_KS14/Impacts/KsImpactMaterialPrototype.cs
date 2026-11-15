@@ -34,4 +34,24 @@ public sealed partial class KsImpactMaterialPrototype : IPrototype
 
     [DataField]
     public float SoundChance = 0.5f;
+
+    /// <summary>
+    ///     The chance a hit throws the full burst: TGMC's, as <see cref="Debris"/> and <see cref="Smoke"/> are written.
+    ///         Every other hit is a lighter one, <see cref="LightAmount"/> as many particles at <see cref="LightSpeed"/>
+    ///         times the speed, so a burst of fire reads as a few chips with the odd shower among them.
+    /// </summary>
+    [DataField]
+    public float DenseChance = 0.25f;
+
+    /// <summary>
+    ///     How many of the prototypes' particles a light hit throws.
+    /// </summary>
+    [DataField]
+    public float LightAmount = 0.4f;
+
+    /// <summary>
+    ///     How fast, against the prototypes' velocities, a light hit's particles fly.
+    /// </summary>
+    [DataField]
+    public float LightSpeed = 0.6f;
 }
