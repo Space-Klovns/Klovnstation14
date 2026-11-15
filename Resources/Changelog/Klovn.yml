@@ -2917,3 +2917,34 @@ Entries:
       message: Bookshelves now stop bullets and lasers.
   id: 264
   time: '2026-11-15T17:08:27.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Add
+      message: >-
+        Added the S.P.A.M., a salvager's tablet that gives out mining and
+        hunting tasks, tracks rank and mining points, and orders gear by drop
+        pod. Clip it onto an ore bag to count ore.
+    - type: Add
+      message: Smelting ore in the ore processor now pays mining points.
+    - type: Add
+      message: Lathes can ask salvagers for missing materials, right-click a recipe.
+    - type: Add
+      message: >-
+        Added the survival emergency medipen and the luxury medipen. They work
+        fully only in low pressure.
+    - type: Add
+      message: >-
+        Added penthrite, which keeps you up past critical. Don't mix it with
+        epinephrine.
+    - type: Add
+      message: Salvage specialists now spawn with a survival emergency medipen.
+    - type: Tweak
+      message: >-
+        Bodies can now process up to 6 chemicals in the bloodstream at once, up
+        from 2.
+    - type: Remove
+      message: Removed the salvage job board. The S.P.A.M. replaces it.
+    - type: Remove
+      message: Coal is removed.
+  id: 265
+  time: '2026-11-15T22:12:17.0000000+00:00'
