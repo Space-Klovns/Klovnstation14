@@ -330,11 +330,23 @@ public sealed class KsSupercriticalTests : GameTest
 
             // Water can't boil under a hundred million kPa, and bitumen's vapor at room temperature is below what pipes count.
             calculator.SetInputs(waterIndex, "100000000", "293.15");
-            var waterCrushed = calculator.ResultText;
+            var waterCrushed = calculator.PressureResultText;
             var bitumenCalculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
             Assert.That(bitumenCalculator.TryParseTag(new Dictionary<string, string> { ["Reagents"] = "KsBitumen" }, out _));
             bitumenCalculator.SetInputs(0, "101.325", "293.15");
-            var bitumen = bitumenCalculator.ResultText;
+            var bitumen = bitumenCalculator.TemperatureResultText;
+
+            // Each input answers on its own line, and changing one leaves the other's answer alone.
+            calculator.SetInputs(waterIndex, "101.325", "373.15");
+            var pressureAnswer = calculator.PressureResultText;
+            var temperatureAnswer = calculator.TemperatureResultText;
+            var substanceAnswer = calculator.SubstanceResultText;
+            calculator.SetPressure("50");
+            var temperatureAfterPressure = calculator.TemperatureResultText;
+            var pressureAfterPressure = calculator.PressureResultText;
+            calculator.SetTemperature("300");
+            var pressureAfterTemperature = calculator.PressureResultText;
+            var temperatureAfterTemperature = calculator.TemperatureResultText;
 
             var defaultCalculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
 
@@ -350,10 +362,17 @@ public sealed class KsSupercriticalTests : GameTest
                 Assert.That(calculator.Reagents.Select(reagent => reagent.ID), Is.EqualTo(new[] { CarbonDioxideReagent.Id, WaterReagent.Id }),
                     "Reagents listed on the page aren't sorted alphabetically.");
                 Assert.That(water, Does.Contain("[color="), "The calculator's numbers aren't set apart from its text.");
-                Assert.That(waterCrushed, Does.Contain("never boils").And.Not.Contain("Vapor pressure"),
-                    "A pressure it can't boil at still shows a vapor pressure beside it.");
-                Assert.That(bitumen, Does.Contain("never boils").And.Not.Contain("Boils at").And.Not.Contain("Vapor pressure"),
-                    "A vapor pressure too small to count still shows a boiling point and a zero vapor pressure.");
+                Assert.That(waterCrushed, Does.Contain("never boils"), "A pressure it can't boil at doesn't say so.");
+                Assert.That(bitumen, Does.Contain("never boils").And.Not.Contain("Vapor pressure"),
+                    "A vapor pressure too small to count is shown as a zero vapor pressure.");
+                Assert.That(pressureAnswer, Does.Contain("Boils at").And.Not.Contain("Vapor pressure"), "The pressure's answer isn't its own.");
+                Assert.That(temperatureAnswer, Does.Contain("Vapor pressure").And.Not.Contain("Boils at"), "The temperature's answer isn't its own.");
+                Assert.That(substanceAnswer, Does.Contain("Melts at").And.Not.Contain("Boils at").And.Not.Contain("Vapor pressure"),
+                    "The substance's own points are mixed with the inputs' answers.");
+                Assert.That(pressureAfterPressure, Is.Not.EqualTo(pressureAnswer), "The pressure's answer didn't follow the pressure.");
+                Assert.That(temperatureAfterPressure, Is.EqualTo(temperatureAnswer), "Typing a pressure changed the temperature's answer.");
+                Assert.That(temperatureAfterTemperature, Is.Not.EqualTo(temperatureAnswer), "The temperature's answer didn't follow the temperature.");
+                Assert.That(pressureAfterTemperature, Is.EqualTo(pressureAfterPressure), "Typing a temperature changed the pressure's answer.");
             }
         });
     }
