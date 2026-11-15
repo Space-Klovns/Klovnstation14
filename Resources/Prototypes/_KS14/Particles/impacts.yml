@@ -26,7 +26,9 @@
   spin: { kind: num, a: -200, b: 200 }
   velocity: [ 0, -11.5625 ]
   friction: { kind: num, a: 0.9718, b: 0.9999 }
-  drift: { kind: circle, a: 2.5, b: 2.5 }
+  # TGMC's circle 8, 8 (2.5 m/s every step) reads as shaking here: drift is a fresh offset each 20 Hz step, not a
+  #   force. Kept to a gentle wander.
+  drift: { kind: circle, a: 0, b: 0.4 }
   # A puff meeting a wall rolls off it softly and spreads along it, rather than passing through or springing back.
   collision:
     onHit: Bounce
@@ -77,6 +79,9 @@
   - sprite:
       sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
       state: wood
+  # Flakes tumble rather than buzz: far less drift and spin than the base's.
+  drift: { kind: circle, a: 0, b: 0.3, dist: square }
+  spin: { kind: num, a: -90, b: 90 }
 
 - type: ksParticles
   parent: KsImpactDebrisBase
