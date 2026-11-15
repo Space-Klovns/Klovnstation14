@@ -6,8 +6,6 @@
   components:
   - type: Item
     size: Small
-  - type: Sprite
-    sprite: _KS14/Cultivation/manuals.rsi
 
 - type: entity
   parent: BaseMartialArtManual
@@ -15,6 +13,7 @@
   name: Eighteen Dragon-Subduing Palms
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_dragon_palm
   - type: MartialArtManual
     art: KsDragonPalms
@@ -25,6 +24,7 @@
   name: Six Meridians Divine Sword Manual
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_six_meridians
   - type: MartialArtManual
     art: KsSixMeridians
@@ -35,6 +35,7 @@
   name: Northern Darkness Scroll
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_northern_darkness
   - type: MartialArtManual
     art: KsNorthernDarkness
@@ -46,6 +47,7 @@
   description: Someone has scratched a warning on the cover. The pages inside feel cold.
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_star_absorbing
   - type: MartialArtManual
     art: KsStarAbsorbing
@@ -56,6 +58,7 @@
   name: Great Shift of Heaven and Earth
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_great_shift
   - type: MartialArtManual
     art: KsGreatShift
@@ -67,6 +70,7 @@
   description: A manual written in the margins of another book. It is warm to the touch.
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_nine_yang
   - type: MartialArtManual
     art: KsNineYang
@@ -77,6 +81,7 @@
   name: Golden Bell Shield Manual
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_golden_bell
   - type: MartialArtManual
     art: KsGoldenBell
@@ -87,6 +92,7 @@
   name: Graceful Waves Steps
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_graceful_steps
   - type: MartialArtManual
     art: KsGracefulSteps
@@ -97,6 +103,7 @@
   name: Ladder-Cloud Leap Manual
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_ladder_cloud
   - type: MartialArtManual
     art: KsLadderCloud
@@ -107,6 +114,7 @@
   name: Nine Swords of Dugu
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_dugu
   - type: MartialArtManual
     art: KsDugu
@@ -117,6 +125,7 @@
   name: Muscle-Tendon Changing Classic
   components:
   - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
     state: art_muscle_tendon
   - type: MartialArtManual
     art: KsMuscleTendon
@@ -124,8 +133,8 @@
 - type: entity
   parent: ProjectileCultivationSwordQi
   id: ProjectileSixMeridiansSwordQi
-  name: finger sword qi
   categories: [ HideSpawnMenu ]
+  name: finger sword qi
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi

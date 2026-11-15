@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Server.Weapons.Ranged.Systems;
+using Content.Server._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Prototypes;
@@ -115,22 +116,22 @@ public sealed partial class MartialArtsSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
-    private void OnManualUsed(Entity<MartialArtManualComponent> manual, ref UseInHandEvent args)
+    private void OnManualUsed(Entity<MartialArtManualComponent> manualEntity, ref UseInHandEvent args)
     {
-        if (args.Handled || !ProtoMan.TryIndex(manual.Comp.Art, out var art))
+        if (args.Handled || !ProtoMan.TryIndex(manualEntity.Comp.Art, out var art))
             return;
 
         args.Handled = true;
-        var user = args.User;
+        var userUid = args.User;
 
-        var result = _martialArtsSystem.CanLearn(user, art);
+        var result = _martialArtsSystem.CanLearn(userUid, art);
         if (result != MartialArtLearnResult.Learned)
         {
-            _popupSystem.PopupEntity(Loc.GetString($"martial-art-learn-{result}"), user, user);
+            _popupSystem.PopupEntity(Loc.GetString($"martial-art-learn-{result}"), userUid, userUid);
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, TimeSpan.FromSeconds(5), new MartialArtReadManualDoAfterEvent(), manual, used: manual)
+        var doAfterArgs = new DoAfterArgs(EntityManager, userUid, TimeSpan.FromSeconds(5), new MartialArtReadManualDoAfterEvent(), manualEntity, used: manualEntity)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
@@ -139,17 +140,17 @@ public sealed partial class MartialArtsSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", user), ("manual", manual.Owner)), user, PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
-    private void OnManualRead(Entity<MartialArtManualComponent> manual, ref MartialArtReadManualDoAfterEvent args)
+    private void OnManualRead(Entity<MartialArtManualComponent> manualEntity, ref MartialArtReadManualDoAfterEvent args)
     {
-        if (args.Cancelled || args.Handled || !ProtoMan.TryIndex(manual.Comp.Art, out var art))
+        if (args.Cancelled || args.Handled || !ProtoMan.TryIndex(manualEntity.Comp.Art, out var art))
             return;
 
         args.Handled = true;
-        var result = _martialArtsSystem.TryLearn(args.User, manual.Comp.Art);
+        var result = _martialArtsSystem.TryLearn(args.User, manualEntity.Comp.Art);
         if (result != MartialArtLearnResult.Learned)
         {
             _popupSystem.PopupEntity(Loc.GetString($"martial-art-learn-{result}"), args.User, args.User);
@@ -165,23 +166,42 @@ public sealed partial class MartialArtsSystem : EntitySystem
     #region Helpers
 
     /// <summary>
+    ///     Turn the next few projectiles back on whoever loosed them, for a while.
+    /// </summary>
+    public void StartGreatShift(EntityUid uid, TimeSpan duration, int charges)
+    {
+        var shiftComponent = EnsureComp<GreatShiftComponent>(uid);
+        shiftComponent.EndTime = _gameTiming.CurTime + duration;
+        shiftComponent.Charges = charges;
+    }
+
+    /// <summary>
+    ///     Wait for the next close blow and break it.
+    /// </summary>
+    public void StartDuguCounter(EntityUid uid, TimeSpan duration)
+    {
+        var counterComponent = EnsureComp<DuguCounterComponent>(uid);
+        counterComponent.EndTime = _gameTiming.CurTime + duration;
+    }
+
+    /// <summary>
     ///     Pay for a body art with stamina. Fails if it would leave you collapsed.
     /// </summary>
-    public bool TryPayStamina(EntityUid user, float cost)
+    public bool TryPayStamina(EntityUid userUid, float cost)
     {
-        if (_staminaSystem.TryTakeStamina(user, cost))
+        if (_staminaSystem.TryTakeStamina(userUid, cost))
             return true;
 
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-too-tired"), user, user, PopupType.SmallCaution);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-too-tired"), userUid, userUid, type: PopupType.SmallCaution);
         return false;
     }
 
-    private void Retaliate(EntityUid target, DamageSpecifier damage, EntityUid source)
+    private void Retaliate(EntityUid targetUid, DamageSpecifier damage, EntityUid sourceUid)
     {
         _retaliating = true;
         try
         {
-            _damageableSystem.TryChangeDamage(target, damage, origin: source);
+            _damageableSystem.TryChangeDamage(targetUid, damage, origin: sourceUid);
         }
         finally
         {
@@ -189,9 +209,9 @@ public sealed partial class MartialArtsSystem : EntitySystem
         }
     }
 
-    private bool InRange(EntityUid first, EntityUid second, float range)
+    private bool InRange(EntityUid firstUid, EntityUid secondUid, float range)
     {
-        return _transformSystem.InRange((first, null), (second, null), range);
+        return _transformSystem.InRange((firstUid, null), (secondUid, null), range);
     }
 
     /// <summary>
@@ -199,21 +219,21 @@ public sealed partial class MartialArtsSystem : EntitySystem
     ///         is drained of stamina instead and the user gains a little.
     /// </summary>
     /// <returns>Qi gained.</returns>
-    private float Drain(EntityUid user, EntityUid target, float qiDrain, float mortalStaminaDamage, float mortalQiGain)
+    private float Drain(EntityUid userUid, EntityUid targetUid, float qiDrain, float mortalStaminaDamage, float mortalQiGain)
     {
         float gained;
-        if (_cultivatorQuery.TryComp(target, out var targetCultivator))
+        if (_cultivatorQuery.TryComp(targetUid, out var targetCultivator))
         {
             gained = MathF.Min(qiDrain, targetCultivator.Qi);
-            _sharedCultivationSystem.TrySpendQi((target, targetCultivator), gained);
+            _sharedCultivationSystem.TrySpendQi((targetUid, targetCultivator), gained);
         }
         else
         {
-            _staminaSystem.TakeStaminaDamage(target, mortalStaminaDamage, source: user);
+            _staminaSystem.TakeStaminaDamage(targetUid, mortalStaminaDamage, source: userUid);
             gained = mortalQiGain;
         }
 
-        _sharedCultivationSystem.AddQi(user, gained);
+        _sharedCultivationSystem.AddQi(userUid, gained);
         return gained;
     }
 
@@ -228,10 +248,10 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
-        var target = args.Target;
+        var targetUid = args.Target;
         var currentTime = _gameTiming.CurTime;
 
-        var comboComponent = EnsureComp<DragonPalmComboComponent>(target);
+        var comboComponent = EnsureComp<DragonPalmComboComponent>(targetUid);
         comboComponent.Stacks = comboComponent.Striker == entity.Owner && currentTime < comboComponent.Expires
             ? Math.Min(comboComponent.Stacks + 1, args.MaxStacks)
             : 1;
@@ -239,28 +259,28 @@ public sealed partial class MartialArtsSystem : EntitySystem
         comboComponent.Expires = currentTime + args.ComboWindow;
 
         var stacks = comboComponent.Stacks;
-        var damage = CultivationSystem.Damage("Blunt", args.BluntDamage + args.DamagePerStack * (stacks - 1));
-        _damageableSystem.TryChangeDamage(target, damage, origin: entity);
+        var damage = CultivationSystem.Damage("Blunt", args.BluntDamage + args.DamagePerStack * (float)(stacks - 1));
+        _damageableSystem.TryChangeDamage(targetUid, damage, origin: entity);
 
-        var direction = _transformSystem.GetMapCoordinates(target).Position - _transformSystem.GetMapCoordinates(entity).Position;
+        var direction = _transformSystem.GetMapCoordinates(targetUid).Position - _transformSystem.GetMapCoordinates(entity).Position;
         if (direction.LengthSquared() > 0.0001f)
         {
-            var distance = args.ThrowDistance + 0.5f * (stacks - 1);
-            _throwingSystem.TryThrow(target, Vector2.Normalize(direction) * distance, baseThrowSpeed: 8f, user: entity, recoil: false);
+            var distance = args.ThrowDistance + 0.5f * (float)(stacks - 1);
+            _throwingSystem.TryThrow(targetUid, Vector2.Normalize(direction) * distance, baseThrowSpeed: 8f, user: entity, recoil: false);
         }
 
         if (stacks >= args.MaxStacks)
         {
             // The last palm, "the haughty dragon repents": it floors them and ends the chain.
-            _stunSystem.TryKnockdown(target, TimeSpan.FromSeconds(2));
-            RemCompDeferred(target, comboComponent);
+            _stunSystem.TryKnockdown(targetUid, TimeSpan.FromSeconds(2));
+            RemCompDeferred(targetUid, comboComponent);
             _audioSystem.PlayPvs(DragonRoarSound, entity);
-            _popupSystem.PopupEntity(Loc.GetString("martial-art-dragon-palm-final", ("user", entity.Owner), ("target", target)), target, PopupType.LargeCaution);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-dragon-palm-final", ("user", entity.Owner), ("target", targetUid)), targetUid, type: PopupType.LargeCaution);
             return;
         }
 
-        _audioSystem.PlayPvs(PalmSound, target);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-dragon-palm", ("user", entity.Owner), ("target", target), ("stacks", stacks)), target, PopupType.MediumCaution);
+        _audioSystem.PlayPvs(PalmSound, targetUid);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-dragon-palm", ("user", entity.Owner), ("target", targetUid), ("stacks", stacks)), targetUid, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -276,7 +296,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
             direction = new Vector2(0f, 1f);
 
         var beamUid = Spawn(args.Projectile, fromMap);
-        _gunSystem.ShootProjectile(beamUid, direction, _physicsSystem.GetMapLinearVelocity(entity), entity, entity, args.Speed);
+        _gunSystem.ShootProjectile(beamUid, direction, _physicsSystem.GetMapLinearVelocity(entity), entity, user: entity, speed: args.Speed);
         _audioSystem.PlayPvs(FingerSwordSound, entity);
     }
 
@@ -291,7 +311,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
 
         _audioSystem.PlayPvs(DrainSound, entity);
         _popupSystem.PopupEntity(Loc.GetString("martial-art-northern-darkness", ("user", entity.Owner), ("target", args.Target), ("qi", (int)gained)),
-            args.Target, PopupType.MediumCaution);
+            args.Target, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -307,11 +327,11 @@ public sealed partial class MartialArtsSystem : EntitySystem
 
         _audioSystem.PlayPvs(DrainSound, entity);
         _popupSystem.PopupEntity(Loc.GetString("martial-art-star-absorbing", ("user", entity.Owner), ("target", args.Target), ("qi", (int)gained)),
-            args.Target, PopupType.LargeCaution);
+            args.Target, type: PopupType.LargeCaution);
 
         // Stolen qi is never truly yours. Sometimes it fights back.
         if (_robustRandom.Prob(args.ClashChance) && _sharedCultivationSystem.AddInternalInjury(entity.Owner))
-            _popupSystem.PopupEntity(Loc.GetString("martial-art-star-absorbing-clash"), entity, entity, PopupType.MediumCaution);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-star-absorbing-clash"), entity, entity, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -321,12 +341,10 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
-        var shiftComponent = EnsureComp<GreatShiftComponent>(entity);
-        shiftComponent.EndTime = _gameTiming.CurTime + args.Duration;
-        shiftComponent.Charges = args.Charges;
+        StartGreatShift(entity, args.Duration, args.Charges);
 
         _audioSystem.PlayPvs(ShiftSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-great-shift", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-great-shift", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -348,7 +366,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
             RemCompDeferred(entity, entity.Comp);
 
         _audioSystem.PlayPvs(ShiftSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-great-shift-turn", ("user", entity.Owner)), entity, PopupType.Small);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-great-shift-turn", ("user", entity.Owner)), entity, type: PopupType.Small);
     }
 
     #endregion
@@ -364,7 +382,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
         args.Handled = true;
         _cultivationStanceSystem.ApplyGoldenBell(entity, args.Duration, args.DamageMultiplier);
         _audioSystem.PlayPvs(BellSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-golden-bell", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-golden-bell", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -375,7 +393,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
 
         args.Handled = true;
         _cultivationStanceSystem.ApplyGracefulSteps(entity, args.Duration, args.SpeedMultiplier);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-graceful-steps", ("user", entity.Owner)), entity, PopupType.Small);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-graceful-steps", ("user", entity.Owner)), entity, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -394,7 +412,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
 
         _throwingSystem.TryThrow(entity, offset, baseThrowSpeed: 12f, recoil: false, doSpin: false);
         _audioSystem.PlayPvs(LeapSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-ladder-cloud", ("user", entity.Owner)), entity, PopupType.Small);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-ladder-cloud", ("user", entity.Owner)), entity, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -404,17 +422,16 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
-        var counterComponent = EnsureComp<DuguCounterComponent>(entity);
-        counterComponent.EndTime = _gameTiming.CurTime + args.Duration;
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-dugu-ready", ("user", entity.Owner)), entity, PopupType.Small);
+        StartDuguCounter(entity, args.Duration);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-dugu-ready", ("user", entity.Owner)), entity, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
     private void OnDuguDamageModify(Entity<DuguCounterComponent> entity, ref DamageModifyEvent args)
     {
         if (_retaliating || entity.Comp.LifeStage > ComponentLifeStage.Running
-            || args.Origin is not { } attacker || attacker == entity.Owner
-            || !_mobStateQuery.HasComp(attacker) || !InRange(entity, attacker, entity.Comp.Range)
+            || args.Origin is not { } attackerUid || attackerUid == entity.Owner
+            || !_mobStateQuery.HasComp(attackerUid) || !InRange(entity, attackerUid, entity.Comp.Range)
             || args.Damage.GetTotal() <= 0)
             return;
 
@@ -422,11 +439,11 @@ public sealed partial class MartialArtsSystem : EntitySystem
         args.Damage *= 0f;
         RemCompDeferred(entity, entity.Comp);
 
-        Retaliate(attacker, CultivationSystem.Damage("Slash", entity.Comp.CounterDamage), entity);
-        _stunSystem.TryKnockdown(attacker, entity.Comp.Knockdown);
+        Retaliate(attackerUid, CultivationSystem.Damage("Slash", entity.Comp.CounterDamage), entity);
+        _stunSystem.TryKnockdown(attackerUid, entity.Comp.Knockdown);
 
         _audioSystem.PlayPvs(CounterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-dugu-counter", ("user", entity.Owner), ("target", attacker)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-dugu-counter", ("user", entity.Owner), ("target", attackerUid)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -436,14 +453,14 @@ public sealed partial class MartialArtsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnHedgehogDamageModify(Entity<SoftHedgehogArmorComponent> entity, ref InventoryRelayedEvent<DamageModifyEvent> args)
     {
-        var wearer = args.Owner;
-        if (_retaliating || args.Args.Origin is not { } attacker || attacker == wearer
-            || !_mobStateQuery.HasComp(attacker) || !InRange(wearer, attacker, entity.Comp.Range)
+        var wearerUid = args.Owner;
+        if (_retaliating || args.Args.Origin is not { } attackerUid || attackerUid == wearerUid
+            || !_mobStateQuery.HasComp(attackerUid) || !InRange(wearerUid, attackerUid, entity.Comp.Range)
             || args.Args.Damage.GetTotal() <= 0)
             return;
 
-        Retaliate(attacker, CultivationSystem.Damage("Piercing", entity.Comp.ThornDamage), wearer);
-        _popupSystem.PopupEntity(Loc.GetString("martial-art-hedgehog-thorns", ("target", attacker)), attacker, attacker, PopupType.SmallCaution);
+        Retaliate(attackerUid, CultivationSystem.Damage("Piercing", entity.Comp.ThornDamage), wearerUid);
+        _popupSystem.PopupEntity(Loc.GetString("martial-art-hedgehog-thorns", ("target", attackerUid)), attackerUid, attackerUid, type: PopupType.SmallCaution);
     }
 
     /// <summary>
@@ -466,31 +483,31 @@ public sealed partial class MartialArtsSystem : EntitySystem
     /// <summary>
     ///     The set wakes only when every piece is worn in its own slot.
     /// </summary>
-    public void UpdateGreatSage(EntityUid wearer)
+    public void UpdateGreatSage(EntityUid wearerUid)
     {
         var complete = true;
         foreach (var slot in RegaliaSlots)
         {
-            if (!_inventorySystem.TryGetSlotEntity(wearer, slot, out var pieceUid) || !HasComp<GreatSageRegaliaComponent>(pieceUid))
+            if (!_inventorySystem.TryGetSlotEntity(wearerUid, slot, out var pieceUid) || !HasComp<GreatSageRegaliaComponent>(pieceUid))
             {
                 complete = false;
                 break;
             }
         }
 
-        if (complete == HasComp<GreatSageComponent>(wearer))
+        if (complete == HasComp<GreatSageComponent>(wearerUid))
             return;
 
         if (complete)
         {
-            AddComp<GreatSageComponent>(wearer);
-            _audioSystem.PlayPvs(BellSound, wearer);
-            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-awakens", ("user", wearer)), wearer, PopupType.Large);
+            AddComp<GreatSageComponent>(wearerUid);
+            _audioSystem.PlayPvs(BellSound, wearerUid);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-awakens", ("user", wearerUid)), wearerUid, type: PopupType.Large);
         }
         else
         {
-            RemComp<GreatSageComponent>(wearer);
-            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-sleeps"), wearer, wearer);
+            RemComp<GreatSageComponent>(wearerUid);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-sleeps"), wearerUid, wearerUid);
         }
     }
 

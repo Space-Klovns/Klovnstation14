@@ -1,12 +1,11 @@
-using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
-namespace Content.Shared._KS14.Cultivation.Body;
+namespace Content.Server._KS14.Cultivation.Body;
 
 /// <summary>
 ///     In the air from a body art; what happens when they come down.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, Access(typeof(BodyArtSystem))]
 public sealed partial class BodyLandingComponent : Component
 {
     /// <summary>
@@ -49,7 +48,7 @@ public sealed partial class BodyLandingComponent : Component
 /// <summary>
 ///     Heaven-Shaking Quake in progress: the ground pulses a few more times.
 /// </summary>
-[RegisterComponent, AutoGenerateComponentPause]
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(BodyArtSystem))]
 public sealed partial class BodyQuakeComponent : Component
 {
     [DataField]
@@ -68,7 +67,7 @@ public sealed partial class BodyQuakeComponent : Component
 /// <summary>
 ///     Breath of Renewal in progress: breaths left after this one.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, Access(typeof(BodyArtSystem))]
 public sealed partial class BodyBreathingComponent : Component
 {
     [DataField]

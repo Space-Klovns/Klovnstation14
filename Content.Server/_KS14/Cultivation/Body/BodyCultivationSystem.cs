@@ -115,12 +115,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
     private void Tick(Entity<BodyCultivatorComponent> entity, TimeSpan currentTime)
     {
-        var alive = !_mobStateQuery.TryComp(entity, out var mobStateComponent) || _mobStateSystem.IsAlive(entity, mobStateComponent);
+        var alive = !_mobStateQuery.TryComp(entity, out var mobStateComponent) || _mobStateSystem.IsAlive(entity, component: mobStateComponent);
         if (!alive)
             return;
 
         // Exhaustion drains back: faster at higher stages, with a strong heart or deep lungs, and in Blood Boil.
-        var recovery = 3f + 0.4f * entity.Comp.Stage;
+        var recovery = 3f + 0.4f * (float)entity.Comp.Stage;
         if (SharedBodyCultivationSystem.GetLevel(entity.Comp, BodyGroup.Heart) >= 3)
             recovery += 1f;
         if (SharedBodyCultivationSystem.GetLevel(entity.Comp, BodyGroup.Lungs) >= 6)
@@ -143,7 +143,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (entity.Comp.HungerMultiplier < 1f && _hungerQuery.TryComp(entity, out var hungerComponent))
         {
             var saved = hungerComponent.ActualDecayRate * (1f - entity.Comp.HungerMultiplier) * (float)TickInterval.TotalSeconds;
-            _hungerSystem.ModifyHunger(entity, saved, hungerComponent);
+            _hungerSystem.ModifyHunger(entity, saved, component: hungerComponent);
         }
     }
 
@@ -185,7 +185,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             EntityManager.AddComponents(entity, power.Components, removeExisting: false);
             _popupSystem.PopupEntity(Loc.GetString("body-power-unlocked",
-                ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), entity, entity, PopupType.Medium);
+                ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), entity, entity, type: PopupType.Medium);
         }
     }
 
@@ -224,7 +224,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     /// </summary>
     private void ScaleCooldowns(Entity<BodyCultivatorComponent> entity)
     {
-        var multiplier = MathF.Max(0.5f, 1f - 0.05f * entity.Comp.Stage);
+        var multiplier = MathF.Max(0.5f, 1f - 0.05f * (float)entity.Comp.Stage);
         foreach (var (action, actionUid) in entity.Comp.Techniques)
         {
             if (_bodySystem.GetBaseCooldown(entity.Comp, action) is { } baseCooldown)
@@ -241,7 +241,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         // Taking a beating is training too.
         if (args.DamageIncreased && args.DamageDelta is { } delta && delta.GetTotal() >= 5)
-            _bodySystem.AddTempering(entity.AsNullable(), 5f, "beaten", TimeSpan.FromSeconds(15));
+            _bodySystem.AddTempering(entity.AsNullable(), 5f, trainingSource: "beaten", cooldown: TimeSpan.FromSeconds(15));
     }
 
     /// <summary>
@@ -264,12 +264,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
             if (_mobStateQuery.HasComp(hitUid))
             {
-                _bodySystem.AddTempering(entity.AsNullable(), 6f, "fight", TimeSpan.FromSeconds(15));
+                _bodySystem.AddTempering(entity.AsNullable(), 6f, trainingSource: "fight", cooldown: TimeSpan.FromSeconds(15));
                 ForgedStrike(entity, hitUid);
                 continue;
             }
 
-            _bodySystem.AddTempering(entity.AsNullable(), 4f, "strike", TimeSpan.FromSeconds(15));
+            _bodySystem.AddTempering(entity.AsNullable(), 4f, trainingSource: "strike", cooldown: TimeSpan.FromSeconds(15));
             if (entity.Comp.PunchStructuralDamage <= 0f)
                 continue;
 
@@ -279,26 +279,26 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
     }
 
-    private void ForgedStrike(Entity<BodyCultivatorComponent> entity, EntityUid victim)
+    private void ForgedStrike(Entity<BodyCultivatorComponent> entity, EntityUid victimUid)
     {
         if (entity.Comp.PunchStaminaDamage > 0f)
-            _staminaSystem.TakeStaminaDamage(victim, entity.Comp.PunchStaminaDamage, source: entity);
+            _staminaSystem.TakeStaminaDamage(victimUid, entity.Comp.PunchStaminaDamage, source: entity);
 
         if (entity.Comp.PunchThrowChance > 0f && _robustRandom.Prob(entity.Comp.PunchThrowChance))
         {
-            var direction = _transformSystem.GetMapCoordinates(victim).Position - _transformSystem.GetMapCoordinates(entity).Position;
+            var direction = _transformSystem.GetMapCoordinates(victimUid).Position - _transformSystem.GetMapCoordinates(entity).Position;
             if (direction.LengthSquared() > 0.0001f)
             {
-                _throwingSystem.TryThrow(victim, Vector2.Normalize(direction) * 3f, baseThrowSpeed: 8f, user: entity, recoil: false);
-                _popupSystem.PopupEntity(Loc.GetString("body-punch-hurl", ("user", entity.Owner), ("target", victim)), victim, PopupType.MediumCaution);
+                _throwingSystem.TryThrow(victimUid, Vector2.Normalize(direction) * 3f, baseThrowSpeed: 8f, user: entity, recoil: false);
+                _popupSystem.PopupEntity(Loc.GetString("body-punch-hurl", ("user", entity.Owner), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
                 return;
             }
         }
 
         if (entity.Comp.PunchKnockdownChance > 0f && _robustRandom.Prob(entity.Comp.PunchKnockdownChance))
         {
-            _stunSystem.TryKnockdown(victim, TimeSpan.FromSeconds(1.5));
-            _popupSystem.PopupEntity(Loc.GetString("body-punch-topple", ("user", entity.Owner), ("target", victim)), victim, PopupType.MediumCaution);
+            _stunSystem.TryKnockdown(victimUid, TimeSpan.FromSeconds(1.5));
+            _popupSystem.PopupEntity(Loc.GetString("body-punch-topple", ("user", entity.Owner), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
         }
     }
 
@@ -343,7 +343,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
         {
             _popupSystem.PopupEntity(Loc.GetString("body-forge-start", ("user", entity.Owner),
-                ("part", Loc.GetString($"body-group-{group}"))), entity, PopupType.Small);
+                ("part", Loc.GetString($"body-group-{group}"))), entity, type: PopupType.Small);
         }
     }
 
@@ -363,7 +363,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (gained > 0)
         {
             _popupSystem.PopupEntity(Loc.GetString("body-forge-level", ("part", Loc.GetString($"body-group-{group}")),
-                ("level", SharedBodyCultivationSystem.GetLevel(entity.Comp, group))), entity, entity, PopupType.Medium);
+                ("level", SharedBodyCultivationSystem.GetLevel(entity.Comp, group))), entity, entity, type: PopupType.Medium);
         }
 
         // Carry on into the next weakest part while there's tempering left to pour.
@@ -371,7 +371,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             _bodySystem.SetForgeTarget(entity.Comp, null);
             if (_bodySystem.ReadyForTribulation(entity.Comp))
-                _popupSystem.PopupEntity(Loc.GetString("body-forge-ready-for-tribulation"), entity, entity, PopupType.Medium);
+                _popupSystem.PopupEntity(Loc.GetString("body-forge-ready-for-tribulation"), entity, entity, type: PopupType.Medium);
             return;
         }
 
@@ -427,7 +427,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         // Ten seconds plus two per stage, in cycles of bones breaking and resetting.
         var duration = 10 + 2 * entity.Comp.Stage;
-        var cycles = Math.Max(1, (int)Math.Ceiling(duration / TribulationCycle.TotalSeconds));
+        var cycles = Math.Max(1, (int)Math.Ceiling((double)duration / TribulationCycle.TotalSeconds));
         var readiness = TribulationReadiness(entity);
 
         var doAfterArgs = new DoAfterArgs(EntityManager, entity, TribulationCycle, new BodyTribulationDoAfterEvent(), entity)
@@ -440,7 +440,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return false;
 
         _bodySystem.SetTribulation(entity.Comp, cycles, readiness);
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-start", ("user", entity.Owner), ("readiness", readiness)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-start", ("user", entity.Owner), ("readiness", readiness)), entity, type: PopupType.LargeCaution);
         return true;
     }
 
@@ -458,7 +458,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         // Bones snap and knit back together.
-        _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", 3 + entity.Comp.Stage), ignoreResistances: true, interruptsDoAfters: false);
+        _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", (float)(3 + entity.Comp.Stage)), ignoreResistances: true, interruptsDoAfters: false);
         _staminaSystem.TakeStaminaDamage(entity, 6f);
         _audioSystem.PlayPvs(CrackSound, entity);
 
@@ -471,7 +471,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         var readiness = entity.Comp.TribulationReadiness;
-        var chance = readiness >= 70 ? 1f : Math.Clamp(readiness, 5, 95) / 100f;
+        var chance = readiness >= 70 ? 1f : (float)Math.Clamp(readiness, 5, 95) / 100f;
         if (_robustRandom.Prob(chance))
             SucceedTribulation(entity);
         else
@@ -485,8 +485,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         var stageName = Loc.GetString($"body-stage-{entity.Comp.Stage}");
         _audioSystem.PlayPvs(StageSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-success", ("user", entity.Owner), ("stage", stageName)), entity, PopupType.Large);
-        _popupSystem.PopupEntity(Loc.GetString($"body-stage-{entity.Comp.Stage}-benefits"), entity, entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-success", ("user", entity.Owner), ("stage", stageName)), entity, type: PopupType.Large);
+        _popupSystem.PopupEntity(Loc.GetString($"body-stage-{entity.Comp.Stage}-benefits"), entity, entity, type: PopupType.Medium);
     }
 
     private void FailTribulation(Entity<BodyCultivatorComponent> entity)
@@ -494,7 +494,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _bodySystem.SetTribulation(entity.Comp, 0, 0);
         _bodySystem.AddExhaustion(entity.AsNullable(), 30f);
         _stunSystem.TryKnockdown(entity.Owner, TimeSpan.FromSeconds(3));
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-fail", ("user", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-fail", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -515,7 +515,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         _bodySystem.SetEternalHeartReady(entity.Comp, _gameTiming.CurTime + entity.Comp.EternalHeartCooldown);
         _bodySystem.SetEternalHeartRevive(entity.Comp, _gameTiming.CurTime + EternalHeartDelay);
-        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-refuses"), entity, entity, PopupType.Large);
+        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-refuses"), entity, entity, type: PopupType.Large);
     }
 
     private void EternalHeartRevive(Entity<BodyCultivatorComponent> entity)
@@ -526,13 +526,13 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         // Heal back to just short of critical, then start the heart.
         var total = _damageableSystem.GetTotalDamage(entity.Owner).Float();
-        var target = (entity.Comp.BaseCriticalThreshold ?? 100f) + entity.Comp.HealthBonus - 10f;
-        if (total > target)
-            _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(target - total));
+        var targetDamage = (entity.Comp.BaseCriticalThreshold ?? 100f) + entity.Comp.HealthBonus - 10f;
+        if (total > targetDamage)
+            _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(targetDamage - total));
 
         _mobStateSystem.ChangeMobState(entity, MobState.Alive);
         _audioSystem.PlayPvs(HeartSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-restarts", ("user", entity.Owner)), entity, PopupType.Large);
+        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-restarts", ("user", entity.Owner)), entity, type: PopupType.Large);
     }
 
     #endregion
@@ -540,27 +540,27 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     #region Manuals
 
     [SubscribeLocalEvent]
-    private void OnBodyManualUsed(Entity<BodyManualComponent> manual, ref UseInHandEvent args)
+    private void OnBodyManualUsed(Entity<BodyManualComponent> manualEntity, ref UseInHandEvent args)
     {
         if (args.Handled)
             return;
 
         args.Handled = true;
-        var user = args.User;
+        var userUid = args.User;
 
-        if (_cultivatorQuery.HasComp(user))
+        if (_cultivatorQuery.HasComp(userUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-qi-cultivator"), user, user);
+            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-qi-cultivator"), userUid, userUid);
             return;
         }
 
-        if (_bodyCultivatorQuery.TryComp(user, out var bodyComponent) && (bodyComponent.Committed || !manual.Comp.Commits))
+        if (_bodyCultivatorQuery.TryComp(userUid, out var bodyComponent) && (bodyComponent.Committed || !manualEntity.Comp.Commits))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-known"), user, user);
+            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-known"), userUid, userUid);
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, manual.Comp.ReadTime, new BodyManualDoAfterEvent(), manual, used: manual)
+        var doAfterArgs = new DoAfterArgs(EntityManager, userUid, manualEntity.Comp.ReadTime, new BodyManualDoAfterEvent(), manualEntity, used: manualEntity)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
@@ -569,25 +569,25 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", user), ("manual", manual.Owner)), user, PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
-    private void OnBodyManualRead(Entity<BodyManualComponent> manual, ref BodyManualDoAfterEvent args)
+    private void OnBodyManualRead(Entity<BodyManualComponent> manualEntity, ref BodyManualDoAfterEvent args)
     {
         if (args.Cancelled || args.Handled || _cultivatorQuery.HasComp(args.User))
             return;
 
         args.Handled = true;
         var bodyComponent = EnsureComp<BodyCultivatorComponent>(args.User);
-        if (manual.Comp.Commits)
+        if (manualEntity.Comp.Commits)
         {
             _bodySystem.Commit((args.User, bodyComponent));
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-committed"), args.User, args.User, PopupType.Large);
+            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-committed"), args.User, args.User, type: PopupType.Large);
         }
         else
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-primer"), args.User, args.User, PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-primer"), args.User, args.User, type: PopupType.Medium);
         }
     }
 

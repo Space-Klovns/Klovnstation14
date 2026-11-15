@@ -97,13 +97,13 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     /// <summary>
     ///     Friends, for techniques that help them or spare them: yourself, and anyone something else vouches for.
     /// </summary>
-    public bool IsAlly(EntityUid user, EntityUid other)
+    public bool IsAlly(EntityUid userUid, EntityUid otherUid)
     {
-        if (user == other)
+        if (userUid == otherUid)
             return true;
 
-        var ev = new CultivationAllyCheckEvent(other);
-        RaiseLocalEvent(user, ref ev);
+        var ev = new CultivationAllyCheckEvent(otherUid);
+        RaiseLocalEvent(userUid, ref ev);
         return ev.Ally;
     }
 

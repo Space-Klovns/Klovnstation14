@@ -60,31 +60,31 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
     /// <summary>
     ///     Living mobs in range, not counting the user.
     /// </summary>
-    private List<EntityUid> MobsAround(EntityUid user, float range)
+    private List<EntityUid> MobsAround(EntityUid userUid, float range)
     {
         _mobs.Clear();
-        _entityLookupSystem.GetEntitiesInRange(Transform(user).Coordinates, range, _mobs);
+        _entityLookupSystem.GetEntitiesInRange(Transform(userUid).Coordinates, range, _mobs);
 
         var found = new List<EntityUid>();
-        foreach (var mob in _mobs)
+        foreach (var mobEntity in _mobs)
         {
-            if (mob.Owner != user && !_mobStateSystem.IsDead(mob.Owner, mob.Comp))
-                found.Add(mob.Owner);
+            if (mobEntity.Owner != userUid && !_mobStateSystem.IsDead(mobEntity.Owner, component: mobEntity.Comp))
+                found.Add(mobEntity.Owner);
         }
 
         return found;
     }
 
-    private void FireBlade(EntityUid user, EntProtoId projectile, Vector2 direction, float speed)
+    private void FireBlade(EntityUid userUid, EntProtoId projectile, Vector2 direction, float speed)
     {
-        var fromMap = _transformSystem.GetMapCoordinates(user);
+        var fromMap = _transformSystem.GetMapCoordinates(userUid);
         var bladeUid = Spawn(projectile, fromMap);
-        _gunSystem.ShootProjectile(bladeUid, direction, _physicsSystem.GetMapLinearVelocity(user), user, user, speed);
+        _gunSystem.ShootProjectile(bladeUid, direction, _physicsSystem.GetMapLinearVelocity(userUid), userUid, user: userUid, speed: speed);
     }
 
-    private Vector2 DirectionTo(EntityUid user, EntityCoordinates target)
+    private Vector2 DirectionTo(EntityUid userUid, EntityCoordinates targetUid)
     {
-        var direction = _transformSystem.ToMapCoordinates(target).Position - _transformSystem.GetMapCoordinates(user).Position;
+        var direction = _transformSystem.ToMapCoordinates(targetUid).Position - _transformSystem.GetMapCoordinates(userUid).Position;
         return direction.LengthSquared() > 0.0001f ? direction : new Vector2(0f, 1f);
     }
 
@@ -96,13 +96,13 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
     /// <summary>
     ///     Throw someone away from a point.
     /// </summary>
-    private void ThrowAway(EntityUid victim, EntityUid from, float distance, EntityUid user)
+    private void ThrowAway(EntityUid victimUid, EntityUid from, float distance, EntityUid userUid)
     {
-        var direction = _transformSystem.GetMapCoordinates(victim).Position - _transformSystem.GetMapCoordinates(from).Position;
+        var direction = _transformSystem.GetMapCoordinates(victimUid).Position - _transformSystem.GetMapCoordinates(from).Position;
         if (direction.LengthSquared() < 0.0001f)
             direction = new Vector2(0f, 1f);
 
-        _throwingSystem.TryThrow(victim, Vector2.Normalize(direction) * distance, baseThrowSpeed: 8f, user: user, recoil: false);
+        _throwingSystem.TryThrow(victimUid, Vector2.Normalize(direction) * distance, baseThrowSpeed: 8f, user: userUid, recoil: false);
     }
 
     #endregion
@@ -139,12 +139,12 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         for (var i = 0; i < args.Count; i++)
         {
-            var offset = args.Count == 1 ? 0f : -args.Spread / 2f + args.Spread * i / (args.Count - 1);
+            var offset = args.Count == 1 ? 0f : -args.Spread / 2f + args.Spread * (float)i / (float)(args.Count - 1);
             FireBlade(entity, args.Projectile, Rotate(direction, offset), args.Speed);
         }
 
         _audioSystem.PlayPvs(SwordSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-rain", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-rain", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     #endregion
@@ -164,7 +164,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _flammableSystem.AdjustFireStacks(args.Target, stacks, ignite: true);
 
         _audioSystem.PlayPvs(FireSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-burning-palm", ("user", entity.Owner), ("target", args.Target)), args.Target, PopupType.MediumCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-burning-palm", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -174,14 +174,14 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        foreach (var victim in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, args.Range))
         {
-            if (!_sharedCultivationSystem.IsAlly(entity, victim))
-                _flammableSystem.AdjustFireStacks(victim, args.FireStacks, ignite: true);
+            if (!_sharedCultivationSystem.IsAlly(entity, victimUid))
+                _flammableSystem.AdjustFireStacks(victimUid, args.FireStacks, ignite: true);
         }
 
         _audioSystem.PlayPvs(FireSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sea-of-flames", ("user", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-sea-of-flames", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -199,7 +199,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _cultivationStanceSystem.ApplyWard(entity, args.Duration, args.DamageMultiplier, releaseWave);
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-still-water", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-still-water", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -209,17 +209,17 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         var damage = CultivationSystem.Damage("Blunt", MathF.Min(args.Stored, WardWaveMaxDamage));
-        foreach (var victim in MobsAround(entity, WardWaveRange))
+        foreach (var victimUid in MobsAround(entity, WardWaveRange))
         {
-            if (_sharedCultivationSystem.IsAlly(entity, victim))
+            if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;
 
-            _damageableSystem.TryChangeDamage(victim, damage, origin: entity);
-            ThrowAway(victim, entity, 2f, entity);
+            _damageableSystem.TryChangeDamage(victimUid, damage, origin: entity);
+            ThrowAway(victimUid, entity, 2f, entity);
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-ward-wave", ("user", entity.Owner)), entity, PopupType.MediumCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-ward-wave", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -229,17 +229,17 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        foreach (var victim in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, args.Range))
         {
-            if (_sharedCultivationSystem.IsAlly(entity, victim))
+            if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;
 
-            ThrowAway(victim, entity, args.ThrowDistance, entity);
-            _stunSystem.TryKnockdown(victim, args.Knockdown);
+            ThrowAway(victimUid, entity, args.ThrowDistance, entity);
+            _stunSystem.TryKnockdown(victimUid, args.Knockdown);
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-tidal-surge", ("user", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-tidal-surge", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -263,7 +263,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(HealSound, args.Target);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-spring-mending", ("user", entity.Owner), ("target", args.Target)), args.Target, PopupType.Small);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-spring-mending", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -274,14 +274,14 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         args.Handled = true;
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-args.Heal), origin: entity);
-        foreach (var friend in MobsAround(entity, args.Range))
+        foreach (var friendUid in MobsAround(entity, args.Range))
         {
-            if (_sharedCultivationSystem.IsAlly(entity, friend))
-                _damageableSystem.HealEvenly(friend, FixedPoint2.New(-args.Heal), origin: entity);
+            if (_sharedCultivationSystem.IsAlly(entity, friendUid))
+                _damageableSystem.HealEvenly(friendUid, FixedPoint2.New(-args.Heal), origin: entity);
         }
 
         _audioSystem.PlayPvs(HealSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     #endregion
@@ -302,7 +302,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _cultivationStanceSystem.ApplyRootedStance(entity, args.Duration, damageMultiplier, args.SpeedMultiplier);
 
         _audioSystem.PlayPvs(EarthSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-rooted-stance", ("user", entity.Owner)), entity, PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-rooted-stance", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -313,17 +313,17 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         args.Handled = true;
         var damage = CultivationSystem.Damage("Blunt", args.BluntDamage);
-        foreach (var victim in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, args.Range))
         {
-            if (_sharedCultivationSystem.IsAlly(entity, victim))
+            if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;
 
-            _damageableSystem.TryChangeDamage(victim, damage, origin: entity);
-            _stunSystem.TryKnockdown(victim, args.Knockdown);
+            _damageableSystem.TryChangeDamage(victimUid, damage, origin: entity);
+            _stunSystem.TryKnockdown(victimUid, args.Knockdown);
         }
 
         _audioSystem.PlayPvs(EarthSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-mountain-collapse", ("user", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-mountain-collapse", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion

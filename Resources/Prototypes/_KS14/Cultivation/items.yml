@@ -65,8 +65,8 @@
 - type: entity
   parent: BaseBullet
   id: ProjectileCultivationSwordQi
-  name: sword qi
   categories: [ HideSpawnMenu ]
+  name: sword qi
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi

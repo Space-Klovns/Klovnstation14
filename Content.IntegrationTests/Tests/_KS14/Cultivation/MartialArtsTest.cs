@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.Cultivation.Components;
 using Content.Server._KS14.Cultivation.Systems;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
@@ -74,7 +75,7 @@ public sealed class MartialArtsTest : GameTest
                 Assert.That(artsSystem.TryLearn(cultivatorUid, "KsStarAbsorbing"), Is.EqualTo(MartialArtLearnResult.Learned));
                 Assert.That(SEntMan.HasComponent<DarkArtsComponent>(cultivatorUid), Is.True, "A dark art left no mark.");
                 Assert.That(artsSystem.TryLearn(cultivatorUid, "KsNineYang"), Is.EqualTo(MartialArtLearnResult.NoRoom),
-                    "A second qi art fit at Qi Condensation.");
+                    "A secondUid qi art fit at Qi Condensation.");
             }
 
             cultivationSystem.BreakThrough(SEntity<CultivatorComponent>(cultivatorUid));
@@ -127,14 +128,14 @@ public sealed class MartialArtsTest : GameTest
             var damageableSystem = SEntMan.System<DamageableSystem>();
             var defenderUid = SEntMan.SpawnEntity(Mortal, map.GridCoords);
             var attackerUid = SEntMan.SpawnEntity(Mortal, map.GridCoords);
-            SEntMan.EnsureComponent<DuguCounterComponent>(defenderUid).EndTime = System.TimeSpan.MaxValue;
+            SEntMan.System<MartialArtsSystem>().StartDuguCounter(defenderUid, System.TimeSpan.FromMinutes(1));
 
             damageableSystem.TryChangeDamage(defenderUid, Damage("Blunt", 20), origin: attackerUid);
 
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(damageableSystem.GetTotalDamage(defenderUid), Is.EqualTo(FixedPoint2.Zero), "The countered blow still landed.");
-                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attacker was not cut by the counter.");
+                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attackerUid was not cut by the counter.");
             }
 
             // The counter is spent: the next blow lands.
@@ -166,7 +167,7 @@ public sealed class MartialArtsTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attacker was not pricked.");
+                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attackerUid was not pricked.");
                 Assert.That(damageableSystem.GetTotalDamage(wearerUid), Is.LessThan(FixedPoint2.New(10)),
                     "The armor neither softened the blow nor stopped the thorns bouncing back.");
             }
@@ -220,7 +221,7 @@ public sealed class MartialArtsTest : GameTest
                 var ev = new DragonPalmActionEvent { Performer = userUid, Target = targetUid };
                 SEntMan.EventBus.RaiseLocalEvent(userUid, ev);
                 Assert.That(ev.Handled, Is.True, "The palm did not go off.");
-                Assert.That(SComp<DragonPalmComboComponent>(targetUid).Stacks, Is.EqualTo(i), "The palms did not build on each other.");
+                Assert.That(SComp<DragonPalmComboComponent>(targetUid).Stacks, Is.EqualTo(i), "The palms did not build on each otherUid.");
             }
         });
     }
@@ -234,9 +235,7 @@ public sealed class MartialArtsTest : GameTest
         {
             var userUid = SEntMan.SpawnEntity(Cultivator, map.GridCoords);
             var shooterUid = SEntMan.SpawnEntity(Mortal, map.GridCoords);
-            var shiftComponent = SEntMan.EnsureComponent<GreatShiftComponent>(userUid);
-            shiftComponent.EndTime = System.TimeSpan.MaxValue;
-            shiftComponent.Charges = 1;
+            SEntMan.System<MartialArtsSystem>().StartGreatShift(userUid, System.TimeSpan.FromMinutes(1), charges: 1);
 
             var projectileUid = SEntMan.SpawnEntity("ProjectileCultivationSwordQi", map.GridCoords);
             var projectileComponent = SComp<ProjectileComponent>(projectileUid);

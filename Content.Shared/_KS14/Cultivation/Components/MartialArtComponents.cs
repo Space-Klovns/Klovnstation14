@@ -105,57 +105,6 @@ public sealed partial class GracefulStepsComponent : Component
 }
 
 /// <summary>
-///     Nine Swords of Dugu: waiting for the opening in the next blow.
-/// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentPause]
-public sealed partial class DuguCounterComponent : Component
-{
-    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
-    public TimeSpan EndTime;
-
-    [DataField]
-    public float CounterDamage = 15f;
-
-    [DataField]
-    public TimeSpan Knockdown = TimeSpan.FromSeconds(2);
-
-    /// <summary>
-    ///     Only blows from this close can be read and broken.
-    /// </summary>
-    [DataField]
-    public float Range = 2f;
-}
-
-/// <summary>
-///     Great Shift of Heaven and Earth: incoming projectiles are turned back on whoever loosed them.
-/// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentPause]
-public sealed partial class GreatShiftComponent : Component
-{
-    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
-    public TimeSpan EndTime;
-
-    [DataField]
-    public int Charges = 3;
-}
-
-/// <summary>
-///     Struck by the Eighteen Dragon-Subduing Palms: each further palm from the same hand hits harder.
-/// </summary>
-[RegisterComponent, AutoGenerateComponentPause]
-public sealed partial class DragonPalmComboComponent : Component
-{
-    [DataField]
-    public EntityUid? Striker;
-
-    [DataField]
-    public int Stacks;
-
-    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
-    public TimeSpan Expires;
-}
-
-/// <summary>
 ///     Soft Hedgehog Armor: barbs under the silk wound anyone who strikes the wearer up close.
 /// </summary>
 [RegisterComponent, NetworkedComponent]

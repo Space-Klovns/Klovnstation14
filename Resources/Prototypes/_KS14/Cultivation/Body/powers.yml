@@ -1,4 +1,4 @@
-# Generated from the power table in the KS14 body cultivation port; nine powers for each part of the body.
+# Nine powers for each part of the body the Body Molding Art tempers. How their effects combine: BodyTemperingPowerPrototype.
 
 - type: bodyTemperingPower
   id: KsBodyHeadFearless

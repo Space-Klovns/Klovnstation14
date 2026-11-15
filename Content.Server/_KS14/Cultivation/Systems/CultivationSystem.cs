@@ -91,10 +91,10 @@ public sealed partial class CultivationSystem : EntitySystem
         _entityLookupSystem.GetEntitiesInRange(Transform(uid).Coordinates, MaxQiSourceRange, _qiSources);
 
         var best = 1f;
-        foreach (var source in _qiSources)
+        foreach (var qiSourceEntity in _qiSources)
         {
-            if (_transformSystem.InRange((source.Owner, null), (uid, null), source.Comp.Range))
-                best = MathF.Max(best, source.Comp.Multiplier);
+            if (_transformSystem.InRange((qiSourceEntity.Owner, null), (uid, null), qiSourceEntity.Comp.Range))
+                best = MathF.Max(best, qiSourceEntity.Comp.Multiplier);
         }
 
         return best;
@@ -178,22 +178,22 @@ public sealed partial class CultivationSystem : EntitySystem
     ///     Pay for a technique. Fails with a popup if there isn't enough qi. With internal injuries, paying can twist
     ///         the meridians and hurt you, but the technique still goes off.
     /// </summary>
-    public bool TryUseTechnique(EntityUid user, float qiCost)
+    public bool TryUseTechnique(EntityUid userUid, float qiCost)
     {
-        if (!_cultivatorQuery.TryComp(user, out var cultivatorComponent))
+        if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
             return false;
 
-        if (!_cultivationSystem.TrySpendQi((user, cultivatorComponent), qiCost))
+        if (!_cultivationSystem.TrySpendQi((userUid, cultivatorComponent), qiCost))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-not-enough-qi"), user, user, PopupType.SmallCaution);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-not-enough-qi"), userUid, userUid, type: PopupType.SmallCaution);
             return false;
         }
 
         var backlashChance = cultivatorComponent.BacklashChancePerInjury * cultivatorComponent.InternalInjury;
         if (backlashChance > 0f && _robustRandom.Prob(backlashChance))
         {
-            _damageableSystem.TryChangeDamage(user, Damage("Blunt", 5), ignoreResistances: true, interruptsDoAfters: false);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-backlash"), user, user, PopupType.MediumCaution);
+            _damageableSystem.TryChangeDamage(userUid, Damage("Blunt", 5), ignoreResistances: true, interruptsDoAfters: false);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-backlash"), userUid, userUid, type: PopupType.MediumCaution);
         }
 
         return true;
@@ -227,7 +227,7 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
 
         if (_cultivationSystem.AddInternalInjury(entity.AsNullable()))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-internal-injury"), entity, entity, PopupType.MediumCaution);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-internal-injury"), entity, entity, type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -270,7 +270,7 @@ public sealed partial class CultivationSystem : EntitySystem
         if (!_doAfterSystem.TryStartDoAfter(doAfterArgs))
             return false;
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-meditate-start", ("user", entity.Owner)), entity, PopupType.Small);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-meditate-start", ("user", entity.Owner)), entity, type: PopupType.Small);
         return true;
     }
 
@@ -291,7 +291,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (_cultivationSystem.ReadyToBreakThrough(entity.Comp))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-ready-to-break-through"), entity, entity, PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-ready-to-break-through"), entity, entity, type: PopupType.Medium);
             return;
         }
 
@@ -334,7 +334,7 @@ public sealed partial class CultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), entity, PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), entity, type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -366,10 +366,10 @@ public sealed partial class CultivationSystem : EntitySystem
 
         _audioSystem.PlayPvs(BreakthroughSound, entity);
         _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-success",
-            ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), entity, PopupType.Large);
+            ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), entity, type: PopupType.Large);
 
         if (newRealm == CultivationRealm.FoundationEstablishment)
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-second-law-slot"), entity, entity, PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-secondUid-law-slot"), entity, entity, type: PopupType.Medium);
     }
 
     /// <summary>
@@ -386,7 +386,7 @@ public sealed partial class CultivationSystem : EntitySystem
             _cultivationSystem.AddInternalInjury(entity.AsNullable());
 
         _audioSystem.PlayPvs(DeviationSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-deviation", ("user", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-deviation", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -394,35 +394,35 @@ public sealed partial class CultivationSystem : EntitySystem
     #region Manuals
 
     [SubscribeLocalEvent]
-    private void OnManualUsed(Entity<CultivationManualComponent> manual, ref UseInHandEvent args)
+    private void OnManualUsed(Entity<CultivationManualComponent> manualEntity, ref UseInHandEvent args)
     {
         if (args.Handled)
             return;
 
         args.Handled = true;
-        var user = args.User;
+        var userUid = args.User;
 
-        if (!_cultivatorQuery.TryComp(user, out var cultivatorComponent))
+        if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-gibberish"), user, user);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-gibberish"), userUid, userUid);
             return;
         }
 
-        if (_cultivationSystem.KnowsLaw(cultivatorComponent, manual.Comp.Law))
+        if (_cultivationSystem.KnowsLaw(cultivatorComponent, manualEntity.Comp.Law))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-known"), user, user);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-known"), userUid, userUid);
             return;
         }
 
         if (cultivatorComponent.Laws.Count >= SharedCultivationSystem.LawSlots(cultivatorComponent.Realm))
         {
             _popupSystem.PopupEntity(Loc.GetString(cultivatorComponent.Realm < CultivationRealm.FoundationEstablishment
-                ? "cultivation-manual-no-room-yet"
-                : "cultivation-manual-no-room"), user, user);
+                ? "cultivation-manualEntity-no-room-yet"
+                : "cultivation-manualEntity-no-room"), userUid, userUid);
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, cultivatorComponent.ReadManualDuration, new CultivationReadManualDoAfterEvent(), manual, used: manual)
+        var doAfterArgs = new DoAfterArgs(EntityManager, userUid, cultivatorComponent.ReadManualDuration, new CultivationReadManualDoAfterEvent(), manualEntity, used: manualEntity)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
@@ -431,36 +431,36 @@ public sealed partial class CultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", user), ("manual", manual.Owner)), user, PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
-    private void OnManualRead(Entity<CultivationManualComponent> manual, ref CultivationReadManualDoAfterEvent args)
+    private void OnManualRead(Entity<CultivationManualComponent> manualEntity, ref CultivationReadManualDoAfterEvent args)
     {
         if (args.Cancelled || args.Handled)
             return;
 
         args.Handled = true;
-        TryLearnFromManual(args.User, manual);
+        TryLearnFromManual(args.User, manualEntity);
     }
 
-    public bool TryLearnFromManual(EntityUid user, Entity<CultivationManualComponent> manual)
+    public bool TryLearnFromManual(EntityUid userUid, Entity<CultivationManualComponent> manualEntity)
     {
-        if (!_cultivatorQuery.TryComp(user, out var cultivatorComponent)
-            || !ProtoMan.TryIndex(manual.Comp.Law, out var law))
+        if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent)
+            || !ProtoMan.TryIndex(manualEntity.Comp.Law, out var law))
             return false;
 
         var isRoot = cultivatorComponent.Laws.Count == 0;
-        if (!_cultivationSystem.TryLearnLaw((user, cultivatorComponent), manual.Comp.Law))
+        if (!_cultivationSystem.TryLearnLaw((userUid, cultivatorComponent), manualEntity.Comp.Law))
             return false;
 
-        GrantTechniques((user, cultivatorComponent));
-        _audioSystem.PlayPvs(LearnSound, user);
+        GrantTechniques((userUid, cultivatorComponent));
+        _audioSystem.PlayPvs(LearnSound, userUid);
         _popupSystem.PopupEntity(Loc.GetString(isRoot ? "cultivation-learned-root" : "cultivation-learned-complementary",
-            ("law", Loc.GetString(law.Name))), user, user, PopupType.Medium);
+            ("law", Loc.GetString(law.Name))), userUid, userUid, type: PopupType.Medium);
 
         if (isRoot)
-            _popupSystem.PopupEntity(Loc.GetString(law.RootDescription), user, user, PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString(law.RootDescription), userUid, userUid, type: PopupType.Small);
 
         return true;
     }

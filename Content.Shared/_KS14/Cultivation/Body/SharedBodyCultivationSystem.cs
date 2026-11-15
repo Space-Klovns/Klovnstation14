@@ -154,18 +154,18 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     ///     Earn tempering from a kind of training, if that kind isn't on cooldown.
     /// </summary>
     /// <returns>Tempering actually gained.</returns>
-    public float AddTempering(Entity<BodyCultivatorComponent?> entity, float amount, string? source = null, TimeSpan? cooldown = null)
+    public float AddTempering(Entity<BodyCultivatorComponent?> entity, float amount, string? trainingSource = null, TimeSpan? cooldown = null)
     {
         if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
             return 0f;
 
         var currentTime = _gameTiming.CurTime;
-        if (source != null)
+        if (trainingSource != null)
         {
-            if (entity.Comp.TrainingCooldowns.TryGetValue(source, out var ready) && currentTime < ready)
+            if (entity.Comp.TrainingCooldowns.TryGetValue(trainingSource, out var ready) && currentTime < ready)
                 return 0f;
 
-            entity.Comp.TrainingCooldowns[source] = currentTime + (cooldown ?? TimeSpan.FromSeconds(30));
+            entity.Comp.TrainingCooldowns[trainingSource] = currentTime + (cooldown ?? TimeSpan.FromSeconds(30));
         }
 
         var gained = Math.Clamp(amount, 0f, entity.Comp.TemperingCap - entity.Comp.Tempering);
@@ -197,11 +197,11 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         for (var next = level + 2; next <= cap; next++)
             room += PartCost(next);
 
-        var poured = (int)MathF.Min(MathF.Min(maxAmount, entity.Comp.Tempering), room);
+        var poured = (int)MathF.Min(MathF.Min(maxAmount, entity.Comp.Tempering), (float)room);
         if (poured <= 0)
             return 0;
 
-        entity.Comp.Tempering -= poured;
+        entity.Comp.Tempering -= (float)poured;
         progress += poured;
 
         var gained = 0;
@@ -290,7 +290,7 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.HungerMultiplier = 1f;
         bodyCultivator.RegenPerSecond = 0f;
         bodyCultivator.HealthBonus = StageHealthBonus(bodyCultivator.Stage);
-        bodyCultivator.PunchDamage = GetLevel(bodyCultivator, BodyGroup.Arms);
+        bodyCultivator.PunchDamage = (float)GetLevel(bodyCultivator, BodyGroup.Arms);
         bodyCultivator.PunchStaminaDamage = 0f;
         bodyCultivator.PunchKnockdownChance = 0f;
         bodyCultivator.PunchThrowChance = 0f;
@@ -299,7 +299,7 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.EternalHeart = false;
 
         // Each stage also makes you a little faster.
-        bodyCultivator.SpeedMultiplier = 1f + 0.01f * bodyCultivator.Stage;
+        bodyCultivator.SpeedMultiplier = 1f + 0.01f * (float)bodyCultivator.Stage;
 
         // A Primordial Chaos Body can't be shocked.
         if (bodyCultivator.Stage >= BodyCultivatorComponent.MaxStage)

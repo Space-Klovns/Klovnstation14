@@ -102,7 +102,7 @@ public sealed class CultivationTest : GameTest
             foreach (var uid in new[] { healthyUid, injuredUid })
                 cultivationSystem.TrySpendQi(uid, SEntMan.GetComponent<CultivatorComponent>(uid).Qi);
 
-            cultivationSystem.AddInternalInjury(injuredUid, 2);
+            cultivationSystem.AddInternalInjury(injuredUid, stacks: 2);
         });
 
         await RunSeconds(10);
@@ -136,11 +136,11 @@ public sealed class CultivationTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, metal), Is.True, "Could not learn a first law.");
-                Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Metal), Is.True, "The first law learned is not the Root Law.");
-                Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, FlyingSword), Is.True, "The Root Law's first technique was not granted.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, metal), Is.True, "Could not learn a firstUid law.");
+                Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Metal), Is.True, "The firstUid law learned is not the Root Law.");
+                Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, FlyingSword), Is.True, "The Root Law's firstUid technique was not granted.");
                 Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, SwordRain), Is.False, "A Golden Core technique was granted at Qi Condensation.");
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.False, "A second law fit before Foundation Establishment.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.False, "A secondUid law fit before Foundation Establishment.");
             }
 
             cultivationSystem.BreakThrough(cultivatorEntity);
@@ -148,7 +148,7 @@ public sealed class CultivationTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.True, "Foundation Establishment did not open a second law slot.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.True, "Foundation Establishment did not open a secondUid law slot.");
                 Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, StillWater), Is.True, "The Complementary Law's technique was not granted.");
                 Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Water), Is.False, "The Complementary Law replaced the Root Law.");
                 Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, fire), Is.False, "A third law fit.");
@@ -205,7 +205,7 @@ public sealed class CultivationTest : GameTest
         await Server.WaitPost(() =>
         {
             cultivatorUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
-            SEntMan.System<SharedCultivationSystem>().AddInternalInjury(cultivatorUid, 1);
+            SEntMan.System<SharedCultivationSystem>().AddInternalInjury(cultivatorUid, stacks: 1);
             Assert.That(SEntMan.System<CultivationSystem>().StartMeditation(SEntity<CultivatorComponent>(cultivatorUid)), Is.True,
                 "Meditation did not start.");
         });
@@ -288,7 +288,7 @@ public sealed class CultivationTest : GameTest
                 Assert.That(damageableSystem.GetTotalDamage(rootedUid).Float(), Is.EqualTo(control * 0.75f).Within(0.01f),
                     "Rooted Mountain Stance did not soften the blow.");
                 Assert.That(SEntMan.GetComponent<MovementSpeedModifierComponent>(rootedUid).CurrentWalkSpeed,
-                    Is.EqualTo(baseWalkSpeed * 0.6f).Within(0.01f), "Rooted Mountain Stance did not slow its user.");
+                    Is.EqualTo(baseWalkSpeed * 0.6f).Within(0.01f), "Rooted Mountain Stance did not slow its userUid.");
             }
         });
 
@@ -327,7 +327,7 @@ public sealed class CultivationTest : GameTest
                 Assert.That(cultivatorComponent.MeditateActionEntity, Is.Not.Null, "No meditate action was granted.");
                 Assert.That(cultivatorComponent.BreakthroughActionEntity, Is.Not.Null, "No breakthrough action was granted.");
                 Assert.That(held.Count(SEntMan.HasComponent<CultivationManualComponent>), Is.EqualTo(1),
-                    "Exactly one starting manual was not put in hand.");
+                    "Exactly one starting manualEntity was not put in hand.");
             }
         });
     }
