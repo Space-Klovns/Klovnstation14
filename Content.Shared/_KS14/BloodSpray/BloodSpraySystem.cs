@@ -315,10 +315,6 @@ public sealed partial class BloodSpraySystem : EntitySystem
     }
 
     /// <summary>
-    ///     The gib burst for a lost limb: thrown after the limb, along <paramref name="worldDirection"/>, faster the
-    ///         harder it was thrown (<paramref name="throwSpeed"/>, metres per second), within limits.
-    /// </summary>
-    /// <summary>
     ///     A small puff of blood mist out of the exit wound of a hit <paramref name="entity"/>'s armour mostly
     ///         stopped, along <paramref name="worldDirection"/>: what little got through.
     /// </summary>
@@ -333,6 +329,10 @@ public sealed partial class BloodSpraySystem : EntitySystem
         SpawnBloodParticles(SplatterMistParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed: 1f, amount: MinSprayAmount);
     }
 
+    /// <summary>
+    ///     The gib burst for a lost limb: thrown after the limb, along <paramref name="worldDirection"/>, faster the
+    ///         harder it was thrown (<paramref name="throwSpeed"/>, metres per second), within limits.
+    /// </summary>
     public void SpawnDismemberParticles(Entity<BloodstreamComponent?> entity, Vector2 worldDirection, float throwSpeed)
     {
         if (worldDirection.LengthSquared() <= float.Epsilon)
