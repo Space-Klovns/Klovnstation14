@@ -20,6 +20,7 @@ namespace Content.Shared.Preferences
             Slot = buffer.ReadInt32();
             var length = buffer.ReadVariableInt32();
             buffer.AssertAtLeastSize(length);
+            Content.Shared._KS14.Network.KsNetMessageLimits.AssertAtMost(length, Content.Shared._KS14.Network.KsNetMessageLimits.MaxCharacterProfileBytes); // KS14: hard cap, stricter than upstream
             using var stream = new MemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             Profile = serializer.Deserialize<HumanoidCharacterProfile>(stream);

@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.Administration
 {
@@ -13,9 +14,11 @@ namespace Content.Shared.Administration
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
+            KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
             var count = buffer.ReadVariableInt32();
 
             buffer.AssertAtLeastSize(count * NetMessageExt.MinSizeOfString);
+            KsNetMessageLimits.AssertAtMost(count, KsNetMessageLimits.MaxAdminCommands); // KS14: hard cap, stricter than upstream
             AvailableCommands = new string[count];
 
             for (var i = 0; i < count; i++)

@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.Players;
 
@@ -18,8 +19,10 @@ public sealed class MsgRoleBans : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
+        KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
         var jobCount = buffer.ReadVariableInt32();
         buffer.AssertAtLeastSize(jobCount * NetMessageExt.MinSizeOfString);
+        KsNetMessageLimits.AssertAtMost(jobCount, KsNetMessageLimits.MaxPrototypeListEntries); // KS14: hard cap, stricter than upstream
         JobBans.EnsureCapacity(jobCount);
 
         for (var i = 0; i < jobCount; i++)
@@ -29,6 +32,7 @@ public sealed class MsgRoleBans : NetMessage
 
         var antagCount = buffer.ReadVariableInt32();
         buffer.AssertAtLeastSize(antagCount * NetMessageExt.MinSizeOfString);
+        KsNetMessageLimits.AssertAtMost(antagCount, KsNetMessageLimits.MaxPrototypeListEntries); // KS14: hard cap, stricter than upstream
         AntagBans.EnsureCapacity(antagCount);
 
         for (var i = 0; i < antagCount; i++)

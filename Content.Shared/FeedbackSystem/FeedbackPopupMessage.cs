@@ -2,6 +2,7 @@
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.FeedbackSystem;
 
@@ -21,11 +22,13 @@ public sealed class FeedbackPopupMessage : NetMessage
     public List<ProtoId<FeedbackPopupPrototype>>? FeedbackPrototypes;
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
+        KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
         Remove = buffer.ReadBoolean();
         buffer.ReadPadBits();
 
         var count = buffer.ReadVariableInt32();
         buffer.AssertAtLeastSize(count * NetMessageExt.MinSizeOfString);
+        KsNetMessageLimits.AssertAtMost(count, KsNetMessageLimits.MaxPrototypeListEntries); // KS14: hard cap, stricter than upstream
         FeedbackPrototypes = [];
 
         for (var i = 0; i < count; i++)

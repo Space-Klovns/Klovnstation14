@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.Chat
 {
@@ -74,8 +75,10 @@ namespace Content.Shared.Chat
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
+            KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
             var length = buffer.ReadVariableInt32();
             buffer.AssertAtLeastSize(length);
+            KsNetMessageLimits.AssertAtMost(length, KsNetMessageLimits.MaxChatMessageBytes); // KS14: hard cap, stricter than upstream
             using var stream = new MemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             serializer.DeserializeDirect(stream, out Message);
