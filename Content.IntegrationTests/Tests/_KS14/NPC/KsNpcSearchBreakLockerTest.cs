@@ -5,6 +5,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Perception;
 using Content.Shared._KS14.NPC;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server._KS14.NPC.Suppression;
 using Content.Server.NPC.HTN;
 using Content.Shared.Storage.EntitySystems;
@@ -119,6 +120,138 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
             Assert.That(broken, "it should have shot the locker open, and the hostile out of it");
         else
             Assert.That(broken, Is.False, "without BreakLockers it should only cover the locker");
+    }
+
+    /// <summary>
+    ///     End to end: a squad of live Redacted that believe the hostile is in a locker none of them can open, and that do not
+    ///         shoot lockers open, gets it open with a breaching charge from their loadout. One plants it, everyone gets clear,
+    ///         and it is set off. The locker goes, and the hostile with it is out. With <c>searchChargeLockers</c> off, it
+    ///         stands.
+    /// </summary>
+    [Test]
+    public async Task TestASquadBlowsOpenALockerItCannotOpen([Values] bool charges)
+    {
+        if (!Server.ProtoMan.HasIndex<EntityPrototype>(Spawner))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var entManager = Server.EntMan;
+        var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
+        var timing = Server.ResolveDependency<IGameTiming>();
+        var containerSystem = entManager.System<SharedContainerSystem>();
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, hostileUid = default, lockerUid = default;
+        var members = new System.Collections.Generic.List<EntityUid>();
+        var chargeProto = new EntProtoId("KsWireEndBreachingCharge");
+
+        await Server.WaitPost(() =>
+        {
+            tacticsSystem.UpdatesPaused = false; // a test before this one on this server may have paused them
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-10, -5), new Vector2i(10, 5)).Owner;
+            GiveGravity(entManager, gridUid);
+            SpawnAt(entManager, Spawner, gridUid, -6, 1);
+            SpawnAt(entManager, Spawner, gridUid, -6, -1);
+            lockerUid = SpawnAt(entManager, "LockerSecurity", gridUid, 4, 0);
+            hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 7, 0);
+
+            // In it, and locked, before they are about: never seen, never fought, and so never known to be anywhere.
+            var storageSystem = entManager.System<SharedEntityStorageSystem>();
+            if (storageSystem.IsOpen(lockerUid))
+                storageSystem.CloseStorage(lockerUid);
+            Assert.That(storageSystem.Insert(hostileUid, lockerUid), "the hostile should be in the locker");
+        });
+
+        await Pair.RunTicksSync(150); // the spawners make the operatives; the navmesh builds; the squad forms
+
+        await Server.WaitPost(() =>
+        {
+            var enumerator = entManager.EntityQueryEnumerator<NpcSquadMemberComponent, TransformComponent>();
+            while (enumerator.MoveNext(out var uid, out var memberComponent, out var transformComponent))
+            {
+                if (transformComponent.MapID != map.MapId || uid == hostileUid)
+                    continue;
+
+                members.Add(uid);
+                entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(uid);
+                entManager.RemoveComponent<Content.Server._KS14.NPC.Grenades.NpcGrenadeThrowerComponent>(uid);
+
+                // Only the charge may open it: nobody shoots it, alone or as a squad.
+                entManager.GetComponent<HTNComponent>(uid).Blackboard.Remove<bool>("BreakLockers");
+                var settings = memberComponent.Tactics;
+                settings.SearchBreakLockers = false;
+                settings.SearchChargeLockers = charges;
+                settings.PlanChargeMinPressure = 0f; // a test map has no air in it
+            }
+
+            Assert.That(members, Has.Count.EqualTo(2), "the test needs two operatives");
+            Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(members[0], out _), "the two should form a squad");
+
+            Assert.That(entManager.System<SharedEntityStorageSystem>().CanOpen(members[0], lockerUid, silent: true), Is.False,
+                "the test needs the locker locked to them");
+
+            // Seen vanishing beside it, by both.
+            var now = timing.CurTime;
+            foreach (var memberUid in members)
+            {
+                entManager.System<NpcPerceptionSystem>().SetContact(memberUid, hostileUid, new NpcContact(NpcContactState.Suspected,
+                    now - System.TimeSpan.FromSeconds(3), now - System.TimeSpan.FromSeconds(1), now - System.TimeSpan.FromSeconds(1),
+                    entManager.GetComponent<TransformComponent>(lockerUid).Coordinates, default, lockerUid, Reacted: true, ReactAt: now));
+            }
+        });
+
+        var broken = false;
+        var sawBlast = false;
+        var log = new System.Text.StringBuilder();
+
+        // 50s: the watch, the walk up, sticking it on, getting clear and setting it off.
+        for (var tick = 0; tick < 1500 && !broken; tick += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Server.WaitPost(() =>
+            {
+                broken = entManager.Deleted(lockerUid) ||
+                    !(containerSystem.TryGetContainingContainer(hostileUid, out var container) && container.Owner == lockerUid);
+
+                var hunt = entManager.System<NpcSquadSystem>().TryGetSquad(members[0], out var squad) ? tacticsSystem.GetHunt(squad.Value.Owner) : null;
+                sawBlast |= hunt?.BlastLockerUid != null;
+
+                log.Append($"+{tick}: hunt={hunt?.Phase} locker={(entManager.Deleted(lockerUid) ? "gone" : entManager.System<SharedEntityStorageSystem>().IsOpen(lockerUid) ? "open" : "shut")} hostileIn={containerSystem.TryGetContainingContainer(hostileUid, out var hostileContainer) && hostileContainer.Owner == lockerUid}");
+                foreach (var memberUid in members)
+                {
+                    var order = tacticsSystem.TryGetOrder(memberUid, out var memberOrder) ? memberOrder.Kind.ToString() : "-";
+                    log.Append($" [{order} {entManager.GetComponent<TransformComponent>(memberUid).LocalPosition}]");
+                }
+
+                log.AppendLine();
+            });
+        }
+
+        var chargesLeft = 0;
+        await Server.WaitPost(() =>
+        {
+            var enumerator = entManager.EntityQueryEnumerator<MetaDataComponent>();
+            while (enumerator.MoveNext(out _, out var metaData))
+            {
+                if (metaData.EntityPrototype?.ID == chargeProto.Id)
+                    chargesLeft++;
+            }
+        });
+
+        if (broken != charges || charges && !sawBlast)
+            TestContext.Out.WriteLine(log.ToString());
+
+        if (!charges)
+        {
+            Assert.That(broken, Is.False, "with the setting off, nothing should open it");
+            return;
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sawBlast, "the squad should have gone for it with a charge");
+            Assert.That(broken, "the charge should have blown the locker open, and the hostile out of it");
+            Assert.That(chargesLeft, Is.EqualTo(members.Count - 1), "one charge should have gone off, the other still carried");
+        });
     }
 
     /// <summary>

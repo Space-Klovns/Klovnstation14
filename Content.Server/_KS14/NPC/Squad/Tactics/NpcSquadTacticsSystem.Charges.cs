@@ -297,7 +297,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     Whether the squad is cut off from <paramref name="coordinates"/>, the other way round from
     ///         <see cref="TryPrepareSealedRoom"/>: walking out from <paramref name="walkerUid"/>, through every door, the floor runs
-    ///         out before it gets there, and every member is on that floor. Otherwise one of them could still go.
+    ///         out before it gets there, or the floor beside it, and every member is on that floor. Otherwise one of them
+    ///         could still go.
     /// </summary>
     private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates)
     {
@@ -311,8 +312,16 @@ public sealed partial class NpcSquadTacticsSystem
         _floodSteps.Clear();
         _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
-        if (_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, coordinates)))
+        // There, or right beside it: a hostile in a locker is on a tile nobody walks onto, the locker's.
+        var targetTile = _mapSystem.TileIndicesFor(grid, coordinates);
+        if (_floodSteps.ContainsKey(targetTile))
             return false;
+
+        foreach (var offset in ChargeSiteOffsets)
+        {
+            if (_floodSteps.ContainsKey(targetTile + offset))
+                return false;
+        }
 
         foreach (var steps in _floodSteps.Values)
         {
