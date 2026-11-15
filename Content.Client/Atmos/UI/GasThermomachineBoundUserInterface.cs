@@ -28,6 +28,9 @@ namespace Content.Client.Atmos.UI
         [ViewVariables]
         private bool _isHeater = true;
 
+        [ViewVariables]
+        private float? _ksShownTarget; // KS14: the target temperature last put in the window
+
         public GasThermomachineBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
         }
@@ -77,7 +80,14 @@ namespace Content.Client.Atmos.UI
             _window.SetTemperatureRange(_minTemp, _maxTemp); // KS14
             _isHeater = system.IsHeater(thermo);
 
-            _window.SetTemperature(thermo.TargetTemperature);
+            // KS14 start: Update() also runs on every status state, sent each atmos tick, and rewriting the box then wiped
+            //     whatever the player was typing. Only show the target when it changed.
+            if (_ksShownTarget != thermo.TargetTemperature)
+            {
+                _ksShownTarget = thermo.TargetTemperature;
+                _window.SetTemperature(thermo.TargetTemperature);
+            }
+            // KS14 end
 
             var receiverSys = EntMan.System<PowerReceiverSystem>();
             SharedApcPowerReceiverComponent? receiver = null;
