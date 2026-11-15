@@ -72,7 +72,8 @@ public sealed class KsTguiWiresWindow : FancyWindow
         _notice.Text = Loc.GetString("ks-tgui-wires-configuration", ("name", state.BoardName));
 
         // tgui's window height, 150 + wires * 30, with room for the statuses. Without it the wire list takes the whole window and the statuses vanish.
-        var height = 150f + (float)state.WiresList.Length * 30f + (float)state.Statuses.Length * 16f + (state.SerialNumber != null ? 16f : 0f);
+        var height = 150f + (float)state.WiresList.Length * 30f + (float)state.Statuses.Length * 16f + (state.SerialNumber != null ? 16f : 0f)
+            + Content.Client._KS14.BaronUI.KsBaronPortedWindowUIController.ExtraHeight(this); // Baron's taller header; 0 under tgui
         if (!MathHelper.CloseTo(SetSize.Y, height))
             SetSize = new Vector2(350f, height);
 

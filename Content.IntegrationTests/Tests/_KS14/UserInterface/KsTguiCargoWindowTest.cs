@@ -25,7 +25,7 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The cargo console BUI opens the tgui window with the theme on and the stock one with it off, and every action the
+///     The cargo console BUI opens the tgui window under both themes since #480, and every action the
 ///         tgui window offers raises its event.
 /// </summary>
 [TestOf(typeof(KsTguiCargoConsoleWindow))]
@@ -79,14 +79,8 @@ public sealed class KsTguiCargoWindowTest : GameTest
         {
             var tguiWindow = (KsTguiCargoConsoleWindow)typeof(CargoOrderConsoleBoundUserInterface).GetField("_ksTguiMenu", Any)!.GetValue(bui);
             var stockWindow = (CargoConsoleMenu)typeof(CargoOrderConsoleBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
-            Assert.That(tguiWindow != null, Is.EqualTo(tgui));
-            Assert.That(stockWindow != null, Is.EqualTo(!tgui));
-
-            if (!tgui)
-            {
-                bui.Dispose();
-                return;
-            }
+            Assert.That(tguiWindow != null, Is.True);
+            Assert.That(stockWindow != null, Is.False);
 
             var approvedOrders = new List<int>();
             var canceledOrders = new List<int>();

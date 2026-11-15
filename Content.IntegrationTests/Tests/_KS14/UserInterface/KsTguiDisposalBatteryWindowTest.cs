@@ -21,8 +21,7 @@ using Robust.Shared.Map;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The disposal unit, mailing unit and battery BUIs open the tgui window with the theme on and the stock one with it
-///         off, and every control of the tgui windows raises its action.
+///     The disposal unit, mailing unit and battery BUIs open the tgui window under both themes since #480, and every control of the tgui windows raises its action.
 /// </summary>
 [TestOf(typeof(KsTguiDisposalWindow))]
 public sealed class KsTguiDisposalBatteryWindowTest : GameTest
@@ -51,25 +50,22 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
         {
             var tguiWindow = typeof(DisposalUnitBoundUserInterface).GetField("_tguiWindow", Any)!.GetValue(bui);
             var stockWindow = typeof(DisposalUnitBoundUserInterface).GetField("_disposalUnitWindow", Any)!.GetValue(bui);
-            Assert.That(tguiWindow is KsTguiDisposalWindow, Is.EqualTo(tgui));
-            Assert.That(stockWindow is DisposalUnitWindow, Is.EqualTo(!tgui));
+            Assert.That(tguiWindow is KsTguiDisposalWindow, Is.True);
+            Assert.That(stockWindow is DisposalUnitWindow, Is.False);
 
-            if (tgui)
-            {
-                var window = (KsTguiDisposalWindow)tguiWindow;
-                var fired = new HashSet<string>();
-                window.OnEject += () => fired.Add("eject");
-                window.OnEngage += () => fired.Add("engage");
-                window.OnPower += () => fired.Add("power");
+            var window = (KsTguiDisposalWindow)tguiWindow;
+            var fired = new HashSet<string>();
+            window.OnEject += () => fired.Add("eject");
+            window.OnEngage += () => fired.Add("engage");
+            window.OnPower += () => fired.Add("power");
 
-                var buttons = new List<KsTguiButton>();
-                Collect(window, buttons);
-                Assert.That(buttons, Has.Count.EqualTo(3));
-                foreach (var button in buttons)
-                    Press(button);
+            var buttons = new List<KsTguiButton>();
+            Collect(window, buttons);
+            Assert.That(buttons, Has.Count.EqualTo(3));
+            foreach (var button in buttons)
+                Press(button);
 
-                Assert.That(fired, Is.EquivalentTo(new[] { "eject", "engage", "power" }));
-            }
+            Assert.That(fired, Is.EquivalentTo(new[] { "eject", "engage", "power" }));
 
             bui.Dispose();
         });
@@ -102,24 +98,21 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var tguiWindow = typeof(MailingUnitBoundUserInterface).GetField("_tguiWindow", Any)!.GetValue(bui);
-            Assert.That(tguiWindow is KsTguiMailingWindow, Is.EqualTo(tgui));
-            Assert.That(bui.MailingUnitWindow is MailingUnitWindow, Is.EqualTo(!tgui));
+            Assert.That(tguiWindow is KsTguiMailingWindow, Is.True);
+            Assert.That(bui.MailingUnitWindow is MailingUnitWindow, Is.False);
 
-            if (tgui)
-            {
-                var window = (KsTguiMailingWindow)tguiWindow;
-                var fired = new List<string>();
-                window.OnTargetSelected += target => fired.Add(target);
+            var window = (KsTguiMailingWindow)tguiWindow;
+            var fired = new List<string>();
+            window.OnTargetSelected += target => fired.Add(target);
 
-                var buttons = new List<KsTguiButton>();
-                Collect(window, buttons);
-                // Eject, flush and power, and a button per destination.
-                Assert.That(buttons, Has.Count.EqualTo(6));
-                foreach (var button in buttons)
-                    Press(button);
+            var buttons = new List<KsTguiButton>();
+            Collect(window, buttons);
+            // Eject, flush and power, and a button per destination.
+            Assert.That(buttons, Has.Count.EqualTo(6));
+            foreach (var button in buttons)
+                Press(button);
 
-                Assert.That(fired, Is.EquivalentTo(new[] { "a", "b", "c" }));
-            }
+            Assert.That(fired, Is.EquivalentTo(new[] { "a", "b", "c" }));
 
             bui.Dispose();
         });
@@ -145,43 +138,40 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var window = typeof(BatteryBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
-            Assert.That(window is KsTguiBatteryWindow, Is.EqualTo(tgui));
-            Assert.That(window is BatteryMenu, Is.EqualTo(!tgui));
+            Assert.That(window is KsTguiBatteryWindow, Is.True);
+            Assert.That(window is BatteryMenu, Is.False);
 
-            if (tgui)
-            {
-                var batteryWindow = (KsTguiBatteryWindow)window;
-                var fired = new HashSet<string>();
-                var chargeRates = new List<float>();
-                var dischargeRates = new List<float>();
-                batteryWindow.OnInBreaker += on => fired.Add($"in{on}");
-                batteryWindow.OnOutBreaker += on => fired.Add($"out{on}");
-                batteryWindow.OnChargeRate += rate => chargeRates.Add(rate);
-                batteryWindow.OnDischargeRate += rate => dischargeRates.Add(rate);
+            var batteryWindow = (KsTguiBatteryWindow)window;
+            var fired = new HashSet<string>();
+            var chargeRates = new List<float>();
+            var dischargeRates = new List<float>();
+            batteryWindow.OnInBreaker += on => fired.Add($"in{on}");
+            batteryWindow.OnOutBreaker += on => fired.Add($"out{on}");
+            batteryWindow.OnChargeRate += rate => chargeRates.Add(rate);
+            batteryWindow.OnDischargeRate += rate => dischargeRates.Add(rate);
 
-                var buttons = new List<KsTguiButton>();
-                Collect(batteryWindow, buttons);
-                // A breaker and four rate buttons per side.
-                Assert.That(buttons, Has.Count.EqualTo(10));
-                foreach (var button in buttons)
-                    Press(button);
+            var buttons = new List<KsTguiButton>();
+            Collect(batteryWindow, buttons);
+            // A breaker and four rate buttons per side.
+            Assert.That(buttons, Has.Count.EqualTo(10));
+            foreach (var button in buttons)
+                Press(button);
 
-                // MakeState: input on, output off.
-                Assert.That(fired, Is.EquivalentTo(new[] { "inFalse", "outTrue" }));
-                Assert.That(chargeRates, Has.Count.EqualTo(4));
-                Assert.That(dischargeRates, Has.Count.EqualTo(4));
-                Assert.That(chargeRates, Does.Contain(1000f).And.Contain(50000f));
-                Assert.That(dischargeRates, Does.Contain(2000f).And.Contain(80000f));
+            // MakeState: input on, output off.
+            Assert.That(fired, Is.EquivalentTo(new[] { "inFalse", "outTrue" }));
+            Assert.That(chargeRates, Has.Count.EqualTo(4));
+            Assert.That(dischargeRates, Has.Count.EqualTo(4));
+            Assert.That(chargeRates, Does.Contain(1000f).And.Contain(50000f));
+            Assert.That(dischargeRates, Does.Contain(2000f).And.Contain(80000f));
 
-                // Typing a target commits it, in watts.
-                var inputs = new List<KsTguiNumberInput>();
-                Collect(batteryWindow, inputs);
-                Assert.That(inputs, Has.Count.EqualTo(2));
-                chargeRates.Clear();
-                inputs[0].Edit.Text = "20";
-                inputs[0].Commit();
-                Assert.That(chargeRates, Is.EqualTo(new[] { 20000f }));
-            }
+            // Typing a target commits it, in watts.
+            var inputs = new List<KsTguiNumberInput>();
+            Collect(batteryWindow, inputs);
+            Assert.That(inputs, Has.Count.EqualTo(2));
+            chargeRates.Clear();
+            inputs[0].Edit.Text = "20";
+            inputs[0].Commit();
+            Assert.That(chargeRates, Is.EqualTo(new[] { 20000f }));
 
             bui.Dispose();
         });

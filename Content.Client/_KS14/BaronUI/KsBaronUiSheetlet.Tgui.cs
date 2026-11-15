@@ -200,11 +200,16 @@ public sealed partial class KsBaronUiSheetlet
             E<PanelContainer>().Class(KsSectionTitle.StyleClassSectionTitle).Class(KsTguiSection.StyleClassTitleRow)
                 .ParentOf(E()).ParentOf(E<Label>()).Font(boldFont),
 
-            // Striped rows: lighter, as the section body under Baron is already near black.
-            E().Class(KsTguiSheetlet.StyleClassCandystripe)
-                .Prop(KsTguiSheetlet.StylePropertyCandystripe, Color.White.WithAlpha(0.045f))
-                .Prop(KsTguiSheetlet.StylePropertyCandystripeEven, Clear),
         });
+
+        // Striped rows: lighter, as the section body under Baron is already near black. Only the control library's own
+        //      striped controls: the admin lists read the same property as "tgui is on" and keep their stock rows under Baron.
+        foreach (var striped in new[] { typeof(KsTguiCandystripe), typeof(KsTguiLabeledList), typeof(KsTguiTable), typeof(KsTguiTabs) })
+        {
+            rules.Add(new MutableSelectorElement { Type = striped }.Class(KsTguiSheetlet.StyleClassCandystripe)
+                .Prop(KsTguiSheetlet.StylePropertyCandystripe, Color.White.WithAlpha(0.045f))
+                .Prop(KsTguiSheetlet.StylePropertyCandystripeEven, Clear));
+        }
     }
 
     /// <summary>

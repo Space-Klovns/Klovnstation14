@@ -23,7 +23,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The fax machine's BUI opens the tgui window under the tgui theme and the stock one otherwise, and the tgui
+///     The fax machine's BUI opens the tgui window under both themes since #480, and the tgui
 ///         window's buttons send what the stock window's do.
 /// </summary>
 [TestOf(typeof(KsTguiFaxWindow))]
@@ -57,8 +57,8 @@ public sealed class KsTguiFaxWindowTest : GameTest
         {
             var uiManager = Client.ResolveDependency<IUserInterfaceManager>();
             var windows = uiManager.WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiFaxWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<FaxWindow>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiFaxWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<FaxWindow>().Any(), Is.False);
         });
     }
 
