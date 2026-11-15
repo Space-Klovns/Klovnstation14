@@ -17,7 +17,7 @@ namespace Content.Client._KS14.BaronUI;
 /// Provides the Baron UI chrome without extending the upstream stylesheet configuration interfaces.
 /// The textures are temporary assets imported from brapmine's Baron UI implementation.
 /// </summary>
-public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
+public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
 {
     public const string ButtonStyle1 = "KsBaronButtonStyle1";
     public const string ButtonStyle2 = "KsBaronButtonStyle2";
@@ -220,6 +220,9 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
+
+            // The ported tgui windows, which Baron opens too since #480 (KsBaronUiSheetlet.Tgui.cs).
+            .. TguiControlRules(regularFont, boldFont, regularFontSmall),
         ];
     }
 
