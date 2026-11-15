@@ -630,7 +630,7 @@
       dropOnDeconstruct: false
       # KS14 end
     # KS14 start: tgstation's ore values, per unit of ore
-    - type: KsSPAMSmelter
+    - type: KsMiningPointsSmelter
       pointsPerUnit:
         SteelOre: 1
         SpaceQuartz: 1

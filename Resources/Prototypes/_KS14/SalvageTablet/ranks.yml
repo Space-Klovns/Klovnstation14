@@ -1,0 +1,13 @@
+- type: ksSalvageRankLadder
+  id: KsSalvageRanks
+  ranks:
+  - title: ks-salvage-tablet-rank-trainee
+    reputation: 0
+  - title: ks-salvage-tablet-rank-prospector
+    reputation: 10
+  - title: ks-salvage-tablet-rank-excavator
+    reputation: 30
+  - title: ks-salvage-tablet-rank-veteran
+    reputation: 60
+  - title: ks-salvage-tablet-rank-legend
+    reputation: 100

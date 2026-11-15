@@ -329,11 +329,11 @@ public sealed partial class LatheMenu : FancyWindow
     // KS14 start
     public void KsSetSmelterPoints(int points)
     {
-        KsQueueTitleLabel.Text = Loc.GetString("ks-spam-smelter-ui-title");
+        KsQueueTitleLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-title");
         KsQueueScroll.Visible = false;
         KsSmelterContainer.Visible = true;
-        KsSmelterPointsLabel.Text = Loc.GetString("ks-spam-smelter-ui-points", ("points", points));
-        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-spam-smelter-ui-hint"), defaultColor: Color.FromHex("#A0A0A0"));
+        KsSmelterPointsLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"), defaultColor: Color.FromHex("#A0A0A0"));
     }
     // KS14 end
 

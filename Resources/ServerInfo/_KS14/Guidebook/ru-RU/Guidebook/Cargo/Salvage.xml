@@ -133,7 +133,7 @@
   ### S.P.A.M.
 
   <Box>
-    <GuideEntityEmbed Entity="KsSPAM"/>
+    <GuideEntityEmbed Entity="KsSalvageTablet"/>
   </Box>
 
   [color=cyan]S.P.A.M.[/color] — карманный помощник утилизатора. Войдите по своему ID, чтобы видеть свои задания, ранг и шахтёрские очки, а также что лежит в силосе станции и что запросили латы.

@@ -1,4 +1,4 @@
-using Content.Client._KS14.SPAM;
+using Content.Client._KS14.SalvageTablet;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Tooltips;
 using Content.Client._KS14.Tgui.Windows.Materials;

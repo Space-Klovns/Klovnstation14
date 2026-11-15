@@ -11,7 +11,7 @@ using Content.Client.Lathe.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
-using Content.Shared._KS14.SPAM;
+using Content.Shared._KS14.SalvageTablet;
 using Content.Shared._KS14.Tgui;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
@@ -1017,7 +1017,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
         {
             await Server.WaitPost(() =>
             {
-                var smelterComponent = SEntMan.GetComponent<KsSPAMSmelterComponent>(processor);
+                var smelterComponent = SEntMan.GetComponent<KsMiningPointsSmelterComponent>(processor);
                 smelterComponent.Unclaimed = points;
                 SEntMan.Dirty(processor, smelterComponent);
             });
@@ -1035,7 +1035,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
 
         string Expected(int points) => tgui
             ? points.ToString()
-            : Robust.Shared.Localization.Loc.GetString("ks-spam-smelter-ui-points", ("points", points));
+            : Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
 
         await SetPoints(42f);
         await Client.WaitAssertion(() =>

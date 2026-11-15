@@ -159,12 +159,12 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         // A smelter makes what it makes at once, so its queue is always empty: the section shows its mining points instead.
         var smelterList = new KsTguiLabeledList();
-        _smelterPointsItem = smelterList.AddItem(Loc.GetString("ks-spam-smelter-ui-unclaimed"), textColor: KsTguiPalettes.Good);
+        _smelterPointsItem = smelterList.AddItem(Loc.GetString("ks-salvage-tablet-smelter-ui-unclaimed"), textColor: KsTguiPalettes.Good);
         _smelterBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = 6, Visible = false };
         _smelterBody.AddChild(smelterList);
         // Rich text so it wraps: the queue column is only 250 wide.
         var smelterHint = new RichTextLabel();
-        smelterHint.SetMessage(Loc.GetString("ks-spam-smelter-ui-hint"), defaultColor: KsTguiPalettes.Label);
+        smelterHint.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"), defaultColor: KsTguiPalettes.Label);
         _smelterBody.AddChild(smelterHint);
 
         var queueContents = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
@@ -594,7 +594,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         if (!_isSmelter)
         {
             _isSmelter = true;
-            _queueSection.Title = Loc.GetString("ks-spam-smelter-ui-title");
+            _queueSection.Title = Loc.GetString("ks-salvage-tablet-smelter-ui-title");
             _queueBody.Visible = false;
             _smelterBody.Visible = true;
             RefreshQueueSection();

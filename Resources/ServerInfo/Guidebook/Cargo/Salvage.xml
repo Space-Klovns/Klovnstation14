@@ -133,7 +133,7 @@
   ### S.P.A.M.
 
   <Box>
-    <GuideEntityEmbed Entity="KsSPAM"/>
+    <GuideEntityEmbed Entity="KsSalvageTablet"/>
   </Box>
 
   The [color=cyan]S.P.A.M.[/color] is a Salvager's handheld. Log in with your ID to see your tasks, your rank and your mining points, along with what the station's silo holds and what the lathes have asked for.

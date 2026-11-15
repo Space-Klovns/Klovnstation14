@@ -32,7 +32,7 @@ public sealed partial class RecipeControl : Control
             OnButtonPressed?.Invoke(_recipeId);
         };
         Button.TooltipSupplier = SupplyTooltip;
-        Content.Client._KS14.SPAM.KsLatheRequestPopup.Attach(Button, () => Button.Disabled, () => KsOnRequestPressed?.Invoke(_recipeId)); // KS14: right click asks the salvagers for what the recipe is short of
+        Content.Client._KS14.SalvageTablet.KsLatheRequestPopup.Attach(Button, () => Button.Disabled, () => KsOnRequestPressed?.Invoke(_recipeId)); // KS14: right click asks the salvagers for what the recipe is short of
     }
 
     public void SetRecipe(LatheRecipePrototype recipe)
