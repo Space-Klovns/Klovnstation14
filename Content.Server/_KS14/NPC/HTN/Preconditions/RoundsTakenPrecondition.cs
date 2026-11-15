@@ -59,6 +59,6 @@ public sealed partial class RoundsTakenPrecondition : KsInvertiblePrecondition
         return _destructibleSystem.TryGetDestroyedAt(targetUid, out var destroyedAt) &&
             destroyedAt is { } destroyedAtValue &&
             destroyedAtValue != FixedPoint2.MaxValue &&
-            destroyedAtValue.Float() <= MaxDamage;
+            (float) destroyedAtValue <= MaxDamage;
     }
 }

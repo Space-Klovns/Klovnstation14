@@ -2,6 +2,7 @@ using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.CombatMode;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Map;
@@ -51,6 +52,28 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
     ///     How long it is taken to keep going the way it was going, out of sight, before it would have stopped.
     /// </summary>
     private const float SpotGrowthTime = 1.5f;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<NpcRoundsTakenComponent, DamageDealtEvent>(OnRoundsTakenDamaged);
+    }
+
+    /// <summary>
+    ///     Healed or repaired, by any amount: as good as new, as far as anyone shooting it goes. The rounds it took count for
+    ///         nothing any more, and it is worth shooting again.
+    /// </summary>
+    private void OnRoundsTakenDamaged(Entity<NpcRoundsTakenComponent> entity, ref DamageDealtEvent args)
+    {
+        foreach (var amount in args.Damage.DamageDict.Values)
+        {
+            if (amount >= 0)
+                continue;
+
+            RemCompDeferred<NpcRoundsTakenComponent>(entity.Owner);
+            return;
+        }
+    }
 
     public override void Update(float frameTime)
     {

@@ -21,29 +21,11 @@
 #   EnergyTurretCompound, LaserTurretCompound). A ballistic turret that sees a hostile through a window takes one in the open
 #   instead, however much nearer the one behind glass is; with only that one, it still takes it on, aims and holds fire.
 - type: utilityQuery
+  parent: NearbyGunTargets # its query and considerations, whatever upstream makes of them, and this one's besides
   id: KsTurretGunTargets
-  query:
-  - !type:NearbyHostilesQuery
   considerations:
-  - !type:TargetIsAliveCon
-    curve: !type:BoolCurve
-  - !type:TargetIsCritCon
-    curve: !type:InverseBoolCurve
-  - !type:TargetIsStunnedCon
-    curve: !type:InverseBoolCurve
-  - !type:TurretTargetingCon
-    curve: !type:BoolCurve
-  - !type:TargetDistanceCon
-    curve: !type:PresetCurve
-      preset: TargetDistance
-  - !type:TargetHealthCon
-    curve: !type:PresetCurve
-      preset: TargetHealth
-  - !type:TargetAccessibleCon
-    curve: !type:BoolCurve
-  - !type:TargetInLOSOrCurrentCon
-    curve: !type:BoolCurve
-  # Last: one ray, only for a candidate that could still win
+  # One ray per candidate. Pushed inheritance puts it ahead of the parent's, so it is cast before the cheap checks too: a
+  #   few rays a turret, every replan.
   - !type:KsTargetInLineOfFireCon
     curve: !type:BoolCurve
       lowScore: 0.001 # not out of the question: aimed at, holding fire, when it is the only one

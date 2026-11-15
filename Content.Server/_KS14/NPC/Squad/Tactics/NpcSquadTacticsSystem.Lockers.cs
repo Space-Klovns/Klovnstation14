@@ -20,6 +20,11 @@ public sealed partial class NpcSquadTacticsSystem
     private const int LockerChargeWalk = 16;
 
     /// <summary>
+    ///     How long after finding nobody who could put a charge on a locker to look again.
+    /// </summary>
+    private static readonly TimeSpan LockerChargeRetry = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     ///     Gives <paramref name="memberUid"/>, sent to <paramref name="point"/>, the orders to break it open if it is a locker to
     ///         break: a charge on it if anyone has one, else up to it and fire at it from where nothing else is in the way.
     ///         Returns whether it is one, and the orders are given; otherwise it is to be opened as any other.
@@ -92,7 +97,7 @@ public sealed partial class NpcSquadTacticsSystem
     {
         return _npcSuppressiveFireSystem.GetRoundsTaken(lockerUid) < settings.SearchBreakLockerRounds &&
             TryGetBreakThreshold(lockerUid, out var threshold) &&
-            threshold.Float() <= settings.SearchBreakLockerDamage;
+            (float) threshold <= settings.SearchBreakLockerDamage;
     }
 
     /// <summary>
@@ -102,8 +107,15 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool TryStartLockerBlast(NpcHunt hunt, EntityUid lockerUid, TimeSpan now)
     {
-        if (hunt.AllowCharges || hunt.Blast != null || !AnyoneHasACharge() || !hunt.ChargedLockers.Add(lockerUid))
+        if (hunt.AllowCharges ||
+            hunt.Blast != null ||
+            hunt.ChargedLockers.Contains(lockerUid) ||
+            now < hunt.NextLockerChargeTry ||
+            !AnyoneHasACharge())
             return false;
+
+        // Looked for again in a moment, not every update: whoever has one may be too far off yet, or round a corner.
+        hunt.NextLockerChargeTry = now + LockerChargeRetry;
 
         var plan = new NpcSquadPlan
         {
@@ -131,6 +143,7 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         hunt.BlastLockerLentGrid = lentGrid;
+        hunt.ChargedLockers.Add(lockerUid); // tried the once: should it not work, it is shot open
 
         hunt.Blast = plan;
         hunt.BlastAction = NpcSquadAction.BlowDoor;
@@ -168,8 +181,10 @@ public sealed partial class NpcSquadTacticsSystem
             if (!TryGetLockerStandTile(lockerTile, out var standTile, out var steps))
                 continue;
 
-            if (IsUnsafeToBlow(hunt, grid, lockerTile, standTile, lockerTile + (lockerTile - standTile)))
-                return null;
+            // Not by the hull, nor with thin air where it stands. Not the far side, as for a wall: a locker is no barrier
+            //      between two rooms, and behind it is mostly a wall, which has no air of its own to measure.
+            if (IsUnsafeToBlow(hunt, grid, lockerTile, standTile, standTile))
+                continue;
 
             var site = new NpcChargeSite(lockerUid,
                 lockerTile,
@@ -219,14 +234,20 @@ public sealed partial class NpcSquadTacticsSystem
         {
             ReleaseCharge(blast);
 
-            // The time it took is not the search's: neither the hunt's, nor that of whoever was sent to the locker, who would
-            //      otherwise have run out of it and be taken off it before a round was fired.
-            hunt.StartedAt += now - blast.StartedAt;
+            // The time it took is not the search's: neither the hunt's, nor that of anyone given a spot to check or a tile to
+            //      sweep before it, who would otherwise have run out of it and had that taken for searched.
+            var took = now - blast.StartedAt;
+            hunt.StartedAt += took;
 
             foreach (var point in hunt.SearchPoints)
             {
-                if (point.StorageUid == hunt.BlastLockerUid && point.AssigneeUid != null)
-                    point.AssignedAt = now;
+                if (point.AssigneeUid != null)
+                    point.AssignedAt += took;
+            }
+
+            foreach (var (memberUid, sweep) in hunt.Sweeps)
+            {
+                hunt.Sweeps[memberUid] = sweep with { AssignedAt = sweep.AssignedAt + took };
             }
         }
 
@@ -252,6 +273,25 @@ public sealed partial class NpcSquadTacticsSystem
             if (_npcPerceptionSystem.TryGetContact(memberUid, targetUid, out var contact) &&
                 contact.State is NpcContactState.Concealed or NpcContactState.Suspected &&
                 contact.ContainerUid == lockerUid)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether a member believes the hunted hostile is in a locker, whichever: on a tile nobody walks onto, the locker's.
+    /// </summary>
+    private bool IsBelievedInAnyLocker(NpcHunt hunt)
+    {
+        if (hunt.TargetUid is not { } targetUid)
+            return false;
+
+        foreach (var memberUid in _members)
+        {
+            if (_npcPerceptionSystem.TryGetContact(memberUid, targetUid, out var contact) &&
+                contact.State is NpcContactState.Concealed or NpcContactState.Suspected &&
+                contact.ContainerUid != null)
                 return true;
         }
 

@@ -6,6 +6,9 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Shared.Atmos.Components;
+using Content.Server.Atmos.EntitySystems;
+using Content.Shared.Atmos;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
@@ -217,6 +220,78 @@ public sealed class KsNpcSquadBreachTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     The same in a room with air in it, at the pressure a charge needs by default, with the locker against its wall:
+    ///         as lockers stand. A wall has no air of its own, so going by the far side of the locker, as for a wall to
+    ///         blow, found it too thin, and no locker by a wall ever got a charge.
+    /// </summary>
+    [Test]
+    public async Task TestALockerAgainstAWallInAirGetsACharge()
+    {
+        var scene = await SetUp(width: 7, height: 6, window: false);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var entManager = scene.EntManager;
+            var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+            mixture.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+            var mapUid = entManager.GetComponent<TransformComponent>(scene.GridUid).MapUid!.Value;
+            entManager.System<AtmosphereSystem>().SetMapAtmosphere(mapUid, space: false, mixture);
+            entManager.EnsureComponent<GridAtmosphereComponent>(scene.GridUid);
+        });
+
+        await Pair.RunTicksSync(5); // the grid's atmosphere sets up its tiles
+
+        // Shut in by its walls, the room does not fill from outside: air goes into every tile of it.
+        await Pair.Server.WaitPost(() =>
+        {
+            var atmosphereSystem = scene.EntManager.System<AtmosphereSystem>();
+            for (var x = 0; x < 7; x++)
+            {
+                for (var y = 0; y < 6; y++)
+                {
+                    var tileMixture = atmosphereSystem.GetGridTileMixture(scene.GridUid, new Vector2i(x, y), excite: true);
+                    tileMixture?.AdjustMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+                    tileMixture?.AdjustMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+                    if (tileMixture != null)
+                        tileMixture.Temperature = Atmospherics.T20C;
+                }
+            }
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var entManager = scene.EntManager;
+            var atmosphereSystem = entManager.System<AtmosphereSystem>();
+            var defaults = new NpcSquadTacticsSettings();
+            ConfigureSquad(scene, settings =>
+            {
+                settings.SearchChargeLockers = true;
+                settings.PlanChargeMinPressure = defaults.PlanChargeMinPressure;
+            });
+
+            // Against the east wall, which is at x = 7.
+            var lockerUid = HideInLocker(scene, lockerX: 6);
+            GiveInHand(entManager, scene.LeaderUid, Charge);
+            GiveInHand(entManager, scene.LeaderUid, Activator);
+
+            Assert.That(atmosphereSystem.GetGridTileMixture(scene.GridUid, new Vector2i(5, 3))?.Pressure ?? 0f,
+                Is.GreaterThanOrEqualTo(defaults.PlanChargeMinPressure), "the test needs air in front of the locker");
+            Assert.That(atmosphereSystem.GetGridTileMixture(scene.GridUid, new Vector2i(7, 3))?.Pressure ?? 0f,
+                Is.LessThan(defaults.PlanChargeMinPressure), "and none to speak of in the wall behind it");
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.BlastLockerUid, Is.EqualTo(lockerUid), "the locker should get the charge, wall or no wall");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.PlantCharge,
+                "the one with it should go to put it on");
+        });
+    }
+
     private static void ConfigureSquad(Scene scene, Action<NpcSquadTacticsSettings> configure)
     {
         foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
@@ -229,13 +304,13 @@ public sealed class KsNpcSquadBreachTest : GameTest
     ///     Puts the hostile in a locked locker in the room, the squad in the room with it and armed, and has them believe it
     ///         in there. Returns the locker.
     /// </summary>
-    private static EntityUid HideInLocker(Scene scene)
+    private static EntityUid HideInLocker(Scene scene, int lockerX = 5)
     {
         var entManager = scene.EntManager;
         var transformSystem = entManager.System<SharedTransformSystem>();
 
         // In the room with it, which they are already inside: they search at once.
-        var lockerUid = SpawnAt(entManager, LockedLocker, scene.GridUid, 5, 3);
+        var lockerUid = SpawnAt(entManager, LockedLocker, scene.GridUid, lockerX, 3);
         transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 1.5f)));
         transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
         GiveInHand(entManager, scene.LeaderUid, Gun);

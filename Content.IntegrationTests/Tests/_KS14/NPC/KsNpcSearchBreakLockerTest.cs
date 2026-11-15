@@ -87,6 +87,29 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
             Assert.That(roundsSeen, Is.InRange(3, 5), "it should have fired three rounds at it, and given up: a burst may finish");
             Assert.That(stillAt, Is.LessThan(MaxTicks - 200), "and fired no more at it after that");
         });
+
+        // Repaired, it is as good as new: the rounds it took count for nothing, and it is shot at again.
+        await Server.WaitPost(() =>
+        {
+            var heal = new Content.Shared.Damage.DamageSpecifier();
+            heal.DamageDict["Piercing"] = -1000;
+            heal.DamageDict["Heat"] = -1000;
+            Server.EntMan.System<Content.Shared.Damage.Systems.DamageableSystem>().ChangeDamage(lockerUid, heal, ignoreResistances: true);
+        });
+
+        await Pair.RunTicksSync(2);
+        var afterRepair = -1;
+        await Server.WaitPost(() => afterRepair = suppressiveFireSystem.GetRoundsTaken(lockerUid));
+        Assert.That(afterRepair, Is.Zero, "repaired, it should have no rounds counted against it");
+
+        var firedAgain = false;
+        for (var tick = 0; tick < MaxTicks && !firedAgain; tick += 10)
+        {
+            await Pair.RunTicksSync(10);
+            await Server.WaitPost(() => firedAgain = suppressiveFireSystem.GetRoundsTaken(lockerUid) > 0);
+        }
+
+        Assert.That(firedAgain, "and it should be shot at again");
     }
 
     [Test]
@@ -143,6 +166,7 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
         EntityUid gridUid = default, hostileUid = default, lockerUid = default;
         var members = new System.Collections.Generic.List<EntityUid>();
         var chargeProto = new EntProtoId("KsWireEndBreachingCharge");
+        var chargesBefore = 0;
 
         await Server.WaitPost(() =>
         {
@@ -184,6 +208,8 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
             }
 
             Assert.That(members, Has.Count.EqualTo(2), "the test needs two operatives");
+            chargesBefore = CountCharges(entManager, chargeProto, map.MapId);
+            Assert.That(chargesBefore, Is.GreaterThan(0), "the test needs them to carry a breaching charge");
             Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(members[0], out _), "the two should form a squad");
 
             Assert.That(entManager.System<SharedEntityStorageSystem>().CanOpen(members[0], lockerUid, silent: true), Is.False,
@@ -227,15 +253,7 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
         }
 
         var chargesLeft = 0;
-        await Server.WaitPost(() =>
-        {
-            var enumerator = entManager.EntityQueryEnumerator<MetaDataComponent>();
-            while (enumerator.MoveNext(out _, out var metaData))
-            {
-                if (metaData.EntityPrototype?.ID == chargeProto.Id)
-                    chargesLeft++;
-            }
-        });
+        await Server.WaitPost(() => chargesLeft = CountCharges(entManager, chargeProto, map.MapId));
 
         if (broken != charges || charges && !sawBlast)
             TestContext.Out.WriteLine(log.ToString());
@@ -250,8 +268,24 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
         {
             Assert.That(sawBlast, "the squad should have gone for it with a charge");
             Assert.That(broken, "the charge should have blown the locker open, and the hostile out of it");
-            Assert.That(chargesLeft, Is.EqualTo(members.Count - 1), "one charge should have gone off, the other still carried");
+            Assert.That(chargesLeft, Is.EqualTo(chargesBefore - 1), "one charge should have gone off, and only the one");
         });
+    }
+
+    /// <summary>
+    ///     Breaching charges on <paramref name="mapId"/>: carried, stuck on, or lying about.
+    /// </summary>
+    private static int CountCharges(IEntityManager entManager, EntProtoId chargeProto, MapId mapId)
+    {
+        var count = 0;
+        var enumerator = entManager.EntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+        while (enumerator.MoveNext(out _, out var metaData, out var transformComponent))
+        {
+            if (metaData.EntityPrototype?.ID == chargeProto.Id && transformComponent.MapID == mapId)
+                count++;
+        }
+
+        return count;
     }
 
     /// <summary>

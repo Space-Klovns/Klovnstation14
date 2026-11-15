@@ -69,6 +69,27 @@ public sealed class KsNpcTurretTargetingTest : GameTest
 ";
 
     /// <summary>
+    ///     The turrets' query is upstream's gun targets with one more consideration, by inheritance
+    ///         (<c>AlwaysPushInheritance</c> on considerations), not a copy that would fall behind it.
+    /// </summary>
+    [Test]
+    public void TestTurretQueryIsGunTargetsAndOneMore()
+    {
+        var turretQueryId = new ProtoId<Content.Server.NPC.Queries.UtilityQueryPrototype>("KsTurretGunTargets");
+        var gunQueryId = new ProtoId<Content.Server.NPC.Queries.UtilityQueryPrototype>("NearbyGunTargets");
+        var turretQuery = Server.ProtoMan.Index(turretQueryId);
+        var gunQuery = Server.ProtoMan.Index(gunQueryId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(turretQuery.Query, Has.Count.EqualTo(gunQuery.Query.Count), "the same query");
+            Assert.That(turretQuery.Considerations, Has.Count.EqualTo(gunQuery.Considerations.Count + 1), "every consideration, and one more");
+            Assert.That(turretQuery.Considerations, Has.Exactly(1).TypeOf<Content.Server._KS14.NPC.Queries.Considerations.KsTargetInLineOfFireCon>(),
+                "its own among them");
+        });
+    }
+
+    /// <summary>
     ///     Two hostiles take turns at being the closest. A turret that keeps its target finishes its lock on the first
     ///         and holds it while it is in sight, and moves to the other only once a wall hides it. Without the switch, the
     ///         control, the lock keeps changing hands and never finishes.

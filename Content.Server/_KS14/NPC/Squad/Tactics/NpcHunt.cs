@@ -148,6 +148,11 @@ public sealed class NpcHunt
     public readonly HashSet<EntityUid> ChargedLockers = new();
 
     /// <summary>
+    ///     When next to look for someone to put a charge on a locker, after finding nobody.
+    /// </summary>
+    public TimeSpan NextLockerChargeTry;
+
+    /// <summary>
     ///     While putting something in ahead of going in (<see cref="NpcHuntPhase.Soften"/>): the plan that holds the throw, which
     ///         nobody else sees, as for <see cref="Blast"/>. What it throws, and where, goes by what the squad last saw of the
     ///         hostile, never the hostile itself.

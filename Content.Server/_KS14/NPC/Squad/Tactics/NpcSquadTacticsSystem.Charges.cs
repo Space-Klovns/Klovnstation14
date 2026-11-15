@@ -255,7 +255,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (!foundRoom && TryPrepareSealedRoom(hunt, plan.TargetUid, Transform(plan.TargetUid).Coordinates))
             return;
 
-        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates, besideCounts: IsBelievedInAnyLocker(hunt)))
             SealIn(hunt, walkerUid);
     }
 
@@ -300,7 +300,9 @@ public sealed partial class NpcSquadTacticsSystem
     ///         out before it gets there, or the floor beside it, and every member is on that floor. Otherwise one of them
     ///         could still go.
     /// </summary>
-    private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates)
+    /// <param name="besideCounts">Whether getting beside it will do: for a hostile believed in a locker, whose tile is the
+    ///     locker's, which nobody walks onto. Not otherwise: a tile beside it may be the far side of a thin window.</param>
+    private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates, bool besideCounts = false)
     {
         var walkerTransform = Transform(walkerUid);
 
@@ -317,10 +319,13 @@ public sealed partial class NpcSquadTacticsSystem
         if (_floodSteps.ContainsKey(targetTile))
             return false;
 
-        foreach (var offset in ChargeSiteOffsets)
+        if (besideCounts)
         {
-            if (_floodSteps.ContainsKey(targetTile + offset))
-                return false;
+            foreach (var offset in ChargeSiteOffsets)
+            {
+                if (_floodSteps.ContainsKey(targetTile + offset))
+                    return false;
+            }
         }
 
         foreach (var steps in _floodSteps.Values)

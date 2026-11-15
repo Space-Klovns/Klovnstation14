@@ -68,7 +68,7 @@ public sealed partial class ChainSystem : EntitySystem
                 firstComponent.NextLinkJointId != pending.Id)
                 continue;
 
-            ConnectTwoLink(pending.FirstUid, pending.SecondUid, pending.Offset, pending.Id);
+            ConnectTwoLink(pending.FirstUid, pending.SecondUid, pending.Offset, id: pending.Id);
 
             // The stretch joint goes by the link joints, and could not be made without this one.
             RefreshStretch(pending.FirstUid);
