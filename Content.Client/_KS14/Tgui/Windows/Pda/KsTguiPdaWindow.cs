@@ -84,7 +84,8 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     public Control ProgramView => _programView;
 
     // The PDA's colours (PdaBorderColorComponent), which the stock frame is painted in. tg's window has no frame to paint, so
-    //     they are a strip over the header: the body colour with the accents at its right, as the stock frame's accent stripes.
+    //     under Baron, which had that frame, they are a strip over the header: the body colour with the accents at its right,
+    //     as the stock frame's accent stripes. tgui stays as tg's window is.
     private readonly BoxContainer _colorStrip;
     private readonly PanelContainer _bodyColor;
     private readonly PanelContainer _accentHColor;
@@ -103,7 +104,7 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     {
         part.Visible = hex != null;
         part.PanelOverride = new StyleBoxFlat(Color.FromHex(hex, Color.White));
-        _colorStrip.Visible = _bodyColor.Visible || _accentHColor.Visible || _accentVColor.Visible;
+        _colorStrip.Visible = !KsTguiTheme.ReadEnabled() && (_bodyColor.Visible || _accentHColor.Visible || _accentVColor.Visible);
     }
 
     public event Action<EntityUid>? OnProgramItemPressed;

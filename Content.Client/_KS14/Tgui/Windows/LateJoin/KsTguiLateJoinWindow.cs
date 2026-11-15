@@ -213,8 +213,9 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         foreach (var station in _stations)
             station.Root.Visible = station == shown;
 
-        // A tab per station, one included: the stock window always names the station the player joins (#480).
-        if (_stations.Count > 0)
+        // A tab per station. Under Baron, one included: the stock window always named the station the player joins (#480).
+        //     tgui stays as tg's window is, with no tabs for a single station.
+        if (_stations.Count > 1 || (_stations.Count > 0 && !KsTguiTheme.ReadEnabled()))
         {
             var tabs = new KsTguiTabs();
             foreach (var station in _stations)
