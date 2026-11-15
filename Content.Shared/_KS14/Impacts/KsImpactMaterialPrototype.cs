@@ -47,11 +47,11 @@ public sealed partial class KsImpactMaterialPrototype : IPrototype
     ///     How many of the prototypes' particles a light hit throws.
     /// </summary>
     [DataField]
-    public float LightAmount = 0.4f;
+    public float LightAmount = 0.6f;
 
     /// <summary>
     ///     How fast, against the prototypes' velocities, a light hit's particles fly.
     /// </summary>
     [DataField]
-    public float LightSpeed = 0.6f;
+    public float LightSpeed = 0.4f;
 }
