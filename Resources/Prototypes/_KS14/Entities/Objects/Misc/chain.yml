@@ -135,3 +135,7 @@
       - Wall
       components:
       - Airlock
+      - EntityStorage # lockers and crates: what is in them gets the worst of it
+    blacklist: # but nothing that can be picked up, body bags included
+      components:
+      - Item

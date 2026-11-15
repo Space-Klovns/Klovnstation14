@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
@@ -12,6 +13,7 @@ using Content.Shared.Storage.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
@@ -102,39 +104,10 @@ public sealed class KsNpcSquadBreachTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var entManager = scene.EntManager;
-            var transformSystem = entManager.System<SharedTransformSystem>();
-
             if (!breaks)
-            {
-                foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
-                {
-                    var settings = entManager.GetComponent<NpcSquadMemberComponent>(memberUid).Tactics;
-                    settings.SearchBreakLockers = false;
-                }
-            }
+                ConfigureSquad(scene, settings => settings.SearchBreakLockers = false);
 
-            // In the room with it, which they are already inside: they search at once.
-            var lockerUid = SpawnAt(entManager, LockedLocker, scene.GridUid, 5, 3);
-            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 1.5f)));
-            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
-            GiveInHand(entManager, scene.LeaderUid, Gun);
-            GiveInHand(entManager, scene.MemberUid, Gun);
-
-            var storageSystem = entManager.System<SharedEntityStorageSystem>();
-            Assert.That(storageSystem.Insert(scene.TargetUid, lockerUid), "the test needs the hostile in the locker");
-            Assert.That(storageSystem.CanOpen(scene.MemberUid, lockerUid, silent: true), Is.False, "the test needs it locked to them");
-
-            var now = IoCManager.Resolve<IGameTiming>().CurTime;
-            var perceptionSystem = entManager.System<NpcPerceptionSystem>();
-            var lockerCoordinates = entManager.GetComponent<TransformComponent>(lockerUid).Coordinates;
-
-            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
-            {
-                perceptionSystem.SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Suspected,
-                    now, now, now, lockerCoordinates, default, lockerUid, Reacted: true, ReactAt: now));
-            }
-
+            var lockerUid = HideInLocker(scene);
             scene.TacticsSystem.UpdateNow();
 
             var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
@@ -153,6 +126,136 @@ public sealed class KsNpcSquadBreachTest : GameTest
                 Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.Search), "turned off, it is sent to open it");
             }
         });
+    }
+
+    /// <summary>
+    ///     A locker that is not worth shooting is not shot: one that takes more than <c>searchBreakLockerDamage</c> to
+    ///         break, or that NPCs have already put <c>searchBreakLockerRounds</c> into. It is sent to be opened, as before,
+    ///         and given up on.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestALockerNotWorthShootingIsNotShot(bool tooSturdy)
+    {
+        var scene = await SetUp(width: 7, height: 6, window: false);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            // An ordinary locker breaks at 100; none has had a round from them yet.
+            if (tooSturdy)
+                ConfigureSquad(scene, settings => settings.SearchBreakLockerDamage = 50f);
+            else
+                ConfigureSquad(scene, settings => settings.SearchBreakLockerRounds = 0);
+
+            var lockerUid = HideInLocker(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "the member nearest the locker should be sent to it");
+            Assert.That(order.TargetUid, Is.EqualTo(lockerUid));
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.Search), "not worth the rounds: sent to open it");
+        });
+    }
+
+    /// <summary>
+    ///     With a breaching charge that sticks to it (the X-4 does), the locker gets that instead of rounds: the search holds,
+    ///         and whoever has it goes to put it on from the floor beside it. Should the charge come to nothing, the search
+    ///         picks up again and the locker is shot open after all. Not tried again on the same locker. With the setting off,
+    ///         the charge is left where it is.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestALockerItIsInGetsACharge(bool charges)
+    {
+        var scene = await SetUp(width: 7, height: 6, window: false);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var entManager = scene.EntManager;
+            ConfigureSquad(scene, settings => settings.SearchChargeLockers = charges);
+
+            var lockerUid = HideInLocker(scene);
+            var chargeUid = GiveInHand(entManager, scene.LeaderUid, Charge);
+            GiveInHand(entManager, scene.LeaderUid, Activator);
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var leaderOrder), "the leader should have an order");
+
+            if (!charges)
+            {
+                Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "turned off, it is a search as before");
+                Assert.That(leaderOrder.Kind, Is.Not.EqualTo(NpcOrderKind.PlantCharge));
+                return;
+            }
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "the search should hold for the charge");
+            Assert.That(hunt.BlastLockerUid, Is.EqualTo(lockerUid));
+            Assert.That(leaderOrder.Kind, Is.EqualTo(NpcOrderKind.PlantCharge), "the one with the charge should go to put it on");
+            Assert.That(leaderOrder.TargetUid, Is.EqualTo(lockerUid), "on the locker");
+
+            var lockerTile = entManager.System<SharedMapSystem>().TileIndicesFor(scene.GridUid, entManager.GetComponent<MapGridComponent>(scene.GridUid),
+                entManager.GetComponent<TransformComponent>(lockerUid).Coordinates);
+            var standTile = entManager.System<SharedMapSystem>().TileIndicesFor(scene.GridUid, entManager.GetComponent<MapGridComponent>(scene.GridUid),
+                leaderOrder.Coordinates);
+            Assert.That((standTile - lockerTile).X * (standTile - lockerTile).X + (standTile - lockerTile).Y * (standTile - lockerTile).Y, Is.EqualTo(1),
+                "from the floor right beside it");
+
+            // The charge comes to nothing: back to the search, and the locker is shot open after all.
+            entManager.DeleteEntity(chargeUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "the search should pick up again");
+            Assert.That(hunt.BlastLockerUid, Is.Null);
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.BreakBarrier && order.TargetUid == lockerUid,
+                "the member nearest it should shoot it open");
+
+            // A new charge, and still not tried again on this locker.
+            GiveInHand(entManager, scene.LeaderUid, Charge);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "the charge is tried the once per locker");
+        });
+    }
+
+    private static void ConfigureSquad(Scene scene, Action<NpcSquadTacticsSettings> configure)
+    {
+        foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+        {
+            configure(scene.EntManager.GetComponent<NpcSquadMemberComponent>(memberUid).Tactics);
+        }
+    }
+
+    /// <summary>
+    ///     Puts the hostile in a locked locker in the room, the squad in the room with it and armed, and has them believe it
+    ///         in there. Returns the locker.
+    /// </summary>
+    private static EntityUid HideInLocker(Scene scene)
+    {
+        var entManager = scene.EntManager;
+        var transformSystem = entManager.System<SharedTransformSystem>();
+
+        // In the room with it, which they are already inside: they search at once.
+        var lockerUid = SpawnAt(entManager, LockedLocker, scene.GridUid, 5, 3);
+        transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 1.5f)));
+        transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
+        GiveInHand(entManager, scene.LeaderUid, Gun);
+        GiveInHand(entManager, scene.MemberUid, Gun);
+
+        var storageSystem = entManager.System<SharedEntityStorageSystem>();
+        Assert.That(storageSystem.Insert(scene.TargetUid, lockerUid), "the test needs the hostile in the locker");
+        Assert.That(storageSystem.CanOpen(scene.MemberUid, lockerUid, silent: true), Is.False, "the test needs it locked to them");
+
+        var now = IoCManager.Resolve<IGameTiming>().CurTime;
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var lockerCoordinates = entManager.GetComponent<TransformComponent>(lockerUid).Coordinates;
+
+        foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+        {
+            perceptionSystem.SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Suspected,
+                now, now, now, lockerCoordinates, default, lockerUid, Reacted: true, ReactAt: now));
+        }
+
+        return lockerUid;
     }
 
     /// <summary>

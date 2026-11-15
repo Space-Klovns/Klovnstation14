@@ -83,18 +83,10 @@ public sealed partial class NPCRangedCombatComponent : Component
     /// <summary>
     ///     With <see cref="KsHoldFireWhenBlocked"/>: whether, at the last check, a round from the gun would get to the target
     ///         by what it collides with, glass stopping a bullet and not a laser. Mobs do not count; friends are for the fire
-    ///         lanes.
+    ///         lanes. <c>NpcLineOfFireSystem.CanRoundReach</c>, which a turret also picks its target by
+    ///         (<c>KsTargetInLineOfFireCon</c>).
     /// </summary>
     [ViewVariables]
     public bool KsTargetInLineOfFire;
-
-    /// <summary>
-    ///     Hold fire, as for a friend, for any standing mob in the line that is neither hostile to it nor its target: a
-    ///         bystander. Off, only friends are held for, and a neutral in the way catches the rounds. From the blackboard key
-    ///         <c>KsHoldFireForNeutrals</c> (<c>GunOperator.KsHoldFireForNeutralsKey</c>). See
-    ///         <c>NpcSquadFireLaneSystem.TryGetClearShot</c>.
-    /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool KsHoldFireForNeutrals;
     // KS14 end
 }

@@ -131,6 +131,23 @@ public sealed class NpcHunt
     public bool BlastTried;
 
     /// <summary>
+    ///     While <see cref="Blast"/> is a charge on a locker the hostile is believed in, rather than a way in: that locker. The
+    ///         search carries on from where it was once it has gone off, or not.
+    /// </summary>
+    public EntityUid? BlastLockerUid;
+
+    /// <summary>
+    ///     Whether <see cref="GridUid"/> was only set for the locker blast, a hunt with no room having none: unset again after.
+    /// </summary>
+    public bool BlastLockerLentGrid;
+
+    /// <summary>
+    ///     Lockers a charge has been tried on, for it to be tried the once each (see
+    ///         <see cref="NpcSquadTacticsSettings.SearchChargeLockers"/>).
+    /// </summary>
+    public readonly HashSet<EntityUid> ChargedLockers = new();
+
+    /// <summary>
     ///     While putting something in ahead of going in (<see cref="NpcHuntPhase.Soften"/>): the plan that holds the throw, which
     ///         nobody else sees, as for <see cref="Blast"/>. What it throws, and where, goes by what the squad last saw of the
     ///         hostile, never the hostile itself.

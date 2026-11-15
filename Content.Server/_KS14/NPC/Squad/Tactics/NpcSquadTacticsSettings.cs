@@ -150,6 +150,30 @@ public sealed partial class NpcSquadTacticsSettings
     public float SearchBreakLockerRange = 3f;
 
     /// <summary>
+    ///     How many rounds NPCs may put into a locker to break it (<see cref="SearchBreakLockers"/>), all of them together,
+    ///         before it is given up on: about twice what a security locker takes. Something that has had that many and still
+    ///         stands is not worth a magazine more.
+    /// </summary>
+    [DataField]
+    public int SearchBreakLockerRounds = 60;
+
+    /// <summary>
+    ///     The most damage a locker may take to break for it to be worth shooting open, as
+    ///         <see cref="PlanBreakDamage"/> is for glass. A security locker breaks at 150, which is some 30 rifle rounds at
+    ///         point blank through its armour; an ordinary one at 100.
+    /// </summary>
+    [DataField]
+    public float SearchBreakLockerDamage = 200f;
+
+    /// <summary>
+    ///     Whether a member that carries a breaching charge that sticks to a locker puts it on one it is believed in, rather than
+    ///         shooting it open, when nobody can open it. Tried the once per locker, and shot open if it does not work. Not in a
+    ///         squad plan's own hunt, which has charge steps of its own. Off, lockers are only shot open.
+    /// </summary>
+    [DataField]
+    public bool SearchChargeLockers;
+
+    /// <summary>
     ///     How thorough the search is: the share of the room's floor, from 0 to 1, that has to have been seen before
     ///         the room counts as searched. At 1, every tile - round every corner, down every leg of an L - is looked
     ///         at. Lower lets a squad give up once it has seen most of a room.

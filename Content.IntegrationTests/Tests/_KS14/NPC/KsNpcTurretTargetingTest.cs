@@ -7,10 +7,12 @@ using Content.Server._KS14.NPC.Squad;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.LockOn;
 using Content.Shared.Damage.Systems;
-using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.NPC.Prototypes;
+using Content.Shared.NPC.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
 using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
@@ -18,8 +20,8 @@ using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 namespace Content.IntegrationTests.Tests._KS14.NPC;
 
 /// <summary>
-///     Which target a planning turret keeps (KsTargetLockOn.KeepTargetUntilLost) and whether it fires past a friend
-///         (KsNpcAimTracking.IgnoreFriendlyBlocking).
+///     Which target a planning turret keeps (KsTargetLockOn.KeepTargetUntilLost), and whom the fire-lane check holds fire
+///         for (NpcFireLane.Mode).
 /// </summary>
 public sealed class KsNpcTurretTargetingTest : GameTest
 {
@@ -27,9 +29,13 @@ public sealed class KsNpcTurretTargetingTest : GameTest
 
     private const string StickyTurret = "KsTurretTargetingTestSticky";
     private const string FickleTurret = "KsTurretTargetingTestFickle";
-    private const string FireThroughTurret = "KsTurretTargetingTestFireThrough";
-    private const string HoldingTurret = "KsTurretTargetingTestHolding";
     private const string FireThroughMob = "KsTurretTargetingTestMobFireThrough";
+    private const string HoldForNeutralsMob = "KsTurretTargetingTestMobHoldForNeutrals";
+
+    /// <summary>
+    ///     Neither friendly nor hostile to the Syndicate.
+    /// </summary>
+    private static readonly ProtoId<NpcFactionPrototype> NeutralFaction = "Passive";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -48,24 +54,18 @@ public sealed class KsNpcTurretTargetingTest : GameTest
     keepTargetUntilLost: true
 
 - type: entity
-  parent: WeaponTurretSyndicate
-  id: KsTurretTargetingTestHolding
-  components:
-  - type: KsNpcAimTracking
-
-- type: entity
   parent: KsSquadTestMobSyndicate
   id: KsTurretTargetingTestMobFireThrough
   components:
-  - type: KsNpcAimTracking
-    ignoreFriendlyBlocking: true
+  - type: NpcFireLane
+    mode: FireThrough
 
 - type: entity
-  parent: KsTurretTargetingTestHolding
-  id: KsTurretTargetingTestFireThrough
+  parent: KsSquadTestMobSyndicate
+  id: KsTurretTargetingTestMobHoldForNeutrals
   components:
-  - type: KsNpcAimTracking
-    ignoreFriendlyBlocking: true
+  - type: NpcFireLane
+    mode: HoldForFriendliesAndNeutrals
 ";
 
     /// <summary>
@@ -153,106 +153,65 @@ public sealed class KsNpcTurretTargetingTest : GameTest
     }
 
     /// <summary>
-    ///     A hostile at the end of a line with a friend of the turret's in the middle of it. Only a turret that ignores
-    ///         friendly blocking fires; the control holds fire, and with no friend there it fires anyway.
+    ///     The fire-lane check itself, asked of a mob shooter with no HTN, with a friend of its, or a bystander (neither
+    ///         friendly nor hostile to it), in the line of fire, for the aim and for a round as it goes. Each
+    ///         <see cref="NpcFireLaneMode"/>: <c>FireThrough</c> holds for neither; <c>HoldForFriendlies</c>, which is also
+    ///         what a shooter with no <c>NpcFireLane</c> does, holds for the friend only; <c>HoldForFriendliesAndNeutrals</c>
+    ///         for both. Live turrets are <c>KsNpcTurretSightTest.TestFireLaneMode</c>.
     /// </summary>
-    [TestCase(true)]
-    [TestCase(false)]
-    public async Task TestIgnoreFriendlyBlocking(bool ignore)
-    {
-        await OverrideCVar(Side.Server, KsCCVars.NpcSquadFireLanes, true);
-
-        var tickRate = (float)Pair.Server.ResolveDependency<IGameTiming>().TickRate;
-        var capTicks = (int)(30f * tickRate);
-        var turret = ignore ? FireThroughTurret : HoldingTurret;
-
-        // With nobody in the way either turret fires. How long that takes is how long the turret needs to wake, turn
-        //      and shoot, which is what a turret holding fire has to be given, and more, before its silence means anything.
-        var clearTicks = await TicksUntilFired(turret, friendInTheWay: false, capTicks);
-        Assert.That(clearTicks, Is.Not.Null, "with no friend in the way it should have fired");
-
-        if (ignore)
-        {
-            Assert.That(await TicksUntilFired(turret, friendInTheWay: true, capTicks), Is.Not.Null,
-                "a turret that ignores friendly blocking should have fired past the friend");
-            return;
-        }
-
-        var heldTicks = clearTicks!.Value * 3 + (int)tickRate;
-        Assert.That(await TicksUntilFired(turret, friendInTheWay: true, heldTicks), Is.Null,
-            $"control: it should hold fire for the friend (it fired within {clearTicks} ticks with nobody there)");
-    }
-
-    /// <summary>
-    ///     Sets a turret against a hostile down a line, on a field of its own, and runs until it has fired. Returns the
-    ///         ticks that took, or null if it had not by <paramref name="maxTicks"/>.
-    /// </summary>
-    private async Task<int?> TicksUntilFired(string turret, bool friendInTheWay, int maxTicks)
-    {
-        var (entManager, gridUid) = await SetUpOpenGrid();
-        EntityUid turretUid = default;
-        var startAmmo = 0;
-
-        await Pair.Server.WaitPost(() =>
-        {
-            turretUid = SpawnAt(entManager, turret, gridUid, 0, 0);
-            var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
-            var godmodeSystem = entManager.System<SharedGodmodeSystem>();
-            godmodeSystem.EnableGodmode(hostileUid);
-
-            if (friendInTheWay)
-                godmodeSystem.EnableGodmode(SpawnAt(entManager, SyndicateMob, gridUid, 3, 0));
-
-            startAmmo = AmmoCount(entManager, turretUid);
-        });
-
-        Assert.That(startAmmo, Is.GreaterThan(0));
-
-        for (var tick = 1; tick <= maxTicks; tick++)
-        {
-            await Pair.RunTicksSync(1);
-
-            var fired = false;
-            await Pair.Server.WaitPost(() => fired = AmmoCount(entManager, turretUid) < startAmmo);
-            if (fired)
-                return tick;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    ///     The fire-lane check itself, asked of a mob shooter with no HTN: a friend in the line of fire makes it hold fire,
-    ///         unless it ignores friendly blocking, for the aim and for a round as it goes. A live turret is
-    ///         <see cref="TestIgnoreFriendlyBlocking"/> and <c>KsNpcTurretSightTest</c>.
-    /// </summary>
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task TestFireLaneCheckIgnoresFriendsWhenAsked(bool ignore)
+    [TestCase(NpcFireLaneMode.FireThrough, false)]
+    [TestCase(NpcFireLaneMode.FireThrough, true)]
+    [TestCase(NpcFireLaneMode.HoldForFriendlies, false)]
+    [TestCase(NpcFireLaneMode.HoldForFriendlies, true)]
+    [TestCase(NpcFireLaneMode.HoldForFriendliesAndNeutrals, false)]
+    [TestCase(NpcFireLaneMode.HoldForFriendliesAndNeutrals, true)]
+    public async Task TestFireLaneModes(NpcFireLaneMode mode, bool neutralInTheWay)
     {
         await OverrideCVar(Side.Server, KsCCVars.NpcSquadFireLanes, true);
 
         var (entManager, gridUid) = await SetUpOpenGrid();
         var fireLaneSystem = entManager.System<NpcSquadFireLaneSystem>();
+        var factionSystem = entManager.System<NpcFactionSystem>();
         var transformSystem = entManager.System<SharedTransformSystem>();
+        var clear = mode == NpcFireLaneMode.FireThrough ||
+            mode == NpcFireLaneMode.HoldForFriendlies && neutralInTheWay;
 
         await Pair.Server.WaitPost(() =>
         {
-            var shooterUid = SpawnAt(entManager, ignore ? FireThroughMob : SyndicateMob, gridUid, 0, 0);
-            SpawnAt(entManager, SyndicateMob, gridUid, 3, 0);
+            var shooter = mode switch
+            {
+                NpcFireLaneMode.FireThrough => FireThroughMob,
+                NpcFireLaneMode.HoldForFriendliesAndNeutrals => HoldForNeutralsMob,
+                _ => SyndicateMob,
+            };
+            var shooterUid = SpawnAt(entManager, shooter, gridUid, 0, 0);
+            var inTheWayUid = SpawnAt(entManager, SyndicateMob, gridUid, 3, 0);
+
+            if (neutralInTheWay)
+            {
+                factionSystem.ClearFactions(inTheWayUid);
+                factionSystem.AddFaction(inTheWayUid, NeutralFaction);
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(fireLaneSystem.GetFireLaneMode(shooterUid), Is.EqualTo(mode));
+                Assert.That(factionSystem.IsEntityFriendly(shooterUid, inTheWayUid), Is.EqualTo(!neutralInTheWay));
+                Assert.That(factionSystem.IsEntityHostile(shooterUid, inTheWayUid), Is.False);
+            });
+
             var from = transformSystem.GetMapCoordinates(shooterUid);
             var aim = new MapCoordinates(from.Position + new Vector2(6f, 0f), from.MapId);
+            var what = neutralInTheWay ? "a bystander" : "a friend";
 
-            Assert.That(fireLaneSystem.TryGetClearShot(shooterUid, from, aim, 0.35f, out _), Is.EqualTo(ignore));
-            Assert.That(fireLaneSystem.IsShotClear(shooterUid, from, aim), Is.EqualTo(ignore));
+            Assert.Multiple(() =>
+            {
+                Assert.That(fireLaneSystem.TryGetClearShot(shooterUid, from, aim, 0.35f, out _), Is.EqualTo(clear),
+                    $"{mode}, {what} in the line: clear shot");
+                Assert.That(fireLaneSystem.IsShotClear(shooterUid, from, aim), Is.EqualTo(clear),
+                    $"{mode}, {what} in the line: round as it goes");
+            });
         });
-    }
-
-    private static int AmmoCount(IEntityManager entManager, EntityUid gunUid)
-    {
-        var ev = new GetAmmoCountEvent();
-        entManager.EventBus.RaiseLocalEvent(gunUid, ref ev);
-        return ev.Count;
     }
 
     private async Task<(IEntityManager EntManager, EntityUid GridUid)> SetUpOpenGrid()

@@ -16,3 +16,34 @@
       slope: 0.5
       exponent: 0.5
       yOffset: 0
+
+# NearbyGunTargets, preferring a hostile its rounds can get to: what turrets pick from (TurretCompound,
+#   EnergyTurretCompound, LaserTurretCompound). A ballistic turret that sees a hostile through a window takes one in the open
+#   instead, however much nearer the one behind glass is; with only that one, it still takes it on, aims and holds fire.
+- type: utilityQuery
+  id: KsTurretGunTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetIsCritCon
+    curve: !type:InverseBoolCurve
+  - !type:TargetIsStunnedCon
+    curve: !type:InverseBoolCurve
+  - !type:TurretTargetingCon
+    curve: !type:BoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetHealthCon
+    curve: !type:PresetCurve
+      preset: TargetHealth
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSOrCurrentCon
+    curve: !type:BoolCurve
+  # Last: one ray, only for a candidate that could still win
+  - !type:KsTargetInLineOfFireCon
+    curve: !type:BoolCurve
+      lowScore: 0.001 # not out of the question: aimed at, holding fire, when it is the only one

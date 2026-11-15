@@ -1,5 +1,4 @@
 using System.Numerics;
-using Content.Server._KS14.NPC.Components;
 using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.Weapons.Ranged.Systems;
@@ -58,7 +57,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    [Dependency] private EntityQuery<KsNpcAimTrackingComponent> _aimTrackingQuery = default!;
+    [Dependency] private EntityQuery<NpcFireLaneComponent> _fireLaneQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
@@ -335,7 +334,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     {
         shot = aim;
 
-        if (!Enabled || from.MapId != aim.MapId || IgnoresFriendlyBlocking(shooterUid) && !HoldsFireForNeutrals(shooterUid))
+        if (!Enabled || from.MapId != aim.MapId || GetFireLaneMode(shooterUid) == NpcFireLaneMode.FireThrough)
             return true;
 
         GatherFriends(shooterUid, from);
@@ -397,7 +396,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     /// </summary>
     public bool IsShotClear(EntityUid shooterUid, MapCoordinates from, MapCoordinates aim)
     {
-        if (!Enabled || from.MapId != aim.MapId || IgnoresFriendlyBlocking(shooterUid) && !HoldsFireForNeutrals(shooterUid))
+        if (!Enabled || from.MapId != aim.MapId || GetFireLaneMode(shooterUid) == NpcFireLaneMode.FireThrough)
             return true;
 
         GatherFriends(shooterUid, from);
@@ -409,28 +408,24 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         return direction.LengthSquared() < 0.0001f || !IsBlocked(MathF.Atan2(direction.Y, direction.X));
     }
 
-    private bool IgnoresFriendlyBlocking(EntityUid shooterUid)
+    /// <summary>
+    ///     Who <paramref name="shooterUid"/> holds fire for: its <see cref="NpcFireLaneComponent.Mode"/>, or, without one,
+    ///         <see cref="NpcFireLaneMode.HoldForFriendlies"/>.
+    /// </summary>
+    public NpcFireLaneMode GetFireLaneMode(EntityUid shooterUid)
     {
-        return _aimTrackingQuery.TryComp(shooterUid, out var aimTrackingComponent) &&
-            aimTrackingComponent.IgnoreFriendlyBlocking;
+        return _fireLaneQuery.TryComp(shooterUid, out var fireLaneComponent) ? fireLaneComponent.Mode : NpcFireLaneMode.HoldForFriendlies;
     }
 
     /// <summary>
-    ///     Whether it holds fire for a bystander as for a friend: <c>NPCRangedCombatComponent.KsHoldFireForNeutrals</c>.
+    ///     Whether a round from <paramref name="shooterUid"/>, which holds fire for friends, is to be kept off
+    ///         <paramref name="mobUid"/>: a friend; or, if it holds fire for neutrals too, a standing mob neither hostile to it
+    ///         nor its target.
     /// </summary>
-    private bool HoldsFireForNeutrals(EntityUid shooterUid)
-    {
-        return _rangedCombatQuery.TryComp(shooterUid, out var rangedCombatComponent) && rangedCombatComponent.KsHoldFireForNeutrals;
-    }
-
-    /// <summary>
-    ///     Whether a round from <paramref name="shooterUid"/> is to be kept off <paramref name="mobUid"/>: a friend, unless it
-    ///         ignores friendly blocking; or, if it holds fire for neutrals, a standing mob neither hostile to it nor its target.
-    /// </summary>
-    private bool IsToBeSpared(EntityUid shooterUid, EntityUid mobUid, bool spareFriends, bool spareNeutrals, EntityUid? targetUid)
+    private bool IsToBeSpared(EntityUid shooterUid, EntityUid mobUid, bool spareNeutrals, EntityUid? targetUid)
     {
         if (_npcFactionSystem.IsEntityFriendly(shooterUid, mobUid))
-            return spareFriends;
+            return true;
 
         return spareNeutrals &&
             mobUid != targetUid &&
@@ -563,10 +558,9 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         var shooterSpeed = shooterVelocity.Length();
         var tickTime = (float) _gameTiming.TickPeriod.TotalSeconds;
 
-        // Bystanders as well as friends, if asked (KsHoldFireForNeutrals); friends not, if it ignores them.
-        var spareFriends = !IgnoresFriendlyBlocking(shooterUid);
-        var spareNeutrals = _rangedCombatQuery.TryComp(shooterUid, out var rangedCombatComponent) && rangedCombatComponent.KsHoldFireForNeutrals;
-        EntityUid? targetUid = rangedCombatComponent?.Target;
+        // Bystanders as well as friends, if asked. One that fires through everyone never gets here.
+        var spareNeutrals = GetFireLaneMode(shooterUid) == NpcFireLaneMode.HoldForFriendliesAndNeutrals;
+        EntityUid? targetUid = _rangedCombatQuery.TryComp(shooterUid, out var rangedCombatComponent) ? rangedCombatComponent.Target : null;
 
         _scratchMobs.Clear();
         _entityLookupSystem.GetEntitiesInRange(from, MissReach, _scratchMobs);
@@ -575,7 +569,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         {
             if (mob.Owner == shooterUid ||
                 !_mobStateSystem.IsAlive(mob.Owner, mob.Comp) ||
-                !IsToBeSpared(shooterUid, mob.Owner, spareFriends, spareNeutrals, targetUid) ||
+                !IsToBeSpared(shooterUid, mob.Owner, spareNeutrals, targetUid) ||
                 PassesThrough(shooterUid, mob.Owner, hitscan))
                 continue;
 

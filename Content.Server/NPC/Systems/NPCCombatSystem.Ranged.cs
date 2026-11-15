@@ -150,7 +150,7 @@ public sealed partial class NPCCombatSystem
                     comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque,
                         predicate: comp.KsStandingMobsBlockSight ? _npcLineOfFireSystem.IsLyingMob : _npcLineOfFireSystem.IsMob);
                     comp.KsTargetInLineOfFire = comp.TargetInLOS &&
-                        _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                        _npcLineOfFireSystem.CanRoundReach(uid, comp.Target); // the same check that picks its target: KsTargetInLineOfFireCon
                 }
                 else
                 {

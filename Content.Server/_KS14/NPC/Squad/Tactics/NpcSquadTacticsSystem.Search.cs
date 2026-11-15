@@ -455,6 +455,14 @@ public sealed partial class NpcSquadTacticsSystem
         foreach (var memberUid in _members)
         {
             OrderSearcher(memberUid, issuerUid, hunt, settings, now);
+
+            // A charge going on a locker (NpcSquadTacticsSystem.Lockers.cs): the search is on hold, and the blast gives everyone
+            //      their orders from now, those already told to search included.
+            if (hunt.Phase == NpcHuntPhase.Blast)
+            {
+                UpdateBlast(issuerUid, leaderUid, hunt, settings, now);
+                return false;
+            }
         }
 
         return false;

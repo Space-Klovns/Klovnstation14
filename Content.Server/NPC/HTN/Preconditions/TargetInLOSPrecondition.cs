@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.LineOfFire; // KS14
+using Content.Server._KS14.NPC.Squad; // KS14
 using Content.Server.Interaction;
 using Content.Shared.NPC.Systems; // KS14
 using Content.Shared.Physics;
@@ -9,8 +10,9 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
 {
     [Dependency] private IEntityManager _entManager = default!;
     private InteractionSystem _interaction = default!;
-    private NpcFactionSystem _npcFactionSystem = default!; // KS14: friends in the way, see IgnoreFriendlyBlocking
+    private NpcFactionSystem _npcFactionSystem = default!; // KS14: friends in the way, see NpcFireLaneMode.FireThrough
     private NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14: bodies on the floor, see IsLyingMob
+    private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!; // KS14: friends in the way, see NpcFireLaneMode.FireThrough
 
     [DataField("targetKey")]
     public string TargetKey = "Target";
@@ -42,6 +44,7 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
         _interaction = sysManager.GetEntitySystem<InteractionSystem>();
         _npcFactionSystem = sysManager.GetEntitySystem<NpcFactionSystem>(); // KS14
         _npcLineOfFireSystem = sysManager.GetEntitySystem<NpcLineOfFireSystem>(); // KS14
+        _npcSquadFireLaneSystem = sysManager.GetEntitySystem<NpcSquadFireLaneSystem>(); // KS14
     }
 
     public override bool IsMet(NPCBlackboard blackboard)
@@ -65,9 +68,8 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
 
         var isLyingMob = _npcLineOfFireSystem.IsLyingMob;
 
-        // A turret that fires through friends does not lose sight of its target behind one
-        if (_entManager.TryGetComponent(owner, out Content.Server._KS14.NPC.Components.KsNpcAimTrackingComponent? aimTrackingComponent) &&
-            aimTrackingComponent.IgnoreFriendlyBlocking)
+        // One that fires through friends does not lose sight of its target behind one
+        if (_npcSquadFireLaneSystem.GetFireLaneMode(owner) == NpcFireLaneMode.FireThrough)
         {
             return _interaction.InRangeUnobstructed(owner, target, range: range, collisionMask: collisionGroup,
                 predicate: other => isLyingMob(other) ||

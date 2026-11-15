@@ -49,12 +49,6 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
     /// </summary>
     [DataField("ksHoldFireWhenBlocked")]
     public bool KsHoldFireWhenBlocked;
-
-    /// <summary>
-    ///     The blackboard key that, true, has it hold fire for a bystander in the line too, not only a friend: see
-    ///         <see cref="NPCRangedCombatComponent.KsHoldFireForNeutrals"/>. A switch per NPC; unset is off.
-    /// </summary>
-    public const string KsHoldFireForNeutralsKey = "KsHoldFireForNeutrals";
     // KS14 end
 
     // Like movement we add a component and pass it off to the dedicated system.
@@ -87,7 +81,6 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
         ranged.UseOpaqueForLOSChecks = UseOpaqueForLOSChecks;
         ranged.KsHoldFireWhenBlocked = KsHoldFireWhenBlocked; // KS14
         ranged.KsStandingMobsBlockSight = blackboard.GetValueOrDefault<bool>(TargetInLOSPrecondition.KsStandingMobsBlockSightKey, _entManager); // KS14
-        ranged.KsHoldFireForNeutrals = blackboard.GetValueOrDefault<bool>(KsHoldFireForNeutralsKey, _entManager); // KS14
 
         if (blackboard.TryGetValue<float>(NPCBlackboard.RotateSpeed, out var rotSpeed, _entManager))
         {

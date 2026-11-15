@@ -24,8 +24,9 @@ Files:
 | Laser sight (shared) | `Content.Shared/_KS14/LaserSight/` (`KsLaserSightComponent`, `KsLaserSightSystem`) |
 | Client visuals | `Content.Client/_KS14/LaserSight/`, `Content.Client/_KS14/LockOn/` |
 | Turret prototypes | `Resources/Prototypes/Entities/Objects/Weapons/Guns/Turrets/turrets_{base,ballistic}.yml`, `Resources/Prototypes/_KS14/Entities/Objects/Weapons/Guns/Turrets/turrets_{ballistic,laser}.yml` |
-| HTN | `Resources/Prototypes/NPCs/root.yml` (`TurretCompound`, `EnergyTurretCompound`), `Resources/Prototypes/_KS14/NPCs/turret_tasks.yml` (`LaserTurretCompound`), `utility_queries.yml` (`NearbyGunTargets`) |
-| Tests | `Content.IntegrationTests/Tests/_KS14/NPC/KsNpcTurretTrackingTest.cs`, `KsNpcCombatTuningTest.cs`, `KsNpcTurretSightTest.cs` (sight vs shot: glass, bodies, friends, bystanders), `KsNpcTurretTargetingTest.cs` |
+| HTN | `Resources/Prototypes/NPCs/root.yml` (`TurretCompound`, `EnergyTurretCompound`), `Resources/Prototypes/_KS14/NPCs/turret_tasks.yml` (`LaserTurretCompound`), `_KS14/NPCs/utility_queries.yml` (`KsTurretGunTargets`) |
+| Fire-lane mode | `Content.Server/_KS14/NPC/Squad/NpcFireLaneComponent.cs` (`NpcFireLaneMode`) |
+| Tests | `Content.IntegrationTests/Tests/_KS14/NPC/KsNpcTurretTrackingTest.cs`, `KsNpcCombatTuningTest.cs`, `KsNpcTurretSightTest.cs` (sight vs shot: glass, bodies, friends, bystanders, fire-lane modes, picking a target its rounds reach), `KsNpcTurretTargetingTest.cs` (sticky targets, the fire-lane check per mode) |
 
 ## 1. The `UpdateRanged` pipeline
 
@@ -40,7 +41,7 @@ component. Steps in order; "exit" means `continue` to the next NPC unless it say
 | 4 | Combat mode forced on (if the NPC has `CombatModeComponent`) | |
 | 5 | `_gun.TryGetGun` fails | `Status = NoWeapon`, `KsStopTargeting`, exit. |
 | 6 | `GetAmmoCountEvent` count 0 | If the gun has `RechargeBasicEntityAmmoComponent`: `KsUpdateSight(uid, target, false)` then `continue` (no status change; laser off and the lock grace applies, as for lost sight). Otherwise `Status = Unspecified`, `KsStopTargeting`, exit. |
-| 7 | LOS cadence: `LOSAccumulator -= frameTime`; when `< 0`, add `UnoccludedCooldown` (const `0.2f`) and re-raycast into `comp.TargetInLOS` (and, in hold-fire mode, `comp.KsTargetInLineOfFire`) | Between raycasts the old answers are reused. Three modes. **Hold-fire** (`KsHoldFireWhenBlocked`, YAML `ksHoldFireWhenBlocked: true` on `GunOperator`; all three turret compounds): `TargetInLOS` is *sight*, `InRangeUnobstructed(..., CollisionGroup.Opaque)` ignoring every mob (`NpcLineOfFireSystem.IsMob`), or only lying/dead ones if `KsStandingMobsBlockSight`; then `KsTargetInLineOfFire` = in sight and `NpcLineOfFireSystem.HasLineOfFire` (the next round's own collision mask, mobs ignored: glass stops a bullet, not a laser). **Opaque** (`opaqueKey: true`): `Opaque`, ignoring lying/dead mobs (`IsLyingMob`). **Default**: `HasLineOfFire`, the gun's own shot mask, mobs ignored. Every mob is on the `Opaque` layer, which is why mobs are filtered. |
+| 7 | LOS cadence: `LOSAccumulator -= frameTime`; when `< 0`, add `UnoccludedCooldown` (const `0.2f`) and re-raycast into `comp.TargetInLOS` (and, in hold-fire mode, `comp.KsTargetInLineOfFire`) | Between raycasts the old answers are reused. Three modes. **Hold-fire** (`KsHoldFireWhenBlocked`, YAML `ksHoldFireWhenBlocked: true` on `GunOperator`; all three turret compounds): `TargetInLOS` is *sight*, `InRangeUnobstructed(..., CollisionGroup.Opaque)` ignoring every mob (`NpcLineOfFireSystem.IsMob`), or only lying/dead ones if `KsStandingMobsBlockSight`; then `KsTargetInLineOfFire` = in sight and `NpcLineOfFireSystem.HasLineOfFire` (the next round's own collision mask, mobs ignored: glass stops a bullet, not a laser; `NpcLineOfFireSystem.CanRoundReach`, one allocation-free ray, the same check the turret picks its target by). **Opaque** (`opaqueKey: true`): `Opaque`, ignoring lying/dead mobs (`IsLyingMob`). **Default**: `HasLineOfFire`, the gun's own shot mask, mobs ignored. Every mob is on the `Opaque` layer, which is why mobs are filtered. |
 | 8 | `KsUpdateSight(uid, target, TargetInLOS)` | Every tick (not only on raycast ticks): `KsTargetLockOn.UpdateLock`; if `KsLaserSight.OnlyWhileTargeting`, `SetEnabled(TargetInLOS)`; if not in LOS, tracking `LastGoalAngle = null`. |
 | 9 | `!TargetInLOS` | `ShootAccumulator = 0`, `Status = NotInSight`, `steering.ForceMove = true`, exit. |
 | 10 | Newly in LOS and `SoundTargetInLOS != null` | `PlayPvs` the sound (blackboard key `SoundTargetInLOS`). |
@@ -51,7 +52,7 @@ component. Steps in order; "exit" means `continue` to the next NPC unless it say
 | 14a | KS14, hold-fire mode only: `!KsTargetInLineOfFire` | `Status = KsShotBlocked`, exit. Seen and aimed at, but a round would not get there (a bullet turret behind glass): it keeps aiming, tracking, locking on and showing its laser, and `GunOperator` carries on. |
 | 15 | `!Enabled \|\| !_gun.CanShoot(gun)` | exit. `Enabled` is the system-wide public toggle (`NPCCombatSystem.Enabled`). |
 | 16 | `!_lockOnSystem.IsLocked(uid, target)` | exit. Missing `KsTargetLockOn` counts as locked. **Aim (step 14) has already happened**; lock-on only delays firing. |
-| 16a | Once `gun.NextFire <= CurTime`: `NpcSquadFireLaneSystem.TryGetClearShot(uid, from, leadSpot, tolerance: target's body radius)` (always clear with `KsNpcAimTracking.ignoreFriendlyBlocking`, unless `KsHoldFireForNeutrals`) | No clear direction: `NoteHeldFire`, `Status = KsFriendInTheWay` once held for `HoldFireTime` where it stands (a mobile NPC then fails the task and finds another spot), but `KsShotBlocked` in hold-fire mode (a turret cannot move, so it keeps aiming until the friend is out of the way), exit. Otherwise the lead spot becomes the clear shot: the aim, or the nearest direction off it that misses every friend and still hits the target's body. Friends are those `IsEntityFriendly`; with the blackboard bool `KsHoldFireForNeutrals` (copied by `GunOperator.Startup` into `NPCRangedCombatComponent.KsHoldFireForNeutrals`) also any standing mob neither hostile to the shooter nor its target. The same check runs again on every round as it is fired (`IsShotClear`, on `ShotAttemptedEvent`). See *Friends in the way* below. |
+| 16a | Once `gun.NextFire <= CurTime`: `NpcSquadFireLaneSystem.TryGetClearShot(uid, from, leadSpot, tolerance: target's body radius)` (always clear with `NpcFireLane.mode: FireThrough`) | No clear direction: `NoteHeldFire`, `Status = KsFriendInTheWay` once held for `HoldFireTime` where it stands (a mobile NPC then fails the task and finds another spot), but `KsShotBlocked` in hold-fire mode (a turret cannot move, so it keeps aiming until the friend is out of the way), exit. Otherwise the lead spot becomes the clear shot: the aim, or the nearest direction off it that misses every friend and still hits the target's body. Friends are those `IsEntityFriendly`; with `NpcFireLane.mode: HoldForFriendliesAndNeutrals` also any standing mob neither hostile to the shooter nor its target. See *Fire-lane mode* below. The same check runs again on every round as it is fired (`IsShotClear`, on `ShotAttemptedEvent`). See *Friends in the way* below. |
 | 17 | Build `targetCordinates` from the lead spot (grid-local if the target is over a grid) | |
 | 18 | `Status = Normal` | Only reached once aimed, able to shoot and locked. |
 | 19 | `gun.NextFire > CurTime` | `continue`. Upstream had `return`, which ended the whole pass and starved every NPC after this one for the tick; KS14 changed it. |
@@ -115,9 +116,9 @@ Notes on components:
 
 ### HTN compounds
 
-All three: `UtilityOperator NearbyGunTargets` writes `Target`, then a `GunOperator` task guarded by
+All three: `UtilityOperator KsTurretGunTargets` writes `Target`, then a `GunOperator` task guarded by
 `KeyExists Target`, `TargetInRange` (`RangedRange`) and `TargetInLOS`, with a `UtilityService RangedService` re-running
-`NearbyGunTargets` to retarget. Fallback branch: `IdleSpinCompound` (random rotations at `RotateSpeed`).
+`KsTurretGunTargets` to retarget. Fallback branch: `IdleSpinCompound` (random rotations at `RotateSpeed`).
 
 | Compound | File | `TargetInLOSPrecondition` | `GunOperator` | `requireLOS` |
 | --- | --- | --- | --- | --- |
@@ -135,8 +136,17 @@ round (step 14a): a laser turret fires through a window, a ballistic one sees th
 if set, wins over it, and is also what `GunOperator.Startup` copies for step 7 (unset = `false`). With it `true`, a
 turret is blinded by a friend standing in the line and never takes the target on.
 
-`NearbyGunTargets` (`utility_queries.yml`): `NearbyHostilesQuery` then considerations alive, not crit, not stunned,
-`TurretTargetingCon` (marker consideration with no fields), distance, health, accessible, `TargetInLOSOrCurrentCon`.
+`KsTurretGunTargets` (`_KS14/NPCs/utility_queries.yml`) is upstream's `NearbyGunTargets` (`NearbyHostilesQuery` then
+considerations alive, not crit, not stunned, `TurretTargetingCon` (marker consideration with no fields), distance, health,
+accessible, `TargetInLOSOrCurrentCon`) plus, last, `KsTargetInLineOfFireCon`: 1 if the turret's next round would get to
+the candidate (`NpcLineOfFireSystem.CanRoundReach`, the check behind `KsTargetInLineOfFire`; lasers pass glass, bullets
+do not, mobs never count), else the `BoolCurve`'s `lowScore: 0.001`. So a ballistic turret takes a hostile in the open
+over a nearer one behind glass, but with only the one behind glass it still takes it on, aims and holds fire. Last in
+the query, the ray is only cast for a candidate that could still win (one ray, no allocation once warm). Switching:
+`RangedService` re-runs the query on every replan that keeps the running plan (every 0.45s), and `GunOperator.Update`
+re-reads `Target`, so a turret holding fire on a hostile behind glass turns to one that steps into the open within a
+replan; a sticky turret (`keepTargetUntilLost`) lets its target go then too (see `KsTargetLockOn`). Other gun NPCs
+(`gun.yml`, tanks, bosses) still use `NearbyGunTargets`.
 
 Blackboard keys turrets care about:
 
@@ -146,7 +156,6 @@ Blackboard keys turrets care about:
 | `SoundTargetInLOS` | `SoundSpecifier` | Played at the turret when LOS to the target is first gained. |
 | `RangedRange` | float, default 10 | Engagement range in the preconditions. |
 | `KsStandingMobsBlockSight` | bool; unset = the precondition's `ksStandingMobsBlock` (turrets `false`) | A standing mob in the line hides the target. |
-| `KsHoldFireForNeutrals` | bool; unset = `false` | Also hold fire for a standing bystander (neither friendly nor hostile, not the target), as for a friend. Off, a bystander in the line is shot through, as upstream. |
 
 Set them in the HTN component:
 
@@ -164,6 +173,26 @@ Set them in the HTN component:
 (Overriding `blackboard` on a child prototype replaces keys by name; re-state `SoundTargetInLOS` only if you want to
 change it. Verify merged values in VV on the `HTN` component.)
 
+### Fire-lane mode (`NpcFireLane`, server only, `Content.Server._KS14.NPC.Squad`)
+
+Whom an NPC holds fire for when they stand in its line of fire: one field, `mode`, on the NPC's entity. Any NPC that
+shoots goes through it (turrets and operatives alike: `TryGetClearShot` before a shot, `IsShotClear` as each round goes).
+Without the component it is `HoldForFriendlies`. Read it with `NpcSquadFireLaneSystem.GetFireLaneMode`.
+
+| `mode` | Holds fire for | Notes |
+| --- | --- | --- |
+| `FireThrough` | nobody | No fire-lane check at all. `TargetInLOSPrecondition` with `ksStandingMobsBlock: true` also sees past friendly mobs. On the heavy MG turret (`KsWeaponTurretNanoTrasenHeavy`). |
+| `HoldForFriendlies` (default) | friends (faction-friendly, standing, alive) | A bystander in the line catches the rounds, as upstream. Operatives and every turret but the heavy MG. |
+| `HoldForFriendliesAndNeutrals` | friends, and bystanders: standing mobs neither friendly nor hostile to it, and not its target | |
+
+```yaml
+- type: NpcFireLane
+  mode: HoldForFriendliesAndNeutrals
+```
+
+There is no "fire through friends but hold for bystanders": it replaced `KsNpcAimTracking.ignoreFriendlyBlocking` and
+the blackboard bool `KsHoldFireForNeutrals`, which allowed it.
+
 ## 3. The KS14 components
 
 Sources: server hooks in `NPCCombatSystem.Klovn.TurretTracking.cs`; components are independent, each optional.
@@ -176,7 +205,6 @@ Sources: server hooks in `NPCCombatSystem.Klovn.TurretTracking.cs`; components a
 | `maxRotationSpeed` | Angle? | null | Hard cap on the final speed per second. Plain YAML number = degrees, `3.14 rad` for radians (`AngleSerializer`). null = none. |
 | `rotateWhileWaiting` | bool | `true` | Aim every tick in LOS, including during `ShootDelay` and lock-on. `false` = upstream behaviour (turn only after the delay). |
 | `accuracyThreshold` | Angle? | null | Replaces `NPCRangedCombat.AccuracyThreshold` (30 degrees) as the tolerance in step 14. Plain number = degrees (examples use `5`). |
-| `ignoreFriendlyBlocking` | bool | `false` | Fire with a friend in the line of fire: `NpcSquadFireLaneSystem.TryGetClearShot`/`IsShotClear` (step 16a, and each round as it goes off) do not hold for friends; with `KsHoldFireForNeutrals` they still hold for bystanders. `TargetInLOSPrecondition` with `ksStandingMobsBlock: true` also sees past friendly mobs. Turrets see past every mob anyway, so for them the fire-lane check is what this changes. On the heavy MG turret. |
 | `LastGoalAngle`, `LastTarget` | VV only | | Runtime state. |
 
 Math in `KsTryAim`, per tick:
@@ -204,7 +232,7 @@ only; aiming continues.
 | --- | --- | --- | --- |
 | `lockOnTime` | TimeSpan (seconds number) | `1.5` | Time from acquiring a visible target to being allowed to fire. |
 | `loseLockGrace` | TimeSpan | `0.5` | Sight lost for longer than this clears the lock (full `lockOnTime` again on reacquire); shorter keeps progress. |
-| `keepTargetUntilLost` | bool | `false` | The turret's target query (`NPCUtilitySystem.KsTryKeepCurrentTarget`) returns the current `Target` alone while it is still a candidate, still scores above 0 on every consideration and is in sight (occlusion check, plus the shooter's own `TargetInLOS`). Without it two alternately-closest hostiles keep swapping the lock and neither finishes. On the heavy MG turret. |
+| `keepTargetUntilLost` | bool | `false` | The turret's target query (`NPCUtilitySystem.KsTryKeepCurrentTarget`) returns the current `Target` alone while it is still a candidate, still scores above 0 on every consideration and is in sight (occlusion check, plus the shooter's own `TargetInLOS`). Without it two alternately-closest hostiles keep swapping the lock and neither finishes. Except: while it holds fire because its rounds cannot reach the current target (hold-fire mode, `!KsTargetInLineOfFire`), any candidate that scores higher on the query takes over, so it turns from a hostile behind glass to one in the open; against another it cannot reach either it keeps the one it has. On the heavy MG turret. |
 | `indicatorColor` | Color | Red | Reticle colour drawn on the target's screen. |
 | `lockingSound` | SoundSpecifier? | null | Played by the server from the **turret** (`PlayPvs`, so everyone in range hears it) when a lock starts. Not networked. |
 | `lockedSound` | SoundSpecifier? | null | Same, when the lock completes. |
@@ -270,8 +298,9 @@ untouched. To make any other shooter miss, move the aim point the same way rathe
 ### Friends in the way (`NpcSquadFireLaneSystem`, cvar `klovn.npc.squad_fire_lanes`)
 
 Every NPC round keeps off standing friends (faction-friendly, alive; not those a `KsFactionCollisionShooter` projectile
-passes through), and, for a shooter whose blackboard has `KsHoldFireForNeutrals: true`, standing bystanders too (alive,
-not lying, neither friendly nor hostile by `NpcFactionSystem.IsEntityHostile`, not its target). The shooter's own body
+passes through), and, for a shooter with `NpcFireLane.mode: HoldForFriendliesAndNeutrals`, standing bystanders too (alive,
+not lying, neither friendly nor hostile by `NpcFactionSystem.IsEntityHostile`, not its target); for one with
+`FireThrough`, nobody. The shooter's own body
 never counts as a wall: `NpcLineOfFireSystem.TryGetFirstHit` skips a hit whose middle is where the ray starts, which
 for a turret is itself (a mob shooter is skipped as a mob anyway). It models where rounds actually go, not a line to
 the target:
@@ -416,6 +445,8 @@ Break the thing, rebuild, see red, restore (CLAUDE.md section 6). Breaks that ea
 | `TestAimTrackingKeepsUp(true)` | Zero the compensation in `KsTryAim` (or `angularVelocityCompensation: 0`): `maxError` exceeds the threshold. |
 | `TestLaserLifecycle` | Remove the `MapInit` handler in `KsLaserSightSystem` (idle assert red); remove the laser-off from `KsStopTargeting` and `KsOnRangedShutdown` (end assert red). |
 | `TestAimTrackingKeepsUp(false)` | Give the plain shooter `KsNpcAimTracking`: it no longer falls behind. |
+| `KsNpcTurretSightTest.TestPrefersTargetItsRoundsReach`, `TestSwitchesToTargetItsRoundsReach` | Point the turret compounds back at `NearbyGunTargets` (or drop `KsTargetInLineOfFireCon` from `KsTurretGunTargets`): both turrets stay on the nearer hostile behind glass and never fire. Remove the hold-fire release in `KsTryKeepCurrentTarget`: the heavy MG case of `TestSwitchesToTargetItsRoundsReach` stays on the glass one. |
+| `KsNpcTurretTargetingTest.TestFireLaneModes`, `KsNpcTurretSightTest.TestFireLaneMode` | Make `IsToBeSpared` ignore `spareNeutrals`, or `GetFireLaneMode` return the default: the neutral and fire-through cases go red. |
 
 The first three were run when the tests were written and each went red: ammo 16 -> 12 before the lock completed;
 `Target` expected null but was a uid; max error 3.1 rad. One trap found doing so: a 1 s lock checked at 0.5 s stayed

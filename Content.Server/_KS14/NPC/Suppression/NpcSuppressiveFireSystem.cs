@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Squad;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
+using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
@@ -27,6 +28,7 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
     [Dependency] private SharedCombatModeSystem _sharedCombatModeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<NpcRoundsTakenComponent> _roundsTakenQuery = default!;
     [Dependency] private EntityQuery<NpcSuppressiveFireComponent> _suppressiveFireQuery = default!;
 
     /// <summary>
@@ -81,9 +83,35 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
 
             var spotRadius = GetSpotRadius(uid, suppressiveFireComponent.TargetUid, now);
 
-            if (_npcSquadFireLaneSystem.TryGetClearShot(uid, worldPosition, targetPosition, spotRadius, out var shot))
-                _gunSystem.AttemptShoot(uid, gunEntity, _transformSystem.ToCoordinates(shot));
+            if (!_npcSquadFireLaneSystem.TryGetClearShot(uid, worldPosition, targetPosition, spotRadius, out var shot))
+                continue;
+
+            var before = suppressiveFireComponent.BarrierUid != null ? GetAmmoCount(gunEntity.Owner) : 0;
+
+            if (_gunSystem.AttemptShoot(uid, gunEntity, _transformSystem.ToCoordinates(shot)) &&
+                suppressiveFireComponent.BarrierUid is { } barrierUid &&
+                !TerminatingOrDeleted(barrierUid))
+            {
+                // What left the gun, and at least the one: a shot is a shot, whatever it draws on.
+                EnsureComp<NpcRoundsTakenComponent>(barrierUid).Rounds += Math.Max(before - GetAmmoCount(gunEntity.Owner), 1);
+            }
         }
+    }
+
+    private int GetAmmoCount(EntityUid gunUid)
+    {
+        var ammoEvent = new GetAmmoCountEvent();
+        RaiseLocalEvent(gunUid, ref ammoEvent);
+        return ammoEvent.Count;
+    }
+
+    /// <summary>
+    ///     How many rounds NPCs have fired at <paramref name="barrierUid"/> to break it, all of them together (see
+    ///         <see cref="Start"/>).
+    /// </summary>
+    public int GetRoundsTaken(EntityUid barrierUid)
+    {
+        return _roundsTakenQuery.TryComp(barrierUid, out var roundsTakenComponent) ? roundsTakenComponent.Rounds : 0;
     }
 
     /// <summary>
@@ -116,12 +144,15 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
     ///         <paramref name="targetUid"/> went, if given, so anywhere it could be by now does as well where a friend is in the
     ///         way; or the spot itself, with none.
     /// </summary>
-    public void Start(EntityUid uid, EntityCoordinates coordinates, TimeSpan duration, EntityUid? targetUid = null)
+    /// <param name="barrierUid">What it fires at to break, if anything: every round fired counts against it
+    ///     (<see cref="GetRoundsTaken"/>).</param>
+    public void Start(EntityUid uid, EntityCoordinates coordinates, TimeSpan duration, EntityUid? targetUid = null, EntityUid? barrierUid = null)
     {
         var suppressiveFireComponent = EnsureComp<NpcSuppressiveFireComponent>(uid);
         suppressiveFireComponent.Coordinates = coordinates;
         suppressiveFireComponent.EndTime = _gameTiming.CurTime + duration;
         suppressiveFireComponent.TargetUid = targetUid;
+        suppressiveFireComponent.BarrierUid = barrierUid;
 
         _sharedCombatModeSystem.SetInCombatMode(uid, true);
     }

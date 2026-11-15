@@ -4,7 +4,7 @@
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
-            proto: NearbyGunTargets
+            proto: KsTurretGunTargets # prefers a hostile its rounds can get to
 
         - !type:HTNPrimitiveTask
           preconditions:
@@ -26,7 +26,7 @@
           services:
             - !type:UtilityService
               id: RangedService
-              proto: NearbyGunTargets
+              proto: KsTurretGunTargets
               key: Target
 
     - tasks:

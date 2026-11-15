@@ -155,6 +155,16 @@ public sealed partial class NpcSquadTacticsSystem
             blown = RunCharge(issuerUid, plan, hunt.BlastAction, settings, now);
         }
 
+        // On a locker: whether or not it went, on with the search, the same update (see NpcSquadTacticsSystem.Lockers.cs).
+        if (hunt.BlastLockerUid != null)
+        {
+            if (!blown && plan.Charge != null)
+                return false;
+
+            EndLockerBlast(hunt, now);
+            return true;
+        }
+
         if (!blown)
         {
             if (plan.Charge != null)
@@ -793,7 +803,9 @@ public sealed partial class NpcSquadTacticsSystem
     ///     Finds who should put a charge on <paramref name="site"/>. Wired over timed, whoever carries it. A wired charge needs
     ///         somewhere to stand off from within reach of its wire, or it is no good here.
     /// </summary>
-    private bool TryPickPlanter(NpcSquadPlan plan, Entity<MapGridComponent> grid, NpcChargeSite site, int routeLength, out NpcChargePick pick)
+    /// <param name="outsideRoom">Whether to set a wired one off from outside the hostile's room, as for a way into it. Not for
+    ///     a locker in the room.</param>
+    private bool TryPickPlanter(NpcSquadPlan plan, Entity<MapGridComponent> grid, NpcChargeSite site, int routeLength, out NpcChargePick pick, bool outsideRoom = true)
     {
         pick = default;
         var found = false;
@@ -813,7 +825,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, _npcChargeSystem.GetWireReach(charge.ActivatorUid), out var standOffCoordinates))
+            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, _npcChargeSystem.GetWireReach(charge.ActivatorUid), out var standOffCoordinates, outsideRoom: outsideRoom))
                 continue;
 
             pick = new NpcChargePick(site, memberUid, charge, standOffCoordinates, routeLength);
@@ -830,7 +842,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// <param name="wireReach">How far the wire reaches. The walk there has to fit on it, not just the straight line: a wire
     ///     round a corner runs round it, and a planter sent further is held back by its own wire, short of the spot and in the
     ///     blast, and never sets it off.</param>
-    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, float wireReach, out EntityCoordinates coordinates)
+    /// <param name="outsideRoom">Whether it has to be outside the room, as for a way into it.</param>
+    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, float wireReach, out EntityCoordinates coordinates, bool outsideRoom = true)
     {
         coordinates = default;
 
@@ -844,7 +857,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var (tile, steps) in _floodSteps)
         {
-            if (hunt.RoomTiles.Contains(tile) || hunt.ThresholdTiles.Contains(tile))
+            if (outsideRoom && (hunt.RoomTiles.Contains(tile) || hunt.ThresholdTiles.Contains(tile)))
                 continue;
 
             var distance = ((Vector2) (tile - site.Tile)).Length();
@@ -1010,7 +1023,8 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
+            // Not for a locker, which is in the room with them: nobody goes back out to stand at the door.
+            if (hunt.BlastLockerUid == null && TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
                 continue;
 
             if (memberUid == plan.WatcherUid)

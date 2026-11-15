@@ -1,6 +1,7 @@
 #nullable enable
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.NPC.Squad;
 using Content.Server.Atmos.Components;
 using Content.Server.Body.Components;
 using Content.Server.NPC.Components;
@@ -26,8 +27,8 @@ namespace Content.IntegrationTests.Tests._KS14.NPC;
 /// <summary>
 ///     What a turret sees is not what it can hit. It takes on a hostile it can see, past mobs standing or lying, and aims and
 ///         tracks it; it fires only once a round would get there by what the round collides with (glass stops a bullet, not
-///         a laser) and, unless it ignores friendly blocking, would hit no friend, nor, if asked, a bystander. Walls still
-///         hide a hostile.
+///         a laser) and, by its <see cref="NpcFireLaneMode"/>, would hit no friend, nor, if asked, a bystander. Walls still
+///         hide a hostile. Of hostiles it can see, it takes on one its rounds can get to before one they cannot.
 /// </summary>
 public sealed class KsNpcTurretSightTest : GameTest
 {
@@ -47,6 +48,7 @@ public sealed class KsNpcTurretSightTest : GameTest
     private const string LaserTurret = "WeaponTurretSyndicateLaser";
     private const string HeavyTurret = "KsWeaponTurretNanoTrasenHeavy";
     private const string StandingMobsBlockTurret = "KsTurretSightTestStandingMobsBlock";
+    private const string FireThroughTurret = "KsTurretSightTestFireThrough";
     private const string HoldForNeutralsTurret = "KsTurretSightTestHoldForNeutrals";
 
     /// <summary>
@@ -71,16 +73,17 @@ public sealed class KsNpcTurretSightTest : GameTest
 
 - type: entity
   parent: WeaponTurretSyndicate
+  id: KsTurretSightTestFireThrough
+  components:
+  - type: NpcFireLane
+    mode: FireThrough
+
+- type: entity
+  parent: WeaponTurretSyndicate
   id: KsTurretSightTestHoldForNeutrals
   components:
-  - type: HTN
-    rootTask:
-      task: TurretCompound
-    blackboard:
-      RotateSpeed: !type:Single
-        3.141
-      KsHoldFireForNeutrals: !type:Bool
-        true
+  - type: NpcFireLane
+    mode: HoldForFriendliesAndNeutrals
 ";
 
     /// <summary>
@@ -209,36 +212,53 @@ public sealed class KsNpcTurretSightTest : GameTest
     }
 
     /// <summary>
-    ///     A bystander, of a faction neither friendly nor hostile to the turret, standing in the line. By default the turret
-    ///         fires through it, as it always has; with <c>KsHoldFireForNeutrals</c> on its blackboard it holds fire for it as
-    ///         for a friend, aiming and tracking the while, and fires once it steps aside.
+    ///     A friend of the turret's, or a bystander (a faction neither friendly nor hostile to it), standing in the line,
+    ///         under each <see cref="NpcFireLaneMode"/>. <c>FireThrough</c> fires through both; <c>HoldForFriendlies</c>, the
+    ///         default (a turret without <c>NpcFireLane</c>), holds fire for the friend and fires through the bystander, as
+    ///         turrets always have; <c>HoldForFriendliesAndNeutrals</c> holds for both. One holding fire aims and tracks the
+    ///         while, and fires once whoever it was holding for steps aside.
     /// </summary>
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task TestHoldFireForNeutralsSwitch(bool holdForNeutrals)
+    [TestCase(NpcFireLaneMode.FireThrough, Blocker.Friend)]
+    [TestCase(NpcFireLaneMode.FireThrough, Blocker.Neutral)]
+    [TestCase(NpcFireLaneMode.HoldForFriendlies, Blocker.Friend)]
+    [TestCase(NpcFireLaneMode.HoldForFriendlies, Blocker.Neutral)]
+    [TestCase(NpcFireLaneMode.HoldForFriendliesAndNeutrals, Blocker.Friend)]
+    [TestCase(NpcFireLaneMode.HoldForFriendliesAndNeutrals, Blocker.Neutral)]
+    public async Task TestFireLaneMode(NpcFireLaneMode mode, Blocker blocker)
     {
         var tickRate = TickRate();
-        var turret = holdForNeutrals ? HoldForNeutralsTurret : BallisticTurret;
-
-        if (!holdForNeutrals)
+        var turret = mode switch
         {
-            var scene = await SetUp(turret, NanoTrasenMob, "NanoTrasen", Blocker.Neutral);
+            NpcFireLaneMode.FireThrough => FireThroughTurret,
+            NpcFireLaneMode.HoldForFriendliesAndNeutrals => HoldForNeutralsTurret,
+            _ => BallisticTurret,
+        };
+        var holds = blocker == Blocker.Friend
+            ? mode != NpcFireLaneMode.FireThrough
+            : mode == NpcFireLaneMode.HoldForFriendliesAndNeutrals;
+
+        if (!holds)
+        {
+            var scene = await SetUp(turret, NanoTrasenMob, "NanoTrasen", blocker);
+            await Pair.Server.WaitPost(() => Assert.That(
+                scene.EntManager.System<NpcSquadFireLaneSystem>().GetFireLaneMode(scene.TurretUid), Is.EqualTo(mode)));
             Assert.That(await RunUntilFired(scene, (int)(30f * tickRate)), Is.Not.Null,
-                "by default a bystander in the line should not stop it");
+                $"{mode} should fire through a {blocker} in the line");
             return;
         }
 
         var clearTicks = await ClearTicks(turret, NanoTrasenMob, "NanoTrasen");
-        var holdingScene = await SetUp(turret, NanoTrasenMob, "NanoTrasen", Blocker.Neutral);
-        await AssertHoldsFire(holdingScene, HoldTicks(clearTicks), "with a bystander in the line");
+        var holdingScene = await SetUp(turret, NanoTrasenMob, "NanoTrasen", blocker);
+        await AssertHoldsFire(holdingScene, HoldTicks(clearTicks), $"{mode}, with a {blocker} in the line");
 
         await Pair.Server.WaitPost(() => MoveTo(holdingScene, holdingScene.BlockerUid!.Value, new Vector2(3f, -3f)));
         Assert.That(await RunUntilFired(holdingScene, (int)(10f * tickRate)), Is.Not.Null,
-            "once the bystander is out of the way it should fire");
+            $"{mode}: once the {blocker} is out of the way it should fire");
     }
 
     /// <summary>
-    ///     The heavy machine gun ignores friendly blocking: a friend of its in the line does not stop it.
+    ///     The heavy machine gun fires through friends (<see cref="NpcFireLaneMode.FireThrough"/>): a friend of its in the
+    ///         line does not stop it.
     /// </summary>
     [Test]
     public async Task TestHeavyTurretFiresPastFriend()
@@ -270,6 +290,73 @@ public sealed class KsNpcTurretSightTest : GameTest
 
         await Pair.Server.WaitPost(() => MoveTo(scene, scene.HostileUid, new Vector2(6f, 0.4f)));
         await AssertHoldsFire(scene, (int)(2f * tickRate), "after the hostile moved behind the window");
+    }
+
+    /// <summary>
+    ///     A hostile behind a window and, further off, another in the open. A ballistic turret takes on the one its bullets
+    ///         can get to, though the other is nearer, and fires at it; once that one is gone it turns to the one behind the
+    ///         window, aims and holds fire, as it would with only that one there. The heavy machine gun, which keeps its
+    ///         target until it loses it, does the same.
+    /// </summary>
+    [TestCase(BallisticTurret, NanoTrasenMob, "NanoTrasen")]
+    [TestCase(HeavyTurret, SyndicateMob, "Syndicate")]
+    public async Task TestPrefersTargetItsRoundsReach(string turret, string hostile, string hostileFaction)
+    {
+        var tickRate = TickRate();
+        var scene = await SetUp(turret, hostile, hostileFaction, Blocker.Window);
+        var glassUid = scene.HostileUid;
+        var openUid = await SpawnOpenHostile(scene, hostile);
+
+        Assert.That(await RunUntilFired(scene, (int)(30f * tickRate)), Is.Not.Null,
+            "it should have taken on the hostile in the open, which it can hit, and fired");
+        await Pair.Server.WaitPost(() => Assert.That(
+            scene.EntManager.GetComponent<NPCRangedCombatComponent>(scene.TurretUid).Target, Is.EqualTo(openUid),
+            "it should be shooting the hostile in the open"));
+
+        // Alone, the one behind glass is still taken on: aimed at, fire held.
+        await Pair.Server.WaitPost(() =>
+        {
+            scene.EntManager.DeleteEntity(openUid);
+            scene.StartAmmo = AmmoCount(scene.EntManager, scene.TurretUid);
+        });
+        scene.HostileUid = glassUid;
+        await AssertHoldsFire(scene, (int)(8f * tickRate), "with only the hostile behind the window left");
+    }
+
+    /// <summary>
+    ///     A turret aiming at a hostile behind a window, holding fire, turns to one that walks out into the open, further
+    ///         off, and fires at it. The heavy machine gun keeps its target until it loses it, but not one it cannot hit
+    ///         while another it can is there.
+    /// </summary>
+    [TestCase(BallisticTurret, NanoTrasenMob, "NanoTrasen")]
+    [TestCase(HeavyTurret, SyndicateMob, "Syndicate")]
+    public async Task TestSwitchesToTargetItsRoundsReach(string turret, string hostile, string hostileFaction)
+    {
+        var scene = await SetUp(turret, hostile, hostileFaction, Blocker.Window);
+        await AssertHoldsFire(scene, (int)(8f * TickRate()), "behind a window");
+
+        var openUid = await SpawnOpenHostile(scene, hostile);
+
+        Assert.That(await RunUntilFired(scene, (int)(15f * TickRate())), Is.Not.Null,
+            "it should have turned to the hostile in the open and fired");
+        await Pair.Server.WaitPost(() => Assert.That(
+            scene.EntManager.GetComponent<NPCRangedCombatComponent>(scene.TurretUid).Target, Is.EqualTo(openUid),
+            "it should be shooting the hostile in the open"));
+    }
+
+    /// <summary>
+    ///     A godmoded hostile in the open, seven tiles off: further than the one behind the window.
+    /// </summary>
+    private async Task<EntityUid> SpawnOpenHostile(Scene scene, string hostile)
+    {
+        var openUid = default(EntityUid);
+        await Pair.Server.WaitPost(() =>
+        {
+            openUid = SpawnAt(scene.EntManager, hostile, scene.GridUid, 0, -7);
+            scene.EntManager.System<SharedGodmodeSystem>().EnableGodmode(openUid);
+        });
+
+        return openUid;
     }
 
     /// <summary>
