@@ -30,7 +30,8 @@ public sealed class KsNpcExecutionOffhandKnifeTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
-    private static readonly Robust.Shared.Prototypes.EntProtoId Spawner = "KsRandomHumanoidSpawnerOperativeRedacted";
+    // A string, not an EntProtoId: the linter checks those, and the Redacted are in the private submodule, which it may lack.
+    private const string Spawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
     [Test]
     public async Task TestExecutesOnceWithAKnifeInTheOtherHand()

@@ -31,7 +31,8 @@ public sealed class KsNpcSearchBreakLockerTest : GameTest
     // Connected: a real NPC only runs while a player is about.
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
-    private static readonly EntProtoId Spawner = "KsRandomHumanoidSpawnerOperativeRedacted";
+    // A string, not an EntProtoId: the linter checks those, and the Redacted are in the private submodule, which it may lack.
+    private const string Spawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
     /// <summary>
     ///     20s: up to the locker, then a few bursts.
