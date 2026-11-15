@@ -55,9 +55,9 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
         PageTabs.OnTabSelected += tab => ShowCart(tab == _cartTab);
 
         SearchBar.Input.OnTextChanged += _ => PopulateProducts();
+        // Plain buttons, unlike a task's drop: a cart is quick to fill again, so asking twice would only get in the way.
         ClearButton.Icon = KsTguiIcons.Trash;
-        ClearButton.ConfirmText = Loc.GetString("ks-salvage-tablet-confirm");
-        ClearButton.Confirmed += () =>
+        ClearButton.OnPressed += _ =>
         {
             _cart.Clear();
             CartChanged();
@@ -138,8 +138,6 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
         _cartTab.Count = count > 0 ? Loc.GetString("ks-salvage-tablet-number", ("number", count)) : null;
         EmptyCartNotice.Visible = _cart.Count == 0;
         ClearButton.Disabled = _cart.Count == 0;
-        if (ClearButton.Disabled)
-            ClearButton.Disarm();
 
         CartContainer.RemoveAllChildren();
         foreach (var (productId, amount) in _cart.OrderBy(entry => ProductName(entry.Key)))
@@ -300,18 +298,17 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
             VerticalAlignment = VAlignment.Center,
         };
         var plusButton = MakeAmountButton(Loc.GetString("ks-salvage-tablet-order-amount-more"), enabled: amount < _maxAmount);
-        var removeButton = new KsTguiConfirmButton
+        var removeButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Trash,
             Text = Loc.GetString("ks-salvage-tablet-order-remove"),
-            ConfirmText = Loc.GetString("ks-salvage-tablet-confirm"),
             VerticalAlignment = VAlignment.Center,
             StyleClasses = { StyleClass.Negative },
         };
 
         minusButton.OnPressed += _ => ChangeAmount(productId, -1);
         plusButton.OnPressed += _ => ChangeAmount(productId, 1);
-        removeButton.Confirmed += () => ChangeAmount(productId, -amount);
+        removeButton.OnPressed += _ => ChangeAmount(productId, -amount);
 
         row.AddChild(minusButton);
         row.AddChild(amountLabel);

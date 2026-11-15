@@ -43,7 +43,7 @@
 
             <BoxContainer Orientation="Horizontal" SeparationOverride="6">
                 <Label Name="TotalLabel" HorizontalExpand="True" VerticalAlignment="Center"/>
-                <ksTgui:KsTguiConfirmButton Name="ClearButton" Text="{Loc 'ks-salvage-tablet-order-clear'}" VerticalAlignment="Center"/>
+                <ksTgui:KsTguiButton Name="ClearButton" Text="{Loc 'ks-salvage-tablet-order-clear'}" VerticalAlignment="Center"/>
                 <Button Name="OrderButton" VerticalAlignment="Center" MinWidth="190"/>
             </BoxContainer>
         </BoxContainer>
