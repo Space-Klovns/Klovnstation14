@@ -1,3 +1,4 @@
+using Content.Client._KS14.SalvageTablet;
 using Content.Client._KS14.Tgui;
 using Content.Client.Resources;
 using Content.Client.Stylesheets;
@@ -220,6 +221,33 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
+            .. KsSalvageTabletStyleClasses.Rules(
+                tracked: Color.FromHex("#5BA85B"),
+                requested: Color.FromHex("#E8A33D"),
+                low: Color.FromHex("#D9443B")),
+            .. SalvageTabletAmountButtonRules(),
+        ];
+    }
+
+    /// <summary>
+    ///     The S.P.A.M. cart's bare - and +: no plate in any state, and no tint on the nothing it draws. Each state needs its
+    ///         own rule, as the button rules set a box and a tint per state.
+    /// </summary>
+    private static StyleRule[] SalvageTabletAmountButtonRules()
+    {
+        var empty = new StyleBoxEmpty();
+        return
+        [
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoNormal()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoHovered()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoPressed()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoDisabled()
+                .Box(empty).Modulate(Color.White),
         ];
     }
 

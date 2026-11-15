@@ -1,4 +1,5 @@
 using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared._KS14.Chemistry.PressureGatedInjector; // KS14
 using System.Linq;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body.Components;
@@ -307,6 +308,14 @@ public sealed partial class InjectorSystem : EntitySystem
         else if (_standingState.IsDown(target))
             doAfterTime *= activeMode.DownedModifier;
 
+        // KS14 start: an injector may take longer still, after the modifiers, and say why
+        var ksDelayEv = new KsModifyInjectorMobDelayEvent(user, target, doAfterTime);
+        RaiseLocalEvent(injector, ref ksDelayEv);
+        doAfterTime = ksDelayEv.Delay;
+        if (ksDelayEv.Message is { } ksDelayMessage)
+            _popup.PopupEntity(ksDelayMessage, user, user);
+        // KS14 end
+
         return true;
     }
     #endregion Mob Interaction
@@ -491,6 +500,11 @@ public sealed partial class InjectorSystem : EntitySystem
 
         // Get transfer amount. It may be smaller than _transferAmount if not enough room
         var plannedTransferAmount = FixedPoint2.Min(injector.Comp.CurrentTransferAmount ?? injectorSolution.Volume, injectorSolution.Volume);
+        // KS14 start: an injector may get only part of its dose in
+        var ksAmountEv = new KsModifyInjectorAmountEvent(plannedTransferAmount);
+        RaiseLocalEvent(injector, ref ksAmountEv);
+        plannedTransferAmount = ksAmountEv.Amount;
+        // KS14 end
         var realTransferAmount = FixedPoint2.Min(plannedTransferAmount, targetSolution.Comp.Solution.AvailableVolume);
 
         if (realTransferAmount <= 0)
@@ -517,6 +531,9 @@ public sealed partial class InjectorSystem : EntitySystem
             _solutionContainer.Inject(target, targetSolution, removedSolution);
         else
             _solutionContainer.Refill(target, targetSolution, removedSolution);
+
+        if (ksAmountEv.DiscardRest) // KS14: what didn't get in is lost
+            _solutionContainer.RemoveAllSolution(injector.Comp.Solution.Value);
 
         LocId msgSuccess = target == user ? "injector-component-inject-success-message-self" : "injector-component-inject-success-message";
 

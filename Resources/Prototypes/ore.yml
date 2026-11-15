@@ -102,7 +102,7 @@
   id: RandomOreDistributionStandard
   weights:
     OreSteel: 10
-    OreCoal: 10
+    # OreCoal: 10 # KS14: coal is no longer mined
     OreSpaceQuartz: 8
     OreGold: 2
     OrePlasma: 4
@@ -119,5 +119,5 @@
     OreUraniumCrab: 2
     OreSilverCrab: 3
     OreBananiumCrab: 1
-    OreCoalCrab: 5
+    # OreCoalCrab: 5 # KS14: coal is no longer mined
     OreGoldCrab: 2

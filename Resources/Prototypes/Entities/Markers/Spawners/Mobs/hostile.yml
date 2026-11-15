@@ -145,7 +145,7 @@
       - id: MobSpawnCrabIron
       - id: MobSpawnCrabQuartz
       - id: MobSpawnCrabSilver
-      - id: MobSpawnCrabCoal
+      # - id: MobSpawnCrabCoal # KS14: coal is no longer mined
       - id: MobSpawnCrabGold
       - id: MobSpawnCrabBananium
 

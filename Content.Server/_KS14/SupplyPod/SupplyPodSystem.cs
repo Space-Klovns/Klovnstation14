@@ -121,6 +121,23 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         BeginDescent(entity, EnsureComp<ActiveSupplyPodComponent>(entity.Owner), _gameTiming.CurTime);
     }
 
+    /// <summary>
+    ///     Drops a pod from the sky with the given things inside it.
+    /// </summary>
+    public EntityUid SpawnPodWithContents(EntProtoId protoId, EntityCoordinates coordinates, IEnumerable<EntProtoId> contents)
+    {
+        // Spawning the pod starts its fall, and it stays shut until it lands.
+        var podUid = Spawn(protoId, coordinates);
+        foreach (var contentId in contents)
+        {
+            var contentUid = Spawn(contentId, coordinates);
+            if (!_entityStorageSystem.Insert(contentUid, podUid))
+                Log.Error($"Could not put {ToPrettyString(contentUid)} in supply pod {ToPrettyString(podUid)}.");
+        }
+
+        return podUid;
+    }
+
     #region Grounded pods
 
     /// <summary>

@@ -1,0 +1,177 @@
+# What a salvager can order from the S.P.A.M. with mining points. minRank counts from zero: 0 is Trainee.
+
+- type: ksSalvageProduct
+  id: KsSalvageProductFlare
+  entity: Flare
+  cost: 20
+  category: ks-salvage-tablet-category-survival
+
+- type: ksSalvageProduct
+  id: KsSalvageProductEmergencyMedipen
+  entity: EmergencyMedipen
+  cost: 150
+  category: ks-salvage-tablet-category-survival
+
+- type: ksSalvageProduct
+  id: KsSalvageProductSurvivalMedipen
+  entity: KsSurvivalMedipen
+  cost: 250
+  category: ks-salvage-tablet-category-survival
+
+- type: ksSalvageProduct
+  id: KsSalvageProductPickaxe
+  entity: Pickaxe
+  cost: 100
+  category: ks-salvage-tablet-category-tools
+
+- type: ksSalvageProduct
+  id: KsSalvageProductOreBag
+  entity: OreBag
+  cost: 100
+  category: ks-salvage-tablet-category-tools
+
+- type: ksSalvageProduct
+  id: KsSalvageProductSpaceMedipen
+  entity: SpaceMedipen
+  cost: 250
+  category: ks-salvage-tablet-category-survival
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductSeismicCharge
+  entity: SeismicCharge
+  cost: 300
+  category: ks-salvage-tablet-category-tools
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductPKAUpgradeDamage
+  entity: PKAUpgradeDamage
+  cost: 675
+  category: ks-salvage-tablet-category-weapons
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductPKAUpgradeRange
+  entity: PKAUpgradeRange
+  cost: 675
+  category: ks-salvage-tablet-category-weapons
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductPKAUpgradeFireRate
+  entity: PKAUpgradeFireRate
+  cost: 675
+  category: ks-salvage-tablet-category-weapons
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductCrusherDagger
+  entity: WeaponCrusherDagger
+  cost: 400
+  category: ks-salvage-tablet-category-weapons
+
+- type: ksSalvageProduct
+  id: KsSalvageProductAdvancedMineralScanner
+  entity: AdvancedMineralScanner
+  cost: 675
+  category: ks-salvage-tablet-category-tools
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductLuxuryMedipen
+  entity: KsLuxuryMedipen
+  cost: 750
+  category: ks-salvage-tablet-category-survival
+  minRank: 2
+
+- type: ksSalvageProduct
+  id: KsSalvageProductCrusher
+  entity: WeaponCrusher
+  cost: 650
+  category: ks-salvage-tablet-category-weapons
+  minRank: 1
+
+- type: ksSalvageProduct
+  id: KsSalvageProductMiningDrill
+  entity: MiningDrill
+  cost: 800
+  category: ks-salvage-tablet-category-tools
+  minRank: 2
+
+- type: ksSalvageProduct
+  id: KsSalvageProductFulton
+  entity: Fulton
+  cost: 800
+  category: ks-salvage-tablet-category-tools
+  minRank: 2
+
+- type: ksSalvageProduct
+  id: KsSalvageProductFultonBeacon
+  entity: FultonBeacon
+  cost: 320
+  category: ks-salvage-tablet-category-tools
+  minRank: 2
+
+- type: ksSalvageProduct
+  id: KsSalvageProductHardsuitSalvage
+  entity: ClothingOuterHardsuitSalvage
+  cost: 2000
+  category: ks-salvage-tablet-category-suits
+  minRank: 2
+
+- type: ksSalvageProduct
+  id: KsSalvageProductCrusherGlaive
+  entity: WeaponCrusherGlaive
+  cost: 1500
+  category: ks-salvage-tablet-category-weapons
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductJetpackVoid
+  entity: JetpackVoidFilled
+  cost: 1500
+  category: ks-salvage-tablet-category-survival
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductMiningDrillDiamond
+  entity: MiningDrillDiamond
+  cost: 2000
+  category: ks-salvage-tablet-category-tools
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductOreBagOfHolding
+  entity: OreBagOfHolding
+  cost: 2000
+  category: ks-salvage-tablet-category-tools
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductHardsuitSpatio
+  entity: ClothingOuterHardsuitSpatio
+  cost: 2500
+  category: ks-salvage-tablet-category-suits
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductGoliathCloak
+  entity: ClothingNeckCloakGoliathCloak
+  cost: 1200
+  category: ks-salvage-tablet-category-suits
+  minRank: 3
+
+- type: ksSalvageProduct
+  id: KsSalvageProductHardsuitMaxim
+  entity: ClothingOuterHardsuitMaxim
+  cost: 6000
+  category: ks-salvage-tablet-category-suits
+  minRank: 4
+
+- type: ksSalvageProduct
+  id: KsSalvageProductSalvagerSupremeCloak
+  entity: ClothingNeckCloakSalvagerSupreme
+  cost: 7000
+  category: ks-salvage-tablet-category-suits
+  minRank: 4

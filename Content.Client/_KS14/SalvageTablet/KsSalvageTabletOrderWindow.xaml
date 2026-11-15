@@ -1,0 +1,51 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'ks-salvage-tablet-order-window-title'}"
+                      SetSize="600 520"
+                      MinSize="500 360">
+    <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+        <!-- Two tabs: the shop, and the checkout list. Each strip is alone in a host, so it adds no gap of its own under
+             it: the box's separation is the gap -->
+        <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+            <Control>
+                <ksTgui:KsTguiTabs Name="PageTabs"/>
+            </Control>
+            <Control HorizontalExpand="True"/>
+            <Label Name="PointsLabel" VerticalAlignment="Center"/>
+        </BoxContainer>
+
+        <BoxContainer Name="CatalogueBox" Orientation="Vertical" VerticalExpand="True" SeparationOverride="6">
+            <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                <Control>
+                    <ksTgui:KsTguiTabs Name="CategoryTabs"/>
+                </Control>
+                <ksTgui:KsTguiSearchBar Name="SearchBar" PlaceHolder="{Loc 'ks-salvage-tablet-order-search'}" VerticalAlignment="Center"/>
+            </BoxContainer>
+
+            <!-- The list takes whatever room the window has -->
+            <ksTgui:KsSectionPanel VerticalExpand="True" BaronColor="#1B1B1E">
+                <ksTgui:KsTguiScrollContainer HScrollEnabled="False" VerticalExpand="True" HorizontalExpand="True">
+                    <BoxContainer Name="ProductContainer" Orientation="Vertical" SeparationOverride="2" Margin="6"/>
+                </ksTgui:KsTguiScrollContainer>
+            </ksTgui:KsSectionPanel>
+        </BoxContainer>
+
+        <BoxContainer Name="CartBox" Orientation="Vertical" VerticalExpand="True" SeparationOverride="6" Visible="False">
+            <ksTgui:KsSectionPanel VerticalExpand="True" BaronColor="#1B1B1E">
+                <ksTgui:KsTguiScrollContainer HScrollEnabled="False" VerticalExpand="True" HorizontalExpand="True">
+                    <BoxContainer Orientation="Vertical" Margin="6">
+                        <ksTgui:KsTguiNoticeBox Name="EmptyCartNotice" Text="{Loc 'ks-salvage-tablet-order-cart-empty'}" NoticeColor="Info"/>
+                        <BoxContainer Name="CartContainer" Orientation="Vertical" SeparationOverride="2"/>
+                    </BoxContainer>
+                </ksTgui:KsTguiScrollContainer>
+            </ksTgui:KsSectionPanel>
+
+            <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                <Label Name="TotalLabel" HorizontalExpand="True" VerticalAlignment="Center"/>
+                <ksTgui:KsTguiButton Name="ClearButton" Text="{Loc 'ks-salvage-tablet-order-clear'}" VerticalAlignment="Center"/>
+                <Button Name="OrderButton" VerticalAlignment="Center" MinWidth="190"/>
+            </BoxContainer>
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>
