@@ -7,11 +7,13 @@ using Content.Shared.Access.Systems;
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Popups;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -41,6 +43,8 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     [Dependency] private EntityQuery<KsMinerAccountComponent> _accountQuery = default!;
     [Dependency] private EntityQuery<AccessComponent> _accessQuery = default!;
     [Dependency] private EntityQuery<IdCardComponent> _idCardQuery = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private EntityQuery<KsSalvageTabletScannedComponent> _scannedQuery = default!;
     [Dependency] private EntityQuery<KsSalvageTabletComponent> _tabletQuery = default!;
 
@@ -95,7 +99,6 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         }
 
         var accountComponent = EnsureComp<KsMinerAccountComponent>(idCardEntity.Owner);
-        accountComponent.Salvager = userUid;
         accountComponent.RankLadder = tabletEntity.Comp.RankLadder;
         accountComponent.TaskSlots = tabletEntity.Comp.TaskSlots;
         FillTasks((idCardEntity.Owner, accountComponent));
@@ -338,6 +341,36 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    ///     Whoever carries the account's ID card right now, however deep: in a hand, a pocket, a PDA or a wallet. Worked
+    ///         out each time rather than stored, so it is never stale and follows the card when it changes hands.
+    /// </summary>
+    /// <returns>False when nobody carries it: on the floor, in a locker, or anywhere else a card legitimately is.</returns>
+    public bool TryGetCardHolder(Entity<KsMinerAccountComponent> accountEntity, out EntityUid holderUid)
+    {
+        holderUid = default;
+
+        // Accounts are only ever made on ID cards, at login. One anywhere else is a bug.
+        if (!_idCardQuery.HasComp(accountEntity.Owner))
+        {
+            Log.Error($"{ToPrettyString(accountEntity.Owner)} has a {nameof(KsMinerAccountComponent)} but is not an ID card.");
+            return false;
+        }
+
+        var currentUid = accountEntity.Owner;
+        while (_containerSystem.TryGetContainingContainer(currentUid, out var container))
+        {
+            currentUid = container.Owner;
+            if (!_mobStateQuery.HasComp(currentUid))
+                continue;
+
+            holderUid = currentUid;
+            return true;
+        }
+
+        return false;
+    }
+
     private void Complete(Entity<KsMinerAccountComponent> accountEntity, KsSalvageActiveTask task, KsSalvageTaskPrototype taskPrototype)
     {
         var rankBefore = GetRank(accountEntity);
@@ -345,7 +378,8 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         accountEntity.Comp.Points += points;
         accountEntity.Comp.Reputation += taskPrototype.Reputation;
 
-        if (accountEntity.Comp.Salvager is not { } salvagerUid || TerminatingOrDeleted(salvagerUid))
+        // Paid either way; only the news needs someone carrying the card to hear it.
+        if (!TryGetCardHolder(accountEntity, out var salvagerUid))
             return;
 
         _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-complete", ("points", points), ("reputation", taskPrototype.Reputation)),
@@ -478,6 +512,22 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     }
 
     /// <summary>
+    ///     The portrait is whoever carries the card, so a card moving in or out of something refreshes it. A card moved
+    ///         inside something else (a PDA handed over) isn't told, and shows its new holder with the next change.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnCardInserted(Entity<KsMinerAccountComponent> entity, ref EntGotInsertedIntoContainerMessage args)
+    {
+        UpdateUis(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnCardRemoved(Entity<KsMinerAccountComponent> entity, ref EntGotRemovedFromContainerMessage args)
+    {
+        UpdateUis(entity);
+    }
+
+    /// <summary>
     ///     A tablet saved logged in comes back logged in, so it rejoins its card's set.
     /// </summary>
     [SubscribeLocalEvent]
@@ -544,8 +594,8 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
             state.NextOrderTime = accountEntity.Comp.NextOrderTime;
             _materialRequestSystem.GetSiloReport(state.Materials, alwaysShown: tabletEntity.Comp.ShownMaterials);
 
-            if (accountEntity.Comp.Salvager is { } salvagerUid && !TerminatingOrDeleted(salvagerUid))
-                state.Owner = GetNetEntity(salvagerUid);
+            if (TryGetCardHolder(accountEntity, out var holderUid))
+                state.Owner = GetNetEntity(holderUid);
 
             if (_idCardQuery.TryComp(accountEntity.Owner, out var idCardComponent))
             {
