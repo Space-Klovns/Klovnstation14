@@ -31,7 +31,6 @@ ks-salvage-tablet-task-drop-refused = You can't drop another task yet.
 ks-salvage-tablet-task-complete = Task done: { $points } mining points, { $reputation } reputation.
 ks-salvage-tablet-rank-up = You have been promoted!
 
-ks-salvage-tablet-profile-header = Salvager
 ks-salvage-tablet-profile-name-label = Name
 ks-salvage-tablet-profile-job-label = Job
 ks-salvage-tablet-profile-rank-label = Rank

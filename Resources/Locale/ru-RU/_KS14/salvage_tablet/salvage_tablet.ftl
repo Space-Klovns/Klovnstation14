@@ -31,7 +31,6 @@ ks-salvage-tablet-task-drop-refused = Пока нельзя отказаться
 ks-salvage-tablet-task-complete = Задание выполнено. Шахтёрские очки: { $points }, репутация: { $reputation }.
 ks-salvage-tablet-rank-up = Вас повысили!
 
-ks-salvage-tablet-profile-header = Утилизатор
 ks-salvage-tablet-profile-name-label = Имя
 ks-salvage-tablet-profile-job-label = Должность
 ks-salvage-tablet-profile-rank-label = Ранг
