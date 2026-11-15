@@ -1,5 +1,6 @@
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Impacts;
+using Content.Shared._KS14.Particles;
 using System.Linq;
 using Content.Shared.Physics;
 using Content.Shared.Storage;
@@ -57,6 +58,28 @@ public sealed class KsImpactSurfacePartialsTest : GameTest
                 var layer = fixturesComponent!.Fixtures.Values.Aggregate(0, (mask, fixture) => mask | fixture.CollisionLayer);
                 Assert.That(layer & (int)CollisionGroup.BulletImpassable, Is.Not.Zero, "bullets pass through a bookshelf");
                 Assert.That(layer & (int)CollisionGroup.Opaque, Is.Not.Zero, "lasers pass through a bookshelf");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Every material's debris bounces off walls, through the collision its abstract base gives them all; a child
+    ///         that restated another field must not have lost it.
+    /// </summary>
+    [Test]
+    public async Task ImpactDebrisCollidesWithWalls()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var debrisPrototypes = Server.ProtoMan.EnumeratePrototypes<KsParticlesPrototype>()
+                .Where(prototype => prototype.Parents?.Contains("KsImpactDebrisBase") == true)
+                .ToList();
+
+            Assert.That(debrisPrototypes, Is.Not.Empty, "no impact debris prototypes found, so this checks nothing");
+            Assert.Multiple(() =>
+            {
+                foreach (var prototype in debrisPrototypes)
+                    Assert.That(prototype.Collision is { Enabled: true }, $"{prototype.ID} flies through walls");
             });
         });
     }

@@ -45,6 +45,12 @@
   rotation: { kind: num, a: -20, b: 20 }
   spin: { kind: num, a: -200, b: 200 }
   drift: { kind: circle, a: 0, b: 2.8125, dist: square }
+  # Chips bounce off the walls around them rather than flying into the next one.
+  collision:
+    onHit: Bounce
+    bounce: 0.3
+    friction: 0.4
+    radius: 0.04
 
 # DEBRIS_SPARKS: metal walls, girders, metal barricades, shuttles. Eight of them, and lit by themselves.
 - type: ksParticles
