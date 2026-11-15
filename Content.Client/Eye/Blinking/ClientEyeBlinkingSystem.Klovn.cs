@@ -88,19 +88,25 @@ public sealed partial class ClientEyeBlinkingSystem
     private void KsRemoveEyelidLayers(Entity<EyeBlinkingComponent> ent, EntityUid holderUid)
     {
         if (_spriteQuery.TryComp(holderUid, out var spriteComponent))
-        {
-            foreach (var eyelidState in ent.Comp.Eyelids)
-            {
-                _sprite.RemoveLayer((holderUid, spriteComponent), eyelidState.LayerKey, logMissing: false);
-                if (eyelidState.DisplacementKey != null)
-                    _sprite.RemoveLayer((holderUid, spriteComponent), eyelidState.DisplacementKey, logMissing: false);
-            }
-        }
+            KsRemoveEyelidSpriteLayers(ent, (holderUid, spriteComponent));
 
         ent.Comp.Eyelids.Clear();
         ent.Comp.BlinkInProgress = false;
 
         if (ent.Comp.Body == holderUid)
             ent.Comp.Body = null;
+    }
+
+    /// <summary>
+    ///     Removes these eyes' eyelid and eyelid displacement layers from a holder's sprite.
+    /// </summary>
+    private void KsRemoveEyelidSpriteLayers(Entity<EyeBlinkingComponent> ent, Entity<SpriteComponent> holder)
+    {
+        foreach (var eyelidState in ent.Comp.Eyelids)
+        {
+            _sprite.RemoveLayer(holder.AsNullable(), eyelidState.LayerKey, logMissing: false);
+            if (eyelidState.DisplacementKey != null)
+                _sprite.RemoveLayer(holder.AsNullable(), eyelidState.DisplacementKey, logMissing: false);
+        }
     }
 }

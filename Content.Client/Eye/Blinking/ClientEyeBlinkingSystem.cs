@@ -260,12 +260,17 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
 
         // Remove existing eyelid layers by their expected mapping
 
+        // KS14 start: shared with detaching eyes (ClientEyeBlinkingSystem.Klovn.cs)
+        KsRemoveEyelidSpriteLayers(ent, (body, comp));
+        /*
         foreach (var state in ent.Comp.Eyelids)
         {
             _sprite.RemoveLayer((body, comp), state.LayerKey, false);
             if (state.DisplacementKey != null)
                 _sprite.RemoveLayer((body, comp), state.DisplacementKey, false);
         }
+        */
+        // KS14 end
 
         // Clears eyelid states from the client component, if it already exists.
         ent.Comp.Eyelids.Clear();
