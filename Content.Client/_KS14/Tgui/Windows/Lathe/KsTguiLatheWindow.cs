@@ -400,6 +400,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 row = new KsTguiLatheRecipeRow(_lathe);
                 row.OnBuild += (recipeId, amount) => RecipeQueueAction?.Invoke(recipeId, amount);
                 row.OnRequest += recipeId => KsRecipeRequestAction?.Invoke(recipeId);
+                row.LatheUid = Entity;
                 _recipeList.AddChild(row);
             }
             else

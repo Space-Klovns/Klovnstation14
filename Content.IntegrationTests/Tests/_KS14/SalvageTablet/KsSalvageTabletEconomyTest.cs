@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
+using Content.Shared.Research.Prototypes;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -207,6 +209,9 @@ public sealed class KsSalvageTabletEconomyTest : GameTest
             var materialId = SProtoMan.Index(recipeId).Materials.Keys.First();
 
             Assert.That(requestSystem.TryRequest((latheUid, latheComponent), recipeId), Is.True, "An empty lathe is short of everything.");
+
+            // Past the cooldown, so what refuses the second ask is that it says nothing new.
+            SEntMan.GetComponent<KsMaterialRequestCooldownComponent>(latheUid).NextRequestTime = Server.Timing.CurTime;
             Assert.That(requestSystem.TryRequest((latheUid, latheComponent), recipeId), Is.False, "Asking twice for the same thing must say nothing new.");
 
             var report = new List<KsSalvageTabletSiloMaterial>();
@@ -231,6 +236,50 @@ public sealed class KsSalvageTabletEconomyTest : GameTest
 
             Assert.That(report.Any(material => material.Amount == 0 && material.Requested == 0), Is.True,
                 "A material the silo has none of must be listed at zero.");
+        });
+    }
+
+    /// <summary>
+    ///     A lathe that has just asked must wait before it asks again, even for something new, and may once the wait,
+    ///         read from its own cooldown, is over.
+    /// </summary>
+    private int TicksFor(float seconds) => (int)(seconds * (float)Server.Timing.TickRate);
+
+    [Test]
+    public async Task ALatheWaitsBeforeAskingAgain()
+    {
+        var scene = await SetUpAsync();
+        EntityUid latheUid = default;
+        ProtoId<LatheRecipePrototype> secondRecipeId = default;
+        TimeSpan cooldown = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var requestSystem = SEntMan.System<KsMaterialRequestSystem>();
+            SEntMan.SpawnEntity(Silo, scene.Coordinates);
+            latheUid = SEntMan.SpawnEntity(Autolathe, scene.Coordinates);
+            var latheComponent = SEntMan.GetComponent<LatheComponent>(latheUid);
+            var recipeIds = SEntMan.System<LatheSystem>().GetAvailableRecipes(latheUid, latheComponent).ToList();
+            var firstRecipeId = recipeIds.First();
+            var firstMaterials = SProtoMan.Index(firstRecipeId).Materials.Keys.ToHashSet();
+
+            // A second recipe that needs something the first didn't, so asking for it would say something new.
+            secondRecipeId = recipeIds.FirstOrDefault(recipeId => SProtoMan.Index(recipeId).Materials.Keys.Any(materialId => !firstMaterials.Contains(materialId)));
+            Assert.That(secondRecipeId.Id, Is.Not.Null, "precondition: the autolathe makes things from different materials");
+
+            Assert.That(requestSystem.TryRequest((latheUid, latheComponent), firstRecipeId), Is.True);
+            cooldown = SEntMan.GetComponent<KsMaterialRequestCooldownComponent>(latheUid).Cooldown;
+            Assert.That(requestSystem.TryRequest((latheUid, latheComponent), secondRecipeId), Is.False,
+                "A lathe that has just asked must wait, even to ask for something new.");
+        });
+
+        await Pair.RunTicksSync(TicksFor((float)cooldown.TotalSeconds + 1f));
+
+        await Server.WaitAssertion(() =>
+        {
+            var latheComponent = SEntMan.GetComponent<LatheComponent>(latheUid);
+            Assert.That(SEntMan.System<KsMaterialRequestSystem>().TryRequest((latheUid, latheComponent), secondRecipeId), Is.True,
+                "Once the wait is over, the lathe must be able to ask again.");
         });
     }
 }

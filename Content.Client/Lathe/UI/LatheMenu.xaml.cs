@@ -152,6 +152,7 @@ public sealed partial class LatheMenu : FancyWindow
                     RecipeQueueAction?.Invoke(s, amount);
                 };
                 control.KsOnRequestPressed += s => KsRecipeRequestAction?.Invoke(s); // KS14
+                control.KsLatheUid = Entity; // KS14
                 RecipeList.AddChild(control);
             }
             else

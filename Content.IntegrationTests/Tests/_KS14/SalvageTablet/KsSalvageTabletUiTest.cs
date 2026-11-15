@@ -272,6 +272,13 @@ public sealed class KsSalvageTabletUiTest : GameTest
 
             var enoughPopup = new KsLatheRequestPopup(canRequest: false, () => { });
             Assert.That(enoughPopup.RequestButton.Disabled, Is.True, "A recipe that can be made has nothing to ask for.");
+
+            var waitingPopup = new KsLatheRequestPopup(canRequest: true, () => { }, cooldownLeft: () => TimeSpan.FromSeconds(30));
+            Assert.That(waitingPopup.RequestButton.Disabled, Is.True, "A lathe waiting out its last request can't ask yet.");
+            Assert.That(waitingPopup.RequestButton.Text,
+                Is.EqualTo(Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-request-button-wait",
+                    ("time", KsSalvageTabletTaskWindow.FormatTime(TimeSpan.FromSeconds(30))))),
+                "The menu must say how long the lathe has to wait.");
         });
     }
 

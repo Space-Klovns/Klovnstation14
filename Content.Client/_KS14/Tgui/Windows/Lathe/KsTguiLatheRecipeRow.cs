@@ -87,7 +87,7 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         AddChild(_titleButton);
 
         // Not tg: a right click asks the salvagers for what the recipe is short of.
-        KsLatheRequestPopup.Attach(_titleButton, () => !_canProduce, () => OnRequest?.Invoke(_recipeId));
+        KsLatheRequestPopup.Attach(_titleButton, () => !_canProduce, () => LatheUid, () => OnRequest?.Invoke(_recipeId));
 
         _fiveButton = MakeAmountButton(5);
         _tenButton = MakeAmountButton(10);
@@ -159,6 +159,11 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     /// </summary>
     public event Action<string, int>? OnBuild;
     public event Action<string>? OnRequest;
+
+    /// <summary>
+    ///     The lathe the row belongs to, whose material-request cooldown a right click shows.
+    /// </summary>
+    public EntityUid? LatheUid;
 
     private KsTguiButton MakeAmountButton(int amount)
     {

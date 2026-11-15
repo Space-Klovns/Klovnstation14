@@ -1,13 +1,16 @@
 using Content.Server.Lathe;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.Station.Systems;
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.SalvageTablet;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
 using Content.Shared.Materials.OreSilo;
+using Content.Shared.Popups;
 using Content.Shared.Radio;
 using Content.Shared.Research.Prototypes;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.SalvageTablet;
 
@@ -21,6 +24,9 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
     [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private RadioSystem _radioSystem = default!;
     [Dependency] private LatheSystem _latheSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private EntityQuery<KsMaterialRequestCooldownComponent> _cooldownQuery = default!;
     [Dependency] private EntityQuery<KsMaterialRequestsComponent> _requestsQuery = default!;
 
     private static readonly ProtoId<RadioChannelPrototype> RequestChannel = "Supply";
@@ -98,11 +104,28 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Asks for what the lathe is short of to make the recipe once.
+    ///     Whether the lathe is still waiting out the cooldown of its last request.
     /// </summary>
-    /// <returns>Whether anything was short.</returns>
-    public bool TryRequest(Entity<LatheComponent> latheEntity, ProtoId<LatheRecipePrototype> recipeId)
+    public bool IsCoolingDown(EntityUid latheUid)
     {
+        return _cooldownQuery.TryComp(latheUid, out var cooldownComponent) && _gameTiming.CurTime < cooldownComponent.NextRequestTime;
+    }
+
+    /// <summary>
+    ///     Asks for what the lathe is short of to make the recipe once. A lathe asks only so often: a request that goes
+    ///         out over the radio starts its cooldown, and one made during it is refused.
+    /// </summary>
+    /// <param name="userUid">Who is told that the lathe has to wait, if anyone.</param>
+    /// <returns>Whether anything was short.</returns>
+    public bool TryRequest(Entity<LatheComponent> latheEntity, ProtoId<LatheRecipePrototype> recipeId, EntityUid? userUid = null)
+    {
+        if (IsCoolingDown(latheEntity.Owner))
+        {
+            if (userUid != null)
+                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-request-wait"), latheEntity.Owner, userUid.Value);
+            return false;
+        }
+
         if (!ProtoMan.TryIndex(recipeId, out var recipePrototype) ||
             !_latheSystem.GetAvailableRecipes(latheEntity.Owner, latheEntity.Comp).Contains(recipeId) ||
             !TryGetSilo(out var siloUid))
@@ -138,6 +161,10 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
         var message = Loc.GetString("ks-salvage-tablet-request-announce", ("lathe", latheEntity.Owner), ("materials", string.Join(", ", shortfalls)));
         _radioSystem.SendRadioMessage(latheEntity.Owner, message, RequestChannel, latheEntity.Owner);
 
+        var cooldownComponent = EnsureComp<KsMaterialRequestCooldownComponent>(latheEntity.Owner);
+        cooldownComponent.NextRequestTime = _gameTiming.CurTime + cooldownComponent.Cooldown;
+        Dirty(latheEntity.Owner, cooldownComponent);
+
         var changedEvent = new KsSiloReportChangedEvent();
         RaiseLocalEvent(ref changedEvent);
         return true;
@@ -161,6 +188,6 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRequestMessage(EntityUid uid, LatheComponent component, KsLatheRequestMaterialsMessage args)
     {
-        TryRequest((uid, component), args.Recipe);
+        TryRequest((uid, component), args.Recipe, userUid: args.Actor);
     }
 }
