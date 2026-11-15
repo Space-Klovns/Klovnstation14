@@ -24,7 +24,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The PDA's BUI opens the tgui window under the tgui theme and the stock one otherwise, and the window's controls send
+///     The PDA's BUI opens the tgui window under both themes since #480, and the window's controls send
 ///         what the stock ones do: the flashlight, the ID and pen ejects, the ringtone, and running and closing a program.
 /// </summary>
 [TestOf(typeof(KsTguiPdaWindow))]
@@ -65,8 +65,8 @@ public sealed class KsTguiPdaWindowTest : GameTest
                 .TryGetOpenUi<PdaBoundUserInterface>(ToClientUid(pda), PdaUiKey.Key, out bui), "the PDA UI is open on the client");
             menu = (IKsPdaMenu?)typeof(PdaBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
             Assert.That(menu, Is.Not.Null);
-            Assert.That(menu is KsTguiPdaWindow, Is.EqualTo(tgui));
-            Assert.That(menu is PdaMenu, Is.EqualTo(!tgui));
+            Assert.That(menu is KsTguiPdaWindow, Is.True);
+            Assert.That(menu is PdaMenu, Is.False);
         });
 
         await Server.WaitAssertion(() =>
@@ -92,36 +92,33 @@ public sealed class KsTguiPdaWindowTest : GameTest
         });
 
         // Running a program from the list shows it in the window, closing it stops it.
-        if (tgui)
+        await Client.WaitPost(() =>
         {
-            await Client.WaitPost(() =>
-            {
-                var programList = (BoxContainer)typeof(KsTguiPdaWindow).GetField("_programList", Any)!.GetValue(menu)!;
-                var row = (BoxContainer)programList.Children.First();
-                var open = row.Children.OfType<KsTguiButton>().First();
-                Raise(open, "OnPressed");
-            });
-            await Pair.RunTicksSync(10);
+            var programList = (BoxContainer)typeof(KsTguiPdaWindow).GetField("_programList", Any)!.GetValue(menu)!;
+            var row = (BoxContainer)programList.Children.First();
+            var open = row.Children.OfType<KsTguiButton>().First();
+            Raise(open, "OnPressed");
+        });
+        await Pair.RunTicksSync(10);
 
-            await Server.WaitAssertion(() =>
-                Assert.That(SEntMan.GetComponent<CartridgeLoaderComponent>(pda).ActiveProgram, Is.Not.Null, "the program started"));
-            await Client.WaitAssertion(() =>
-            {
-                Assert.That(menu!.ProgramView.ChildCount, Is.GreaterThan(0), "the program's UI is hosted");
-                Assert.That(menu.ProgramView.Visible, Is.True);
-            });
+        await Server.WaitAssertion(() =>
+            Assert.That(SEntMan.GetComponent<CartridgeLoaderComponent>(pda).ActiveProgram, Is.Not.Null, "the program started"));
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(menu!.ProgramView.ChildCount, Is.GreaterThan(0), "the program's UI is hosted");
+            Assert.That(menu.ProgramView.Visible, Is.True);
+        });
 
-            await Client.WaitPost(() =>
-            {
-                var close = (KsTguiButton)typeof(KsTguiPdaWindow).GetField("_closeProgramButton", Any)!.GetValue(menu)!;
-                Raise(close, "OnPressed");
-            });
-            await Pair.RunTicksSync(10);
+        await Client.WaitPost(() =>
+        {
+            var close = (KsTguiButton)typeof(KsTguiPdaWindow).GetField("_closeProgramButton", Any)!.GetValue(menu)!;
+            Raise(close, "OnPressed");
+        });
+        await Pair.RunTicksSync(10);
 
-            await Server.WaitAssertion(() =>
-                Assert.That(SEntMan.GetComponent<CartridgeLoaderComponent>(pda).ActiveProgram, Is.Null, "the program stopped"));
-            await Client.WaitAssertion(() => Assert.That(menu!.ProgramView.Visible, Is.False));
-        }
+        await Server.WaitAssertion(() =>
+            Assert.That(SEntMan.GetComponent<CartridgeLoaderComponent>(pda).ActiveProgram, Is.Null, "the program stopped"));
+        await Client.WaitAssertion(() => Assert.That(menu!.ProgramView.Visible, Is.False));
 
         await Client.WaitPost(() => bui!.Dispose());
     }

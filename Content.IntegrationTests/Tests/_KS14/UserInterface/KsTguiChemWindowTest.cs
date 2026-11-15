@@ -25,8 +25,8 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The reagent dispenser's and the ChemMaster's BUIs open the tgui window under the tgui theme and the stock one
-///         otherwise, and each tgui window's controls send what the stock window's do.
+///     The reagent dispenser's and the ChemMaster's BUIs open the tgui window under both themes since #480,
+///         and each tgui window's controls send what the stock window's do.
 /// </summary>
 [TestOf(typeof(KsTguiReagentDispenserWindow))]
 public sealed class KsTguiChemWindowTest : GameTest
@@ -64,10 +64,10 @@ public sealed class KsTguiChemWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiReagentDispenserWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<ReagentDispenserWindow>().Any(), Is.EqualTo(!tgui));
-            Assert.That(windows.OfType<KsTguiChemMasterWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<ChemMasterWindow>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiReagentDispenserWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<ReagentDispenserWindow>().Any(), Is.False);
+            Assert.That(windows.OfType<KsTguiChemMasterWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<ChemMasterWindow>().Any(), Is.False);
         });
     }
 

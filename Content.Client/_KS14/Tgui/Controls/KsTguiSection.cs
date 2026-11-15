@@ -24,6 +24,12 @@ public sealed class KsTguiSection : KsSectionPanel
     /// </summary>
     public const string StyleClassNestedTitle = "KsTguiSectionNestedTitle";
 
+    /// <summary>
+    ///     On the title row of every section, for a theme that draws it differently from a bare <see cref="KsSectionTitle"/>.
+    ///         The tgui sheet has no rule for it; Baron gives it a line (<c>KsBaronUiSheetlet.Tgui.cs</c>).
+    /// </summary>
+    public const string StyleClassTitleRow = "KsTguiSectionTitleRow";
+
     private static readonly Thickness BodyPadding = new(6f, 8f, 6f, 8f);
 
     private readonly BoxContainer _root;
@@ -56,6 +62,7 @@ public sealed class KsTguiSection : KsSectionPanel
         _titleRow = new TitleRow(_titleLabel, _buttonsSlot);
 
         _titlePanel = new KsSectionTitle { Visible = false };
+        _titlePanel.AddStyleClass(StyleClassTitleRow);
         _titlePanel.AddChild(_titleRow);
 
         _content = new BoxContainer

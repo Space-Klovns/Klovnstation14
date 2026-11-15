@@ -26,7 +26,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The lathe's BUI opens the tgui window under the tgui theme and the stock menu otherwise, and the tgui window's
+///     The lathe's BUI opens the tgui window under both themes since #480, and the tgui window's
 ///         designs, queue and material bar send what the stock menu does.
 /// </summary>
 [TestOf(typeof(KsTguiLatheWindow))]
@@ -74,8 +74,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiLatheWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<LatheMenu>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiLatheWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<LatheMenu>().Any(), Is.False);
         });
     }
 

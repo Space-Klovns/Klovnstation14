@@ -2,6 +2,7 @@ using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Materials;
 using Content.Client.Materials.UI;
 using Content.Shared.Materials;
+using Content.Shared.Materials.OreSilo;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
@@ -40,6 +41,7 @@ public sealed partial class KsTguiLatheMaterialSummary : BoxContainer
     private readonly KsTguiCollapsible _collapsible;
     private readonly KsTguiLabeledListItem _collapsibleItem;
     private readonly KsTguiLabeledList _materialsList;
+    private readonly KsTguiNoticeBox _siloNotice;
     private readonly Dictionary<ProtoId<MaterialPrototype>, MaterialRow> _rows = new();
 
     private EntityUid? _owner;
@@ -64,7 +66,16 @@ public sealed partial class KsTguiLatheMaterialSummary : BoxContainer
         _collapsibleItem.AddChild(_collapsible);
         list.AddChild(_collapsibleItem);
 
+        // The stock material display says when a silo supplies the lathe (MaterialStorageControl); so does this.
+        _siloNotice = new KsTguiNoticeBox
+        {
+            Text = Loc.GetString("lathe-menu-silo-linked-message"),
+            NoticeColor = KsTguiNoticeColor.Info,
+            Visible = false,
+        };
+
         var section = new KsTguiSection { Title = Loc.GetString("ks-tgui-lathe-total-materials") };
+        section.AddChild(_siloNotice);
         section.AddChild(list);
         AddChild(section);
     }
@@ -72,6 +83,8 @@ public sealed partial class KsTguiLatheMaterialSummary : BoxContainer
     public KsTguiProgressBar TotalBar => _totalBar;
 
     public KsTguiCollapsible MaterialsCollapsible => _collapsible;
+
+    public KsTguiNoticeBox SiloNotice => _siloNotice;
 
     public IReadOnlyDictionary<ProtoId<MaterialPrototype>, MaterialRow> Rows => _rows;
 
@@ -92,6 +105,8 @@ public sealed partial class KsTguiLatheMaterialSummary : BoxContainer
             _owner = null;
             return;
         }
+
+        _siloNotice.Visible = _entityManager.TryGetComponent<OreSiloClientComponent>(owner, out var siloClient) && siloClient.Silo != null;
 
         var stored = _materialStorage.GetStoredMaterials((owner, materialStorage));
         var canEject = materialStorage.CanEjectStoredMaterials;

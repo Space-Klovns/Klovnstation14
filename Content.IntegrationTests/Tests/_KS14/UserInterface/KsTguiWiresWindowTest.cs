@@ -16,7 +16,7 @@ using Robust.Client.UserInterface.Controls;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The wires BUI opens the tgui window with the theme on and the stock one with it off, and the tgui window's buttons
+///     The wires BUI opens the tgui window under both themes since #480, and the tgui window's buttons
 ///         raise the same actions.
 /// </summary>
 [TestOf(typeof(KsTguiWiresWindow))]
@@ -53,14 +53,8 @@ public sealed class KsTguiWiresWindowTest : GameTest
         {
             var tguiWindow = (KsTguiWiresWindow)typeof(WiresBoundUserInterface).GetField("_ksTguiMenu", Any)!.GetValue(bui);
             var stockWindow = (WiresMenu)typeof(WiresBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
-            Assert.That(tguiWindow != null, Is.EqualTo(tgui));
-            Assert.That(stockWindow != null, Is.EqualTo(!tgui));
-
-            if (!tgui)
-            {
-                bui.Dispose();
-                return;
-            }
+            Assert.That(tguiWindow != null, Is.True);
+            Assert.That(stockWindow != null, Is.False);
 
             var actions = new List<(int, WiresAction)>();
             tguiWindow.OnAction += (id, action) => actions.Add((id, action));

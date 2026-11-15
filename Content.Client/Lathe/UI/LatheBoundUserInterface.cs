@@ -22,7 +22,7 @@ namespace Content.Client.Lathe.UI
             base.Open();
 
             // KS14 start: the tgui theme opens its own window
-            _menu = KsTguiTheme.ReadEnabled()
+            _menu = KsTguiTheme.UsePortedWindows() /* KS14: under both themes since #480 */
                 ? this.CreateWindowCenteredRight<KsTguiLatheWindow>()
                 : this.CreateWindowCenteredRight<LatheMenu>();
             // KS14 end
