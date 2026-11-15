@@ -51,3 +51,13 @@
   id: Silicon
   debris: KsImpactDebrisSparks
   smoke: null
+
+# A mob's armour soaking most of a ballistic hit (KsImpactSurfaceSystem.ArmorMaterial): chips off the plate and a few
+# sparks, back at the shooter, and a little blood out of the exit wound (BloodSpraySystem.SpawnExitWoundMist). Its
+# armour sound plays already.
+- type: ksImpactMaterial
+  id: Armor
+  debris: KsImpactDebrisArmor
+  extraDebris:
+  - KsImpactArmorSparks
+  smoke: null

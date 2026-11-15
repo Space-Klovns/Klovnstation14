@@ -44,6 +44,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private BloodSpray.BloodSpraySystem _bloodSpraySystem = default!;
 
     [Dependency] private EntityQuery<KsImpactSurfaceComponent> _surfaceQuery = default!;
     [Dependency] private EntityQuery<KsImpactSurfaceStorageFillComponent> _storageFillQuery = default!;
@@ -55,6 +56,11 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     ///     A hit on anything else that is not a mob: smoke only, as TGMC gives every object.
     /// </summary>
     public static readonly ProtoId<KsImpactMaterialPrototype> FallbackMaterial = "Default";
+
+    /// <summary>
+    ///     A ballistic hit on a mob that its armour soaked (<see cref="IsSoaked"/>): sparks off the plate.
+    /// </summary>
+    public static readonly ProtoId<KsImpactMaterialPrototype> ArmorMaterial = "Armor";
 
     /// <summary>
     ///     TGMC tells ballistic ammo from energy and xeno ammo by a flag; here a hit is ballistic if it pierces or
@@ -100,17 +106,33 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         var ballistic = IsBallistic(rawDamage);
 
-        // A mob gets only what its own surface gives it (a borg's sparks); flesh has the blood spray instead.
+        // A mob gets sparks off its armour when that soaked the hit, else only what its own surface gives it (a
+        //      borg's sparks); flesh has the blood spray instead.
+        ProtoId<KsImpactMaterialPrototype> materialId;
         if (_mobStateQuery.HasComp(target))
         {
             if (ballistic && IsSoaked(target, rawDamage!, dealtDamage))
+            {
                 PlayHere(ArmorSound, coordinates, null);
-
-            if (!_surfaceQuery.HasComp(target))
+                // What little got through comes out the far side.
+                _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
+                materialId = ArmorMaterial;
+            }
+            else if (_surfaceQuery.HasComp(target))
+            {
+                materialId = PickMaterial(target);
+            }
+            else
+            {
                 return;
+            }
+        }
+        else
+        {
+            materialId = PickMaterial(target);
         }
 
-        if (!ProtoMan.TryIndex(PickMaterial(target), out var material))
+        if (!ProtoMan.TryIndex(materialId, out var material))
             return;
 
         coordinates = GetEntryPoint(target, coordinates, worldDirection);
@@ -125,6 +147,9 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
             return;
 
         SpawnImpactParticles(material.Debris, coordinates, localRotation, amount, speed);
+        foreach (var extraDebris in material.ExtraDebris)
+            SpawnImpactParticles(extraDebris, coordinates, localRotation, amount, speed);
+
         if (material.Sound != null && _random.Prob(material.SoundChance))
             PlayHere(material.Sound, coordinates, RicochetParams);
     }

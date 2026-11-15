@@ -180,3 +180,21 @@
   friction: 0.8926
   grow: 0.5
   drift: { kind: sphere, a: 0, b: 0.3125, dist: normal }
+
+# Armour soaking a hit (the Armor impact material): grey chips off the plate, and a few sparks with them.
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisArmor
+  count: 4
+  burst: 4
+  color: "#9A9CA2"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: snow
+
+- type: ksParticles
+  parent: KsImpactDebrisSparks
+  id: KsImpactArmorSparks
+  count: 3
+  burst: 3

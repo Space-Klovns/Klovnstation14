@@ -40,6 +40,7 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private readonly EntProtoId _testBleedingMob = "KsImpactTestBleedingMob";
     private readonly EntProtoId _testSiliconMob = "KsImpactTestSiliconMob";
     private static readonly EntProtoId BulletImpactEffect = "BulletImpactEffect";
+    private static readonly ProtoId<KsParticlesPrototype> BloodMist = "KsBloodSplatterMist";
     private readonly EntProtoId _testDenseWall = "KsImpactTestDenseWall";
     private readonly EntProtoId _testShelf = "KsImpactTestShelf";
     private readonly EntProtoId _testBook = "KsImpactTestBook";
@@ -804,6 +805,77 @@ public sealed class KsImpactSurfaceTest : InteractionTest
             Assert.That(debris, Has.Count.EqualTo(1), "a shot silicon mob threw no sparks");
             foreach (var (uid, _) in debris)
                 Assert.That(Vector2.Dot(ClientTravel(uid), new Vector2(-1f, 0f)), Is.GreaterThan(0.99f), "the sparks do not fly back at the shooter");
+        });
+    }
+
+    /// <summary>
+    ///     A ballistic hit on a mob that its armour soaked sparks off the plate, back at the shooter; one that went in
+    ///         throws nothing (flesh has the blood spray).
+    /// </summary>
+    [Test]
+    public async Task ArmourSoakedHitsSpark([Values] bool soaked)
+    {
+        NetEntity mobNetEntity = default;
+        await Server.WaitPost(() => mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testMob, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        DamageSpecifier Piercing(float amount)
+        {
+            var damage = new DamageSpecifier();
+            damage.DamageDict[PiercingDamage] = amount;
+            return damage;
+        }
+
+        await Client.WaitAssertion(() =>
+        {
+            var armorMaterial = Client.ProtoMan.Index(KsImpactSurfaceSystem.ArmorMaterial);
+            var armorDebris = armorMaterial.Debris!.Value;
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
+            CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(mobNetEntity), coordinates, new Vector2(1f, 0f),
+                Piercing(10f), Piercing(soaked ? 1f : 10f));
+
+            var sparks = ClientEmitters([armorDebris]);
+            if (!soaked)
+            {
+                Assert.That(sparks, Is.Empty, "a hit that went into a mob sparked");
+                return;
+            }
+
+            Assert.That(sparks, Has.Count.EqualTo(1), "a hit the armour soaked threw no chips");
+            foreach (var (uid, _) in sparks)
+                Assert.That(Vector2.Dot(ClientTravel(uid), new Vector2(-1f, 0f)), Is.GreaterThan(0.99f), "the armour's chips do not fly back at the shooter");
+            foreach (var extra in armorMaterial.ExtraDebris)
+                Assert.That(ClientEmitters([extra]), Has.Count.EqualTo(1), $"a hit the armour soaked threw no {extra}");
+        });
+    }
+
+    /// <summary>
+    ///     A hit the armour soaked still lets a little blood out of the exit wound, along the shot.
+    /// </summary>
+    [Test]
+    public async Task ArmourSoakedHitsBleedALittle()
+    {
+        NetEntity mobNetEntity = default;
+        await Server.WaitPost(() => mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testBleedingMob, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var raw = new DamageSpecifier();
+        raw.DamageDict[PiercingDamage] = 10;
+        var soaked = new DamageSpecifier();
+        soaked.DamageDict[PiercingDamage] = 1;
+
+        await Client.WaitAssertion(() =>
+        {
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
+            CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(mobNetEntity), coordinates, new Vector2(1f, 0f), raw, soaked);
+
+            var mist = ClientEmitters([BloodMist]);
+            Assert.That(mist, Has.Count.EqualTo(1), "a hit the armour soaked let no blood out");
+            foreach (var (uid, _) in mist)
+            {
+                Assert.That(Vector2.Dot(ClientTravel(uid), new Vector2(1f, 0f)), Is.GreaterThan(0.99f), "the blood does not leave by the exit wound");
+                Assert.That(CEntMan.GetComponent<KsParticlesComponent>(uid).Amount, Is.EqualTo(Content.Shared._KS14.BloodSpray.BloodSpraySystem.MinSprayAmount), "more than a little blood");
+            }
         });
     }
 
