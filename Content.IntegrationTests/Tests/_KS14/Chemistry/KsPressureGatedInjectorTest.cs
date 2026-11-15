@@ -17,7 +17,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Chemistry;
 
 /// <summary>
-///     The survival medipen, as tg's: a full dose at once where the air is thin, and half of one after a long wait anywhere else.
+///     The survival medipen: a full dose at once where the air is thin, and half of one after a long wait anywhere else.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsPressureGatedInjectorSystem))]

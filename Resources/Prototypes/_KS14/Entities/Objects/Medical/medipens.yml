@@ -1,5 +1,4 @@
-# tg's mining medipens, which work properly only where the air is thin. tg's chemicals that have no match here are
-#   swapped for the nearest one: salicylic acid for bicaridine, oxandrolone for dermaline, salbutamol for dexalin plus.
+# Salvagers' medipens, which work properly only where the air is thin.
 
 - type: entity
   parent: ChemicalMedipen

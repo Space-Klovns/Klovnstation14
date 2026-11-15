@@ -629,7 +629,7 @@
       canEjectStoredMaterials: false
       dropOnDeconstruct: false
       # KS14 end
-    # KS14 start: tgstation's ore values, per unit of ore
+    # KS14 start: mining points paid per unit of ore
     - type: KsMiningPointsSmelter
       pointsPerUnit:
         SteelOre: 1

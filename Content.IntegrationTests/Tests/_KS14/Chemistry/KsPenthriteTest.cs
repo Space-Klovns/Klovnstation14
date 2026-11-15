@@ -20,7 +20,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Chemistry;
 
 /// <summary>
-///     tg's penthrite: it holds a body up past where it would go critical, heals it while it is that hurt, and goes off
+///     Penthrite holds a body up past where it would go critical, heals it while it is that hurt, and goes off
 ///         with epinephrine.
 /// </summary>
 [TestFixture]

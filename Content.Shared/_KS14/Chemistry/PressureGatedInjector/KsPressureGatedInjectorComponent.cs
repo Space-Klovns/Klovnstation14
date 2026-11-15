@@ -3,14 +3,14 @@ using Robust.Shared.GameStates;
 namespace Content.Shared._KS14.Chemistry.PressureGatedInjector;
 
 /// <summary>
-///     An injector made for low pressure, as tg's survival medipens are: where the air is thin it works as any other,
+///     An injector made for low pressure: where the air is thin it works as any other,
 ///         but anywhere thicker its gauge has to be bled by hand first, and only part of the dose gets in.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class KsPressureGatedInjectorComponent : Component
 {
     /// <summary>
-    ///     The most pressure, in kPa, at which the injector works freely. tg's <c>LAVALAND_EQUIPMENT_EFFECT_PRESSURE</c>.
+    ///     The most pressure, in kPa, at which the injector works freely.
     /// </summary>
     [DataField]
     public float MaxPressure = 50f;

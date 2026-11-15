@@ -15,7 +15,7 @@ using Robust.Shared.Timing;
 namespace Content.Client._KS14.SalvageTablet;
 
 /// <summary>
-///     Where a salvager spends mining points. Two tabs, as on tgstation's mining order console: the catalogue of what
+///     Where a salvager spends mining points. Two tabs: the catalogue of what
 ///         their rank may order, each with a button that adds it to the cart, and the cart, which is where amounts
 ///         are changed and the lot is ordered, dropped next to them by pod.
 /// </summary>
@@ -189,7 +189,7 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
     {
         ProductContainer.RemoveAllChildren();
 
-        // A search looks through every category, as tgstation's does.
+        // A search looks through every category.
         var search = SearchEdit.Text.Trim();
         var products = new List<(KsSalvageProductPrototype Product, EntityPrototype Entity)>();
         foreach (var productPrototype in _prototypeManager.EnumeratePrototypes<KsSalvageProductPrototype>())
