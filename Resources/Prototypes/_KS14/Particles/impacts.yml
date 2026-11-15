@@ -27,6 +27,12 @@
   velocity: [ 0, -11.5625 ]
   friction: { kind: num, a: 0.9718, b: 0.9999 }
   drift: { kind: circle, a: 2.5, b: 2.5 }
+  # A puff meeting a wall rolls off it softly and spreads along it, rather than passing through or springing back.
+  collision:
+    onHit: Bounce
+    bounce: 0.35
+    friction: 0.3
+    radius: 0.1
 
 # /particles/debris, as the debris element sets it up: count and spawning both its debris_amount, so one burst.
 - type: ksParticles
@@ -134,6 +140,12 @@
   velocity: { kind: box, a: [ -0.3, -3 ], b: [ 0.3, -2 ] }
   friction: { kind: num, a: 0.9718, b: 0.9999 }
   drift: { kind: circle, a: 0, b: 0.5 }
+  # A puff meeting a wall rolls off it softly and spreads along it, rather than passing through or springing back.
+  collision:
+    onHit: Bounce
+    bounce: 0.35
+    friction: 0.3
+    radius: 0.1
 
 # /particles/overheat_smoke: smoke curling up off a hot gun, for as long as it is hot. KsGunOverheatSmokeSystem turns
 # it on and off. TGMC's 3 per ds into a cap of 1000, its z-drift (GEN_SPHERE) only ordering them.

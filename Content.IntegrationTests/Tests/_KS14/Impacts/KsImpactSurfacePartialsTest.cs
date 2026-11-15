@@ -83,4 +83,30 @@ public sealed class KsImpactSurfacePartialsTest : GameTest
             });
         });
     }
+
+    private static readonly ProtoId<KsParticlesPrototype> ImpactSmoke = "KsImpactSmoke";
+    private static readonly ProtoId<KsParticlesPrototype> FiringSmoke = "KsGunFiringSmoke";
+    private static readonly ProtoId<KsParticlesPrototype> GibSplatter = "KsGibSplatter";
+    private static readonly ProtoId<KsParticlesPrototype> DismemberGibSplatter = "KsDismemberGibSplatter";
+
+    /// <summary>
+    ///     Smoke rolls off walls, and giblets stick to them, the dismemberment's inheriting it.
+    /// </summary>
+    [Test]
+    public async Task SmokeBouncesAndGibletsStick()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            string ResponseOf(ProtoId<KsParticlesPrototype> id) =>
+                Server.ProtoMan.Index(id).Collision is { Enabled: true } collision ? collision.OnHit.ToString() : "none";
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(ResponseOf(ImpactSmoke), Is.EqualTo(nameof(KsParticleHitResponse.Bounce)), "impact smoke does not bounce off walls");
+                Assert.That(ResponseOf(FiringSmoke), Is.EqualTo(nameof(KsParticleHitResponse.Bounce)), "muzzle smoke does not bounce off walls");
+                Assert.That(ResponseOf(GibSplatter), Is.EqualTo(nameof(KsParticleHitResponse.Stick)), "giblets do not stick to walls");
+                Assert.That(ResponseOf(DismemberGibSplatter), Is.EqualTo(nameof(KsParticleHitResponse.Stick)), "a lost limb's giblets do not stick to walls");
+            });
+        });
+    }
 }

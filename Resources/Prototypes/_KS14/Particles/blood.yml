@@ -125,10 +125,10 @@
   friction: { kind: num, a: 0.8031, b: 0.6513 }
   position: { kind: circle, a: 0.28125, b: 0.28125 }
   drift: { kind: circle, a: 0.625, b: 0.3125 }
-  # Chunks thud off walls instead of flying through them. Inherited by KsDismemberGibSplatter.
+  # Chunks that reach a wall stick to it for the rest of their short life, instead of flying through. Inherited by
+  #   KsDismemberGibSplatter.
   collision:
-    bounce: 0.3
-    friction: 0.4
+    onHit: Stick
     radius: 0.1
 
 # A lost limb: the same burst, thrown after the limb rather than every way. BloodSpraySystem turns the emitter so

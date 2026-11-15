@@ -168,12 +168,12 @@ and keeps nothing. With it, particles stop at walls, client-side only:
 
 ```yaml
 - type: ksParticles
-  id: KsGibSplatter
+  id: KsImpactDebrisBase
   collision:
     onHit: Bounce   # or Stick (stays where it hit for the rest of its life) or Die
     bounce: 0.3     # restitution: fraction of the speed into the wall kept, outwards
     friction: 0.4   # fraction of the speed along the wall lost per contact
-    radius: 0.1     # metres from the wall the particle's centre stops, scaled with the component's scale
+    radius: 0.04    # metres from the wall the particle's centre stops, scaled with the component's scale
 ```
 
 | What | How |
