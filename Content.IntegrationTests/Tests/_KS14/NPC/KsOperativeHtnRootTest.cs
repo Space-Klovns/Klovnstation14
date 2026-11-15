@@ -417,26 +417,103 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     The branch traversal record of each kind of order's plan through the real root, hard-coded: HTNSystem
-    ///         replaces a running plan when a new one is lower at any index, and every decomposed compound adds an
-    ///         entry, so changing how an order's compounds nest changes what may interrupt it. Reshaping the YAML
-    ///         must leave these as they are.
+    ///     The branch traversal record of each kind of order's plan through the real root: HTNSystem replaces a running
+    ///         plan when a new one is lower at any index, and every decomposed compound adds an entry, so changing how an
+    ///         order's compounds nest changes what may interrupt it. Reshaping the YAML must leave these as they are.
+    ///     <para>
+    ///         The first entry is the order's own root branch, found in the root by the compound it hands over to
+    ///             (<see cref="GetRootBranch"/>), so a root branch added above the orders moves it without breaking this;
+    ///             the rest, the nesting below it, is as written here. That the orders keep their places among themselves
+    ///             is <see cref="TestOrderBranchesKeepTheirOrder"/>.
+    ///     </para>
     /// </summary>
-    [TestCase(NpcOrderKind.Investigate, "28,0,0")]
-    [TestCase(NpcOrderKind.Watch, "29,0,0")]
-    [TestCase(NpcOrderKind.Stage, "30,0,0")]
-    [TestCase(NpcOrderKind.Breach, "31,0,0")]
-    [TestCase(NpcOrderKind.Enter, "32,0,0")]
-    [TestCase(NpcOrderKind.Search, "34,0")]
-    [TestCase(NpcOrderKind.HoldArea, "35,0")]
-    [TestCase(NpcOrderKind.Regroup, "36,0")]
-    public async Task TestOrderBranchTraversalRecord(NpcOrderKind kind, string expected)
+    /// <param name="compound">The compound the order's root branch hands over to.</param>
+    /// <param name="nesting">The record below the root branch.</param>
+    [TestCase(NpcOrderKind.Investigate, "KsOperativeOrderInvestigateCompound", ",0,0")]
+    [TestCase(NpcOrderKind.Watch, "KsOperativeOrderWatchCompound", ",0,0")]
+    [TestCase(NpcOrderKind.Stage, "KsOperativeOrderStageCompound", ",0,0")]
+    [TestCase(NpcOrderKind.Breach, "KsOperativeOrderBreachCompound", ",0,0")]
+    [TestCase(NpcOrderKind.Enter, "KsOperativeOrderEnterCompound", ",0,0")]
+    [TestCase(NpcOrderKind.Search, "KsOperativeOrderSearchSpotCompound", ",0")]
+    [TestCase(NpcOrderKind.HoldArea, "KsOperativeOrderHoldAreaCompound", ",0")]
+    [TestCase(NpcOrderKind.Regroup, "KsOperativeOrderRegroupCompound", ",0")]
+    public async Task TestOrderBranchTraversalRecord(NpcOrderKind kind, string compound, string nesting)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
             stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, kind));
 
-        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo(expected),
+        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo(GetRootBranch(compound) + nesting),
             $"{kind}: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     The orders' root branches come one after another in this order, with nothing between them: a branch put among them
+    ///         could interrupt the orders below it and be interrupted by those above. What comes before the first of them
+    ///         is free to change.
+    /// </summary>
+    [Test]
+    public void TestOrderBranchesKeepTheirOrder()
+    {
+        if (!Pair.Server.ResolveDependency<IPrototypeManager>().HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        string[] compounds =
+        [
+            "KsOperativeOrderInvestigateCompound",
+            "KsOperativeOrderWatchCompound",
+            "KsOperativeOrderStageCompound",
+            "KsOperativeOrderBreachCompound",
+            "KsOperativeOrderEnterCompound",
+            "KsOperativeOrderSearchLockerCompound",
+            "KsOperativeOrderSearchSpotCompound",
+            "KsOperativeOrderHoldAreaCompound",
+            "KsOperativeOrderRegroupCompound",
+        ];
+
+        var first = GetRootBranch(compounds[0]);
+        for (var i = 1; i < compounds.Length; i++)
+        {
+            Assert.That(GetRootBranch(compounds[i]), Is.EqualTo(first + i), $"{compounds[i]} should be {i} below {compounds[0]}");
+        }
+    }
+
+    /// <summary>
+    ///     The index of the operative root's branch that hands over to <paramref name="compound"/>: what a plan through it has
+    ///         first in its branch traversal record. Read from the root as it is, so that a branch added to it or moved in it
+    ///         never needs a number changed here. The one such branch: with two, which a plan took would say nothing.
+    /// </summary>
+    private int GetRootBranch(string compound)
+    {
+        var branches = Pair.Server.ResolveDependency<IPrototypeManager>().Index(_operativeRoot).Branches;
+        var found = new List<int>();
+
+        for (var i = 0; i < branches.Count; i++)
+        {
+            if (branches[i].Tasks.Any(task => task is HTNCompoundTask compoundTask && compoundTask.Task.Id == compound))
+                found.Add(i);
+        }
+
+        Assert.That(found, Has.Count.EqualTo(1), $"the operative root should hand over to {compound} from one branch");
+        return found[0];
+    }
+
+    /// <summary>
+    ///     The index of the operative root's branch for being stunned: the one gated on the status effect, which hands over
+    ///         to no compound to find it by.
+    /// </summary>
+    private int GetStunnedRootBranch()
+    {
+        var branches = Pair.Server.ResolveDependency<IPrototypeManager>().Index(_operativeRoot).Branches;
+        var found = new List<int>();
+
+        for (var i = 0; i < branches.Count; i++)
+        {
+            if (branches[i].Preconditions.Any(precondition => precondition is Content.Server.NPC.HTN.Preconditions.HasStatusEffectPrecondition))
+                found.Add(i);
+        }
+
+        Assert.That(found, Has.Count.EqualTo(1), "the operative root should have one branch for being stunned");
+        return found[0];
     }
 
     /// <summary>
@@ -457,7 +534,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
                     lockerUid);
             });
 
-        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo("33,0"), Describe(plan));
+        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo(GetRootBranch("KsOperativeOrderSearchLockerCompound") + ",0"),
+            Describe(plan));
     }
 
     /// <summary>
@@ -621,7 +699,14 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(pickedAnExit, Is.EqualTo(leaves), $"got: {Describe(plan)}");
 
             if (leaves)
-                Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(2), "getting out of a fire should come first, with being stunned and staying in a closet the only things before it");
+            {
+                var fireBranch = GetRootBranch("KsOperativeLeaveDangerCompound");
+                var allowedAbove = new[] { GetStunnedRootBranch(), GetRootBranch("KsOperativeInClosetCompound") };
+
+                Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(fireBranch), "getting out of the fire is what it should be doing");
+                Assert.That(Enumerable.Range(0, fireBranch), Is.SubsetOf(allowedAbove),
+                    "getting out of a fire should come first, with being stunned and staying in a closet the only things before it");
+            }
         });
     }
 
@@ -733,7 +818,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
         var operators = plan.Tasks.Select(task => task.Operator.GetType().Name).ToList();
         Assert.Multiple(() =>
         {
-            Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(1), $"right below being stunned, got: {Describe(plan)}");
+            var closetBranch = GetRootBranch("KsOperativeInClosetCompound");
+            Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(closetBranch), $"it should be staying in its closet, got: {Describe(plan)}");
+            Assert.That(closetBranch, Is.EqualTo(GetStunnedRootBranch() + 1), "right below being stunned");
             Assert.That(operators, Does.Contain("InteractUsingOperator"), $"it uses its meds in there, got: {Describe(plan)}");
             Assert.That(operators[^1], Is.EqualTo("HideOperator"), $"then stays in, got: {Describe(plan)}");
         });

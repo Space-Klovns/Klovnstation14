@@ -28,6 +28,11 @@ public sealed partial class NPCCombatSystem
     [Dependency] private EntityQuery<NpcPerceptionComponent> _perceptionQuery = default!;
 
     /// <summary>
+    ///     How long an NPC that has lost its perception since it first shot goes before it is asked for again.
+    /// </summary>
+    private static readonly TimeSpan NoPerceptionRecheck = TimeSpan.FromSeconds(5);
+
+    /// <summary>
     ///     Turns <paramref name="targetSpot"/> about <paramref name="worldPos"/> by however far off <paramref name="uid"/>'s aim
     ///         is going, for how dark <paramref name="targetUid"/> is to it.
     /// </summary>
@@ -57,14 +62,17 @@ public sealed partial class NPCCombatSystem
 
     private void RollDarkAim(Entity<NpcDarkAimComponent> entity, EntityUid targetUid, TimeSpan now)
     {
+        entity.Comp.TargetUid = targetUid;
+
+        // Its perception was taken off since: aims true, and is looked at again in a while. Not TimeSpan.MaxValue: RollAt is
+        //      moved on by however long the NPC is paused, which would overflow it.
         if (!_perceptionQuery.TryComp(entity.Owner, out var perceptionComponent))
         {
             entity.Comp.Offset = Angle.Zero;
-            entity.Comp.RollAt = TimeSpan.MaxValue;
+            entity.Comp.RollAt = now + NoPerceptionRecheck;
             return;
         }
 
-        entity.Comp.TargetUid = targetUid;
         entity.Comp.RollAt = now + perceptionComponent.DarkAimHold;
         entity.Comp.Offset = GetDarkAimSpread((entity.Owner, perceptionComponent), targetUid) is { } spread
             ? new Angle(spread.Theta * _random.NextFloat(-1f, 1f))

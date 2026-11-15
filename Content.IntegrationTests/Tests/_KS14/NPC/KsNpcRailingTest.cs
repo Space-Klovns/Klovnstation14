@@ -1,9 +1,11 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server.NPC;
+using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
@@ -57,24 +59,68 @@ public sealed class KsNpcRailingTest : GameTest
     }
 
     /// <summary>
+    ///     How far each side of the row the NPC and its goal are, in tiles.
+    /// </summary>
+    private const int Across = 3;
+
+    /// <summary>
+    ///     What climbing over a railing costs a path on top of walking through its tile, in tiles of walking: the climb cost,
+    ///         over the part of the tile the railing takes up. A railing's poly is one of the navmesh's four steps to a tile deep.
+    /// </summary>
+    private static float ClimbExtra => PathfindingSystem.ClimbCost / PathfindingSystem.SubStep;
+
+    /// <summary>
+    ///     How much further it is to walk round through a gap <paramref name="gapAt"/> tiles along the row than straight
+    ///         across, in tiles, as the pathfinder counts distance: diagonals at root two.
+    /// </summary>
+    private static float GetDetourExtra(int gapAt)
+    {
+        var leg = MathF.Max(gapAt, Across) + (MathF.Sqrt(2f) - 1f) * MathF.Min(gapAt, Across);
+        return 2f * leg - 2f * Across;
+    }
+
+    /// <summary>
     ///     A climber walks round where that is short - an open tile a step along the row - and climbs where it is long, rather
     ///         than climbing every time: a climb is slow, and stood still.
     /// </summary>
-    [TestCase(1, ExpectedResult = "round")]
-    [TestCase(GapStart, ExpectedResult = "over")]
-    public Task<string> TestClimberPrefersWalkingRound(int gapAt)
+    /// <remarks>
+    ///     Where "short" and "long" are is the climb cost's to say, so both gaps are placed from it: the near one a step along,
+    ///         which has to be well under what a climb costs, and the far one where walking round is twice the climb or more.
+    ///         Retuning <see cref="PathfindingSystem.ClimbCost"/> moves the far gap and leaves both sides of the trade tested.
+    /// </remarks>
+    [TestCase(true, ExpectedResult = "round")]
+    [TestCase(false, ExpectedResult = "over")]
+    public Task<string> TestClimberPrefersWalkingRound(bool near)
     {
-        return FindWay(facing: 0, gapAt, climbs: true);
+        const int nearGap = 1;
+
+        if (near)
+        {
+            // So cheap a climb that even a step aside is not clearly less: there is no walking round left to test.
+            if (ClimbExtra < 1.5f * GetDetourExtra(nearGap))
+                Assert.Ignore($"at a climb cost of {PathfindingSystem.ClimbCost}, no way round a railing is clearly cheaper than climbing it");
+
+            return FindWay(facing: 0, nearGap, climbs: true);
+        }
+
+        var farGap = GapStart;
+        while (GetDetourExtra(farGap) < 2f * ClimbExtra)
+        {
+            farGap++;
+        }
+
+        // The gap is two tiles, and the row runs to the edge of the grid.
+        return FindWay(facing: 0, farGap, climbs: true, half: Math.Max(Half, farGap + 1));
     }
 
-    private async Task<string> FindWay(int facing, int? gapAt, bool climbs)
+    private async Task<string> FindWay(int facing, int? gapAt, bool climbs, int half = Half)
     {
-        var (entManager, gridUid, npcUid) = await SetUp(facing, gapAt, climbs, "KsSquadTestMobSyndicate");
+        var (entManager, gridUid, npcUid) = await SetUp(facing, gapAt, climbs, "KsSquadTestMobSyndicate", half: half);
 
         System.Threading.Tasks.Task<PathResultEvent> pathTask = default!;
         await Pair.Server.WaitPost(() => pathTask = entManager.System<PathfindingSystem>().GetPath(npcUid,
             entManager.GetComponent<TransformComponent>(npcUid).Coordinates,
-            new EntityCoordinates(gridUid, Place(facing, 0, 3) + new Vector2(0.5f, 0.5f)),
+            new EntityCoordinates(gridUid, Place(facing, 0, Across) + new Vector2(0.5f, 0.5f)),
             0.5f,
             default,
             entManager.System<PathfindingSystem>().GetFlags(npcUid)));
@@ -163,7 +209,50 @@ public sealed class KsNpcRailingTest : GameTest
         Assert.That(Vector2.Distance(position, goal), Is.LessThan(0.8f), $"it should climb over and get there; it got to {position}");
     }
 
-    private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid NpcUid)> SetUp(int facing, int? gapAt, bool climbs, string mob, int startAcross = -3)
+    /// <summary>
+    ///     A goal that is itself anchored is not in its own way: walking up to a wall, a door or a machine from close by is
+    ///         still a straight line, not a path asked for at every step. The same spot given as a place on the grid is
+    ///         behind that wall, and is not.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestAnAnchoredGoalIsNotInItsOwnWay(bool goalIsTheWall)
+    {
+        var entManager = Pair.Server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = Pair.Server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, npcUid = default;
+        NPCSteeringComponent steeringComponent = default!;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-2, -2), new Vector2i(2, 2)).Owner;
+            var wallUid = SpawnAt(entManager, "WallSolid", gridUid, 0, 0);
+            npcUid = SpawnAt(entManager, "KsTileDangerTestWalker", gridUid, 0, -1);
+            Assert.That(entManager.GetComponent<TransformComponent>(wallUid).Anchored);
+
+            // A tile away: well inside the range steering walks straight at a goal from.
+            var goal = goalIsTheWall
+                ? new EntityCoordinates(wallUid, Vector2.Zero)
+                : new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f));
+
+            steeringComponent = entManager.System<NPCSteeringSystem>().Register(npcUid, goal);
+            Assert.That(steeringComponent.RepathRange, Is.GreaterThan(1f), "the test's goal has to be near enough to walk straight at");
+            entManager.System<NPCSystem>().WakeNPC(npcUid, entManager.GetComponent<HTNComponent>(npcUid));
+        });
+
+        await WaitForNavmeshSettled(Pair, gridUid);
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            // Trusted for a while once found clear, and never set when not.
+            Assert.That(steeringComponent.KsBeelineClearUntil > TimeSpan.Zero, Is.EqualTo(goalIsTheWall),
+                goalIsTheWall ? "the wall it is walking up to is not in the way of itself" : "a spot behind a wall is not a clear line");
+        });
+    }
+
+    private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid NpcUid)> SetUp(int facing, int? gapAt, bool climbs, string mob, int startAcross = -Across, int half = Half)
     {
         var entManager = Pair.Server.ResolveDependency<IEntityManager>();
         var tileDefinitionManager = Pair.Server.ResolveDependency<ITileDefinitionManager>();
@@ -172,10 +261,10 @@ public sealed class KsNpcRailingTest : GameTest
 
         await Pair.Server.WaitPost(() =>
         {
-            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-Half, -Half), new Vector2i(Half, Half)).Owner;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-half, -half), new Vector2i(half, half)).Owner;
             var transformSystem = entManager.System<SharedTransformSystem>();
 
-            for (var along = -Half; along <= Half; along++)
+            for (var along = -half; along <= half; along++)
             {
                 if (along >= gapAt && along <= gapAt + 1)
                     continue;

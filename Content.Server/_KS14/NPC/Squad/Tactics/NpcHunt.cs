@@ -131,6 +131,28 @@ public sealed class NpcHunt
     public bool BlastTried;
 
     /// <summary>
+    ///     While <see cref="Blast"/> is a charge on a locker the hostile is believed in, rather than a way in: that locker. The
+    ///         search carries on from where it was once it has gone off, or not.
+    /// </summary>
+    public EntityUid? BlastLockerUid;
+
+    /// <summary>
+    ///     Whether <see cref="GridUid"/> was only set for the locker blast, a hunt with no room having none: unset again after.
+    /// </summary>
+    public bool BlastLockerLentGrid;
+
+    /// <summary>
+    ///     Lockers a charge has been tried on, for it to be tried the once each (see
+    ///         <see cref="NpcSquadTacticsSettings.SearchChargeLockers"/>).
+    /// </summary>
+    public readonly HashSet<EntityUid> ChargedLockers = new();
+
+    /// <summary>
+    ///     When next to look for someone to put a charge on a locker, after finding nobody.
+    /// </summary>
+    public TimeSpan NextLockerChargeTry;
+
+    /// <summary>
     ///     While putting something in ahead of going in (<see cref="NpcHuntPhase.Soften"/>): the plan that holds the throw, which
     ///         nobody else sees, as for <see cref="Blast"/>. What it throws, and where, goes by what the squad last saw of the
     ///         hostile, never the hostile itself.
@@ -247,6 +269,13 @@ public enum NpcSearchPointKind : byte
     ///     Where it was last seen.
     /// </summary>
     LastKnown,
+
+    /// <summary>
+    ///     A disposal unit it could have climbed into: one that shows something is in it, or one with no power, which
+    ///         shows nothing either way (<see cref="NpcSquadTacticsSettings.SearchOccupiedDisposals"/>,
+    ///         <see cref="NpcSquadTacticsSettings.SearchUnpoweredDisposals"/>). Searched by emptying it.
+    /// </summary>
+    Disposal,
 }
 
 /// <summary>
@@ -262,9 +291,16 @@ public sealed class NpcHuntSearchPoint
     public required EntityCoordinates Coordinates;
 
     /// <summary>
-    ///     The locker, for <see cref="NpcSearchPointKind.Locker"/>.
+    ///     The locker, for <see cref="NpcSearchPointKind.Locker"/>, or the disposal unit, for
+    ///         <see cref="NpcSearchPointKind.Disposal"/>.
     /// </summary>
     public EntityUid? StorageUid;
+
+    /// <summary>
+    ///     For <see cref="NpcSearchPointKind.Disposal"/>: a member has emptied it (<c>NpcSquadTacticsSystem.NoteEmptied</c>).
+    ///         There is no seeing into one, so that is what searched means.
+    /// </summary>
+    public bool Emptied;
 
     public bool Cleared;
 

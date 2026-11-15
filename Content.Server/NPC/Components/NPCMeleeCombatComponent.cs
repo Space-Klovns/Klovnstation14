@@ -56,5 +56,11 @@ public enum CombatStatus : byte
     /// Holding fire for a friend in the way, for long enough to want somewhere else to shoot from. See NpcSquadFireLaneSystem.
     /// </summary>
     KsFriendInTheWay,
+
+    /// <summary>
+    /// In sight and aimed at, and holding fire while a round would not get there or would hit a friend: a turret
+    /// (NPCRangedCombatComponent.KsHoldFireWhenBlocked). The task carries on.
+    /// </summary>
+    KsShotBlocked,
     // KS14 end
 }

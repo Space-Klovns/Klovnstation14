@@ -142,10 +142,23 @@ public sealed partial class NPCCombatSystem
             {
                 comp.LOSAccumulator += UnoccludedCooldown;
 
-                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem
-                comp.TargetInLOS = comp.UseOpaqueForLOSChecks
-                    ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque)
-                    : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem. Every mob is on the
+                //      Opaque layer, and a body on the floor hides nothing and lets rounds and beams pass: IsLyingMob
+                if (comp.KsHoldFireWhenBlocked)
+                {
+                    // Sight, then shot: what hides the target, then whether a round would get to it
+                    comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque,
+                        predicate: comp.KsStandingMobsBlockSight ? _npcLineOfFireSystem.IsLyingMob : _npcLineOfFireSystem.IsMob);
+                    comp.KsTargetInLineOfFire = comp.TargetInLOS &&
+                        _npcLineOfFireSystem.CanRoundReach(uid, comp.Target); // the same check that picks its target: KsTargetInLineOfFireCon
+                }
+                else
+                {
+                    comp.TargetInLOS = comp.UseOpaqueForLOSChecks
+                        ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque,
+                            predicate: _npcLineOfFireSystem.IsLyingMob)
+                        : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                }
                 // KS14 end
             }
 
@@ -200,6 +213,13 @@ public sealed partial class NPCCombatSystem
 
             if (!ksAimed)
                 continue;
+
+            // Seen but a round would not get there, through glass, say: keep aiming and tracking, hold fire, carry on
+            if (comp.KsHoldFireWhenBlocked && !comp.KsTargetInLineOfFire)
+            {
+                comp.Status = CombatStatus.KsShotBlocked;
+                continue;
+            }
             // KS14 end
 
             // TODO: LOS
@@ -233,6 +253,10 @@ public sealed partial class NPCCombatSystem
                 {
                     if (_npcSquadFireLaneSystem.NoteHeldFire(uid))
                         comp.Status = CombatStatus.KsFriendInTheWay;
+
+                    // A turret cannot go elsewhere to shoot from: it keeps aiming until the friend is out of the way
+                    if (comp.KsHoldFireWhenBlocked)
+                        comp.Status = CombatStatus.KsShotBlocked;
 
                     continue;
                 }

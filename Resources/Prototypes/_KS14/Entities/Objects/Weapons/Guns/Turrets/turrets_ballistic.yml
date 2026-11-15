@@ -105,8 +105,8 @@
   components:
   - type: KsTargetLockOn
     keepTargetUntilLost: true
-  - type: KsNpcAimTracking
-    ignoreFriendlyBlocking: true
+  - type: NpcFireLane
+    mode: FireThrough # a heavy machine gun does not wait for a friend to step aside
   # Smokes after a long burst, as TGMC's overheated guns do. Only a visual: it never stops firing.
   - type: KsParticles
     prototype: KsGunOverheatSmoke

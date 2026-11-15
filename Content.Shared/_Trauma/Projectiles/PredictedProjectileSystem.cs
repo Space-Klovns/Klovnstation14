@@ -85,6 +85,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     }
 
     // KS14 start
+    /// <summary>
+    ///     Looked ahead of from startup, on a map that is initialised; on one that is not, from its map init
+    ///         (<see cref="KsOnProjectileMapInit"/>).
+    /// </summary>
     private void KsOnProjectileStartup(Entity<ProjectileComponent> entity, ref ComponentStartup args)
     {
         // Not on a map yet to be initialised, where nothing moves and a save of it would write the component into the
@@ -160,6 +164,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         if (comp.ProjectileSpent || comp is { Weapon: null, OnlyCollideWhenShot: true })
             return;
 
+        // KS14: one meant to cross what cannot be damaged (PA particles, the containment field) does not count it as a hit
+        if (comp.KsPassesUndamageable && !HasComp<DamageableComponent>(target))
+            return;
+
         // it's here so this check is only done once before possible hit
         var attemptEv = new ProjectileReflectAttemptEvent(uid, comp, false);
         RaiseLocalEvent(target, ref attemptEv);
@@ -183,8 +191,9 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         bool isAMob = HasComp<MobCollisionComponent>(target);
         if (comp.PenetrationThreshold > 0 && !isAMob) damageRequired /= _gunPenetrationMinShots;
 
-        if (!TryComp<DamageableComponent>(target, out var damageable))
-            return;
+        // Nothing to damage is still something hit: the round is spent on it below, as on anything it fails to damage. This
+        //      returned here, and a round went on through any hard thing with no DamageableComponent.
+        TryComp<DamageableComponent>(target, out var damageable);
         //KS14 pen end
 
         // KS14 Impact start

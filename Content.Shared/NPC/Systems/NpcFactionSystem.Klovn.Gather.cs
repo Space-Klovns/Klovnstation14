@@ -67,6 +67,35 @@ public sealed partial class NpcFactionSystem
         }
     }
 
+    /// <summary>
+    ///     Whether <paramref name="otherUid"/> is one <paramref name="entity"/> would fight: by the same tests as
+    ///         <see cref="GetNearbyHostiles(Entity{NpcFactionMemberComponent?, FactionExceptionComponent?}, float, HashSet{EntityUid})"/>,
+    ///         one at a time, without allocating.
+    /// </summary>
+    public bool IsEntityHostile(Entity<NpcFactionMemberComponent?, FactionExceptionComponent?> entity, EntityUid otherUid)
+    {
+        if (entity.Owner == otherUid)
+            return false;
+
+        Resolve(entity, ref entity.Comp2, false);
+
+        if (entity.Comp2 != null)
+        {
+            if (entity.Comp2.Ignored.Contains(otherUid))
+                return false;
+
+            if (entity.Comp2.Hostiles.Contains(otherUid))
+                return true;
+        }
+
+        if (!Resolve(entity, ref entity.Comp1, false) || !TryComp<NpcFactionMemberComponent>(otherUid, out var otherComponent))
+            return false;
+
+        return AnyIn(otherComponent.Factions, entity.Comp1.HostileFactions) &&
+            !AnyIn(otherComponent.Factions, entity.Comp1.Factions) &&
+            !AnyIn(otherComponent.Factions, entity.Comp1.FriendlyFactions);
+    }
+
     private static bool AnyIn<T>(HashSet<T> items, HashSet<T> set)
     {
         foreach (var item in items)

@@ -123,6 +123,57 @@ public sealed partial class NpcSquadTacticsSettings
     public int MaxSearchPoints = 10;
 
     /// <summary>
+    ///     Whether a search empties each disposal unit by the room whose light shows something is in it. A unit's light
+    ///         only shows with power.
+    /// </summary>
+    [DataField]
+    public bool SearchOccupiedDisposals = true;
+
+    /// <summary>
+    ///     Whether a search empties each disposal unit by the room with no power, which shows nothing of what is in it.
+    /// </summary>
+    [DataField]
+    public bool SearchUnpoweredDisposals = true;
+
+    /// <summary>
+    ///     Whether a search shoots open a locker somebody saw the hostile get into, or believes it is in, when no member can
+    ///         open it: locked, or welded shut. Only those with a gun and a round in it, from where they have a clear shot at
+    ///         it. Off, a member is sent to open it all the same, and gives up on it.
+    /// </summary>
+    [DataField]
+    public bool SearchBreakLockers;
+
+    /// <summary>
+    ///     How near a locker, in tiles, a member gets to shoot it open (<see cref="SearchBreakLockers"/>).
+    /// </summary>
+    [DataField]
+    public float SearchBreakLockerRange = 3f;
+
+    /// <summary>
+    ///     How many rounds NPCs may put into a locker to break it (<see cref="SearchBreakLockers"/>), all of them together,
+    ///         before it is given up on: about twice what a security locker takes. Something that has had that many and still
+    ///         stands is not worth a magazine more.
+    /// </summary>
+    [DataField]
+    public int SearchBreakLockerRounds = 60;
+
+    /// <summary>
+    ///     The most damage a locker may take to break for it to be worth shooting open, as
+    ///         <see cref="PlanBreakDamage"/> is for glass. A security locker breaks at 150, which is some 30 rifle rounds at
+    ///         point blank through its armour; an ordinary one at 100.
+    /// </summary>
+    [DataField]
+    public float SearchBreakLockerDamage = 200f;
+
+    /// <summary>
+    ///     Whether a member that carries a breaching charge that sticks to a locker puts it on one it is believed in, rather than
+    ///         shooting it open, when nobody can open it. Tried the once per locker, and shot open if it does not work. Not in a
+    ///         squad plan's own hunt, which has charge steps of its own. Off, lockers are only shot open.
+    /// </summary>
+    [DataField]
+    public bool SearchChargeLockers;
+
+    /// <summary>
     ///     How thorough the search is: the share of the room's floor, from 0 to 1, that has to have been seen before
     ///         the room counts as searched. At 1, every tile - round every corner, down every leg of an L - is looked
     ///         at. Lower lets a squad give up once it has seen most of a room.
@@ -379,6 +430,14 @@ public sealed partial class NpcSquadTacticsSettings
     /// </summary>
     [DataField]
     public float PlanChargeMinPressure = 50f;
+
+    /// <summary>
+    ///     Whether a plan with no room to go by, or none of whose walls will do, blows what stands between the squad and the
+    ///         hostile it can see: the glass itself, if a charge goes on it, or a wall beside it. A hostile behind a window
+    ///         somewhere too big or too open to be taken for a room used to be left alone, whoever had a charge.
+    /// </summary>
+    [DataField]
+    public bool PlanChargeBarrier = true;
 
     /// <summary>
     ///     How long a planter may go without getting any nearer its site, by the way it has to walk, before it is given up on.

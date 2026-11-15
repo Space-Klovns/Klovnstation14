@@ -226,7 +226,8 @@ public sealed class KsNpcCalloutTest : GameTest
         if (how != "revived")
             return;
 
-        // Down again while still down: nothing. Back on its feet, then down again: called out again.
+        // Down again while still down - critical, and now hurt some more - is nothing new. Dying of it is the "crit then
+        //      dead" case. Back on its feet, then down again: called out again.
         await Server.WaitPost(() => SetDamage(downedUid, 160));
         for (var i = 0; i < 40; i++)
         {

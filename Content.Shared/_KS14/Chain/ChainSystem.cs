@@ -35,6 +35,47 @@ public sealed partial class ChainSystem : EntitySystem
     private const string StretchJointSuffix = "chainstretch";
 
     /// <summary>
+    ///     Link joints to make a tick from now, by <see cref="SpawnChainInbetween"/>: those from a link that was already there
+    ///         to one just spawned. Made in the same tick, the client gets the joint before the new link has a place in the
+    ///         world, skips it on the old link, and logs "the joint already existed" once the new one starts up with it.
+    /// </summary>
+    private readonly List<PendingLinkJoint> _pendingLinkJoints = new();
+
+    private readonly record struct PendingLinkJoint(EntityUid FirstUid, EntityUid SecondUid, Vector2 Offset, string Id, GameTick After);
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (_pendingLinkJoints.Count == 0)
+            return;
+
+        var tick = _gameTiming.CurTick;
+
+        for (var i = _pendingLinkJoints.Count - 1; i >= 0; i--)
+        {
+            var pending = _pendingLinkJoints[i];
+            if (tick <= pending.After)
+                continue;
+
+            _pendingLinkJoints.RemoveAt(i);
+
+            // Still linked as it was: not broken, or deleted, in the meantime.
+            if (TerminatingOrDeleted(pending.FirstUid) ||
+                TerminatingOrDeleted(pending.SecondUid) ||
+                !TryGetLiveLink(pending.FirstUid, out var firstComponent) ||
+                firstComponent.NextLinkUid != pending.SecondUid ||
+                firstComponent.NextLinkJointId != pending.Id)
+                continue;
+
+            ConnectTwoLink(pending.FirstUid, pending.SecondUid, pending.Offset, id: pending.Id);
+
+            // The stretch joint goes by the link joints, and could not be made without this one.
+            RefreshStretch(pending.FirstUid);
+        }
+    }
+
+    /// <summary>
     ///     Most links walked looking for a segment's ends, against a chain that somehow loops.
     /// </summary>
     private const int MaxStretchWalk = 1000;
@@ -317,9 +358,9 @@ public sealed partial class ChainSystem : EntitySystem
     ///
     ///     Meant for individual chain links.
     /// </summary>
-    private DistanceJoint ConnectTwoLink(EntityUid firstUid, EntityUid secondUid, Vector2 offset)
+    private DistanceJoint ConnectTwoLink(EntityUid firstUid, EntityUid secondUid, Vector2 offset, string? id = null)
     {
-        var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: _gameTiming.CurTick.ToString() + firstUid.ToString() + "chain");
+        var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: id ?? GetLinkJointId(firstUid));
 
         joint.CollideConnected = false;
         joint.MinLength = offset.Y * 0.95f;
@@ -327,6 +368,11 @@ public sealed partial class ChainSystem : EntitySystem
         joint.MaxLength = offset.Y;
 
         return joint;
+    }
+
+    private string GetLinkJointId(EntityUid firstUid)
+    {
+        return _gameTiming.CurTick.ToString() + firstUid.ToString() + "chain";
     }
 
     /// <summary>
@@ -534,15 +580,26 @@ public sealed partial class ChainSystem : EntitySystem
 
         void LastToCurrent(EntityUid currentLinkUid, ChainLinkComponent currentLinkComponent)
         {
-            var lastToHereJoint = ConnectTwoLink(lastEntity, currentLinkUid, offset);
+            // Between the start or end, which were already there, and a link spawned just now: next tick (see
+            //      _pendingLinkJoints). Between two new links it does not matter, and is made at once.
+            string jointId;
+            if (lastEntity.Owner == startUid || currentLinkUid == endUid)
+            {
+                jointId = GetLinkJointId(lastEntity);
+                _pendingLinkJoints.Add(new PendingLinkJoint(lastEntity, currentLinkUid, offset, jointId, _gameTiming.CurTick));
+            }
+            else
+            {
+                jointId = ConnectTwoLink(lastEntity, currentLinkUid, offset).ID;
+            }
 
             // form basically a linked list
             currentLinkComponent.PreviousLinkUid = lastEntity;
             lastEntity.Comp.NextLinkUid = currentLinkUid;
 
             // and for joint ids
-            lastEntity.Comp.NextLinkJointId = lastToHereJoint.ID;
-            currentLinkComponent.PreviousLinkJointId = lastToHereJoint.ID;
+            lastEntity.Comp.NextLinkJointId = jointId;
+            currentLinkComponent.PreviousLinkJointId = jointId;
 
             currentLinkComponent.EdgeUids.Add(startUid); // as its the first entity
             currentLinkComponent.EdgeUids.Add(endUid); // as its the first entity

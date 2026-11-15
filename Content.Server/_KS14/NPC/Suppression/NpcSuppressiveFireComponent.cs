@@ -24,4 +24,10 @@ public sealed partial class NpcSuppressiveFireComponent : Component
     /// </summary>
     [ViewVariables]
     public EntityUid? TargetUid;
+
+    /// <summary>
+    ///     What it is firing at to break, if anything: every round fired counts against it (<see cref="NpcRoundsTakenComponent"/>).
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? BarrierUid;
 }

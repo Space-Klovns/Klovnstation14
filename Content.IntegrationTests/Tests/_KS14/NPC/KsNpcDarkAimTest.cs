@@ -2,6 +2,7 @@
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Inventory;
@@ -46,11 +47,6 @@ public sealed class KsNpcDarkAimTest : GameTest
   - type: NpcDarkVision
 ";
 
-    /// <summary>
-    ///     How far off the aim may go in pitch dark: <c>NpcPerception.darkAimSpread</c>'s default.
-    /// </summary>
-    private const double MaxSpreadDegrees = 12;
-
     [TestCase("dark", true)]
     [TestCase("lit", false)]
     [TestCase("goggles", false)]
@@ -83,7 +79,9 @@ public sealed class KsNpcDarkAimTest : GameTest
             if (!astray)
                 return;
 
-            Assert.That(spread!.Value.Degrees, Is.GreaterThan(0d).And.LessThanOrEqualTo(MaxSpreadDegrees + 0.001));
+            // At most what the shooter's own perception allows in pitch dark, whatever that is tuned to.
+            var maxSpread = scene.EntManager.GetComponent<NpcPerceptionComponent>(shooterUid).DarkAimSpread;
+            Assert.That(spread!.Value.Degrees, Is.GreaterThan(0d).And.LessThanOrEqualTo(maxSpread.Degrees + 0.001));
 
             var transformSystem = scene.EntManager.System<SharedTransformSystem>();
             var from = transformSystem.GetMapCoordinates(shooterUid).Position;
@@ -95,6 +93,9 @@ public sealed class KsNpcDarkAimTest : GameTest
             combatSystem.KsApplyDarkAim(shooterUid, targetUid, from, ref second);
 
             var off = System.Math.Abs(Angle.ShortestDistance((target - from).ToAngle(), (first - from).ToAngle()).Degrees);
+            // Rolled anywhere within the spread, so only ever exactly on target by a roll of exactly nothing: an aim never
+            //      turned at all is what this is here to catch.
+            Assert.That(off, Is.GreaterThan(0d), "turned off the target");
             Assert.That(off, Is.LessThanOrEqualTo(spread.Value.Degrees + 0.001), "within the spread");
             Assert.That((first - from).Length(), Is.EqualTo((target - from).Length()).Within(0.01f), "turned, not moved nearer or further");
             Assert.That(Vector2.Distance(first, second), Is.LessThan(0.001f), "held, not shaking from one tick to the next");

@@ -148,5 +148,11 @@ public enum PathfindingBreadcrumbFlag : ushort
     ///     A door that opens for no hand, only from its button, and that nothing pries: a blast door.
     /// </summary>
     Sealed = 1 << 9,
+
+    /// <summary>
+    ///     Something here breaks when climbed onto, and hurts the climber: a glass table. A wall to a climber that does not
+    ///         climb such things. See <c>PathFlags.ClimbingBreakables</c>.
+    /// </summary>
+    ClimbBreaks = 1 << 10,
     // KS14 end
 }

@@ -29,6 +29,13 @@ public sealed partial class SuppressOperator : HTNOperator
     [DataField]
     public string? TargetKey;
 
+    /// <summary>
+    ///     What it is firing at to break, if anything (a locker, a window): each round counts against it, for
+    ///         <see cref="Preconditions.RoundsTakenPrecondition"/> to give up on it.
+    /// </summary>
+    [DataField]
+    public string? BarrierKey;
+
     public override void Startup(NPCBlackboard blackboard)
     {
         base.Startup(blackboard);
@@ -37,7 +44,8 @@ public sealed partial class SuppressOperator : HTNOperator
             return;
 
         EntityUid? targetUid = TargetKey is not null && blackboard.TryGetEntity(TargetKey, _entityManager, out var uid) ? uid : null;
-        _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration, targetUid);
+        EntityUid? barrierUid = BarrierKey is not null && blackboard.TryGetEntity(BarrierKey, _entityManager, out var barrier) ? barrier : null;
+        _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration, targetUid: targetUid, barrierUid: barrierUid);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)

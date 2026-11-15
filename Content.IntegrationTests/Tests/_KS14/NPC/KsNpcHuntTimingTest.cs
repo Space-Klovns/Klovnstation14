@@ -56,7 +56,9 @@ public sealed class KsNpcHuntTimingTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             scene.TacticsSystem.UpdateNow();
-            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.Not.EqualTo(NpcHuntPhase.Watch),
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null, "still hunting: a hunt that had ended would not be watching either");
+            Assert.That(hunt!.Phase, Is.Not.EqualTo(NpcHuntPhase.Watch),
                 "the watch is over 4s after the loss, however late the hunt began");
         });
     }

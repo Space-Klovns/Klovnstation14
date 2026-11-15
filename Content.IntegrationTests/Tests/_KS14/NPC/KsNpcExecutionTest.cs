@@ -273,6 +273,11 @@ public sealed class KsNpcExecutionTest : GameTest
 
         await Pair.Server.WaitPost(() =>
         {
+            // Asked once more after its task was dropped, as a plan that came back to it would: the execution is no longer
+            //      its to judge, so the victim having been moved since is not a cancelled one. Without this nothing asks.
+            if (!completes)
+                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed), "the victim is still alive");
+
             Assert.That(executionSystem.IsRefused(victimUid), Is.False);
 
             if (completes)

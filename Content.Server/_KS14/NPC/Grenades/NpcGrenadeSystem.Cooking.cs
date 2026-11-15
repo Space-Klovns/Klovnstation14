@@ -179,11 +179,23 @@ public sealed partial class NpcGrenadeSystem
         // First: nothing below may find the hold still there and start another end to it.
         RemComp<NpcGrenadeCookComponent>(uid);
 
+        // Out of the hand already, and not by this throw: dropped by a stun, knocked or taken out of it, or gone. Wherever it
+        //      is, it is not coming down where it was meant to, and nobody is to go in on that spot when it goes off. The
+        //      hands are put as they were all the same: the weapon is still to take up again.
         if (!Exists(grenadeUid) || !_handsSystem.IsHolding(uid, grenadeUid))
+        {
+            RemCompDeferred<NpcThrownGrenadeComponent>(grenadeUid);
+            _npcHandsSystem.PutBack(uid, takenOut);
             return;
+        }
 
         // The grenade is surely the item in the active hand, but a throw takes the active one, whatever is there.
         _npcHandsSystem.TryTakeOut(uid, grenadeUid, out _);
+
+        // Whatever it threw a moment ago, this one goes now: the wait between throws is for one thing after another by
+        //      choice, and the other way out of a hold cut short inside it is a lit grenade at its own feet.
+        if (_handsQuery.TryComp(uid, out var handsComponent))
+            handsComponent.NextThrowTime = TimeSpan.Zero;
 
         var thrown = _predictedHandsSystem.ThrowHeldItem(uid, coordinates) && !_handsSystem.IsHolding(uid, grenadeUid);
         if (!thrown && _handsSystem.IsHolding(uid, grenadeUid))

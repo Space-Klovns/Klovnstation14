@@ -1,4 +1,5 @@
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.RayCollision;
 
@@ -20,11 +21,21 @@ public sealed partial class KsRayCollisionComponent : Component
     public string Fixture = string.Empty;
 
     /// <summary>
-    ///     What the look ahead has already had it collide with. Physics may yet start a contact with any of them, a step later,
-    ///         which is not a second collision: see <see cref="KsRayCollisionSystem.WasSwept"/>.
+    ///     What the look ahead has had it collide with on its way. Physics may yet start a contact with any of them, a step
+    ///         later, which is not a second collision: see <see cref="KsRayCollisionSystem.WasSwept"/>. Forgotten once it
+    ///         has left the thing behind (a tick on, and no longer touching it), or is no longer on its way: at rest, in a
+    ///         container, or without its fixture. Each with the tick it was hit on, by
+    ///         which a client running that tick again forgets it: see the system.
     /// </summary>
     [ViewVariables]
-    public readonly List<EntityUid> SweptHits = new();
+    public readonly List<(EntityUid Uid, GameTick Tick)> SweptHits = new();
+
+    /// <summary>
+    ///     Whether it has been looked ahead of since it was last at rest: the first look of a flight also collides it with
+    ///         what its middle is already inside, which no ray from there finds.
+    /// </summary>
+    [ViewVariables]
+    public bool Flying;
 }
 
 /// <summary>
