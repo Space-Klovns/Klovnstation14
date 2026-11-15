@@ -1,13 +1,13 @@
 - type: entity
   parent: BaseStructure
-  id: KsLawnMower
+  id: KsLawnmower
   name: lawn mower
   description: Equipped with reliable safeties to prevent accidents in the workplace.
   components:
   - type: Transform
     anchored: false
   - type: Sprite
-    sprite: _KS14/Vehicles/LawnMower/lawnmower.rsi
+    sprite: _KS14/Vehicles/Lawnmower/lawnmower.rsi
     drawdepth: Mobs
     layers:
     - state: lawnmower
@@ -15,7 +15,7 @@
   - type: Appearance
   - type: GenericVisualizer
     visuals:
-      enum.KsLawnMowerVisuals.SafetyDisabled:
+      enum.KsLawnmowerVisuals.SafetyDisabled:
         mower:
           True: { state: lawnmoweremag }
   - type: Physics
@@ -63,26 +63,31 @@
     whitelist:
       components:
       - HumanoidProfile
-  - type: KsLawnMower
-  - type: KsLawnMowerBlades
+  - type: KsLawnmower
+  - type: KsLawnmowerBlades
+    mowableTiles:
+    - FloorAstroGrass
+    - FloorDarkAstroGrass
+    - FloorJungleAstroGrass
+    - FloorLightAstroGrass
     driveSound:
-      collection: KsLawnMowerDrive
+      collection: KsLawnmowerDrive
       params:
         volume: -5
     bumpSound:
-      path: /Audio/_KS14/Vehicles/LawnMower/hit_kick.ogg
+      path: /Audio/_KS14/Vehicles/Lawnmower/hit_kick.ogg
     bladeSound:
-      path: /Audio/_KS14/Vehicles/LawnMower/chainsawhit.ogg
+      path: /Audio/_KS14/Vehicles/Lawnmower/chainsawhit.ogg
     crushSound:
-      path: /Audio/_KS14/Vehicles/LawnMower/mowermovesquish.ogg
+      path: /Audio/_KS14/Vehicles/Lawnmower/mowermovesquish.ogg
     bumpDamage:
       types:
         Blunt: 25
     crushDamage: 1000
 
 - type: entity
-  parent: [ KsLawnMower, BaseSyndicateContraband ]
-  id: KsLawnMowerEmagged
+  parent: [ KsLawnmower, BaseSyndicateContraband ]
+  id: KsLawnmowerEmagged
   name: Blood Red Lawnmower
   description: A viciously modified lawn mower, painted blood red and stripped of every sensible safety feature. The blades look hungry.
   components:
@@ -94,15 +99,15 @@
     emagType: Interaction
 
 - type: soundCollection
-  id: KsLawnMowerDrive
+  id: KsLawnmowerDrive
   files:
-  - /Audio/_KS14/Vehicles/LawnMower/mowermove1.ogg
-  - /Audio/_KS14/Vehicles/LawnMower/mowermove2.ogg
+  - /Audio/_KS14/Vehicles/Lawnmower/mowermove1.ogg
+  - /Audio/_KS14/Vehicles/Lawnmower/mowermove2.ogg
 
 - type: decal
-  id: KsLawnMowerBloodTracks
+  id: KsLawnmowerBloodTracks
   showMenu: false
   defaultCleanable: true
   sprite:
-    sprite: _KS14/Vehicles/LawnMower/tracks.rsi
+    sprite: _KS14/Vehicles/Lawnmower/tracks.rsi
     state: parallel

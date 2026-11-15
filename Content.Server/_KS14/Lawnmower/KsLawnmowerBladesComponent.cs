@@ -1,12 +1,20 @@
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
+using Content.Shared.Maps;
 using Robust.Shared.Audio;
+using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.LawnMower;
+namespace Content.Server._KS14.Lawnmower;
 
-[RegisterComponent, Access(typeof(KsLawnMowerSystem))]
-public sealed partial class KsLawnMowerBladesComponent : Component
+[RegisterComponent, Access(typeof(KsLawnmowerSystem))]
+public sealed partial class KsLawnmowerBladesComponent : Component
 {
+    /// <summary>
+    ///     Grass floor types that the blades replace with mowed turf.
+    /// </summary>
+    [DataField]
+    public HashSet<ProtoId<ContentTileDefinition>> MowableTiles = new();
+
     [DataField(required: true)]
     public SoundSpecifier DriveSound = default!;
 

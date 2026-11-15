@@ -37,9 +37,9 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Content.Server._KS14.LawnMower;
+namespace Content.Server._KS14.Lawnmower;
 
-public sealed partial class KsLawnMowerSystem : EntitySystem
+public sealed partial class KsLawnmowerSystem : EntitySystem
 {
     [Dependency] private DecalSystem _decalSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
@@ -61,7 +61,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
     [Dependency] private ThrowingSystem _throwingSystem = default!;
 
     private static readonly ProtoId<ContentTileDefinition> MowedAstroGrass = "FloorMowedAstroGrass";
-    private static readonly ProtoId<DecalPrototype> WheelTracks = "KsLawnMowerBloodTracks";
+    private static readonly ProtoId<DecalPrototype> WheelTracks = "KsLawnmowerBloodTracks";
     private static readonly ProtoId<EmotePrototype> Scream = "Scream";
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
     private static readonly ResPath GrassDecalSprite = new("/Textures/Decals/Flora/flora_grass.rsi");
@@ -69,7 +69,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
     private const string BladeFixture = "blades";
 
     [SubscribeLocalEvent]
-    private void OnStartCollide(Entity<KsLawnMowerBladesComponent> entity, ref StartCollideEvent args)
+    private void OnStartCollide(Entity<KsLawnmowerBladesComponent> entity, ref StartCollideEvent args)
     {
         if (args.OurFixtureId != BladeFixture || !HasComp<MobStateComponent>(args.OtherEntity))
             return;
@@ -79,7 +79,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
-    private void OnEndCollide(Entity<KsLawnMowerBladesComponent> entity, ref EndCollideEvent args)
+    private void OnEndCollide(Entity<KsLawnmowerBladesComponent> entity, ref EndCollideEvent args)
     {
         var contacts = entity.Comp.Contacts;
         if (args.OurFixtureId != BladeFixture || !contacts.TryGetValue(args.OtherEntity, out var count))
@@ -97,7 +97,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        var query = EntityQueryEnumerator<KsLawnMowerBladesComponent, MovementRelayTargetComponent, InputMoverComponent, PhysicsComponent>();
+        var query = EntityQueryEnumerator<KsLawnmowerBladesComponent, MovementRelayTargetComponent, InputMoverComponent, PhysicsComponent>();
         while (query.MoveNext(out var uid, out var blades, out var relay, out var mover, out var physics))
         {
             if (!mover.HasDirectionalMovement || !mover.CanMove || mover.WishDir == Vector2.Zero)
@@ -125,7 +125,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
         }
     }
 
-    private void MowTile(Entity<KsLawnMowerBladesComponent> mower, TransformComponent transform)
+    private void MowTile(Entity<KsLawnmowerBladesComponent> mower, TransformComponent transform)
     {
         if (transform.GridUid is not { } gridUid ||
             !TryComp<MapGridComponent>(gridUid, out var grid) ||
@@ -141,7 +141,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
             return;
 
         mower.Comp.LastTile = tileKey;
-        if (_tileDefinitions[tile.Tile.TypeId].ID is "FloorAstroGrass" or "FloorDarkAstroGrass" or "FloorJungleAstroGrass" or "FloorLightAstroGrass")
+        if (mower.Comp.MowableTiles.Contains(_tileDefinitions[tile.Tile.TypeId].ID))
             _mapSystem.SetTile(gridUid, grid, tile.GridIndices, new Tile(ProtoMan.Index(MowedAstroGrass).TileId));
 
         var tileOrigin = new Vector2(tile.GridIndices.X, tile.GridIndices.Y) * grid.TileSize;
@@ -171,7 +171,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
         }
     }
 
-    private bool ProcessContacts(Entity<KsLawnMowerBladesComponent> mower, EntityUid riderUid, Vector2 direction)
+    private bool ProcessContacts(Entity<KsLawnmowerBladesComponent> mower, EntityUid riderUid, Vector2 direction)
     {
         var crushed = false;
         var mowerPosition = _transformSystem.GetWorldPosition(mower.Owner);
@@ -264,7 +264,7 @@ public sealed partial class KsLawnMowerSystem : EntitySystem
         }
     }
 
-    private void HitWithBlades(Entity<KsLawnMowerBladesComponent> mower, EntityUid victimUid, LocId message)
+    private void HitWithBlades(Entity<KsLawnmowerBladesComponent> mower, EntityUid victimUid, LocId message)
     {
         _popupSystem.PopupEntity(KsPopupMessage.Create(message, ("mower", mower.Owner), ("victim", victimUid)),
             mower.Owner, PopupType.LargeCaution);

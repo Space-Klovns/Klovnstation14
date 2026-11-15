@@ -9,9 +9,9 @@ using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.LawnMower;
+namespace Content.Shared._KS14.Lawnmower;
 
-public sealed partial class SharedKsLawnMowerSystem : EntitySystem
+public sealed partial class SharedKsLawnmowerSystem : EntitySystem
 {
     [Dependency] private ContentLocalizationManager _contentLocalization = default!;
     [Dependency] private EmagSystem _emagSystem = default!;
@@ -22,19 +22,19 @@ public sealed partial class SharedKsLawnMowerSystem : EntitySystem
     [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public static readonly EntProtoId EmaggedPrototype = "KsLawnMowerEmagged";
+    public static readonly EntProtoId EmaggedPrototype = "KsLawnmowerEmagged";
     private const string JumpsuitSlot = "jumpsuit";
     private const float GrillingShortsSpeedMultiplier = 1.1f;
 
     [SubscribeLocalEvent]
-    private void OnStrapped(Entity<KsLawnMowerComponent> entity, ref StrappedEvent args)
+    private void OnStrapped(Entity<KsLawnmowerComponent> entity, ref StrappedEvent args)
     {
         _moverController.SetRelay(args.Buckle.Owner, entity.Owner);
         _movementSpeedSystem.RefreshMovementSpeedModifiers(entity.Owner);
     }
 
     [SubscribeLocalEvent]
-    private void OnUnstrapped(Entity<KsLawnMowerComponent> entity, ref UnstrappedEvent args)
+    private void OnUnstrapped(Entity<KsLawnmowerComponent> entity, ref UnstrappedEvent args)
     {
         if (TryComp<RelayInputMoverComponent>(args.Buckle.Owner, out var relay) && relay.RelayEntity == entity.Owner)
             RemComp(args.Buckle.Owner, relay);
@@ -44,7 +44,7 @@ public sealed partial class SharedKsLawnMowerSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
-    private void OnRefreshSpeed(Entity<KsLawnMowerComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
+    private void OnRefreshSpeed(Entity<KsLawnmowerComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
     {
         if (TryComp<MovementRelayTargetComponent>(entity.Owner, out var relay) &&
             _inventorySystem.TryGetSlotEntity(relay.Source, JumpsuitSlot, out var jumpsuitUid) &&
@@ -70,21 +70,21 @@ public sealed partial class SharedKsLawnMowerSystem : EntitySystem
     {
         if (slot == JumpsuitSlot &&
             TryComp<RelayInputMoverComponent>(riderUid, out var relay) &&
-            HasComp<KsLawnMowerComponent>(relay.RelayEntity))
+            HasComp<KsLawnmowerComponent>(relay.RelayEntity))
         {
             _movementSpeedSystem.RefreshMovementSpeedModifiers(relay.RelayEntity);
         }
     }
 
     [SubscribeLocalEvent]
-    private void OnMapInit(Entity<KsLawnMowerComponent> entity, ref MapInitEvent args)
+    private void OnMapInit(Entity<KsLawnmowerComponent> entity, ref MapInitEvent args)
     {
         if (_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
-            _appearanceSystem.SetData(entity.Owner, KsLawnMowerVisuals.SafetyDisabled, true);
+            _appearanceSystem.SetData(entity.Owner, KsLawnmowerVisuals.SafetyDisabled, true);
     }
 
     [SubscribeLocalEvent]
-    private void OnEmagged(Entity<KsLawnMowerComponent> entity, ref GotEmaggedEvent args)
+    private void OnEmagged(Entity<KsLawnmowerComponent> entity, ref GotEmaggedEvent args)
     {
         if (args.Handled || !_emagSystem.CompareFlag(args.Type, EmagType.Interaction))
             return;
@@ -96,7 +96,7 @@ public sealed partial class SharedKsLawnMowerSystem : EntitySystem
         }
 
         args.Handled = true;
-        _appearanceSystem.SetData(entity.Owner, KsLawnMowerVisuals.SafetyDisabled, true);
+        _appearanceSystem.SetData(entity.Owner, KsLawnmowerVisuals.SafetyDisabled, true);
         ApplyEmaggedName(entity.Owner);
     }
 

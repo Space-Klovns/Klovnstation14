@@ -177,10 +177,11 @@ public abstract partial class SharedBuckleSystem
     private void OnBuckleUpdateCanMove(EntityUid uid, BuckleComponent component, UpdateCanMoveEvent args)
     {
         // KS14 start: allow riders to drive the mower through its movement relay.
+        // TODO VEHICLES: replace this exception when buckled riders can use a shared vehicle movement relay.
         if (component.Buckled &&
             !(TryComp<Content.Shared.Movement.Components.RelayInputMoverComponent>(uid, out var relay) &&
               relay.RelayEntity == component.BuckledTo &&
-              HasComp<Content.Shared._KS14.LawnMower.KsLawnMowerComponent>(relay.RelayEntity)))
+              HasComp<Content.Shared._KS14.Lawnmower.KsLawnmowerComponent>(relay.RelayEntity)))
         {
             args.Cancel();
         }

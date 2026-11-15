@@ -1,9 +1,9 @@
 - type: listing
-  id: KsUplinkLawnMower
+  id: KsUplinkLawnmower
   name: ks-uplink-lawn-mower-name
   description: ks-uplink-lawn-mower-desc
-  productEntity: KsLawnMowerEmagged
-  icon: { sprite: _KS14/Vehicles/LawnMower/lawnmower.rsi, state: lawnmoweremag }
+  productEntity: KsLawnmowerEmagged
+  icon: { sprite: _KS14/Vehicles/Lawnmower/lawnmower.rsi, state: lawnmoweremag }
   cost:
     Telecrystal: 20
   categories:

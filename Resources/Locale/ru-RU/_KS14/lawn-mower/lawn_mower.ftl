@@ -1,10 +1,12 @@
-# Resources/Prototypes/_KS14/Entities/Vehicles/LawnMower/lawn_mower.yml
-ent-KsLawnMower = газонокосилка
+# KsLawnmower
+ent-KsLawnmower = газонокосилка
     .desc = Оснащена надёжной защитой от несчастных случаев на рабочем месте.
-ent-KsLawnMowerEmagged = кроваво-красная газонокосилка
+
+# KsLawnmowerEmagged
+ent-KsLawnmowerEmagged = кроваво-красная газонокосилка
     .desc = Зловещая газонокосилка, окрашенная в кроваво-красный цвет. Все предохранители сняты, а лезвия выглядят голодными.
 
-# Resources/Prototypes/_KS14/Entities/Vehicles/LawnMower/grilling_shorts.yml
+# KsClothingUniformGrillingShorts
 ent-KsClothingUniformGrillingShorts = шорты для гриля
     .desc = Для тех, кто только и мечтает жарить на гриле.
 

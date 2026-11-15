@@ -5,9 +5,9 @@
   description: For when all you want in life is to grill.
   components:
   - type: Sprite
-    sprite: _KS14/Vehicles/LawnMower/grilling_shorts.rsi
+    sprite: _KS14/Vehicles/Lawnmower/grilling_shorts.rsi
   - type: Clothing
-    sprite: _KS14/Vehicles/LawnMower/grilling_shorts.rsi
+    sprite: _KS14/Vehicles/Lawnmower/grilling_shorts.rsi
   - type: KsGrillingShorts
 
 - type: loadout

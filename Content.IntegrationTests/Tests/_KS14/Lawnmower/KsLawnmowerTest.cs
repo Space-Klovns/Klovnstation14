@@ -3,7 +3,7 @@ using System.Numerics;
 using Content.IntegrationTests.Tests.Movement;
 using Content.Server.Atmos.Components;
 using Content.Server.Zombies;
-using Content.Shared._KS14.LawnMower;
+using Content.Shared._KS14.Lawnmower;
 using Content.Shared.Buckle;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -22,13 +22,13 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
-namespace Content.IntegrationTests.Tests._KS14.LawnMower;
+namespace Content.IntegrationTests.Tests._KS14.Lawnmower;
 
-[TestOf(typeof(SharedKsLawnMowerSystem))]
-public sealed class KsLawnMowerTest : MovementTest
+[TestOf(typeof(SharedKsLawnmowerSystem))]
+public sealed class KsLawnmowerTest : MovementTest
 {
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
-    private static readonly EntProtoId Mower = "KsLawnMower";
+    private static readonly EntProtoId Mower = "KsLawnmower";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Shorts = "KsClothingUniformGrillingShorts";
     private static readonly EntProtoId Emag = "EmagUnlimited";
@@ -48,7 +48,7 @@ public sealed class KsLawnMowerTest : MovementTest
     public async Task DrivingMowsGrassAndOnlyGibsProneZombies(bool emagged, bool zombie)
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(emagged ? SharedKsLawnMowerSystem.EmaggedPrototype : Mower, origin);
+        var mowerUid = await SpawnEntity(emagged ? SharedKsLawnmowerSystem.EmaggedPrototype : Mower, origin);
         var victimUid = await SpawnEntity(Human, origin.Offset(new Vector2(2, 0)));
         var mapSystem = Server.System<SharedMapSystem>();
         var grassIndices = mapSystem.TileIndicesFor(MapData.Grid, origin.Offset(new Vector2(1, 0)));
@@ -92,7 +92,7 @@ public sealed class KsLawnMowerTest : MovementTest
     public async Task EmaggedMowerShovesAStandingTarget()
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(SharedKsLawnMowerSystem.EmaggedPrototype, origin);
+        var mowerUid = await SpawnEntity(SharedKsLawnmowerSystem.EmaggedPrototype, origin);
         var victimUid = await SpawnEntity(Human, origin.Offset(new Vector2(2, 0)));
 
         await Server.WaitAssertion(() =>
@@ -116,7 +116,7 @@ public sealed class KsLawnMowerTest : MovementTest
     public async Task GrillingShortsBoostTheCurrentRiderAndEmagWorks(bool preEmagged)
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(preEmagged ? SharedKsLawnMowerSystem.EmaggedPrototype : Mower, origin);
+        var mowerUid = await SpawnEntity(preEmagged ? SharedKsLawnmowerSystem.EmaggedPrototype : Mower, origin);
         var shortsUid = await SpawnEntity(Shorts, origin);
         var emagUid = await SpawnEntity(Emag, origin);
 

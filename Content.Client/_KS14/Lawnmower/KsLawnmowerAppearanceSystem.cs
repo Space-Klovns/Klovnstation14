@@ -1,15 +1,15 @@
 using Content.Shared._KS14.CCVar;
-using Content.Shared._KS14.LawnMower;
+using Content.Shared._KS14.Lawnmower;
 using Robust.Client.GameObjects;
 using Robust.Shared.Configuration;
 
-namespace Content.Client._KS14.LawnMower;
+namespace Content.Client._KS14.Lawnmower;
 
-public sealed partial class KsLawnMowerAppearanceSystem : EntitySystem
+public sealed partial class KsLawnmowerAppearanceSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private SharedKsLawnMowerSystem _lawnMowerSystem = default!;
+    [Dependency] private SharedKsLawnmowerSystem _lawnMowerSystem = default!;
 
     public override void Initialize()
     {
@@ -18,14 +18,14 @@ public sealed partial class KsLawnMowerAppearanceSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
-    private void OnAppearanceChanged(Entity<KsLawnMowerComponent> entity, ref AppearanceChangeEvent args)
+    private void OnAppearanceChanged(Entity<KsLawnmowerComponent> entity, ref AppearanceChangeEvent args)
     {
         RefreshName(entity.Owner);
     }
 
     private void RefreshNames()
     {
-        var query = EntityQueryEnumerator<KsLawnMowerComponent>();
+        var query = EntityQueryEnumerator<KsLawnmowerComponent>();
         while (query.MoveNext(out var uid, out _))
         {
             RefreshName(uid);
@@ -35,8 +35,8 @@ public sealed partial class KsLawnMowerAppearanceSystem : EntitySystem
     private void RefreshName(EntityUid uid)
     {
         // A mower bought from the uplink already has the emagged prototype's localized name.
-        if (_appearanceSystem.TryGetData<bool>(uid, KsLawnMowerVisuals.SafetyDisabled, out var disabled) && disabled &&
-            MetaData(uid).EntityPrototype?.ID != SharedKsLawnMowerSystem.EmaggedPrototype.Id)
+        if (_appearanceSystem.TryGetData<bool>(uid, KsLawnmowerVisuals.SafetyDisabled, out var disabled) && disabled &&
+            MetaData(uid).EntityPrototype?.ID != SharedKsLawnmowerSystem.EmaggedPrototype.Id)
         {
             _lawnMowerSystem.ApplyEmaggedName(uid);
         }
