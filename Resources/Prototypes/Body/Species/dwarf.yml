@@ -98,7 +98,7 @@
       - category: Stomach
         entity: OrganDwarfStomach
       - category: Liver
-        entity: OrganHumanLiver
+        entity: OrganDwarfLiver
       - category: Kidneys
         entity: OrganHumanKidneys
 

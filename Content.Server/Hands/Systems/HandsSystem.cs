@@ -28,11 +28,11 @@ namespace Content.Server.Hands.Systems
         private void GetComponentState(EntityUid uid, HandsComponent hands, ref ComponentGetState args)
         {
             // If we only switch hands don't send a full state.
-            if (args.FromTick > hands.CreationTick && hands.LastUnclassifiedDirty >= args.FromTick)
+            if (args.FromTick > hands.CreationTick) // KS14: was also `&& hands.LastUnclassifiedDirty >= args.FromTick`, which only let through states where nothing had changed
             {
                 var aspects = EntityManager.GetModifiedAspects(hands, args.FromTick);
 
-                if (aspects == ActiveHandIdIndex)
+                if (aspects == 1UL << ActiveHandIdIndex /* KS14: was `ActiveHandIdIndex`; aspects is a bitmask, not an index */)
                 {
                     args.State = new HandsComponentActiveHandDeltaState(hands.ActiveHandId);
                     return;

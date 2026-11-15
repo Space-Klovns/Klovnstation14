@@ -72,7 +72,7 @@ public sealed class KsEyeBlinkingTest : GameTest
             var spriteComponent = CEntMan.GetComponent<SpriteComponent>(clientBodyUid);
 
             visibility = blinkingComponent.Eyelids
-                .Select(eyelid => spriteSystem.LayerMapTryGet((clientBodyUid, spriteComponent), eyelid.LayerKey, out var index, false)
+                .Select(eyelid => spriteSystem.LayerMapTryGet((clientBodyUid, spriteComponent), eyelid.LayerKey, out var index, logMissing: false)
                     ? (bool?)spriteComponent[index].Visible
                     : null)
                 .Where(visible => visible != null)
@@ -135,7 +135,7 @@ public sealed class KsEyeBlinkingTest : GameTest
             {
                 Assert.That(blinkingComponent.Eyelids, Is.Empty, "The client still tracks eyelids for eyes that left the body.");
                 Assert.That(blinkingComponent.Body, Is.Null, "The client's eyes still point at the body they left.");
-                Assert.That(CEntMan.System<SpriteSystem>().LayerMapTryGet((clientBodyUid, spriteComponent), $"{ClientEyeBlinkingSystem.LayerPrefix}-0", out _, false),
+                Assert.That(CEntMan.System<SpriteSystem>().LayerMapTryGet((clientBodyUid, spriteComponent), $"{ClientEyeBlinkingSystem.LayerPrefix}-0", out _, logMissing: false),
                     Is.False, "The body kept eyelid layers without its eyes.");
             }
         });

@@ -13,7 +13,6 @@ public sealed partial class EyeBlinkingComponent
     public List<HumanoidVisualLayers> KsHidingLayers = new()
     {
         HumanoidVisualLayers.Eyes,
-        HumanoidVisualLayers.Eyelids,
         HumanoidVisualLayers.Head,
     };
 }
