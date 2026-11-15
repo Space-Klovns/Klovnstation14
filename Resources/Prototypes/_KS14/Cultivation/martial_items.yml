@@ -173,3 +173,60 @@
         Slash: 0.4
         Piercing: 0.5
         Blunt: 0.9
+
+# The Great Sage's regalia, given by the Dragon Kings of the Four Seas. Wear all three to wake the set.
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterGoldenChainMail
+  name: golden chain-mail
+  description: Fish-scale mail of red gold between black lacquered plates, with a heart-protecting mirror on either breast. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/golden_chain_mail.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/golden_chain_mail.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.6
+        Heat: 0.75
+  - type: ClothingSpeedModifier
+    walkModifier: 0.95
+    sprintModifier: 0.95
+  - type: GreatSageRegalia
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadPhoenixWingCrown
+  name: phoenix-wing purple-gold crown
+  description: A purple cap under a band of gold, crowned with two long pheasant plumes. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/phoenix_crown.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/phoenix_crown.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.85
+        Slash: 0.85
+  - type: GreatSageRegalia
+
+- type: entity
+  parent: ClothingShoesBase
+  id: ClothingShoesCloudStepping
+  name: lotus-silk cloud-stepping boots
+  description: Boots of lotus-root silk with upturned cloud toes. The wearer never slips and seems to walk on air. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/cloud_stepping_boots.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/cloud_stepping_boots.rsi
+  - type: ClothingSpeedModifier
+    walkModifier: 1.15
+    sprintModifier: 1.15
+  - type: NoSlip
+  - type: GreatSageRegalia

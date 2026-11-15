@@ -10,6 +10,7 @@ using Content.Shared.DoAfter;
 using Content.Shared.FixedPoint;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
+using Content.Shared.Inventory.Events;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Content.Shared.Projectiles;
@@ -46,6 +47,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
     [Dependency] private CultivationStanceSystem _cultivationStanceSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private GunSystem _gunSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedMartialArtsSystem _martialArtsSystem = default!;
@@ -442,6 +444,61 @@ public sealed partial class MartialArtsSystem : EntitySystem
 
         Retaliate(attacker, CultivationSystem.Damage("Piercing", entity.Comp.ThornDamage), wearer);
         _popupSystem.PopupEntity(Loc.GetString("martial-art-hedgehog-thorns", ("target", attacker)), attacker, attacker, PopupType.SmallCaution);
+    }
+
+    /// <summary>
+    ///     The slots the Great Sage's regalia is worn in: chain-mail, crown and boots.
+    /// </summary>
+    private static readonly string[] RegaliaSlots = { "outerClothing", "head", "shoes" };
+
+    [SubscribeLocalEvent]
+    private void OnRegaliaEquipped(Entity<GreatSageRegaliaComponent> entity, ref GotEquippedEvent args)
+    {
+        UpdateGreatSage(args.EquipTarget);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRegaliaUnequipped(Entity<GreatSageRegaliaComponent> entity, ref GotUnequippedEvent args)
+    {
+        UpdateGreatSage(args.EquipTarget);
+    }
+
+    /// <summary>
+    ///     The set wakes only when every piece is worn in its own slot.
+    /// </summary>
+    public void UpdateGreatSage(EntityUid wearer)
+    {
+        var complete = true;
+        foreach (var slot in RegaliaSlots)
+        {
+            if (!_inventorySystem.TryGetSlotEntity(wearer, slot, out var pieceUid) || !HasComp<GreatSageRegaliaComponent>(pieceUid))
+            {
+                complete = false;
+                break;
+            }
+        }
+
+        if (complete == HasComp<GreatSageComponent>(wearer))
+            return;
+
+        if (complete)
+        {
+            AddComp<GreatSageComponent>(wearer);
+            _audioSystem.PlayPvs(BellSound, wearer);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-awakens", ("user", wearer)), wearer, PopupType.Large);
+        }
+        else
+        {
+            RemComp<GreatSageComponent>(wearer);
+            _popupSystem.PopupEntity(Loc.GetString("martial-art-great-sage-sleeps"), wearer, wearer);
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGreatSageDamageModify(Entity<GreatSageComponent> entity, ref DamageModifyEvent args)
+    {
+        if (args.Damage.GetTotal() > 0)
+            args.Damage *= entity.Comp.DamageMultiplier;
     }
 
     #endregion

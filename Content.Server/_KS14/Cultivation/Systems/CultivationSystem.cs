@@ -44,6 +44,7 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
+    [Dependency] private EntityQuery<GreatSageComponent> _greatSageQuery = default!;
     [Dependency] private EntityQuery<MuscleTendonComponent> _muscleTendonQuery = default!;
     [Dependency] private EntityQuery<NineYangComponent> _nineYangQuery = default!;
 
@@ -74,7 +75,8 @@ public sealed partial class CultivationSystem : EntitySystem
                 * (float)RegenInterval.TotalSeconds
                 * SharedCultivationSystem.RegenMultiplier(cultivatorComponent.InjuryRegenPenalty, cultivatorComponent.InternalInjury)
                 * QiSourceMultiplier(uid)
-                * (_nineYangQuery.TryComp(uid, out var nineYangComponent) ? nineYangComponent.RegenMultiplier : 1f);
+                * (_nineYangQuery.TryComp(uid, out var nineYangComponent) ? nineYangComponent.RegenMultiplier : 1f)
+                * (_greatSageQuery.TryComp(uid, out var greatSageComponent) ? greatSageComponent.QiRegenMultiplier : 1f);
 
             _cultivationSystem.AddQi((uid, cultivatorComponent), regen);
         }

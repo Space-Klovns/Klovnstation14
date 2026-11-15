@@ -39,3 +39,5 @@ martial-art-ladder-cloud = {CAPITALIZE(THE($user))} springs off the air itself!
 martial-art-dugu-ready = {CAPITALIZE(THE($user))} lowers {POSS-ADJ($user)} guard, watching.
 martial-art-dugu-counter = {CAPITALIZE(THE($user))} reads the flaw in {THE($target)}'s blow and breaks it!
 martial-art-hedgehog-thorns = Barbs in {THE($target)}'s armor bite into you!
+martial-art-great-sage-awakens = The regalia of the Great Sage Equal to Heaven rings out as one around {THE($user)}!
+martial-art-great-sage-sleeps = The Great Sage's regalia falls quiet.

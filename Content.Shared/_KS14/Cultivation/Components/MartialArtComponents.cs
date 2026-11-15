@@ -167,3 +167,22 @@ public sealed partial class SoftHedgehogArmorComponent : Component
     [DataField]
     public float Range = 1.5f;
 }
+
+/// <summary>
+///     One piece of the Great Sage's regalia. Wearing every piece at once wakes the set.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class GreatSageRegaliaComponent : Component;
+
+/// <summary>
+///     Wearing the whole of the Great Sage's regalia: blows land softer, and a cultivator's qi flows faster.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+public sealed partial class GreatSageComponent : Component
+{
+    [DataField]
+    public float DamageMultiplier = 0.85f;
+
+    [DataField]
+    public float QiRegenMultiplier = 1.25f;
+}
