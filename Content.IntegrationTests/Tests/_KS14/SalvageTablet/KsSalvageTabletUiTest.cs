@@ -379,4 +379,49 @@ public sealed class KsSalvageTabletUiTest : GameTest
                 "A message from someone without salvage access must be refused.");
         });
     }
+
+    /// <summary>
+    ///     The server says whether it took an order, and the cart follows that answer: refused, it keeps what was picked;
+    ///         taken, it empties.
+    /// </summary>
+    [Test]
+    public async Task TheCartEmptiesOnlyWhenTheServerTakesTheOrder()
+    {
+        var scene = await OpenLoggedInTabletAsync();
+        var product = CProtoMan.EnumeratePrototypes<KsSalvageProductPrototype>().Where(product => product.MinRank == 0).MinBy(product => product.Cost)!;
+        ProtoId<KsSalvageProductPrototype> productId = product.ID;
+
+        KsSalvageTabletOrderWindow OrderWindow() => OpenWindows<KsSalvageTabletOrderWindow>().Single();
+
+        await Client.WaitPost(() =>
+        {
+            OpenWindows<KsSalvageTabletWindow>().Single().ShowOrders();
+            OrderWindow().ChangeAmount(productId, 1);
+            SendFromClient(scene, new KsSalvageTabletOrderMessage(new Dictionary<ProtoId<KsSalvageProductPrototype>, int>(OrderWindow().Cart)));
+        });
+        await Pair.RunTicksSync(10);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(OrderWindow().Cart.GetValueOrDefault(productId), Is.EqualTo(1), "A refused order must leave the cart as it was.");
+        });
+
+        await Server.WaitPost(() =>
+        {
+            var accountComponent = SEntMan.GetComponent<KsMinerAccountComponent>(scene.CardUid);
+            SEntMan.System<KsSalvageTabletSystem>().AddPoints((scene.CardUid, accountComponent), product.Cost);
+        });
+        await Pair.RunTicksSync(5);
+
+        await Client.WaitPost(() =>
+        {
+            SendFromClient(scene, new KsSalvageTabletOrderMessage(new Dictionary<ProtoId<KsSalvageProductPrototype>, int>(OrderWindow().Cart)));
+        });
+        await Pair.RunTicksSync(10);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(OrderWindow().Cart, Is.Empty, "A taken order must empty the cart.");
+        });
+    }
 }

@@ -42,12 +42,6 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
     private int _shownWaitSeconds = -1;
 
     /// <summary>
-    ///     Whether an order was sent and the server has yet to accept it. The cart is kept until it does, so a
-    ///         refused order loses nothing.
-    /// </summary>
-    private bool _orderSent;
-
-    /// <summary>
     ///     What is in the cart, for whoever needs to look and not touch.
     /// </summary>
     public IReadOnlyDictionary<ProtoId<KsSalvageProductPrototype>, int> Cart => _cart;
@@ -70,7 +64,7 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
             if (_cart.Count == 0)
                 return;
 
-            _orderSent = true;
+            // The cart is kept until the server says it took the order, so a refused one loses nothing.
             OnOrder?.Invoke(new Dictionary<ProtoId<KsSalvageProductPrototype>, int>(_cart));
         };
 
@@ -83,25 +77,29 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
     {
         var rankChanged = rank != _rank;
 
-        // The order cooldown only moves forward when the server takes an order.
-        var accepted = _orderSent && nextOrderTime > _nextOrderTime;
-
         _points = points;
         _rank = rank;
         _nextOrderTime = nextOrderTime;
         _maxAmount = Math.Max(maxAmount, 1);
 
-        if (accepted)
-        {
-            _cart.Clear();
-            CartChanged();
-            ShowCart(false);
-        }
-
         if (rankChanged)
             PopulateProducts();
 
         UpdateTotals();
+    }
+
+    /// <summary>
+    ///     What the server made of the last order. A taken order empties the cart; a refused one leaves it, so nothing
+    ///         has to be picked again.
+    /// </summary>
+    public void OrderResult(bool accepted)
+    {
+        if (!accepted)
+            return;
+
+        _cart.Clear();
+        CartChanged();
+        ShowCart(false);
     }
 
     /// <summary>
@@ -128,9 +126,6 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
 
     private void CartChanged()
     {
-        // A changed cart is a new order, whatever became of the last one.
-        _orderSent = false;
-
         var count = 0;
         foreach (var amount in _cart.Values)
         {

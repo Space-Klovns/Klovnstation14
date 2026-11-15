@@ -49,20 +49,19 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
     public event Action? OnLoggedIn;
 
     /// <summary>
-    ///     The details of a task were opened.
+    ///     A task's card was pressed, to open its details.
     /// </summary>
-    public event Action? OnTaskShown;
-    public event Action<ProtoId<KsSalvageTaskPrototype>>? OnTrack;
-    public event Action<ProtoId<KsSalvageTaskPrototype>>? OnDrop;
-    public event Action<Dictionary<ProtoId<KsSalvageProductPrototype>, int>>? OnOrder;
+    public event Action<ProtoId<KsSalvageTaskPrototype>>? OnShowTask;
+
+    /// <summary>
+    ///     The order button was pressed, to open the order window.
+    /// </summary>
+    public event Action? OnShowOrders;
 
     private readonly List<KsSalvageTabletTaskCard> _taskCards = [];
     private readonly Dictionary<ProtoId<MaterialPrototype>, KsSalvageTabletMaterialRow> _materialRows = [];
-    private KsSalvageTabletTaskWindow? _taskWindow;
-    private KsSalvageTabletOrderWindow? _orderWindow;
     private KsSalvageTabletBuiState _state = new();
     private ProtoId<KsSalvageRankLadderPrototype> _ladderId;
-    private int _maxOrderAmount = 1;
     private int _maxTrackedTasks = 1;
     private int _lowMaterialAmount;
 
@@ -84,33 +83,26 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         };
         LogoutButton.OnPressed += _ => OnLogout?.Invoke();
         OrderButton.OnPressed += _ => ShowOrders();
-        OnClose += CloseSubWindows;
     }
 
     /// <summary>
-    ///     Closes the task and order windows. They are windows of their own, so nothing closes them when the server
-    ///         closes the tablet: that disposes this window without <see cref="BaseWindow.OnClose"/> ever firing.
+    ///     Asks for the order window, which is a window of its own.
     /// </summary>
-    public void CloseSubWindows()
+    public void ShowOrders()
     {
-        _taskWindow?.Close();
-        _orderWindow?.Close();
+        OnShowOrders?.Invoke();
     }
 
     public void UpdateState(KsSalvageTabletBuiState state, KsSalvageTabletComponent tabletComponent)
     {
         _state = state;
         _ladderId = tabletComponent.RankLadder;
-        _maxOrderAmount = tabletComponent.MaxOrderAmount;
         _maxTrackedTasks = tabletComponent.MaxTrackedTasks;
         _lowMaterialAmount = tabletComponent.LowMaterialAmount;
         RefreshScreen();
 
         if (!state.LoggedIn)
-        {
-            CloseSubWindows();
             return;
-        }
 
         OwnerNameLabel.Text = state.OwnerName;
         JobLabel.Text = state.JobTitle;
@@ -121,9 +113,6 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         UpdateNextUnlocks(rank);
         UpdateTasks(state);
         UpdateMaterials(state);
-
-        if (_orderWindow is { IsOpen: true })
-            _orderWindow.UpdateState(state.Points, rank, state.NextOrderTime, _maxOrderAmount);
     }
 
     /// <returns>The rank, counted from zero.</returns>
@@ -170,10 +159,13 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
             Loc.GetString("ks-salvage-tablet-profile-next-unlocks", ("items", string.Join(", ", names)))));
     }
 
-    private int TrackedCount()
+    /// <summary>
+    ///     How many of the state's tasks are tracked.
+    /// </summary>
+    public static int TrackedCount(KsSalvageTabletBuiState state)
     {
         var tracked = 0;
-        foreach (var task in _state.Tasks)
+        foreach (var task in state.Tasks)
         {
             if (task.Tracked)
                 tracked++;
@@ -186,7 +178,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
     {
         NoTasksLabel.Visible = state.Tasks.Count == 0;
         TaskScroll.Visible = state.Tasks.Count > 0;
-        TrackedLabel.Text = Loc.GetString("ks-salvage-tablet-tasks-tracked", ("tracked", TrackedCount()), ("max", _maxTrackedTasks));
+        TrackedLabel.Text = Loc.GetString("ks-salvage-tablet-tasks-tracked", ("tracked", TrackedCount(state)), ("max", _maxTrackedTasks));
 
         while (_taskCards.Count > state.Tasks.Count)
         {
@@ -198,7 +190,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         while (_taskCards.Count < state.Tasks.Count)
         {
             var card = new KsSalvageTabletTaskCard();
-            card.OnPressed += _ => ShowTask(card.Task);
+            card.OnPressed += _ => OnShowTask?.Invoke(card.Task);
             _taskCards.Add(card);
             TaskContainer.AddChild(card);
         }
@@ -207,26 +199,6 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         {
             _taskCards[slot].SetTask(state.Tasks[slot], _prototypeManager);
         }
-
-        if (_taskWindow is not { IsOpen: true })
-            return;
-
-        // The task on show was finished, failed or dropped.
-        if (FindTask(_taskWindow.Task) is { } shown)
-            _taskWindow.SetTask(shown, state.NextDropTime, TrackedCount() < _maxTrackedTasks);
-        else
-            _taskWindow.Close();
-    }
-
-    private KsSalvageActiveTask? FindTask(ProtoId<KsSalvageTaskPrototype> taskId)
-    {
-        foreach (var task in _state.Tasks)
-        {
-            if (task.Task == taskId)
-                return task;
-        }
-
-        return null;
     }
 
     private void UpdateMaterials(KsSalvageTabletBuiState state)
@@ -236,7 +208,7 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         var spriteSystem = _entityManager.System<SpriteSystem>();
         var materialStorageSystem = _entityManager.System<MaterialStorageSystem>();
 
-        // Rows are kept from one state to the next: a state arrives every second, and a rebuilt row loses its tooltip.
+        // Rows are kept from one state to the next: a rebuilt row loses its tooltip.
         var seen = new HashSet<ProtoId<MaterialPrototype>>();
         foreach (var material in state.Materials)
         {
@@ -279,42 +251,6 @@ public sealed partial class KsSalvageTabletWindow : FancyWindow
         return _prototypeManager.TryIndex(materialId, out var materialPrototype)
             ? Loc.GetString(materialPrototype.Name)
             : materialId.Id;
-    }
-
-    private void ShowTask(ProtoId<KsSalvageTaskPrototype> taskId)
-    {
-        if (FindTask(taskId) is not { } task)
-            return;
-
-        if (_taskWindow == null)
-        {
-            _taskWindow = new KsSalvageTabletTaskWindow();
-            _taskWindow.OnTrack += shownTaskId => OnTrack?.Invoke(shownTaskId);
-            _taskWindow.OnDrop += shownTaskId => OnDrop?.Invoke(shownTaskId);
-        }
-
-        _taskWindow.SetTask(task, _state.NextDropTime, TrackedCount() < _maxTrackedTasks);
-        if (!_taskWindow.IsOpen)
-            _taskWindow.OpenCentered();
-
-        OnTaskShown?.Invoke();
-    }
-
-    /// <summary>
-    ///     Opens the order window, which is a window of its own.
-    /// </summary>
-    public void ShowOrders()
-    {
-        if (_orderWindow == null)
-        {
-            _orderWindow = new KsSalvageTabletOrderWindow();
-            _orderWindow.OnOrder += cart => OnOrder?.Invoke(cart);
-        }
-
-        var rank = _prototypeManager.TryIndex(_ladderId, out var ladderPrototype) ? ladderPrototype.GetRank(_state.Reputation) : 0;
-        _orderWindow.UpdateState(_state.Points, rank, _state.NextOrderTime, _maxOrderAmount);
-        if (!_orderWindow.IsOpen)
-            _orderWindow.OpenCentered();
     }
 
     /// <summary>
