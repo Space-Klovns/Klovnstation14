@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Forensics.Components;
 using Content.Shared.Inventory;
 using Content.Shared.Lock;
@@ -33,7 +34,7 @@ public sealed partial class FingerprintReaderSystem : EntitySystem
             return;
 
         // If the user has access to this lock, we pass it into the event.
-        if (IsAllowed(ent.Owner, args.User, out var denyReason))
+        if (IsAllowed(ent.Owner, args.User, out var denyReason, showPopup: false /* KS14: the lock shows the reason itself, it showed twice */))
             args.HasAccess |= LockTypes.Fingerprint;
         else
             args.DenyReason = denyReason;
@@ -50,7 +51,7 @@ public sealed partial class FingerprintReaderSystem : EntitySystem
     /// <returns>True if access was granted, otherwise false.</returns>
     // TODO: Remove showPopup, just keeping it here for backwards compatibility while I refactor mail
     [PublicAPI]
-    public bool IsAllowed(Entity<FingerprintReaderComponent?> target, EntityUid user, [NotNullWhen(false)] out string? denyReason, bool showPopup = true, bool checkGloves = true)
+    public bool IsAllowed(Entity<FingerprintReaderComponent?> target, EntityUid user, [NotNullWhen(false)] out KsPopupMessage? /* KS14: string? -> KsPopupMessage?, localized by the recipient */ denyReason, bool showPopup = true, bool checkGloves = true)
     {
         denyReason = null;
         if (!Resolve(target, ref target.Comp, false))
@@ -62,10 +63,10 @@ public sealed partial class FingerprintReaderSystem : EntitySystem
         // Check for gloves first
         if (checkGloves && !target.Comp.IgnoreGloves && TryGetBlockingGloves(user, out var gloves))
         {
-            denyReason = Loc.GetString("fingerprint-reader-fail-gloves", ("blocker", gloves));
+            denyReason = KsPopupMessage.Create("fingerprint-reader-fail-gloves", ("blocker", gloves)); // KS14: Loc.GetString -> deferred
 
             if (showPopup)
-                _popup.PopupClient(denyReason, target, user);
+                _popup.PopupEntity /* KS14: PopupClient -> PopupEntity, same audience */(denyReason.Value, target, user);
 
             return false;
         }
@@ -74,10 +75,10 @@ public sealed partial class FingerprintReaderSystem : EntitySystem
         if (!TryComp<FingerprintComponent>(user, out var fingerprint) || fingerprint.Fingerprint == null ||
             !target.Comp.AllowedFingerprints.Contains(fingerprint.Fingerprint))
         {
-            denyReason = Loc.GetString("fingerprint-reader-fail");
+            denyReason = KsPopupMessage.Create("fingerprint-reader-fail"); // KS14: Loc.GetString -> deferred
 
             if (showPopup)
-                _popup.PopupClient(denyReason, target, user);
+                _popup.PopupEntity /* KS14: PopupClient -> PopupEntity, same audience */(denyReason.Value, target, user);
 
             return false;
         }
