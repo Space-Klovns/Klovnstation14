@@ -39,7 +39,9 @@ public sealed partial class PtlWindow : FancyWindow
 
         DelaySlider.MinValue = state.MinDelay;
         DelaySlider.MaxValue = state.MaxDelay;
-        DelaySlider.SetValueWithoutEvent(state.ShootDelay);
+        // States come with every change of charge: one mid-drag would snap the slider back.
+        if (!DelaySlider.Grabbed)
+            DelaySlider.SetValueWithoutEvent(state.ShootDelay);
         DelayValueLabel.Text = Loc.GetString("ptl-ui-delay-value", ("delay", state.ShootDelay.ToString("F0")));
 
         var chargeMj = state.CurrentCharge / 1_000_000f;

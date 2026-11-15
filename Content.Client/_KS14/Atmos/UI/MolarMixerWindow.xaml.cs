@@ -66,16 +66,20 @@ namespace Content.Client._KS14.Atmos.UI
 
         public void SetOutputMolarFlow(float molarFlow)
         {
-            MixerMolarFlowOutputInput.Text = molarFlow.ToString(CultureInfo.CurrentCulture);
+            // A state from someone else's change must not wipe what the player is typing.
+            if (!MixerMolarFlowOutputInput.HasKeyboardFocus())
+                MixerMolarFlowOutputInput.Text = molarFlow.ToString(CultureInfo.CurrentCulture);
         }
 
         public void SetNodePercentages(float nodeOne)
         {
             nodeOne *= 100.0f;
-            MixerNodeOneInput.Text = nodeOne.ToString("0.##", CultureInfo.CurrentCulture);
+            if (!MixerNodeOneInput.HasKeyboardFocus())
+                MixerNodeOneInput.Text = nodeOne.ToString("0.##", CultureInfo.CurrentCulture);
 
             float nodeTwo = 100.0f - nodeOne;
-            MixerNodeTwoInput.Text = nodeTwo.ToString("0.##", CultureInfo.CurrentCulture);
+            if (!MixerNodeTwoInput.HasKeyboardFocus())
+                MixerNodeTwoInput.Text = nodeTwo.ToString("0.##", CultureInfo.CurrentCulture);
         }
 
         public void SetMixerStatus(bool enabled)
