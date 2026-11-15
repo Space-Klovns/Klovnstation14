@@ -425,19 +425,18 @@ public sealed partial class KsTguiFeelUIController
     }
 
     /// <summary>
-    ///     Whether the control is wholly outside the view of a scroll container it is in.
+    ///     Whether the control is wholly outside the view of a scroll container it is in, either way.
     /// </summary>
     private static bool ScrolledOutOfSight(Control control)
     {
-        var top = control.GlobalPosition.Y;
-        var bottom = top + control.Size.Y;
+        var box = UIBox2.FromDimensions(control.GlobalPosition, control.Size);
         for (var ancestor = control.Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor is not ScrollContainer scroll)
                 continue;
 
-            var viewTop = scroll.GlobalPosition.Y;
-            if (bottom <= viewTop || top >= viewTop + scroll.Size.Y)
+            var view = UIBox2.FromDimensions(scroll.GlobalPosition, scroll.Size);
+            if (box.Bottom <= view.Top || box.Top >= view.Bottom || box.Right <= view.Left || box.Left >= view.Right)
                 return true;
         }
 

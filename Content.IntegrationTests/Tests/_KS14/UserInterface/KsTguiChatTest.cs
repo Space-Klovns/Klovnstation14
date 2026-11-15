@@ -378,6 +378,8 @@ public sealed class KsTguiChatTest : GameTest
             box.KsSay.ReleaseInput();
             box.KsSay.FocusInput();
         });
+        // Past the frames and the time the opening key is waited for.
+        await Task.Delay(KsTguiSayBar.OpeningKeyMinimum * 2);
         await Pair.RunTicksSync(3);
 
         await Client.WaitPost(() =>

@@ -41,11 +41,16 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private const int HistoryLimit = 5;
 
     /// <summary>
-    ///     For how many of its frame updates after taking focus the bar drops a character typed, which is the key that opened
-    ///         it: the rest of the frame the key was pressed in, and the next, for text input that started a frame late. A
-    ///         stock LineEdit's IgnoreNext lasts one. Any longer and a fast typist's first letter goes instead (#427).
+    ///     How long after taking focus the bar drops a character typed, which is the key that opened it: at least the rest of
+    ///         the frame the key was pressed in and the next, for text input that started a frame late, and at least
+    ///         <see cref="OpeningKeyMinimum"/>, so a fast frame rate doesn't end it before the text arrives. A stock LineEdit's
+    ///         IgnoreNext lasts one frame. Much longer, and a fast typist's first letter goes instead (#427).
     /// </summary>
     private const int OpeningKeyFrames = 2;
+
+    public static readonly TimeSpan OpeningKeyMinimum = TimeSpan.FromMilliseconds(30);
+
+    [Dependency] private IGameTiming _gameTiming = default!;
 
 
     private readonly KsTguiStyleBox _windowBox = new(Color.White);
@@ -60,6 +65,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private string _lastText = string.Empty;
     private string _textAtFocus = string.Empty;
     private int _openingKeyFramesLeft;
+    private TimeSpan _focusedAt;
     private bool _hadFocus;
     private bool _setting;
 
@@ -238,6 +244,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
         _textAtFocus = Text;
         _openingKeyPending = ignoreOpeningKey;
         _openingKeyFramesLeft = OpeningKeyFrames;
+        _focusedAt = _gameTiming.RealTime;
         _edit.GrabKeyboardFocus();
     }
 
@@ -449,8 +456,12 @@ public sealed partial class KsTguiSayBar : PanelContainer
 
         ApplyDeferredText();
 
-        if (_openingKeyPending && --_openingKeyFramesLeft <= 0)
+        if (_openingKeyPending
+            && --_openingKeyFramesLeft <= 0
+            && _gameTiming.RealTime - _focusedAt >= OpeningKeyMinimum)
+        {
             _openingKeyPending = false;
+        }
 
         var hasFocus = _edit.HasKeyboardFocus();
         if (hasFocus != _hadFocus)

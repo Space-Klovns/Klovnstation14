@@ -67,6 +67,7 @@ namespace Content.Client.Atmos.UI
             }
 
             SendPredictedMessage(new GasThermomachineChangeTemperatureMessage(actual));
+            _ksShownTarget = null; // KS14: show whatever target comes back, even one the server kept as it was
         }
 
         public override void Update()
