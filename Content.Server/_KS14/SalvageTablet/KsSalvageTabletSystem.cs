@@ -19,7 +19,7 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.SalvageTablet;
 
 /// <summary>
-///     Runs the S.P.A.M. tablets and the accounts behind them: logging in, dealing, tracking and dropping tasks, counting
+///     Runs the salvage tablets and the accounts behind them: logging in, dealing, tracking and dropping tasks, counting
 ///         progress, and paying out mining points and reputation.
 ///
 ///     Whatever sees a task's objective happen reports it here with <see cref="Advance"/>.
@@ -27,18 +27,21 @@ namespace Content.Server._KS14.SalvageTablet;
 public sealed partial class KsSalvageTabletSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedIdCardSystem _idCardSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
-    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SupplyPodSystem _supplyPodSystem = default!;
     [Dependency] private KsMaterialRequestSystem _materialRequestSystem = default!;
     [Dependency] private EntityQuery<KsMinerAccountComponent> _accountQuery = default!;
+    [Dependency] private EntityQuery<AccessComponent> _accessQuery = default!;
+    [Dependency] private EntityQuery<IdCardComponent> _idCardQuery = default!;
+    [Dependency] private EntityQuery<KsSalvageTabletScannedComponent> _scannedQuery = default!;
 
     private static readonly TimeSpan ExpiryCheckInterval = TimeSpan.FromSeconds(1);
 
@@ -72,6 +75,8 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         }
 
         // The silo and the bank change under an open tablet, and nothing says when.
+        _materialRequestSystem.PruneMetRequests();
+
         var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
         while (tabletEnumerator.MoveNext(out var tabletUid, out var tabletComponent))
         {
@@ -82,82 +87,82 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     /// <summary>
     ///     Logs the tablet in with the ID the user carries. The ID gets an account if it has none.
     /// </summary>
-    public bool TryLogin(Entity<KsSalvageTabletComponent> tablet, EntityUid user)
+    public bool TryLogin(Entity<KsSalvageTabletComponent> tabletEntity, EntityUid userUid)
     {
-        if (!TryFindIdCard(user, out var idCard))
+        if (!TryFindIdCard(userUid, out var idCardEntity))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-login-no-id"), tablet.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-login-no-id"), tabletEntity.Owner, userUid);
             return false;
         }
 
-        if (!TryComp<AccessComponent>(idCard.Owner, out var accessComponent) ||
-            !accessComponent.Tags.Contains(tablet.Comp.RequiredAccess))
+        if (!_accessQuery.TryComp(idCardEntity.Owner, out var accessComponent) ||
+            !accessComponent.Tags.Contains(tabletEntity.Comp.RequiredAccess))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-login-denied"), tablet.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-login-denied"), tabletEntity.Owner, userUid);
             return false;
         }
 
-        var accountComponent = EnsureComp<KsMinerAccountComponent>(idCard.Owner);
-        accountComponent.Salvager = user;
-        accountComponent.RankLadder = tablet.Comp.RankLadder;
-        accountComponent.TaskSlots = tablet.Comp.TaskSlots;
-        FillTasks((idCard.Owner, accountComponent));
+        var accountComponent = EnsureComp<KsMinerAccountComponent>(idCardEntity.Owner);
+        accountComponent.Salvager = userUid;
+        accountComponent.RankLadder = tabletEntity.Comp.RankLadder;
+        accountComponent.TaskSlots = tabletEntity.Comp.TaskSlots;
+        FillTasks((idCardEntity.Owner, accountComponent));
 
-        tablet.Comp.BoundCard = idCard.Owner;
-        Dirty(tablet);
-        UpdateUi(tablet);
+        tabletEntity.Comp.BoundCard = idCardEntity.Owner;
+        Dirty(tabletEntity);
+        UpdateUi(tabletEntity);
         return true;
     }
 
     /// <summary>
     ///     The ID the user wears or holds. The tablet is in their active hand, so an ID in the other one counts too.
     /// </summary>
-    private bool TryFindIdCard(EntityUid user, out Entity<IdCardComponent> idCard)
+    private bool TryFindIdCard(EntityUid userUid, out Entity<IdCardComponent> idCardEntity)
     {
-        if (_idCardSystem.TryFindIdCard(user, out idCard))
+        if (_idCardSystem.TryFindIdCard(userUid, out idCardEntity))
             return true;
 
-        foreach (var heldUid in _handsSystem.EnumerateHeld(user))
+        foreach (var heldUid in _handsSystem.EnumerateHeld(userUid))
         {
-            if (_idCardSystem.TryGetIdCard(heldUid, out idCard))
+            if (_idCardSystem.TryGetIdCard(heldUid, out idCardEntity))
                 return true;
         }
 
         return false;
     }
 
-    public void Logout(Entity<KsSalvageTabletComponent> tablet)
+    public void Logout(Entity<KsSalvageTabletComponent> tabletEntity)
     {
-        tablet.Comp.BoundCard = null;
-        Dirty(tablet);
-        UpdateUi(tablet);
+        tabletEntity.Comp.BoundCard = null;
+        Dirty(tabletEntity);
+        UpdateUi(tabletEntity);
     }
 
     /// <summary>
     ///     Takes a task on: from now it counts progress, and its time runs. An account tracks only so many at once,
     ///         and a tracked task stays tracked until it is finished, failed or dropped.
     /// </summary>
-    public bool TryTrackTask(Entity<KsSalvageTabletComponent> tablet, ProtoId<KsSalvageTaskPrototype> taskId)
+    public bool TryTrackTask(Entity<KsSalvageTabletComponent> tabletEntity, ProtoId<KsSalvageTaskPrototype> taskId)
     {
-        if (!TryGetAccount(tablet, out var account) ||
-            !TryGetTask(account, taskId, out var task) ||
+        if (!TryGetAccount(tabletEntity, out var accountEntity) ||
+            !TryGetTask(accountEntity, taskId, out var task) ||
             task.Tracked ||
-            !_prototypeManager.TryIndex(taskId, out var taskPrototype))
+            !ProtoMan.TryIndex(taskId, out var taskPrototype))
             return false;
 
         var tracked = 0;
-        foreach (var activeTask in account.Comp.Tasks)
+        foreach (var activeTask in accountEntity.Comp.Tasks)
         {
             if (activeTask.Tracked)
                 tracked++;
         }
 
-        if (tracked >= tablet.Comp.MaxTrackedTasks)
+        if (tracked >= tabletEntity.Comp.MaxTrackedTasks)
             return false;
 
         task.Tracked = true;
         task.EndTime = _gameTiming.CurTime + taskPrototype.Duration;
-        UpdateUis(account.Owner);
+        UpdateUis(accountEntity.Owner);
         return true;
     }
 
@@ -166,34 +171,34 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     ///         the account's rank is offered one it isn't already doing; otherwise the slot stays empty until the cooldown
     ///         is over.
     /// </summary>
-    /// <param name="user">Who is told why a drop was refused, if anyone.</param>
-    public bool TryDropTask(Entity<KsSalvageTabletComponent> tablet, ProtoId<KsSalvageTaskPrototype> taskId, EntityUid? user = null)
+    /// <param name="userUid">Who is told why a drop was refused, if anyone.</param>
+    public bool TryDropTask(Entity<KsSalvageTabletComponent> tabletEntity, ProtoId<KsSalvageTaskPrototype> taskId, EntityUid? userUid = null)
     {
-        if (!TryGetAccount(tablet, out var account) || !TryGetTask(account, taskId, out var task))
+        if (!TryGetAccount(tabletEntity, out var accountEntity) || !TryGetTask(accountEntity, taskId, out var task))
             return false;
 
-        if (_gameTiming.CurTime < account.Comp.NextDropTime)
+        if (_gameTiming.CurTime < accountEntity.Comp.NextDropTime)
         {
-            if (user != null)
-                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-drop-refused"), tablet.Owner, user.Value);
+            if (userUid != null)
+                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-drop-refused"), tabletEntity.Owner, userUid.Value);
             return false;
         }
 
         // The old task stays in the list while the new one is picked, so the drop never deals the same task back.
-        var index = account.Comp.Tasks.IndexOf(task);
-        if (PickTask(account) is { } replacement)
-            account.Comp.Tasks[index] = replacement;
+        var index = accountEntity.Comp.Tasks.IndexOf(task);
+        if (PickTask(accountEntity) is { } replacement)
+            accountEntity.Comp.Tasks[index] = replacement;
         else
-            account.Comp.Tasks.RemoveAt(index);
+            accountEntity.Comp.Tasks.RemoveAt(index);
 
-        account.Comp.NextDropTime = _gameTiming.CurTime + tablet.Comp.DropCooldown;
-        UpdateUis(account.Owner);
+        accountEntity.Comp.NextDropTime = _gameTiming.CurTime + tabletEntity.Comp.DropCooldown;
+        UpdateUis(accountEntity.Owner);
         return true;
     }
 
-    private static bool TryGetTask(Entity<KsMinerAccountComponent> account, ProtoId<KsSalvageTaskPrototype> taskId, [NotNullWhen(true)] out KsSalvageActiveTask? task)
+    private static bool TryGetTask(Entity<KsMinerAccountComponent> accountEntity, ProtoId<KsSalvageTaskPrototype> taskId, [NotNullWhen(true)] out KsSalvageActiveTask? task)
     {
-        foreach (var activeTask in account.Comp.Tasks)
+        foreach (var activeTask in accountEntity.Comp.Tasks)
         {
             if (activeTask.Task != taskId)
                 continue;
@@ -211,18 +216,18 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     ///         and a finished one pays out and is replaced.
     /// </summary>
     /// <returns>Whether any task wanted it.</returns>
-    public bool Advance<T>(Entity<KsMinerAccountComponent?> account, Predicate<T> matches, int amount = 1) where T : KsSalvageTaskObjective
+    public bool Advance<T>(Entity<KsMinerAccountComponent?> accountEntity, Predicate<T> matches, int amount = 1) where T : KsSalvageTaskObjective
     {
-        if (amount <= 0 || !_accountQuery.Resolve(account.Owner, ref account.Comp, logMissing: false))
+        if (amount <= 0 || !_accountQuery.Resolve(accountEntity.Owner, ref accountEntity.Comp, logMissing: false))
             return false;
 
         var advanced = false;
-        var tasks = account.Comp.Tasks;
+        var tasks = accountEntity.Comp.Tasks;
         for (var index = tasks.Count - 1; index >= 0; index--)
         {
             var task = tasks[index];
             if (!task.Tracked ||
-                !_prototypeManager.TryIndex(task.Task, out var taskPrototype) ||
+                !ProtoMan.TryIndex(task.Task, out var taskPrototype) ||
                 taskPrototype.Objective is not T objective ||
                 !matches(objective))
                 continue;
@@ -233,52 +238,52 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
                 continue;
 
             tasks.RemoveAt(index);
-            Complete((account.Owner, account.Comp), task, taskPrototype);
+            Complete((accountEntity.Owner, accountEntity.Comp), task, taskPrototype);
         }
 
         if (!advanced)
             return false;
 
-        FillTasks((account.Owner, account.Comp));
-        UpdateUis(account.Owner);
+        FillTasks((accountEntity.Owner, accountEntity.Comp));
+        UpdateUis(accountEntity.Owner);
         return true;
     }
 
     /// <summary>
     ///     Pays mining points into an account.
     /// </summary>
-    public void AddPoints(Entity<KsMinerAccountComponent> account, int points)
+    public void AddPoints(Entity<KsMinerAccountComponent> accountEntity, int points)
     {
-        account.Comp.Points += points;
-        UpdateUis(account.Owner);
+        accountEntity.Comp.Points += points;
+        UpdateUis(accountEntity.Owner);
     }
 
     /// <summary>
     ///     Buys the cart with the account's mining points and drops it next to the buyer in a pod. All of it or
     ///         nothing: one product above the account's rank, or a total above its points, refuses the order.
     /// </summary>
-    public bool TryOrder(Entity<KsSalvageTabletComponent> tablet, EntityUid buyer, Dictionary<ProtoId<KsSalvageProductPrototype>, int> cart)
+    public bool TryOrder(Entity<KsSalvageTabletComponent> tabletEntity, EntityUid buyerUid, Dictionary<ProtoId<KsSalvageProductPrototype>, int> cart)
     {
-        if (!TryGetAccount(tablet, out var account) || cart.Count == 0)
+        if (!TryGetAccount(tabletEntity, out var accountEntity) || cart.Count == 0)
             return false;
 
-        if (_gameTiming.CurTime < account.Comp.NextOrderTime)
+        if (_gameTiming.CurTime < accountEntity.Comp.NextOrderTime)
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-wait"), tablet.Owner, buyer);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-wait"), tabletEntity.Owner, buyerUid);
             return false;
         }
 
-        var rank = GetRank(account);
+        var rank = GetRank(accountEntity);
         var total = 0;
         var contents = new List<EntProtoId>();
         foreach (var (productId, amount) in cart)
         {
             if (amount <= 0 ||
-                amount > tablet.Comp.MaxOrderAmount ||
-                !_prototypeManager.TryIndex(productId, out var productPrototype) ||
+                amount > tabletEntity.Comp.MaxOrderAmount ||
+                !ProtoMan.TryIndex(productId, out var productPrototype) ||
                 productPrototype.MinRank > rank)
             {
-                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-refused"), tablet.Owner, buyer);
+                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-refused"), tabletEntity.Owner, buyerUid);
                 return false;
             }
 
@@ -289,74 +294,75 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
             }
         }
 
-        if (total > account.Comp.Points)
+        if (total > accountEntity.Comp.Points)
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-too-expensive"), tablet.Owner, buyer);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-too-expensive"), tabletEntity.Owner, buyerUid);
             return false;
         }
 
-        account.Comp.Points -= total;
-        account.Comp.NextOrderTime = _gameTiming.CurTime + tablet.Comp.OrderCooldown;
+        accountEntity.Comp.Points -= total;
+        accountEntity.Comp.NextOrderTime = _gameTiming.CurTime + tabletEntity.Comp.OrderCooldown;
 
-        // Beside the buyer, not on top of them.
-        var dropCoordinates = Transform(buyer).Coordinates.Offset(_random.NextAngle().ToVec() * tablet.Comp.PodDistance);
-        _supplyPodSystem.SpawnPodWithContents(tablet.Comp.PodPrototype, dropCoordinates, contents);
+        // Beside the buyer, not on top of them. Mover coordinates, so a buyer inside a locker or a mech still gets the
+        //      pod beside whatever holds them, rather than inside it.
+        var dropCoordinates = _transformSystem.GetMoverCoordinates(buyerUid).Offset(_random.NextAngle().ToVec() * tabletEntity.Comp.PodDistance);
+        _supplyPodSystem.SpawnPodWithContents(tabletEntity.Comp.PodPrototype, dropCoordinates, contents);
 
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-sent"), tablet.Owner, buyer, PopupType.Medium);
-        UpdateUis(account.Owner);
+        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-sent"), tabletEntity.Owner, buyerUid, type: PopupType.Medium);
+        UpdateUis(accountEntity.Owner);
         return true;
     }
 
     /// <summary>
     ///     The rank, counted from zero, of an account.
     /// </summary>
-    public int GetRank(Entity<KsMinerAccountComponent> account)
+    public int GetRank(Entity<KsMinerAccountComponent> accountEntity)
     {
-        return _prototypeManager.TryIndex(account.Comp.RankLadder, out var ladderPrototype)
-            ? ladderPrototype.GetRank(account.Comp.Reputation)
+        return ProtoMan.TryIndex(accountEntity.Comp.RankLadder, out var ladderPrototype)
+            ? ladderPrototype.GetRank(accountEntity.Comp.Reputation)
             : 0;
     }
 
-    public bool TryGetAccount(Entity<KsSalvageTabletComponent> tablet, out Entity<KsMinerAccountComponent> account)
+    public bool TryGetAccount(Entity<KsSalvageTabletComponent> tabletEntity, out Entity<KsMinerAccountComponent> accountEntity)
     {
-        account = default;
-        if (tablet.Comp.BoundCard is not { } cardUid || !_accountQuery.TryComp(cardUid, out var accountComponent))
+        accountEntity = default;
+        if (tabletEntity.Comp.BoundCard is not { } cardUid || !_accountQuery.TryComp(cardUid, out var accountComponent))
             return false;
 
-        account = (cardUid, accountComponent);
+        accountEntity = (cardUid, accountComponent);
         return true;
     }
 
-    private void Complete(Entity<KsMinerAccountComponent> account, KsSalvageActiveTask task, KsSalvageTaskPrototype taskPrototype)
+    private void Complete(Entity<KsMinerAccountComponent> accountEntity, KsSalvageActiveTask task, KsSalvageTaskPrototype taskPrototype)
     {
-        var rankBefore = GetRank(account);
+        var rankBefore = GetRank(accountEntity);
         var points = taskPrototype.PointsPerUnit * task.Amount;
-        account.Comp.Points += points;
-        account.Comp.Reputation += taskPrototype.Reputation;
+        accountEntity.Comp.Points += points;
+        accountEntity.Comp.Reputation += taskPrototype.Reputation;
 
-        if (account.Comp.Salvager is not { } ownerUid || TerminatingOrDeleted(ownerUid))
+        if (accountEntity.Comp.Salvager is not { } salvagerUid || TerminatingOrDeleted(salvagerUid))
             return;
 
         _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-complete", ("points", points), ("reputation", taskPrototype.Reputation)),
-            ownerUid,
-            ownerUid,
-            PopupType.Medium);
-        PlayToSalvager(account, ownerUid, tabletComponent => tabletComponent.CompleteSound);
+            salvagerUid,
+            salvagerUid,
+            type: PopupType.Medium);
+        PlayToSalvager(accountEntity, salvagerUid, tabletComponent => tabletComponent.CompleteSound);
 
-        if (GetRank(account) > rankBefore)
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-rank-up"), ownerUid, ownerUid, PopupType.Large);
+        if (GetRank(accountEntity) > rankBefore)
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-rank-up"), salvagerUid, salvagerUid, type: PopupType.Large);
     }
 
     /// <summary>
     ///     Tracked tasks ran out of time, and are gone from the account already: every tablet logged in with it sounds
     ///         where it is. A salvager away from their tablet hears nothing.
     /// </summary>
-    private void Fail(Entity<KsMinerAccountComponent> account)
+    private void Fail(Entity<KsMinerAccountComponent> accountEntity)
     {
         var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
         while (tabletEnumerator.MoveNext(out var tabletUid, out var tabletComponent))
         {
-            if (tabletComponent.BoundCard == account.Owner)
+            if (tabletComponent.BoundCard == accountEntity.Owner)
                 _audioSystem.PlayPvs(tabletComponent.FailSound, tabletUid);
         }
     }
@@ -364,12 +370,12 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     /// <summary>
     ///     Plays one of the sounds of a tablet logged in with the account, to its salvager alone.
     /// </summary>
-    private void PlayToSalvager(Entity<KsMinerAccountComponent> account, EntityUid salvagerUid, Func<KsSalvageTabletComponent, SoundSpecifier?> pickSound)
+    private void PlayToSalvager(Entity<KsMinerAccountComponent> accountEntity, EntityUid salvagerUid, Func<KsSalvageTabletComponent, SoundSpecifier?> pickSound)
     {
         var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
         while (tabletEnumerator.MoveNext(out _, out var tabletComponent))
         {
-            if (tabletComponent.BoundCard != account.Owner)
+            if (tabletComponent.BoundCard != accountEntity.Owner)
                 continue;
 
             _audioSystem.PlayGlobal(pickSound(tabletComponent), salvagerUid);
@@ -377,28 +383,28 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         }
     }
 
-    private void FillTasks(Entity<KsMinerAccountComponent> account)
+    private void FillTasks(Entity<KsMinerAccountComponent> accountEntity)
     {
-        while (account.Comp.Tasks.Count < account.Comp.TaskSlots)
+        while (accountEntity.Comp.Tasks.Count < accountEntity.Comp.TaskSlots)
         {
-            var task = PickTask(account);
+            var task = PickTask(accountEntity);
             if (task == null)
                 return;
 
-            account.Comp.Tasks.Add(task);
+            accountEntity.Comp.Tasks.Add(task);
         }
     }
 
     /// <summary>
     ///     Picks a task the account's rank is offered and that it isn't already doing, by weight.
     /// </summary>
-    private KsSalvageActiveTask? PickTask(Entity<KsMinerAccountComponent> account)
+    private KsSalvageActiveTask? PickTask(Entity<KsMinerAccountComponent> accountEntity)
     {
-        var rank = GetRank(account);
+        var rank = GetRank(accountEntity);
         var totalWeight = 0f;
-        foreach (var taskPrototype in _prototypeManager.EnumeratePrototypes<KsSalvageTaskPrototype>())
+        foreach (var taskPrototype in ProtoMan.EnumeratePrototypes<KsSalvageTaskPrototype>())
         {
-            if (IsOffered(account, taskPrototype, rank))
+            if (IsOffered(accountEntity, taskPrototype, rank))
                 totalWeight += taskPrototype.Weight;
         }
 
@@ -407,9 +413,9 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
 
         var roll = _random.NextFloat(totalWeight);
         KsSalvageTaskPrototype? picked = null;
-        foreach (var taskPrototype in _prototypeManager.EnumeratePrototypes<KsSalvageTaskPrototype>())
+        foreach (var taskPrototype in ProtoMan.EnumeratePrototypes<KsSalvageTaskPrototype>())
         {
-            if (!IsOffered(account, taskPrototype, rank))
+            if (!IsOffered(accountEntity, taskPrototype, rank))
                 continue;
 
             picked = taskPrototype;
@@ -428,12 +434,12 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         };
     }
 
-    private static bool IsOffered(Entity<KsMinerAccountComponent> account, KsSalvageTaskPrototype taskPrototype, int rank)
+    private static bool IsOffered(Entity<KsMinerAccountComponent> accountEntity, KsSalvageTaskPrototype taskPrototype, int rank)
     {
         if (taskPrototype.MinRank > rank || taskPrototype.Weight <= 0f)
             return false;
 
-        foreach (var activeTask in account.Comp.Tasks)
+        foreach (var activeTask in accountEntity.Comp.Tasks)
         {
             if (activeTask.Task == taskPrototype.ID)
                 return false;
@@ -455,34 +461,37 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         }
     }
 
-    private void UpdateUi(Entity<KsSalvageTabletComponent> tablet)
+    private void UpdateUi(Entity<KsSalvageTabletComponent> tabletEntity)
     {
-        if (!_uiSystem.IsUiOpen(tablet.Owner, KsSalvageTabletUiKey.Key))
+        if (!_userInterfaceSystem.IsUiOpen(tabletEntity.Owner, KsSalvageTabletUiKey.Key))
             return;
 
         var state = new KsSalvageTabletBuiState();
-        if (TryGetAccount(tablet, out var account))
+        if (TryGetAccount(tabletEntity, out var accountEntity))
         {
             state.LoggedIn = true;
-            state.Points = account.Comp.Points;
-            state.Reputation = account.Comp.Reputation;
-            state.Tasks = [.. account.Comp.Tasks];
-            state.NextDropTime = account.Comp.NextDropTime;
-            state.NextOrderTime = account.Comp.NextOrderTime;
-            _materialRequestSystem.GetSiloReport(state.Materials, alwaysShown: tablet.Comp.ShownMaterials);
+            state.Points = accountEntity.Comp.Points;
+            state.Reputation = accountEntity.Comp.Reputation;
+            state.Tasks = [.. accountEntity.Comp.Tasks];
+            state.NextDropTime = accountEntity.Comp.NextDropTime;
+            state.NextOrderTime = accountEntity.Comp.NextOrderTime;
+            _materialRequestSystem.GetSiloReport(state.Materials, alwaysShown: tabletEntity.Comp.ShownMaterials);
 
-            if (account.Comp.Salvager is { } ownerUid && !TerminatingOrDeleted(ownerUid))
-                state.Owner = GetNetEntity(ownerUid);
+            if (accountEntity.Comp.Salvager is { } salvagerUid && !TerminatingOrDeleted(salvagerUid))
+                state.Owner = GetNetEntity(salvagerUid);
 
-            if (TryComp<IdCardComponent>(account.Owner, out var idCardComponent))
+            if (_idCardQuery.TryComp(accountEntity.Owner, out var idCardComponent))
             {
                 state.OwnerName = idCardComponent.FullName ?? string.Empty;
                 state.JobTitle = idCardComponent.LocalizedJobTitle ?? string.Empty;
             }
         }
 
-        _uiSystem.SetUiState(tablet.Owner, KsSalvageTabletUiKey.Key, state);
+        _userInterfaceSystem.SetUiState(tabletEntity.Owner, KsSalvageTabletUiKey.Key, state);
     }
+
+    // The handlers below take a uid and component rather than an Entity<T>: BUI messages and BoundUIOpenedEvent are
+    //      by-value class events, and the engine has an Entity<T> handler only for by-ref ones.
 
     [SubscribeLocalEvent]
     private void OnUiOpened(EntityUid uid, KsSalvageTabletComponent component, BoundUIOpenedEvent args)
@@ -511,7 +520,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnDropTaskMessage(EntityUid uid, KsSalvageTabletComponent component, KsSalvageTabletDropTaskMessage args)
     {
-        TryDropTask((uid, component), args.Task, user: args.Actor);
+        TryDropTask((uid, component), args.Task, userUid: args.Actor);
     }
 
     [SubscribeLocalEvent]
@@ -552,18 +561,18 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
 
         args.Handled = true;
 
-        if (HasComp<KsSalvageTabletScannedComponent>(targetUid))
+        if (_scannedQuery.HasComp(targetUid))
         {
             _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-scan-already"), targetUid, args.User);
             return;
         }
 
-        if (!TryGetAccount(entity, out var account))
+        if (!TryGetAccount(entity, out var accountEntity))
             return;
 
         var targetPrototype = Prototype(targetUid)?.ID;
         if (targetPrototype == null ||
-            !Advance<KsSalvageCorpseObjective>(account.AsNullable(), objective => objective.Prototypes.Contains(targetPrototype)))
+            !Advance<KsSalvageCorpseObjective>(accountEntity.AsNullable(), objective => objective.Prototypes.Contains(targetPrototype)))
         {
             _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-scan-unwanted"), targetUid, args.User);
             return;

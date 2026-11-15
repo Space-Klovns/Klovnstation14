@@ -6,7 +6,7 @@ namespace Content.Server._KS14.SalvageTablet;
 /// <summary>
 ///     A salvager's S.P.A.M. account, kept on their ID card.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, AutoGenerateComponentPause]
 [Access(typeof(KsSalvageTabletSystem))]
 public sealed partial class KsMinerAccountComponent : Component
 {
@@ -37,10 +37,16 @@ public sealed partial class KsMinerAccountComponent : Component
     [DataField]
     public ProtoId<KsSalvageRankLadderPrototype> RankLadder = "KsSalvageRanks";
 
-    [DataField]
+    /// <summary>
+    ///     When the account may drop a task again.
+    /// </summary>
+    [DataField, AutoPausedField]
     public TimeSpan NextDropTime;
 
-    [DataField]
+    /// <summary>
+    ///     When the account may order again.
+    /// </summary>
+    [DataField, AutoPausedField]
     public TimeSpan NextOrderTime;
 
     /// <summary>

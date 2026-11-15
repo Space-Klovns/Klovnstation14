@@ -27,11 +27,11 @@ public sealed partial class KsSalvageTabletOreSystem : EntitySystem
     /// <summary>
     ///     How many units of the stack have been counted already.
     /// </summary>
-    public int GetCounted(Entity<StackComponent> stack)
+    public int GetCounted(Entity<StackComponent> stackEntity)
     {
         // Units that were used up took their count with them.
-        return _countedQuery.TryComp(stack.Owner, out var countedComponent)
-            ? Math.Min(countedComponent.Counted, stack.Comp.Count)
+        return _countedQuery.TryComp(stackEntity.Owner, out var countedComponent)
+            ? Math.Min(countedComponent.Counted, stackEntity.Comp.Count)
             : 0;
     }
 
@@ -39,28 +39,28 @@ public sealed partial class KsSalvageTabletOreSystem : EntitySystem
     ///     Offers units of ore to the tasks of the tablet attached to the bag.
     /// </summary>
     /// <returns>Whether a task wanted them, which is when they stop being countable.</returns>
-    private bool TryCount(Entity<KsSalvageTabletOreBagComponent> bag, StackComponent stackComponent, int amount)
+    private bool TryCount(Entity<KsSalvageTabletOreBagComponent> bagEntity, StackComponent stackComponent, int amount)
     {
         if (amount <= 0 ||
-            _itemSlotsSystem.GetItemOrNull(bag.Owner, bag.Comp.Slot) is not { } tabletUid ||
+            _itemSlotsSystem.GetItemOrNull(bagEntity.Owner, bagEntity.Comp.Slot) is not { } tabletUid ||
             !_tabletQuery.TryComp(tabletUid, out var tabletComponent) ||
-            !_salvageTabletSystem.TryGetAccount((tabletUid, tabletComponent), out var account))
+            !_salvageTabletSystem.TryGetAccount((tabletUid, tabletComponent), out var accountEntity))
             return false;
 
         var stackType = stackComponent.StackTypeId;
-        return _salvageTabletSystem.Advance<KsSalvageOreObjective>(account.AsNullable(), objective => objective.Stack == stackType, amount);
+        return _salvageTabletSystem.Advance<KsSalvageOreObjective>(accountEntity.AsNullable(), objective => objective.Stack == stackType, amount);
     }
 
-    private bool IsInBagStorage(EntityUid uid, out Entity<KsSalvageTabletOreBagComponent> bag)
+    private bool IsInBagStorage(EntityUid uid, out Entity<KsSalvageTabletOreBagComponent> bagEntity)
     {
-        bag = default;
+        bagEntity = default;
         if (!_containerSystem.TryGetContainingContainer(uid, out var container) ||
             !_oreBagQuery.TryComp(container.Owner, out var oreBagComponent) ||
             !_storageQuery.TryComp(container.Owner, out var storageComponent) ||
             storageComponent.Container != container)
             return false;
 
-        bag = (container.Owner, oreBagComponent);
+        bagEntity = (container.Owner, oreBagComponent);
         return true;
     }
 
@@ -96,7 +96,7 @@ public sealed partial class KsSalvageTabletOreSystem : EntitySystem
             donorCountedComponent.Counted = Math.Min(donorCountedComponent.Counted, donorStackComponent.Count) - movedCounted;
 
         var movedUncounted = args.Amount - movedCounted;
-        if (movedUncounted > 0 && IsInBagStorage(entity.Owner, out var bag) && TryCount(bag, entity.Comp, movedUncounted))
+        if (movedUncounted > 0 && IsInBagStorage(entity.Owner, out var bagEntity) && TryCount(bagEntity, entity.Comp, movedUncounted))
             movedCounted = args.Amount;
 
         if (movedCounted <= 0)
