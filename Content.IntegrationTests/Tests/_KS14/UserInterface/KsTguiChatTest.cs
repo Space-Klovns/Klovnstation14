@@ -1,5 +1,7 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui.Chat;
 using Content.Client.UserInterface.Screens;
@@ -10,6 +12,7 @@ using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Chat;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Localization;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
@@ -268,6 +271,124 @@ public sealed class KsTguiChatTest : GameTest
             longBar.SetChannel("Служба безопасности и охраны", Robust.Shared.Maths.Color.White);
             longBar.Measure(Robust.Shared.Maths.Vector2Helpers.Infinity);
             Assert.That(longBar.DesiredSize.X, Is.GreaterThan(short_ + 40f), "a long name widens the button instead of clipping");
+        });
+    }
+    /// <summary>
+    ///     The floating say window opens just under the mouse pointer, centred on it (#458).
+    /// </summary>
+    [Test]
+    public async Task TheFloatingSayOpensUnderThePointer()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+
+        SeparatedChatGameScreen separated = default!;
+        var pointer = Vector2.Zero;
+        await Client.WaitPost(() =>
+        {
+            separated = new SeparatedChatGameScreen();
+            Client.Resolve<IUserInterfaceManager>().WindowRoot.AddChild(separated);
+            separated.ChatBox.Focus();
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(separated.ChatBox.KsSayWindow.Visible, Is.True);
+            // High enough that the window fits under it: a headless screen is small.
+            pointer = new Vector2(separated.Size.X / 2f, MathF.Max(0f, separated.Size.Y - KsTguiSayBar.LargeHeight - KsTguiSayWindow.PointerGap) / 2f);
+            separated.ChatBox.KsSayWindow.OpenUnder(separated.GlobalPosition + pointer);
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            var expected = new Vector2(pointer.X - KsTguiSayBar.WindowWidth / 2f, pointer.Y + KsTguiSayWindow.PointerGap);
+            Assert.That(Vector2.Distance(separated.ChatBox.KsSayWindow.Position, expected), Is.LessThan(0.5f),
+                $"opened at {separated.ChatBox.KsSayWindow.Position}, not centred under the pointer at {expected}");
+            separated.ChatBox.KsSayWindow.OpenUnder(separated.GlobalPosition + new Vector2(-100f, -100f));
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(separated.ChatBox.KsSayWindow.Position, Is.EqualTo(Vector2.Zero), "kept on screen");
+            separated.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     Sending from the floating say window says focus is gone, though the closed window gets no more frame updates;
+    ///         otherwise the typing indicator stays over the player's head (#427).
+    /// </summary>
+    [Test]
+    public async Task ClosingTheSayReportsTheFocusGone()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+
+        SeparatedChatGameScreen separated = default!;
+        var focus = new List<bool>();
+        await Client.WaitPost(() =>
+        {
+            separated = new SeparatedChatGameScreen();
+            Client.Resolve<IUserInterfaceManager>().WindowRoot.AddChild(separated);
+            separated.ChatBox.KsSay.OnFocusChanged += focus.Add;
+            separated.ChatBox.Focus();
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(focus, Is.EqualTo(new[] { true }), "the bar took focus");
+            separated.ChatBox.KsSay.SetText("ks focus", notify: true);
+            separated.ChatBox.KsSay.Submit();
+            Assert.That(separated.ChatBox.KsSayWindow.Visible, Is.False);
+            Assert.That(focus, Is.EqualTo(new[] { true, false }), "closing said the focus went");
+        });
+
+        await Pair.RunTicksSync(3);
+        await Client.WaitPost(() =>
+        {
+            Assert.That(focus, Is.EqualTo(new[] { true, false }), "and only once");
+            separated.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     The character of the key that opened the bar is dropped, but only right then: a letter typed a few frames later
+    ///         is the player's (#427).
+    /// </summary>
+    [Test]
+    public async Task OnlyTheOpeningKeyIsDropped()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+
+        ChatBox box = default!;
+        await Client.WaitPost(() =>
+        {
+            box = AddBox(Client.Resolve<IUserInterfaceManager>().WindowRoot);
+            box.KsSetTguiMode(true);
+            box.KsSay.FocusInput();
+            box.KsSay.Edit.InsertAtCursor("t");
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(box.KsSay.Text, Is.Empty, "the opening key's character went");
+            box.KsSay.ReleaseInput();
+            box.KsSay.FocusInput();
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            box.KsSay.Edit.InsertAtCursor("h");
+            Assert.That(box.KsSay.Text, Is.EqualTo("h"), "a letter typed after the opening frames stays");
+            box.KsSay.ReleaseInput();
+            box.KsSay.FocusInput(ignoreOpeningKey: false);
+            box.KsSay.Edit.InsertAtCursor("i");
+            Assert.That(box.KsSay.Text, Is.EqualTo("hi"), "focus from a click drops nothing");
+            box.Dispose();
         });
     }
 }
