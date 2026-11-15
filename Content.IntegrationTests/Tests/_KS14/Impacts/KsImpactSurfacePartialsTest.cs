@@ -23,12 +23,15 @@ public sealed class KsImpactSurfacePartialsTest : GameTest
     private static readonly EntProtoId WallRockSnow = "WallRockSnow";
     private static readonly EntProtoId ReinforcedWindow = "ReinforcedWindow";
     private static readonly EntProtoId Bookshelf = "Bookshelf";
+    private static readonly EntProtoId BorgChassisGeneric = "BorgChassisGeneric";
+    private static readonly EntProtoId MobCleanBot = "MobCleanBot";
 
     private static readonly ProtoId<KsImpactMaterialPrototype> Metal = "Metal";
     private static readonly ProtoId<KsImpactMaterialPrototype> Wood = "Wood";
     private static readonly ProtoId<KsImpactMaterialPrototype> Snow = "Snow";
     private static readonly ProtoId<KsImpactMaterialPrototype> Glass = "Glass";
     private static readonly ProtoId<KsImpactMaterialPrototype> Paper = "Paper";
+    private static readonly ProtoId<KsImpactMaterialPrototype> Silicon = "Silicon";
 
     [Test]
     public async Task SurfacesHaveTheirMaterials()
@@ -47,6 +50,8 @@ public sealed class KsImpactSurfacePartialsTest : GameTest
                 Assert.That(MaterialOf(WallRockSnow), Is.EqualTo(Snow.Id), "a snowdrift kept its parent's rock");
                 Assert.That(MaterialOf(ReinforcedWindow), Is.EqualTo(Glass.Id), "a reinforced window does not throw glass");
                 Assert.That(MaterialOf(Bookshelf), Is.EqualTo(Wood.Id), "an empty bookshelf does not throw wood");
+                Assert.That(MaterialOf(BorgChassisGeneric), Is.EqualTo(Silicon.Id), "a borg does not spark when shot");
+                Assert.That(MaterialOf(MobCleanBot), Is.EqualTo(Silicon.Id), "a robot (MobRobotic) does not spark when shot");
 
                 var bookshelf = Server.ProtoMan.Index(Bookshelf);
                 Assert.That(bookshelf.TryComp<KsImpactSurfaceStorageFillComponent>(out var storageFillComponent, SEntMan.ComponentFactory) ? storageFillComponent.Material.Id : "none",

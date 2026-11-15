@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._KS14.Particles;
+using Content.Shared.Body.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -47,6 +48,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     [Dependency] private EntityQuery<KsImpactSurfaceComponent> _surfaceQuery = default!;
     [Dependency] private EntityQuery<KsImpactSurfaceStorageFillComponent> _storageFillQuery = default!;
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<BloodstreamComponent> _bloodstreamQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
 
     /// <summary>
@@ -98,12 +100,14 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         var ballistic = IsBallistic(rawDamage);
 
+        // A mob gets only what its own surface gives it (a borg's sparks); flesh has the blood spray instead.
         if (_mobStateQuery.HasComp(target))
         {
             if (ballistic && IsSoaked(target, rawDamage!, dealtDamage))
                 PlayHere(ArmorSound, coordinates, null);
 
-            return;
+            if (!_surfaceQuery.HasComp(target))
+                return;
         }
 
         if (!ProtoMan.TryIndex(PickMaterial(target), out var material))
@@ -177,6 +181,15 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
             return storageFillComponent.Material;
 
         return _surfaceQuery.TryComp(target, out var surfaceComponent) ? surfaceComponent.Material : FallbackMaterial;
+    }
+
+    /// <summary>
+    ///     Whether a projectile's own impact sprite (upstream's <c>BulletImpactEffect</c>, which reads as sparks)
+    ///         suits a hit on <paramref name="target"/>: not on a mob that bleeds, which sprays blood instead.
+    /// </summary>
+    public bool ShowsProjectileImpactEffect(EntityUid target)
+    {
+        return !(_mobStateQuery.HasComp(target) && _bloodstreamQuery.HasComp(target));
     }
 
     public static bool IsBallistic(DamageSpecifier? damage)

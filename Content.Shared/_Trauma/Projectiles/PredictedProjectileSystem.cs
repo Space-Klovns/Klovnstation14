@@ -267,7 +267,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         if (comp.DeleteOnCollide && comp.ProjectileSpent)
             _ksPredictedSpawnSystem.PredictedQueueDelDeferrable/* KS14: PredictedQueueDel -> deferred for a kept client copy hit during a state reset */(uid);
 
-        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */)
+        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */ && _ksImpactSurfaceSystem.ShowsProjectileImpactEffect(target) /* KS14: added, no sparks on flesh */)
         {
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }

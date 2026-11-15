@@ -45,3 +45,9 @@
   debris: KsImpactDebrisPaper
   sound:
     collection: KsBulletRicochet
+
+# A silicon mob (a borg, a robot): sparks thrown back at the shooter, no smoke, no bounce sound (its own hit sound plays).
+- type: ksImpactMaterial
+  id: Silicon
+  debris: KsImpactDebrisSparks
+  smoke: null

@@ -7,6 +7,7 @@ using Content.Shared._KS14.Impacts;
 using Content.Shared._KS14.Particles;
 using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
@@ -36,6 +37,9 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private readonly EntProtoId _testMob = "KsImpactTestMob";
     private readonly EntProtoId _testBulletproofMob = "KsImpactTestBulletproofMob";
     private readonly EntProtoId _testLightWall = "KsImpactTestLightWall";
+    private readonly EntProtoId _testBleedingMob = "KsImpactTestBleedingMob";
+    private readonly EntProtoId _testSiliconMob = "KsImpactTestSiliconMob";
+    private static readonly EntProtoId BulletImpactEffect = "BulletImpactEffect";
     private readonly EntProtoId _testDenseWall = "KsImpactTestDenseWall";
     private readonly EntProtoId _testShelf = "KsImpactTestShelf";
     private readonly EntProtoId _testBook = "KsImpactTestBook";
@@ -150,6 +154,39 @@ public sealed class KsImpactSurfaceTest : InteractionTest
   id: KsImpactTestBulletproofSpecies
   coefficients:
     Piercing: 0.25
+
+- type: entity
+  id: KsImpactTestBleedingMob
+  components:
+  - type: MobState
+  - type: Damageable
+  - type: SolutionContainerManager
+  - type: Bloodstream
+    bloodlossDamage:
+      types:
+        Bloodloss: 1
+    bloodlossHealDamage:
+      types:
+        Bloodloss: -1
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.4,-0.4,0.4,0.4""
+        hard: true
+        layer:
+        - MobLayer
+
+- type: entity
+  id: KsImpactTestSiliconMob
+  components:
+  - type: MobState
+  - type: Damageable
+  - type: KsImpactSurface
+    material: KsImpactTestMaterial
 
 - type: entity
   id: KsImpactTestBulletproofMob
@@ -685,6 +722,88 @@ public sealed class KsImpactSurfaceTest : InteractionTest
                 Assert.That(particlesComponent.Amount, Is.EqualTo(dense ? 1f : 0.5f), $"{prototype}'s amount on a {(dense ? "dense" : "light")} hit");
                 Assert.That(particlesComponent.Speed, Is.EqualTo(dense ? 1f : 0.25f), $"{prototype}'s speed on a {(dense ? "dense" : "light")} hit");
             }
+        });
+    }
+
+    /// <summary>
+    ///     A bullet's own impact sprite (upstream's BulletImpactEffect, which looks like sparks) plays on a wall but not
+    ///         on a mob that bleeds, which sprays blood instead.
+    /// </summary>
+    [Test]
+    public async Task NoProjectileSparksOnFlesh([Values] bool flesh)
+    {
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            SEntMan.SpawnEntity(flesh ? _testBleedingMob : _testWall, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var gunNetEntity = await PlaceInHands(TestGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+        await Shoot(gunNetEntity, shooterPosition + new Vector2(40f, 0f));
+
+        var impacts = new HashSet<EntityUid>();
+        var serverFired = false;
+        var serverHit = false;
+        for (var tick = 0; tick < 60; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                var enumerator = CEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (enumerator.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID == BulletImpactEffect.Id)
+                        impacts.Add(uid);
+                }
+            });
+            await Server.WaitPost(() =>
+            {
+                var bullets = 0;
+                var query = SEntMan.AllEntityQueryEnumerator<Content.Shared.Projectiles.ProjectileComponent>();
+                while (query.MoveNext(out _, out var projectileComponent))
+                {
+                    if (projectileComponent.Shooter == SPlayer)
+                        bullets++;
+                }
+
+                serverFired |= bullets > 0;
+                serverHit |= serverFired && bullets == 0;
+            });
+        }
+
+        Assert.That(serverHit, "the server's bullet never hit, so this proves nothing");
+        if (flesh)
+            Assert.That(impacts, Is.Empty, "a hit on a bleeding mob played the bullet's spark sprite");
+        else
+            Assert.That(impacts, Is.Not.Empty, "a hit on a wall played no bullet impact sprite");
+    }
+
+    /// <summary>
+    ///     A mob with a surface (a borg) throws its sparks back at the shooter; one without throws nothing.
+    /// </summary>
+    [Test]
+    public async Task SiliconMobsSpark()
+    {
+        NetEntity siliconNetEntity = default;
+        await Server.WaitPost(() => siliconNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testSiliconMob, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var piercing = new DamageSpecifier();
+        piercing.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.6f));
+            CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(siliconNetEntity), coordinates, new Vector2(1f, 0f), piercing, piercing);
+
+            var debris = ClientEmitters([_testDebris]);
+            Assert.That(debris, Has.Count.EqualTo(1), "a shot silicon mob threw no sparks");
+            foreach (var (uid, _) in debris)
+                Assert.That(Vector2.Dot(ClientTravel(uid), new Vector2(-1f, 0f)), Is.GreaterThan(0.99f), "the sparks do not fly back at the shooter");
         });
     }
 

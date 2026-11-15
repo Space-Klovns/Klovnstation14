@@ -227,3 +227,16 @@
   components:
   - type: KsImpactSurface
     material: Snow
+
+# Silicon mobs spark when shot, where flesh sprays blood.
+- type: !PartialOnly entity
+  id: BaseBorgChassisNotIonStormable
+  components:
+  - type: KsImpactSurface
+    material: Silicon
+
+- type: !PartialOnly entity
+  id: MobRobotic
+  components:
+  - type: KsImpactSurface
+    material: Silicon

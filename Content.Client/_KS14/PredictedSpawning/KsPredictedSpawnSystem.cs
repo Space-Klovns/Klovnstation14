@@ -489,7 +489,8 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         if (args.ToPredictingUser && !ClaimServerImpact(args, targetUid))
             return;
 
-        if (args.ImpactEffect is { } impactEffect)
+        // No sparks on flesh, which sprays blood instead.
+        if (args.ImpactEffect is { } impactEffect && (targetUid == null || _impactSurfaceSystem.ShowsProjectileImpactEffect(targetUid.Value)))
             RaiseLocalEvent(new ImpactEffectEvent(impactEffect, args.Coordinates));
 
         if (targetUid != null && !TerminatingOrDeleted(targetUid.Value))
