@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui;
 using Content.Client._KS14.Tgui.Controls;
+using Content.Client.Communications.UI;
 using Content.Client.Stylesheets;
 using Content.Client.Store.Ui;
 using Content.Client.UserInterface.Controls;
@@ -11,6 +12,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Tgui;
+using Content.Shared.Communications;
 using Content.Shared.Store;
 using Content.Shared.Store.Components;
 using Content.Shared.UserInterface;
@@ -301,6 +303,30 @@ public sealed class KsTguiWindowThemeTest : GameTest
 
             var sheet = ((StylesheetManager)Client.ResolveDependency<IStylesheetManager>()).KsGetThemedSheet(expected);
             Assert.That(menu.Stylesheet, Is.SameAs(sheet));
+        });
+    }
+    /// <summary>
+    ///     An antagonist's communications console opens in its faction's theme, and the station's in the default (#437).
+    /// </summary>
+    [TestCase("SyndicateComputerComms", KsTguiWindowTheme.Syndicate)]
+    [TestCase("WizardComputerComms", KsTguiWindowTheme.Wizard)]
+    [TestCase("ComputerComms", null)]
+    public async Task TheCommsWindowTakesTheConsolesTheme(string prototypeId, KsTguiWindowTheme? expected)
+    {
+        var testMap = await Pair.CreateTestMap();
+        await Server.WaitPost(() =>
+        {
+            var console = SEntMan.SpawnEntity(prototypeId, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            var user = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 1.5f)));
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
+            SEntMan.System<SharedUserInterfaceSystem>().OpenUi(console, CommunicationsConsoleUiKey.Key, user);
+        });
+        await Pair.RunTicksSync(10);
+
+        await Client.WaitAssertion(() =>
+        {
+            var menu = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<CommunicationsConsoleMenu>().Single();
+            Assert.That(menu.GetKsTheme(), Is.EqualTo(expected));
         });
     }
 }
