@@ -96,6 +96,11 @@ public sealed class KsBaronTguiControlsTest : GameTest
                 Assert.That(title, Is.Not.Null);
                 title!.ForceRunStyleUpdate();
                 Assert.That(title.PanelOverride, Is.Null, "Baron's sheet draws a section's title row");
+
+                // The body lets Baron's window texture through, darkened enough to group.
+                Assert.That(section.PanelOverride, Is.TypeOf<StyleBoxFlat>());
+                var body = ((StyleBoxFlat)section.PanelOverride).BackgroundColor;
+                Assert.That(body.A, Is.GreaterThan(0f).And.LessThan(1f), "a section body is translucent under Baron");
             });
 
             window.Close();
