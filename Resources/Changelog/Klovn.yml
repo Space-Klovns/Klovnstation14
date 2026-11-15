@@ -2895,3 +2895,25 @@ Entries:
         gore flies after it.
   id: 263
   time: '2026-11-14T19:56:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Bullets and lasers kick up smoke and debris based on what they hit, and
+        sometimes ricochet, ported from TGMC.
+    - type: Add
+      message: >-
+        Guns puff smoke when fired, and heavy machine-gun turrets smoke after
+        long bursts.
+    - type: Add
+      message: >-
+        New bullet hit, ricochet, armor, miss, gib and bone-break sounds from
+        TGMC.
+    - type: Tweak
+      message: >-
+        Gibs stick to walls; sparks, debris, blood mist and smoke bounce off
+        them instead of passing through.
+    - type: Fix
+      message: Bookshelves now stop bullets and lasers.
+  id: 264
+  time: '2026-11-15T17:08:27.0000000+00:00'
