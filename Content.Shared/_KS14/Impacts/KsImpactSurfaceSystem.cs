@@ -102,16 +102,21 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <param name="worldDirection">Which way the projectile was flying. The smoke and debris fly back against it.</param>
     /// <param name="rawDamage">The projectile's damage before anything resisted it.</param>
     /// <param name="dealtDamage">The damage the hit dealt, if any.</param>
-    public void PlayImpact(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
+    /// <returns>
+    ///     Whether the hit rang off armour (<see cref="HitsArmor"/>), whose sound takes the place of the hit sound
+    ///         <c>SharedGunSystem.PlayImpactSound</c> would play: the caller plays that only when this is false.
+    /// </returns>
+    public bool PlayImpact(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
     {
         if (_netManager.IsServer || TerminatingOrDeleted(target))
-            return;
+            return false;
 
         var ballistic = IsBallistic(rawDamage);
 
         // A mob gets sparks off its armour when that soaked the hit, else only what its own surface gives it (a
         //      borg's sparks); flesh has the blood spray instead.
         ProtoId<KsImpactMaterialPrototype> materialId;
+        var hitsArmor = false;
         if (_mobStateQuery.HasComp(target))
         {
             if (HitsArmor(target, rawDamage, dealtDamage))
@@ -120,6 +125,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
                 // What little got through comes out the far side.
                 _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
                 materialId = ArmorMaterial;
+                hitsArmor = true;
             }
             else if (_surfaceQuery.HasComp(target))
             {
@@ -127,7 +133,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
             }
             else
             {
-                return;
+                return false;
             }
         }
         else
@@ -136,7 +142,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         }
 
         if (!ProtoMan.TryIndex(materialId, out var material))
-            return;
+            return hitsArmor;
 
         coordinates = GetEntryPoint(target, coordinates, worldDirection);
         var localRotation = GetLocalRotation(coordinates, -worldDirection);
@@ -147,7 +153,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         SpawnImpactParticles(material.Smoke, coordinates, localRotation, amount, speed);
         if (!ballistic)
-            return;
+            return hitsArmor;
 
         SpawnImpactParticles(material.Debris, coordinates, localRotation, amount, speed);
         foreach (var extraDebris in material.ExtraDebris)
@@ -155,6 +161,8 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         if (material.Sound != null && _random.Prob(material.SoundChance))
             PlayHere(material.Sound, coordinates, RicochetParams);
+
+        return hitsArmor;
     }
 
     /// <summary>
@@ -232,7 +240,8 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <summary>
     ///     Whether a hit on <paramref name="target"/> rang off its armour: a ballistic hit on a mob that its armour
     ///         soaked (<see cref="IsSoaked"/>). <see cref="PlayImpact"/> plays the armour's sound for it, which takes the
-    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, so its callers skip that.
+    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, and says so; a caller that
+    ///         plays the hit sound apart from it (a hitscan's effects) asks this instead.
     /// </summary>
     public bool HitsArmor(EntityUid target, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
     {

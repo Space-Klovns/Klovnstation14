@@ -43,7 +43,9 @@ public sealed partial class DismembermentSystem : EntitySystem
     /// <summary>
     ///     TGMC's bone break, as a limb comes off.
     /// </summary>
-    private static readonly SoundSpecifier DismemberSound = new SoundCollectionSpecifier("KsBoneBreak", AudioParams.Default.WithVariation(0.05f));
+    private static readonly ProtoId<SoundCollectionPrototype> DismemberSoundCollection = "KsBoneBreak";
+
+    private static readonly SoundSpecifier DismemberSound = new SoundCollectionSpecifier(DismemberSoundCollection, AudioParams.Default.WithVariation(0.05f));
 
     /// <returns>True if, with the given damage, something can be dismembered from the given entity.</returns>
     public bool CanDismemberByDamage(Entity<BodyComponent?> bodyEntity, FixedPoint2 damageFp2, [NotNullWhen(true)] out float? totalDamage)

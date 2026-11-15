@@ -45,7 +45,9 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private readonly EntProtoId _testBullet = "KsImpactTestBullet";
     private static readonly EntProtoId BulletImpactEffect = "BulletImpactEffect";
     private static readonly ProtoId<KsParticlesPrototype> BloodMist = "KsBloodSplatterMist";
+    private static readonly ProtoId<KsParticlesPrototype> ExitWoundMist = "KsExitWoundMist";
     private readonly EntProtoId _testDenseWall = "KsImpactTestDenseWall";
+    private readonly EntProtoId _testUndamageableWall = "KsImpactTestUndamageableWall";
     private readonly EntProtoId _testShelf = "KsImpactTestShelf";
     private readonly EntProtoId _testBook = "KsImpactTestBook";
     private readonly ProtoId<KsParticlesPrototype> _testSmoke = "KsImpactTestSmoke";
@@ -266,6 +268,25 @@ public sealed class KsImpactSurfaceTest : InteractionTest
         mask:
         - FullTileMask
   - type: Damageable
+  - type: KsImpactSurface
+    material: KsImpactTestMaterial
+
+- type: entity
+  id: KsImpactTestUndamageableWall
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.5,-0.5,0.5,0.5""
+        hard: true
+        layer:
+        - WallLayer
+        mask:
+        - FullTileMask
   - type: KsImpactSurface
     material: KsImpactTestMaterial
 
@@ -526,16 +547,17 @@ public sealed class KsImpactSurfaceTest : InteractionTest
 
     /// <summary>
     ///     A laser hit carries where it landed: the shooter's own plays its smoke and debris once, at once, back along the
-    ///         beam, and the server's relay to everyone else leaves the shooter out.
+    ///         beam, and the server's relay to everyone else leaves the shooter out. On a wall it cannot damage too, as
+    ///         a bullet's does.
     /// </summary>
     [Test]
-    public async Task ShootersLaserHitThrowsDebrisBackOnce()
+    public async Task ShootersLaserHitThrowsDebrisBackOnce([Values] bool damageable)
     {
         var shooterPosition = Vector2.Zero;
         await Server.WaitPost(() =>
         {
             shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
-            SEntMan.SpawnEntity(_testWall, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+            SEntMan.SpawnEntity(damageable ? _testWall : _testUndamageableWall, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
         });
         await RunTicks(5);
 
@@ -926,7 +948,7 @@ public sealed class KsImpactSurfaceTest : InteractionTest
             var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
             CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(mobNetEntity), coordinates, new Vector2(1f, 0f), raw, soaked);
 
-            var mist = ClientEmitters([BloodMist]);
+            var mist = ClientEmitters([ExitWoundMist]);
             Assert.That(mist, Has.Count.EqualTo(1), "a hit the armour soaked let no blood out");
             foreach (var (uid, _) in mist)
             {
@@ -1000,6 +1022,38 @@ public sealed class KsImpactSurfaceTest : InteractionTest
             Assert.That(heardFlesh || heardArmour, "the hit played no sound at all, so this proves nothing");
             Assert.That(heardArmour, Is.EqualTo(armoured), armoured ? "a hit the armour soaked did not ring off it" : "a hit on a bare mob rang off armour");
             Assert.That(heardFlesh, Is.EqualTo(!armoured), armoured ? "a hit the armour soaked played the flesh hit too" : "a hit on a bare mob played no hit sound");
+        });
+    }
+
+    /// <summary>
+    ///     A hit the armour mostly soaked can still bleed, and its spray and the exit wound's puff come in the same tick
+    ///         from the same mob: both show, neither taken for a re-prediction of the other.
+    /// </summary>
+    [Test]
+    public async Task ExitWoundMistKeepsTheHitsSpray()
+    {
+        NetEntity mobNetEntity = default;
+        await Server.WaitPost(() => mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testBleedingMob, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var raw = new DamageSpecifier();
+        raw.DamageDict[PiercingDamage] = 40;
+        var soaked = new DamageSpecifier();
+        soaked.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var mobUid = CEntMan.GetEntity(mobNetEntity);
+            var bloodstreamComponent = CEntMan.GetComponent<Content.Shared.Body.Components.BloodstreamComponent>(mobUid);
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
+
+            // The hit's own spray, as its damage raises it, then its impact, the same tick.
+            CEntMan.System<Content.Shared._KS14.BloodSpray.BloodSpraySystem>().HandleBleedEffects((mobUid, bloodstreamComponent), 10f, new Vector2(1f, 0f), damage: 10f);
+            Assert.That(ClientEmitters([BloodMist]), Has.Count.EqualTo(1), "the hit sprayed no blood, so this proves nothing");
+
+            Assert.That(CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(mobUid, coordinates, new Vector2(1f, 0f), raw, soaked),
+                "the hit did not ring off the armour, so this proves nothing");
+            Assert.That(ClientEmitters([BloodMist, ExitWoundMist]), Has.Count.EqualTo(2), "the exit wound's puff and the hit's spray did not both show");
         });
     }
 

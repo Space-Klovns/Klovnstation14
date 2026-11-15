@@ -261,13 +261,15 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
         if (!deleted)
         {
-            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) // KS14: added, once for a kept client copy, whose hit can land on a re-predicted tick
-                && !_ksImpactSurfaceSystem.HitsArmor(target, ev.Damage, damage)) // KS14: armour plays its own sound instead, in PlayImpact
-                _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound, once: true /* KS14: added arg, as above */);
-
-            // KS14 start: TGMC's per-surface impact particles and ricochets, and its armour-soak sound; client only
-            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) && TryComp(uid, out TransformComponent? impactTransform))
-                _ksImpactSurfaceSystem.PlayImpact(target, impactTransform.Coordinates, worldDirection, ev.Damage, damage);
+            // KS14 start: once for a kept client copy, whose hit can land on a re-predicted tick. TGMC's per-surface impact
+            //      particles and ricochets, client only; armour that soaked the hit plays its own sound instead of the hit's
+            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid))
+            {
+                var hitsArmor = TryComp(uid, out TransformComponent? impactTransform) &&
+                                _ksImpactSurfaceSystem.PlayImpact(target, impactTransform.Coordinates, worldDirection, ev.Damage, damage);
+                if (!hitsArmor)
+                    _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound, once: true);
+            }
             // KS14 end
 
             if (!ourBody.LinearVelocity.IsLengthZero() && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> once for a kept client copy, whose hit can land on a re-predicted tick */)

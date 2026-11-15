@@ -23,12 +23,15 @@ public sealed partial class HitscanBasicDamageSystem : EntitySystem
 
         var dmg = ent.Comp.Damage * _damage.UniversalHitscanDamageModifier;
 
-        if (!_damage.TryChangeDamage(args.Data.HitEntity.Value, dmg, out var damageDealt, origin: args.Data.Gun))
-            return;
+        var damaged = _damage.TryChangeDamage(args.Data.HitEntity.Value, dmg, out var damageDealt, origin: args.Data.Gun); // KS14: kept, for the impact below
 
-        // KS14 start: TGMC's per-surface impact particles, as bullets have
+        // KS14 start: TGMC's per-surface impact particles, as bullets have, whether or not the hit did damage: a bullet's
+        //      plays on what it cannot hurt too, and armour soaking all of it is still a hit on the armour
         if (args.Data.HitCoordinates is { } hitCoordinates)
             _ksImpactSurfaceSystem.PlayImpactPredicted(args.Data.HitEntity.Value, hitCoordinates, args.Data.ShotDirection, dmg, damageDealt, args.Data.Shooter);
+
+        if (!damaged)
+            return;
         // KS14 end
 
         var damageEvent = new HitscanDamageDealtEvent
