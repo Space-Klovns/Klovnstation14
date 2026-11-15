@@ -132,6 +132,27 @@ public sealed partial class BodyCultivatorComponent : Component
     public TimeSpan EternalHeartCooldown = TimeSpan.FromMinutes(15);
 
     /// <summary>
+    ///     Bone-cracking cycles left in a running Tribulation of Flesh, and its chance of success.
+    /// </summary>
+    [DataField]
+    public int TribulationCyclesLeft;
+
+    [DataField]
+    public int TribulationReadiness;
+
+    /// <summary>
+    ///     When a dead body's Eternal Heart restarts it, if it's going to.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan? EternalHeartReviveAt;
+
+    /// <summary>
+    ///     Cooldowns of granted arts as their prototypes set them, before stage shortens them.
+    /// </summary>
+    [DataField]
+    public Dictionary<EntProtoId, TimeSpan> BaseCooldowns = new();
+
+    /// <summary>
     ///     The part Forge the Body is pouring into.
     /// </summary>
     [DataField]

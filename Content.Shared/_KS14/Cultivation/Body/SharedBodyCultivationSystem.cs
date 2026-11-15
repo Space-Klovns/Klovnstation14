@@ -363,6 +363,27 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.BaseDeadThreshold = dead;
     }
 
+    public void SetTribulation(BodyCultivatorComponent bodyCultivator, int cyclesLeft, int readiness)
+    {
+        bodyCultivator.TribulationCyclesLeft = cyclesLeft;
+        bodyCultivator.TribulationReadiness = readiness;
+    }
+
+    public void SetEternalHeartRevive(BodyCultivatorComponent bodyCultivator, TimeSpan? reviveAt)
+    {
+        bodyCultivator.EternalHeartReviveAt = reviveAt;
+    }
+
+    public void RecordBaseCooldown(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto, TimeSpan cooldown)
+    {
+        bodyCultivator.BaseCooldowns[actionProto] = cooldown;
+    }
+
+    public TimeSpan? GetBaseCooldown(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto)
+    {
+        return bodyCultivator.BaseCooldowns.TryGetValue(actionProto, out var cooldown) ? cooldown : null;
+    }
+
     public void SetForgeTarget(BodyCultivatorComponent bodyCultivator, BodyGroup? group)
     {
         bodyCultivator.ForgeTarget = group;
