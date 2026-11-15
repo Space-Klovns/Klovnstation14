@@ -1,30 +1,24 @@
 using Content.Shared._KS14.PopupLocalization;
-using Content.Shared.Popups;
 
 namespace Content.Shared._KS14.Chemistry.PressureGatedInjector;
 
+/// <summary>
+///     Slows a pressure-gated injector down, and wastes half its dose, wherever the air is too thick for it.
+/// </summary>
 public sealed partial class KsPressureGatedInjectorSystem : EntitySystem
 {
-    [Dependency] private SharedPopupSystem _popupSystem = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsPressureGatedInjectorComponent, KsGetInjectorMobDelayEvent>(OnGetMobDelay);
-        SubscribeLocalEvent<KsPressureGatedInjectorComponent, KsGetInjectorAmountEvent>(OnGetAmount);
-    }
-
-    private void OnGetMobDelay(Entity<KsPressureGatedInjectorComponent> injector, ref KsGetInjectorMobDelayEvent args)
+    [SubscribeLocalEvent]
+    private void OnModifyMobDelay(Entity<KsPressureGatedInjectorComponent> injector, ref KsModifyInjectorMobDelayEvent args)
     {
         if (injector.Comp.LowPressure)
             return;
 
         args.Delay += injector.Comp.HighPressureDelay;
-        _popupSystem.PopupClient(KsPopupMessage.Create("ks-pressure-gated-injector-high-pressure"), args.User, args.User);
+        args.Message = KsPopupMessage.Create("ks-pressure-gated-injector-high-pressure");
     }
 
-    private void OnGetAmount(Entity<KsPressureGatedInjectorComponent> injector, ref KsGetInjectorAmountEvent args)
+    [SubscribeLocalEvent]
+    private void OnModifyAmount(Entity<KsPressureGatedInjectorComponent> injector, ref KsModifyInjectorAmountEvent args)
     {
         if (injector.Comp.LowPressure)
             return;

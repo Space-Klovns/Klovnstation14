@@ -1,13 +1,13 @@
 using Content.Server.Atmos.EntitySystems;
-using Content.Shared.Atmos;
 using Content.Shared._KS14.Chemistry.PressureGatedInjector;
-using Robust.Shared.Map.Components;
+using Content.Shared.Atmos;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Chemistry.PressureGatedInjector;
 
 /// <summary>
 ///     Keeps <see cref="KsPressureGatedInjectorComponent.LowPressure"/> up to date with the air where each injector is.
+///         The air around a carried injector changes with no event to say so, so it is checked on an interval.
 /// </summary>
 public sealed partial class KsPressureGatedInjectorPressureSystem : EntitySystem
 {
@@ -44,15 +44,12 @@ public sealed partial class KsPressureGatedInjectorPressureSystem : EntitySystem
     /// <summary>
     ///     The pressure of the tile the injector is on, wherever it is carried. Nothing to breathe counts as none.
     /// </summary>
-    private float GetPressure(Entity<TransformComponent> injector)
+    private float GetPressure(Entity<TransformComponent> injectorEntity)
     {
-        var mapUid = injector.Comp.MapUid;
-        var coordinates = _transformSystem.GetMapCoordinates(injector);
-        GasMixture? mixture;
-        if (_mapSystem.TryFindGridAt(coordinates, out var gridUid, out var gridComponent))
-            mixture = _atmosphereSystem.GetTileMixture(gridUid, mapUid, _mapSystem.WorldToTile(gridUid, gridComponent, coordinates.Position));
-        else
-            mixture = _atmosphereSystem.GetTileMixture(null, mapUid, Vector2i.Zero);
+        var coordinates = _transformSystem.GetMapCoordinates(injectorEntity);
+        GasMixture? mixture = _mapSystem.TryFindGridAt(coordinates, out var gridUid, out var gridComponent)
+            ? _atmosphereSystem.GetGridTileMixture(gridUid, _mapSystem.WorldToTile(gridUid, gridComponent, coordinates.Position))
+            : _atmosphereSystem.GetMapMixture(injectorEntity.Comp.MapUid);
 
         return mixture?.Pressure ?? 0f;
     }

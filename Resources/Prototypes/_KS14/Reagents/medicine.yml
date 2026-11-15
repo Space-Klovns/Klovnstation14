@@ -17,7 +17,7 @@
       # Past where the body would have gone critical
       - !type:EvenHealthChange
         conditions:
-        - !type:TotalDamageCondition
+        - !type:KsTotalDamageCondition
           min: 100
         damage:
           Brute: -2
@@ -25,12 +25,12 @@
           Toxin: -2
       - !type:HealthChange
         conditions:
-        - !type:TotalDamageCondition
+        - !type:KsTotalDamageCondition
           min: 100
         damage:
           types:
             Asphyxiation: -6
       - !type:Jitter
         conditions:
-        - !type:TotalDamageCondition
+        - !type:KsTotalDamageCondition
           min: 100

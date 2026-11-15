@@ -10,22 +10,22 @@ namespace Content.Shared._KS14.EntityEffects.EffectConditions;
 ///     Returns true if the entity has taken at least a certain amount of damage, of all kinds together.
 /// </summary>
 /// <inheritdoc cref="EntityConditionSystem{T, TCondition}"/>
-public sealed partial class TotalDamageEntityConditionSystem : EntityConditionSystem<DamageableComponent, TotalDamageCondition>
+public sealed partial class KsTotalDamageEntityConditionSystem : EntityConditionSystem<DamageableComponent, KsTotalDamageCondition>
 {
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    protected override void Condition(Entity<DamageableComponent> entity, ref EntityConditionEvent<TotalDamageCondition> args)
+    protected override void Condition(Entity<DamageableComponent> entity, ref EntityConditionEvent<KsTotalDamageCondition> args)
     {
         args.Result = _damageableSystem.GetTotalDamage((entity.Owner, entity.Comp)) >= args.Condition.Min;
     }
 }
 
 /// <inheritdoc cref="EntityCondition"/>
-public sealed partial class TotalDamageCondition : EntityConditionBase<TotalDamageCondition>
+public sealed partial class KsTotalDamageCondition : EntityConditionBase<KsTotalDamageCondition>
 {
     [DataField(required: true)]
     public FixedPoint2 Min;
 
     public override string EntityConditionGuidebookText(IPrototypeManager prototype) =>
-        Loc.GetString("reagent-effect-condition-guidebook-total-damage", ("min", Min.Float()));
+        Loc.GetString("reagent-effect-condition-guidebook-total-damage", ("min", (float)Min));
 }

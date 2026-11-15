@@ -1,10 +1,13 @@
 #nullable enable
+using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Chemistry.PressureGatedInjector;
 using Content.Shared.Atmos;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using NUnit.Framework;
@@ -17,31 +20,39 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Chemistry;
 
 /// <summary>
-///     The survival medipen: a full dose at once where the air is thin, and half of one after a long wait anywhere else.
+///     The survival medipen: a full dose at once where the air is thin, and part of one after a long wait anywhere else.
+///         The delay and the fraction are read from the pen, so retuning it doesn't break the test.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsPressureGatedInjectorSystem))]
 public sealed class KsPressureGatedInjectorTest : GameTest
 {
-    public override PoolSettings PoolSettings => new() { Dirty = true };
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId SurvivalMedipen = "KsSurvivalMedipen";
-    private const string Reagent = "Bicaridine";
+    private static readonly ProtoId<ReagentPrototype> Reagent = "Bicaridine";
 
-    /// <summary>
-    ///     How much of <see cref="Reagent"/> the pen holds.
-    /// </summary>
-    private const float FullDose = 10f;
+    private sealed class Scene
+    {
+        public EntityUid UserUid;
+        public EntityUid PenUid;
 
-    private int TicksFor(float seconds) => (int)(seconds * (float)Server.ResolveDependency<IGameTiming>().TickRate);
+        /// <summary>
+        ///     How much of <see cref="Reagent"/> the pen held before it was used.
+        /// </summary>
+        public float Dose;
 
-    private async Task<(EntityUid User, EntityUid Pen)> SetUpAsync(bool air)
+        public KsPressureGatedInjectorComponent GateComponent = default!;
+    }
+
+    private int TicksFor(double seconds) => (int)Math.Ceiling(seconds * (double)Server.ResolveDependency<IGameTiming>().TickRate);
+
+    private async Task<Scene> SetUpAsync(bool air)
     {
         var testMap = await Pair.CreateTestMap();
         var coordinates = new EntityCoordinates(testMap.Grid, 0.5f, 0.5f);
-        var userUid = EntityUid.Invalid;
-        var penUid = EntityUid.Invalid;
+        var scene = new Scene();
 
         await Server.WaitAssertion(() =>
         {
@@ -53,59 +64,86 @@ public sealed class KsPressureGatedInjectorTest : GameTest
                 SEntMan.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, false, mixture);
             }
 
-            userUid = SEntMan.SpawnEntity(Human, coordinates);
-            penUid = SEntMan.SpawnEntity(SurvivalMedipen, coordinates);
-            Assert.That(SEntMan.System<SharedHandsSystem>().TryPickupAnyHand(userUid, penUid), Is.True);
+            scene.UserUid = SEntMan.SpawnEntity(Human, coordinates);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, scene.UserUid);
+            scene.PenUid = SEntMan.SpawnEntity(SurvivalMedipen, coordinates);
+            scene.GateComponent = SEntMan.GetComponent<KsPressureGatedInjectorComponent>(scene.PenUid);
+            Assert.That(TryGetPenSolution(scene.PenUid, out var penSolution), Is.True);
+            scene.Dose = (float)penSolution!.GetTotalPrototypeQuantity(Reagent.Id);
+            Assert.That(scene.Dose, Is.GreaterThan(0f), $"precondition: the pen holds {Reagent}");
+            Assert.That(SEntMan.System<SharedHandsSystem>().TryPickupAnyHand(scene.UserUid, scene.PenUid), Is.True);
         });
-        await Pair.RunTicksSync(TicksFor(1f));
+        await Pair.RunTicksSync(TicksFor(1));
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(SEntMan.GetComponent<KsPressureGatedInjectorComponent>(penUid).LowPressure, Is.EqualTo(!air),
-                "precondition: the pen knows the pressure where it is");
-            SEntMan.System<SharedInteractionSystem>().UseInHandInteraction(userUid, penUid);
+            Assert.That(scene.GateComponent.LowPressure, Is.EqualTo(!air), "precondition: the pen knows the pressure where it is");
+            SEntMan.System<SharedInteractionSystem>().UseInHandInteraction(scene.UserUid, scene.PenUid);
         });
 
-        return (userUid, penUid);
+        return scene;
     }
 
     private float Injected(EntityUid userUid)
     {
         Assert.That(SEntMan.System<SharedSolutionContainerSystem>().TryGetInjectableSolution(userUid, out _, out var solution), Is.True);
-        return solution!.GetTotalPrototypeQuantity(Reagent).Float();
+        return (float)solution!.GetTotalPrototypeQuantity(Reagent.Id);
+    }
+
+    private bool TryGetPenSolution(EntityUid penUid, out Solution? solution)
+    {
+        var injectorComponent = SEntMan.GetComponent<InjectorComponent>(penUid);
+        return SEntMan.System<SharedSolutionContainerSystem>().TryGetSolution(penUid, injectorComponent.SolutionName, out _, out solution);
+    }
+
+    private bool ShowsHighPressurePopup()
+    {
+        var text = Robust.Shared.Localization.Loc.GetString("ks-pressure-gated-injector-high-pressure");
+        return CEntMan.System<Content.Client.Popups.PopupSystem>().WorldLabels.Any(label => label.Text == text);
     }
 
     [Test]
     public async Task WhereTheAirIsThinTheWholeDoseGetsInAtOnce()
     {
-        var (userUid, _) = await SetUpAsync(air: false);
-        await Pair.RunTicksSync(2);
+        var scene = await SetUpAsync(air: false);
+        await Pair.RunTicksSync(5);
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(Injected(userUid), Is.GreaterThan(FullDose - 1f), "The whole dose must get in at once at low pressure.");
+            Assert.That(Injected(scene.UserUid), Is.GreaterThan(scene.Dose - 1f), "The whole dose must get in at once at low pressure.");
+        });
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(ShowsHighPressurePopup(), Is.False, "Thin air must not tell the user to bleed the gauge.");
         });
     }
 
     [Test]
-    public async Task InThickAirItTakesLongAndOnlyHalfGetsIn()
+    public async Task InThickAirItTakesLongAndOnlyPartGetsIn()
     {
-        var (userUid, penUid) = await SetUpAsync(air: true);
-        await Pair.RunTicksSync(TicksFor(5f));
+        var scene = await SetUpAsync(air: true);
+        var delaySeconds = scene.GateComponent.HighPressureDelay.TotalSeconds;
+        var expected = scene.Dose * scene.GateComponent.HighPressureAmount;
 
-        await Server.WaitAssertion(() =>
+        await Pair.RunTicksSync(5);
+        await Client.WaitAssertion(() =>
         {
-            Assert.That(Injected(userUid), Is.Zero, "Nothing must get in before the gauge is bled.");
+            Assert.That(ShowsHighPressurePopup(), Is.True, "The user must be told why the injection takes longer.");
         });
 
-        await Pair.RunTicksSync(TicksFor(6f));
-
+        await Pair.RunTicksSync(TicksFor(delaySeconds / 2));
         await Server.WaitAssertion(() =>
         {
-            var injected = Injected(userUid);
-            Assert.That(injected, Is.GreaterThan(FullDose / 2f - 1f).And.LessThanOrEqualTo(FullDose / 2f),
-                "Only half the dose must get in at high pressure.");
-            Assert.That(SEntMan.Deleted(penUid) || SEntMan.System<SharedSolutionContainerSystem>().TryGetSolution(penUid, "hypospray", out _, out var left) && left.Volume == 0,
+            Assert.That(Injected(scene.UserUid), Is.Zero, "Nothing must get in before the gauge is bled.");
+        });
+
+        await Pair.RunTicksSync(TicksFor(delaySeconds / 2 + 1));
+        await Server.WaitAssertion(() =>
+        {
+            var injected = Injected(scene.UserUid);
+            Assert.That(injected, Is.GreaterThan(expected - 1f).And.LessThanOrEqualTo(expected),
+                "Only part of the dose must get in at high pressure.");
+            Assert.That(SEntMan.Deleted(scene.PenUid) || !TryGetPenSolution(scene.PenUid, out var penSolution) || penSolution!.Volume == 0,
                 Is.True, "What didn't get in must be lost.");
         });
     }
