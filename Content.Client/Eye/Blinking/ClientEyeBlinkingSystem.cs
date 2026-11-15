@@ -180,7 +180,7 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
     /// <summary>
     /// Updates a given eyelid state if it exists.
     /// </summary>
-    private void ChangeEyeState(Entity<SpriteComponent?> ent, EyelidState state, bool eyeClosed)
+    private void ChangeEyeState(Entity<SpriteComponent?> ent, EyelidState state, bool eyeClosed, EyeBlinkingComponent blinkingComponent /* KS14: added param */)
     {
         var layer = state.LayerKey;
         if (!_sprite.LayerMapTryGet(ent, layer, out var layerIndex, logMissing: false))
@@ -188,7 +188,7 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
 
         state.IsClosed = eyeClosed;
         state.IsCompleteBlink = !eyeClosed;
-        _sprite.LayerSetVisible(ent, layerIndex, eyeClosed);
+        _sprite.LayerSetVisible(ent, layerIndex, eyeClosed && !KsIsOccluded(ent.Owner, blinkingComponent) /* KS14: hidden while occluded */);
     }
 
     /// <summary>
@@ -206,7 +206,7 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
 
         foreach (var eyelidState in ent.Comp.Eyelids)
         {
-            ChangeEyeState((ent.Comp.Body.Value, sprite), eyelidState, eyeClosed);
+            ChangeEyeState((ent.Comp.Body.Value, sprite), eyelidState, eyeClosed, ent.Comp /* KS14: added arg */);
         }
     }
 
@@ -348,11 +348,11 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
                     {
                         // If the eyelid is not closed and the current time has reached or passed the scheduled close time, close the eyelid.
                         case false when curTime >= eyelidState.ScheduledCloseTime && !eyelidState.IsCompleteBlink:
-                            ChangeEyeState((comp.Body.Value, sprite), eyelidState, true);
+                            ChangeEyeState((comp.Body.Value, sprite), eyelidState, true, comp /* KS14: added arg */);
                             break;
                         // If the eyelid is closed and the current time has reached or passed the scheduled open time, open the eyelid.
                         case true when curTime >= eyelidState.ScheduledOpenTime:
-                            ChangeEyeState((comp.Body.Value, sprite), eyelidState, false);
+                            ChangeEyeState((comp.Body.Value, sprite), eyelidState, false, comp /* KS14: added arg */);
                             break;
                     }
                 }
@@ -369,6 +369,14 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
 
             if (comp.NextBlinkingTime > curTime)
                 continue;
+
+            // KS14 start: periodic blinking can be turned off; eyes then close only for a reason
+            if (!_periodicBlinking)
+            {
+                KsDeferBlink(comp, curTime);
+                continue;
+            }
+            // KS14 end
 
             Blink((uid, comp));
         }

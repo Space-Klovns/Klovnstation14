@@ -33,6 +33,7 @@ chat-emote-msg-deathgasp-monkey = издаёт слабый взвизг, осе
 chat-emote-msg-deathgasp-scurret = издаёт последний "ва" и замирает...
 
 chat-emote-msg-flap = машет { POSS-ADJ($entity) } крыльями.
+chat-emote-msg-blink = моргает.
 
 chat-emote-msg-gasp = задыхается.
 
@@ -110,6 +111,7 @@ chat-emote-name-crying = Плакать
 chat-emote-name-deathgasp = Предсмертный хрип
 
 chat-emote-name-flap = Взмахнуть крыльями
+chat-emote-name-blink = Моргнуть
 
 chat-emote-name-gasp = Задыхаться
 
