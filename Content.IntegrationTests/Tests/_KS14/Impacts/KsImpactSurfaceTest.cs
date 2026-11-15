@@ -929,10 +929,11 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     }
 
     /// <summary>
-    ///     A hit the armour soaked still lets a little blood out of the exit wound, along the shot.
+    ///     A hit the armour soaked still lets a little blood out of the exit wound, along the shot; one it stopped
+    ///         entirely lets none out.
     /// </summary>
     [Test]
-    public async Task ArmourSoakedHitsBleedALittle()
+    public async Task ArmourSoakedHitsBleedALittle([Values] bool anyGotThrough)
     {
         NetEntity mobNetEntity = default;
         await Server.WaitPost(() => mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testBleedingMob, SpaceCoordinates(6f))));
@@ -941,7 +942,7 @@ public sealed class KsImpactSurfaceTest : InteractionTest
         var raw = new DamageSpecifier();
         raw.DamageDict[PiercingDamage] = 10;
         var soaked = new DamageSpecifier();
-        soaked.DamageDict[PiercingDamage] = 1;
+        soaked.DamageDict[PiercingDamage] = anyGotThrough ? 1 : 0;
 
         await Client.WaitAssertion(() =>
         {
@@ -949,6 +950,12 @@ public sealed class KsImpactSurfaceTest : InteractionTest
             CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(mobNetEntity), coordinates, new Vector2(1f, 0f), raw, soaked);
 
             var mist = ClientEmitters([ExitWoundMist]);
+            if (!anyGotThrough)
+            {
+                Assert.That(mist, Is.Empty, "a hit the armour stopped entirely let blood out");
+                return;
+            }
+
             Assert.That(mist, Has.Count.EqualTo(1), "a hit the armour soaked let no blood out");
             foreach (var (uid, _) in mist)
             {

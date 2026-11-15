@@ -261,6 +261,18 @@ full the entity's storage is (bookshelves: paper), worked out as items go in and
 client for itself, `SpawnLocal`, from the hit it predicted or from the server's `KsPredictedSpawnImpactEvent`:
 nothing is networked per bullet. Its emitters are aimed back along the shot, with `SetRotation`.
 
+A mob has no surface of its own: flesh gets `BloodSpraySystem`'s spray instead, and no upstream `BulletImpactEffect`
+sparks (`ShowsProjectileImpactEffect`); a silicon mob takes the `Silicon` material, sparks. A ballistic hit (piercing
+or blunt) that dealt under `ArmorSoakFraction` (0.8) of what the mob's own species resistances leave of it rang off
+its armour (`HitsArmor`): it plays the `Armor` material (grey chips, and sparks through `extraDebris`) and TGMC's
+armour sound in place of the hit's flesh sound, which is why `PlayImpact` returns whether it did. What little got
+through puffs `KsExitWoundMist` out of the far side, its own prototype so it does not take the place of the hit's
+own spray; nothing, when nothing got through.
+
+A hit of `BloodSpraySystem.HeavyHitDamage` (38) or more sprays its mist faster, up to 1.8x, and punches a share of a
+lost limb's gore out of the exit wound (`KsHeavyHitBloodExplosion`, `KsHeavyHitGibSplatter`), more the harder the hit,
+between 0.1 and 0.3 of it.
+
 `KsGunFiringSmoke` on a gun puffs `KsGunFiringSmoke` out along each shot (`SpawnPredictedEffect`, the gun as
 source). `KsGunOverheatSmoke`, with a `KsParticles` that starts `emitting: false`, turns it on after a burst
 and off once a purely visual heat cools.

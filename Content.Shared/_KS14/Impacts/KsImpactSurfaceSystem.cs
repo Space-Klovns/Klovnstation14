@@ -122,8 +122,9 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
             if (HitsArmor(target, rawDamage, dealtDamage))
             {
                 PlayHere(ArmorSound, coordinates, null);
-                // What little got through comes out the far side.
-                _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
+                // What little got through comes out the far side; none, if the armour stopped it all.
+                if (dealtDamage != null && dealtDamage.GetTotal() > 0)
+                    _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
                 materialId = ArmorMaterial;
                 hitsArmor = true;
             }
