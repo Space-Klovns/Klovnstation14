@@ -27,7 +27,7 @@ namespace Content.Client.VendingMachines
             base.Open();
 
             // KS14 start: tgui layout
-            if (Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled())
+            if (Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: under both themes since #480 */)
             {
                 _tguiMenu = this.CreateWindowCenteredLeft<Content.Client._KS14.Tgui.Windows.Vending.KsTguiVendingWindow>();
                 _tguiMenu.Title = EntMan.GetComponent<MetaDataComponent>(Owner).EntityName;

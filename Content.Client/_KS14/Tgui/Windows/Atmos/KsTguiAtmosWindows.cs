@@ -132,7 +132,7 @@ public static class KsTguiAtmosWindows
         where TStock : BaseWindow, TInterface, new()
         where TTgui : BaseWindow, TInterface, new()
     {
-        return KsTguiTheme.ReadEnabled()
+        return KsTguiTheme.UsePortedWindows()
             ? boundUserInterface.CreateWindow<TTgui>()
             : boundUserInterface.CreateWindow<TStock>();
     }

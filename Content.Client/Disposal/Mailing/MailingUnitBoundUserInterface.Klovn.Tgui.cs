@@ -13,11 +13,11 @@ public sealed partial class MailingUnitBoundUserInterface
     [ViewVariables] private KsTguiMailingWindow? _tguiWindow;
 
     /// <summary>
-    ///     Opens tgui's layout when the theme is on. False leaves the stock window to the caller.
+    ///     Opens tgui's layout (under both themes since #480). False leaves the stock window to the caller.
     /// </summary>
     private bool OpenTgui()
     {
-        if (!KsTguiTheme.ReadEnabled())
+        if (!KsTguiTheme.UsePortedWindows())
             return false;
 
         _tguiWindow = this.CreateWindow<KsTguiMailingWindow>();
