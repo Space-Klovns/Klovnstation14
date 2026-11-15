@@ -1,0 +1,242 @@
+# Which surface throws what when shot (KsImpactSurface, Resources/Prototypes/_KS14/Impacts/materials.yml), after
+# TGMC's add_debris_element() overrides. Children inherit their parent's and override it where listed below.
+
+# DEBRIS_SPARKS: TGMC's walls, girders, metal barricades, shuttles.
+- type: !PartialOnly entity
+  id: BaseStructureWall
+  components:
+  - type: KsImpactSurface
+    material: Metal
+
+- type: !PartialOnly entity
+  id: Girder
+  components:
+  - type: KsImpactSurface
+    material: Metal
+
+- type: !PartialOnly entity
+  id: TableBase
+  components:
+  - type: KsImpactSurface
+    material: Metal
+
+- type: !PartialOnly entity
+  id: CrateGeneric
+  components:
+  - type: KsImpactSurface
+    material: Metal
+
+- type: !PartialOnly entity
+  id: BaseFenceMetal
+  components:
+  - type: KsImpactSurface
+    material: Metal
+
+# DEBRIS_WOOD: wooden walls, tables, crates, doors, barricades and trees.
+- type: !PartialOnly entity
+  id: WallWood
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: TableWood
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: TableFancyBase
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: CrateLivestock
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: CrateCoffin
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: CrateWoodenGrave
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: BaseTree
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: BaseBarricade
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: BaseFenceWood
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: WoodDoor
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: KsBasePalletWooden
+  components:
+  - type: KsImpactSurface
+    material: Wood
+
+- type: !PartialOnly entity
+  id: Bookshelf
+  components:
+  - type: KsImpactSurface
+    material: Wood
+  # Paper instead, with a chance of how full the shelf is: an empty one only throws wood.
+  - type: KsImpactSurfaceStorageFill
+    material: Paper
+  # Stops bullets, and lasers (it is already an occluder): BaseStructure's fixture, plus Opaque and BulletImpassable.
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 60
+        mask:
+        - MachineMask
+        layer:
+        - Opaque
+        - MidImpassable
+        - LowImpassable
+        - BulletImpassable
+
+# DEBRIS_GLASS: windows.
+- type: !PartialOnly entity
+  id: Window
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+- type: !PartialOnly entity
+  id: WindowDirectional
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+- type: !PartialOnly entity
+  id: PlastitaniumWindowBase
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+- type: !PartialOnly entity
+  id: BaseWindoor
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+- type: !PartialOnly entity
+  id: TableGlass
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+- type: !PartialOnly entity
+  id: TableReinforcedGlass
+  components:
+  - type: KsImpactSurface
+    material: Glass
+
+# DEBRIS_ROCK: mineral walls and rocks. Brick and stone walls too, which TGMC leaves as metal.
+- type: !PartialOnly entity
+  id: WallRock
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: BaseUngatherableAsteroidRock
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: BaseRock
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: WallBrick
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: WallSandstone
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: WallCobblebrick
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: WallNecropolis
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: WallVaultRock
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+- type: !PartialOnly entity
+  id: TableStone
+  components:
+  - type: KsImpactSurface
+    material: Rock
+
+# DEBRIS_SNOW: ice and snowed-over rock.
+- type: !PartialOnly entity
+  id: WallIce
+  components:
+  - type: KsImpactSurface
+    material: Snow
+
+- type: !PartialOnly entity
+  id: WallRockSnow
+  components:
+  - type: KsImpactSurface
+    material: Snow
+
+# Silicon mobs spark when shot, where flesh sprays blood.
+- type: !PartialOnly entity
+  id: BaseBorgChassisNotIonStormable
+  components:
+  - type: KsImpactSurface
+    material: Silicon
+
+- type: !PartialOnly entity
+  id: MobRobotic
+  components:
+  - type: KsImpactSurface
+    material: Silicon

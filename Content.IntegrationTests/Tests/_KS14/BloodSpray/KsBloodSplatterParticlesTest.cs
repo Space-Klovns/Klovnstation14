@@ -42,6 +42,8 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
     private static readonly ProtoId<KsParticlesPrototype> GibSplatter = "KsGibSplatter";
     private static readonly ProtoId<KsParticlesPrototype> DismemberExplosion = "KsDismemberBloodExplosion";
     private static readonly ProtoId<KsParticlesPrototype> DismemberSplatter = "KsDismemberGibSplatter";
+    private static readonly ProtoId<KsParticlesPrototype> HeavyHitExplosion = "KsHeavyHitBloodExplosion";
+    private static readonly ProtoId<KsParticlesPrototype> HeavyHitSplatter = "KsHeavyHitGibSplatter";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -438,6 +440,59 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
                     var splatter = SEntMan.GetComponent<KsParticlesComponent>(emitters[SplatterSprite.Id]);
                     Assert.That(mist.Amount, Is.EqualTo(expectedAmount).Within(0.001f), $"mist at {damage} damage");
                     Assert.That(splatter.Scale, Is.EqualTo(MathF.Sqrt(expectedAmount)).Within(0.001f), $"splatter at {damage} damage");
+
+                    foreach (var emitterUid in emitters.Values)
+                        SEntMan.DeleteEntity(emitterUid);
+                    SEntMan.DeleteEntity(mobUid);
+                }
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A heavy hit punches out more: its mist flies faster, and the exit wound throws a share of a lost limb's gore,
+    ///         more the harder the hit, up to a cap. A lighter hit throws none.
+    /// </summary>
+    [Test]
+    public async Task HeavyHitsPunchOutGore()
+    {
+        var testMap = await Pair.CreateTestMap();
+
+        float[] damages =
+        [
+            BloodSpraySystem.HeavyHitDamage - 1f,
+            BloodSpraySystem.HeavyHitDamage,
+            BloodSpraySystem.HeavyHitDamage * 2f,
+            BloodSpraySystem.HeavyHitDamage * 100f,
+        ];
+
+        await Server.WaitAssertion(() =>
+        {
+            var bloodSpraySystem = SEntMan.System<BloodSpraySystem>();
+            Assert.Multiple(() =>
+            {
+                foreach (var damage in damages)
+                {
+                    var mobUid = SEntMan.SpawnEntity(_mob, new MapCoordinates(Vector2.Zero, testMap.MapId));
+                    var bloodstreamComponent = SEntMan.GetComponent<BloodstreamComponent>(mobUid);
+                    bloodSpraySystem.HandleBleedEffects((mobUid, bloodstreamComponent), 20f, new Vector2(1f, 0f), damage: damage);
+
+                    var emitters = ServerEmitters();
+                    var mist = SEntMan.GetComponent<KsParticlesComponent>(emitters[SplatterMist.Id]);
+                    if (damage < BloodSpraySystem.HeavyHitDamage)
+                    {
+                        Assert.That(emitters.ContainsKey(HeavyHitExplosion.Id) || emitters.ContainsKey(HeavyHitSplatter.Id), Is.False, $"a {damage} damage hit threw heavy gore");
+                        Assert.That(mist.Speed, Is.EqualTo(1f), $"a {damage} damage hit's mist flew faster");
+                    }
+                    else
+                    {
+                        var expectedSpeed = MathF.Min(1f + (damage - BloodSpraySystem.HeavyHitDamage) * BloodSpraySystem.HeavySpraySpeedPerDamage, BloodSpraySystem.MaxHeavySpraySpeed);
+                        var expectedGore = Math.Clamp(damage * BloodSpraySystem.HeavyGorePerDamage, BloodSpraySystem.MinHeavyGoreAmount, BloodSpraySystem.MaxHeavyGoreAmount);
+                        Assert.That(mist.Speed, Is.EqualTo(expectedSpeed).Within(0.001f), $"mist speed at {damage} damage");
+                        Assert.That(emitters.ContainsKey(HeavyHitExplosion.Id) && emitters.ContainsKey(HeavyHitSplatter.Id), $"a {damage} damage hit threw no gore");
+                        if (emitters.TryGetValue(HeavyHitSplatter.Id, out var goreUid))
+                            Assert.That(SEntMan.GetComponent<KsParticlesComponent>(goreUid).Amount, Is.EqualTo(expectedGore).Within(0.001f), $"gore at {damage} damage");
+                    }
 
                     foreach (var emitterUid in emitters.Values)
                         SEntMan.DeleteEntity(emitterUid);

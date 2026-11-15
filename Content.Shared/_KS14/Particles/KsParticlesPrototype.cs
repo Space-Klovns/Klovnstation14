@@ -186,6 +186,13 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     [DataField]
     public bool PixelSnap;
 
+    /// <summary>
+    ///     Whether, and how, particles collide with walls. Null, the default, never tests anything and costs
+    ///         nothing; particles pass through everything, as BYOND's do.
+    /// </summary>
+    [DataField]
+    public KsParticleCollision? Collision;
+
     #endregion
 
     #region Per particle
@@ -276,6 +283,13 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     /// </summary>
     [DataField]
     public KsParticleGenerator Drift = KsParticleGenerator.Zero;
+
+    /// <summary>
+    ///     Whether <see cref="Drift"/> is a jolt to each step's motion (the default) or, as in BYOND, added to the
+    ///         velocity every 0.1 s.
+    /// </summary>
+    [DataField]
+    public KsParticleDriftMode DriftMode = KsParticleDriftMode.Offset;
 
     #endregion
 }

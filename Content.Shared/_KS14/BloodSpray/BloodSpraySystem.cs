@@ -46,6 +46,8 @@ public sealed partial class BloodSpraySystem : EntitySystem
     private static readonly ProtoId<KsParticlesPrototype> GibSplatterParticles = "KsGibSplatter";
     private static readonly ProtoId<KsParticlesPrototype> DismemberExplosionParticles = "KsDismemberBloodExplosion";
     private static readonly ProtoId<KsParticlesPrototype> DismemberSplatterParticles = "KsDismemberGibSplatter";
+    private static readonly ProtoId<KsParticlesPrototype> HeavyHitExplosionParticles = "KsHeavyHitBloodExplosion";
+    private static readonly ProtoId<KsParticlesPrototype> HeavyHitSplatterParticles = "KsHeavyHitGibSplatter";
 
     /// <summary>
     ///     The limb throw speed, in metres per second, at which a dismemberment's burst flies at its prototype's own
@@ -64,6 +66,31 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
     public const float MinSprayAmount = 0.3f;
     public const float MaxSprayAmount = 3f;
+
+    /// <summary>
+    ///     A hit of at least this much damage is a heavy one: its mist flies out faster, and the exit wound throws
+    ///         a few puffs of blood and bits of gore after it, more the harder the hit. A pistol round is under it.
+    /// </summary>
+    public const float HeavyHitDamage = 38f;
+
+    /// <summary>
+    ///     How much faster a heavy hit's mist flies per damage past <see cref="HeavyHitDamage"/>, up to
+    ///         <see cref="MaxHeavySpraySpeed"/>.
+    /// </summary>
+    public const float HeavySpraySpeedPerDamage = 1f / 40f;
+
+    public const float MaxHeavySpraySpeed = 1.8f;
+
+    /// <summary>
+    ///     A heavy hit's gore burst (<c>KsHeavyHitBloodExplosion</c>, <c>KsHeavyHitGibSplatter</c>), as a share of the
+    ///         lost limb's it is made from: this much per damage, between the min and the max. Their own prototypes,
+    ///         so a hit that also takes a limb off in the same tick still shows both (predicted effects are told apart
+    ///         by prototype, source and tick).
+    /// </summary>
+    public const float HeavyGorePerDamage = 1f / 300f;
+
+    public const float MinHeavyGoreAmount = 0.1f;
+    public const float MaxHeavyGoreAmount = 0.3f;
 
     /// <summary>
     ///     How many ticks a client remembers where a predicted hit bled from: more than it ever re-predicts.
@@ -135,7 +162,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
         var bloodColor = bloodSolution.GetColor(ProtoMan);
         var sprayAmount = Math.Clamp((damage ?? bloodloss) / ReferenceSprayDamage, MinSprayAmount, MaxSprayAmount);
-        SpawnSplatterParticles(entity.Owner, new EntityCoordinates(broadphaseUid, localPosition), bloodColor, localDeltaUnit, sprayAmount);
+        SpawnSplatterParticles(entity.Owner, new EntityCoordinates(broadphaseUid, localPosition), bloodColor, localDeltaUnit, sprayAmount, damage ?? 0f);
 
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
@@ -251,14 +278,26 @@ public sealed partial class BloodSpraySystem : EntitySystem
     ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter at <paramref name="coordinates"/>,
     ///         both flying out along <paramref name="localDeltaUnit"/>, a direction in the frame of the coordinates'
     ///         parent. Predicted: the client that predicted the hit shows its own at once. <paramref name="amount"/>
-    ///         multiplies the mist; the single splatter grows with its square root.
+    ///         multiplies the mist; the single splatter grows with its square root. A hit of
+    ///         <see cref="HeavyHitDamage"/> or more (<paramref name="damage"/>) sprays faster and throws gore too.
     /// </summary>
-    private void SpawnSplatterParticles(EntityUid uid, EntityCoordinates coordinates, Color bloodColor, Vector2 localDeltaUnit, float amount)
+    private void SpawnSplatterParticles(EntityUid uid, EntityCoordinates coordinates, Color bloodColor, Vector2 localDeltaUnit, float amount, float damage)
     {
         // The prototypes spray along their emitter's -y, which FromWorldVec turns onto the direction.
         var localRotation = Angle.FromWorldVec(localDeltaUnit);
-        SpawnBloodParticles(SplatterMistParticles, uid, coordinates, bloodColor, localRotation, speed: 1f, amount: amount);
+        var mistSpeed = damage >= HeavyHitDamage
+            ? Math.Min(1f + (damage - HeavyHitDamage) * HeavySpraySpeedPerDamage, MaxHeavySpraySpeed)
+            : 1f;
+        SpawnBloodParticles(SplatterMistParticles, uid, coordinates, bloodColor, localRotation, speed: mistSpeed, amount: amount);
         SpawnBloodParticles(SplatterSpriteParticles, uid, coordinates, bloodColor, localRotation, speed: 1f, scale: MathF.Sqrt(amount));
+
+        if (damage < HeavyHitDamage)
+            return;
+
+        // A heavy hit punches gore out of the exit wound: a slice of a lost limb's burst, thrown the same way.
+        var goreAmount = Math.Clamp(damage * HeavyGorePerDamage, MinHeavyGoreAmount, MaxHeavyGoreAmount);
+        SpawnBloodParticles(HeavyHitExplosionParticles, uid, coordinates, bloodColor, localRotation, speed: mistSpeed, amount: goreAmount);
+        SpawnBloodParticles(HeavyHitSplatterParticles, uid, coordinates, bloodColor, localRotation, speed: mistSpeed, amount: goreAmount);
     }
 
     /// <summary>
@@ -273,6 +312,21 @@ public sealed partial class BloodSpraySystem : EntitySystem
         var coordinates = Transform(entity.Owner).Coordinates;
         SpawnBloodParticles(GibExplosionParticles, entity.Owner, coordinates, bloodColor, localRotation: null, speed: 1f);
         SpawnBloodParticles(GibSplatterParticles, entity.Owner, coordinates, bloodColor, localRotation: null, speed: 1f);
+    }
+
+    /// <summary>
+    ///     A small puff of blood mist out of the exit wound of a hit <paramref name="entity"/>'s armour mostly
+    ///         stopped, along <paramref name="worldDirection"/>: what little got through.
+    /// </summary>
+    public void SpawnExitWoundMist(Entity<BloodstreamComponent?> entity, Vector2 worldDirection)
+    {
+        if (worldDirection.LengthSquared() <= float.Epsilon || !TryGetBloodColor(entity, out var bloodColor))
+            return;
+
+        var transformComponent = Transform(entity.Owner);
+        var parentRotation = transformComponent.ParentUid.IsValid() ? _transformSystem.GetWorldRotation(transformComponent.ParentUid) : Angle.Zero;
+        var localRotation = Angle.FromWorldVec(Vector2.Normalize(worldDirection)) - parentRotation;
+        SpawnBloodParticles(SplatterMistParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed: 1f, amount: MinSprayAmount);
     }
 
     /// <summary>

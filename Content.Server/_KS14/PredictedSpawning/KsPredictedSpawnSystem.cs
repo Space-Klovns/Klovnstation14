@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Damage;
 using Content.Shared.Projectiles;
@@ -15,7 +16,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         SetPredictingUser((uid, EnsureComp<KsPredictedSpawnComponent>(uid)), user);
     }
 
-    public override void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage)
+    public override void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage, DamageSpecifier? rawDamage, Vector2 direction)
     {
         // A new instance per send: a queued network event is not serialised at once.
         KsPredictedSpawnImpactEvent MakeEvent(bool toPredictingUser) => new()
@@ -27,6 +28,8 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             SoundHit = projectile.Comp.SoundHit,
             ForceSound = projectile.Comp.ForceSound,
             Damage = damage,
+            RawDamage = rawDamage,
+            Direction = direction,
             ToPredictingUser = toPredictingUser,
         };
 

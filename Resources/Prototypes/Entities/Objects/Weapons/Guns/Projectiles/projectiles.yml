@@ -91,7 +91,7 @@
       types:
         Piercing: 14
     soundHit:
-      path: /Audio/Weapons/Guns/Hits/bullet_hit.ogg
+      collection: KsBulletHitGeneric # KS14: path /Audio/Weapons/Guns/Hits/bullet_hit.ogg -> it and TGMC's hits
   - type: TimedDespawn
     lifetime: 10
 

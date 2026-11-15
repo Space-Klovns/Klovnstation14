@@ -30,6 +30,11 @@
   drift: { kind: circle, a: 0.9375, b: 0.9375 }
   position: { kind: circle, a: 0.125, b: 0.125 }
   spin: { kind: num, a: -200, b: 200 }
+  # A spray against a wall spreads along it rather than through it.
+  collision:
+    bounce: 0.1
+    friction: 0.5
+    radius: 0.08
 
 # The bloodsplatter temp_visual itself: one of six sprays at alpha 200, sliding 8 px along the spray while it fades
 # out over its 0.5 s.
@@ -120,6 +125,11 @@
   friction: { kind: num, a: 0.8031, b: 0.6513 }
   position: { kind: circle, a: 0.28125, b: 0.28125 }
   drift: { kind: circle, a: 0.625, b: 0.3125 }
+  # Chunks that reach a wall stick to it for the rest of their short life, instead of flying through. Inherited by
+  #   KsDismemberGibSplatter.
+  collision:
+    onHit: Stick
+    radius: 0.1
 
 # A lost limb: the same burst, thrown after the limb rather than every way. BloodSpraySystem turns the emitter so
 # its -y points along the throw, and scales its velocities with how hard the limb was thrown.
@@ -135,3 +145,13 @@
   # No fake upward arc: it would turn with the throw.
   gravity: 0, 0
   velocity: { kind: box, a: [ -0.75, -6.5 ], b: [ 0.75, -4 ] }
+
+# A heavy hit (BloodSpraySystem.HeavyHitDamage or more): a slice of a lost limb's burst, punched out of the exit wound.
+#   BloodSpraySystem sets how much. Their own ids, so a hit that also dismembers still shows both.
+- type: ksParticles
+  parent: KsDismemberBloodExplosion
+  id: KsHeavyHitBloodExplosion
+
+- type: ksParticles
+  parent: KsDismemberGibSplatter
+  id: KsHeavyHitGibSplatter

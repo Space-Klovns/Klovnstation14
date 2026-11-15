@@ -135,6 +135,7 @@ Emitter-wide, no generators (BYOND's "affect entire set" group):
 | `animated` | true | Play an animated sprite from the particle's birth. |
 | `interpolate` | true | Draw between steps. Off, particles move in steps, as BYOND's do. |
 | `pixelSnap` | false | Nudge the emitter onto a whole screen pixel, as grids are. |
+| `collision` | none | Particles stop at walls: `onHit` (`Bounce`, `Stick` or `Die`), `bounce` (0.5), `friction` (0.2), `radius` (0.05 m), `enabled` (true). See *Collision*. |
 
 Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), except `drift`:
 
@@ -153,12 +154,41 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 | `spin` | 0 | Degrees per second. |
 | `friction` | 0 | Fraction of velocity lost per second, 0..1. |
 | `drift` | 0 | m/s, sampled afresh every step: a random walk. |
+| `driftMode` | `Offset` | `Offset`: `drift` is a jolt to each step's motion, velocity untouched (chaotic: sparks, embers). `Accelerate`: added to the velocity every 0.1 s, as BYOND does (OpenDream applies it as an acceleration against friction), so particles wander smoothly; DM values port unchanged. |
 
 The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
 whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `speed` that
 multiplies starting velocities alone (a harder throw), an `amount` that multiplies how many spawn (burst,
 rate and the most alive at once: a heavier hit), a `scale` that scales positions, velocities and sizes
 together, and `emitting`.
+
+## Collision
+
+Off by default: particles fly through everything, as BYOND's do, and an emitter without `collision` tests nothing
+and keeps nothing. With it, particles stop at walls, client-side only:
+
+```yaml
+- type: ksParticles
+  id: KsImpactDebrisBase
+  collision:
+    onHit: Bounce   # or Stick (stays where it hit for the rest of its life) or Die
+    bounce: 0.3     # restitution: fraction of the speed into the wall kept, outwards
+    friction: 0.4   # fraction of the speed along the wall lost per contact
+    radius: 0.04    # metres from the wall the particle's centre stops, scaled with the component's scale
+```
+
+| What | How |
+| --- | --- |
+| What stops a particle | Hard fixtures on `Impassable` or `HighImpassable` (`FlyingMobMask`) of static bodies anchored to a grid: walls, windows, grilles, closed airlocks, windoors, firelocks. Not tables, machines, crates, mobs or items: low or loose things, which particles pass over. Nothing off a grid. |
+| Shape | Each fixture's own shape in its grid's frame, grown by `radius`: a polygon (or `PhysShapeAabb`) as its edges' planes plus a bevel at each corner, a circle as a circle. Exact at the faces, without the physics polygon skin, so a particle meets the face drawn; within about a fifth of `radius` of round at the corners. A diagonal wall is its triangle. Edges and chains, not used for walls, fall back to their bounding box. |
+| Broadphase | Per emitter, every 0.5 s of simulation or when the particles leave the gathered region: the grids about the particles' swept bounds plus 1 m, and their anchored entities there. Never a lookup per particle. Particles spread over more than 32 m don't collide. |
+| Each step | Each particle's segment from its last position to its new one, in the map frame, against the gathered shapes (Cyrus-Beck clipping against a polygon's planes, a quadratic for a circle): the first surface entered reflects the velocity and the rest of the motion (`bounce` on the normal part, `friction` on the tangential), up to three bounces a step. Under 0.05 m/s outward it stops bouncing and slides, so gravity rests it against a wall. |
+| Inside a wall | A particle that starts a step in one (spawned in it, a door closed on it) is put out through the nearest face that isn't in another wall, or dies if there is none. |
+| `space: Local` | The segment starts where the particle was in the world, through the emitter's matrix as of the last step, and ends through this step's, so the emitter's own motion is swept: an emitter carried into or through a wall leaves its particles at it. Resolved in the map frame and mapped back, rotation and scale included. A stuck particle stays where it stuck in the world while its emitter moves. |
+| Z | Untouched: collision is in the plane, z only orders particles. |
+
+A child prototype that restates `collision` replaces the parent's whole, as `gradient` does; `enabled: false` turns
+an inherited one off. Once warm a colliding step allocates nothing.
 
 ## Porting a /tg/ particle
 
@@ -210,12 +240,30 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
 
 - **No clip plane.** `size` only decides whether the emitter is on screen; particles outside it are still
   drawn. Use `bounds` to kill them instead.
+- **`drift` is a jolt by default.** BYOND adds it to the velocity every tick (an acceleration, which friction
+  damps); here it is added to each step's motion alone unless `driftMode: Accelerate`. The jolt suits sparks and
+  embers; set `Accelerate` for smoke or flakes ported from DM that should wander smoothly.
 - **A particle that shrinks to zero dies.** BYOND lets the scale go negative and mirrors the sprite.
 - **Rotation follows the engine.** `rotation` and `spin` are still clockwise-positive degrees as written, and
   converted on the way in.
 - **Interpolated by default.** Set `interpolate: false` for BYOND's stepped look.
 - **Additions:** `burst`, `emitDuration`, `oneShot`, `space: World`, `followRotation`, `layer`, `unshaded`, `animated`,
-  `pixelSnap`, prototype inheritance, and the component's `color`, `offset`, `scale`.
+  `pixelSnap`, `collision`, prototype inheritance, and the component's `color`, `offset`, `scale`.
+
+### Bullet impacts and gun smoke
+
+TGMC's debris element is `KsImpactSurfaceSystem` (`Content.Shared/_KS14/Impacts/`). A surface names a
+`ksImpactMaterial` (`Resources/Prototypes/_KS14/Impacts/materials.yml`: its smoke, its debris, a sound and its
+chance, and how often a hit throws the full burst rather than a light one: `denseChance`, `lightAmount`,
+`lightSpeed`) with `- type: KsImpactSurface`; upstream surfaces get theirs by partial in `Impacts/Partials/surfaces.yml`.
+A non-mob without one only smokes. `KsImpactSurfaceStorageFill` swaps in another material with a chance of how
+full the entity's storage is (bookshelves: paper), worked out as items go in and out. The impact plays on each
+client for itself, `SpawnLocal`, from the hit it predicted or from the server's `KsPredictedSpawnImpactEvent`:
+nothing is networked per bullet. Its emitters are aimed back along the shot, with `SetRotation`.
+
+`KsGunFiringSmoke` on a gun puffs `KsGunFiringSmoke` out along each shot (`SpawnPredictedEffect`, the gun as
+source). `KsGunOverheatSmoke`, with a `KsParticles` that starts `emitting: false`, turns it on after a burst
+and off once a purely visual heat cools.
 
 ## Trying it in game
 
@@ -242,4 +290,5 @@ frame timings are resolved once per prototype and shared.
 `Content.IntegrationTests/Tests/_KS14/Particles/`. The headless client steps emitters but draws nothing, so the
 tests check the state the simulation leaves: the generator and serializer, counts, motion against the closed
 form, lifespans, bursts, emitting, spaces, and that the three spawn modes put an emitting copy exactly where
-they should. What it looks like is unverified until seen in game.
+they should. `KsParticleCollisionTest` fires emitters at a ring of test walls, on turned grids too, and checks
+every live particle after every step. What it looks like is unverified until seen in game.

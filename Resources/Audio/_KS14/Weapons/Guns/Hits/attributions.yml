@@ -1,0 +1,14 @@
+- files: ["tgmc_bullet_flesh1.ogg", "tgmc_bullet_flesh2.ogg", "tgmc_bullet_flesh3.ogg", "tgmc_bullet_armor1.ogg", "tgmc_bullet_armor2.ogg", "tgmc_bullet_armor3.ogg", "tgmc_bullet_armor4.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from TerraGov-Marine-Corps (sound/bullets/bullet_impact1-3, bullet_armor1-4), added in CM-SS13's gun config PR #636. No original source is credited there."
+  source: "https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/sound/bullets/"
+
+- files: ["tgmc_bullet_hit1.ogg", "tgmc_bullet_hit2.ogg", "tgmc_bullet_hit3.ogg", "tgmc_bullet_hit4.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from TerraGov-Marine-Corps (sound/bullets/bullet_impact4-7), added in TGMC PR #2128. No original source is credited there."
+  source: "https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/sound/bullets/"
+
+- files: ["tgmc_ricochet1.ogg", "tgmc_ricochet2.ogg", "tgmc_ricochet3.ogg", "tgmc_ricochet4.ogg", "tgmc_ricochet5.ogg", "tgmc_ricochet6.ogg", "tgmc_ricochet7.ogg", "tgmc_ricochet8.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from TerraGov-Marine-Corps (sound/bullets/bullet_ricochet1-8), as remixed in TGMC PR #12189. No original source is credited there. Downmixed to mono."
+  source: "https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/sound/bullets/"

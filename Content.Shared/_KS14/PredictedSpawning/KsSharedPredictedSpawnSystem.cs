@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Damage;
 using Content.Shared.Projectiles;
@@ -167,7 +168,7 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     ///         predict it, and to the user of a user-mode projectile, whose client reconciles it with its kept copy's
     ///         (see <see cref="KsPredictedSpawnImpactEvent"/>).
     /// </summary>
-    public virtual void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage)
+    public virtual void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage, DamageSpecifier? rawDamage, Vector2 direction)
     {
     }
 

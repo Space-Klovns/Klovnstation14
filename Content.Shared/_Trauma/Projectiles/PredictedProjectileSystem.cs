@@ -51,6 +51,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private SharedMapSystem _mapSystem = default!; // KS14
     [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
+    [Dependency] private _KS14.Impacts.KsImpactSurfaceSystem _ksImpactSurfaceSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -254,13 +255,20 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
         // KS14 start: the server's copy's hit is sent to its user; a kept client copy's plays at once, unless that hit already did
         var playImpact = _ksPredictedSpawnSystem.ClaimImpact(uid, target);
-        _ksPredictedSpawnSystem.OnProjectileHit((uid, comp), target, damage);
+        var worldDirection = _physicsSystem.GetMapLinearVelocity(uid, ourBody);
+        _ksPredictedSpawnSystem.OnProjectileHit((uid, comp), target, damage, ev.Damage, worldDirection);
         // KS14 end
 
         if (!deleted)
         {
-            if (playImpact) // KS14
-                _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound);
+            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) // KS14: added, once for a kept client copy, whose hit can land on a re-predicted tick
+                && !_ksImpactSurfaceSystem.HitsArmor(target, ev.Damage, damage)) // KS14: armour plays its own sound instead, in PlayImpact
+                _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound, once: true /* KS14: added arg, as above */);
+
+            // KS14 start: TGMC's per-surface impact particles and ricochets, and its armour-soak sound; client only
+            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) && TryComp(uid, out TransformComponent? impactTransform))
+                _ksImpactSurfaceSystem.PlayImpact(target, impactTransform.Coordinates, worldDirection, ev.Damage, damage);
+            // KS14 end
 
             if (!ourBody.LinearVelocity.IsLengthZero() && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> once for a kept client copy, whose hit can land on a re-predicted tick */)
                 _recoil.KickCamera(target, ourBody.LinearVelocity.Normalized());
@@ -269,7 +277,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         if (comp.DeleteOnCollide && comp.ProjectileSpent)
             _ksPredictedSpawnSystem.PredictedQueueDelDeferrable/* KS14: PredictedQueueDel -> deferred for a kept client copy hit during a state reset */(uid);
 
-        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */)
+        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */ && _ksImpactSurfaceSystem.ShowsProjectileImpactEffect(target) /* KS14: added, no sparks on flesh */)
         {
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
