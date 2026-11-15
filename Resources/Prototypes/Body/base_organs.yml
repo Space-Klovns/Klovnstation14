@@ -310,6 +310,7 @@
     markingData:
       layers:
       - Eyes
+      - OverEyes
 
 - type: entity
   parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents

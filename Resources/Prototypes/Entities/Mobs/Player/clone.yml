@@ -80,6 +80,7 @@
   - CreamPied # Displacements
   - Puller
   - Vocal # voice sounds
+  - EyeBlinking # for rsiPath and other blinking settings
 
 # for job-specific traits etc.
 - type: cloningSettings
