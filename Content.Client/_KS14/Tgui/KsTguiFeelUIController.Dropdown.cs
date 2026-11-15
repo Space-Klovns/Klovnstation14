@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using Content.Client._KS14.Tgui.Backdrop;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -43,6 +44,7 @@ public sealed partial class KsTguiFeelUIController
     private readonly List<DropdownOpening> _dropdownOpenings = new();
     private readonly List<ChevronTurn> _chevronTurns = new();
     private readonly List<KsTguiDropdownGhost> _dropdownGhosts = new();
+    private readonly List<AnchoredDropdown> _anchoredDropdowns = new();
 
     /// <summary>
     ///     The popups whose showing is already watched, to place the menu in the very call that shows it.
@@ -62,6 +64,17 @@ public sealed partial class KsTguiFeelUIController
         public readonly KsTguiScaleHost Host = host;
         public readonly Control? Anchor = anchor;
         public float Elapsed;
+    }
+
+    /// <summary>
+    ///     An open menu and where it sits from what it opened from, so that it goes where that goes, as Floating's
+    ///         <c>autoUpdate</c> does on scroll and resize.
+    /// </summary>
+    private sealed class AnchoredDropdown(Popup popup, Control anchor, Vector2 offset)
+    {
+        public readonly Popup Popup = popup;
+        public readonly Control Anchor = anchor;
+        public readonly Vector2 Offset = offset;
     }
 
     private sealed class ChevronTurn(TextureRect triangle, ShaderInstance shader, Popup popup)
@@ -283,6 +296,8 @@ public sealed partial class KsTguiFeelUIController
 
     private void UpdateDropdowns(float deltaSeconds)
     {
+        FollowDropdownAnchors();
+
         for (var i = _dropdownOpenings.Count - 1; i >= 0; i--)
         {
             var opening = _dropdownOpenings[i];
@@ -367,6 +382,66 @@ public sealed partial class KsTguiFeelUIController
         origin.Y = flip ? above : below;
         opening.Host.PivotBottom = flip;
         PopupContainer.SetPopupOrigin(popup, origin);
+
+        _anchoredDropdowns.RemoveAll(found => found.Popup == popup);
+        _anchoredDropdowns.Add(new AnchoredDropdown(popup, anchor, origin - AnchorPosition(anchor)));
+    }
+
+    /// <summary>
+    ///     Where the anchor is in the modal layer, which is what a popup's origin is measured in.
+    /// </summary>
+    private Vector2 AnchorPosition(Control anchor)
+    {
+        return anchor.GlobalPosition - UIManager.ModalRoot.GlobalPosition;
+    }
+
+    /// <summary>
+    ///     Keeps each open menu by what it opened from (#473). When that moves (a scrolled page, a window that grew, a
+    ///         dragged window) the menu goes with it, as Floating does. When it is gone, hidden, or scrolled out of sight, the
+    ///         menu closes, as there is nothing left for it to hang from.
+    /// </summary>
+    private void FollowDropdownAnchors()
+    {
+        for (var i = _anchoredDropdowns.Count - 1; i >= 0; i--)
+        {
+            var dropdown = _anchoredDropdowns[i];
+            if (!dropdown.Popup.IsInsideTree || !dropdown.Popup.Visible)
+            {
+                _anchoredDropdowns.RemoveAt(i);
+                continue;
+            }
+
+            if (!dropdown.Anchor.VisibleInTree || ScrolledOutOfSight(dropdown.Anchor))
+            {
+                _anchoredDropdowns.RemoveAt(i);
+                dropdown.Popup.Close();
+                continue;
+            }
+
+            var origin = AnchorPosition(dropdown.Anchor) + dropdown.Offset;
+            if (Vector2.DistanceSquared(origin, PopupContainer.GetPopupOrigin(dropdown.Popup)) > 0.01f)
+                PopupContainer.SetPopupOrigin(dropdown.Popup, origin);
+        }
+    }
+
+    /// <summary>
+    ///     Whether the control is wholly outside the view of a scroll container it is in.
+    /// </summary>
+    private static bool ScrolledOutOfSight(Control control)
+    {
+        var top = control.GlobalPosition.Y;
+        var bottom = top + control.Size.Y;
+        for (var ancestor = control.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is not ScrollContainer scroll)
+                continue;
+
+            var viewTop = scroll.GlobalPosition.Y;
+            if (bottom <= viewTop || top >= viewTop + scroll.Size.Y)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -459,6 +534,7 @@ public sealed partial class KsTguiFeelUIController
 
         _chevronTurns.Clear();
         _dropdownOpenings.Clear();
+        _anchoredDropdowns.Clear();
 
         for (var i = _dropdownGhosts.Count - 1; i >= 0; i--)
         {

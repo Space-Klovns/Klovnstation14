@@ -465,4 +465,68 @@ public sealed class KsTguiBackdropTest : GameTest
             option.Orphan();
         });
     }
+    /// <summary>
+    ///     An open menu follows its button when the button moves, as when the page under it scrolls, and closes when the
+    ///         button goes (#473).
+    /// </summary>
+    [Test]
+    public async Task AnOpenDropdownFollowsItsButtonAndClosesWithIt()
+    {
+        await SetTheme(true);
+
+        await Client.WaitPost(() =>
+        {
+            var (option, popup, _) = OpenDropdown();
+            FinishOpening();
+            var opened = PopupContainer.GetPopupOrigin(popup);
+
+            option.Arrange(UIBox2.FromDimensions(new Vector2(20f, 80f), option.DesiredSize));
+            Feel.FrameUpdate(new FrameEventArgs(0.01f));
+            Assert.That(PopupContainer.GetPopupOrigin(popup), Is.EqualTo(opened + new Vector2(0f, 60f)),
+                "the menu moved with its button");
+            Assert.That(popup.Visible, Is.True);
+
+            option.Visible = false;
+            Feel.FrameUpdate(new FrameEventArgs(0.01f));
+            Assert.That(popup.Parent, Is.Null, "the menu closed with its button hidden");
+
+            option.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     A menu whose button is scrolled out of its page's view closes.
+    /// </summary>
+    [Test]
+    public async Task ADropdownScrolledOutOfSightCloses()
+    {
+        await SetTheme(true);
+
+        await Client.WaitPost(() =>
+        {
+            var option = new OptionButton();
+            option.AddItem("one");
+            option.AddItem("two");
+            var page = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            page.AddChild(option);
+            page.AddChild(new Control { MinHeight = 1000f });
+            var scroll = new ScrollContainer { HScrollEnabled = false };
+            scroll.AddChild(page);
+            UiManager.PopupRoot.AddChild(scroll);
+            Restyle(scroll);
+            scroll.Measure(new Vector2(300f, 200f));
+            scroll.Arrange(UIBox2.FromDimensions(new Vector2(20f, 20f), new Vector2(300f, 200f)));
+
+            var (_, popup, _) = OpenDropdown(option);
+            FinishOpening();
+            Assert.That(popup.Visible, Is.True);
+
+            scroll.SetScrollValue(new Vector2(0f, 500f));
+            scroll.Arrange(UIBox2.FromDimensions(new Vector2(20f, 20f), new Vector2(300f, 200f)));
+            Feel.FrameUpdate(new FrameEventArgs(0.01f));
+            Assert.That(popup.Parent, Is.Null, "the menu closed once its button was out of sight");
+
+            scroll.Orphan();
+        });
+    }
 }
