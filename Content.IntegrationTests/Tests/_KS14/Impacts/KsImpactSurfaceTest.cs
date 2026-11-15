@@ -1064,6 +1064,44 @@ public sealed class KsImpactSurfaceTest : InteractionTest
         });
     }
 
+    /// <summary>
+    ///     A shot straight along an axis whose way back runs exactly along an edge of what it hit: the engine's
+    ///         bounding-box ray cast made that hit's distance 0 * infinity, NaN, and the impact was spawned at NaN and
+    ///         threw (an NPC test shooting due east at mobs on whole and half tiles). It plays where it should instead.
+    /// </summary>
+    [Test]
+    public async Task ShotAlongAnEdgePlaysAtTheFace()
+    {
+        NetEntity wallNetEntity = default;
+        await Server.WaitPost(() => wallNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testWall, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var piercing = new DamageSpecifier();
+        piercing.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+            var wallUid = CEntMan.GetEntity(wallNetEntity);
+            // Level with the bottom edge of the box the broadphase has for the wall (in space, so in the map's frame),
+            //      inside its face, flying due east: the slab test's near side there is (bottom - y) * (1 / 0), 0 * infinity.
+            var proxyBounds = CEntMan.GetComponent<Robust.Shared.Physics.FixturesComponent>(wallUid).Fixtures.Values.Single().Proxies[0].AABB;
+            var hitPosition = new MapCoordinates(new Vector2(proxyBounds.Left + 0.1f, proxyBounds.Bottom), MapData.MapId);
+            var coordinates = transformSystem.ToCoordinates(hitPosition);
+
+            Assert.DoesNotThrow(() => CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(wallUid, coordinates, new Vector2(1f, 0f), piercing, piercing),
+                "a hit whose way back runs along an edge threw");
+
+            var smoke = ClientEmitters([_testSmoke]);
+            Assert.That(smoke, Has.Count.EqualTo(1), "a hit whose way back runs along an edge puffed no smoke");
+            foreach (var (uid, _) in smoke)
+            {
+                var position = transformSystem.GetWorldPosition(uid);
+                Assert.That(float.IsFinite(position.X) && float.IsFinite(position.Y), $"the smoke is at {position}");
+            }
+        });
+    }
+
     private async Task Shoot(NetEntity gunNetEntity, Vector2 worldTarget)
     {
         var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, worldTarget));
