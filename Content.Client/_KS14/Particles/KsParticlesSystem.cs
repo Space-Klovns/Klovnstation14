@@ -30,6 +30,11 @@ public readonly record struct KsParticleDrawEntry(EntityUid Uid, KsParticlesComp
 /// </remarks>
 public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 {
+    /// <summary>
+    ///     A BYOND tick, seconds: what DM's per-tick particle values are per.
+    /// </summary>
+    private const float ByondTick = 0.1f;
+
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
@@ -449,7 +454,19 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
                 if (hasDrift)
                 {
                     var drift = prototype.Drift.SampleVector3(random);
-                    motion += world ? ToEmitter(drift, particlesComponent, emitterComponent) : drift;
+                    if (world)
+                        drift = ToEmitter(drift, particlesComponent, emitterComponent);
+
+                    // BYOND adds drift to the velocity once a tick (0.1 s); spread over this step, that is drift / 0.1 s.
+                    if (prototype.DriftMode == KsParticleDriftMode.Accelerate)
+                    {
+                        particle.Velocity += drift * (dt / ByondTick);
+                        motion = particle.Velocity;
+                    }
+                    else
+                    {
+                        motion += drift;
+                    }
                 }
 
                 particle.Position += motion * dt;
