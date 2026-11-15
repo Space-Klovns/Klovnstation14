@@ -1,7 +1,7 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Drawn for Klovnstation 14 by Tools/_KS14/cultivation_armor.py, fitted to the human body parts",
+  "copyright": "Hand-drawn for Klovnstation 14 in Tools/_KS14/cultivation_armor.py",
   "size": {
     "x": 32,
     "y": 32
@@ -15,11 +15,11 @@
       "directions": 4
     },
     {
-      "name": "inhand-left",
+      "name": "inhand-right",
       "directions": 4
     },
     {
-      "name": "inhand-right",
+      "name": "inhand-left",
       "directions": 4
     }
   ]
