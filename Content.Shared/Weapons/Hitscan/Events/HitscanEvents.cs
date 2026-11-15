@@ -114,4 +114,11 @@ public record struct HitscanDamageDealtEvent
     /// The amount of damage that the target was dealt.
     /// </summary>
     public DamageSpecifier DamageDealt;
+
+    // KS14 start: what the hit would have dealt before anything resisted it, to tell an armour-soaked hit
+    /// <summary>
+    /// The damage the hitscan carried, before the target's resistances and armour.
+    /// </summary>
+    public DamageSpecifier? RawDamage;
+    // KS14 end
 }

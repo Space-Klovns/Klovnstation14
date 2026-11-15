@@ -11,6 +11,7 @@ public sealed partial class HitscanBasicEffectsSystem : EntitySystem
 {
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
     [Dependency] private SharedGunSystem _gun = default!;
+    [Dependency] private Content.Shared._KS14.Impacts.KsImpactSurfaceSystem _ksImpactSurfaceSystem = default!; // KS14
 
     public override void Initialize()
     {
@@ -31,6 +32,7 @@ public sealed partial class HitscanBasicEffectsSystem : EntitySystem
                 Filter.Pvs(args.Target, entityManager: EntityManager));
         }
 
-        _gun.PlayImpactSound(args.Target, args.DamageDealt, ent.Comp.Sound, ent.Comp.ForceSound);
+        if (!_ksImpactSurfaceSystem.HitsArmor(args.Target, args.RawDamage, args.DamageDealt)) // KS14: armour plays its own sound instead
+            _gun.PlayImpactSound(args.Target, args.DamageDealt, ent.Comp.Sound, ent.Comp.ForceSound);
     }
 }

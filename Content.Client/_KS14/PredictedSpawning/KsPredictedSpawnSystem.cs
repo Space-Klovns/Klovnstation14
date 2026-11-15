@@ -495,7 +495,9 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
         if (targetUid != null && !TerminatingOrDeleted(targetUid.Value))
         {
-            _gunSystem.PlayImpactSound(targetUid.Value, args.Damage, args.SoundHit, args.ForceSound);
+            // Armour plays its own sound instead, in PlayImpact.
+            if (!_impactSurfaceSystem.HitsArmor(targetUid.Value, args.RawDamage, args.Damage))
+                _gunSystem.PlayImpactSound(targetUid.Value, args.Damage, args.SoundHit, args.ForceSound);
             _impactSurfaceSystem.PlayImpact(targetUid.Value, GetCoordinates(args.Coordinates), args.Direction, args.RawDamage, args.Damage);
         }
     }

@@ -32,6 +32,7 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private const string TestGun = "KsImpactTestGun";
     private const string TestWall = "KsImpactTestWall";
     private const string TestLaser = "KsImpactTestLaserGun";
+    private const string TestArmourGun = "KsImpactTestArmourGun";
 
     private readonly EntProtoId _testWall = TestWall;
     private readonly EntProtoId _testMob = "KsImpactTestMob";
@@ -39,6 +40,9 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     private readonly EntProtoId _testLightWall = "KsImpactTestLightWall";
     private readonly EntProtoId _testBleedingMob = "KsImpactTestBleedingMob";
     private readonly EntProtoId _testSiliconMob = "KsImpactTestSiliconMob";
+    private readonly EntProtoId _testArmouredMob = "KsImpactTestArmouredMob";
+    private readonly EntProtoId _testArmour = "KsImpactTestArmour";
+    private readonly EntProtoId _testBullet = "KsImpactTestBullet";
     private static readonly EntProtoId BulletImpactEffect = "BulletImpactEffect";
     private static readonly ProtoId<KsParticlesPrototype> BloodMist = "KsBloodSplatterMist";
     private readonly EntProtoId _testDenseWall = "KsImpactTestDenseWall";
@@ -150,6 +154,55 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     proto: KsImpactTestRay
     capacity: 10
     count: 10
+
+- type: entity
+  parent: BaseBullet
+  id: KsImpactTestBullet
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 20
+    soundHit:
+      path: /Audio/Weapons/Guns/Hits/bullet_hit.ogg
+
+- type: entity
+  id: {TestArmourGun}
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 2
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BasicEntityAmmoProvider
+    proto: KsImpactTestBullet
+    capacity: 10
+    count: 10
+
+- type: entity
+  parent: KsImpactTestBleedingMob
+  id: KsImpactTestArmouredMob
+  components:
+  - type: Sprite
+  - type: InventorySlots
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+
+- type: entity
+  id: KsImpactTestArmour
+  components:
+  - type: Item
+  - type: Clothing
+    slots:
+    - outerClothing
+  - type: Armor
+    modifiers:
+      coefficients:
+        Piercing: 0.1
 
 - type: damageModifierSet
   id: KsImpactTestBulletproofSpecies
@@ -590,6 +643,10 @@ public sealed class KsImpactSurfaceTest : InteractionTest
                     "armour soaking most of what the species let through did not count");
                 Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(2.5f)),
                     "armour soaking three quarters of a hit on a plain mob did not count");
+                Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(7f)),
+                    "armour taking three tenths of a hit (the plain armour vest) did not count");
+                Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(9f)), Is.False,
+                    "a tenth off a hit counted as armour");
                 Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(10f)), Is.False,
                     "an unarmoured hit counted as soaked");
             });
@@ -876,6 +933,73 @@ public sealed class KsImpactSurfaceTest : InteractionTest
                 Assert.That(Vector2.Dot(ClientTravel(uid), new Vector2(1f, 0f)), Is.GreaterThan(0.99f), "the blood does not leave by the exit wound");
                 Assert.That(CEntMan.GetComponent<KsParticlesComponent>(uid).Amount, Is.EqualTo(Content.Shared._KS14.BloodSpray.BloodSpraySystem.MinSprayAmount), "more than a little blood");
             }
+        });
+    }
+
+    /// <summary>
+    ///     A bullet that armour soaked rings off it: the armour's sound, not the bullet's flesh hit as well. One that went
+    ///         in plays the bullet's hit, and no armour.
+    /// </summary>
+    [Test]
+    public async Task ArmourHitPlaysArmourNotFlesh([Values] bool armoured)
+    {
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            var mobUid = SEntMan.SpawnEntity(_testArmouredMob, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+            if (!armoured)
+                return;
+
+            var armourUid = SEntMan.SpawnEntity(_testArmour, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+            Assert.That(SEntMan.System<Content.Shared.Inventory.InventorySystem>().TryEquip(mobUid, armourUid, "outerClothing", silent: true, force: true),
+                "the armour could not be put on");
+        });
+        await RunTicks(5);
+
+        var gunNetEntity = await PlaceInHands(TestArmourGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+
+        var fleshFiles = new HashSet<string>();
+        var armourFiles = new HashSet<string>();
+        var audioBefore = new HashSet<EntityUid>();
+        await Client.WaitPost(() =>
+        {
+            Client.ProtoMan.Index(_testBullet).TryComp<Content.Shared.Projectiles.ProjectileComponent>(out var projectileComponent, CEntMan.ComponentFactory);
+            fleshFiles.Add(((Robust.Shared.Audio.SoundPathSpecifier)projectileComponent!.SoundHit!).Path.ToString());
+            foreach (var path in Client.ProtoMan.Index(KsImpactSurfaceSystem.ArmorSoundCollection).PickFiles)
+                armourFiles.Add(path.ToString());
+
+            var query = CEntMan.AllEntityQueryEnumerator<Robust.Shared.Audio.Components.AudioComponent>();
+            while (query.MoveNext(out var uid, out _))
+                audioBefore.Add(uid);
+        });
+
+        await Shoot(gunNetEntity, shooterPosition + new Vector2(40f, 0f));
+
+        var heard = new HashSet<string>();
+        for (var tick = 0; tick < 60; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                var query = CEntMan.AllEntityQueryEnumerator<Robust.Shared.Audio.Components.AudioComponent>();
+                while (query.MoveNext(out var uid, out var audioComponent))
+                {
+                    if (!audioBefore.Contains(uid))
+                        heard.Add(audioComponent.FileName);
+                }
+            });
+        }
+
+        var heardFlesh = heard.Overlaps(fleshFiles);
+        var heardArmour = heard.Overlaps(armourFiles);
+        Assert.Multiple(() =>
+        {
+            Assert.That(heardFlesh || heardArmour, "the hit played no sound at all, so this proves nothing");
+            Assert.That(heardArmour, Is.EqualTo(armoured), armoured ? "a hit the armour soaked did not ring off it" : "a hit on a bare mob rang off armour");
+            Assert.That(heardFlesh, Is.EqualTo(!armoured), armoured ? "a hit the armour soaked played the flesh hit too" : "a hit on a bare mob played no hit sound");
         });
     }
 

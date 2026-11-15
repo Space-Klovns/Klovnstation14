@@ -35,6 +35,7 @@ public sealed partial class HitscanBasicDamageSystem : EntitySystem
         {
             Target = args.Data.HitEntity.Value,
             DamageDealt = damageDealt,
+            RawDamage = dmg, // KS14
         };
 
         RaiseLocalEvent(ent, ref damageEvent);

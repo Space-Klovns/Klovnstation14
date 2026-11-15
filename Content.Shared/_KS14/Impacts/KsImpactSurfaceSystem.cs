@@ -72,12 +72,15 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <summary>
     ///     TGMC's <c>sound_armor</c>, played when armour soaks a ballistic hit.
     /// </summary>
-    private static readonly SoundSpecifier ArmorSound = new SoundCollectionSpecifier("KsBulletArmorImpact", AudioParams.Default.WithVariation(0.05f));
+    public static readonly ProtoId<SoundCollectionPrototype> ArmorSoundCollection = "KsBulletArmorImpact";
+
+    private static readonly SoundSpecifier ArmorSound = new SoundCollectionSpecifier(ArmorSoundCollection, AudioParams.Default.WithVariation(0.05f));
 
     /// <summary>
-    ///     A ballistic hit on a mob that dealt less than this share of its damage counts as soaked by armour.
+    ///     A ballistic hit on a mob that dealt less than this share of its damage counts as soaked by armour: armour
+    ///         that took a fifth of it or more. The plain armour vest lets 70% of a bullet through.
     /// </summary>
-    public const float ArmorSoakFraction = 0.5f;
+    public const float ArmorSoakFraction = 0.8f;
 
     /// <summary>
     ///     How far back along the shot <see cref="GetEntryPoint"/> starts looking for where it came in, in metres.
@@ -111,7 +114,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         ProtoId<KsImpactMaterialPrototype> materialId;
         if (_mobStateQuery.HasComp(target))
         {
-            if (ballistic && IsSoaked(target, rawDamage!, dealtDamage))
+            if (HitsArmor(target, rawDamage, dealtDamage))
             {
                 PlayHere(ArmorSound, coordinates, null);
                 // What little got through comes out the far side.
@@ -224,6 +227,16 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         return damage.DamageDict.TryGetValue(PiercingDamage, out var piercing) && piercing > 0 ||
                damage.DamageDict.TryGetValue(BluntDamage, out var blunt) && blunt > 0;
+    }
+
+    /// <summary>
+    ///     Whether a hit on <paramref name="target"/> rang off its armour: a ballistic hit on a mob that its armour
+    ///         soaked (<see cref="IsSoaked"/>). <see cref="PlayImpact"/> plays the armour's sound for it, which takes the
+    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, so its callers skip that.
+    /// </summary>
+    public bool HitsArmor(EntityUid target, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
+    {
+        return rawDamage != null && _mobStateQuery.HasComp(target) && IsBallistic(rawDamage) && IsSoaked(target, rawDamage, dealtDamage);
     }
 
     /// <summary>

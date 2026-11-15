@@ -252,7 +252,8 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
         if (!deleted)
         {
-            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid)) // KS14: added, once for a kept client copy, whose hit can land on a re-predicted tick
+            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) // KS14: added, once for a kept client copy, whose hit can land on a re-predicted tick
+                && !_ksImpactSurfaceSystem.HitsArmor(target, ev.Damage, damage)) // KS14: armour plays its own sound instead, in PlayImpact
                 _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound, once: true /* KS14: added arg, as above */);
 
             // KS14 start: TGMC's per-surface impact particles and ricochets, and its armour-soak sound; client only
