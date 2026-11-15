@@ -310,6 +310,15 @@ coordinates are on does not count, so an anchored goal is not in its own way). O
 Climbing costs `PathfindingSystem.ClimbCost` on top of walking, so climbers walk round anything short; operatives have
 `NavClimb`. `KsNpcRailingTest` covers railings at every rotation.
 
+### Steering allows for how slowly a mob turns
+
+A free path node is reached only from inside its tile. Weightless (no gravity on the grid, which includes every test grid
+without `GiveGravity`), a mob accelerates at 1 m/s² against 10 on its feet. Shoved on past a turn by a squadmate
+(`movement.mob_pushing`), it then went round and round its next node about a tile out, and every path asked for from there
+began with the same node. `NPCSteeringSystem.KsCancelDrift` steers against the part of the velocity across the line to
+the target, so it straightens out. A test of walking without gravity tests this too; one that needs ordinary walking
+gives the grid gravity. `KsNpcSteeringCirclingTest` covers it.
+
 ### A hunt's clock is the loss, not the hunt
 
 A squad often only gets round to hunting a few seconds after the hostile ducked out of sight: it was suppressing, pushing,

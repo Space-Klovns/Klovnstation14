@@ -386,6 +386,7 @@ public sealed partial class NPCSteeringSystem
 
         // We have the input in world terms but need to convert it back to what movercontroller is doing.
         input = offsetRot.RotateVec(input);
+        input = KsCancelDrift(input, body.LinearVelocity, moveSpeed); // KS14: steer against sideways drift, not only at the target
         var norm = input.Normalized();
         var weight = MapValue(direction.Length(), tickMovement * 0.5f, tickMovement * 0.75f);
 
@@ -444,6 +445,25 @@ public sealed partial class NPCSteeringSystem
     }
 
     // KS14 start
+    /// <summary>
+    /// The way to steer to get to a target in <paramref name="toTarget"/> (a unit vector) while moving at
+    /// <paramref name="velocity"/>: towards it, and against whatever of the velocity is across that line. Steering only at
+    /// the target turns the velocity slowly when the mob can only accelerate slowly, weightless above all: drifting
+    /// sideways past a path node, shoved by a squadmate say, it goes round and round the node, never inside the tile it
+    /// has to reach, and a new path starts with the same node. On its feet it accelerates ten times as fast, and this
+    /// changes little but cutting corners a little tighter.
+    /// </summary>
+    private static Vector2 KsCancelDrift(Vector2 toTarget, Vector2 velocity, float moveSpeed)
+    {
+        if (moveSpeed <= 0f)
+            return toTarget;
+
+        var across = velocity - toTarget * Vector2.Dot(velocity, toTarget);
+        var steer = toTarget * moveSpeed - across;
+
+        return steer.LengthSquared() > 0f ? steer.Normalized() : toTarget;
+    }
+
     /// <summary>
     /// How much nearer its node an NPC must get to count as getting nearer: less is jitter.
     /// </summary>
