@@ -31,3 +31,17 @@ public sealed class KsParticleGradientInheritanceHandler : ITypeInheritanceHandl
         return child;
     }
 }
+
+/// <summary>
+///     A child prototype's <see cref="KsParticlesPrototype.Collision"/> replaces its parent's whole, as
+///         <see cref="KsParticlesPrototype.Gradient"/> does, so what a child writes is all it gets: a child that
+///         changes only <c>onHit</c> is back to the default bounce and radius. Leaving it out still inherits the parent's.
+/// </summary>
+[TypeSerializer]
+public sealed class KsParticleCollisionInheritanceHandler : ITypeInheritanceHandler<KsParticleCollision, MappingDataNode>
+{
+    public MappingDataNode PushInheritance(ISerializationManager serializationManager, MappingDataNode child, MappingDataNode parent, IDependencyCollection dependencies, ISerializationContext? context)
+    {
+        return child;
+    }
+}

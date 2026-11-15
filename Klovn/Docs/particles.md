@@ -135,6 +135,7 @@ Emitter-wide, no generators (BYOND's "affect entire set" group):
 | `animated` | true | Play an animated sprite from the particle's birth. |
 | `interpolate` | true | Draw between steps. Off, particles move in steps, as BYOND's do. |
 | `pixelSnap` | false | Nudge the emitter onto a whole screen pixel, as grids are. |
+| `collision` | none | Particles stop at walls: `onHit` (`Bounce`, `Stick` or `Die`), `bounce` (0.5), `friction` (0.2), `radius` (0.05 m), `enabled` (true). See *Collision*. |
 
 Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), except `drift`:
 
@@ -159,6 +160,34 @@ whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn
 multiplies starting velocities alone (a harder throw), an `amount` that multiplies how many spawn (burst,
 rate and the most alive at once: a heavier hit), a `scale` that scales positions, velocities and sizes
 together, and `emitting`.
+
+## Collision
+
+Off by default: particles fly through everything, as BYOND's do, and an emitter without `collision` tests nothing
+and keeps nothing. With it, particles stop at walls, client-side only, approximately:
+
+```yaml
+- type: ksParticles
+  id: KsGibSplatter
+  collision:
+    onHit: Bounce   # or Stick (stays where it hit for the rest of its life) or Die
+    bounce: 0.3     # restitution: fraction of the speed into the wall kept, outwards
+    friction: 0.4   # fraction of the speed along the wall lost per contact
+    radius: 0.1     # metres from the wall the particle's centre stops, scaled with the component's scale
+```
+
+| What | How |
+| --- | --- |
+| What stops a particle | Hard fixtures on `Impassable` or `HighImpassable` (`FlyingMobMask`) of static bodies anchored to a grid: walls, windows, grilles, closed airlocks, windoors, firelocks. Not tables, machines, crates, mobs or items: low or loose things, which particles pass over. Nothing off a grid. |
+| Shape | Each fixture's bounding box in its grid's frame, inflated by `radius`, so it is exact for tile walls on a turned grid; a diagonal wall counts as its whole box. |
+| Broadphase | Per emitter, every 0.5 s of simulation or when the particles leave the gathered region: the grids about the particles' swept bounds plus 1 m, and their anchored entities there. Never a lookup per particle. Particles spread over more than 32 m don't collide. |
+| Each step | Each particle's segment from its last position to its new one, in the map frame, against the gathered boxes: the first face entered reflects the velocity and the rest of the motion (`bounce` on the normal part, `friction` on the tangential), up to three bounces a step. Under 0.05 m/s outward it stops bouncing and slides, so gravity rests it against a wall. |
+| Inside a wall | A particle that starts a step in one (spawned in it, a door closed on it) is put out through the nearest face that isn't in another wall, or dies if there is none. |
+| `space: Local` | The segment is mapped through the emitter's matrix, resolved in the map frame and mapped back, rotation and scale included. Both ends use this frame's matrix, so the emitter's own motion is not swept, and a stuck particle stays put in the emitter's frame, moving with it. |
+| Z | Untouched: collision is in the plane, z only orders particles. |
+
+A child prototype that restates `collision` replaces the parent's whole, as `gradient` does; `enabled: false` turns
+an inherited one off. Once warm a colliding step allocates nothing.
 
 ## Porting a /tg/ particle
 
@@ -215,7 +244,7 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
   converted on the way in.
 - **Interpolated by default.** Set `interpolate: false` for BYOND's stepped look.
 - **Additions:** `burst`, `emitDuration`, `oneShot`, `space: World`, `followRotation`, `layer`, `unshaded`, `animated`,
-  `pixelSnap`, prototype inheritance, and the component's `color`, `offset`, `scale`.
+  `pixelSnap`, `collision`, prototype inheritance, and the component's `color`, `offset`, `scale`.
 
 ### Bullet impacts and gun smoke
 
@@ -256,4 +285,5 @@ frame timings are resolved once per prototype and shared.
 `Content.IntegrationTests/Tests/_KS14/Particles/`. The headless client steps emitters but draws nothing, so the
 tests check the state the simulation leaves: the generator and serializer, counts, motion against the closed
 form, lifespans, bursts, emitting, spaces, and that the three spawn modes put an emitting copy exactly where
-they should. What it looks like is unverified until seen in game.
+they should. `KsParticleCollisionTest` fires emitters at a ring of test walls, on turned grids too, and checks
+every live particle after every step. What it looks like is unverified until seen in game.

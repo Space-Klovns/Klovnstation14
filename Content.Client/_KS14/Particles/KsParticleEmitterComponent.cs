@@ -72,6 +72,13 @@ public sealed partial class KsParticleEmitterComponent : Component
 
     public System.Random Random = new();
 
+    /// <summary>
+    ///     The walls near the emitter, for a prototype with <see cref="KsParticlesPrototype.Collision"/>. Null for
+    ///         every other, which never tests anything.
+    /// </summary>
+    [ViewVariables]
+    public KsParticleCollisionCache? Collision;
+
     #region Per frame, for the overlays
 
     [ViewVariables]

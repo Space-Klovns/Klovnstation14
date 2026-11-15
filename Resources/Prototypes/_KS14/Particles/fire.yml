@@ -105,6 +105,11 @@
     b: 1
     dist: normal
   drift: 0
+  # Sparks skip off walls. Inherited by KsSparksSevere.
+  collision:
+    bounce: 0.5
+    friction: 0.2
+    radius: 0.04
 
 - type: ksParticles
   parent: KsSparks

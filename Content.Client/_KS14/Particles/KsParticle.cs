@@ -44,4 +44,10 @@ public struct KsParticle
 
     /// <summary>Index into the emitter's <see cref="KsParticleSpriteSet"/>, or -1 for a white pixel.</summary>
     public int Sprite;
+
+    /// <summary>
+    ///     Whether it hit a wall with <see cref="Content.Shared._KS14.Particles.KsParticleHitResponse.Stick"/>: it no
+    ///         longer moves in its own frame.
+    /// </summary>
+    public bool Stuck;
 }
