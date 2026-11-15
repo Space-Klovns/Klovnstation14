@@ -145,3 +145,13 @@
   # No fake upward arc: it would turn with the throw.
   gravity: 0, 0
   velocity: { kind: box, a: [ -0.75, -6.5 ], b: [ 0.75, -4 ] }
+
+# A heavy hit (BloodSpraySystem.HeavyHitDamage or more): a slice of a lost limb's burst, punched out of the exit wound.
+#   BloodSpraySystem sets how much. Their own ids, so a hit that also dismembers still shows both.
+- type: ksParticles
+  parent: KsDismemberBloodExplosion
+  id: KsHeavyHitBloodExplosion
+
+- type: ksParticles
+  parent: KsDismemberGibSplatter
+  id: KsHeavyHitGibSplatter

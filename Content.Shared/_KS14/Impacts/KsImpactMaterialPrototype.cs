@@ -21,6 +21,12 @@ public sealed partial class KsImpactMaterialPrototype : IPrototype
     public ProtoId<KsParticlesPrototype>? Debris;
 
     /// <summary>
+    ///     Thrown alongside <see cref="Debris"/>, the same way (armour: its chips, and a few sparks).
+    /// </summary>
+    [DataField]
+    public List<ProtoId<KsParticlesPrototype>> ExtraDebris = new();
+
+    /// <summary>
     ///     Puffed out of the surface by every hit.
     /// </summary>
     [DataField]
