@@ -75,7 +75,7 @@
       params:
         volume: -5
     bumpSound:
-      path: /Audio/_KS14/Vehicles/Lawnmower/hit_kick.ogg
+      path: /Audio/Effects/hit_kick.ogg
     bladeSound:
       path: /Audio/_KS14/Vehicles/Lawnmower/chainsawhit.ogg
     crushSound:
