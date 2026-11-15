@@ -29,7 +29,8 @@ public sealed partial class NpcPerceptionSystem
         MapCoordinates observerMapCoordinates,
         float range)
     {
-        contact = contact with { ObserverWasMoving = IsAdvancing(entity.Owner) };
+        // What it made of the hostile, from the sighting just ended: what its squad goes by while it is gone.
+        contact = contact with { ObserverWasMoving = IsAdvancing(entity.Owner), Traits = GetTraits(targetUid) };
 
         if (TryGetStorageAround(targetUid, out var storageUid))
             return contact with { State = NpcContactState.Concealed, ContainerUid = storageUid };

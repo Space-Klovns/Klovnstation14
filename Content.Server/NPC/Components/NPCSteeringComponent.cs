@@ -79,6 +79,13 @@ public sealed partial class NPCSteeringComponent : Component
     /// </summary>
     [ViewVariables, AutoPausedField]
     public TimeSpan KsNodeClosestTime;
+
+    /// <summary>
+    /// Until when the straight line to a target within <see cref="RepathRange"/> is known to be clear, so it may walk
+    /// straight at it without a path. See NPCSteeringSystem.KsIsBeelineClear.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan KsBeelineClearUntil;
     // KS14 end
 
     /// <summary>

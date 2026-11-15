@@ -441,7 +441,7 @@ public sealed partial class PathfindingSystem
                 tilePolys.Clear();
 
                 var tile = _maps.GetTileRef(grid.Owner, grid.Comp, tilePos);
-                var flags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None;
+                var tileFlags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None; // KS14: flags -> tileFlags, see below
                 // var isBorder = x < 0 || y < 0 || x == ChunkSize - 1 || y == ChunkSize - 1;
 
                 // KS14 start: into one set reused across the chunk rather than a new one each tile, and each entity's part
@@ -467,7 +467,7 @@ public sealed partial class PathfindingSystem
                         continue;
                     }
 
-                    tileEntities.Add(GetTileEntity(ent, fixtures, xform));
+                    tileEntities.Add(GetTileEntity(ent, fixtures, xform, tilePos));
                 }
                 // KS14 end
                 // KS14: replaced above
@@ -511,6 +511,10 @@ public sealed partial class PathfindingSystem
                         var damage = 0f;
                         var blockedBesidesDoors = false; // KS14: see below
                         var blockedUnpushable = false; // KS14: see below
+                        // KS14: each point's own, from the tile's. One for the whole tile, every point after the first covered
+                        //      by a door kept that door's flags, uncovered or not: a windoor on one edge made its tile's
+                        //      open side a Door, and steering, which leaves doors on a door node to be opened, walked into it
+                        var flags = tileFlags;
 
                         // KS14 start: only whether each entity covers this point is worked out per point; what it adds to a point it
                         //      covers was worked out once for the tile, in GetTileEntity
@@ -532,9 +536,11 @@ public sealed partial class PathfindingSystem
                                 // Do an AABB check first as it's probably faster, then do an actual point check.
                                 var intersects = false;
 
+                                // Something thin enough to miss every point is tested against the point's cell
+                                //      instead: see FitsBetweenPoints.
                                 foreach (var proxy in fixture.Proxies)
                                 {
-                                    if (!proxy.AABB.Contains(localPos))
+                                    if (!(tileEntity.MissesEveryPoint ? OverlapsPointCell(proxy.AABB, localPos) : proxy.AABB.Contains(localPos)))
                                         continue;
 
                                     intersects = true;
@@ -542,6 +548,7 @@ public sealed partial class PathfindingSystem
                                 }
 
                                 if (!intersects ||
+                                    !tileEntity.MissesEveryPoint &&
                                     !_fixtures.TestPoint(fixture.Shape, tileEntity.LocalTransform, localPos))
                                 {
                                     continue;

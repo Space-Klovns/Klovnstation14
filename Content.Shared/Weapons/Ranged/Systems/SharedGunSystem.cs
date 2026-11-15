@@ -186,8 +186,11 @@ public abstract partial class SharedGunSystem : EntitySystem
         using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))
             AttemptShoot(user.Value, userGun);
         // KS14 end
+        // KS14: removed, client-requested continuous fire was a free autoclicker
+        /*
         if (msg.Continuous)
             userGun.Comp.ShotCounter = 0;
+        */
     }
 
     private void OnStopShootRequest(RequestStopShootEvent ev, EntitySessionEventArgs args)
@@ -812,6 +815,9 @@ public abstract partial class SharedGunSystem : EntitySystem
             glowComponent.StartTime = Timing.CurTime;
             Dirty(entity, glowComponent);
         }
+
+        var ejectedEvent = new _KS14.Despawn.KsCartridgeEjectedEvent(entity);
+        RaiseLocalEvent(ref ejectedEvent);
         // KS14 end
     }
 

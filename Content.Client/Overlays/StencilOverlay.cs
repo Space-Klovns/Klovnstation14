@@ -74,6 +74,11 @@ public sealed partial class StencilOverlay : Overlay
         if (_entManager.TryGetComponent<RestrictedRangeComponent>(mapUid, out var restrictedRangeComponent))
             DrawRestrictedRange(args, res, restrictedRangeComponent, invMatrix);
 
+        // KS14 start: the Field Commander fog
+        if (_entManager.TryGetComponent<Content.Shared._KS14.FieldCommander.KsFieldCommanderFogComponent>(mapUid, out var fieldCommanderFogComponent))
+            DrawFieldCommanderFog(args, res, fieldCommanderFogComponent, invMatrix);
+        // KS14 end
+
         args.WorldHandle.UseShader(null);
         args.WorldHandle.SetTransform(Matrix3x2.Identity);
     }

@@ -1,0 +1,9 @@
+- type: stack
+  parent: BaseMediumStack
+  id: KsSandbag
+  name: stack-ks-sandbag
+  icon:
+    sprite: /Textures/_KS14/Objects/Misc/sandbag.rsi
+    state: sandbag_3
+  spawn: KsSandbag
+  maxCount: 30

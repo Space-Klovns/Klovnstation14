@@ -1,9 +1,18 @@
-# The Redacted say nothing but what a kill or an execution calls for: every other line the operative HTN speaks is
-#   silenced here. Applied by giving the mob NpcVoiceSet with this set.
+# The Redacted say nothing but what a fight calls for: a kill, an execution, a grenade either way, a squadmate down, and
+#   their own calls to suppress, push and flank. Every other line the operative HTN speaks is silenced here. Applied
+#   by giving the mob NpcVoiceSet with this set.
 - type: npcVoiceSet
   id: KsOperativeRedacted
   replacements:
     KsOperativeTargetDown: KsOperativeRedactedTargetDown
+    KsOperativeAlertGrenade: KsOperativeRedactedAlertGrenade
+  callouts: # said only by voices that name them: see NpcCallout
+    ThrowFrag: KsOperativeRedactedThrowFrag
+    ThrowOther: KsOperativeRedactedThrowOther
+    ManDown: KsOperativeRedactedManDown
+    Suppressing: KsOperativeRedactedSuppressing
+    Push: KsOperativeRedactedPush
+    Flank: KsOperativeRedactedFlank
   silenced:
   - KsOperativeAdvancing
   - KsOperativeContact
@@ -15,7 +24,6 @@
   - KsOperativeDisturbanceCombat
   - KsOperativeDisturbance
   - KsOperativeGetAway
-  - KsOperativeAlertGrenade
   - KsOperativeStandDown
   - KsOperativeStandDownAcknowledge
   - KsOperativeSearching
@@ -35,10 +43,108 @@
   id: KsOperativeRedactedTargetDown
   values:
     prefix: ks-operative-redacted-line-target-down-
-    count: 7
+    count: 20
+
+- type: localizedDataset
+  id: KsOperativeRedactedAlertGrenade
+  values:
+    prefix: ks-operative-redacted-line-alert-grenade-
+    count: 6
+
+- type: localizedDataset
+  id: KsOperativeRedactedThrowFrag
+  values:
+    prefix: ks-operative-redacted-line-throw-
+    count: 4
+
+# The first of the frag lines only, "Fire in the hole": the same string, so the same clip, for a flashbang or smoke.
+- type: localizedDataset
+  id: KsOperativeRedactedThrowOther
+  values:
+    prefix: ks-operative-redacted-line-throw-other-
+    count: 1
+
+# For a squadmate with no callsign. One with a callsign is named: ks-operative-redacted-line-man-down-<callsign>, see
+#   KsRedactedCallsigns.
+- type: localizedDataset
+  id: KsOperativeRedactedManDown
+  values:
+    prefix: ks-operative-redacted-line-man-down-
+    count: 5
+
+- type: localizedDataset
+  id: KsOperativeRedactedSuppressing
+  values:
+    prefix: ks-operative-redacted-line-suppressing-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeRedactedPush
+  values:
+    prefix: ks-operative-redacted-line-push-
+    count: 9
+
+- type: localizedDataset
+  id: KsOperativeRedactedFlank
+  values:
+    prefix: ks-operative-redacted-line-flank-
+    count: 8
 
 - type: localizedDataset
   id: KsOperativeExecution
   values:
     prefix: ks-operative-redacted-line-execution-
-    count: 1
+    count: 7
+
+# The two speakers the Redacted are recorded by, one per mob for life (see NpcVoiceSet on the Redacted). Speaker A's
+#   recordings are louder than speaker B's, so B is turned down. The clips themselves come from the private
+#   _KsModule/Audio/Partials/redacted_voice.yml; without it both are mute.
+- type: npcVoiceRecording
+  id: KsRedactedSpeakerA
+  volume: 3.5
+
+- type: npcVoiceRecording
+  id: KsRedactedSpeakerB
+  volume: 3.2
+
+# The Redacted's callsigns, handed out in this order, one each among the living on a map. A squadmate that sees one go
+#   down calls it out by callsign (NpcCallsignSystem).
+- type: npcCallsignSet
+  id: KsRedactedCallsigns
+  callsigns:
+  - name: ks-operative-redacted-callsign-viper-1
+    downLine: ks-operative-redacted-line-man-down-viper-1
+  - name: ks-operative-redacted-callsign-titan-1
+    downLine: ks-operative-redacted-line-man-down-titan-1
+  - name: ks-operative-redacted-callsign-dagger-1
+    downLine: ks-operative-redacted-line-man-down-dagger-1
+  - name: ks-operative-redacted-callsign-hunter-1
+    downLine: ks-operative-redacted-line-man-down-hunter-1
+  - name: ks-operative-redacted-callsign-spectre-1
+    downLine: ks-operative-redacted-line-man-down-spectre-1
+  - name: ks-operative-redacted-callsign-goliath-1
+    downLine: ks-operative-redacted-line-man-down-goliath-1
+  - name: ks-operative-redacted-callsign-viper-2
+    downLine: ks-operative-redacted-line-man-down-viper-2
+  - name: ks-operative-redacted-callsign-titan-2
+    downLine: ks-operative-redacted-line-man-down-titan-2
+  - name: ks-operative-redacted-callsign-dagger-2
+    downLine: ks-operative-redacted-line-man-down-dagger-2
+  - name: ks-operative-redacted-callsign-hunter-2
+    downLine: ks-operative-redacted-line-man-down-hunter-2
+  - name: ks-operative-redacted-callsign-spectre-2
+    downLine: ks-operative-redacted-line-man-down-spectre-2
+  - name: ks-operative-redacted-callsign-goliath-2
+    downLine: ks-operative-redacted-line-man-down-goliath-2
+  - name: ks-operative-redacted-callsign-viper-3
+    downLine: ks-operative-redacted-line-man-down-viper-3
+  - name: ks-operative-redacted-callsign-titan-3
+    downLine: ks-operative-redacted-line-man-down-titan-3
+  - name: ks-operative-redacted-callsign-dagger-3
+    downLine: ks-operative-redacted-line-man-down-dagger-3
+  - name: ks-operative-redacted-callsign-hunter-3
+    downLine: ks-operative-redacted-line-man-down-hunter-3
+  - name: ks-operative-redacted-callsign-spectre-3
+    downLine: ks-operative-redacted-line-man-down-spectre-3
+  - name: ks-operative-redacted-callsign-goliath-3
+    downLine: ks-operative-redacted-line-man-down-goliath-3

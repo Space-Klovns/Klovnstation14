@@ -13,6 +13,7 @@
         map: [ "unshaded" ]
     - type: Projectile
       deleteOnCollide: false
+      ksPassesUndamageable: true # KS14: through the containment field to the singularity, unspent
       impactEffect: null
       soundHit:
         path: /Audio/Weapons/Guns/Hits/bullet_hit.ogg

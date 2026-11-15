@@ -60,3 +60,8 @@
   id: KsRefrigeration
   name: guide-entry-ks-refrigeration
   text: "/ServerInfo/_KS14/Guidebook/Engineering/Refrigeration.xml"
+
+- type: guideEntry
+  id: KsFortifications
+  name: guide-entry-fortifications
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Fortifications.xml"

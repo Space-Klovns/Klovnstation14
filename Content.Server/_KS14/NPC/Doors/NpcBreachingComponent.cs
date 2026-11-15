@@ -39,6 +39,12 @@ public sealed partial class NpcBreachingComponent : Component
     public DoAfterId? DoAfterId;
 
     /// <summary>
+    ///     When it started: orders wait for a breach on the way only so long (<see cref="NpcDoorSystem.IsBreachingOnTheWay"/>).
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan StartedAt;
+
+    /// <summary>
     ///     When to give up if the door is still shut.
     /// </summary>
     [ViewVariables]

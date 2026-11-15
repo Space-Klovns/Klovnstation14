@@ -24,9 +24,10 @@ namespace Content.IntegrationTests.Tests._KS14.Chain;
 [TestOf(typeof(LinkedChainSystem))]
 public sealed class KsLinkedChainTest : GameTest
 {
-    // Server only. On a connected pair the client logs "joint already existed" errors when a chain is strung between
-    //      two pre-existing entities (see the report on #237), and every error log fails the test.
-    public override PoolSettings PoolSettings => PsDisconnected;
+    // Connected, for the client's side of stringing a chain between two pre-existing entities: it used to log "joint
+    //      already existed" (#237) when the joints to them came in the same tick as the new links. Any error log fails the
+    //      test, so these do not pass with that back. See ChainSystem._pendingLinkJoints.
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId WireStart = "KsWireStart";
     private static readonly EntProtoId WireEnd = "KsWireEnd";

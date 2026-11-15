@@ -1,0 +1,11 @@
+# The bare particle emitter that KsSharedParticlesSystem's spawn helpers and the ksparticles command make. Any
+# entity may carry a KsParticles component of its own instead; this exists for effects that are nothing else.
+- type: entity
+  id: KsParticles
+  name: particles
+  description: Something in the air.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    noRot: true
+  - type: KsParticles

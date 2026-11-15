@@ -1,0 +1,115 @@
+# Ported from tgstation's code/game/objects/effects/particles/fire.dm. Units converted as in smoke.yml.
+
+- type: ksParticles
+  id: KsBonfire
+  size: 3.125, 3.125
+  count: 1000
+  spawning: 40
+  lifespan: 0.7
+  fade: 1
+  grow: -0.1
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/bonfire.rsi
+      state: bonfire
+  position:
+    kind: circle
+    a: 0
+    b: 0.5
+    dist: normal
+  drift:
+    kind: vector
+    a: [ 0, -0.0625 ]
+    b: [ 0, 0.0625 ]
+  gravity: 0, 2.97
+  scale:
+    kind: vector
+    a: 0.3
+    b: 1
+    dist: normal
+  rotation: 30
+  spin:
+    kind: num
+    a: -200
+    b: 200
+
+# Embers glow, so they ignore the dark: a KS14 addition to the tg definition.
+- type: ksParticles
+  id: KsEmbers
+  size: 2, 3
+  count: 500
+  spawning: 50
+  lifespan: 3
+  fade: 1
+  unshaded: true
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/generic.rsi
+      state: dot
+    weight: 4
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/generic.rsi
+      state: cross
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/generic.rsi
+      state: curl
+  gradient:
+    colors: [ "#FBAF4D", "#FCE6B6", "#FD481C" ]
+  color: 0
+  colorChange: 0.5
+  position:
+    kind: box
+    a: [ -0.375, -0.5 ]
+    b: [ 0.375, 0.5 ]
+    dist: normal
+  drift:
+    kind: vector
+    a: [ -0.03125, 0 ]
+    b: [ 0.03125, 0.0078125 ]
+  spin:
+    kind: num
+    a: -150
+    b: 150
+    dist: normal
+  scale:
+    kind: vector
+    a: 0.5
+    b: 2
+    dist: normal
+
+- type: ksParticles
+  parent: KsEmbers
+  id: KsEmbersMinor
+  spawning: 10
+
+- type: ksParticles
+  parent: KsEmbers
+  id: KsSparks
+  count: 3
+  spawning: 20
+  gradient:
+    colors: [ "#FBAF4D", "#FCE6B6", "#FFFFFF" ]
+  lifespan: 1.5
+  fade: 1
+  fadeIn: 0.1
+  grow: -1
+  velocity:
+    kind: circle
+    a: 0.9375
+    b: 0.9375
+    dist: square
+  position: [ 0, 0, 0 ]
+  scale:
+    kind: vector
+    a: 0.5
+    b: 1
+    dist: normal
+  drift: 0
+
+- type: ksParticles
+  parent: KsSparks
+  id: KsSparksSevere
+  count: 10
+  spawning: 50
+  gradient:
+    colors: [ "#FCE6B6", "#FFFFFF" ]

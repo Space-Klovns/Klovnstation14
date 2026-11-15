@@ -62,6 +62,7 @@ namespace Content.Server.NPC.Pathfinding
         [Dependency] private EntityQuery<DoorBoltComponent> _doorBoltQuery = default!; // KS14
         [Dependency] private EntityQuery<AirlockComponent> _airlockQuery = default!; // KS14
         [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
+        [Dependency] private EntityQuery<GlassTableComponent> _glassTableQuery = default!; // KS14
         [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
         [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
@@ -489,6 +490,9 @@ namespace Content.Server.NPC.Pathfinding
             // KS14 start
             if (blackboard.TryGetValue<bool>(NPCBlackboard.NavPush, out var push, EntityManager) && push)
                 flags |= PathFlags.Pushing;
+
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavClimbBreakables, out var climbBreakables, EntityManager) && climbBreakables)
+                flags |= PathFlags.ClimbingBreakables;
 
             // Steering forces doors for an NPC that interacts: see NPCSteeringSystem.Obstacles.cs
             if ((flags & PathFlags.Interact) != 0x0 &&

@@ -171,6 +171,11 @@ To make a shrinking layer vanish, hide it with `LayerSetVisible` and keep the sc
   - Textures go in as `Texture`.
   - `vec4` takes a `Color` or a `Vector4`.
   - Setting a uniform that doesn't exist fails silently.
+  - **A `Color` or `Color[]` is converted from sRGB to linear on upload** (`Clyde.ShaderProgram.SetUniformDirect`,
+    `convertToLinear`). Fine for a colour; ruinous for data packed into one: positions and sizes go through a gamma
+    curve, so a radius of 0.03 arrives as about 0.002 and positions bunch towards zero. The visor shader's drops came
+    out as specks this way. Pass data as `float[]`, `Vector2[]` or a single `Vector4`, which are uploaded raw. Every
+    array element takes a whole uniform slot on most drivers, so keep arrays short (a few dozen).
 
 **Uniform values belong to the GL program, not to the instance**, and Clyde uploads nothing for an instance with no
 parameters of its own. So an instance that never sets a uniform draws with whatever the last instance of that
@@ -282,7 +287,11 @@ Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParamete
 ## Checklist
 
 - [ ] No early `return` in `fragment()`.
-- [ ] No variables named after GLSL built-ins: `step`, `distance`, `noise`, `length`, `mix`, `sign`, and so on.
+- [ ] No variables named after GLSL built-ins: `step`, `distance`, `noise`, `length`, `mix`, `sign`, `round`, and so on.
+- [ ] Data, not colours, goes in as `float[]`/`Vector2[]`/`Vector4`: `Color` uniforms are converted to linear.
+- [ ] A wide blur over the screen uses enough taps in a fixed pattern: a few spread taps show ghosted copies of the
+      scene (sharply, over pixel art), and rotating the pattern per pixel to hide that turns into visible grain. About
+      24 taps on a golden-angle spiral, weighted towards the middle, is smooth (`_KS14/Shaders/visor_rain.swsl`).
 - [ ] Every float literal has a decimal point: `1.0`, not `1`. GLSL ES does not convert `int` to `float` for you.
 - [ ] `highp` on anything that holds positions, UVs or `TIME`. `TIME` gets big, and at `mediump` it loses its
       fractional part.

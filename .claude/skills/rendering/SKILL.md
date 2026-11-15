@@ -196,7 +196,7 @@ show through walls. To draw only where the viewer can see, test for 0, which is 
 ## Drawing API facts
 
 - **The world handle is in world units, Y up**, under the transform you set. Draw in a grid's frame by setting the
-  grid's world matrix (CONTRIBUTING §6, "World-space overlays draw square to the map").
+  grid's world matrix (the overlays skill, *Map frame vs grid frame*).
 - **Texture coordinates in world-space draws** (`WorldTextureBoundsToUV`): U runs left to right, V from **0 at the
   bottom** to 1 at the top. The quad's bottom-left vertex samples (0, 0) of a whole texture. A render-target texture
   drawn this way comes out upright. `subRegion` arguments are in pixels with a top-left origin, and the engine
@@ -209,6 +209,15 @@ show through walls. To draw only where the viewer can see, test for 0, which is 
 - **The sandbox forbids `stackalloc` and `CollectionsMarshal`** in content (CONTRIBUTING §6). Keep a pooled
   `DrawVertexUV2D[]` and pass it, since an array converts to a span (`ScalingViewport.Klovn.Portal.cs`,
   `_portalVertexPool`).
+- **`Color.Transparent` is white, not black**: `(1, 1, 1, 0)` (`Robust.Shared.Maths/Color.cs`). Anything reading only
+  its alpha never notices. Anything reading its colour gets white: a render target cleared with it holds white under
+  every empty pixel (added over the screen it washes it white; a sprite blended into it fades to white at its edges, and
+  a blur spreads that into a halo); interpolating towards it passes through paler colours, not just more transparent
+  ones; a shader sampling it sees white wherever alpha is zero unless it weights by alpha. Where colour matters, clear
+  with `new Color(0f, 0f, 0f, 0f)`; a target cleared to black also comes out premultiplied after ordinary blending,
+  which is what a blur or additive composite needs. `EmissiveOverlay`'s bloom target was cleared with
+  `Color.Transparent`: it first washed the screen white, then, weighted by alpha, gave white halos that looked like
+  the ambient light's colour.
 - **`RequestScreenTexture`** copies the whole screen before your `Draw`. That costs a full copy per overlay per
   pass, so avoid it in anything that runs in every portal and z-level pass.
 

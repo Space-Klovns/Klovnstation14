@@ -130,7 +130,11 @@ public sealed partial class ExplosionSystem
             try
             {
 #endif
+            KsProcessingUser = _activeExplosion.KsUser; // KS14: who set off what is being processed
+            KsProcessingRecipient = _activeExplosion.KsRecipient; // KS14: and who is paid for it
             var processed = _activeExplosion.Process(tilesRemaining);
+            KsProcessingUser = null; // KS14: the credited scope ends with processing
+            KsProcessingRecipient = null; // KS14: likewise
             tilesRemaining -= processed;
 
             // has the explosion finished processing?
@@ -146,6 +150,8 @@ public sealed partial class ExplosionSystem
             catch (Exception)
             {
                 // Ensure the system does not get stuck in an error-loop.
+                KsProcessingUser = null; // KS14: and when processing threw
+                KsProcessingRecipient = null; // KS14: likewise
                 if (_activeExplosion != null)
                     QueueDel(_activeExplosion.VisualEnt);
                 _activeExplosion = null;
@@ -387,6 +393,9 @@ public sealed partial class ExplosionSystem
     private DamageSpecifier GetDamage(EntityUid uid,
         string id, DamageSpecifier damage)
     {
+        if (KsIsSpared(uid, id)) // KS14: explosions that leave some things alone, such as anti-personnel rounds and walls
+            return new DamageSpecifier();
+
         // TODO Explosion Performance
         // Cache this? I.e., instead of raising an event, check for a component?
         var resistanceEv = new GetExplosionResistanceEvent(id);
@@ -723,6 +732,9 @@ sealed class Explosion
 
     public readonly EntityUid? Cause;
 
+    public EntityUid? KsUser; // KS14: who set it off, which Cause (the explosive itself) is not
+    public Robust.Shared.Network.NetUserId? KsRecipient; // KS14: who is paid for what it kills
+
     /// <summary>
     ///     Initialize a new instance for processing
     /// </summary>
@@ -992,4 +1004,6 @@ public sealed class QueuedExplosion(ExplosionPrototype proto)
     public int MaxTileBreak;
     public bool CanCreateVacuum;
     public EntityUid? Cause; // The entity that exploded, for logging purposes.
+    public EntityUid? KsUser; // KS14: who set it off
+    public Robust.Shared.Network.NetUserId? KsRecipient; // KS14: who is paid for what it kills
 }

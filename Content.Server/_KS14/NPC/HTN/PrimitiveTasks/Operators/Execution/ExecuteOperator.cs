@@ -8,7 +8,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
 
 /// <summary>
 ///     Executes the entity at <see cref="TargetKey"/> with the weapon at <see cref="WeaponKey"/>, and waits for it to be
-///         over (see <see cref="NpcExecutionSystem"/>). Fails if the target comes out of it alive. The owner has to be in
+///         over (see <see cref="NpcExecutionSystem"/>). Fails if the target comes out of it alive. One whose execution was
+///         cancelled is not tried again, but shot (see <see cref="NpcExecutionRefusedComponent"/>). The owner has to be in
 ///         reach, and stay still until it is done.
 /// </summary>
 public sealed partial class ExecuteOperator : HTNOperator
@@ -37,9 +38,15 @@ public sealed partial class ExecuteOperator : HTNOperator
         if (_npcExecutionSystem.IsExecuting(blackboard.GetOwner()))
             return HTNOperatorStatus.Continuing;
 
-        return blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) && _mobStateSystem.IsDead(targetUid)
-            ? HTNOperatorStatus.Finished
-            : HTNOperatorStatus.Failed;
+        if (!blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid))
+            return HTNOperatorStatus.Failed;
+
+        if (_mobStateSystem.IsDead(targetUid))
+            return HTNOperatorStatus.Finished;
+
+        // Over and the victim lives: cancelled, which means it is shot from here on.
+        _npcExecutionSystem.NoteIfCancelled(blackboard.GetOwner(), targetUid);
+        return HTNOperatorStatus.Failed;
     }
 
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)

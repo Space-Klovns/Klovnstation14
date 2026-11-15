@@ -586,6 +586,33 @@ public static class KsNpcSquadTestHelpers
             $"after {maxTicks} ticks (tick {pair.Server.Timing.CurTick})");
     }
 
+    /// <summary>
+    ///     Runs ticks until the navmesh of <paramref name="gridUid"/> has caught up with everything on it: no chunk left to
+    ///         rebuild. Unlike <see cref="WaitForNavmesh"/>, which only asks that a poly be there, this is for layouts whose
+    ///         walls all have to be in it, as a fixed number of ticks may not be on a busy machine: a wall missing is a way
+    ///         through. Fails the test if it never settles.
+    /// </summary>
+    public static async Task WaitForNavmeshSettled(Content.IntegrationTests.Pair.TestPair pair, EntityUid gridUid, int maxTicks = 600)
+    {
+        var entManager = pair.Server.ResolveDependency<IEntityManager>();
+        var dirty = -1;
+
+        for (var i = 0; i < maxTicks; i++)
+        {
+            await pair.Server.WaitPost(() =>
+                dirty = entManager.TryGetComponent<GridPathfindingComponent>(gridUid, out var gridPathfindingComponent)
+                    ? gridPathfindingComponent.DirtyChunks.Count
+                    : -1);
+
+            if (dirty == 0)
+                return;
+
+            await pair.RunTicksSync(1);
+        }
+
+        Assert.Fail($"the navmesh of {entManager.ToPrettyString(gridUid)} still had {dirty} chunks to rebuild after {maxTicks} ticks");
+    }
+
     public static EntityUid SpawnAt(IEntityManager entManager, string prototype, EntityUid gridUid, int x, int y)
     {
         return entManager.SpawnEntity(prototype, new EntityCoordinates(gridUid, new Vector2(x + 0.5f, y + 0.5f)));

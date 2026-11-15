@@ -493,11 +493,12 @@ public sealed partial class NPCSteeringSystem
 
     /// <summary>
     /// Whether <paramref name="uid"/> is stopped on a tile posing what it avoids. A path that has to cross a danger is
-    /// not stopped on it: turned back from the far side of a fire every time, it would never get across.
+    /// not stopped on it: turned back from the far side of a fire every time, it would never get across. Only the dangers in
+    /// <paramref name="only"/> count.
     /// </summary>
-    public bool IsStandingInDanger(EntityUid uid)
+    public bool IsStandingInDanger(EntityUid uid, NpcTileDangerKind only = (NpcTileDangerKind) byte.MaxValue)
     {
-        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid) & only;
         if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(Transform(uid).Coordinates, dangers))
             return false;
 
@@ -547,6 +548,12 @@ public sealed partial class NPCSteeringSystem
     {
         var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
         if (dangers == NpcTileDangerKind.None || xform.GridUid is not { } gridUid || xform.ParentUid != gridUid)
+            return;
+
+        // A step onto what it is standing in already is no worse than staying: inside a blast's reach every step is, and
+        //      ruling them all out would hold it there.
+        dangers &= ~_pathfindingSystem.GetDangersAt(xform.Coordinates).Posed;
+        if (dangers == NpcTileDangerKind.None)
             return;
 
         // Steering's directions are relative to the grid, so on one they are in the same terms as its local position.
@@ -781,6 +788,20 @@ public sealed partial class NPCSteeringSystem
     }
 
     /// <summary>
+    ///     KS14: whether <paramref name="uid"/> stands on the tile <paramref name="poly"/> is part of. A poly never spans tiles.
+    /// </summary>
+    private bool KsIsOnPolyTile(EntityUid uid, PathPoly poly)
+    {
+        var transformComponent = _xformQuery.GetComponent(uid);
+        if (transformComponent.ParentUid != poly.GraphUid)
+            return false;
+
+        var position = transformComponent.LocalPosition;
+        var center = poly.Box.Center;
+        return MathF.Floor(position.X) == MathF.Floor(center.X) && MathF.Floor(position.Y) == MathF.Floor(center.Y);
+    }
+
+    /// <summary>
     /// Filter down a list of entities into what can be considered obstacles.
     ///
     /// If allObstacles is set to false, don't filter out obstacles that can
@@ -830,6 +851,8 @@ public sealed partial class NPCSteeringSystem
 
             // If we're walking into a door we can handle...
             if (checkDoors &&
+                KsIsOnPolyTile(nearbyEnt, poly) && // KS14: that door, not every door nearby: a closed windoor beside the one
+                                                   //      being gone through is as much in the way as a wall
                 CanHandleDoor(ent, poly.Data.Flags, nearbyEnt))
                 nearbyEntities.Remove(nearbyEnt);
             // Then check climbability

@@ -1,0 +1,123 @@
+- type: entity
+  parent: BaseItem
+  id: KsBarbedWireCoil
+  name: barbed wire coil
+  description: A coil of barbed wire. Unroll it across the ground to slow down and cut up anything that wades through.
+  components:
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,0,1
+    storedRotation: -90
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
+    state: razor_wire
+  - type: Tag
+    tags:
+    - KsBarbedWireCoil
+  - type: StaticPrice
+    price: 15
+  - type: GuideHelp
+    guides:
+    - KsFortifications
+
+- type: entity
+  parent: BaseStructure
+  id: KsBarbedWire
+  name: barbed wire
+  description: Rolled-out barbed wire. It doesn't stop anyone, or any bullet, but wading through it is slow and bloody. Cut it with wirecutters to roll it back up.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/barbed_wire.rsi
+    # Over puddles and anything dropped on it, still under the mobs caught in it.
+    drawdepth: BelowMobs
+    # KsLineSmooth shows whichever of these the neighbours call for, each turned to its own direction.
+    layers:
+    - state: wire
+      map: [ "wireVertical" ]
+    - state: wire
+      map: [ "wireHorizontal" ]
+    - state: post
+      map: [ "postNorth" ]
+    - state: post
+      map: [ "postSouth" ]
+    - state: post
+      map: [ "postEast" ]
+    - state: post
+      map: [ "postWest" ]
+  - type: Icon
+    sprite: _KS14/Structures/barbed_wire.rsi
+    state: wire
+  - type: KsLineSmooth
+    key: barbedWire
+    # The art's frames aren't centred alike: these bring the north-south wire, and the north-south half of each post,
+    #     onto the middle of the tile (measured from the frames' wire). The east-west pieces already agree.
+    verticalWire:
+      key: wireVertical
+      offset: -2, 0
+    southPost:
+      key: postSouth
+      offset: -1, 0
+    northPost:
+      key: postNorth
+      offset: 2, 0
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        hard: false
+        shape:
+          !type:PhysShapeAabb
+          # A bit inside the tile, so brushing past its edge doesn't catch on it.
+          bounds: "-0.425,-0.425,0.425,0.425"
+        density: 60
+        layer:
+        - MidImpassable
+  - type: SpeedModifierContacts
+    walkSpeedModifier: 0.175
+    sprintSpeedModifier: 0.175
+  # Cuts only those wading through: standing still in it is safe, the first step after hurts at once. Astride two
+  #     pieces, or more, it cuts like one.
+  - type: DamageContacts
+    onlyWhileMoving: true
+    exclusiveGroup: KsBarbedWire
+    # Wears out as it cuts: it breaks after dealing about 250 damage. Its Destructible threshold below, 60, over
+    #     250 is 0.24 of what it deals, taken as Structural past its own resistances.
+    selfDamageRatio: 0.24
+    selfDamageType: Structural
+    damage:
+      types:
+        Slash: 10
+  # A dive into it ends in it. Something thrown still goes over.
+  - type: KsStopsDives
+  - type: KsDamagedSound
+    sound:
+      collection: FenceRattle
+    playOnContactDamage: true
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 60
+      behaviors:
+      # The wire snapping: a wirecutter's snip, pitched down.
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Items/wirecutter.ogg
+          params:
+            pitch: 0.7
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Construction
+    graph: KsBarbedWire
+    node: barbedWire
+  - type: GuideHelp
+    guides:
+    - KsFortifications

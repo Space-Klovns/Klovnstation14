@@ -103,6 +103,10 @@ public sealed class KsOperativeEncounterTest : GameTest
             foreach (var mobUid in mobs)
             {
                 entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("SuppressionChance", 100f);
+
+                // Suppression alone. A frag after it into the cell, when one comes up, has them all go in on the blast, which
+                //      comes before suppressing (root.yml), and can break the cell open: then an encounter is not one duck.
+                entManager.RemoveComponent<Content.Server._KS14.NPC.Grenades.NpcGrenadeThrowerComponent>(mobUid);
             }
         });
 

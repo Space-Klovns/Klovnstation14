@@ -378,6 +378,8 @@ public sealed partial class RCDSystem : EntitySystem
 
         #endregion
 
+        KsApplyInstant(component, prototype, args.Target, user, ref delay, ref effectPrototype); // KS14: instant RCDs
+
         // Try to start the do after
         var effect = Spawn(effectPrototype, _mapSystem.ToCenterCoordinates(tile, mapGrid));
         var ev = new RCDDoAfterEvent(
@@ -557,11 +559,14 @@ public sealed partial class RCDSystem : EntitySystem
     {
         var prototype = ProtoMan.Index(component.ProtoId);
 
+        if (KsIsInNoBuildZone(uid, gridUid, mapGrid, position, user, popMsgs)) // KS14: no-build zones, such as spawn areas
+            return false;
+
         // Check that the RCD has enough ammo to get the job done
         var charges = _sharedCharges.GetCurrentCharges(uid);
 
         // Both of these were messages were suppose to be predicted, but HasInsufficientCharges wasn't being checked on the client for some reason?
-        if (charges == 0)
+        if (charges == 0 && prototype.Cost > 0 /* KS14: free builds work with an empty RCD */)
         {
             if (popMsgs)
                 _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-no-ammo-message"), uid, user);
@@ -914,6 +919,8 @@ public sealed partial class RCDSystem : EntitySystem
 
                 var ent = Spawn(proto, mapCoords, rotation: rotation);
                 // Starlight edit End: RPD
+
+                KsMarkBuilt(component, ent, user); // KS14: instant RCDs remember who built what
 
                 switch (prototype.Rotation)
                 {

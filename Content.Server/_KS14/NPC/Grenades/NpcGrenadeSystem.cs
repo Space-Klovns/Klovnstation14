@@ -1,8 +1,11 @@
 using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Voices;
 using Content.Server.Hands.Systems;
 using Content.Shared._Trauma.Hands;
+using Content.Shared.Explosion.Components;
 using Content.Shared.Throwing;
 using Content.Shared.Trigger;
 using Content.Shared.Trigger.Systems;
@@ -16,7 +19,8 @@ namespace Content.Server._KS14.NPC.Grenades;
 ///     Has an NPC throw a grenade. It all happens at once rather than as a chain of tasks, and the fuse is only lit once the
 ///         grenade has left its hand, so nothing can leave a live grenade in its hand or back in its belt. When it goes off,
 ///         the thrower and the squadmates it tells go in on the spot (<see cref="NpcGrenadePusherComponent"/>). HTN does the
-///         going.
+///         going. One that cooks its frags (<see cref="NpcGrenadeThrowerComponent.Cooks"/>) is the exception that lights it
+///         first and holds it: see <c>NpcGrenadeSystem.Cooking.cs</c>.
 /// </summary>
 public sealed partial class NpcGrenadeSystem : EntitySystem
 {
@@ -25,9 +29,13 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
     [Dependency] private NpcHandsSystem _npcHandsSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcSquadTacticsSystem _npcSquadTacticsSystem = default!;
+    [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
     [Dependency] private PredictedHandsSystem _predictedHandsSystem = default!;
     [Dependency] private TriggerSystem _triggerSystem = default!;
 
+    [Dependency] private EntityQuery<ExplosiveComponent> _explosiveQuery = default!;
+    [Dependency] private EntityQuery<NpcGrenadeCookComponent> _grenadeCookQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadePusherComponent> _grenadePusherQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadePushComponent> _grenadePushQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadeThrowerComponent> _grenadeThrowerQuery = default!;
@@ -52,6 +60,9 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
             thrownGrenadeComponent.Coordinates = coordinates;
 
             _triggerSystem.ActivateTimerTrigger(grenadeUid, uid);
+
+            // Said as it goes, by a voice that says it: what it is, so the squad knows whether to look away or get down.
+            _npcVoiceSystem.TrySpeakCallout(uid, _explosiveQuery.HasComp(grenadeUid) ? NpcCallout.ThrowFrag : NpcCallout.ThrowOther);
         }
 
         _npcHandsSystem.PutBack(uid, takenOut);
@@ -59,13 +70,22 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Where <paramref name="grenadeUid"/> is coming down, if it is a grenade an NPC threw and it is still in the air.
+    ///     Where <paramref name="grenadeUid"/> is coming down, if it is a grenade an NPC threw and it is still in the air, or
+    ///         one it is cooking (<see cref="NpcGrenadeThrowerComponent.Cooks"/>) for a throw it has yet to make.
     /// </summary>
     public bool TryGetLanding(EntityUid grenadeUid, out EntityCoordinates coordinates)
     {
         coordinates = default;
 
-        if (!_thrownItemQuery.HasComp(grenadeUid) || !_thrownGrenadeQuery.TryComp(grenadeUid, out var thrownGrenadeComponent))
+        if (!_thrownGrenadeQuery.TryComp(grenadeUid, out var thrownGrenadeComponent))
+            return false;
+
+        // In the air, or still in the thrower's hand while it is cooked for that throw: either way it is coming down there.
+        // A cooked one is in a container, so the blast tile dangers (PathfindingSystem.Klovn.Blast.cs) leave it out until it
+        //   is thrown, and then it is in the air: the squad is warned of where it lands from the moment the cook starts
+        //   (TargetDangerRangeCon, grenade.yml) and goes round it from the moment it leaves the hand.
+        if (!_thrownItemQuery.HasComp(grenadeUid) &&
+            !(_grenadeCookQuery.TryComp(thrownGrenadeComponent.ThrowerUid, out var cookComponent) && cookComponent.GrenadeUid == grenadeUid))
             return false;
 
         coordinates = thrownGrenadeComponent.Coordinates;
@@ -123,6 +143,9 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
             return;
 
         StartPush(throwerUid, coordinates);
+
+        // A squad that pushes in a fight may go in on a hostile caught by it.
+        _npcSquadTacticsSystem.NoteBlast(throwerUid, coordinates);
 
         if (!_grenadeThrowerQuery.TryComp(throwerUid, out var grenadeThrowerComponent) || !grenadeThrowerComponent.CallsOutBlasts)
             return;

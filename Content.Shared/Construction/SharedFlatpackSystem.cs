@@ -98,6 +98,10 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
         // <Trauma> - predict this and remove local rotatio
         var spawn = PredictedSpawnAtPosition(comp.Entity, _map.GridTileToLocal(grid, gridComp, buildPos));
         _transform.SetLocalRotation(spawn, 0);
+        // KS14 start: tell who unpacked it, so a turret's kills can be credited
+        var unpackedEvent = new Content.Shared._KS14.Construction.KsFlatpackUnpackedEvent(spawn, args.User);
+        RaiseLocalEvent(uid, ref unpackedEvent);
+        // KS14 end
         _adminLogger.Add(LogType.Construction,
             LogImpact.Low,
             $"{ToPrettyString(args.User):player} unpacked {ToPrettyString(spawn):entity} at {xform.Coordinates} from {ToPrettyString(uid):entity}");

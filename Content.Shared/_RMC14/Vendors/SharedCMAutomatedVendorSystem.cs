@@ -344,6 +344,11 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 user.ExtraPoints[vendor.Comp.PointsType] = userPoints - (entry.Points ?? 0);
 
             Dirty(actor, user);
+
+            // KS14 start: let whatever keeps these points elsewhere follow the purchase
+            var ksPointsSpentEvent = new Content.Shared._KS14.Vendors.KsVendorPointsSpentEvent(actor, vendor.Comp.PointsType, userPoints - (entry.Points ?? 0));
+            RaiseLocalEvent(ref ksPointsSpentEvent);
+            // KS14 end
         }
 
         if (entry.Amount != null)
@@ -374,6 +379,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 AmountUpdated(vendor, entry);
             }
         }
+        KsVendAlongside(vendor, actor, section); // KS14: vend the section's also-vend entry (base gear) before the pick
         var min = comp.MinOffset;
         var max = comp.MaxOffset;
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(

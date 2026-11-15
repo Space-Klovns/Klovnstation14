@@ -159,8 +159,9 @@ namespace Content.Client.Options.UI.Tabs
 
             AddHeader("ui-options-header-general");
             AddToggleCvarCheckBox("ui-options-hotkey-keymap", CVars.DisplayUSQWERTYHotkeys);
-            AddToggleCvarCheckBox("ui-options-hold-to-attack-melee", CCVars.ControlHoldToAttackMelee);
-            AddToggleCvarCheckBox("ui-options-hold-to-attack-ranged", CCVars.ControlHoldToAttackRanged);
+            // KS14: removed, hold-to-attack was a free autoclicker
+            /* AddToggleCvarCheckBox("ui-options-hold-to-attack-melee", CCVars.ControlHoldToAttackMelee); */
+            /* AddToggleCvarCheckBox("ui-options-hold-to-attack-ranged", CCVars.ControlHoldToAttackRanged); */
 
             AddHeader("ui-options-header-movement");
             AddButton(EngineKeyFunctions.MoveUp);

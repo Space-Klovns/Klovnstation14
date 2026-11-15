@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Entry;
 
+// TODO KS14 PARTIALS: per-file name prefixes or something to denote them being partial (maybe .partial.yml file extension)
 public sealed partial class KsEntryPoint : GameShared
 {
     [Dependency] private IResourceManager _resourceManager = default!;

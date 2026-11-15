@@ -8,9 +8,8 @@ description: How client UI is built in this repo - XAML and its code-behind, lay
 Facts read from `RobustToolbox` v291 (`RT` = `RobustToolbox/Robust.Client/UserInterface`) and content. Nothing
 headless draws, so styling and visuals are only verified once someone has looked in game. Say so when reporting.
 
-Already in `CLAUDE.md`, not repeated here: *A window's `MinSize` does not protect contents that wrap* (§6), *CVars:
-unsubscribe from anything that does not live as long as the process* (§6, applies to every `Control`), and client
-localisation (§7).
+Already in `CLAUDE.md`, not repeated here: *CVars: unsubscribe from anything that does not live as long as the
+process* (§6, applies to every `Control`). Client localisation is the `localization` skill.
 
 ## Where to look
 
@@ -65,7 +64,7 @@ localisation (§7).
 - **Constraint priority:** `MinSize` > `MaxSize` > `SetSize`.
 - **Measure is capped at the space offered** (`Control.Layout.cs:605`). A squeezed control reports less than it
   needs and is laid out at that size. It *vanishes* rather than overflowing, which is the root of the wrapping-window
-  trap in CLAUDE.md.
+  trap in *Wrapping text in a resizable window* below.
 - `Label` doesn't wrap. For free text (server names, character summaries), use a `RichTextLabel` with `MaxWidth`,
   which wraps, and fill it with `FormattedMessage.FromUnformatted` so player text can't inject markup.
 - **`ClipText="True"` measures zero width** (`Label.cs:372-375`: `MeasureOverride` returns `(0, textHeight)`).
@@ -308,7 +307,51 @@ Pick by what the window holds:
 | --- | --- |
 | A form with a fixed set of rows (most BUIs) | `MinWidth="340" Resizable="False"`, no `SetSize`, no height at all. Sizing to the contents can't go wrong in any language. |
 | Something that wants the room (a list, a map, a log) | `SetSize` and `MinSize`, with a `ScrollContainer` or an expanding child taking the slack, so a smaller window shrinks that and not the rows. |
-| Wrapping text in a resizable window | The minimum has to follow the contents: CLAUDE.md §6, *A window's `MinSize` does not protect contents that wrap*. |
+| Wrapping text in a resizable window | The minimum has to follow the contents: see below. |
+
+### Wrapping text in a resizable window
+
+`BaseWindow` clamps a drag to `MinSize` and never asks the contents. Wrapping text (`RichTextLabel`, anything
+word-wrapped) gets *taller* as the window narrows, so a window can meet its minimum and still push what's below the text
+out of the bottom: those controls are laid out at zero height and vanish. The voice link window lost its buttons this
+way. Make the minimum follow the contents: the rows that can't wrap set the minimum width, and the minimum height is what
+the contents need *at the current width*. Recompute on every resize and whenever a row's text changes:
+
+```csharp
+protected override void Resized()
+{
+    base.Resized();
+    UpdateMinimumSize();
+}
+
+private void UpdateMinimumSize()
+{
+    if (RootBox.Size.X <= 0f)
+        return; // not laid out yet
+
+    var marginSize = new Vector2(RootBox.Margin.SumHorizontal, RootBox.Margin.SumVertical);
+    var frameSize = Size - RootBox.Size - marginSize; // title bar and borders
+
+    var widestRow = 0f;
+    foreach (var row in _unwrappableRows) // buttons, single-line labels
+    {
+        row.Measure(Vector2Helpers.Infinity);
+        widestRow = MathF.Max(widestRow, row.DesiredSize.X);
+    }
+
+    // DesiredSize includes the margin.
+    RootBox.Measure(new Vector2(RootBox.Size.X + marginSize.X, float.PositiveInfinity));
+
+    MinSize = new Vector2(frameSize.X + marginSize.X + widestRow, frameSize.Y + RootBox.DesiredSize.Y);
+}
+```
+
+A `MinSize` bigger than `SetSize` wins at measure time, so the window grows back by itself; set `SetSize` to match too,
+so the next drag starts from the size shown (`KsVoiceLinkWindow`). **Testing it:** a squeezed control is laid out *and
+measured* at the squeezed size, so its `Size` and `DesiredSize` agree at zero, and "is it inside the window?" passes too.
+Compare each control against what it needs with room to spare: `Measure` it with unlimited height (and width, for
+anything that can't wrap), then check its shown size against that (`KsVoiceLinkWindowTests`). Layout runs in the
+headless client with real font metrics.
 
 Don't fix a cut-off window by raising the number; that's how the pressure pump went from 110 to 160 and was still 2.6 px
 short. `KsWindowContentsFitTest` measures every `FancyWindow` that can be built empty and fails on a new one that doesn't
@@ -355,7 +398,8 @@ ever shrinks.
       // assert inside Client.WaitPost, Close() last
   }
   ```
-- Assert against `Measure(Vector2Helpers.Infinity)`, not a squeezed control's own `DesiredSize` (CLAUDE.md §6), and
+- Assert against `Measure(Vector2Helpers.Infinity)`, not a squeezed control's own `DesiredSize` (see *Wrapping text
+  in a resizable window*), and
   prove the test fails with the fix removed.
 - Lobby smoke tests: `--filter "FullyQualifiedName~Lobby|FullyQualifiedName~SandboxTest"`.
 - **Drive the real screen when standalone doesn't reproduce.** With `PoolSettings { Connected = true, InLobby = true }`,
