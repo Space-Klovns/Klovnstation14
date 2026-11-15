@@ -1,0 +1,555 @@
+using Content.Shared.Alert;
+using Content.Shared.Damage.Events;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Examine;
+using Content.Shared.Movement.Systems;
+using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+
+namespace Content.Shared._KS14.Cultivation.Body;
+
+/// <summary>
+///     The one place a body cultivator's stage, tempering, exhaustion and part levels change, and where the combined
+///         effects of their unlocked powers and active arts are applied to damage, speed and stamina.
+/// </summary>
+public sealed partial class SharedBodyCultivationSystem : EntitySystem
+{
+    public static readonly ProtoId<AlertPrototype> ExhaustionAlert = "KsBodyExhaustion";
+    public static readonly ProtoId<AlertPrototype> TemperingAlert = "KsBodyTempering";
+
+    /// <summary>
+    ///     Health added by reaching each stage (index 0 is Copper Skin), cumulative.
+    /// </summary>
+    public static readonly float[] StageHealth = { 10f, 10f, 10f, 10f, 15f, 15f, 15f, 20f, 20f };
+
+    public static readonly BodyGroup[] AllGroups =
+    {
+        BodyGroup.Head, BodyGroup.Chest, BodyGroup.Arms, BodyGroup.Legs, BodyGroup.Eyes,
+        BodyGroup.Ears, BodyGroup.Heart, BodyGroup.Lungs, BodyGroup.Liver, BodyGroup.Stomach,
+    };
+
+    private static readonly string[] BruteTypes = { "Blunt", "Slash", "Piercing" };
+    private static readonly string[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
+
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private AlertsSystem _alertsSystem = default!;
+    [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
+    [Dependency] private EntityQuery<BodyCultivatorComponent> _bodyCultivatorQuery = default!;
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (_netManager.IsClient)
+            return;
+
+        var currentTime = _gameTiming.CurTime;
+        var hardeningEnumerator = EntityQueryEnumerator<BodyHardeningComponent>();
+        while (hardeningEnumerator.MoveNext(out var uid, out var hardeningComponent))
+        {
+            if (hardeningComponent.BloodBoilEnd != TimeSpan.Zero && currentTime >= hardeningComponent.BloodBoilEnd)
+            {
+                hardeningComponent.BloodBoilEnd = TimeSpan.Zero;
+                AddExhaustion(uid, hardeningComponent.BloodBoilCrash);
+                Dirty(uid, hardeningComponent);
+                _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+                var ev = new BodyBloodBoilEndedEvent();
+                RaiseLocalEvent(uid, ref ev);
+            }
+
+            if (currentTime >= hardeningComponent.IronShirtEnd && currentTime >= hardeningComponent.VajraEnd
+                && hardeningComponent.BloodBoilEnd == TimeSpan.Zero)
+                RemCompDeferred(uid, hardeningComponent);
+        }
+    }
+
+    #region Rules
+
+    /// <summary>
+    ///     Tempering it takes to raise a part from one level below to this level.
+    /// </summary>
+    public static int PartCost(int level)
+    {
+        return 2 + level;
+    }
+
+    public static int StageCap(BodyCultivatorComponent bodyCultivator)
+    {
+        return bodyCultivator.Committed ? BodyCultivatorComponent.MaxStage : BodyCultivatorComponent.MortalStageCap;
+    }
+
+    /// <summary>
+    ///     Parts can be tempered one level past the current stage, and no further than the path allows.
+    /// </summary>
+    public static int PartCap(BodyCultivatorComponent bodyCultivator)
+    {
+        return Math.Min(bodyCultivator.Stage + 1, StageCap(bodyCultivator));
+    }
+
+    public static int GetLevel(BodyCultivatorComponent bodyCultivator, BodyGroup group)
+    {
+        return bodyCultivator.Levels.GetValueOrDefault(group);
+    }
+
+    public static float StageHealthBonus(int stage)
+    {
+        var total = 0f;
+        for (var i = 0; i < stage && i < StageHealth.Length; i++)
+            total += StageHealth[i];
+
+        return total;
+    }
+
+    /// <summary>
+    ///     Every part tempered past the current stage, and the path still open above it.
+    /// </summary>
+    public bool ReadyForTribulation(BodyCultivatorComponent bodyCultivator)
+    {
+        if (bodyCultivator.Stage >= StageCap(bodyCultivator))
+            return false;
+
+        foreach (var group in AllGroups)
+        {
+            if (GetLevel(bodyCultivator, group) <= bodyCultivator.Stage)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     The least tempered part that can still take more, or null if every part is at the cap.
+    /// </summary>
+    public BodyGroup? WeakestGroup(BodyCultivatorComponent bodyCultivator)
+    {
+        var cap = PartCap(bodyCultivator);
+        BodyGroup? weakest = null;
+        var weakestLevel = int.MaxValue;
+        foreach (var group in AllGroups)
+        {
+            var level = GetLevel(bodyCultivator, group);
+            if (level >= cap || level >= weakestLevel)
+                continue;
+
+            weakest = group;
+            weakestLevel = level;
+        }
+
+        return weakest;
+    }
+
+    public bool CanExert(BodyCultivatorComponent bodyCultivator, float exhaustion)
+    {
+        return bodyCultivator.Exhaustion + exhaustion <= bodyCultivator.MaxExhaustion;
+    }
+
+    #endregion
+
+    #region Changes
+
+    /// <summary>
+    ///     Earn tempering from a kind of training, if that kind isn't on cooldown.
+    /// </summary>
+    /// <returns>Tempering actually gained.</returns>
+    public float AddTempering(Entity<BodyCultivatorComponent?> entity, float amount, string? source = null, TimeSpan? cooldown = null)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return 0f;
+
+        var currentTime = _gameTiming.CurTime;
+        if (source != null)
+        {
+            if (entity.Comp.TrainingCooldowns.TryGetValue(source, out var ready) && currentTime < ready)
+                return 0f;
+
+            entity.Comp.TrainingCooldowns[source] = currentTime + (cooldown ?? TimeSpan.FromSeconds(30));
+        }
+
+        var gained = Math.Clamp(amount, 0f, entity.Comp.TemperingCap - entity.Comp.Tempering);
+        if (gained <= 0f)
+            return 0f;
+
+        entity.Comp.Tempering += gained;
+        Dirty(entity);
+        UpdateAlerts((entity, entity.Comp));
+        return gained;
+    }
+
+    /// <summary>
+    ///     Pour tempering into a part, but only as much as it can take before the cap. Leftover stays banked.
+    /// </summary>
+    /// <returns>Levels gained.</returns>
+    public int Forge(Entity<BodyCultivatorComponent?> entity, BodyGroup group, float maxAmount)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return 0;
+
+        var cap = PartCap(entity.Comp);
+        var level = GetLevel(entity.Comp, group);
+        if (level >= cap)
+            return 0;
+
+        var progress = entity.Comp.Progress.GetValueOrDefault(group);
+        var room = PartCost(level + 1) - progress;
+        for (var next = level + 2; next <= cap; next++)
+            room += PartCost(next);
+
+        var poured = (int)MathF.Min(MathF.Min(maxAmount, entity.Comp.Tempering), room);
+        if (poured <= 0)
+            return 0;
+
+        entity.Comp.Tempering -= poured;
+        progress += poured;
+
+        var gained = 0;
+        while (level < cap && progress >= PartCost(level + 1))
+        {
+            progress -= PartCost(level + 1);
+            level++;
+            gained++;
+        }
+
+        entity.Comp.Levels[group] = level;
+        entity.Comp.Progress[group] = progress;
+        Dirty(entity);
+        UpdateAlerts((entity, entity.Comp));
+
+        if (gained > 0)
+            Recalculate((entity, entity.Comp));
+
+        return gained;
+    }
+
+    /// <summary>
+    ///     Set a part's level directly, as remolding a part from scratch does.
+    /// </summary>
+    public void SetLevel(Entity<BodyCultivatorComponent?> entity, BodyGroup group, int level)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return;
+
+        entity.Comp.Levels[group] = Math.Clamp(level, 0, BodyCultivatorComponent.MaxStage);
+        entity.Comp.Progress[group] = 0;
+        Dirty(entity);
+        Recalculate((entity, entity.Comp));
+    }
+
+    public void AddExhaustion(Entity<BodyCultivatorComponent?> entity, float amount)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return;
+
+        var newExhaustion = Math.Clamp(entity.Comp.Exhaustion + amount, 0f, entity.Comp.MaxExhaustion);
+        if (MathHelper.CloseTo(newExhaustion, entity.Comp.Exhaustion))
+            return;
+
+        entity.Comp.Exhaustion = newExhaustion;
+        Dirty(entity);
+        UpdateAlerts((entity, entity.Comp));
+    }
+
+    public void Commit(Entity<BodyCultivatorComponent?> entity)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false) || entity.Comp.Committed)
+            return;
+
+        entity.Comp.Committed = true;
+        Dirty(entity);
+    }
+
+    public void AdvanceStage(Entity<BodyCultivatorComponent?> entity)
+    {
+        if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false)
+            || entity.Comp.Stage >= StageCap(entity.Comp))
+            return;
+
+        var oldStage = entity.Comp.Stage;
+        entity.Comp.Stage++;
+        Dirty(entity);
+        Recalculate((entity, entity.Comp));
+
+        var ev = new BodyStageChangedEvent(oldStage, entity.Comp.Stage);
+        RaiseLocalEvent(entity, ref ev);
+    }
+
+    /// <summary>
+    ///     Recombine the stage and every unlocked power into the body's modifiers.
+    /// </summary>
+    /// <returns>Powers unlocked by this change.</returns>
+    public List<BodyTemperingPowerPrototype> Recalculate(Entity<BodyCultivatorComponent> entity)
+    {
+        var bodyCultivator = entity.Comp;
+        var newlyUnlocked = new List<BodyTemperingPowerPrototype>();
+
+        bodyCultivator.DamageMultipliers.Clear();
+        bodyCultivator.SpeedMultiplier = 1f;
+        bodyCultivator.StaminaMultiplier = 1f;
+        bodyCultivator.HungerMultiplier = 1f;
+        bodyCultivator.RegenPerSecond = 0f;
+        bodyCultivator.HealthBonus = StageHealthBonus(bodyCultivator.Stage);
+        bodyCultivator.PunchDamage = GetLevel(bodyCultivator, BodyGroup.Arms);
+        bodyCultivator.PunchStaminaDamage = 0f;
+        bodyCultivator.PunchKnockdownChance = 0f;
+        bodyCultivator.PunchThrowChance = 0f;
+        bodyCultivator.PunchStructuralDamage = 0f;
+        bodyCultivator.PunchBreaksWalls = false;
+        bodyCultivator.EternalHeart = false;
+
+        // Each stage also makes you a little faster.
+        bodyCultivator.SpeedMultiplier = 1f + 0.01f * bodyCultivator.Stage;
+
+        // A Primordial Chaos Body can't be shocked.
+        if (bodyCultivator.Stage >= BodyCultivatorComponent.MaxStage)
+            bodyCultivator.DamageMultipliers["Shock"] = 0f;
+
+        foreach (var power in ProtoMan.EnumeratePrototypes<BodyTemperingPowerPrototype>())
+        {
+            if (GetLevel(bodyCultivator, power.Group) < power.Level)
+                continue;
+
+            if (bodyCultivator.Powers.Add(power.ID))
+                newlyUnlocked.Add(power);
+
+            foreach (var (type, multiplier) in power.DamageMultipliers)
+            {
+                bodyCultivator.DamageMultipliers[type] = bodyCultivator.DamageMultipliers.TryGetValue(type, out var current)
+                    ? MathF.Min(current, multiplier)
+                    : multiplier;
+            }
+
+            bodyCultivator.SpeedMultiplier = MathF.Max(bodyCultivator.SpeedMultiplier, power.SpeedMultiplier);
+            bodyCultivator.StaminaMultiplier = MathF.Min(bodyCultivator.StaminaMultiplier, power.StaminaMultiplier);
+            bodyCultivator.HungerMultiplier = MathF.Min(bodyCultivator.HungerMultiplier, power.HungerMultiplier);
+            bodyCultivator.RegenPerSecond += power.RegenPerSecond;
+            bodyCultivator.HealthBonus += power.HealthBonus;
+            bodyCultivator.PunchDamage += power.PunchDamage;
+            bodyCultivator.PunchStaminaDamage += power.PunchStaminaDamage;
+            bodyCultivator.PunchKnockdownChance = MathF.Max(bodyCultivator.PunchKnockdownChance, power.PunchKnockdownChance);
+            bodyCultivator.PunchThrowChance = MathF.Max(bodyCultivator.PunchThrowChance, power.PunchThrowChance);
+            bodyCultivator.PunchStructuralDamage = MathF.Max(bodyCultivator.PunchStructuralDamage, power.PunchStructuralDamage);
+            bodyCultivator.PunchBreaksWalls |= power.PunchBreaksWalls;
+            bodyCultivator.EternalHeart |= power.EternalHeart;
+        }
+
+        Dirty(entity);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
+
+        var ev = new BodyPowersChangedEvent(newlyUnlocked);
+        RaiseLocalEvent(entity, ref ev);
+        return newlyUnlocked;
+    }
+
+    public void SetNextTick(BodyCultivatorComponent bodyCultivator, TimeSpan next)
+    {
+        bodyCultivator.NextTick = next;
+    }
+
+    public void SetNextPassiveTempering(BodyCultivatorComponent bodyCultivator, TimeSpan next)
+    {
+        bodyCultivator.NextPassiveTempering = next;
+    }
+
+    public void SetEternalHeartReady(BodyCultivatorComponent bodyCultivator, TimeSpan ready)
+    {
+        bodyCultivator.EternalHeartReady = ready;
+    }
+
+    public void SetBaseThresholds(BodyCultivatorComponent bodyCultivator, float? critical, float? dead)
+    {
+        bodyCultivator.BaseCriticalThreshold = critical;
+        bodyCultivator.BaseDeadThreshold = dead;
+    }
+
+    public void SetForgeTarget(BodyCultivatorComponent bodyCultivator, BodyGroup? group)
+    {
+        bodyCultivator.ForgeTarget = group;
+    }
+
+    public void RecordTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto, EntityUid actionUid)
+    {
+        bodyCultivator.Techniques[actionProto] = actionUid;
+    }
+
+    public bool HasTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto)
+    {
+        return bodyCultivator.Techniques.ContainsKey(actionProto);
+    }
+
+    public void UpdateAlerts(Entity<BodyCultivatorComponent> entity)
+    {
+        _alertsSystem.ShowAlert(entity.Owner, ExhaustionAlert);
+        _alertsSystem.ShowAlert(entity.Owner, TemperingAlert);
+    }
+
+    #endregion
+
+    #region Stances and hardening
+
+    public BodyStance? GetStance(EntityUid uid)
+    {
+        return TryComp<BodyStanceComponent>(uid, out var stanceComponent) ? stanceComponent.Stance : null;
+    }
+
+    public void SetStance(EntityUid uid, BodyStance? stance)
+    {
+        if (stance is not { } newStance)
+        {
+            RemComp<BodyStanceComponent>(uid);
+        }
+        else
+        {
+            var stanceComponent = EnsureComp<BodyStanceComponent>(uid);
+            stanceComponent.Stance = newStance;
+            Dirty(uid, stanceComponent);
+        }
+
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+    }
+
+    public void ApplyIronShirt(EntityUid uid, TimeSpan duration, float bruteMultiplier)
+    {
+        var hardeningComponent = EnsureComp<BodyHardeningComponent>(uid);
+        hardeningComponent.IronShirtEnd = _gameTiming.CurTime + duration;
+        hardeningComponent.BruteMultiplier = bruteMultiplier;
+        Dirty(uid, hardeningComponent);
+    }
+
+    public void ApplyVajra(EntityUid uid, TimeSpan duration)
+    {
+        var hardeningComponent = EnsureComp<BodyHardeningComponent>(uid);
+        hardeningComponent.VajraEnd = _gameTiming.CurTime + duration;
+        Dirty(uid, hardeningComponent);
+    }
+
+    public void ApplyBloodBoil(EntityUid uid, TimeSpan duration, float crash)
+    {
+        var hardeningComponent = EnsureComp<BodyHardeningComponent>(uid);
+        hardeningComponent.BloodBoilEnd = _gameTiming.CurTime + duration;
+        hardeningComponent.BloodBoilCrash = crash;
+        Dirty(uid, hardeningComponent);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+    }
+
+    public bool InBloodBoil(EntityUid uid)
+    {
+        return TryComp<BodyHardeningComponent>(uid, out var hardeningComponent)
+            && hardeningComponent.BloodBoilEnd != TimeSpan.Zero
+            && _gameTiming.CurTime < hardeningComponent.BloodBoilEnd;
+    }
+
+    public bool InVajra(EntityUid uid)
+    {
+        return TryComp<BodyHardeningComponent>(uid, out var hardeningComponent) && _gameTiming.CurTime < hardeningComponent.VajraEnd;
+    }
+
+    #endregion
+
+    #region Effects
+
+    [SubscribeLocalEvent]
+    private void OnDamageModify(Entity<BodyCultivatorComponent> entity, ref DamageModifyEvent args)
+    {
+        var stance = GetStance(entity);
+        foreach (var type in new List<ProtoId<DamageTypePrototype>>(args.Damage.DamageDict.Keys))
+        {
+            var amount = args.Damage.DamageDict[type];
+            if (amount <= 0)
+                continue;
+
+            var multiplier = entity.Comp.DamageMultipliers.GetValueOrDefault(type.Id, 1f);
+            if (stance == BodyStance.Thunderclap && (Array.IndexOf(BruteTypes, type.Id) >= 0 || Array.IndexOf(BurnTypes, type.Id) >= 0))
+                multiplier *= 1.1f;
+            else if (stance == BodyStance.Mountain && Array.IndexOf(BruteTypes, type.Id) >= 0)
+                multiplier *= 0.9f;
+
+            args.Damage.DamageDict[type] = amount * multiplier;
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHardeningDamageModify(Entity<BodyHardeningComponent> entity, ref DamageModifyEvent args)
+    {
+        var currentTime = _gameTiming.CurTime;
+        var ironShirt = currentTime < entity.Comp.IronShirtEnd;
+        var vajra = currentTime < entity.Comp.VajraEnd;
+        if (!ironShirt && !vajra)
+            return;
+
+        foreach (var type in new List<ProtoId<DamageTypePrototype>>(args.Damage.DamageDict.Keys))
+        {
+            var amount = args.Damage.DamageDict[type];
+            if (amount <= 0)
+                continue;
+
+            var brute = Array.IndexOf(BruteTypes, type.Id) >= 0;
+            var burn = Array.IndexOf(BurnTypes, type.Id) >= 0;
+            var multiplier = 1f;
+            if (ironShirt && brute)
+                multiplier *= entity.Comp.BruteMultiplier;
+            if (vajra && (brute || burn))
+                multiplier *= entity.Comp.VajraMultiplier;
+
+            args.Damage.DamageDict[type] = amount * multiplier;
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRefreshSpeed(Entity<BodyCultivatorComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
+    {
+        var multiplier = entity.Comp.SpeedMultiplier;
+        switch (GetStance(entity))
+        {
+            case BodyStance.Thunderclap:
+                multiplier *= 1.15f;
+                break;
+            case BodyStance.Mountain:
+                multiplier *= 0.8f;
+                break;
+        }
+
+        // Blood Boil: nothing slows you.
+        if (InBloodBoil(entity))
+            multiplier = MathF.Max(multiplier, 1.2f);
+
+        args.ModifySpeed(multiplier);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStaminaDamage(Entity<BodyCultivatorComponent> entity, ref BeforeStaminaDamageEvent args)
+    {
+        if (args.Value > 0)
+            args.Value *= entity.Comp.StaminaMultiplier;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnExamined(Entity<BodyCultivatorComponent> entity, ref ExaminedEvent args)
+    {
+        if (entity.Comp.Stage <= 0)
+            return;
+
+        args.PushMarkup(Loc.GetString("body-cultivation-examine",
+            ("target", entity.Owner),
+            ("stage", Loc.GetString($"body-stage-{entity.Comp.Stage}"))));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<BodyCultivatorComponent> entity, ref ComponentShutdown args)
+    {
+        _alertsSystem.ClearAlert(entity.Owner, ExhaustionAlert);
+        _alertsSystem.ClearAlert(entity.Owner, TemperingAlert);
+    }
+
+    #endregion
+}
+
+/// <summary>
+///     Raised on a body cultivator whenever their powers are recombined, with any powers newly unlocked.
+/// </summary>
+[ByRefEvent]
+public readonly record struct BodyPowersChangedEvent(List<BodyTemperingPowerPrototype> NewlyUnlocked);
+
+[ByRefEvent]
+public readonly record struct BodyBloodBoilEndedEvent;
