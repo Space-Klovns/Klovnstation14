@@ -8,6 +8,39 @@
   },
   "states": [
     {
+      "name": "art_dragon_palm"
+    },
+    {
+      "name": "art_dugu"
+    },
+    {
+      "name": "art_golden_bell"
+    },
+    {
+      "name": "art_graceful_steps"
+    },
+    {
+      "name": "art_great_shift"
+    },
+    {
+      "name": "art_ladder_cloud"
+    },
+    {
+      "name": "art_muscle_tendon"
+    },
+    {
+      "name": "art_nine_yang"
+    },
+    {
+      "name": "art_northern_darkness"
+    },
+    {
+      "name": "art_six_meridians"
+    },
+    {
+      "name": "art_star_absorbing"
+    },
+    {
       "name": "manual_earth"
     },
     {

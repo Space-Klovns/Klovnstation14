@@ -1,0 +1,175 @@
+- type: entity
+  abstract: true
+  parent: BaseItem
+  id: BaseMartialArtManual
+  description: A worn martial arts manual, its pages full of stances, breathing charts and marginal notes.
+  components:
+  - type: Item
+    size: Small
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualDragonPalms
+  name: Eighteen Dragon-Subduing Palms
+  components:
+  - type: Sprite
+    state: art_dragon_palm
+  - type: MartialArtManual
+    art: KsDragonPalms
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualSixMeridians
+  name: Six Meridians Divine Sword Manual
+  components:
+  - type: Sprite
+    state: art_six_meridians
+  - type: MartialArtManual
+    art: KsSixMeridians
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualNorthernDarkness
+  name: Northern Darkness Scroll
+  components:
+  - type: Sprite
+    state: art_northern_darkness
+  - type: MartialArtManual
+    art: KsNorthernDarkness
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualStarAbsorbing
+  name: Star-Absorbing Great Method
+  description: Someone has scratched a warning on the cover. The pages inside feel cold.
+  components:
+  - type: Sprite
+    state: art_star_absorbing
+  - type: MartialArtManual
+    art: KsStarAbsorbing
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGreatShift
+  name: Great Shift of Heaven and Earth
+  components:
+  - type: Sprite
+    state: art_great_shift
+  - type: MartialArtManual
+    art: KsGreatShift
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualNineYang
+  name: Nine Yang Manual
+  description: A manual written in the margins of another book. It is warm to the touch.
+  components:
+  - type: Sprite
+    state: art_nine_yang
+  - type: MartialArtManual
+    art: KsNineYang
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGoldenBell
+  name: Golden Bell Shield Manual
+  components:
+  - type: Sprite
+    state: art_golden_bell
+  - type: MartialArtManual
+    art: KsGoldenBell
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGracefulSteps
+  name: Graceful Waves Steps
+  components:
+  - type: Sprite
+    state: art_graceful_steps
+  - type: MartialArtManual
+    art: KsGracefulSteps
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualLadderCloud
+  name: Ladder-Cloud Leap Manual
+  components:
+  - type: Sprite
+    state: art_ladder_cloud
+  - type: MartialArtManual
+    art: KsLadderCloud
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualDugu
+  name: Nine Swords of Dugu
+  components:
+  - type: Sprite
+    state: art_dugu
+  - type: MartialArtManual
+    art: KsDugu
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualMuscleTendon
+  name: Muscle-Tendon Changing Classic
+  components:
+  - type: Sprite
+    state: art_muscle_tendon
+  - type: MartialArtManual
+    art: KsMuscleTendon
+
+- type: entity
+  parent: ProjectileCultivationSwordQi
+  id: ProjectileSixMeridiansSwordQi
+  name: finger sword qi
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
+    layers:
+    - state: magicm_yellow
+      shader: unshaded
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 12
+
+# Legendary armor
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterSoftHedgehogArmor
+  name: soft hedgehog armor
+  description: A supple vest of black silk lined with barbs. Whoever strikes its wearer up close is pricked bloody.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/soft_hedgehog_armor.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/soft_hedgehog_armor.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.7
+        Piercing: 0.8
+  - type: SoftHedgehogArmor
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterGoldenSilkVest
+  name: golden silk vest
+  description: A treasure vest woven from golden silk, light as cloth and almost impossible to cut or pierce.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/golden_silk_vest.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/golden_silk_vest.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Slash: 0.4
+        Piercing: 0.5
+        Blunt: 0.9

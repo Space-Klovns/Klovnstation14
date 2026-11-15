@@ -55,6 +55,40 @@ ACTIONS = {
     "mountain_collapse": ("崩", "tan"),
 }
 
+# Martial arts from the novels.
+ACTIONS.update({
+    "dragon_palm": ("龙", "gold"),
+    "six_meridians": ("脉", "teal"),
+    "northern_darkness": ("冥", "violet"),
+    "star_absorbing": ("吸", "crimson"),
+    "great_shift": ("移", "purple"),
+    "golden_bell": ("钟", "gold"),
+    "graceful_steps": ("波", "blue"),
+    "ladder_cloud": ("云", "silver"),
+    "dugu_counter": ("独", "silver"),
+})
+
+ART_MANUALS = {
+    "art_dragon_palm": ("龙", "gold"),
+    "art_six_meridians": ("脉", "teal"),
+    "art_northern_darkness": ("冥", "violet"),
+    "art_star_absorbing": ("吸", "crimson"),
+    "art_great_shift": ("移", "purple"),
+    "art_nine_yang": ("阳", "orange"),
+    "art_golden_bell": ("钟", "gold"),
+    "art_graceful_steps": ("波", "blue"),
+    "art_ladder_cloud": ("云", "silver"),
+    "art_dugu": ("独", "silver"),
+    "art_muscle_tendon": ("筋", "brown"),
+}
+
+# Legendary armor: the vanilla vest, gradient-mapped onto a new palette (dark, mid, light).
+ARMORS = {
+    "soft_hedgehog_armor.rsi": ((40, 26, 18), (112, 76, 44), (196, 150, 96)),
+    "golden_silk_vest.rsi": ((92, 58, 10), (206, 160, 52), (255, 236, 150)),
+}
+VEST = "Resources/Textures/Clothing/OuterClothing/Vests/vest.rsi"
+
 MANUALS = {
     "manual_metal": ("金", "silver"),
     "manual_wood": ("木", "green"),
@@ -156,6 +190,36 @@ def injury_alert(stacks, font_path):
     return image
 
 
+def gradient_map(image, palette):
+    """Recolour by brightness onto a dark-mid-light palette, keeping alpha."""
+    dark, mid, light = palette
+    image = image.convert("RGBA")
+    pixels = image.load()
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = pixels[x, y]
+            if a == 0:
+                continue
+            value = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            colour = lerp(dark, mid, value * 2) if value < 0.5 else lerp(mid, light, (value - 0.5) * 2)
+            pixels[x, y] = colour + (a,)
+    return image
+
+
+def write_armor(name, palette):
+    path = os.path.join(TEXTURES, name)
+    os.makedirs(path, exist_ok=True)
+    with open(os.path.join(VEST, "meta.json"), encoding="utf-8") as file:
+        meta = json.load(file)
+    for state in meta["states"]:
+        source = Image.open(os.path.join(VEST, state["name"] + ".png"))
+        gradient_map(source, palette).save(os.path.join(path, state["name"] + ".png"))
+    meta["copyright"] = "Recoloured from vest.rsi by Tools/_KS14/cultivation_icons.py. Original: " + meta["copyright"]
+    with open(os.path.join(path, "meta.json"), "w", encoding="utf-8") as file:
+        json.dump(meta, file, indent=2)
+        file.write("\n")
+
+
 def write_rsi(path, states, extra_copyright=""):
     os.makedirs(path, exist_ok=True)
     for name, image in states.items():
@@ -182,7 +246,10 @@ def main():
     write_rsi(os.path.join(TEXTURES, "actions.rsi"),
               {name: medallion(glyph, PALETTE[colour], args.font) for name, (glyph, colour) in ACTIONS.items()})
     write_rsi(os.path.join(TEXTURES, "manuals.rsi"),
-              {name: manual(glyph, PALETTE[colour], args.font) for name, (glyph, colour) in MANUALS.items()})
+              {name: manual(glyph, PALETTE[colour], args.font)
+               for name, (glyph, colour) in {**MANUALS, **ART_MANUALS}.items()})
+    for name, palette in ARMORS.items():
+        write_armor(name, palette)
     write_rsi(os.path.join(TEXTURES, "internal_injury.rsi"),
               {f"injury{stacks}": injury_alert(stacks, args.font) for stacks in range(1, 4)})
 

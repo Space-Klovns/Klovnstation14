@@ -44,6 +44,8 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
+    [Dependency] private EntityQuery<MuscleTendonComponent> _muscleTendonQuery = default!;
+    [Dependency] private EntityQuery<NineYangComponent> _nineYangQuery = default!;
 
     private readonly HashSet<Entity<CultivationQiSourceComponent>> _qiSources = new();
 
@@ -71,7 +73,8 @@ public sealed partial class CultivationSystem : EntitySystem
             var regen = cultivatorComponent.QiRegenPerSecond
                 * (float)RegenInterval.TotalSeconds
                 * SharedCultivationSystem.RegenMultiplier(cultivatorComponent.InjuryRegenPenalty, cultivatorComponent.InternalInjury)
-                * QiSourceMultiplier(uid);
+                * QiSourceMultiplier(uid)
+                * (_nineYangQuery.TryComp(uid, out var nineYangComponent) ? nineYangComponent.RegenMultiplier : 1f);
 
             _cultivationSystem.AddQi((uid, cultivatorComponent), regen);
         }
@@ -218,11 +221,25 @@ public sealed partial class CultivationSystem : EntitySystem
                 dealt += amount;
         }
 
-        if (dealt < entity.Comp.HeavyBlowThreshold)
+        if (dealt < HeavyBlowThreshold(entity))
             return;
 
         if (_cultivationSystem.AddInternalInjury(entity.AsNullable()))
             _popupSystem.PopupEntity(Loc.GetString("cultivation-internal-injury"), entity, entity, PopupType.MediumCaution);
+    }
+
+    /// <summary>
+    ///     How hard a single blow must be to bruise the meridians, after any arts that toughen them.
+    /// </summary>
+    public float HeavyBlowThreshold(Entity<CultivatorComponent> entity)
+    {
+        var threshold = entity.Comp.HeavyBlowThreshold;
+        if (_nineYangQuery.TryComp(entity, out var nineYangComponent))
+            threshold += nineYangComponent.HeavyBlowBonus;
+        if (_muscleTendonQuery.TryComp(entity, out var muscleTendonComponent))
+            threshold += muscleTendonComponent.HeavyBlowBonus;
+
+        return threshold;
     }
 
     #endregion

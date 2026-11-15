@@ -7,8 +7,8 @@ using Robust.Shared.Timing;
 namespace Content.Shared._KS14.Cultivation.Systems;
 
 /// <summary>
-///     Timed defensive techniques that change how a body takes damage or moves: Still Water Ward and Rooted
-///         Mountain Stance. Shared, so the slowdown is predicted.
+///     Timed techniques that change how a body takes damage or moves: Still Water Ward, Rooted Mountain Stance,
+///         Golden Bell Shield and Graceful Waves Steps. Shared, so the slowdown is predicted.
 /// </summary>
 public sealed partial class CultivationStanceSystem : EntitySystem
 {
@@ -38,6 +38,20 @@ public sealed partial class CultivationStanceSystem : EntitySystem
         {
             if (currentTime >= stanceComponent.EndTime)
                 RemCompDeferred(uid, stanceComponent);
+        }
+
+        var bellEnumerator = EntityQueryEnumerator<GoldenBellComponent>();
+        while (bellEnumerator.MoveNext(out var uid, out var bellComponent))
+        {
+            if (currentTime >= bellComponent.EndTime)
+                RemCompDeferred(uid, bellComponent);
+        }
+
+        var stepsEnumerator = EntityQueryEnumerator<GracefulStepsComponent>();
+        while (stepsEnumerator.MoveNext(out var uid, out var stepsComponent))
+        {
+            if (currentTime >= stepsComponent.EndTime)
+                RemCompDeferred(uid, stepsComponent);
         }
     }
 
@@ -106,6 +120,62 @@ public sealed partial class CultivationStanceSystem : EntitySystem
 
     [SubscribeLocalEvent]
     private void OnStanceShutdown(Entity<RootedStanceComponent> entity, ref ComponentShutdown args)
+    {
+        if (!TerminatingOrDeleted(entity))
+            _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
+    }
+
+    #endregion
+
+    #region Golden Bell Shield
+
+    /// <summary>
+    ///     The kinds of damage hardened skin turns aside.
+    /// </summary>
+    private static readonly string[] PhysicalDamageTypes = { "Blunt", "Slash", "Piercing" };
+
+    public void ApplyGoldenBell(EntityUid uid, TimeSpan duration, float damageMultiplier)
+    {
+        var bellComponent = EnsureComp<GoldenBellComponent>(uid);
+        bellComponent.EndTime = _gameTiming.CurTime + duration;
+        bellComponent.DamageMultiplier = damageMultiplier;
+        Dirty(uid, bellComponent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBellDamageModify(Entity<GoldenBellComponent> entity, ref DamageModifyEvent args)
+    {
+        foreach (var type in PhysicalDamageTypes)
+        {
+            if (args.Damage.DamageDict.TryGetValue(type, out var amount) && amount > 0)
+                args.Damage.DamageDict[type] = amount * entity.Comp.DamageMultiplier;
+        }
+    }
+
+    #endregion
+
+    #region Graceful Waves Steps
+
+    public void ApplyGracefulSteps(EntityUid uid, TimeSpan duration, float speedMultiplier)
+    {
+        var stepsComponent = EnsureComp<GracefulStepsComponent>(uid);
+        stepsComponent.EndTime = _gameTiming.CurTime + duration;
+        stepsComponent.SpeedMultiplier = speedMultiplier;
+        Dirty(uid, stepsComponent);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStepsRefreshSpeed(Entity<GracefulStepsComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
+    {
+        if (entity.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        args.ModifySpeed(entity.Comp.SpeedMultiplier);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStepsShutdown(Entity<GracefulStepsComponent> entity, ref ComponentShutdown args)
     {
         if (!TerminatingOrDeleted(entity))
             _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);

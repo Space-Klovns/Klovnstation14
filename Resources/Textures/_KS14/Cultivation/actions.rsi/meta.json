@@ -14,7 +14,25 @@
       "name": "burning_palm"
     },
     {
+      "name": "dragon_palm"
+    },
+    {
+      "name": "dugu_counter"
+    },
+    {
       "name": "flying_sword"
+    },
+    {
+      "name": "golden_bell"
+    },
+    {
+      "name": "graceful_steps"
+    },
+    {
+      "name": "great_shift"
+    },
+    {
+      "name": "ladder_cloud"
     },
     {
       "name": "meditate"
@@ -26,13 +44,22 @@
       "name": "myriad_spring"
     },
     {
+      "name": "northern_darkness"
+    },
+    {
       "name": "rooted_stance"
     },
     {
       "name": "sea_of_flames"
     },
     {
+      "name": "six_meridians"
+    },
+    {
       "name": "spring_mending"
+    },
+    {
+      "name": "star_absorbing"
     },
     {
       "name": "still_water"
