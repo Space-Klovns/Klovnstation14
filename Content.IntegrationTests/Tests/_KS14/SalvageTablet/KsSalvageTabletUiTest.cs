@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -8,7 +9,9 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.SalvageTablet;
 using Content.Shared._KS14.SalvageTablet;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Access.Components;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Materials;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
@@ -38,6 +41,8 @@ public sealed class KsSalvageTabletUiTest : GameTest
     private static readonly EntProtoId OreBag = "OreBag";
     private const string BagSlot = "ks_salvage_tablet";
     private const string BagLayer = "tablet";
+    private static readonly EntProtoId Silo = "MachineMaterialSilo";
+    private static readonly ProtoId<MaterialPrototype> Steel = "Steel";
 
     private T[] OpenWindows<T>() where T : BaseWindow
     {
@@ -250,6 +255,128 @@ public sealed class KsSalvageTabletUiTest : GameTest
 
             var enoughPopup = new KsLatheRequestPopup(canRequest: false, () => { });
             Assert.That(enoughPopup.RequestButton.Disabled, Is.True, "A recipe that can be made has nothing to ask for.");
+        });
+    }
+
+    private sealed class OpenTablet
+    {
+        public EntityUid UserUid;
+        public EntityUid TabletUid;
+        public EntityUid CardUid;
+        public EntityUid SiloUid;
+    }
+
+    /// <summary>
+    ///     A salvager holding a tablet logged in with their ID, open on their screen, beside a silo.
+    /// </summary>
+    private async Task<OpenTablet> OpenLoggedInTabletAsync()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var coordinates = new EntityCoordinates(testMap.Grid, 0.5f, 0.5f);
+        var scene = new OpenTablet();
+
+        await Server.WaitAssertion(() =>
+        {
+            var handsSystem = SEntMan.System<SharedHandsSystem>();
+            scene.UserUid = SEntMan.SpawnEntity(Human, coordinates);
+            scene.TabletUid = SEntMan.SpawnEntity(TabletPrototype, coordinates);
+            scene.CardUid = SEntMan.SpawnEntity(SalvageId, coordinates);
+            scene.SiloUid = SEntMan.SpawnEntity(Silo, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+            Assert.That(handsSystem.TryPickupAnyHand(scene.UserUid, scene.TabletUid), Is.True);
+            Assert.That(handsSystem.TryPickupAnyHand(scene.UserUid, scene.CardUid), Is.True);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, scene.UserUid);
+
+            var tablet = new Entity<KsSalvageTabletComponent>(scene.TabletUid, SEntMan.GetComponent<KsSalvageTabletComponent>(scene.TabletUid));
+            Assert.That(SEntMan.System<KsSalvageTabletSystem>().TryLogin(tablet, scene.UserUid), Is.True);
+        });
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.System<SharedUserInterfaceSystem>().TryOpenUi(scene.TabletUid, KsSalvageTabletUiKey.Key, scene.UserUid), Is.True);
+        });
+        await Pair.RunTicksSync(10);
+        return scene;
+    }
+
+    private BoundUserInterfaceState? ServerState(OpenTablet scene)
+    {
+        return SEntMan.GetComponent<UserInterfaceComponent>(scene.TabletUid).States.GetValueOrDefault(KsSalvageTabletUiKey.Key);
+    }
+
+    private void SendFromClient(OpenTablet scene, BoundUserInterfaceMessage message)
+    {
+        var clientTabletUid = CEntMan.GetEntity(SEntMan.GetNetEntity(scene.TabletUid));
+        Assert.That(CEntMan.System<UserInterfaceSystem>().TryGetOpenUi<KsSalvageTabletBoundUserInterface>(clientTabletUid, KsSalvageTabletUiKey.Key, out var boundUserInterface),
+            Is.True, "precondition: the client has the tablet open");
+        boundUserInterface!.SendMessage(message);
+    }
+
+    /// <summary>
+    ///     The state carries end times, so the client counts down by itself: an open tablet is sent nothing while nothing
+    ///         changes, and is sent a state as soon as something it shows does, here the silo.
+    /// </summary>
+    [Test]
+    public async Task AnOpenTabletIsSentStateOnlyWhenItChanges()
+    {
+        var scene = await OpenLoggedInTabletAsync();
+        BoundUserInterfaceState? before = null;
+        await Server.WaitAssertion(() =>
+        {
+            before = ServerState(scene);
+            Assert.That(before, Is.Not.Null, "precondition: the open tablet was sent a state");
+        });
+
+        await Pair.RunTicksSync(Server.Timing.TickRate * 3);
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(ServerState(scene), Is.SameAs(before), "Time passing must not resend the tablet's state.");
+            Assert.That(SEntMan.System<SharedMaterialStorageSystem>().TryChangeMaterialAmount(scene.SiloUid, Steel, 100), Is.True,
+                "precondition: the silo takes steel");
+        });
+        await Pair.RunTicksSync(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(ServerState(scene), Is.Not.SameAs(before), "A change to the silo must reach the open tablet.");
+        });
+    }
+
+    /// <summary>
+    ///     A tablet left logged in must not let just anyone spend for its salvager: every message but logging in and out
+    ///         takes salvage access, checked when it arrives.
+    /// </summary>
+    [Test]
+    public async Task MessagesFromSomeoneWithoutAccessAreRefused()
+    {
+        var scene = await OpenLoggedInTabletAsync();
+        var tasks = Array.Empty<ProtoId<KsSalvageTaskPrototype>>();
+        await Server.WaitAssertion(() =>
+        {
+            tasks = SEntMan.GetComponent<KsMinerAccountComponent>(scene.CardUid).Tasks.Select(task => task.Task).ToArray();
+            Assert.That(tasks, Has.Length.AtLeast(2), "precondition: the account has two tasks to track");
+        });
+
+        await Client.WaitPost(() => SendFromClient(scene, new KsSalvageTabletTrackTaskMessage(tasks[0])));
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var account = SEntMan.GetComponent<KsMinerAccountComponent>(scene.CardUid);
+            Assert.That(account.Tasks.Single(task => task.Task == tasks[0]).Tracked, Is.True, "precondition: a salvager's message is taken");
+
+            // The same card, with its access gone.
+            SEntMan.GetComponent<AccessComponent>(scene.CardUid).Tags.Clear();
+        });
+
+        await Client.WaitPost(() => SendFromClient(scene, new KsSalvageTabletTrackTaskMessage(tasks[1])));
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var account = SEntMan.GetComponent<KsMinerAccountComponent>(scene.CardUid);
+            Assert.That(account.Tasks.Single(task => task.Task == tasks[1]).Tracked, Is.False,
+                "A message from someone without salvage access must be refused.");
         });
     }
 }

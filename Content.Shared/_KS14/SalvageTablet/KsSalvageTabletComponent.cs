@@ -11,7 +11,7 @@ namespace Content.Shared._KS14.SalvageTablet;
 ///         mining points. Everything personal is kept on the ID card, so a lost tablet loses nothing.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState]
+[AutoGenerateComponentState(true)]
 public sealed partial class KsSalvageTabletComponent : Component
 {
     /// <summary>

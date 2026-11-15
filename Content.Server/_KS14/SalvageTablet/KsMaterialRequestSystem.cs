@@ -44,18 +44,6 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
         return fallbackUid != null;
     }
 
-    /// <summary>
-    ///     Forgets the requests the silo has met since they were made, so a request ends once it is filled rather than
-    ///         coming back the next time the silo dips below it.
-    /// </summary>
-    public void PruneMetRequests()
-    {
-        if (!TryGetSilo(out var siloUid) || !_requestsQuery.TryComp(siloUid, out var requestsComponent))
-            return;
-
-        PruneMetRequests((siloUid, requestsComponent));
-    }
-
     private void PruneMetRequests(Entity<KsMaterialRequestsComponent> siloEntity)
     {
         // A Dictionary may have entries removed while it is being enumerated.
@@ -69,7 +57,7 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
 
     /// <summary>
     ///     Fills in what the silo holds and how much more of each material has been asked for. Only reads: met
-    ///         requests are forgotten by <see cref="PruneMetRequests()"/>.
+    ///         requests are forgotten as the silo fills.
     /// </summary>
     /// <param name="alwaysShown">Materials to report even if the silo has never held any and nobody asked.</param>
     public void GetSiloReport(List<KsSalvageTabletSiloMaterial> materials, IReadOnlyList<ProtoId<MaterialPrototype>>? alwaysShown = null)
@@ -149,7 +137,24 @@ public sealed partial class KsMaterialRequestSystem : EntitySystem
         // Escaped: the lathe's name can carry player text, a hand labeler's for one.
         var message = Loc.GetString("ks-salvage-tablet-request-announce", ("lathe", latheEntity.Owner), ("materials", string.Join(", ", shortfalls)));
         _radioSystem.SendRadioMessage(latheEntity.Owner, message, RequestChannel, latheEntity.Owner);
+
+        var changedEvent = new KsSiloReportChangedEvent();
+        RaiseLocalEvent(ref changedEvent);
         return true;
+    }
+
+    /// <summary>
+    ///     Requests the silo has now met are forgotten, so one ends once it is filled rather than coming back the next
+    ///         time the silo dips below it. Then whoever shows the report is told.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnSiloMaterialAmountChanged(Entity<OreSiloComponent> entity, ref MaterialAmountChangedEvent args)
+    {
+        if (_requestsQuery.TryComp(entity.Owner, out var requestsComponent))
+            PruneMetRequests((entity.Owner, requestsComponent));
+
+        var changedEvent = new KsSiloReportChangedEvent();
+        RaiseLocalEvent(ref changedEvent);
     }
 
     // BUI messages are by-value class events, which have no Entity<T> handler, so this one takes the uid and component.

@@ -42,6 +42,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     [Dependency] private EntityQuery<AccessComponent> _accessQuery = default!;
     [Dependency] private EntityQuery<IdCardComponent> _idCardQuery = default!;
     [Dependency] private EntityQuery<KsSalvageTabletScannedComponent> _scannedQuery = default!;
+    [Dependency] private EntityQuery<KsSalvageTabletComponent> _tabletQuery = default!;
 
     private static readonly TimeSpan ExpiryCheckInterval = TimeSpan.FromSeconds(1);
 
@@ -71,16 +72,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
                 FillTasks((cardUid, accountComponent));
 
             if (failed > 0 || accountComponent.Tasks.Count != taskCount)
-                UpdateUis(cardUid);
-        }
-
-        // The silo and the bank change under an open tablet, and nothing says when.
-        _materialRequestSystem.PruneMetRequests();
-
-        var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
-        while (tabletEnumerator.MoveNext(out var tabletUid, out var tabletComponent))
-        {
-            UpdateUi((tabletUid, tabletComponent));
+                UpdateUis((cardUid, accountComponent));
         }
     }
 
@@ -108,10 +100,23 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         accountComponent.TaskSlots = tabletEntity.Comp.TaskSlots;
         FillTasks((idCardEntity.Owner, accountComponent));
 
+        Unbind(tabletEntity);
         tabletEntity.Comp.BoundCard = idCardEntity.Owner;
+        accountComponent.Tablets.Add(tabletEntity.Owner);
         Dirty(tabletEntity);
         UpdateUi(tabletEntity);
         return true;
+    }
+
+    /// <summary>
+    ///     Takes the tablet off the account it is logged in with, on both sides.
+    /// </summary>
+    private void Unbind(Entity<KsSalvageTabletComponent> tabletEntity)
+    {
+        if (tabletEntity.Comp.BoundCard is { } cardUid && _accountQuery.TryComp(cardUid, out var accountComponent))
+            accountComponent.Tablets.Remove(tabletEntity.Owner);
+
+        tabletEntity.Comp.BoundCard = null;
     }
 
     /// <summary>
@@ -133,7 +138,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
 
     public void Logout(Entity<KsSalvageTabletComponent> tabletEntity)
     {
-        tabletEntity.Comp.BoundCard = null;
+        Unbind(tabletEntity);
         Dirty(tabletEntity);
         UpdateUi(tabletEntity);
     }
@@ -162,7 +167,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
 
         task.Tracked = true;
         task.EndTime = _gameTiming.CurTime + taskPrototype.Duration;
-        UpdateUis(accountEntity.Owner);
+        UpdateUis(accountEntity);
         return true;
     }
 
@@ -192,7 +197,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
             accountEntity.Comp.Tasks.RemoveAt(index);
 
         accountEntity.Comp.NextDropTime = _gameTiming.CurTime + tabletEntity.Comp.DropCooldown;
-        UpdateUis(accountEntity.Owner);
+        UpdateUis(accountEntity);
         return true;
     }
 
@@ -245,7 +250,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
             return false;
 
         FillTasks((accountEntity.Owner, accountEntity.Comp));
-        UpdateUis(accountEntity.Owner);
+        UpdateUis((accountEntity.Owner, accountEntity.Comp));
         return true;
     }
 
@@ -255,7 +260,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     public void AddPoints(Entity<KsMinerAccountComponent> accountEntity, int points)
     {
         accountEntity.Comp.Points += points;
-        UpdateUis(accountEntity.Owner);
+        UpdateUis(accountEntity);
     }
 
     /// <summary>
@@ -309,7 +314,7 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         _supplyPodSystem.SpawnPodWithContents(tabletEntity.Comp.PodPrototype, dropCoordinates, contents);
 
         _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-order-sent"), tabletEntity.Owner, buyerUid, type: PopupType.Medium);
-        UpdateUis(accountEntity.Owner);
+        UpdateUis(accountEntity);
         return true;
     }
 
@@ -359,10 +364,9 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     /// </summary>
     private void Fail(Entity<KsMinerAccountComponent> accountEntity)
     {
-        var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
-        while (tabletEnumerator.MoveNext(out var tabletUid, out var tabletComponent))
+        foreach (var tabletUid in accountEntity.Comp.Tablets)
         {
-            if (tabletComponent.BoundCard == accountEntity.Owner)
+            if (_tabletQuery.TryComp(tabletUid, out var tabletComponent))
                 _audioSystem.PlayPvs(tabletComponent.FailSound, tabletUid);
         }
     }
@@ -372,10 +376,9 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     /// </summary>
     private void PlayToSalvager(Entity<KsMinerAccountComponent> accountEntity, EntityUid salvagerUid, Func<KsSalvageTabletComponent, SoundSpecifier?> pickSound)
     {
-        var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
-        while (tabletEnumerator.MoveNext(out _, out var tabletComponent))
+        foreach (var tabletUid in accountEntity.Comp.Tablets)
         {
-            if (tabletComponent.BoundCard != accountEntity.Owner)
+            if (!_tabletQuery.TryComp(tabletUid, out var tabletComponent))
                 continue;
 
             _audioSystem.PlayGlobal(pickSound(tabletComponent), salvagerUid);
@@ -449,16 +452,80 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Refreshes every open tablet logged in with the card.
+    ///     Refreshes every open tablet logged in with the card. The state carries end times rather than time left, so
+    ///         nothing needs sending just because time passed: only when something in it changes.
     /// </summary>
-    private void UpdateUis(EntityUid cardUid)
+    private void UpdateUis(Entity<KsMinerAccountComponent> accountEntity)
+    {
+        foreach (var tabletUid in accountEntity.Comp.Tablets)
+        {
+            if (_tabletQuery.TryComp(tabletUid, out var tabletComponent))
+                UpdateUi((tabletUid, tabletComponent));
+        }
+    }
+
+    /// <summary>
+    ///     Every open tablet shows the silo, so a change to it refreshes them all.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnSiloReportChanged(ref KsSiloReportChangedEvent args)
     {
         var tabletEnumerator = EntityQueryEnumerator<KsSalvageTabletComponent>();
         while (tabletEnumerator.MoveNext(out var tabletUid, out var tabletComponent))
         {
-            if (tabletComponent.BoundCard == cardUid)
-                UpdateUi((tabletUid, tabletComponent));
+            UpdateUi((tabletUid, tabletComponent));
         }
+    }
+
+    /// <summary>
+    ///     A tablet saved logged in comes back logged in, so it rejoins its card's set.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnTabletStartup(Entity<KsSalvageTabletComponent> entity, ref ComponentStartup args)
+    {
+        if (entity.Comp.BoundCard is { } cardUid && _accountQuery.TryComp(cardUid, out var accountComponent))
+            accountComponent.Tablets.Add(entity.Owner);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnTabletShutdown(Entity<KsSalvageTabletComponent> entity, ref ComponentShutdown args)
+    {
+        if (entity.Comp.BoundCard is { } cardUid && _accountQuery.TryComp(cardUid, out var accountComponent))
+            accountComponent.Tablets.Remove(entity.Owner);
+    }
+
+    /// <summary>
+    ///     The card's times are absolute, so a pause would otherwise eat into them: every one moves on by however long
+    ///         the card was paused, task end times included.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnAccountUnpaused(Entity<KsMinerAccountComponent> entity, ref EntityUnpausedEvent args)
+    {
+        entity.Comp.NextDropTime += args.PausedTime;
+        entity.Comp.NextOrderTime += args.PausedTime;
+        foreach (var task in entity.Comp.Tasks)
+        {
+            if (task.EndTime is { } endTime)
+                task.EndTime = endTime + args.PausedTime;
+        }
+
+        UpdateUis(entity);
+    }
+
+    /// <summary>
+    ///     Anything but logging in or out takes the access the tablet asks for, checked on every message rather than
+    ///         only at login: a tablet left logged in must not let whoever picks it up spend for its salvager.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnMessageAttempt(Entity<KsSalvageTabletComponent> entity, ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.Message is KsSalvageTabletLoginMessage or KsSalvageTabletLogoutMessage)
+            return;
+
+        if (!TryFindIdCard(args.Actor, out var idCardEntity) ||
+            !_accessQuery.TryComp(idCardEntity.Owner, out var accessComponent) ||
+            !accessComponent.Tags.Contains(entity.Comp.RequiredAccess))
+            args.Cancel();
     }
 
     private void UpdateUi(Entity<KsSalvageTabletComponent> tabletEntity)
@@ -526,7 +593,8 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnOrderMessage(EntityUid uid, KsSalvageTabletComponent component, KsSalvageTabletOrderMessage args)
     {
-        TryOrder((uid, component), args.Actor, args.Cart);
+        var accepted = TryOrder((uid, component), args.Actor, args.Cart);
+        _userInterfaceSystem.ServerSendUiMessage(uid, KsSalvageTabletUiKey.Key, new KsSalvageTabletOrderResultMessage(accepted), args.Actor);
     }
 
     /// <summary>

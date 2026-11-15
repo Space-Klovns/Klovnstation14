@@ -113,6 +113,16 @@ public sealed class KsSalvageTabletOrderMessage(Dictionary<ProtoId<KsSalvageProd
 }
 
 /// <summary>
+///     Sent back to whoever ordered: whether the server took the order. The cart is kept until it does, so a refused
+///         order loses nothing.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsSalvageTabletOrderResultMessage(bool accepted) : BoundUserInterfaceMessage
+{
+    public readonly bool Accepted = accepted;
+}
+
+/// <summary>
 ///     Sent from the window of a lathe: ask the salvagers for what a recipe is short of.
 /// </summary>
 [Serializable, NetSerializable]

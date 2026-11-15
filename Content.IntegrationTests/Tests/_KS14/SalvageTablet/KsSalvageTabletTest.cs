@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
@@ -440,6 +441,49 @@ public sealed class KsSalvageTabletTest : GameTest
 
             Assert.That(Account(scene).Tasks.First(task => task.Task == smallTask).Progress, Is.Zero,
                 "Ore that finished a task must not count again for the next one.");
+        });
+    }
+
+    /// <summary>
+    ///     The card's times are absolute, so pausing the card's map must move them on by as long as it was paused:
+    ///         a tracked task's end time with them, or a pause would eat into the time a salvager has.
+    /// </summary>
+    [Test]
+    public async Task PausingTheCardMovesItsTimesOn()
+    {
+        var scene = await SetUpAsync(SalvageId);
+        TimeSpan endTimeBefore = default;
+        TimeSpan dropTimeBefore = default;
+        TimeSpan pausedAt = default;
+        EntityUid mapUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var salvageTabletSystem = SEntMan.System<KsSalvageTabletSystem>();
+            Assert.That(salvageTabletSystem.TryLogin(Tablet(scene), scene.UserUid), Is.True);
+            Assert.That(salvageTabletSystem.TryTrackTask(Tablet(scene), _scanTaskId), Is.True);
+            Assert.That(salvageTabletSystem.TryDropTask(Tablet(scene), _oreTaskId), Is.True, "precondition: a drop starts the drop cooldown");
+
+            var account = Account(scene);
+            endTimeBefore = account.Tasks.Single(task => task.Task == _scanTaskId).EndTime!.Value;
+            dropTimeBefore = account.NextDropTime;
+
+            mapUid = SEntMan.GetComponent<TransformComponent>(scene.CardUid).MapUid!.Value;
+            pausedAt = Server.Timing.CurTime;
+            SEntMan.System<SharedMapSystem>().SetPaused(mapUid, true);
+        });
+
+        await Pair.RunTicksSync(TicksFor(2f));
+
+        await Server.WaitAssertion(() =>
+        {
+            var pausedFor = Server.Timing.CurTime - pausedAt;
+            SEntMan.System<SharedMapSystem>().SetPaused(mapUid, false);
+
+            var account = Account(scene);
+            Assert.That(account.Tasks.Single(task => task.Task == _scanTaskId).EndTime, Is.EqualTo(endTimeBefore + pausedFor),
+                "A tracked task's end time must move on by the pause.");
+            Assert.That(account.NextDropTime, Is.EqualTo(dropTimeBefore + pausedFor), "The drop cooldown must move on by the pause.");
         });
     }
 }

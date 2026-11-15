@@ -6,7 +6,7 @@ namespace Content.Server._KS14.SalvageTablet;
 /// <summary>
 ///     A salvager's S.P.A.M. account, kept on their ID card.
 /// </summary>
-[RegisterComponent, AutoGenerateComponentPause]
+[RegisterComponent]
 [Access(typeof(KsSalvageTabletSystem))]
 public sealed partial class KsMinerAccountComponent : Component
 {
@@ -22,6 +22,10 @@ public sealed partial class KsMinerAccountComponent : Component
     [DataField]
     public int Reputation;
 
+    /// <summary>
+    ///     Shifted with the card on unpause, together with <see cref="NextDropTime"/>, <see cref="NextOrderTime"/> and each
+    ///         task's end time, by <see cref="KsSalvageTabletSystem"/>.
+    /// </summary>
     [DataField]
     public List<KsSalvageActiveTask> Tasks = [];
 
@@ -40,13 +44,13 @@ public sealed partial class KsMinerAccountComponent : Component
     /// <summary>
     ///     When the account may drop a task again.
     /// </summary>
-    [DataField, AutoPausedField]
+    [DataField]
     public TimeSpan NextDropTime;
 
     /// <summary>
     ///     When the account may order again.
     /// </summary>
-    [DataField, AutoPausedField]
+    [DataField]
     public TimeSpan NextOrderTime;
 
     /// <summary>
@@ -54,4 +58,11 @@ public sealed partial class KsMinerAccountComponent : Component
     /// </summary>
     [DataField]
     public EntityUid? Salvager;
+
+    /// <summary>
+    ///     The tablets logged in with the card. Derived from each tablet's <see cref="KsSalvageTabletComponent.BoundCard"/>,
+    ///         so not saved.
+    /// </summary>
+    [ViewVariables]
+    public HashSet<EntityUid> Tablets = [];
 }
