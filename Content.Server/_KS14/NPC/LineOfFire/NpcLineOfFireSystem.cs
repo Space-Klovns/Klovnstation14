@@ -2,15 +2,18 @@ using System.Numerics;
 using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Interaction;
+using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Physics;
 using Content.Shared.Projectiles;
+using Content.Shared.Standing;
 using Content.Shared.Weapons.Hitscan.Components;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Systems;
@@ -54,14 +57,19 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     [Dependency] private GunSystem _gunSystem = default!;
     [Dependency] private InteractionSystem _interactionSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<BallisticAmmoProviderComponent> _ballisticAmmoProviderQuery = default!;
     [Dependency] private EntityQuery<BasicEntityAmmoProviderComponent> _basicEntityAmmoProviderQuery = default!;
     [Dependency] private EntityQuery<BatteryAmmoProviderComponent> _batteryAmmoProviderQuery = default!;
+    [Dependency] private EntityQuery<BroadphaseComponent> _broadphaseQuery = default!;
     [Dependency] private EntityQuery<CartridgeAmmoComponent> _cartridgeAmmoQuery = default!;
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
     [Dependency] private EntityQuery<RevolverAmmoProviderComponent> _revolverAmmoProviderQuery = default!;
+    [Dependency] private EntityQuery<StandingStateComponent> _standingStateQuery = default!;
 
     /// <summary>
     ///     For a gun it can tell nothing about, and an NPC with no gun at all.
@@ -69,6 +77,12 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     private const CollisionGroup UnknownShotMask = SharedInteractionSystem.InRangeUnobstructedMask;
 
     private const int MaxRoundsToFollow = 4;
+
+    /// <summary>
+    ///     How near a shot's start the middle of what it hits must be for that to be the shooter: see
+    ///         <see cref="TryGetFirstHit"/>. Squared, in tiles.
+    /// </summary>
+    private const float ShooterMiddleDistanceSquared = 0.0001f;
 
     /// <summary>
     ///     How far either side of its line a round hits things, for one whose fixture tells nothing: a bullet's.
@@ -91,11 +105,50 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
     private SharedInteractionSystem.Ignored _isMob = default!;
 
+    /// <summary>
+    ///     For a sight check by collision mask that no mob ends, standing or not: every mob is on the
+    ///         <see cref="CollisionGroup.Opaque"/> layer. Made once, not on every cast.
+    /// </summary>
+    public SharedInteractionSystem.Ignored IsMob => _isMob;
+
+    /// <summary>
+    ///     <see cref="_isMob"/> as the ray query takes it: made once, not on every cast.
+    /// </summary>
+    private Func<EntityUid, bool> _isMobPredicate = default!;
+
+    /// <summary>
+    ///     For a sight check by collision mask, which a body on the floor must not end: whether this is a mob lying down or
+    ///         dead. Every mob is on the <see cref="CollisionGroup.Opaque"/> layer, so lasers hit those standing, but one on
+    ///         the floor hides nothing, and rounds and beams pass over it unless aimed at it
+    ///         (<c>RequireProjectileTargetComponent</c>, active while it is down). Made once, not on every cast.
+    /// </summary>
+    public SharedInteractionSystem.Ignored IsLyingMob { get; private set; } = default!;
+
+    /// <summary>
+    ///     What <see cref="CanRoundReach"/>'s ray passes through: any mob, the shooter and the target. Made once, not on every
+    ///         cast; the two it reads are set just before each.
+    /// </summary>
+    private Func<EntityUid, bool> _isIgnoredByRound = default!;
+
+    private EntityUid _roundShooterUid;
+    private EntityUid _roundTargetUid;
+
+    /// <summary>
+    ///     <see cref="CanRoundReach"/>'s hit, if any. Reused, so that it stops allocating once it has held one.
+    /// </summary>
+    private RayResult _roundRayResult = new();
+
     public override void Initialize()
     {
         base.Initialize();
 
+        _isIgnoredByRound = uid => uid == _roundShooterUid || uid == _roundTargetUid || _mobStateQuery.HasComp(uid);
+
         _isMob = uid => _mobStateQuery.HasComp(uid);
+        _isMobPredicate = uid => _mobStateQuery.HasComp(uid);
+        IsLyingMob = uid => _mobStateQuery.TryComp(uid, out var mobState) &&
+            (mobState.CurrentState == MobState.Dead ||
+                (_standingStateQuery.TryComp(uid, out var standingState) && !standingState.Standing));
 
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(_ => _shots.Clear());
     }
@@ -241,6 +294,91 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Whether the next round from what <paramref name="shooterUid"/> is holding would get from it to
+    ///         <paramref name="targetUid"/>, by what that round collides with: glass stops a bullet and not a laser. Mobs do not
+    ///         count (one may be gone by then; friends in the way are for <c>NpcSquadFireLaneSystem</c>), nor do the shooter's
+    ///         own body or the target's. One ray from middle to middle, with no allocation once warm: for asking of every
+    ///         candidate target while planning, and every few ticks in a fight. A turret's hold fire
+    ///         (<c>NPCRangedCombatComponent.KsTargetInLineOfFire</c>) and its choice of target
+    ///         (<c>KsTargetInLineOfFireCon</c>) both ask this, so the two never disagree.
+    /// </summary>
+    /// <remarks>
+    ///     Main thread only: the ray's state is kept on the system. NPC systems and planning never run anywhere else.
+    /// </remarks>
+    public bool CanRoundReach(EntityUid shooterUid, EntityUid targetUid)
+    {
+        var from = _transformSystem.GetMapCoordinates(shooterUid);
+        var to = _transformSystem.GetMapCoordinates(targetUid);
+        if (from.MapId != to.MapId || from.MapId == MapId.Nullspace)
+            return false;
+
+        var translation = to.Position - from.Position;
+        if (translation.LengthSquared() < 0.0001f)
+            return true;
+
+        if (!_mapSystem.TryGetMap(from.MapId, out var mapUid))
+            return false;
+
+        _roundShooterUid = shooterUid;
+        _roundTargetUid = targetUid;
+        _roundRayResult.Results.Clear();
+
+        var state = new RoundRayState(this,
+            from.Position,
+            translation,
+            new QueryFilter
+            {
+                MaskBits = (int) GetShotMask(shooterUid),
+                IsIgnored = _isIgnoredByRound,
+            });
+
+        if (_broadphaseQuery.TryComp(mapUid.Value, out var mapBroadphaseComponent))
+            CastRoundRay((mapUid.Value, mapBroadphaseComponent), ref state);
+
+        if (!_roundRayResult.Hit)
+        {
+            var bounds = new Box2(Vector2.Min(from.Position, to.Position), Vector2.Max(from.Position, to.Position));
+            _mapSystem.FindGridsIntersecting(mapUid.Value,
+                bounds,
+                ref state,
+                static (EntityUid gridUid, MapGridComponent _, ref RoundRayState rayState) =>
+                {
+                    var system = rayState.System;
+                    if (system._broadphaseQuery.TryComp(gridUid, out var broadphaseComponent))
+                        system.CastRoundRay((gridUid, broadphaseComponent), ref rayState);
+
+                    return !system._roundRayResult.Hit;
+                },
+                approx: true,
+                includeMap: false);
+        }
+
+        _roundShooterUid = EntityUid.Invalid;
+        _roundTargetUid = EntityUid.Invalid;
+        return !_roundRayResult.Hit;
+    }
+
+    /// <summary>
+    ///     <see cref="CanRoundReach"/>'s ray against one broadphase, the map's or a grid's, in that broadphase's frame, as
+    ///         <c>RayCastSystem.CastRayClosest(MapId, ...)</c> does it, but into a result kept between calls.
+    /// </summary>
+    private void CastRoundRay(Entity<BroadphaseComponent> broadphase, ref RoundRayState state)
+    {
+        var transform = _physicsSystem.GetPhysicsTransform(broadphase.Owner);
+        var localOrigin = Robust.Shared.Physics.Transform.InvTransformPoint(transform, state.Origin);
+        var localTranslation = Robust.Shared.Physics.Transform.InvTransformPoint(transform, state.Origin + state.Translation) - localOrigin;
+        _rayCastSystem.CastRayClosest((broadphase.Owner, broadphase.Comp), ref _roundRayResult, localOrigin, localTranslation, state.Filter);
+    }
+
+    private readonly struct RoundRayState(NpcLineOfFireSystem system, Vector2 origin, Vector2 translation, QueryFilter filter)
+    {
+        public readonly NpcLineOfFireSystem System = system;
+        public readonly Vector2 Origin = origin;
+        public readonly Vector2 Translation = translation;
+        public readonly QueryFilter Filter = filter;
+    }
+
+    /// <summary>
     ///     Whether a shot colliding with <paramref name="shotMask"/> would get from one place to the other. Mobs do not count:
     ///         one may be gone by then. Friends in the way are for <c>NpcSquadFireLaneSystem.IsFriendInLineOfFire</c>, when the
     ///         shot is fired: whether they are hit depends on the shot (<c>KsFactionCollisionShooter</c>, hitscan).
@@ -286,7 +424,9 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
     /// <summary>
     ///     What a shot colliding with <paramref name="shotMask"/> would hit first on its way from one place to the other, if
-    ///         anything. Mobs do not count: see <see cref="IsClear"/>.
+    ///         anything. Mobs do not count: see <see cref="IsClear"/>. Nor does whatever has its middle where the shot starts:
+    ///         the shooter itself, a turret's own body, which its rounds leave and never hit, and which would otherwise hide
+    ///         everything from it.
     /// </summary>
     public bool TryGetFirstHit(MapCoordinates from, MapCoordinates to, CollisionGroup shotMask, out RayCastResults hit)
     {
@@ -301,9 +441,10 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
         var nearest = float.MaxValue;
 
         // Every hit, not the first: the first is the first the broadphase came across, not the nearest.
-        foreach (var result in _physicsSystem.IntersectRayWithPredicate(from.MapId, ray, distance, _isMob.Invoke, returnOnFirstHit: false))
+        foreach (var result in _physicsSystem.IntersectRayWithPredicate(from.MapId, ray, distance, _isMobPredicate, returnOnFirstHit: false))
         {
-            if (result.Distance >= nearest)
+            if (result.Distance >= nearest ||
+                Vector2.DistanceSquared(_transformSystem.GetWorldPosition(result.HitEntity), from.Position) < ShooterMiddleDistanceSquared)
                 continue;
 
             nearest = result.Distance;

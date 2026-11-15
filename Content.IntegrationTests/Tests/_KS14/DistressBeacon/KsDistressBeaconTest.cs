@@ -248,8 +248,10 @@ public sealed class KsDistressBeaconTest : InteractionTest
     {
         EntityUid beaconUid = default;
         await Server.WaitPost(() => beaconUid = SpawnAndWear());
-        await Server.WaitPost(() => SetMobState(MobState.Critical));
-        await RunTicks(1); // the player is healthy, so any longer and the mob state would right itself
+        // Real damage, as a state changed outright is put right by the next look at the player's health, which anything
+        //      that hurts them in the meantime (no air on the test map) brings on.
+        await Server.WaitPost(() => SetDownState(MobState.Critical));
+        await RunTicks(1);
 
         // It beeped as soon as its wearer went down, and booked the next one a critical interval on.
         await Server.WaitAssertion(() =>

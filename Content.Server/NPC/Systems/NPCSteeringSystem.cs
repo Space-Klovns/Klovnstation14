@@ -105,7 +105,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         base.Initialize();
 
-        _ksIsLoose = otherUid => !Transform(otherUid).Anchored; // KS14: see KsIsBeelineClear
+        _ksIsLoose = otherUid => otherUid == _ksBeelineGoalUid || !Transform(otherUid).Anchored; // KS14: see KsIsBeelineClear
         Log.Level = LogLevel.Info;
 
         for (var i = 0; i < InterestDirections; i++)
@@ -452,12 +452,16 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     /// <summary>
     /// Whether nothing anchored stands between <paramref name="uid"/> and its target, near enough to walk straight at
     /// (<see cref="NPCSteeringComponent.RepathRange"/>). Mobs don't count: they move, and the path would ignore them too.
+    /// Nor does what the target coordinates are on: a goal that is itself anchored - a door, a machine - is not in its
+    /// own way, and counted, every step of the last tile and a half to one asked for a path instead.
     /// </summary>
     private bool KsIsBeelineClear(EntityUid uid, NPCSteeringComponent steering, float targetDistance)
     {
         var now = _timing.CurTime;
         if (now < steering.KsBeelineClearUntil)
             return true;
+
+        _ksBeelineGoalUid = steering.Coordinates.EntityId;
 
         if (!TryComp<PhysicsComponent>(uid, out var physics) ||
             !_interaction.InRangeUnobstructed(uid,
@@ -472,9 +476,16 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     }
 
     /// <summary>
-    /// Ignores anything not anchored in place, for <see cref="KsIsBeelineClear"/>. Made once, not per call.
+    /// Ignores anything not anchored in place, and <see cref="_ksBeelineGoalUid"/>, for <see cref="KsIsBeelineClear"/>.
+    /// Made once, not per call.
     /// </summary>
     private SharedInteractionSystem.Ignored _ksIsLoose = default!;
+
+    /// <summary>
+    /// What the coordinates being checked by <see cref="KsIsBeelineClear"/> are on, for <see cref="_ksIsLoose"/>: set
+    /// before each check, in place of a closure made for each. Steering runs one NPC at a time.
+    /// </summary>
+    private EntityUid _ksBeelineGoalUid;
     // KS14 end
 
     /// <summary>

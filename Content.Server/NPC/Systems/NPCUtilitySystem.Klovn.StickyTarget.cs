@@ -15,6 +15,12 @@ public sealed partial class NPCUtilitySystem
     ///         target is still among <paramref name="candidates"/>, still scores above zero on every consideration,
     ///         and is still in sight, it is the only result, however a rival now ranks. Re-ranking by distance every
     ///         replan would otherwise swap two alternately-closest targets before either lock could finish.
+    ///     <para>
+    ///         Not, though, a target it is holding fire on because its rounds cannot get there
+    ///             (<see cref="NPCRangedCombatComponent.KsTargetInLineOfFire"/>), if another candidate now scores higher: a
+    ///             turret watching a hostile behind glass turns to one in the open that is shooting it. Against another it
+    ///             cannot reach either, it still keeps the one it has.
+    ///     </para>
     /// </summary>
     private bool KsTryKeepCurrentTarget(
         NPCBlackboard blackboard,
@@ -44,18 +50,43 @@ public sealed partial class NPCUtilitySystem
         if (!_examine.InRangeUnOccluded(owner, currentTarget, range: radius + 0.5f))
             return false;
 
-        var score = 1f;
+        var score = KsScoreCandidate(blackboard, query, currentTarget, floor: 0f);
+        if (score <= 0f)
+            return false;
 
-        foreach (var consideration in query.Considerations)
+        // Holding fire on it because a round would not get there: kept only while nothing else scores higher
+        if (rangedComponent is { KsHoldFireWhenBlocked: true, KsTargetInLineOfFire: false } &&
+            rangedComponent.Target == currentTarget)
         {
-            var curveScore = GetScore(consideration.Curve, GetScore(blackboard, currentTarget, consideration));
-            score *= GetAdjustedScore(curveScore, query.Considerations.Count);
-
-            if (score <= 0f)
-                return false;
+            foreach (var candidate in candidates)
+            {
+                if (candidate != currentTarget && KsScoreCandidate(blackboard, query, candidate, floor: score) > score)
+                    return false;
+            }
         }
 
         result = new UtilityResult(new Dictionary<EntityUid, float> { { currentTarget, score } });
         return true;
+    }
+
+    /// <summary>
+    ///     <paramref name="candidate"/>'s score on every consideration of <paramref name="query"/>, as
+    ///         <see cref="GetEntities"/> works it out; 0 as soon as it can no longer beat <paramref name="floor"/>.
+    /// </summary>
+    private float KsScoreCandidate(NPCBlackboard blackboard, UtilityQueryPrototype query, EntityUid candidate, float floor)
+    {
+        var score = 1f;
+
+        foreach (var consideration in query.Considerations)
+        {
+            var curveScore = GetScore(consideration.Curve, GetScore(blackboard, candidate, consideration));
+            score *= GetAdjustedScore(curveScore, query.Considerations.Count);
+
+            // The running score only goes down
+            if (score <= floor)
+                return 0f;
+        }
+
+        return score;
     }
 }

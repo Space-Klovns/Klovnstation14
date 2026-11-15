@@ -255,6 +255,12 @@ public sealed partial class PathfindingSystem
         if (_climbableQuery.HasComponent(uid))
             flags |= PathfindingBreadcrumbFlag.Climb;
 
+        // Shatters under one of a person's weight that climbs onto it: a plain glass table, not a reinforced or plasma one,
+        //      which take more than that (GlassTableComponent.MassLimit). The mesh is shared, so it goes by a person, the
+        //      climber NPCs there are. See PathFlags.ClimbingBreakables.
+        if (_glassTableQuery.TryGetComponent(uid, out var glassTableComponent) && glassTableComponent.MassLimit < ClimberMass)
+            flags |= PathfindingBreadcrumbFlag.ClimbBreaks;
+
         var damage = _destructibleQuery.TryGetComponent(uid, out var destructibleComponent)
             ? _destructible.DestroyedAt(uid, destructibleComponent).Float()
             : 0f;

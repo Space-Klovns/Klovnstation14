@@ -42,8 +42,8 @@ namespace Content.Server._KS14.NPC.Lights;
 ///         <b>When.</b> Only two moments, both when nothing is in the way of what the NPC would do anyway: staging at a
 ///             door, for the room's lit lights it can see from where it stands (<see cref="NpcLightShotReason.Staging"/>), and
 ///             in a fight, for the light on a hostile that cannot see in the dark, when no hostile in sight can be hit
-///             (<see cref="NpcLightShotReason.Fight"/>). The operative root puts the branch below ranged combat as well, so a
-///             hostile it can hit is shot instead whatever this says. They never look for darkness or prefer dark places.
+///             (<see cref="NpcLightShotReason.Fight"/>). The operative root puts the branch above the squad plan and combat, where a
+///             squad on plan orders still gets to it; that a hostile it can hit is shot instead is this system's to keep. They never look for darkness or prefer dark places.
 ///     </para>
 ///     <para>
 ///         <b>Bounds.</b> One light at a time per NPC and one NPC per light, <see cref="NpcLightShooterComponent.TaskTime"/>

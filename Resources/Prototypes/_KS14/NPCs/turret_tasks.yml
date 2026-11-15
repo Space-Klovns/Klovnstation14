@@ -4,7 +4,7 @@
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
-            proto: NearbyGunTargets
+            proto: KsTurretGunTargets # prefers a hostile its rounds can get to
 
         - !type:HTNPrimitiveTask
           preconditions:
@@ -17,14 +17,16 @@
               targetKey: Target
               rangeKey: RangedRange
               opaqueKey: true
+              ksStandingMobsBlock: false # seen past mobs; holds fire for friends instead
           operator: !type:GunOperator
             targetKey: Target
             requireLOS: true
             opaqueKey: true
+            ksHoldFireWhenBlocked: true # aims and tracks, and holds fire until a round would get there
           services:
             - !type:UtilityService
               id: RangedService
-              proto: NearbyGunTargets
+              proto: KsTurretGunTargets
               key: Target
 
     - tasks:

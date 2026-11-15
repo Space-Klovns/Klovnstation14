@@ -1034,6 +1034,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             if (!seenArmed)
             {
+                // Past the point where something would have gone in: still stacking up, nothing has been decided yet.
+                Assert.That(hunt.Phase, Is.Not.AnyOf(NpcHuntPhase.Stage, NpcHuntPhase.Breach), "the test needs them past stacking up");
                 Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Soften), "nothing goes in ahead of them on a hostile last seen unarmed");
                 Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var walkIn) && walkIn.Kind == NpcOrderKind.ThrowGrenade, Is.False);
                 return;
@@ -1094,7 +1096,9 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
             Assert.That(hunt, Is.Not.Null, "the test needs them hunting");
-            Assert.That(hunt!.SoftenTried, Is.False);
+            // Softening is only ever tried on the way in: a hunt still stacking up has tried nothing, planning or not.
+            Assert.That(hunt!.Phase, Is.Not.AnyOf(NpcHuntPhase.Stage, NpcHuntPhase.Breach), "the test needs them past stacking up");
+            Assert.That(hunt.SoftenTried, Is.False);
             Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Soften));
         });
     }

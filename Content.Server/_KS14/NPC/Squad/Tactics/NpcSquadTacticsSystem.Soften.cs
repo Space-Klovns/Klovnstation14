@@ -28,6 +28,9 @@ public sealed partial class NpcSquadTacticsSystem
     ///     The squad's freshest belief about <paramref name="targetUid"/>: where whichever member saw it last now believes it
     ///         to be, and what the last of them to see it made of it.
     /// </summary>
+    /// <remarks>
+    ///     Of the group being updated (<see cref="GetEveryMember"/>): only means anything inside that group's update.
+    /// </remarks>
     /// <returns>Whether any member knows anything of it.</returns>
     public bool TryGetSquadBelief(EntityUid targetUid, out NpcContactTraits traits, out EntityCoordinates believedCoordinates)
     {
@@ -70,11 +73,12 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     Whether <paramref name="memberUid"/>'s squad is holding its grenades for a hunt: while it stacks up, forces a door or
     ///         softens the room, a throw of a member's own would land before the squad is ready, or on top of the one it is
-    ///         putting in. Going in, it throws as it likes, unless something has already gone in this hunt.
+    ///         putting in. Going in, it throws as it likes, unless something has already gone in this hunt. One on its own
+    ///         hunts as a squad of one, and holds its throws for its own hunt the same.
     /// </summary>
     public bool IsHoldingThrows(EntityUid memberUid)
     {
-        if (!_npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) || GetHunt(squadEntity.Value.Owner) is not { } hunt)
+        if (GetHunt(_npcSquadSystem.GetSquadOrSelf(memberUid)) is not { } hunt)
             return false;
 
         return hunt.Phase is NpcHuntPhase.Stage or NpcHuntPhase.Breach or NpcHuntPhase.Soften ||

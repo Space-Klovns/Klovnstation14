@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.NPC.Components;
+using Content.Server.NPC.HTN.Preconditions; // KS14
 using Content.Shared.CombatMode;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -40,6 +41,16 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
     [DataField("opaqueKey")]
     public bool UseOpaqueForLOSChecks = false;
 
+    // KS14 start
+    /// <summary>
+    ///     Tell seeing the target from being able to hit it: in sight (walls and the like, not mobs), aim and track it, and
+    ///         hold fire while a round would not get there or would hit a friend, without failing. For turrets. See
+    ///         <see cref="NPCRangedCombatComponent.KsHoldFireWhenBlocked"/>; overrides <see cref="UseOpaqueForLOSChecks"/>.
+    /// </summary>
+    [DataField("ksHoldFireWhenBlocked")]
+    public bool KsHoldFireWhenBlocked;
+    // KS14 end
+
     // Like movement we add a component and pass it off to the dedicated system.
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard,
@@ -68,6 +79,8 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
         var ranged = _entManager.EnsureComponent<NPCRangedCombatComponent>(owner);
         ranged.Target = blackboard.GetValue<EntityUid>(TargetKey);
         ranged.UseOpaqueForLOSChecks = UseOpaqueForLOSChecks;
+        ranged.KsHoldFireWhenBlocked = KsHoldFireWhenBlocked; // KS14
+        ranged.KsStandingMobsBlockSight = blackboard.GetValueOrDefault<bool>(TargetInLOSPrecondition.KsStandingMobsBlockSightKey, _entManager); // KS14
 
         if (blackboard.TryGetValue<float>(NPCBlackboard.RotateSpeed, out var rotSpeed, _entManager))
         {
@@ -125,6 +138,7 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
                             status = HTNOperatorStatus.Continuing;
                         break;
                     case CombatStatus.Normal:
+                    case CombatStatus.KsShotBlocked: // KS14: aiming, holding fire
                         status = HTNOperatorStatus.Continuing;
                         break;
                     default:

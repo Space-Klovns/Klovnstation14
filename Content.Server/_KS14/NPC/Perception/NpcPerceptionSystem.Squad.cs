@@ -51,7 +51,8 @@ public sealed partial class NpcPerceptionSystem
             return;
 
         // What it saw itself, as recently, beats being told: kept, with the way it was going, which a callout has not got.
-        if (known && contact.State != NpcContactState.Reported && contact.LastSeen >= args.LastSeen)
+        //      And an older sighting than one it was already told of tells it nothing: callouts need not come in order.
+        if (known && (contact.State == NpcContactState.Reported ? contact.LastSeen > args.LastSeen : contact.LastSeen >= args.LastSeen))
             return;
 
         // As of when the caller saw it, not when this one heard: a hunt goes by when it was really lost (NpcHunt.LostAt).

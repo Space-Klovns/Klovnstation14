@@ -797,7 +797,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
                 continue;
             }
 
-            if (memberHtnComponent.Blackboard.ContainsKey(key) ||
+            if (memberHtnComponent.Blackboard.ContainsKey(key, EntityManager) ||
                 (memberSquadMemberComponent.ReceivedSharedValues.TryGetValue(key, out var receivedValue) &&
                     Equals(receivedValue, value)))
                 continue;

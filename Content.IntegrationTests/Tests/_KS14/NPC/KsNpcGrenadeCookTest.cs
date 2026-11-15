@@ -39,12 +39,6 @@ public sealed class KsNpcGrenadeCookTest : GameTest
 
     private const string WeaponHand = "right";
 
-    /// <summary>
-    ///     Of fuse that must be left whenever a cooked grenade is still in a hand: <c>NpcGrenadeSystem.MinCookMargin</c>, less
-    ///         a tick's worth.
-    /// </summary>
-    private const double SafeFuse = 0.3;
-
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -65,6 +59,16 @@ public sealed class KsNpcGrenadeCookTest : GameTest
   - type: NpcGrenadeThrower
     cooks: true
     cookMargin: 0.45
+    cookSpread: 0
+
+# One set to keep nothing back at all: only the system's own minimum stands between it and a grenade landing as it goes off.
+- type: entity
+  parent: KsCookTestPlain
+  id: KsCookTestCookReckless
+  components:
+  - type: NpcGrenadeThrower
+    cooks: true
+    cookMargin: 0
     cookSpread: 0
 
 - type: entity
@@ -258,7 +262,8 @@ public sealed class KsNpcGrenadeCookTest : GameTest
                     entManager.System<MobStateSystem>().ChangeMobState(cook.NpcUid, MobState.Dead);
                     break;
                 case "cannot throw":
-                    entManager.GetComponent<HandsComponent>(cook.NpcUid).NextThrowTime = timing.CurTime + System.TimeSpan.FromHours(1);
+                    // Stunned: it can throw nothing. Not the wait between throws, which ending a hold does not keep to.
+                    entManager.EnsureComponent<Content.Shared.Stunnable.StunnedComponent>(cook.NpcUid);
                     operatorTask.TaskShutdown(blackboard, HTNOperatorStatus.BetterPlan);
                     break;
                 case "task stopped renewing":
@@ -302,10 +307,12 @@ public sealed class KsNpcGrenadeCookTest : GameTest
 
     /// <summary>
     ///     However long a cook runs, it ends with the minimum of fuse still to go: a task that never ends it, and a thrower that
-    ///         is never told of anything, still throw it in time.
+    ///         is never told of anything, still throw it in time. Whatever it is set to keep back, too: one set to keep nothing
+    ///         still leaves the system's minimum on landing.
     /// </summary>
-    [Test]
-    public async Task TestACookIsThrownBeforeTheFuseIsDown()
+    [TestCase(Cook)]
+    [TestCase("KsCookTestCookReckless")]
+    public async Task TestACookIsThrownBeforeTheFuseIsDown(string thrower)
     {
         var (entManager, gridUid) = await SetUpGrid();
         var grenadeSystem = entManager.System<NpcGrenadeSystem>();
@@ -313,12 +320,19 @@ public sealed class KsNpcGrenadeCookTest : GameTest
         var timing = Pair.Server.ResolveDependency<IGameTiming>();
         Thrower cook = default!;
         var leftWhenThrown = double.NaN;
+        var flightTime = 0d;
+        const float throwDistance = 6f;
 
         await Pair.Server.WaitPost(() =>
         {
-            cook = SpawnThrower(entManager, gridUid, Cook, -3, 0, Frag);
-            var aim = entManager.GetComponent<TransformComponent>(cook.NpcUid).Coordinates.Offset(new Vector2(6f, 0f));
+            cook = SpawnThrower(entManager, gridUid, thrower, -3, 0, Frag);
+            var aim = entManager.GetComponent<TransformComponent>(cook.NpcUid).Coordinates.Offset(new Vector2(throwDistance, 0f));
             Assert.That(grenadeSystem.TryBeginThrow(cook.NpcUid, cook.GrenadeUid, aim), Is.EqualTo(NpcGrenadeThrowResult.Cooking));
+
+            // How long it is in the air for, as the system reckons it: from the thrower's own hands, not a copied speed.
+            var handsComponent = entManager.GetComponent<HandsComponent>(cook.NpcUid);
+            Assert.That(handsComponent.ThrowRange, Is.GreaterThanOrEqualTo(throwDistance), "the test's throw should be within reach");
+            flightTime = throwDistance / handsComponent.BaseThrowspeed;
         });
 
         for (var i = 0; i < 200 && double.IsNaN(leftWhenThrown); i++)
@@ -337,7 +351,10 @@ public sealed class KsNpcGrenadeCookTest : GameTest
         }
 
         Assert.That(leftWhenThrown, Is.Not.NaN, "it should have been thrown");
-        Assert.That(leftWhenThrown, Is.GreaterThanOrEqualTo(SafeFuse + 0.5), "with the margin and the flight still to go");
+        // Thrown on the first update past its time, and looked at an update after that.
+        var tick = timing.TickPeriod.TotalSeconds;
+        Assert.That(leftWhenThrown, Is.GreaterThanOrEqualTo(flightTime + NpcGrenadeSystem.MinCookMargin - 2 * tick),
+            "with the flight and the minimum margin still to go");
     }
 
     /// <summary>

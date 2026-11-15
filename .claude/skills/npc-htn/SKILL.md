@@ -58,6 +58,9 @@ The links below cross system and file boundaries, and nothing in any one file sh
 one end of a chain, check the other end. An arrow means "is read by" or "calls".
 
 - **Light, sight and aim.** `NpcLightDetectionSystem.GetLightLevel` caches the level per target per tick.
+  - It goes by the ambient light a player sees, not the server's: a map's day and night (`LightCycleComponent`) is
+    only applied to its colour on clients, and roofs (`RoofComponent` tiles, and every grid that is not the map,
+    `ImplicitRoofComponent`) only shut it out of the client's lighting. It swaps the engine's ambient for that one.
   - `NpcPerceptionSystem.CanSee` reads it. With the observer's dark vision applied, it is kept on the contact as
     `NpcContact.SeenLight`.
   - `GetSeenLight` reads it from there for:
@@ -77,8 +80,9 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
   Melee, carries those out. Ordinary orders sit below combat, so the same order given outside that block never beats a
   fight.
 - **Flank routes.** `Fight.cs` `StartFlankProbes` → `PathfindingSystem.GetPathAvoiding`. That runs on worker threads,
-  with the tiles the squad's fire covers as extra-cost tiles. Each probe needs its own tile set, because the path job
-  adds to it.
+  with the tiles by the hostile and the squad's own front, between each fighter and the hostile, as walls (not as a
+  cost: a route through them is no route). Each probe needs its own tile set, because the path request adds the
+  flanker's own avoided tiles to it and then reads it on a worker thread.
 - **Pushing on a blast and on a pause in fire.**
   - `NpcGrenadeSystem` → `NpcSquadTacticsSystem.NoteBlast`, for the thrower's squad.
   - `NpcGunfireSystem` keeps `NpcRecentShooterComponent.LastShotAt` for every shooter. `Fight.cs` reads it to tell a
@@ -104,8 +108,9 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
 
   Shooters don't allow for dives (`NpcSquadFireLaneSystem`); the diver does.
 - **Grenades in paths.** `PathfindingSystem.Klovn.Blast.cs` makes every tile a primed explosive's blast would reach a
-  `Blast` tile danger, around its landing spot while it's in the air. It reads `NpcGrenadeSystem.TryGetLanding` and
-  `ExplosionSystem.IntensityToRadius`.
+  `Blast` tile danger, around its landing spot while it's in the air, and every tile in range of a primed flash a
+  `Flash` one. It reads `NpcGrenadeSystem.TryGetLanding` and `ExplosionSystem.IntensityToRadius`. A flash is no danger
+  to an NPC it cannot blind (`SharedFlashSystem.CanFlash`, asked once per NPC per refresh).
   - Operatives avoid it through `NpcAvoidsTileDanger`.
   - The root's leave-danger branch is filtered to `dangers: Fire`, so getting out of a blast stays with the grenade
     branch.
@@ -116,15 +121,16 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
     task), or the NPC dead or unable to throw. Ending is always throwing it at the spot aimed for, or dropping it if it
     cannot be thrown. Never leave a lit grenade in a hand with only a task to end it.
   - The blast tile dangers skip what is in a container, so `NpcGrenadeSystem.TryGetLanding` answers for a cooked one too:
-    where it is going. `TargetDangerRangeCon` and `grenade.yml` then have the squad leave the spot as the cook starts,
-    and the callout is made then.
+    where it is going. `TargetDangerRangeCon` and `grenade.yml` then have the squad leave the spot as the cook starts.
+    The voice callout is made when the grenade is thrown, not when the cook starts, and not if it is dropped.
 - **Shooting out lights.** `NpcLightShooterSystem` picks the light (two moments: the staging room's lit lights, or the light
   on a hostile who cannot see in the dark) and keeps it on `NpcLightShooterComponent`. `LightPickPrecondition` and
   `LightPickQuery` expose it, and `light_shoot.yml` shoots it with `GunOperator`, a light being a ranged target like any
   other (`NPCCombatSystem.Klovn.LightTargets.cs` aims at its fixture, not the entity's own spot, which is mid-tile). So the
   shot goes through `NpcSquadFireLaneSystem.TryGetClearShot` like every shot. A wall light breaks only when it is the
-  target (`RequireProjectileTarget`), and any damage breaks the bulb. The root branch is below ranged combat, so a hostile that
-  can be hit is shot instead. Settings are on `NpcLightShooter`, listed in the operative README.
+  target (`RequireProjectileTarget`), and any damage breaks the bulb. The root branch is above the squad plan and ranged
+  combat, but `NpcLightShooterSystem` never picks a light while a hostile in sight can be hit, so that hostile is shot
+  instead. Settings are on `NpcLightShooter`, listed in the operative README.
 - **Man down.** `NpcSquadSystem` raises `NpcSquadMemberDownedEvent` on critical, dead, or gibbed while not already
   dead.
   - `NpcMeterOnSquadLossSystem` reads it (caution).
@@ -226,7 +232,10 @@ Nothing removes a key when the plan that wrote it ends, unless an operator does 
 A key can also outlive what it names. A target gets gibbed, or a grid is deleted, while its uid or coordinates still sit
 on the blackboard. `NPCBlackboard.TryGetValue`, `GetValueOrDefault` and so `TryGetEntity` treat an entity (or
 coordinates on one) that is deleted or being deleted as missing. Read entities through them, not through
-`GetValue`/`_blackboard` directly.
+`GetValue`/`_blackboard` directly. Ask whether a key is there with `ContainsKey(key, entityManager)`, which agrees
+with them, as `KeyExistsPrecondition` and `KeyNotExistsPrecondition` do. The one-argument `ContainsKey(key)` still
+says yes for a deleted entity: a branch gated on it plans, its operator fails on the read, the failure replans at
+once onto the same branch, and everything below it is starved.
 
 Two cases still need their own check, because a system method given a deleted uid throws (`EnsureComp`, transforms),
 and one throw in an operator aborts the NPC update for every NPC after it, every tick:
@@ -293,7 +302,8 @@ in step for good, and their costly searches all land on the same tick.
 ### Steering only walks straight at a near target if the way is clear
 
 Within `RepathRange` (1.5 tiles) steering skips the path and walks straight at its target. It does that only while a ray
-says nothing anchored is in the way (`NPCSteeringSystem.KsIsBeelineClear`, rechecked every 0.3s). Otherwise it paths:
+says nothing anchored is in the way (`NPCSteeringSystem.KsIsBeelineClear`, rechecked every 0.3s; what the goal's
+coordinates are on does not count, so an anchored goal is not in its own way). Otherwise it paths:
 - a target just over a railing or table would otherwise have it pressed against that for good;
 - a climb (`ClimbingComponent.NextTransition`) is waited out, not taken for being stuck.
 
@@ -397,7 +407,7 @@ Consequences:
 13. Grenade push (opt-in; going in on a squad grenade that just went off; see `grenade_throw.yml`)
 14. Buddy aid (opt-in; see `buddy_aid.yml`)
 15. Tactical reload (opt-in, through `TacticalReload` on the blackboard)
-16. Support: peek (two root branches, not pinned down and pinned down, the latter a third as often), then push (never when pinned down), backing up a squadmate fighting a hostile this one can't see; see `support.yml`
+16. Support: peek (two root branches, not pinned down and pinned down, the latter every 15s rather than every 6s), then push (never when pinned down), backing up a squadmate fighting a hostile this one can't see; see `support.yml`
 16a. Peek a lost hostile (the same two branches again; a hostile this one lost 1.5s to 8s ago, with nobody calling it out: step out to a spot that sees where it went, look, step back; see `peek.yml`). Both peeks are gated on `PeekDueAt` / `PeekPinnedDueAt`, which the peek sets when it finds a spot, and stop at a `PeekRange` of a quarter tile, not `CampingRange`, which stopped short behind the corner.
 17. Follow
 18. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
@@ -445,7 +455,8 @@ request that avoids them, and are never walls, so an NPC with no other way still
 cost a little more (`marginCost`), so a path leaves a gap where that is a short way round.
 
 - **What is dangerous:** an entity with `NpcTileDanger` makes its whole tile so. Gas fires have no entity and come from
-  `AtmosphereSystem.GetGasFires`. A new sort of danger is a value in `NpcTileDangerKind`.
+  `AtmosphereSystem.GetGasFires`. Primed explosives and flashes make every tile they would reach a `Blast` or `Flash`
+  danger (`PathfindingSystem.Klovn.Blast.cs`). A new sort of danger is a value in `NpcTileDangerKind`.
 - **Who cares:** only an NPC with `NpcAvoidsTileDanger`, for the sorts it lists. Everything else ignores all of them,
   which is what a firebot needs, and an NPC that fire cannot hurt leaves `Fire` out.
 - **Cost:** worked out on demand, at most every 0.5s, and only for an NPC that avoids something, so it is nothing with
@@ -694,8 +705,9 @@ or notice a handler's answer changing without the tile being rebuilt.
 
 ## Moving somewhere without going through somewhere
 
-The pathfinder only knows the shortest way, and it cannot be told to avoid a set of tiles: it has no hook for that.
-When the way matters, as for a member stacking up on the door on the far side of a room, which
+The pathfinder only knows the shortest way. It can be told to treat a set of tiles as walls
+(`PathfindingSystem.GetPathAvoiding`, which flank routes use), but not to prefer one way over another. When the way
+matters, as for a member stacking up on the door on the far side of a room, which
 the shortest path reaches straight through the room, the tactics system routes it itself.
 `NpcSquadCoverSystem.TryFindRouteAround` floods the same tile classification as room detection, keeping off the
 avoided tiles. It then cuts the corners off the route, leaving only the turns. The member is ordered to each turn in

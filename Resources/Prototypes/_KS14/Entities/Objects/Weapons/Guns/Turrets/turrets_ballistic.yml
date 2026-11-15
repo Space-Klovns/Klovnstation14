@@ -105,8 +105,8 @@
   components:
   - type: KsTargetLockOn
     keepTargetUntilLost: true
-  - type: KsNpcAimTracking
-    ignoreFriendlyBlocking: true
+  - type: NpcFireLane
+    mode: FireThrough # a heavy machine gun does not wait for a friend to step aside
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Turrets/hmg_turret.rsi
     drawdepth: Mobs

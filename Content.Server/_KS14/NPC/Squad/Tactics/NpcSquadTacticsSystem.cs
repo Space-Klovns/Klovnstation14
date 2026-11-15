@@ -40,6 +40,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem _powerReceiverSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
     [Dependency] private NpcHuntDebugSystem _npcHuntDebugSystem = default!;
@@ -191,8 +192,10 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         // A fight on: combat comes first, and a hostile in sight is not lost. What the squad does together in it, it does
         //      over that (see NpcSquadTacticsSystem.Fight.cs).
         // The gather that finds the fight's fighters answers whether anyone is in one, rather than walking the contacts twice.
-        //      A group too small to push or flank, with neither going, has no use for the fighters and only asks.
-        var gathering = (settings.Pushing || settings.Flanking) && (_members.Count >= 2 || IsFightLive(issuerUid));
+        //      A group too small to push or flank, with neither going, has no use for the fighters and only asks. One going
+        //      is kept up or ended whatever the settings say now: they are the leader's, and a new leader that does neither
+        //      would otherwise leave the old one's flankers on their orders for as long as the fight lasts.
+        var gathering = (settings.Pushing || settings.Flanking) && _members.Count >= 2 || IsFightLive(issuerUid);
         if (gathering ? GatherFight() : AnyoneInCombat())
         {
             EndHunt(issuerUid, keepFightOrders: true);
@@ -211,8 +214,9 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         EndFight(issuerUid, settings, now);
 
         // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after
-        //      the check above, because one with a hostile in sight is still in the fight.
-        RemoveRecovering(issuerUid, movedTo: null);
+        //      the check above, because one with a hostile in sight is still in the fight. Kept aside, as a plan keeps them:
+        //      a hunt that softens a room goes by them too (the blast, the gas, what they last saw).
+        RemoveRecovering(issuerUid, movedTo: _recovering);
 
         if (_members.Count == 0)
             return;

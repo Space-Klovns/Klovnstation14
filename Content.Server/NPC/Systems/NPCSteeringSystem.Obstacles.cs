@@ -90,7 +90,8 @@ public sealed partial class NPCSteeringSystem
             GetObstacleEntities(poly, mask, layer, obstacleEnts);
             var isDoor = (poly.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
-            var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
+            var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0 &&
+                PathfindingSystem.CanClimbOnto(component.Flags, poly.Data.Flags); // KS14: not onto a glass table, unless it may
 
             // KS14 start: open any door we are allowed through, whether it opens by bumping or by clicking.
             //      Leaving bump-open doors to the NPC physically walking into them left NPCs standing in front of

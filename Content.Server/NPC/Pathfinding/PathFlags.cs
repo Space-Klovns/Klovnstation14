@@ -41,5 +41,11 @@ public enum PathFlags : byte
     ///         prying with its own claws, this is a door it stops to force. See <c>NpcDoorSystem.PriesDoorsInItsWay</c>.
     /// </summary>
     PryingTool = 1 << 6,
+
+    /// <summary>
+    ///     With <see cref="Climbing"/>, also climb things that break when climbed onto - glass tables - rather than walk
+    ///         round them. See <c>PathfindingBreadcrumbFlag.ClimbBreaks</c>.
+    /// </summary>
+    ClimbingBreakables = 1 << 7,
     // KS14 end
 }

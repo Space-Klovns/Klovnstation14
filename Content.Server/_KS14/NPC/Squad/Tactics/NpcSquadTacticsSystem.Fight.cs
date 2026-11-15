@@ -112,7 +112,12 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private const int FlankWaypointStep = 4;
 
-    private const float FlankWaypointReach = 1.5f;
+    /// <summary>
+    ///     Further than the order's own range (<see cref="FightOrderRange"/>): tactics update only every half second, so at
+    ///         1.5 a flanker usually got to a waypoint and stood there until the next update sent it on. The last waypoint is
+    ///         walked all the way to.
+    /// </summary>
+    private const float FlankWaypointReach = 2.5f;
 
     /// <summary>
     ///     How long a squad too spread out to flank is left before it is looked at again.
@@ -125,6 +130,10 @@ public sealed partial class NpcSquadTacticsSystem
     private readonly List<EntityUid> _fightContacts = new();
     private readonly Dictionary<EntityUid, int> _fightCounts = new();
     private readonly List<EntityUid> _fightMembers = new();
+    /// <summary>
+    ///     Within one <see cref="StartPush"/>: each pusher's index in <see cref="_fighters"/>, and which way from the hostile
+    ///         it goes in from, relative to the way the pushers are from it on the whole.
+    /// </summary>
     private readonly List<(int Index, Angle Bearing)> _pushBearings = new();
     private readonly List<Vector2> _orderSpotPositions = new();
     private readonly List<MapCoordinates> _routePoints = new();
@@ -204,7 +213,8 @@ public sealed partial class NpcSquadTacticsSystem
     ///     With nobody in sight of the hostile: keeps a flank on, flankers following their routes, for
     ///         <see cref="FlankSightGrace"/> after anyone last had it in sight, as the front ducking back into cover for a
     ///         moment is no reason to call them back. (A push is never on alongside a flank.) True if the flank is still on,
-    ///         and nothing else should give orders.
+    ///         and nothing else should give orders. Not with a flanker gone (<see cref="IsFlankerGone"/>): there is nobody
+    ///         to keep going, and one deleted has no place to measure its way from.
     /// </summary>
     private bool KeepFlankWhileUnseen(EntityUid issuerUid, TimeSpan now)
     {
@@ -212,6 +222,12 @@ public sealed partial class NpcSquadTacticsSystem
             fightComponent.FlankTargetUid == null ||
             now - fightComponent.LastFoughtAt >= FlankSightGrace)
             return false;
+
+        foreach (var route in fightComponent.FlankRoutes)
+        {
+            if (IsFlankerGone(route.FlankerUid))
+                return false;
+        }
 
         using (GivePlanOrders())
         {
@@ -508,6 +524,22 @@ public sealed partial class NpcSquadTacticsSystem
         EnsureFighterTraits();
         var anchorIndex = onBlast ? -1 : GetFurthestFighterIndex(hostileCoordinates);
 
+        // Bearings are kept relative to the way the pushers are from the hostile on the whole, and put in order by that: so
+        //      the place where angles wrap round is behind the hostile from them, where nobody is. In order by the plain
+        //      angle, two either side of due west (179 and -179 degrees) were a turn apart, and went to the same tile.
+        var pusherSum = Vector2.Zero;
+        for (var i = 0; i < _fighters.Count; i++)
+        {
+            if (i == anchorIndex || !_fighterArmed[i])
+                continue;
+
+            var offset = _fighterCoordinates[i].Position - hostileCoordinates.Position;
+            if (offset.LengthSquared() > 0.0001f)
+                pusherSum += Vector2.Normalize(offset);
+        }
+
+        var pusherBearing = pusherSum.LengthSquared() > 0.0001f ? pusherSum.ToAngle() : Angle.Zero;
+
         _pushBearings.Clear();
         for (var i = 0; i < _fighters.Count; i++)
         {
@@ -515,11 +547,11 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             var offset = _fighterCoordinates[i].Position - hostileCoordinates.Position;
-            _pushBearings.Add((i, offset.ToAngle()));
+            _pushBearings.Add((i, Angle.ShortestDistance(pusherBearing, offset.ToAngle())));
         }
 
         // Spread round it: no two closer than PushSpread, seen from the hostile.
-        _pushBearings.Sort((a, b) => a.Bearing.Theta.CompareTo(b.Bearing.Theta));
+        _pushBearings.Sort(static (a, b) => a.Bearing.Theta.CompareTo(b.Bearing.Theta));
         for (var i = 1; i < _pushBearings.Count; i++)
         {
             if (_pushBearings[i].Bearing.Theta - _pushBearings[i - 1].Bearing.Theta < PushSpread.Theta)
@@ -530,7 +562,7 @@ public sealed partial class NpcSquadTacticsSystem
         foreach (var (pusherIndex, bearing) in _pushBearings)
         {
             var pusherUid = _fighters[pusherIndex];
-            if (!TryFindStandSpot(_fighterShotMasks[pusherIndex], hostileCoordinates, bearing, settings.PushStandoff, StandSpotTurns, out var spot))
+            if (!TryFindStandSpot(_fighterShotMasks[pusherIndex], hostileCoordinates, pusherBearing + bearing, settings.PushStandoff, StandSpotTurns, out var spot))
                 continue;
 
             SetOrder(pusherUid, issuerUid, NpcOrderKind.Push, spot, Angle.Zero, FightOrderRange, hostileUid, now);
@@ -931,6 +963,11 @@ public sealed partial class NpcSquadTacticsSystem
             return;
         }
 
+        // The second best was picked against whichever was best at the time, and a better way found since may be the same
+        //      flanker's, or round the same side: one flanker cannot walk two ways, so then only the best goes.
+        if (second != null && !IsOtherSide(first, second))
+            second = null;
+
         fightComponent.Flankers.Clear();
         fightComponent.FlankRoutes.Clear();
         AddFlankRoute(fightComponent, first, firstPath);
@@ -1139,9 +1176,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var route in fightComponent.FlankRoutes)
         {
-            // Gone: dead, out of the squad, or waiting for its meds. Not out of sight of the hostile: a flank route is chosen
-            //      to be, and a flanker dropping out of the fighters the moment it set off was every flank's end.
-            if (TerminatingOrDeleted(route.FlankerUid) || !_fightMembers.Contains(route.FlankerUid))
+            if (IsFlankerGone(route.FlankerUid))
                 return true;
 
             var remaining = GetRemaining(route);
@@ -1153,6 +1188,17 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return allThere;
+    }
+
+    /// <summary>
+    ///     Whether a flanker is gone: deleted, dead, out of the squad, or waiting for its meds. Not out of sight of the hostile:
+    ///         a flank route is chosen to be, and a flanker dropping out of the fighters the moment it set off was every
+    ///         flank's end. Goes by <see cref="_fightMembers"/>, so only after <see cref="GatherFight"/> has run for the group,
+    ///         which it has whenever a flank is on (see <c>UpdateGroup</c>).
+    /// </summary>
+    private bool IsFlankerGone(EntityUid flankerUid)
+    {
+        return TerminatingOrDeleted(flankerUid) || !_fightMembers.Contains(flankerUid);
     }
 
     private void EndFlank(EntityUid issuerUid, NpcSquadFightComponent fightComponent, NpcSquadTacticsSettings settings, TimeSpan now)

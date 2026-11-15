@@ -59,6 +59,14 @@ public sealed class KsNpcSquadFightTest : GameTest
       flankChance: 0
 
 - type: entity
+  parent: KsSquadFightTestMob
+  id: KsSquadFightTestMobNoPush # armed like the rest: only the setting keeps it back
+  components:
+  - type: NpcSquadMember
+    tactics:
+      pushing: false
+
+- type: entity
   id: KsSquadFightTestGrenade
   components:
   - type: TimerTrigger
@@ -128,10 +136,20 @@ public sealed class KsNpcSquadFightTest : GameTest
     ///     No moment, no push: a hostile that never fired, or a squad that does not push.
     /// </summary>
     [TestCase(FighterMob, false)]
-    [TestCase(SyndicateMob, true)]
+    [TestCase("KsSquadFightTestMobNoPush", true)]
     public async Task TestNoPushWithoutAMoment(string mob, bool shot)
     {
         var scene = await SetUp(mob, (-6, 0), (1, 6), (1, -6));
+
+        // Armed, or having no gun in hand would be what kept them back (TestNotEveryoneGoes), whatever the squad does.
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var gunSystem = scene.EntManager.System<SharedGunSystem>();
+            foreach (var memberUid in scene.Members)
+            {
+                Assert.That(gunSystem.TryGetGun(memberUid, out _), "the test needs them armed");
+            }
+        });
 
         await Pair.Server.WaitPost(() =>
         {
@@ -222,6 +240,11 @@ public sealed class KsNpcSquadFightTest : GameTest
             scene.TacticsSystem.UpdateNow();
             Assert.That(CountOrders(scene, kind), Is.Zero);
         });
+
+        // A flank is only ordered once a way round has been found, some updates on: followed as long as the squad that
+        //      does flank is (TestASquadOnOneSideFlanks, the same layout), or nothing has had the time to go wrong.
+        if (kind == NpcOrderKind.Flank)
+            Assert.That(await FollowFlank(scene), Is.Empty, "its chance came up short: nobody goes round");
     }
 
     /// <summary>
@@ -412,6 +435,9 @@ public sealed class KsNpcSquadFightTest : GameTest
         });
 
         await Pair.RunTicksSync(240); // for the squad to form
+
+        // Every wall has to be in the navmesh before a way round is looked for: one missing is a way through.
+        await WaitForNavmeshSettled(Pair, gridUid);
 
         await server.WaitAssertion(() =>
         {

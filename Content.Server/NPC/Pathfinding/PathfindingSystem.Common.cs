@@ -59,16 +59,32 @@ public sealed partial class PathfindingSystem
     }
 
     /// <summary>
-    /// What stepping onto <paramref name="end"/> costs per unit of distance for a request with these flags and
-    /// collision, or 0 if it cannot.
-    /// </summary>
-    /// <summary>
     /// KS14: what a climb costs on top of walking, per unit of distance. Climbing takes a do-after, standing still and
     /// open, so a climber walks round unless that is much further. The poly of a railing is a quarter of a tile deep, so
     /// stepping over one costs about four tiles' walking; a table, a whole tile deep, about twelve.
     /// </summary>
     public const float ClimbCost = 12f;
 
+    /// <summary>
+    /// KS14: the weight a glass table is judged against, for whether climbing it breaks it: about a person's (a human's
+    /// fixture comes to some 70). The navmesh is shared, so it is one weight for every climber.
+    /// </summary>
+    public const float ClimberMass = 70f;
+
+    /// <summary>
+    /// KS14: whether a climber with these flags climbs onto a climbable poly with <paramref name="polyFlags"/>: not onto
+    /// something that breaks under it, a glass table, unless it has <see cref="PathFlags.ClimbingBreakables"/>.
+    /// </summary>
+    public static bool CanClimbOnto(PathFlags flags, PathfindingBreadcrumbFlag polyFlags)
+    {
+        return (polyFlags & PathfindingBreadcrumbFlag.ClimbBreaks) == 0x0 ||
+            (flags & PathFlags.ClimbingBreakables) != 0x0;
+    }
+
+    /// <summary>
+    /// What stepping onto <paramref name="end"/> costs per unit of distance for a request with these flags and
+    /// collision, or 0 if it cannot.
+    /// </summary>
     internal static float GetTileModifier(PathFlags flags, int collisionLayer, int collisionMask, PathPoly end)
     {
         // KS14 end
@@ -130,7 +146,8 @@ public sealed partial class PathfindingSystem
                 // Breaking stuff should be usually last resort, especially because we WILL try to punch walls.
                 modifier += 10f + end.Data.Damage / 10f;
             }
-            else if (isClimb && (flags /* KS14: request.Flags -> flags */ & PathFlags.Climbing) != 0x0)
+            else if (isClimb && (flags /* KS14: request.Flags -> flags */ & PathFlags.Climbing) != 0x0 &&
+                CanClimbOnto(flags, end.Data.Flags) /* KS14: glass tables */)
             {
                 modifier += ClimbCost; // KS14: was 0.5, which made climbing all but free; see ClimbCost
             }
