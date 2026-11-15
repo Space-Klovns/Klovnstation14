@@ -284,5 +284,12 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     [DataField]
     public KsParticleGenerator Drift = KsParticleGenerator.Zero;
 
+    /// <summary>
+    ///     Whether <see cref="Drift"/> is a jolt to each step's motion (the default) or, as in BYOND, added to the
+    ///         velocity every 0.1 s.
+    /// </summary>
+    [DataField]
+    public KsParticleDriftMode DriftMode = KsParticleDriftMode.Offset;
+
     #endregion
 }

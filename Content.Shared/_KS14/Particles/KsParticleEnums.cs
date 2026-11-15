@@ -30,3 +30,22 @@ public enum KsParticleSpace : byte
     /// <summary>Particles stay where they were emitted: smoke trails behind a moving thing.</summary>
     World,
 }
+
+/// <summary>
+///     How <see cref="KsParticlesPrototype.Drift"/> moves a particle.
+/// </summary>
+public enum KsParticleDriftMode : byte
+{
+    /// <summary>
+    ///     Added to the step's motion only, its velocity left alone: a fresh jolt every step, which jitters. Suits
+    ///         sparks and embers.
+    /// </summary>
+    Offset,
+
+    /// <summary>
+    ///     Added to the velocity every BYOND tick (0.1 s), as BYOND does (OpenDream applies drift as an
+    ///         acceleration, against friction): the jolts build up and are damped, so the particle wanders smoothly.
+    ///         The values port from DM unchanged.
+    /// </summary>
+    Accelerate,
+}

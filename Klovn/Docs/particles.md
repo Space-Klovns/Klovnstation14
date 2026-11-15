@@ -154,6 +154,7 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 | `spin` | 0 | Degrees per second. |
 | `friction` | 0 | Fraction of velocity lost per second, 0..1. |
 | `drift` | 0 | m/s, sampled afresh every step: a random walk. |
+| `driftMode` | `Offset` | `Offset`: `drift` is a jolt to each step's motion, velocity untouched (chaotic: sparks, embers). `Accelerate`: added to the velocity every 0.1 s, as BYOND does (OpenDream applies it as an acceleration against friction), so particles wander smoothly; DM values port unchanged. |
 
 The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
 whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `speed` that
@@ -239,6 +240,9 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
 
 - **No clip plane.** `size` only decides whether the emitter is on screen; particles outside it are still
   drawn. Use `bounds` to kill them instead.
+- **`drift` is a jolt by default.** BYOND adds it to the velocity every tick (an acceleration, which friction
+  damps); here it is added to each step's motion alone unless `driftMode: Accelerate`. The jolt suits sparks and
+  embers; set `Accelerate` for smoke or flakes ported from DM that should wander smoothly.
 - **A particle that shrinks to zero dies.** BYOND lets the scale go negative and mirrors the sprite.
 - **Rotation follows the engine.** `rotation` and `spin` are still clockwise-positive degrees as written, and
   converted on the way in.
