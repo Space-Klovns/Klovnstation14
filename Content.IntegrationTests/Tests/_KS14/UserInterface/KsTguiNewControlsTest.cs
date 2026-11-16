@@ -349,15 +349,18 @@ public sealed class KsTguiNewControlsTest : GameTest
     public void BlinkFollowsTgui()
     {
         // Visible for the first interval + time, then hidden for `time` out of every period.
-        Assert.That(KsTguiBlink.IsHidden(0f, 1000, 1000), Is.False);
-        Assert.That(KsTguiBlink.IsHidden(1.5f, 1000, 1000), Is.False, "The first timer fires after 2 seconds.");
-        Assert.That(KsTguiBlink.IsHidden(2.5f, 1000, 1000), Is.True);
-        Assert.That(KsTguiBlink.IsHidden(3.5f, 1000, 1000), Is.False);
-        Assert.That(KsTguiBlink.IsHidden(4.5f, 1000, 1000), Is.True);
+        var second = TimeSpan.FromSeconds(1);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0), second, second), Is.False);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(1.5), second, second), Is.False, "The first timer fires after 2 seconds.");
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(2.5), second, second), Is.True);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(3.5), second, second), Is.False);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(4.5), second, second), Is.True);
 
         // Visible 200ms, hidden 100ms: period 0.3.
-        Assert.That(KsTguiBlink.IsHidden(0.35f, 200, 100), Is.True);
-        Assert.That(KsTguiBlink.IsHidden(0.45f, 200, 100), Is.False);
+        var visible = TimeSpan.FromMilliseconds(200);
+        var hidden = TimeSpan.FromMilliseconds(100);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0.35), visible, hidden), Is.True);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0.45), visible, hidden), Is.False);
     }
 
     [Test]
@@ -365,23 +368,23 @@ public sealed class KsTguiNewControlsTest : GameTest
     {
         await Client.WaitPost(() =>
         {
-            var blink = new KsTguiBlink { Interval = 100, Time = 100 };
+            var blink = new KsTguiBlink { Interval = TimeSpan.FromMilliseconds(100), Time = TimeSpan.FromMilliseconds(100) };
             var content = Block(30f, 10f);
             blink.AddChild(content);
 
-            blink.Advance(0.1f);
+            blink.Advance(TimeSpan.FromSeconds(0.1));
             Assert.That(blink.Hidden, Is.False);
-            blink.Advance(0.15f);
+            blink.Advance(TimeSpan.FromSeconds(0.15));
             Assert.That(blink.Hidden, Is.True);
 
             Layout(blink, new Vector2(100f, 100f));
             Assert.That(blink.DesiredSize, Is.EqualTo(new Vector2(30f, 10f)), "Hidden content still takes its room.");
 
-            blink.Advance(0.1f);
+            blink.Advance(TimeSpan.FromSeconds(0.1));
             Assert.That(blink.Hidden, Is.False);
 
-            blink.Advance(0.1f);
-            blink.Interval = 500;
+            blink.Advance(TimeSpan.FromSeconds(0.1));
+            blink.Interval = TimeSpan.FromMilliseconds(500);
             Assert.That(blink.Hidden, Is.False, "A new interval restarts the timer.");
         });
     }
