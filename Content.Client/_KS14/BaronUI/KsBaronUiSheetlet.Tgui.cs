@@ -1,5 +1,6 @@
 using Content.Client._KS14.Tgui;
 using Content.Client._KS14.Tgui.Controls;
+using Content.Client._KS14.Tgui.Windows.Lathe;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -246,6 +247,11 @@ public sealed partial class KsBaronUiSheetlet
                 .Prop(KsTguiSheetlet.StylePropertyTabSelectedText, Color.White)
                 .Prop(KsTguiSheetlet.StylePropertyTabSelectedWash, Brown)
                 .Prop(KsTguiSheetlet.StylePropertyTabHoverWash, Color.FromHex("#3A3F45")),
+            // The lathe's categories: Baron's hover grey, and its brown for the selected one's bar in place of tg's blue.
+            E<KsTguiFabricatorTab>()
+                .Prop(KsTguiSheetlet.StylePropertyTabHoverWash, Color.FromHex("#3A3F45"))
+                .Prop(KsTguiSheetlet.StylePropertyTabIndicator, Color.FromHex("#A08A6E"))
+                .Prop(KsTguiSheetlet.StylePropertyTabSelectedText, Color.White),
             E<KsTguiNumberInput>()
                 .Prop(KsTguiSheetlet.StylePropertyInputBackground, InputBackground)
                 .Prop(KsTguiSheetlet.StylePropertyInputBorder, Green)
