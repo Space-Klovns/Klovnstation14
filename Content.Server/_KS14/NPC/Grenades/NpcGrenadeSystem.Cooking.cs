@@ -71,15 +71,15 @@ public enum NpcGrenadeThrowResult : byte
 public sealed partial class NpcGrenadeSystem
 {
     /// <summary>
-    ///     Of fuse, in seconds, that is always left on landing, whatever <see cref="NpcGrenadeThrowerComponent.CookMargin"/> and
+    ///     Of fuse that is always left on landing, whatever <see cref="NpcGrenadeThrowerComponent.CookMargin"/> and
     ///         its spread say.
     /// </summary>
-    public const float MinCookMargin = 0.35f;
+    public static readonly TimeSpan MinCookMargin = TimeSpan.FromSeconds(0.35);
 
     /// <summary>
-    ///     A hold shorter than this, in seconds, is not worth the trouble: the grenade is just thrown.
+    ///     A hold shorter than this is not worth the trouble: the grenade is just thrown.
     /// </summary>
-    private const float MinCookTime = 0.25f;
+    private static readonly TimeSpan MinCookTime = TimeSpan.FromSeconds(0.25);
 
     /// <summary>
     ///     How long a task may go without renewing its hold (<see cref="RenewCook"/>) before it is taken as gone. A task updates
@@ -128,7 +128,7 @@ public sealed partial class NpcGrenadeSystem
         var curTime = _gameTiming.CurTime;
 
         // The fuse's own end, not what was worked out from its length: whatever set it going has the last word.
-        var latestRelease = _timerTriggerQuery.GetComponent(grenadeUid).NextTrigger - TimeSpan.FromSeconds(flightTime + MinCookMargin);
+        var latestRelease = _timerTriggerQuery.GetComponent(grenadeUid).NextTrigger - TimeSpan.FromSeconds(flightTime) - MinCookMargin;
         var releaseAt = TimeSpan.FromTicks(Math.Min((curTime + TimeSpan.FromSeconds(holdTime)).Ticks, latestRelease.Ticks));
 
         // Added once it is in the hand: going into a container takes it off again (OnThrownGrenadeInserted).
@@ -299,14 +299,16 @@ public sealed partial class NpcGrenadeSystem
         var distance = MathF.Min((to.Position - from.Position).Length(), handsComponent.ThrowRange);
         flightTime = distance / MathF.Max(0.1f, handsComponent.BaseThrowspeed);
 
-        var margin = MathF.Max(grenadeThrowerComponent.CookMargin, MinCookMargin);
-        var spread = MathF.Max(0f, grenadeThrowerComponent.CookSpread);
+        // In seconds from here on, as the flight time is.
+        var minMargin = (float) MinCookMargin.TotalSeconds;
+        var margin = MathF.Max((float) grenadeThrowerComponent.CookMargin.TotalSeconds, minMargin);
+        var spread = MathF.Max(0f, (float) grenadeThrowerComponent.CookSpread.TotalSeconds);
         var fuse = (float) timerTriggerComponent.Delay.TotalSeconds;
 
         // At most what leaves the minimum, whatever the spread did, and never below nothing.
         holdTime = fuse - flightTime - margin + _random.NextFloat(-spread, spread);
-        holdTime = MathF.Max(0f, MathF.Min(holdTime, fuse - flightTime - MinCookMargin));
+        holdTime = MathF.Max(0f, MathF.Min(holdTime, fuse - flightTime - minMargin));
 
-        return holdTime >= MinCookTime;
+        return holdTime >= MinCookTime.TotalSeconds;
     }
 }

@@ -97,7 +97,7 @@ public sealed partial class NpcLightShooterSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnMapInit(Entity<NpcLightShooterComponent> entity, ref MapInitEvent args)
     {
-        entity.Comp.NextUpdate = NpcThrottle.Spread(_gameTiming.CurTime, TimeSpan.FromSeconds(entity.Comp.UpdateInterval), _robustRandom);
+        entity.Comp.NextUpdate = NpcThrottle.Spread(_gameTiming.CurTime, entity.Comp.UpdateInterval, _robustRandom);
     }
 
     public override void Update(float frameTime)
@@ -109,7 +109,7 @@ public sealed partial class NpcLightShooterSystem : EntitySystem
 
         while (enumerator.MoveNext(out var uid, out var shooterComponent, out _, out _))
         {
-            if (!NpcThrottle.TryConsume(ref shooterComponent.NextUpdate, now, TimeSpan.FromSeconds(shooterComponent.UpdateInterval)))
+            if (!NpcThrottle.TryConsume(ref shooterComponent.NextUpdate, now, shooterComponent.UpdateInterval))
                 continue;
 
             UpdateShooter((uid, shooterComponent), now);
@@ -231,7 +231,7 @@ public sealed partial class NpcLightShooterSystem : EntitySystem
 
         shooterComponent.Target = picked;
         shooterComponent.Reason = reason;
-        shooterComponent.ExpiresAt = now + TimeSpan.FromSeconds(shooterComponent.TaskTime);
+        shooterComponent.ExpiresAt = now + shooterComponent.TaskTime;
 
         // Taken up on the next planning, rather than the one after.
         _npcSensorSystem.RequestReplan(uid);
@@ -244,7 +244,7 @@ public sealed partial class NpcLightShooterSystem : EntitySystem
 
         entity.Comp.Target = null;
         entity.Comp.Reason = NpcLightShotReason.None;
-        entity.Comp.NextPickAt = now + TimeSpan.FromSeconds(lightOut ? entity.Comp.SuccessCooldown : entity.Comp.Cooldown);
+        entity.Comp.NextPickAt = now + (lightOut ? entity.Comp.SuccessCooldown : entity.Comp.Cooldown);
 
         if (replan)
             _npcSensorSystem.RequestReplan(entity.Owner);
@@ -276,7 +276,7 @@ public sealed partial class NpcLightShooterSystem : EntitySystem
             return false;
 
         var now = _gameTiming.CurTime;
-        var lostAge = TimeSpan.FromSeconds(entity.Comp.LostContactAge);
+        var lostAge = entity.Comp.LostContactAge;
         var best = float.MinValue;
 
         foreach (var (hostileUid, contact) in perceptionComponent.Contacts)

@@ -63,11 +63,11 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     public int Burst;
 
     /// <summary>
-    ///     How long the emitter spawns for, in seconds, from when it starts. Null spawns forever. Particles already
-    ///         alive when it ends live out their lifespans.
+    ///     How long the emitter spawns for, from when it starts. Null spawns forever. Particles already alive when it
+    ///         ends live out their lifespans.
     /// </summary>
     [DataField]
-    public float? EmitDuration;
+    public TimeSpan? EmitDuration;
 
     /// <summary>
     ///     Whether the emitter's entity deletes itself once its last particle has died: <see cref="EmitDuration"/>
@@ -79,10 +79,10 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     public bool OneShot;
 
     /// <summary>
-    ///     How long after it starts a <see cref="OneShot"/> emitter's entity lives, in seconds. Null when the emitter
-    ///         is not one-shot, or its particles can live forever.
+    ///     How long after it starts a <see cref="OneShot"/> emitter's entity lives. Null when the emitter is not
+    ///         one-shot, or its particles can live forever.
     /// </summary>
-    public float? OneShotLifetime
+    public TimeSpan? OneShotLifetime
     {
         get
         {
@@ -94,7 +94,13 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
                 return null;
 
             // One simulation step on top: the burst spawns on the emitter's first step, not the instant it appears.
-            return (EmitDuration ?? 0f) + lifespan + 1f / TickRate;
+            var seconds = (EmitDuration ?? TimeSpan.Zero).TotalSeconds + lifespan + TickLength;
+
+            // A lifespan too long for a TimeSpan is one that lives forever, as far as despawning goes.
+            if (!double.IsFinite(seconds) || seconds >= TimeSpan.MaxValue.TotalSeconds)
+                return null;
+
+            return TimeSpan.FromSeconds(seconds);
         }
     }
 
@@ -139,6 +145,16 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     /// </summary>
     [DataField]
     public float TickRate = 20f;
+
+    /// <summary>
+    ///     Steps per second allowed on a prototype, so a typo cannot ask for a million.
+    /// </summary>
+    public const float MaxTickRate = 240f;
+
+    /// <summary>
+    ///     Seconds per simulation step: <see cref="TickRate"/>, kept between 1 and <see cref="MaxTickRate"/>.
+    /// </summary>
+    public float TickLength => 1f / Math.Clamp(TickRate, 1f, MaxTickRate);
 
     /// <summary>
     ///     Whether particles move with the emitter or stay where they were emitted.

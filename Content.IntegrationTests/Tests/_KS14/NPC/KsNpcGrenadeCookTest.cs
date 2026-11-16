@@ -353,7 +353,7 @@ public sealed class KsNpcGrenadeCookTest : GameTest
         Assert.That(leftWhenThrown, Is.Not.NaN, "it should have been thrown");
         // Thrown on the first update past its time, and looked at an update after that.
         var tick = timing.TickPeriod.TotalSeconds;
-        Assert.That(leftWhenThrown, Is.GreaterThanOrEqualTo(flightTime + NpcGrenadeSystem.MinCookMargin - 2 * tick),
+        Assert.That(leftWhenThrown, Is.GreaterThanOrEqualTo(flightTime + NpcGrenadeSystem.MinCookMargin.TotalSeconds - 2 * tick),
             "with the flight and the minimum margin still to go");
     }
 

@@ -239,19 +239,19 @@ public sealed partial class KsBearingPlot : Control
         }
 
         var dimmed = Hud.Dim(entry.Color);
-        if (entry.GhostSince is not { } ghostAt || reduced || Hud.GhostFadeSeconds <= 0f)
+        if (entry.GhostSince is not { } ghostAt || reduced || Hud.GhostFade <= TimeSpan.Zero)
             return dimmed;
 
-        var fade = (float) Math.Clamp((now - ghostAt.TotalSeconds) / Hud.GhostFadeSeconds, 0d, 1d);
+        var fade = (float) Math.Clamp((now - ghostAt.TotalSeconds) / Hud.GhostFade.TotalSeconds, 0d, 1d);
         return Color.InterpolateBetween(entry.Color, dimmed, fade);
     }
 
     private void DrawPing(DrawingHandleScreen handle, Vector2 pos, in KsBearingPlotEntry entry, double now, bool reduced)
     {
-        if (entry.PingStart is not { } start || reduced || Hud.PingSeconds <= 0f)
+        if (entry.PingStart is not { } start || reduced || Hud.PingDuration <= TimeSpan.Zero)
             return;
 
-        var progress = (float) ((now - start.TotalSeconds) / Hud.PingSeconds);
+        var progress = (float) ((now - start.TotalSeconds) / Hud.PingDuration.TotalSeconds);
         KsInstrumentDraw.DrawPing(handle, pos, progress, entry.Color, UIScale, Hud.PingAlpha);
     }
 
@@ -302,8 +302,8 @@ public sealed partial class KsBearingPlot : Control
         var wedgeAlpha = 1f;
         if (!entry.Live)
         {
-            wedgeAlpha = entry.GhostSince is { } ghostAt && !reduced && Hud.GhostFadeSeconds > 0f
-                ? 1f - (float) Math.Clamp((now - ghostAt.TotalSeconds) / Hud.GhostFadeSeconds, 0d, 1d)
+            wedgeAlpha = entry.GhostSince is { } ghostAt && !reduced && Hud.GhostFade > TimeSpan.Zero
+                ? 1f - (float) Math.Clamp((now - ghostAt.TotalSeconds) / Hud.GhostFade.TotalSeconds, 0d, 1d)
                 : 0f;
         }
 

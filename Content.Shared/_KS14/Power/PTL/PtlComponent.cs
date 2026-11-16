@@ -19,10 +19,17 @@ public sealed partial class PtlComponent : Component
     [DataField]
     public double MinShootPower = 1e6; // 1 MJ
 
+    /// <summary>
+    ///     Time between shots, set from the window between <see cref="MinShootDelay"/> and <see cref="MaxShootDelay"/>.
+    /// </summary>
     [DataField, AutoNetworkedField]
-    public float ShootDelay = 10f;
+    public TimeSpan ShootDelay = TimeSpan.FromSeconds(10);
+
     [DataField, AutoNetworkedField]
-    public Vector2 ShootDelayThreshold = new(2f, 10f); // X is min, Y is max
+    public TimeSpan MinShootDelay = TimeSpan.FromSeconds(2);
+
+    [DataField, AutoNetworkedField]
+    public TimeSpan MaxShootDelay = TimeSpan.FromSeconds(10);
 
     [DataField, AutoNetworkedField]
     public bool ReversedFiring = false;

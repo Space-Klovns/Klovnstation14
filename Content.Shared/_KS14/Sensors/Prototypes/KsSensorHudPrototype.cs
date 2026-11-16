@@ -388,9 +388,9 @@ public sealed partial class KsSensorHudPrototype : IPrototype
     [DataField]
     public KsAnim TabFlicker = new() { Curve = KsAnimCurve.Blink, Speed = 30f, Base = 0.4f, Amplitude = 0.6f };
 
-    /// <summary>Seconds the tab-switch flicker runs before the screen settles.</summary>
+    /// <summary>How long the tab-switch flicker runs before the screen settles.</summary>
     [DataField]
-    public float TabFlickerDuration = 0.12f;
+    public TimeSpan TabFlickerDuration = TimeSpan.FromSeconds(0.12);
 
     /// <summary>
     ///     The RWR threat strobe's curve and brightness range. Its rate comes per
@@ -410,18 +410,18 @@ public sealed partial class KsSensorHudPrototype : IPrototype
     public KsAnim Afterglow = new() { Curve = KsAnimCurve.Decay, Speed = 1.6f, Base = 1f, Amplitude = 0.6f };
 
     /// <summary>
-    ///     Seconds a contact takes to fade from its live colour to the memory-ghost
+    ///     How long a contact takes to fade from its live colour to the memory-ghost
     ///         tone after going stale (0 = snap; reduce-motion always snaps).
     /// </summary>
     [DataField]
-    public float GhostFadeSeconds = 1.5f;
+    public TimeSpan GhostFade = TimeSpan.FromSeconds(1.5);
 
     /// <summary>
-    ///     Seconds the contact-ping ring (first detection / live-again) takes to
+    ///     How long the contact-ping ring (first detection / live-again) takes to
     ///         expand and fade. 0 disables the ping; reduce-motion skips it.
     /// </summary>
     [DataField]
-    public float PingSeconds = 0.8f;
+    public TimeSpan PingDuration = TimeSpan.FromSeconds(0.8);
 
     /// <summary>The contact-ping ring's starting alpha.</summary>
     [DataField]
@@ -434,9 +434,9 @@ public sealed partial class KsSensorHudPrototype : IPrototype
     [DataField]
     public KsAnim Boot = new() { Curve = KsAnimCurve.Blink, Speed = 24f, Base = 0.3f, Amplitude = 0.7f };
 
-    /// <summary>Seconds the boot flicker runs before the shell settles (0 disables it).</summary>
+    /// <summary>How long the boot flicker runs before the shell settles (0 disables it).</summary>
     [DataField]
-    public float BootDuration = 0.7f;
+    public TimeSpan BootDuration = TimeSpan.FromSeconds(0.7);
 
     /// <summary>How many range rings the RADAR plot spreads across its current display range.</summary>
     [DataField]

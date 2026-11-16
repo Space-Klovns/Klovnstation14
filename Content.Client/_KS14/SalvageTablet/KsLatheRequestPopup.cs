@@ -1,3 +1,4 @@
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Shared._KS14.SalvageTablet;
 using Robust.Client.UserInterface;
@@ -50,7 +51,7 @@ public sealed class KsLatheRequestPopup : Popup
         _shownSeconds = seconds;
         if (seconds > 0)
         {
-            var time = KsSalvageTabletTaskWindow.FormatTime(left);
+            var time = KsTguiTimeDisplay.FormatTime(left);
             RequestButton.Text = Loc.GetString("ks-salvage-tablet-request-button-wait", ("time", time));
             RequestButton.ToolTip = Loc.GetString("ks-salvage-tablet-request-tooltip-wait", ("time", time));
             RequestButton.Disabled = true;

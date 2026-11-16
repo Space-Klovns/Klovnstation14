@@ -134,7 +134,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         threatCoordinates = default;
 
         if (squadEntity.Comp.ThreatCoordinates is not { } coordinates ||
-            _gameTiming.CurTime > squadEntity.Comp.ThreatReportedAt + TimeSpan.FromSeconds(settings.ThreatObjectiveLifetime))
+            _gameTiming.CurTime > squadEntity.Comp.ThreatReportedAt + settings.ThreatObjectiveLifetime)
             return false;
 
         threatCoordinates = coordinates;
@@ -243,7 +243,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
             return plan;
 
         plan.HasRoom = true;
-        plan.ExpiresAt = now + TimeSpan.FromSeconds(settings.PlanLifetime);
+        plan.ExpiresAt = now + settings.PlanLifetime;
         return plan;
     }
 
@@ -346,7 +346,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
         var thresholdOrder = GetThresholdPriority(squadEntity, gridEntity, plan);
         var unassignedUids = new List<EntityUid>(squadEntity.Comp.Members);
-        var claimTtl = TimeSpan.FromSeconds(settings.PlanLifetime + 5f);
+        var claimTtl = settings.PlanLifetime + TimeSpan.FromSeconds(5);
 
         // Grid-local, like everything else here. Filled as members are placed, so each later pick keeps out of
         //      the lines of fire of those before it, and keeps them out of its own.

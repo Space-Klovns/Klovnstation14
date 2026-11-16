@@ -56,7 +56,7 @@ public sealed class KsParticleOneShotTest : GameTest
         await Server.WaitAssertion(() =>
         {
             var prototype = Server.ProtoMan.Index(_oneShot);
-            Assert.That(prototype.OneShotLifetime, Is.GreaterThanOrEqualTo(prototype.Lifespan.MaxFloat), "the entity outlives the longest particle");
+            Assert.That(prototype.OneShotLifetime, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(prototype.Lifespan.MaxFloat)), "the entity outlives the longest particle");
             Assert.That(Server.ProtoMan.Index(_lasting).OneShotLifetime, Is.Null, "not one-shot, never despawned");
         });
     }

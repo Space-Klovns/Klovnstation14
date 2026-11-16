@@ -23,15 +23,15 @@ public sealed partial class NpcGrenadeThrowerComponent : Component
     public bool Cooks;
 
     /// <summary>
-    ///     How much of the fuse is left when a cooked grenade lands, in seconds. Never taken as less than
+    ///     How much of the fuse is left when a cooked grenade lands. Never taken as less than
     ///         <see cref="NpcGrenadeSystem.MinCookMargin"/>.
     /// </summary>
     [DataField]
-    public float CookMargin = 0.4f;
+    public TimeSpan CookMargin = TimeSpan.FromSeconds(0.4);
 
     /// <summary>
-    ///     Each cook is up to this many seconds longer or shorter than that, at random.
+    ///     Each cook is up to this much longer or shorter than that, at random.
     /// </summary>
     [DataField]
-    public float CookSpread = 0.05f;
+    public TimeSpan CookSpread = TimeSpan.FromSeconds(0.05);
 }

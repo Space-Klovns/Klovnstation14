@@ -95,19 +95,7 @@ public sealed partial class KsSalvageTabletTaskWindow : FancyWindow
             ("reputation", taskPrototype.Reputation));
 
         if (task.EndTime == null)
-            _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-duration-long", ("time", FormatTime(taskPrototype.Duration)));
-    }
-
-    /// <summary>
-    ///     A time as tgui writes one (<see cref="KsTguiTimeDisplay.FormatTime"/>), never below zero.
-    /// </summary>
-    public static string FormatTime(TimeSpan time)
-    {
-        if (time < TimeSpan.Zero)
-            time = TimeSpan.Zero;
-
-        // tgui counts in deciseconds.
-        return KsTguiTimeDisplay.FormatTime((float)(time.TotalSeconds * 10.0));
+            _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-duration-long", ("time", KsTguiTimeDisplay.FormatTime(taskPrototype.Duration)));
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
@@ -122,7 +110,7 @@ public sealed partial class KsSalvageTabletTaskWindow : FancyWindow
             if (seconds != _shownSeconds)
             {
                 _shownSeconds = seconds;
-                _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-time-left", ("time", FormatTime(timeLeft)));
+                _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-time-left", ("time", KsTguiTimeDisplay.FormatTime(timeLeft)));
             }
         }
 
@@ -141,7 +129,7 @@ public sealed partial class KsSalvageTabletTaskWindow : FancyWindow
             return;
 
         DropButton.Text = dropSeconds > 0
-            ? Loc.GetString("ks-salvage-tablet-task-drop-wait", ("time", FormatTime(dropWait)))
+            ? Loc.GetString("ks-salvage-tablet-task-drop-wait", ("time", KsTguiTimeDisplay.FormatTime(dropWait)))
             : Loc.GetString("ks-salvage-tablet-task-drop");
     }
 }

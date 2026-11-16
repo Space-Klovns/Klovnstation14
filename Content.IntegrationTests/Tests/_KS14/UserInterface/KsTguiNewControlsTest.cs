@@ -289,23 +289,25 @@ public sealed class KsTguiNewControlsTest : GameTest
         });
     }
 
-    [TestCase(0f, "00:00:00")]
-    [TestCase(10f, "00:00:01")]
-    [TestCase(9f, "00:00:00")]
-    [TestCase(610f, "00:01:01")]
-    [TestCase(36610f, "01:01:01")]
-    public void TimeDisplayDefaultFormat(float deciseconds, string expected)
+    [TestCase(0.0, "00:00:00")]
+    [TestCase(1.0, "00:00:01")]
+    [TestCase(0.9, "00:00:00")]
+    [TestCase(61.0, "00:01:01")]
+    [TestCase(3661.0, "01:01:01")]
+    [TestCase(-5.0, "00:00:00")]
+    public void TimeDisplayDefaultFormat(double seconds, string expected)
     {
-        Assert.That(KsTguiTimeDisplay.FormatTime(deciseconds), Is.EqualTo(expected));
+        Assert.That(KsTguiTimeDisplay.FormatTime(TimeSpan.FromSeconds(seconds)), Is.EqualTo(expected));
     }
 
-    [TestCase(36610f, "1h1m1s")]
-    [TestCase(600f, "1m")]
-    [TestCase(30f, "3s")]
-    [TestCase(0f, "")]
-    public void TimeDisplayShortFormat(float deciseconds, string expected)
+    [TestCase(3661.0, "1h1m1s")]
+    [TestCase(60.0, "1m")]
+    [TestCase(3.0, "3s")]
+    [TestCase(0.0, "")]
+    [TestCase(-5.0, "")]
+    public void TimeDisplayShortFormat(double seconds, string expected)
     {
-        Assert.That(KsTguiTimeDisplay.FormatTime(deciseconds, shortFormat: true), Is.EqualTo(expected));
+        Assert.That(KsTguiTimeDisplay.FormatTime(TimeSpan.FromSeconds(seconds), shortFormat: true), Is.EqualTo(expected));
     }
 
     [Test]
@@ -313,7 +315,7 @@ public sealed class KsTguiNewControlsTest : GameTest
     {
         await Client.WaitPost(() =>
         {
-            var display = new KsTguiTimeDisplay { Value = 30f, Auto = KsTguiTimeAuto.Down };
+            var display = new KsTguiTimeDisplay { Value = TimeSpan.FromSeconds(3), Auto = KsTguiTimeAuto.Down };
             Assert.That(display.Text, Is.EqualTo("00:00:03"));
 
             display.Tick();
@@ -321,12 +323,12 @@ public sealed class KsTguiNewControlsTest : GameTest
             display.Tick();
             display.Tick();
             display.Tick();
-            Assert.That(display.Shown, Is.EqualTo(0f), "Counting down stops at zero.");
+            Assert.That(display.Shown, Is.EqualTo(TimeSpan.Zero), "Counting down stops at zero.");
 
             // The same value again does not restart; another does.
-            display.Value = 30f;
-            Assert.That(display.Shown, Is.EqualTo(0f));
-            display.Value = 50f;
+            display.Value = TimeSpan.FromSeconds(3);
+            Assert.That(display.Shown, Is.EqualTo(TimeSpan.Zero));
+            display.Value = TimeSpan.FromSeconds(5);
             Assert.That(display.Text, Is.EqualTo("00:00:05"));
 
             display.Auto = KsTguiTimeAuto.Up;
@@ -337,9 +339,9 @@ public sealed class KsTguiNewControlsTest : GameTest
             display.Tick();
             Assert.That(display.Text, Is.EqualTo("00:00:06"), "Without auto nothing counts.");
 
-            display.Format = deciseconds => $"T{deciseconds}";
-            display.Value = 70f;
-            Assert.That(display.Text, Is.EqualTo("T70"), "A custom format replaces the default.");
+            display.Format = time => $"T{time.TotalSeconds}";
+            display.Value = TimeSpan.FromSeconds(7);
+            Assert.That(display.Text, Is.EqualTo("T7"), "A custom format replaces the default.");
         });
     }
 
@@ -347,15 +349,18 @@ public sealed class KsTguiNewControlsTest : GameTest
     public void BlinkFollowsTgui()
     {
         // Visible for the first interval + time, then hidden for `time` out of every period.
-        Assert.That(KsTguiBlink.IsHidden(0f, 1000, 1000), Is.False);
-        Assert.That(KsTguiBlink.IsHidden(1.5f, 1000, 1000), Is.False, "The first timer fires after 2 seconds.");
-        Assert.That(KsTguiBlink.IsHidden(2.5f, 1000, 1000), Is.True);
-        Assert.That(KsTguiBlink.IsHidden(3.5f, 1000, 1000), Is.False);
-        Assert.That(KsTguiBlink.IsHidden(4.5f, 1000, 1000), Is.True);
+        var second = TimeSpan.FromSeconds(1);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0), second, second), Is.False);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(1.5), second, second), Is.False, "The first timer fires after 2 seconds.");
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(2.5), second, second), Is.True);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(3.5), second, second), Is.False);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(4.5), second, second), Is.True);
 
         // Visible 200ms, hidden 100ms: period 0.3.
-        Assert.That(KsTguiBlink.IsHidden(0.35f, 200, 100), Is.True);
-        Assert.That(KsTguiBlink.IsHidden(0.45f, 200, 100), Is.False);
+        var visible = TimeSpan.FromMilliseconds(200);
+        var hidden = TimeSpan.FromMilliseconds(100);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0.35), visible, hidden), Is.True);
+        Assert.That(KsTguiBlink.IsHidden(TimeSpan.FromSeconds(0.45), visible, hidden), Is.False);
     }
 
     [Test]
@@ -363,23 +368,23 @@ public sealed class KsTguiNewControlsTest : GameTest
     {
         await Client.WaitPost(() =>
         {
-            var blink = new KsTguiBlink { Interval = 100, Time = 100 };
+            var blink = new KsTguiBlink { Interval = TimeSpan.FromMilliseconds(100), Time = TimeSpan.FromMilliseconds(100) };
             var content = Block(30f, 10f);
             blink.AddChild(content);
 
-            blink.Advance(0.1f);
+            blink.Advance(TimeSpan.FromSeconds(0.1));
             Assert.That(blink.Hidden, Is.False);
-            blink.Advance(0.15f);
+            blink.Advance(TimeSpan.FromSeconds(0.15));
             Assert.That(blink.Hidden, Is.True);
 
             Layout(blink, new Vector2(100f, 100f));
             Assert.That(blink.DesiredSize, Is.EqualTo(new Vector2(30f, 10f)), "Hidden content still takes its room.");
 
-            blink.Advance(0.1f);
+            blink.Advance(TimeSpan.FromSeconds(0.1));
             Assert.That(blink.Hidden, Is.False);
 
-            blink.Advance(0.1f);
-            blink.Interval = 500;
+            blink.Advance(TimeSpan.FromSeconds(0.1));
+            blink.Interval = TimeSpan.FromMilliseconds(500);
             Assert.That(blink.Hidden, Is.False, "A new interval restarts the timer.");
         });
     }
