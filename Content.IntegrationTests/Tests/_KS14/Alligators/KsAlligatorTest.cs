@@ -4,18 +4,21 @@ using Content.IntegrationTests.Pair;
 using Content.Server._KS14.Alligators;
 using Content.Server.Gravity;
 using Content.Server.NPC.HTN;
+using Content.Shared._KS14.Alligators;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Body;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
 using Content.Shared.CombatMode;
+using Content.Shared.Destructible;
 using Content.Shared.Gravity;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Standing;
 using Content.Shared.Stunnable;
 using Content.Shared.Weapons.Melee;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 
@@ -27,10 +30,15 @@ public sealed class KsAlligatorTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private const string AlligatorPrototype = "KsMobSpaceAlligator";
-    private const string HumanPrototype = "MobHuman";
+    private static readonly EntProtoId AlligatorPrototype = "KsMobSpaceAlligator";
+    private static readonly EntProtoId HumanPrototype = "MobHuman";
     private static readonly ProtoId<OrganCategoryPrototype> LeftLeg = "LegLeft";
     private static readonly ProtoId<OrganCategoryPrototype> RightLeg = "LegRight";
+
+    /// <summary>
+    ///     Far more bites than any tuning should need to floor a fresh victim and latch onto them.
+    /// </summary>
+    private const int MaxBitesToLatch = 40;
 
     private EntityUid _alligatorUid;
     private EntityUid _victimUid;
@@ -59,48 +67,59 @@ public sealed class KsAlligatorTest : GameTest
     }
 
     [Test]
-    public async Task RepeatedBitesKnockDownAndDeathRollRemovesOneLeg()
+    public async Task BitesFloorVictimThenDeathRollSwallowsOneLeg()
     {
         await SpawnFight();
         var standing = SEntMan.System<StandingStateSystem>();
+        var buckle = SComp<BuckleComponent>(_victimUid);
 
-        for (var bite = 0; bite < 2; bite++)
+        // A bite only latches onto someone already on the floor, and a fresh victim takes several to put there.
+        var bites = 0;
+        while (buckle.BuckledTo == null)
         {
+            Assert.That(++bites, Is.LessThanOrEqualTo(MaxBitesToLatch), "Bites never floored and latched onto the victim.");
+            var wasDown = false;
+            await Server.WaitPost(() => wasDown = standing.IsDown(_victimUid));
             await Bite();
-            await Server.WaitAssertion(() =>
-            {
-                Assert.That(standing.IsDown(_victimUid), Is.False);
-                Assert.That(SComp<BuckleComponent>(_victimUid).BuckledTo, Is.Null);
-                Assert.That(CountLegs(), Is.EqualTo(2));
-            });
             await Advance(_biteInterval);
+            if (!wasDown && bites == 1)
+                Assert.That(buckle.BuckledTo, Is.Null, "The first bite latched onto a standing victim.");
         }
 
-        await Bite();
-        await Server.WaitAssertion(() =>
-        {
-            Assert.That(standing.IsDown(_victimUid), Is.True);
-            Assert.That(SComp<BuckleComponent>(_victimUid).BuckledTo, Is.Null);
-        });
-        await Advance(_biteInterval);
-
-        await Bite();
-        var buckle = SComp<BuckleComponent>(_victimUid);
-        await Advance(buckle.Delay);
+        Assert.That(bites, Is.GreaterThan(1));
+        EntityUid? leg = null;
         await Server.WaitAssertion(() =>
         {
             Assert.That(buckle.BuckledTo, Is.EqualTo(_alligatorUid));
             Assert.That(SEntMan.System<SharedBuckleSystem>().TryUnbuckle(_victimUid, _victimUid, popup: false), Is.False);
             Assert.That(SEntMan.System<ActionBlockerSystem>().CanMove(_alligatorUid), Is.False);
+            Assert.That(SEntMan.HasComponent<KsDeathRollVictimComponent>(_victimUid), Is.True);
             Assert.That(CountLegs(), Is.EqualTo(2));
+            leg = SComp<KsAlligatorComponent>(_alligatorUid).Leg;
+            Assert.That(leg, Is.Not.Null);
         });
 
         await Advance(_rollDuration);
+        var containers = SEntMan.System<SharedContainerSystem>();
         await Server.WaitAssertion(() =>
         {
             Assert.That(buckle.BuckledTo, Is.Null);
             Assert.That(CountLegs(), Is.EqualTo(1));
             Assert.That(SEntMan.System<ActionBlockerSystem>().CanMove(_alligatorUid), Is.True);
+            Assert.That(SEntMan.HasComponent<KsDeathRollVictimComponent>(_victimUid), Is.False);
+
+            // The leg is inside the alligator, and comes back out when it is butchered.
+            Assert.That(containers.TryGetContainingContainer(leg.Value, out var stomach), Is.True);
+            Assert.That(stomach.Owner, Is.EqualTo(_alligatorUid));
+            Assert.That(SEntMan.System<SharedDestructibleSystem>().DestroyEntity(_alligatorUid), Is.True);
+        });
+
+        await Pair.RunTicksSync(5);
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.EntityExists(_alligatorUid), Is.False);
+            Assert.That(SEntMan.EntityExists(leg.Value), Is.True);
+            Assert.That(containers.IsEntityInContainer(leg.Value), Is.False);
         });
     }
 

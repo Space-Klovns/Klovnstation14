@@ -1,12 +1,16 @@
+using Content.Server.Chat.Managers;
+using Content.Shared._KS14.Alligators;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared._KS14.Klovnmed.Dismemberment;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.ActionBlocker;
+using Content.Shared.Alert;
 using Content.Shared.Body;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
+using Content.Shared.Chat;
 using Content.Shared.Damage.Components;
-using Content.Shared.Damage.Systems;
+using Content.Shared.Destructible;
 using Content.Shared.Gravity;
 using Content.Shared.Humanoid;
 using Content.Shared.Interaction.Events;
@@ -16,35 +20,45 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Events;
 using Content.Shared.Popups;
 using Content.Shared.Standing;
-using Content.Shared.Stunnable;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Containers;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Alligators;
 
 /// <summary>
-///     Wears down standing humanoids with bites and knocks them over once they have enough stamina damage.
-///     A bite against a prone victim can buckle them to the alligator for a death roll.
+///     A bite against a prone humanoid can buckle them to the alligator for a death roll.
 ///     The roll severs the grabbed leg only if the alligator holds on for the full duration.
+///     The alligator swallows the leg, and gives it back when butchered or otherwise destroyed.
 /// </summary>
 public sealed partial class KsAlligatorSystem : EntitySystem
 {
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
     [Dependency] private DismembermentSystem _dismembermentSystem = default!;
+    [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private InventorySystem _inventorySystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private OrganSearchSystem _organSearchSystem = default!;
     [Dependency] private SharedBuckleSystem _buckleSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedGravitySystem _gravitySystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
-    [Dependency] private SharedStaminaSystem _staminaSystem = default!;
-    [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingSystem = default!;
 
-    private const float FirstBiteStamina = 5f;
-    private const float KnockdownStamina = 8f;
+    /// <summary>
+    ///     Holds the legs the alligator has swallowed.
+    /// </summary>
+    private const string StomachContainerId = "ks_alligator_stomach";
+
+    private static readonly LocId DeathRollStartMessage = "ks-alligator-death-roll-start";
+    private static readonly LocId DeathRollCompleteMessage = "ks-alligator-death-roll-complete";
+    private static readonly LocId ChatWrapMessage = "ks-alligator-chat-wrap-message";
 
     [SubscribeLocalEvent]
     private void OnMeleeHit(Entity<KsAlligatorComponent> alligator, ref MeleeHitEvent args)
@@ -57,25 +71,11 @@ public sealed partial class KsAlligatorSystem : EntitySystem
 
         foreach (var victimUid in args.HitEntities)
         {
-            if (!HasComp<HumanoidProfileComponent>(victimUid) || HasComp<GodmodeComponent>(victimUid))
-                continue;
-
-            if (_standingSystem.IsDown(victimUid))
+            if (HasComp<HumanoidProfileComponent>(victimUid) && !HasComp<GodmodeComponent>(victimUid) &&
+                _standingSystem.IsDown(victimUid) && TryLatch(alligator, victimUid))
             {
-                if (TryLatch(alligator, victimUid))
-                    break;
-                continue;
+                break;
             }
-
-            if (!TryComp<StaminaComponent>(victimUid, out var stamina))
-                continue;
-
-            var fatigue = _staminaSystem.GetStaminaDamage(victimUid, stamina);
-            if (fatigue >= KnockdownStamina)
-                _stunSystem.TryKnockdown(victimUid, alligator.Comp.BiteKnockdown);
-            else
-                _staminaSystem.TakeStaminaDamage(victimUid, fatigue < FirstBiteStamina ? FirstBiteStamina : KnockdownStamina - FirstBiteStamina,
-                    component: stamina, source: alligator.Owner, visual: false);
         }
     }
 
@@ -89,13 +89,29 @@ public sealed partial class KsAlligatorSystem : EntitySystem
             return false;
         }
 
+        // The victim is buckled in front of the jaws, so turn those towards the victim first.
+        var previousRotation = _transformSystem.GetWorldRotation(alligator.Owner);
+        var toVictim = _transformSystem.GetWorldPosition(victimUid) - _transformSystem.GetWorldPosition(alligator.Owner);
+        if (toVictim.LengthSquared() > 0.0001f)
+            _transformSystem.SetWorldRotation(alligator.Owner, toVictim.ToWorldAngle());
+
         // The strap checks the target during TryBuckle, so record it before the attempt.
         alligator.Comp.Victim = victimUid;
         if (!_buckleSystem.TryBuckle(victimUid, null, alligator.Owner, buckleComp: buckle, popup: false))
         {
             alligator.Comp.Victim = null;
+            _transformSystem.SetWorldRotation(alligator.Owner, previousRotation);
             return false;
         }
+
+        // Nothing to click: the victim cannot unbuckle themselves from the jaws.
+        if (TryComp<StrapComponent>(alligator.Owner, out var strap))
+            _alertsSystem.ClearAlert(victimUid, strap.BuckledAlertType);
+
+        var deathRollVictim = EnsureComp<KsDeathRollVictimComponent>(victimUid);
+        deathRollVictim.Alligator = alligator.Owner;
+        deathRollVictim.StartTime = _gameTiming.CurTime;
+        Dirty(victimUid, deathRollVictim);
 
         alligator.Comp.Leg = legUid;
         alligator.Comp.RollEndsAt = _gameTiming.CurTime + alligator.Comp.RollDuration;
@@ -105,9 +121,24 @@ public sealed partial class KsAlligatorSystem : EntitySystem
         if (HasComp<InventoryComponent>(victimUid))
             _inventorySystem.TryUnequip(victimUid, "shoes", silent: true, force: true);
 
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-alligator-death-roll-start",
-            ("alligator", alligator.Owner), ("victim", victimUid)), victimUid, PopupType.LargeCaution);
+        Announce(DeathRollStartMessage, alligator.Owner, victimUid);
         return true;
+    }
+
+    /// <summary>
+    ///     Shows a message about the alligator and its victim above the victim, and in the chat of everyone nearby.
+    /// </summary>
+    private void Announce(LocId message, EntityUid alligatorUid, EntityUid victimUid)
+    {
+        _popupSystem.PopupEntity(KsPopupMessage.Create(message, ("alligator", alligatorUid), ("victim", victimUid)),
+            victimUid, PopupType.LargeCaution);
+
+        // Chat text is formatted here, in the server's language, as every other chat message is.
+        var chatMessage = Loc.GetString(message, ("alligator", alligatorUid), ("victim", victimUid));
+        var wrappedMessage = Loc.GetString(ChatWrapMessage, ("message", FormattedMessage.EscapeText(chatMessage)));
+        // No source entity: the popup already marks the spot, and a source would add a speech bubble on top of it.
+        _chatManager.ChatMessageToManyFiltered(Filter.Pvs(victimUid, entityManager: EntityManager), ChatChannel.Emotes,
+            chatMessage, wrappedMessage, EntityUid.Invalid, hideChat: false, recordReplay: true, colorOverride: null);
     }
 
     public override void Update(float frameTime)
@@ -136,9 +167,17 @@ public sealed partial class KsAlligatorSystem : EntitySystem
             ReleaseVictim(alligator);
             _dismembermentSystem.DismemberPart(victimUid, legUid, cause: uid);
             _dismembermentSystem.DoFixedEmote(victimUid);
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-alligator-death-roll-complete",
-                ("alligator", uid), ("victim", victimUid)), victimUid, PopupType.LargeCaution);
+            _containerSystem.Insert(legUid, _containerSystem.EnsureContainer<Container>(uid, StomachContainerId));
+            Announce(DeathRollCompleteMessage, uid, victimUid);
         }
+    }
+
+    // Raised for butchering as well as gibbing, before the alligator and everything inside it is deleted.
+    [SubscribeLocalEvent]
+    private void OnDestruction(Entity<KsAlligatorComponent> alligator, ref DestructionEventArgs args)
+    {
+        if (_containerSystem.TryGetContainer(alligator.Owner, StomachContainerId, out var stomach))
+            _containerSystem.EmptyContainer(stomach, force: true);
     }
 
     [SubscribeLocalEvent]
@@ -202,6 +241,7 @@ public sealed partial class KsAlligatorSystem : EntitySystem
         // Clear the latch before unbuckling, which can raise UnstrappedEvent here again.
         alligator.Comp.Victim = null;
         alligator.Comp.Leg = null;
+        RemCompDeferred<KsDeathRollVictimComponent>(victimUid);
 
         if (!TerminatingOrDeleted(victimUid) && TryComp<BuckleComponent>(victimUid, out var buckle) &&
             buckle.BuckledTo == alligator.Owner)

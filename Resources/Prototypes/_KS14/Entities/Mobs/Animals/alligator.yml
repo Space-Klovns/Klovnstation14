@@ -6,6 +6,7 @@
   components:
   - type: Sprite
     drawdepth: Mobs
+    noRot: false
     sprite: _KS14/Mobs/Animals/maint_croc.rsi
     layers:
     - state: croc
@@ -62,12 +63,16 @@
       path: /Audio/Effects/bite.ogg
     damage:
       types:
-        Piercing: 8
+        Piercing: 10
+  - type: StaminaDamageOnHit
+    damage: 25
   - type: Strap
     position: Down
     rotation: 90
-    buckleOffset: 0,-0.55
+    buckleOffset: 0,-1
     buckleOnInteractHand: false
+    buckleSound: null
+    unbuckleSound: null
     whitelist:
       components:
       - HumanoidProfile

@@ -22,12 +22,6 @@ public sealed partial class KsAlligatorComponent : Component
     public TimeSpan RollRecovery = TimeSpan.FromSeconds(1.5);
 
     /// <summary>
-    ///     How long a bite keeps a fatigued standing target down, giving the alligator time to latch.
-    /// </summary>
-    [DataField]
-    public TimeSpan BiteKnockdown = TimeSpan.FromSeconds(3);
-
-    /// <summary>
     ///     The target selected for the latch. Set before the buckle attempt and cleared if it fails.
     /// </summary>
     public EntityUid? Victim;
