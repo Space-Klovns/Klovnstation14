@@ -1,0 +1,188 @@
+# Things techniques leave in the world.
+
+- type: entity
+  parent: BaseItem
+  id: KsQiTalisman
+  name: qi talisman
+  description: A strip of paper inscribed in qi. Burn it to release what was written into it.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: talisman
+
+- type: entity
+  parent: BaseItem
+  id: KsJadeTransmissionSlip
+  name: jade transmission slip
+  description: A slip of jade holding a master's law. Whoever studies it learns the law, and even a mortal awakens.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: jade_slip
+  - type: CultivationManual
+    law: KsMetal
+    awakens: true
+
+- type: entity
+  id: KsGatheringArray
+  categories: [ HideSpawnMenu ]
+  name: gathering array
+  description: A circle of trigrams that draws ambient qi inward. Meditating inside it is far more effective.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: array_gathering
+    drawdepth: FloorObjects
+  - type: CultivationQiSource
+    range: 2
+    multiplier: 2
+  - type: TimedDespawn
+    lifetime: 120
+
+- type: entity
+  id: KsAlarmArray
+  categories: [ HideSpawnMenu ]
+  name: alarm array
+  description: A circle of trigrams that whispers to its maker whenever a stranger steps inside.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: array_alarm
+    drawdepth: FloorObjects
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
+  id: KsQiBarrier
+  categories: [ HideSpawnMenu ]
+  name: qi barrier
+  description: A shimmering wall of golden qi. Its maker and their allies pass through it freely.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: qi_wall
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        mask:
+        - SpecialWallLayer
+        layer:
+        - SpecialWallLayer
+  - type: QiBarrier
+  - type: TimedDespawn
+    lifetime: 60
+
+- type: entity
+  id: KsSteamVeil
+  categories: [ HideSpawnMenu ]
+  name: steam
+  description: A billowing cloud of hot steam. You can't see through it.
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    state: chemsmoke
+    color: "#e8eef2dd"
+    drawdepth: Effects
+  - type: Occluder
+  - type: TimedDespawn
+    lifetime: 10
+
+- type: entity
+  id: KsSuckingMud
+  categories: [ HideSpawnMenu ]
+  name: sucking mud
+  description: Thick, bubbling mud. Your feet sink into it.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: mud
+    drawdepth: FloorObjects
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      slow:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.4,-0.4,0.4,0.4"
+        hard: false
+        layer:
+        - SlipLayer
+  - type: SpeedModifierContacts
+    walkSpeedModifier: 0.4
+    sprintSpeedModifier: 0.4
+  - type: TimedDespawn
+    lifetime: 6
+
+- type: entity
+  id: KsBuddhaPalmShadow
+  categories: [ HideSpawnMenu ]
+  name: palm shadow
+  description: A vast shadow, growing darker by the moment.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: palm_shadow
+    scale: 3, 3
+    drawdepth: FloorObjects
+  - type: TimedDespawn
+    lifetime: 2
+
+- type: entity
+  parent: ProjectileCultivationSwordQi
+  id: ProjectileCultivationThornSword
+  categories: [ HideSpawnMenu ]
+  name: thorn sword
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
+    layers:
+    - state: magicm_green
+      shader: unshaded
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 10
+  - type: StaminaDamageOnCollide
+    damage: 15
+
+# A nascent soul out walking: a small golden figure that flies over tables and crowds.
+- type: entity
+  parent: [ SimpleSpaceMobBase, FlyingMobBase ]
+  id: KsNascentSoul
+  categories: [ HideSpawnMenu ]
+  name: nascent soul
+  description: A tiny golden figure floating in the air, glowing softly.
+  components:
+  - type: Sprite
+    sprite: Mobs/Ghosts/ghost_human.rsi
+    state: animated
+    color: "#ffd860cc"
+    scale: 0.6, 0.6
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 5
+    baseSprintSpeed: 7
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      40: Dead
+  - type: PointLight
+    color: "#ffd860"
+    radius: 2

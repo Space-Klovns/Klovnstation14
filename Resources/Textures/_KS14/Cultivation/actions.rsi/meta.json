@@ -8,6 +8,24 @@
   },
   "states": [
     {
+      "name": "acupoint"
+    },
+    {
+      "name": "alarm_array"
+    },
+    {
+      "name": "artifact_strike"
+    },
+    {
+      "name": "barrier_array"
+    },
+    {
+      "name": "bind_artifact"
+    },
+    {
+      "name": "binding_vines"
+    },
+    {
       "name": "body_blood_boil"
     },
     {
@@ -47,6 +65,9 @@
       "name": "body_mountain"
     },
     {
+      "name": "body_outside_body"
+    },
+    {
       "name": "body_quake"
     },
     {
@@ -74,7 +95,22 @@
       "name": "breakthrough"
     },
     {
+      "name": "buddha_palm"
+    },
+    {
+      "name": "burning_blood"
+    },
+    {
       "name": "burning_palm"
+    },
+    {
+      "name": "calm_heart"
+    },
+    {
+      "name": "concealment"
+    },
+    {
+      "name": "dharma_idol"
     },
     {
       "name": "dragon_palm"
@@ -83,10 +119,28 @@
       "name": "dugu_counter"
     },
     {
+      "name": "empty_palm"
+    },
+    {
       "name": "flying_sword"
     },
     {
+      "name": "forced_circulation"
+    },
+    {
+      "name": "forget_law"
+    },
+    {
+      "name": "furnace_burst"
+    },
+    {
+      "name": "gathering_array"
+    },
+    {
       "name": "golden_bell"
+    },
+    {
+      "name": "golden_bell_qi"
     },
     {
       "name": "graceful_steps"
@@ -95,19 +149,40 @@
       "name": "great_shift"
     },
     {
+      "name": "kindle"
+    },
+    {
       "name": "ladder_cloud"
     },
     {
       "name": "meditate"
     },
     {
+      "name": "mirror_lake"
+    },
+    {
+      "name": "molten_step"
+    },
+    {
       "name": "mountain_collapse"
+    },
+    {
+      "name": "mud_prison"
     },
     {
       "name": "myriad_spring"
     },
     {
       "name": "northern_darkness"
+    },
+    {
+      "name": "qinggong"
+    },
+    {
+      "name": "realm_pressure"
+    },
+    {
+      "name": "return_to_body"
     },
     {
       "name": "rooted_stance"
@@ -119,19 +194,49 @@
       "name": "six_meridians"
     },
     {
+      "name": "spiritual_sense"
+    },
+    {
       "name": "spring_mending"
     },
     {
       "name": "star_absorbing"
     },
     {
+      "name": "steam_veil"
+    },
+    {
       "name": "still_water"
+    },
+    {
+      "name": "sword_formation"
     },
     {
       "name": "sword_rain"
     },
     {
+      "name": "sword_riding"
+    },
+    {
+      "name": "thousand_thorns"
+    },
+    {
       "name": "tidal_surge"
+    },
+    {
+      "name": "transmit_law"
+    },
+    {
+      "name": "turtle_breathing"
+    },
+    {
+      "name": "verdant_growth"
+    },
+    {
+      "name": "void_step"
+    },
+    {
+      "name": "write_talisman"
     }
   ]
 }

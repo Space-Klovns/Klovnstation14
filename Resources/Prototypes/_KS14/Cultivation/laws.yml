@@ -10,6 +10,14 @@
     action: ActionCultivationFlyingSword
   - realm: GoldenCore
     action: ActionCultivationSwordRain
+  - realm: QiCondensation
+    action: ActionCultivationBindArtifact
+  - realm: QiCondensation
+    action: ActionCultivationArtifactStrike
+  - realm: GoldenCore
+    action: ActionCultivationSwordRiding
+  - realm: NascentSoul
+    action: ActionCultivationSwordFormation
 
 - type: cultivationLaw
   id: KsWood
@@ -23,6 +31,10 @@
     action: ActionCultivationSpringMending
   - realm: GoldenCore
     action: ActionCultivationMyriadSpring
+  - realm: QiCondensation
+    action: ActionCultivationVerdantGrowth
+  - realm: GoldenCore
+    action: ActionCultivationBindingVines
 
 - type: cultivationLaw
   id: KsWater
@@ -36,6 +48,12 @@
     action: ActionCultivationStillWaterWard
   - realm: GoldenCore
     action: ActionCultivationTidalSurge
+  - realm: QiCondensation
+    action: ActionCultivationCalmHeart
+  - realm: GoldenCore
+    action: ActionCultivationTurtleBreathing
+  - realm: NascentSoul
+    action: ActionCultivationMirrorLake
 
 - type: cultivationLaw
   id: KsFire
@@ -49,6 +67,12 @@
     action: ActionCultivationBurningPalm
   - realm: GoldenCore
     action: ActionCultivationSeaOfFlames
+  - realm: QiCondensation
+    action: ActionCultivationKindle
+  - realm: QiCondensation
+    action: ActionCultivationFurnaceBurst
+  - realm: GoldenCore
+    action: ActionCultivationBurningBlood
 
 - type: cultivationLaw
   id: KsEarth
@@ -62,3 +86,35 @@
     action: ActionCultivationRootedStance
   - realm: GoldenCore
     action: ActionCultivationMountainCollapse
+  - realm: QiCondensation
+    action: ActionCultivationGoldenBellQi
+  - realm: GoldenCore
+    action: ActionCultivationDharmaIdol
+  - realm: NascentSoul
+    action: ActionCultivationBuddhaPalm
+
+# Two laws' qi resonating opens a technique of its own.
+
+- type: cultivationCombo
+  id: KsComboSteamVeil
+  elementOne: Fire
+  elementTwo: Water
+  action: ActionCultivationSteamVeil
+
+- type: cultivationCombo
+  id: KsComboThousandThorns
+  elementOne: Metal
+  elementTwo: Wood
+  action: ActionCultivationThousandThorns
+
+- type: cultivationCombo
+  id: KsComboMoltenStep
+  elementOne: Earth
+  elementTwo: Fire
+  action: ActionCultivationMoltenStep
+
+- type: cultivationCombo
+  id: KsComboMudPrison
+  elementOne: Water
+  elementTwo: Earth
+  action: ActionCultivationMudPrison
