@@ -284,16 +284,16 @@
       state: tourniquet
     - type: Item
       heldPrefix: tourniquet
-      size: Tiny # BF14
+      size: Tiny # KS14
     - type: Healing
       damageContainers:
         - Biological
       damage:
         types:
-          Blunt: -2 #KS14
-          Slash: -2 #KS14
-          Piercing: -5 #KS14
-#KS14          Asphyxiation: 5
+          Blunt: -2 # KS14 removed blunt damage because this would just make you keep bleeding
+          Slash: -2 # KS14
+          Piercing: -5 # KS14
+#KS14          Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
       bloodlossModifier: -10
       delay: 0.65 # KS14: changed from `0.5` -> `0.65`
       selfHealDelayMultiplier: 0 # KS14
