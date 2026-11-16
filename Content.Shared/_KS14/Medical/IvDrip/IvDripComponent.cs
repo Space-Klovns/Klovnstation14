@@ -73,10 +73,10 @@ public sealed partial class IvDripComponent : Component
     public FixedPoint2 InjectionAmount = FixedPoint2.New(1);
 
     /// <summary>
-    ///     Seconds between injections.
+    ///     Time between injections.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float InjectionInterval = 1f;
+    public TimeSpan InjectionInterval = TimeSpan.FromSeconds(1);
 
     /// <summary>
     ///     Who is currently wearing this drip, or null while unworn.
@@ -119,16 +119,16 @@ public sealed partial class IvDripComponent : Component
     public FixedPoint2 MaximumInjectionAmount = FixedPoint2.New(30);
 
     /// <summary>
-    ///     Lower bound, in seconds, <see cref="InjectionInterval"/> is clamped to.
+    ///     Lower bound <see cref="InjectionInterval"/> is clamped to.
     /// </summary>
     [DataField]
-    public float MinimumInjectionInterval = 0.1f;
+    public TimeSpan MinimumInjectionInterval = TimeSpan.FromSeconds(0.1);
 
     /// <summary>
-    ///     Upper bound, in seconds, <see cref="InjectionInterval"/> is clamped to.
+    ///     Upper bound <see cref="InjectionInterval"/> is clamped to.
     /// </summary>
     [DataField]
-    public float MaximumInjectionInterval = 10f;
+    public TimeSpan MaximumInjectionInterval = TimeSpan.FromSeconds(10);
 
     /// <summary>
     ///     Whether damage to the wearer spills fluid from this drip.
@@ -176,15 +176,15 @@ public enum IvDripUiKey : byte
 public sealed class IvDripBoundUserInterfaceState(
     bool injectionEnabled,
     FixedPoint2 injectionAmount,
-    float injectionInterval,
+    TimeSpan injectionInterval,
     FixedPoint2 solutionVolume,
     FixedPoint2 solutionMaxVolume,
     bool canSetInjectionAmount,
     bool canSetInjectionInterval,
     FixedPoint2 minimumInjectionAmount,
     FixedPoint2 maximumInjectionAmount,
-    float minimumInjectionInterval,
-    float maximumInjectionInterval) : BoundUserInterfaceState
+    TimeSpan minimumInjectionInterval,
+    TimeSpan maximumInjectionInterval) : BoundUserInterfaceState
 {
     /// <inheritdoc cref="IvDripComponent.InjectionEnabled"/>
     public bool InjectionEnabled = injectionEnabled;
@@ -193,7 +193,7 @@ public sealed class IvDripBoundUserInterfaceState(
     public FixedPoint2 InjectionAmount = injectionAmount;
 
     /// <inheritdoc cref="IvDripComponent.InjectionInterval"/>
-    public float InjectionInterval = injectionInterval;
+    public TimeSpan InjectionInterval = injectionInterval;
 
     /// <summary>
     ///     Current contents of the drip's solution, in units.
@@ -218,10 +218,10 @@ public sealed class IvDripBoundUserInterfaceState(
     public FixedPoint2 MaximumInjectionAmount = maximumInjectionAmount;
 
     /// <inheritdoc cref="IvDripComponent.MinimumInjectionInterval"/>
-    public float MinimumInjectionInterval = minimumInjectionInterval;
+    public TimeSpan MinimumInjectionInterval = minimumInjectionInterval;
 
     /// <inheritdoc cref="IvDripComponent.MaximumInjectionInterval"/>
-    public float MaximumInjectionInterval = maximumInjectionInterval;
+    public TimeSpan MaximumInjectionInterval = maximumInjectionInterval;
 }
 
 /// <summary>
@@ -248,10 +248,10 @@ public sealed class IvDripSetAmountMessage(FixedPoint2 amount) : BoundUserInterf
 ///     Sent by the window to change how often injection happens. Clamped server-side.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class IvDripSetIntervalMessage(float interval) : BoundUserInterfaceMessage
+public sealed class IvDripSetIntervalMessage(TimeSpan interval) : BoundUserInterfaceMessage
 {
     /// <inheritdoc cref="IvDripComponent.InjectionInterval"/>
-    public float Interval = interval;
+    public TimeSpan Interval = interval;
 }
 
 /// <summary>

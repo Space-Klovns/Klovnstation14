@@ -79,16 +79,31 @@ public sealed partial class IvDripSystem
     ///     Rounded to the two decimal places the window shows, so the value sent up matches the one that
     ///         comes back, then clamped to the drip's own bounds.
     /// </remarks>
-    public void SetInjectionInterval(Entity<IvDripComponent> entity, float interval)
+    public void SetInjectionInterval(Entity<IvDripComponent> entity, TimeSpan interval)
     {
         if (!entity.Comp.CanSetInjectionInterval)
             return;
 
-        entity.Comp.InjectionInterval = Math.Clamp((float)Math.Round(interval, 2, MidpointRounding.AwayFromZero),
-            entity.Comp.MinimumInjectionInterval,
-            entity.Comp.MaximumInjectionInterval);
+        // Clamped before rounding as well as after: rounding anything near TimeSpan.MaxValue overflows.
+        entity.Comp.InjectionInterval = ClampInterval(entity.Comp, RoundInterval(ClampInterval(entity.Comp, interval)));
         Dirty(entity);
         UpdateUserInterface(entity);
+    }
+
+    private static TimeSpan ClampInterval(IvDripComponent component, TimeSpan interval)
+    {
+        if (interval < component.MinimumInjectionInterval)
+            return component.MinimumInjectionInterval;
+
+        return interval > component.MaximumInjectionInterval ? component.MaximumInjectionInterval : interval;
+    }
+
+    /// <summary>
+    ///     Rounds an interval to the hundredths of a second the window shows.
+    /// </summary>
+    public static TimeSpan RoundInterval(TimeSpan interval)
+    {
+        return TimeSpan.FromSeconds(Math.Round(interval.TotalSeconds, 2, MidpointRounding.AwayFromZero));
     }
 
     /// <summary>

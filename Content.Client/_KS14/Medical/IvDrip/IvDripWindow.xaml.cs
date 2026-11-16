@@ -26,7 +26,7 @@ public sealed partial class IvDripWindow : FancyWindow
     /// <summary>
     ///     Raised when the wearer picks a new interval, by slider or by text box.
     /// </summary>
-    public event Action<float>? OnIntervalChanged;
+    public event Action<TimeSpan>? OnIntervalChanged;
 
     /// <summary>
     ///     What the last state put in each text box.
@@ -44,7 +44,7 @@ public sealed partial class IvDripWindow : FancyWindow
         RobustXamlLoader.Load(this);
         EnabledCheckBox.OnToggled += args => OnEnabledChanged?.Invoke(args.Pressed);
         AmountSlider.OnReleased += _ => OnAmountChanged?.Invoke(FixedPoint2.New(AmountSlider.Value));
-        IntervalSlider.OnReleased += _ => OnIntervalChanged?.Invoke(NormalizeInterval(IntervalSlider.Value));
+        IntervalSlider.OnReleased += _ => OnIntervalChanged?.Invoke(IvDripSystem.RoundInterval(TimeSpan.FromSeconds(IntervalSlider.Value)));
         AmountInput.OnTextEntered += args => SubmitAmount(args.Text);
         AmountInput.OnFocusExit += args => SubmitAmount(args.Text);
         IntervalInput.OnTextEntered += args => SubmitInterval(args.Text);
@@ -73,10 +73,11 @@ public sealed partial class IvDripWindow : FancyWindow
 
         IntervalSlider.Disabled = !state.CanSetInjectionInterval;
         IntervalInput.Editable = state.CanSetInjectionInterval;
-        IntervalSlider.MinValue = state.MinimumInjectionInterval;
-        IntervalSlider.MaxValue = state.MaximumInjectionInterval;
-        IntervalSlider.SetValueWithoutEvent(state.InjectionInterval);
-        _lastIntervalText = state.InjectionInterval.ToString("F2", CultureInfo.InvariantCulture);
+        // The slider and the text box count in seconds.
+        IntervalSlider.MinValue = (float)state.MinimumInjectionInterval.TotalSeconds;
+        IntervalSlider.MaxValue = (float)state.MaximumInjectionInterval.TotalSeconds;
+        IntervalSlider.SetValueWithoutEvent((float)state.InjectionInterval.TotalSeconds);
+        _lastIntervalText = state.InjectionInterval.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture);
         IntervalInput.Text = _lastIntervalText;
         IntervalLabel.Text = Loc.GetString("iv-drip-window-rate", ("interval", _lastIntervalText));
     }
@@ -95,14 +96,12 @@ public sealed partial class IvDripWindow : FancyWindow
         if (text == _lastIntervalText)
             return;
 
-        if (float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var interval))
-            OnIntervalChanged?.Invoke(NormalizeInterval(interval));
+        // Rounded as the server rounds it, so that the value sent up matches the one that comes back.
+        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds) &&
+            double.IsFinite(seconds) &&
+            Math.Abs(seconds) < TimeSpan.MaxValue.TotalSeconds)
+        {
+            OnIntervalChanged?.Invoke(IvDripSystem.RoundInterval(TimeSpan.FromSeconds(seconds)));
+        }
     }
-
-    /// <summary>
-    ///     Rounds an interval to the same two decimal places the server clamps it to, so that the value
-    ///         sent up matches the one that comes back.
-    /// </summary>
-    private static float NormalizeInterval(float interval) =>
-        (float)Math.Round(interval, 2, MidpointRounding.AwayFromZero);
 }

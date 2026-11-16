@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Pair;
@@ -290,7 +291,7 @@ public sealed class IvDripTest : GameTest
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
 
             ivDripSystem.SetInjectionAmount((dripUid, ivDripComponent), FixedPoint2.New(9999));
-            ivDripSystem.SetInjectionInterval((dripUid, ivDripComponent), 9999f);
+            ivDripSystem.SetInjectionInterval((dripUid, ivDripComponent), TimeSpan.MaxValue);
 
             using (Assert.EnterMultipleScope())
             {
@@ -299,6 +300,10 @@ public sealed class IvDripTest : GameTest
                 Assert.That(ivDripComponent.InjectionInterval, Is.EqualTo(ivDripComponent.MaximumInjectionInterval),
                     "An out-of-range interval was not clamped to the maximum.");
             }
+
+            ivDripSystem.SetInjectionInterval((dripUid, ivDripComponent), TimeSpan.MinValue);
+            Assert.That(ivDripComponent.InjectionInterval, Is.EqualTo(ivDripComponent.MinimumInjectionInterval),
+                "An out-of-range interval was not clamped to the minimum.");
         });
     }
 
@@ -317,7 +322,7 @@ public sealed class IvDripTest : GameTest
             var originalInterval = ivDripComponent.InjectionInterval;
 
             ivDripSystem.SetInjectionAmount((dripUid, ivDripComponent), FixedPoint2.New(1));
-            ivDripSystem.SetInjectionInterval((dripUid, ivDripComponent), 2f);
+            ivDripSystem.SetInjectionInterval((dripUid, ivDripComponent), TimeSpan.FromSeconds(2));
 
             using (Assert.EnterMultipleScope())
             {
