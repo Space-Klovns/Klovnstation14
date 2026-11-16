@@ -2972,3 +2972,15 @@ Entries:
         somewhere after being bumped.
   id: 268
   time: '2026-11-16T12:38:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Bullet impacts no longer occasionally crash the client.
+    - type: Fix
+      message: >-
+        A hit that armour mostly stopped no longer swallows its own blood spray,
+        and one armour stopped entirely no longer bleeds.
+    - type: Fix
+      message: Lasers now puff smoke on things they can't damage, the same as bullets.
+  id: 269
+  time: '2026-11-16T12:44:57.0000000+00:00'
