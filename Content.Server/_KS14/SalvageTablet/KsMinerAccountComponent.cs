@@ -54,6 +54,12 @@ public sealed partial class KsMinerAccountComponent : Component
     public TimeSpan NextOrderTime;
 
     /// <summary>
+    ///     Whoever last logged in with the card, for their picture on the tablet.
+    /// </summary>
+    [DataField]
+    public EntityUid? Salvager;
+
+    /// <summary>
     ///     The tablets logged in with the card. Derived from each tablet's <see cref="KsSalvageTabletComponent.BoundCard"/>,
     ///         so not saved.
     /// </summary>
