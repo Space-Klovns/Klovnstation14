@@ -29,6 +29,9 @@
       "name": "binding_vines"
     },
     {
+      "name": "blood_escape"
+    },
+    {
       "name": "body_blood_boil"
     },
     {
@@ -113,6 +116,12 @@
       "name": "concealment"
     },
     {
+      "name": "corpse_puppet"
+    },
+    {
+      "name": "devouring_art"
+    },
+    {
       "name": "dharma_idol"
     },
     {
@@ -123,6 +132,9 @@
     },
     {
       "name": "empty_palm"
+    },
+    {
+      "name": "exploding_heart"
     },
     {
       "name": "flying_sword"
@@ -150,6 +162,9 @@
     },
     {
       "name": "great_shift"
+    },
+    {
+      "name": "gu_worm"
     },
     {
       "name": "kindle"
@@ -197,6 +212,9 @@
       "name": "six_meridians"
     },
     {
+      "name": "soul_search"
+    },
+    {
       "name": "spiritual_sense"
     },
     {
@@ -210,6 +228,9 @@
     },
     {
       "name": "still_water"
+    },
+    {
+      "name": "stir_gu"
     },
     {
       "name": "summon_beast"
@@ -228,6 +249,9 @@
     },
     {
       "name": "tidal_surge"
+    },
+    {
+      "name": "transmit_demonic"
     },
     {
       "name": "transmit_law"

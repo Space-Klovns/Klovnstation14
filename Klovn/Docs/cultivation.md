@@ -16,16 +16,56 @@ and injury alerts stay in step.
 - **Realms:** Qi Condensation, Foundation Establishment, Golden Core, Nascent Soul. Each raises the qi cap.
 - **Meditation** (`CultivationSystem`) is a repeating do-after: each cycle gathers insight and qi, every second
   cycle eases one stack of internal injury. A `CultivationQiSourceComponent` nearby multiplies both.
-- **Breakthrough** needs full insight. Failing it (a qi deviation) halves insight and injures. The chance of
-  failure is `SharedCultivationSystem.DeviationChance`, which internal injury pushes up sharply.
+- **Breakthrough** needs full insight and means enduring heaven's tribulation: `3 + 2 × realm` cycles of a
+  do-after, each with a chance of tribulation lightning (lightning rods nearby take most of it). Readiness
+  (`CultivationSystem.BreakthroughReadiness`) is 50, minus 20 per injury, plus bonuses for a qi source, nearly full
+  qi and a tempered Dao heart; 70 or more is certain. Anything else can add to it through
+  `CultivationBreakthroughReadinessEvent`. A failure (a qi deviation) halves insight, injures, and may tear loose a
+  heart demon (`HeartDemonSystem`): kill it close by and the Dao heart is tempered, let it go and it costs more.
+- **Ascension:** at Nascent Soul with full insight, the breakthrough action begins a 20-cycle tribulation. Surviving
+  it leaves the round as an immortal.
 - **Internal injury:** any single blow of 15 or more damage adds a stack (up to three). Stacks slow qi recovery and
   give spending qi a chance to backlash.
 - **Laws** (`cultivationLaw` prototypes) are learned from manuals. The first is the Root Law, which twists one of
   its techniques (see each law's `rootDescription`); a second, Complementary Law fits from Foundation. Each law
   lists its techniques and the realm that opens them; `CultivationSystem.GrantTechniques` hands them out.
 
+Besides each law's techniques, every cultivator comes to the universal techniques
+(`CultivationSystem.UniversalTechniques`: Spiritual Sense, Qinggong, Acupoint Sealing, talismans, formations,
+spirit beasts, Body Outside the Body and more), and two laws together can resonate into a combination technique
+(`cultivationCombo` prototypes). Spiritual Sense raises `CultivationSensedEvent` on everyone it sweeps, so any system
+can add what it notices; meditation raises `CultivationMeditatedEvent` after each cycle.
+
 The antagonist is `KsCultivator` (rule `KsCultivators`): one to three cultivators, each starting with a random
 law manual in hand.
+
+## The Demonic Path
+
+`ForbiddenArtsSystem`. The Heaven-Devouring Demonic Scripture (`KsDemonicScripture`, 18 TC in the uplink) can only be
+read by someone whose mind already holds an antagonist role; anyone else takes a qi deviation. Reading it awakens a
+mortal and adds `DemonicPathComponent` as a master. A master's Transmit Demonic Art writes a blood slip
+(`KsDemonicTransmission`) for one disciple: reading it is consent, needs no antagonist role, and makes a disciple who
+can never pass the arts on.
+
+The arts are in `ForbiddenArtsSystem.ForbiddenTechniques`, granted by realm alongside the rest:
+
+- **Devouring Art:** drain someone dying, or devour a corpse for qi, insight and healing. A devoured corpse becomes
+  `Unrevivable` (still cloneable). A dead cultivator gives up a quarter of their insight.
+- **Gu worms:** a worm sips its host's health into the master's qi for five minutes. Holy water in the blood drives
+  it out. Stir the Gu makes every worm bite at once, spending them.
+- **Soul Search:** read a helpless (cuffed, stunned, knocked down or critical) person's job and hidden antagonist
+  roles, sent privately to the searcher's chat.
+- **Corpse Puppet:** a `KsJiangshi` wearing the corpse's appearance, with the real body held in a container. It
+  follows its master and retaliates for them. It collapses when its time runs out, when it is cut down, or when any
+  qi talisman is used on it; the body always drops out.
+- **Heavenly Demon Blood Escape:** a quarter of the way to critical condition in blood, for a jump of 8 to 15 tiles
+  that breaks pulls and cuffs.
+- **Five-Point Exploding Heart Palm:** `ExplodingHeartComponent` counts the victim's own steps (not dragged or
+  thrown) and bursts the heart when they run out, with the count shown as an alert. Chest protection that stops 40%
+  of a blunt blow turns the fingers aside. Acupoint Sealing (`AcupointSealedEvent`) or two meditation cycles undo it.
+
+Every art adds taint, which fades by two a minute and lowers breakthrough readiness by up to 30. Spiritual Sense
+smells the path, gu worms, jiangshi, a planted palm and the stained hands that struck it.
 
 ## Martial arts
 
@@ -79,7 +119,9 @@ and copyright metadata. Run them from the repository root with Pillow installed.
 
 ## Tests
 
-`Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the martial arts and armor, and the body
-path. The Dugu counter and Eternal Heart tests have been checked by breaking what they cover and watching them
-fail (the Eternal Heart test was vacuous at first: a gibbed body reads as "not dead"). The rest still need the
-same check.
+`Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
+the body path and the Demonic Path, and `CultivationLocaleTest` checks every cultivation locale key resolves
+(`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
+concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) have been checked
+by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads
+as "not dead". The rest still need the same check.

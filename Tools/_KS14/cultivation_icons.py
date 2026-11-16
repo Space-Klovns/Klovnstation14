@@ -135,6 +135,18 @@ ACTIONS.update({
     "summon_beast": ("召", "jade"),
 })
 
+# The Demonic Path.
+ACTIONS.update({
+    "devouring_art": ("噬", "crimson"),
+    "gu_worm": ("蛊", "violet"),
+    "stir_gu": ("搅", "violet"),
+    "soul_search": ("搜", "purple"),
+    "corpse_puppet": ("尸", "violet"),
+    "blood_escape": ("遁", "crimson"),
+    "exploding_heart": ("爆", "crimson"),
+    "transmit_demonic": ("魔", "crimson"),
+})
+
 ART_MANUALS = {
     "body_primer": ("铜", "orange"),
     "body_molding_art": ("塑", "brown"),
@@ -178,6 +190,7 @@ MANUALS = {
     "manual_water": ("水", "blue"),
     "manual_fire": ("火", "red"),
     "manual_earth": ("土", "brown"),
+    "manual_demonic": ("魔", "crimson"),
 }
 
 
@@ -286,6 +299,19 @@ def jade_slip(font_path):
     return image
 
 
+def blood_slip(font_path):
+    """A strip of yellowed bone written over in blood."""
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.rounded_rectangle((10, 4, 21, 27), radius=3, fill=(214, 200, 164, 255), outline=(110, 84, 56, 255))
+    draw.line((12, 7, 12, 24), fill=(236, 228, 204, 255))
+    mask = glyph_layer("魔", font_path, 10, 32, threshold=60)
+    image.paste(Image.new("RGBA", (32, 32), (150, 16, 24, 255)), (0, 0), mask)
+    # A drip running off the bottom.
+    draw.line((18, 25, 18, 29), fill=(150, 16, 24, 255))
+    return image
+
+
 def array_circle(glyph, colour, font_path):
     """A floor circle of trigrams around a glyph."""
     face, rim = PALETTE[colour]
@@ -381,6 +407,7 @@ def main():
     write_rsi(os.path.join(TEXTURES, "items.rsi"), {
         "talisman": talisman(args.font),
         "jade_slip": jade_slip(args.font),
+        "blood_slip": blood_slip(args.font),
         "array_gathering": array_circle("聚", "jade", args.font),
         "array_barrier": array_circle("阵", "gold", args.font),
         "array_alarm": array_circle("警", "orange", args.font),
@@ -388,7 +415,8 @@ def main():
         "mud": mud(),
         "palm_shadow": palm_shadow(),
     })
-    for name, glyph, colour in (("body_exhaustion.rsi", "疲", "orange"), ("body_tempering.rsi", "锻", "gold")):
+    for name, glyph, colour in (("body_exhaustion.rsi", "疲", "orange"), ("body_tempering.rsi", "锻", "gold"),
+                                ("exploding_heart.rsi", "心", "crimson")):
         meter_path = os.path.join(TEXTURES, name)
         os.makedirs(meter_path, exist_ok=True)
         for digit in range(10):

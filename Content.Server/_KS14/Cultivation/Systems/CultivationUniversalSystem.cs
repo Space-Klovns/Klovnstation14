@@ -57,6 +57,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private FlammableSystem _flammableSystem = default!;
+    [Dependency] private ForbiddenArtsSystem _forbiddenArtsSystem = default!;
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
@@ -132,6 +133,11 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         {
             if (HasComp<CultivationConcealedComponent>(otherUid))
                 continue;
+
+            var sensedEvent = new CultivationSensedEvent(entity);
+            RaiseLocalEvent(otherUid, ref sensedEvent);
+            if (sensedEvent.Found)
+                found++;
 
             if (_cultivatorQuery.TryComp(otherUid, out var otherCultivator))
             {
@@ -335,6 +341,20 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         }
 
         _popupSystem.PopupEntity(Loc.GetString("cultivation-talisman-burns", ("user", userUid)), userUid, type: PopupType.Medium);
+        QueueDel(entity);
+    }
+
+    /// <summary>
+    ///     Any talisman pressed to a jiangshi's brow seals it, and the corpse drops.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnTalismanAfterInteract(Entity<QiTalismanComponent> entity, ref AfterInteractEvent args)
+    {
+        if (args.Handled || !args.CanReach || args.Target is not { } targetUid || !_forbiddenArtsSystem.TrySealPuppet(targetUid))
+            return;
+
+        args.Handled = true;
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-talisman-seals-jiangshi", ("user", args.User)), args.User, type: PopupType.Medium);
         QueueDel(entity);
     }
 

@@ -1,3 +1,4 @@
+using Content.Server._KS14.Cultivation.Components;
 using Content.Server.Lightning;
 using Content.Server.Lightning.Components;
 using Content.Shared._KS14.Cultivation;
@@ -219,6 +220,19 @@ public sealed partial class CultivationSystem : EntitySystem
             }
         }
 
+        // The Demonic Path's arts, and for a master, the means to pass it on.
+        if (TryComp<DemonicPathComponent>(entity, out var demonicComponent))
+        {
+            foreach (var (action, realm) in ForbiddenArtsSystem.ForbiddenTechniques)
+            {
+                if (realm <= entity.Comp.Realm)
+                    GrantTechnique(entity, action);
+            }
+
+            if (demonicComponent.Master)
+                GrantTechnique(entity, ForbiddenArtsSystem.TransmitAction);
+        }
+
         // Two laws' qi resonating opens a technique of its own.
         foreach (var combo in ProtoMan.EnumeratePrototypes<CultivationComboPrototype>())
         {
@@ -380,6 +394,9 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))
             _popupSystem.PopupEntity(Loc.GetString("cultivation-injury-eased"), entity, entity);
+
+        var meditatedEvent = new CultivationMeditatedEvent();
+        RaiseLocalEvent(entity, ref meditatedEvent);
 
         if (_cultivationSystem.ReadyToBreakThrough(entity.Comp))
         {

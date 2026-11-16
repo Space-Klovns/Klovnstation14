@@ -6,7 +6,8 @@ using Content.Shared.Alert.Components;
 namespace Content.Client._KS14.Cultivation;
 
 /// <summary>
-///     Fills in the cultivation counter alerts: qi, and a body cultivator's exhaustion and banked tempering.
+///     Fills in the cultivation counter alerts: qi, a body cultivator's exhaustion and banked tempering, and the steps
+///         left before a Five-Point Exploding Heart bursts.
 /// </summary>
 public sealed partial class CultivationAlertSystem : EntitySystem
 {
@@ -29,5 +30,14 @@ public sealed partial class CultivationAlertSystem : EntitySystem
             args.Amount = (int)entity.Comp.Exhaustion;
         else if (args.Alert.ID == SharedBodyCultivationSystem.TemperingAlert)
             args.Amount = (int)entity.Comp.Tempering;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGetHeartCounterAmount(Entity<ExplodingHeartComponent> entity, ref GetGenericAlertCounterAmountEvent args)
+    {
+        if (args.Handled || args.Alert.ID != ExplodingHeartComponent.Alert)
+            return;
+
+        args.Amount = entity.Comp.StepsLeft;
     }
 }
