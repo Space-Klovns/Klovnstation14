@@ -20,6 +20,9 @@
       "name": "barrier_array"
     },
     {
+      "name": "beast_contract"
+    },
+    {
       "name": "bind_artifact"
     },
     {
@@ -207,6 +210,9 @@
     },
     {
       "name": "still_water"
+    },
+    {
+      "name": "summon_beast"
     },
     {
       "name": "sword_formation"

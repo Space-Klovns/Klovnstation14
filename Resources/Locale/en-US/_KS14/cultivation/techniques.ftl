@@ -74,3 +74,11 @@ cultivation-binding-vines = Vines burst from the floor and wrap around {THE($tar
 
 cultivation-steam-veil = A billowing cloud of steam swallows {THE($user)}!
 cultivation-molten-step = {CAPITALIZE(THE($user))}'s footsteps begin to glow with magma.
+
+## Spirit beasts
+
+cultivation-beast-unfit = {CAPITALIZE(THE($target))} can't be bound as a spirit beast.
+cultivation-beast-contracted = {CAPITALIZE(THE($user))} binds {THE($target)} as a spirit beast!
+cultivation-beast-none = You have no living spirit beast.
+cultivation-beast-too-far = Your spirit beast is too far away to hear you.
+cultivation-beast-summoned = {CAPITALIZE(THE($target))} answers its master's call.

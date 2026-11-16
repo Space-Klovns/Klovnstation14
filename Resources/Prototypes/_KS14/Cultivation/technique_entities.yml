@@ -186,3 +186,17 @@
   - type: PointLight
     color: "#ffd860"
     radius: 2
+
+# A spirit beast fights its master's enemies, and otherwise stays at their heel.
+- type: htnCompound
+  id: KsSpiritBeastCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: MeleeCombatCompound
+  - tasks:
+    - !type:HTNCompoundTask
+      task: FollowCompound
+  - tasks:
+    - !type:HTNCompoundTask
+      task: IdleCompound

@@ -465,3 +465,32 @@
     range: 8
   - type: WorldTargetAction
     event: !type:MudPrisonActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBeastContract
+  name: Spirit Beast Contract
+  description: Bind a station animal as your spirit beast. It follows you, takes your side, and turns on whoever hurts you. One contract at a time. 30 qi.
+  components:
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: beast_contract }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:BeastContractActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSummonBeast
+  name: Summon Spirit Beast
+  description: Call your contracted spirit beast to your side from anywhere nearby. 10 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: summon_beast }
+  - type: InstantAction
+    event: !type:SummonBeastActionEvent

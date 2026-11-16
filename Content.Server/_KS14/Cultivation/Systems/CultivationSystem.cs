@@ -53,6 +53,8 @@ public sealed partial class CultivationSystem : EntitySystem
         ("ActionCultivationGatheringArray", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationBarrierArray", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationAlarmArray", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationBeastContract", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationSummonBeast", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationVoidStep", CultivationRealm.GoldenCore),
         ("ActionCultivationBodyOutsideBody", CultivationRealm.NascentSoul),
     };

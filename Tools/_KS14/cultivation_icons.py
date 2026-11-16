@@ -131,6 +131,8 @@ ACTIONS.update({
     "thousand_thorns": ("刺", "green"),
     "molten_step": ("熔", "orange"),
     "mud_prison": ("泥", "brown"),
+    "beast_contract": ("兽", "brown"),
+    "summon_beast": ("召", "jade"),
 })
 
 ART_MANUALS = {

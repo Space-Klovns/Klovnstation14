@@ -210,6 +210,35 @@ public sealed class CultivationTechniquesTest : GameTest
     }
 
     [Test]
+    public async Task TestSpiritBeastTakesItsMastersSide()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var masterUid = SEntMan.SpawnEntity(Cultivator, map.GridCoords);
+            var beastUid = SEntMan.SpawnEntity("MobMouse", map.GridCoords);
+            SEntMan.System<SharedCultivationSystem>().AddQi(masterUid, 1000f);
+
+            var ev = new BeastContractActionEvent { Performer = masterUid, Target = beastUid };
+            SEntMan.EventBus.RaiseLocalEvent(masterUid, ev);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(ev.Handled, Is.True, "The contract was refused.");
+                Assert.That(SComp<SpiritBeastComponent>(beastUid).Master, Is.EqualTo(masterUid));
+                Assert.That(SComp<Content.Server.NPC.HTN.HTNComponent>(beastUid).RootTask.Task.Id, Is.EqualTo("KsSpiritBeastCompound"),
+                    "The beast did not take up its new behaviour.");
+                Assert.That(SComp<Content.Shared.NPC.Components.NpcFactionMemberComponent>(masterUid).Factions, Is.Not.Empty,
+                    "The master has no side to take, so the next check proves nothing.");
+                Assert.That(SComp<Content.Shared.NPC.Components.NpcFactionMemberComponent>(beastUid).Factions,
+                    Is.EquivalentTo(SComp<Content.Shared.NPC.Components.NpcFactionMemberComponent>(masterUid).Factions),
+                    "The beast did not take its master's side.");
+            }
+        });
+    }
+
+    [Test]
     public async Task TestAscensionLeavesTheWorld()
     {
         var map = await Pair.CreateTestMap();

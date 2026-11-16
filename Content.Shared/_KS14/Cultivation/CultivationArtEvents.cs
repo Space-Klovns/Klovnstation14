@@ -344,3 +344,24 @@ public sealed partial class MudPrisonActionEvent : WorldTargetActionEvent
 
 [Serializable, NetSerializable]
 public sealed partial class ForgetLawDoAfterEvent : SimpleDoAfterEvent;
+
+/// <summary>
+///     Bind a station animal as a spirit beast: it follows its master and fights whoever attacks them.
+/// </summary>
+public sealed partial class BeastContractActionEvent : EntityTargetActionEvent
+{
+    [DataField]
+    public float QiCost = 30f;
+}
+
+/// <summary>
+///     Call the contracted spirit beast to your side.
+/// </summary>
+public sealed partial class SummonBeastActionEvent : InstantActionEvent
+{
+    [DataField]
+    public float QiCost = 10f;
+
+    [DataField]
+    public float Range = 30f;
+}
