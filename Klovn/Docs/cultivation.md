@@ -162,6 +162,20 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   chip walls (`wallChip`), so a few blows bring a wall down; from stage 6 walls give way at once
   (`BodyArtSystem.WallTier`). Anyone further along the path braces against them: half damage and no knockdown.
 
+## Admin shortcuts
+
+`CultivationAdminSystem` adds three submenus to an admin's right-click menu on any mob (Fun flag):
+
+- **Cultivation: Qi** - awaken, break through one realm or straight to Nascent Soul, fill insight (ready for the
+  normal breakthrough), fill qi, heal internal injuries, teach any law there is a slot for, make a Demonic master.
+- **Cultivation: Body** - start the path (primer) or commit to it (Body Molding Art), advance one stage or to the
+  highest the path allows (parts are forged first, then the stage is taken as a successful Tribulation), fill
+  tempering, clear exhaustion.
+- **Cultivation: Martial Arts** - teach any art they don't know; arts they can't take right now (no slot, too low a
+  realm, not a cultivator) are greyed out with the reason.
+
+Each step goes through the same code as play, so techniques, arts and powers are granted as usual.
+
 ## Messages
 
 Popups raised over the same entity in the same tick are drawn on top of each other. Every popup over an entity in
