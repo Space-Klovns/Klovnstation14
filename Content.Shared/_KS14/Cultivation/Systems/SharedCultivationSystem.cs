@@ -310,8 +310,8 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnExamined(Entity<CultivatorComponent> entity, ref ExaminedEvent args)
     {
-        // Anyone can feel the pressure of a Golden Core; below that, a cultivator passes for a mortal.
-        if (entity.Comp.Realm < CultivationRealm.GoldenCore)
+        // Anyone can feel the pressure of a Golden Core; below that, or concealed, a cultivator passes for a mortal.
+        if (entity.Comp.Realm < CultivationRealm.GoldenCore || HasComp<CultivationConcealedComponent>(entity))
             return;
 
         args.PushMarkup(Loc.GetString("cultivation-examine-aura",

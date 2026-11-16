@@ -1,6 +1,10 @@
 using Content.Shared._KS14.Cultivation.Components;
+using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
+using System.Numerics;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Sprite;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
@@ -15,6 +19,8 @@ public sealed partial class CultivationStanceSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
+    [Dependency] private SharedCultivationSystem _cultivationSystem = default!;
+    [Dependency] private SharedScaleVisualsSystem _scaleVisualsSystem = default!;
 
     public override void Update(float frameTime)
     {
@@ -52,6 +58,22 @@ public sealed partial class CultivationStanceSystem : EntitySystem
         {
             if (currentTime >= stepsComponent.EndTime)
                 RemCompDeferred(uid, stepsComponent);
+        }
+
+        ExpireAll<CultivationSnaredComponent>(currentTime, snared => snared.EndTime);
+        ExpireAll<CultivationHasteComponent>(currentTime, haste => haste.EndTime);
+        ExpireAll<GoldenBellQiComponent>(currentTime, bell => bell.EndTime);
+        ExpireAll<DharmaIdolComponent>(currentTime, idol => idol.EndTime);
+        ExpireAll<TurtleBreathingComponent>(currentTime, turtle => turtle.EndTime);
+    }
+
+    private void ExpireAll<T>(TimeSpan currentTime, Func<T, TimeSpan> endTime) where T : IComponent
+    {
+        var enumerator = EntityQueryEnumerator<T>();
+        while (enumerator.MoveNext(out var uid, out var component))
+        {
+            if (currentTime >= endTime(component))
+                RemCompDeferred(uid, component);
         }
     }
 
@@ -179,6 +201,137 @@ public sealed partial class CultivationStanceSystem : EntitySystem
     {
         if (!TerminatingOrDeleted(entity))
             _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
+    }
+
+    #endregion
+
+    #region Snares and haste
+
+    public void ApplySnare(EntityUid uid, TimeSpan duration, float speedMultiplier)
+    {
+        var snaredComponent = EnsureComp<CultivationSnaredComponent>(uid);
+        snaredComponent.EndTime = _gameTiming.CurTime + duration;
+        // The strongest hold wins while two overlap.
+        snaredComponent.SpeedMultiplier = snaredComponent.LifeStage <= ComponentLifeStage.Running && snaredComponent.SpeedMultiplier < speedMultiplier
+            ? snaredComponent.SpeedMultiplier
+            : speedMultiplier;
+        Dirty(uid, snaredComponent);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+    }
+
+    public void ApplyHaste(EntityUid uid, TimeSpan duration, float speedMultiplier)
+    {
+        var hasteComponent = EnsureComp<CultivationHasteComponent>(uid);
+        hasteComponent.EndTime = _gameTiming.CurTime + duration;
+        hasteComponent.SpeedMultiplier = speedMultiplier;
+        Dirty(uid, hasteComponent);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnSnaredRefreshSpeed(Entity<CultivationSnaredComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+            args.ModifySpeed(entity.Comp.SpeedMultiplier);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnSnaredShutdown(Entity<CultivationSnaredComponent> entity, ref ComponentShutdown args)
+    {
+        if (!TerminatingOrDeleted(entity))
+            _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHasteRefreshSpeed(Entity<CultivationHasteComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+            args.ModifySpeed(entity.Comp.SpeedMultiplier);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHasteShutdown(Entity<CultivationHasteComponent> entity, ref ComponentShutdown args)
+    {
+        if (!TerminatingOrDeleted(entity))
+            _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
+    }
+
+    #endregion
+
+    #region Golden Bell Qi, Dharma Idol, Turtle Breathing
+
+    public void ApplyGoldenBellQi(EntityUid uid, TimeSpan duration)
+    {
+        var bellComponent = EnsureComp<GoldenBellQiComponent>(uid);
+        bellComponent.EndTime = _gameTiming.CurTime + duration;
+        Dirty(uid, bellComponent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGoldenBellQiDamageModify(Entity<GoldenBellQiComponent> entity, ref DamageModifyEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running && args.Damage.GetTotal() > 0)
+            args.Damage *= 0f;
+    }
+
+    public void ApplyDharmaIdol(EntityUid uid, TimeSpan duration, float damageMultiplier)
+    {
+        var idolComponent = EnsureComp<DharmaIdolComponent>(uid);
+        idolComponent.EndTime = _gameTiming.CurTime + duration;
+        idolComponent.DamageMultiplier = damageMultiplier;
+        Dirty(uid, idolComponent);
+        _scaleVisualsSystem.SetSpriteScale(uid, new Vector2(1.4f, 1.4f));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDharmaIdolDamageModify(Entity<DharmaIdolComponent> entity, ref DamageModifyEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running && args.Damage.GetTotal() > 0)
+            args.Damage *= entity.Comp.DamageMultiplier;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDharmaIdolShutdown(Entity<DharmaIdolComponent> entity, ref ComponentShutdown args)
+    {
+        if (!TerminatingOrDeleted(entity))
+            _scaleVisualsSystem.SetSpriteScale(entity, Vector2.One);
+    }
+
+    public void ApplyTurtleBreathing(EntityUid uid, TimeSpan duration)
+    {
+        var turtleComponent = EnsureComp<TurtleBreathingComponent>(uid);
+        turtleComponent.EndTime = _gameTiming.CurTime + duration;
+        Dirty(uid, turtleComponent);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnTurtleBreathingDamageModify(Entity<TurtleBreathingComponent> entity, ref DamageModifyEvent args)
+    {
+        if (entity.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        // No breath is needed, and the cold of the void can't reach a body this still.
+        foreach (var type in TurtleImmuneTypes)
+        {
+            if (args.Damage.DamageDict.ContainsKey(type))
+                args.Damage.DamageDict[type] = 0;
+        }
+    }
+
+    private static readonly string[] TurtleImmuneTypes = { "Asphyxiation", "Cold" };
+
+    #endregion
+
+    #region Barrier arrays
+
+    [SubscribeLocalEvent]
+    private void OnBarrierPreventCollide(Entity<QiBarrierComponent> entity, ref PreventCollideEvent args)
+    {
+        if (entity.Comp.Maker is not { } makerUid)
+            return;
+
+        if (args.OtherEntity == makerUid || _cultivationSystem.IsAlly(makerUid, args.OtherEntity))
+            args.Cancelled = true;
     }
 
     #endregion

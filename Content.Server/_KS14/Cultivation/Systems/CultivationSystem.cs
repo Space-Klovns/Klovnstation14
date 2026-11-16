@@ -2,6 +2,7 @@ using Content.Server.Lightning;
 using Content.Server.Lightning.Components;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
+using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Shared._KS14.Cultivation.Systems;
 using Content.Shared.Actions;
 using Content.Shared.Damage;
@@ -33,6 +34,28 @@ public sealed partial class CultivationSystem : EntitySystem
     private static readonly TimeSpan RegenInterval = TimeSpan.FromSeconds(1);
     private static readonly SoundSpecifier BreakthroughSound = new SoundPathSpecifier("/Audio/Effects/church_bell1.ogg");
     private static readonly SoundSpecifier DeviationSound = new SoundPathSpecifier("/Audio/Magic/disintegrate.ogg");
+    /// <summary>
+    ///     Techniques every cultivator comes to, by the realm that opens them.
+    /// </summary>
+    public static readonly (EntProtoId Action, CultivationRealm Realm)[] UniversalTechniques =
+    {
+        ("ActionCultivationSpiritualSense", CultivationRealm.QiCondensation),
+        ("ActionCultivationEmptyPalm", CultivationRealm.QiCondensation),
+        ("ActionCultivationQinggong", CultivationRealm.QiCondensation),
+        ("ActionCultivationWriteTalisman", CultivationRealm.QiCondensation),
+        ("ActionCultivationRealmPressure", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationAcupointSealing", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationTransmitLaw", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationConcealment", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationForcedCirculation", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationForgetLaw", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationGatheringArray", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationBarrierArray", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationAlarmArray", CultivationRealm.FoundationEstablishment),
+        ("ActionCultivationVoidStep", CultivationRealm.GoldenCore),
+        ("ActionCultivationBodyOutsideBody", CultivationRealm.NascentSoul),
+    };
+
     private static readonly SoundSpecifier ThunderSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
     private static readonly EntProtoId TribulationCloud = "KsTribulationCloud";
     private static readonly EntProtoId TribulationLightning = "KsTribulationLightning";
@@ -173,21 +196,54 @@ public sealed partial class CultivationSystem : EntitySystem
     /// </summary>
     public void GrantTechniques(Entity<CultivatorComponent> entity)
     {
+        foreach (var (action, realm) in UniversalTechniques)
+        {
+            if (realm <= entity.Comp.Realm)
+                GrantTechnique(entity, action);
+        }
+
+        var elements = new HashSet<CultivationElement>();
         foreach (var lawId in entity.Comp.Laws)
         {
             if (!ProtoMan.TryIndex(lawId, out var law))
                 continue;
 
+            elements.Add(law.Element);
             foreach (var technique in law.Techniques)
             {
-                if (technique.Realm > entity.Comp.Realm || _cultivationSystem.HasTechnique(entity.Comp, technique.Action))
-                    continue;
-
-                EntityUid? actionUid = null;
-                if (_actionsSystem.AddAction(entity, ref actionUid, technique.Action))
-                    _cultivationSystem.RecordTechnique(entity.Comp, technique.Action, actionUid.Value);
+                if (technique.Realm <= entity.Comp.Realm)
+                    GrantTechnique(entity, technique.Action);
             }
         }
+
+        // Two laws' qi resonating opens a technique of its own.
+        foreach (var combo in ProtoMan.EnumeratePrototypes<CultivationComboPrototype>())
+        {
+            if (combo.Realm > entity.Comp.Realm || !elements.Contains(combo.ElementOne) || !elements.Contains(combo.ElementTwo)
+                || _cultivationSystem.HasTechnique(entity.Comp, combo.Action))
+                continue;
+
+            if (GrantTechnique(entity, combo.Action))
+            {
+                _popupSystem.PopupEntity(Loc.GetString("cultivation-combo-resonates",
+                    ("one", Loc.GetString($"cultivation-element-{combo.ElementOne}")),
+                    ("two", Loc.GetString($"cultivation-element-{combo.ElementTwo}"))), entity, entity, type: PopupType.Medium);
+            }
+        }
+    }
+
+    /// <returns>True if the technique was newly granted.</returns>
+    private bool GrantTechnique(Entity<CultivatorComponent> entity, EntProtoId action)
+    {
+        if (_cultivationSystem.HasTechnique(entity.Comp, action))
+            return false;
+
+        EntityUid? actionUid = null;
+        if (!_actionsSystem.AddAction(entity, ref actionUid, action))
+            return false;
+
+        _cultivationSystem.RecordTechnique(entity.Comp, action, actionUid.Value);
+        return true;
     }
 
     #endregion
@@ -209,7 +265,11 @@ public sealed partial class CultivationSystem : EntitySystem
             return false;
         }
 
-        var backlashChance = cultivatorComponent.BacklashChancePerInjury * cultivatorComponent.InternalInjury;
+        // Any technique gives away a concealed cultivator.
+        if (RemComp<CultivationConcealedComponent>(userUid))
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-concealment-broken"), userUid, userUid, type: PopupType.SmallCaution);
+
+        var backlashChance = cultivatorComponent.BacklashChancePerInjury * (float)cultivatorComponent.InternalInjury;
         if (backlashChance > 0f && _robustRandom.Prob(backlashChance))
         {
             _damageableSystem.TryChangeDamage(userUid, Damage("Blunt", 5), ignoreResistances: true, interruptsDoAfters: false);
@@ -303,7 +363,16 @@ public sealed partial class CultivationSystem : EntitySystem
         args.Handled = true;
 
         var multiplier = QiSourceMultiplier(entity);
-        _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * multiplier);
+        var insightMultiplier = multiplier;
+        if (entity.Comp.ForcedCirculation)
+        {
+            // Twice the insight, driven past the safe limit.
+            insightMultiplier *= 2f;
+            if (_robustRandom.Prob(entity.Comp.ForcedCirculationRisk) && _cultivationSystem.AddInternalInjury(entity.AsNullable()))
+                _popupSystem.PopupEntity(Loc.GetString("cultivation-forced-circulation-backlash"), entity, entity, type: PopupType.MediumCaution);
+        }
+
+        _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * insightMultiplier);
         _cultivationSystem.AddQi(entity.AsNullable(), entity.Comp.MeditateQi * multiplier);
 
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))
@@ -362,6 +431,12 @@ public sealed partial class CultivationSystem : EntitySystem
         {
             _popupSystem.PopupEntity(Loc.GetString("cultivation-not-ready",
                 ("insight", (int)entity.Comp.Insight), ("required", (int)required)), entity, entity);
+            return;
+        }
+
+        if (entity.Comp.Realm >= CultivationRealm.NascentSoul)
+        {
+            StartAscension(entity);
             return;
         }
 
@@ -427,9 +502,9 @@ public sealed partial class CultivationSystem : EntitySystem
     /// <summary>
     ///     Heaven notices. A bolt may fall on the one breaking through, unless a grounding rod nearby draws it away.
     /// </summary>
-    private void CallLightning(Entity<CultivatorComponent> entity)
+    private void CallLightning(Entity<CultivatorComponent> entity, float chance = LightningChance)
     {
-        if (!_robustRandom.Prob(LightningChance))
+        if (!_robustRandom.Prob(chance))
             return;
 
         var coordinates = Transform(entity).Coordinates;

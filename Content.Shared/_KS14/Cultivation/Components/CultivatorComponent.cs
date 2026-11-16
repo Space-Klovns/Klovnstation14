@@ -58,10 +58,11 @@ public sealed partial class CultivatorComponent : Component
     public List<float> MaxQiByRealm = new() { 100f, 200f, 350f, 500f };
 
     /// <summary>
-    ///     Insight needed to break out of each realm, indexed by <see cref="CultivationRealm"/>. The last realm has no entry.
+    ///     Insight needed to break out of each realm, indexed by <see cref="CultivationRealm"/>. Past the peak of
+    ///         Nascent Soul, the last entry is what Ascension needs.
     /// </summary>
     [DataField]
-    public List<float> InsightByRealm = new() { 100f, 200f, 350f };
+    public List<float> InsightByRealm = new() { 100f, 200f, 350f, 500f };
 
     [DataField]
     public float QiRegenPerSecond = 1f;

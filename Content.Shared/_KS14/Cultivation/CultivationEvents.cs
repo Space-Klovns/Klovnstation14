@@ -15,6 +15,9 @@ public sealed partial class CultivationMeditateDoAfterEvent : SimpleDoAfterEvent
 public sealed partial class CultivationBreakthroughDoAfterEvent : SimpleDoAfterEvent;
 
 [Serializable, NetSerializable]
+public sealed partial class CultivationAscensionDoAfterEvent : SimpleDoAfterEvent;
+
+[Serializable, NetSerializable]
 public sealed partial class CultivationReadManualDoAfterEvent : SimpleDoAfterEvent;
 
 /// <summary>
