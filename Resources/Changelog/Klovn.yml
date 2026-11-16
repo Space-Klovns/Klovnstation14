@@ -2964,3 +2964,11 @@ Entries:
         the ID card.
   id: 267
   time: '2026-11-16T11:10:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        NPCs without gravity no longer go round and round a spot on their way
+        somewhere after being bumped.
+  id: 268
+  time: '2026-11-16T12:38:53.0000000+00:00'
