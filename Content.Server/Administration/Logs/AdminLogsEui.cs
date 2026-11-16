@@ -184,8 +184,9 @@ public sealed partial class AdminLogsEui : BaseEui
             return;
         }
         // KS14 end
+        // KS14: removed, fetched above for the filter it was started with
         /* var logs = await Task.Run(async () => await _adminLogs.All(_filter, _adminLogListPool.Get),
-            _filter.CancellationToken); */ // KS14: removed, see above
+            _filter.CancellationToken); */
 
         if (logs.Count > 0)
         {

@@ -74,7 +74,6 @@ public sealed partial class KsFlashProbeSystem : EntitySystem
         Shots.Add(_gameTiming.CurTick.Value);
     }
 
-
 }
 
 /// <summary>
