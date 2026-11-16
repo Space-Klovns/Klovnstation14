@@ -29,6 +29,7 @@ public sealed class KsLawnmowerTest : MovementTest
 {
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
     private static readonly EntProtoId Mower = "KsLawnmower";
+    private static readonly EntProtoId EmaggedMower = "KsLawnmowerEmagged";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Shorts = "KsClothingUniformGrillingShorts";
     private static readonly EntProtoId Emag = "EmagUnlimited";
@@ -48,7 +49,7 @@ public sealed class KsLawnmowerTest : MovementTest
     public async Task DrivingMowsGrassAndOnlyGibsProneZombies(bool emagged, bool zombie)
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(emagged ? SharedKsLawnmowerSystem.EmaggedPrototype : Mower, origin);
+        var mowerUid = await SpawnEntity(emagged ? EmaggedMower : Mower, origin);
         var victimUid = await SpawnEntity(Human, origin.Offset(new Vector2(2, 0)));
         var mapSystem = Server.System<SharedMapSystem>();
         var grassIndices = mapSystem.TileIndicesFor(MapData.Grid, origin.Offset(new Vector2(1, 0)));
@@ -92,7 +93,7 @@ public sealed class KsLawnmowerTest : MovementTest
     public async Task EmaggedMowerShovesAStandingTarget()
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(SharedKsLawnmowerSystem.EmaggedPrototype, origin);
+        var mowerUid = await SpawnEntity(EmaggedMower, origin);
         var victimUid = await SpawnEntity(Human, origin.Offset(new Vector2(2, 0)));
 
         await Server.WaitAssertion(() =>
@@ -116,7 +117,7 @@ public sealed class KsLawnmowerTest : MovementTest
     public async Task GrillingShortsBoostTheCurrentRiderAndEmagWorks(bool preEmagged)
     {
         var origin = SEntMan.GetCoordinates(PlayerCoords);
-        var mowerUid = await SpawnEntity(preEmagged ? SharedKsLawnmowerSystem.EmaggedPrototype : Mower, origin);
+        var mowerUid = await SpawnEntity(preEmagged ? EmaggedMower : Mower, origin);
         var shortsUid = await SpawnEntity(Shorts, origin);
         var emagUid = await SpawnEntity(Emag, origin);
 
@@ -131,7 +132,7 @@ public sealed class KsLawnmowerTest : MovementTest
             var baseSpeed = speed.CurrentSprintSpeed;
             var inventory = Server.System<InventorySystem>();
             Assert.That(inventory.TryEquip(SPlayer, shortsUid, "jumpsuit", silent: true, force: true), Is.True);
-            Assert.That(speed.CurrentSprintSpeed, Is.EqualTo(baseSpeed * 1.1f).Within(0.001f));
+            Assert.That(speed.CurrentSprintSpeed, Is.EqualTo(baseSpeed * SEntMan.GetComponent<KsGrillingShortsComponent>(shortsUid).MowerSpeedMultiplier).Within(0.001f));
 
             Assert.That(inventory.TryUnequip(SPlayer, "jumpsuit", silent: true, force: true), Is.True);
             Assert.That(speed.CurrentSprintSpeed, Is.EqualTo(baseSpeed).Within(0.001f));

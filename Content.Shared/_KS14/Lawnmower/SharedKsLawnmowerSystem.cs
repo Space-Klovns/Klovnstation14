@@ -22,10 +22,6 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
     [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public static readonly EntProtoId EmaggedPrototype = "KsLawnmowerEmagged";
-    private const string JumpsuitSlot = "jumpsuit";
-    private const float GrillingShortsSpeedMultiplier = 1.1f;
-
     [SubscribeLocalEvent]
     private void OnStrapped(Entity<KsLawnmowerComponent> entity, ref StrappedEvent args)
     {
@@ -46,29 +42,40 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRefreshSpeed(Entity<KsLawnmowerComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
     {
-        if (TryComp<MovementRelayTargetComponent>(entity.Owner, out var relay) &&
-            _inventorySystem.TryGetSlotEntity(relay.Source, JumpsuitSlot, out var jumpsuitUid) &&
-            HasComp<KsGrillingShortsComponent>(jumpsuitUid))
+        if (!TryComp<MovementRelayTargetComponent>(entity.Owner, out var relayTargetComponent) ||
+            !_inventorySystem.TryGetContainerSlotEnumerator(relayTargetComponent.Source, out var slots))
         {
-            args.ModifySpeed(GrillingShortsSpeedMultiplier);
+            return;
+        }
+
+        while (slots.NextItem(out var itemUid, out var slot))
+        {
+            if (!TryComp<KsGrillingShortsComponent>(itemUid, out var shortsComponent) ||
+                (slot.SlotFlags & shortsComponent.Slots) == 0)
+            {
+                continue;
+            }
+
+            args.ModifySpeed(shortsComponent.MowerSpeedMultiplier);
+            return;
         }
     }
 
     [SubscribeLocalEvent]
     private void OnShortsEquipped(Entity<KsGrillingShortsComponent> entity, ref GotEquippedEvent args)
     {
-        RefreshRiddenMower(args.EquipTarget, args.Slot);
+        RefreshRiddenMower(entity, args.EquipTarget, args.SlotFlags);
     }
 
     [SubscribeLocalEvent]
     private void OnShortsUnequipped(Entity<KsGrillingShortsComponent> entity, ref GotUnequippedEvent args)
     {
-        RefreshRiddenMower(args.EquipTarget, args.Slot);
+        RefreshRiddenMower(entity, args.EquipTarget, args.SlotFlags);
     }
 
-    private void RefreshRiddenMower(EntityUid riderUid, string slot)
+    private void RefreshRiddenMower(Entity<KsGrillingShortsComponent> shorts, EntityUid riderUid, SlotFlags slot)
     {
-        if (slot == JumpsuitSlot &&
+        if ((slot & shorts.Comp.Slots) != 0 &&
             TryComp<RelayInputMoverComponent>(riderUid, out var relay) &&
             HasComp<KsLawnmowerComponent>(relay.RelayEntity))
         {
@@ -97,13 +104,13 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
 
         args.Handled = true;
         _appearanceSystem.SetData(entity.Owner, KsLawnmowerVisuals.SafetyDisabled, true);
-        ApplyEmaggedName(entity.Owner);
+        ApplyEmaggedName(entity);
     }
 
-    public void ApplyEmaggedName(EntityUid uid)
+    public void ApplyEmaggedName(Entity<KsLawnmowerComponent> entity)
     {
-        var prototype = ProtoMan.Index(EmaggedPrototype);
-        _metaDataSystem.SetEntityName(uid, _contentLocalization.GetLocalizedPrototypeName(prototype));
-        _metaDataSystem.SetEntityDescription(uid, _contentLocalization.GetLocalizedPrototypeDescription(prototype));
+        var prototype = ProtoMan.Index(entity.Comp.EmaggedPrototype);
+        _metaDataSystem.SetEntityName(entity.Owner, _contentLocalization.GetLocalizedPrototypeName(prototype));
+        _metaDataSystem.SetEntityDescription(entity.Owner, _contentLocalization.GetLocalizedPrototypeDescription(prototype));
     }
 }

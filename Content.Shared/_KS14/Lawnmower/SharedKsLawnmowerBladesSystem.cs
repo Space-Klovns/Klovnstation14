@@ -46,9 +46,6 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
     [Dependency] private StandingStateSystem _standingSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
 
-    private static readonly TimeSpan DriveSoundInterval = TimeSpan.FromSeconds(0.8);
-    private const string BladeFixture = "blades";
-
     // Scratch set for the mower being updated.
     private readonly HashSet<EntityUid> _touching = new();
 
@@ -67,7 +64,7 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
             if (!moverComponent.HasDirectionalMovement || !moverComponent.CanMove || moverComponent.WishDir == Vector2.Zero)
                 continue;
 
-            var moving = physicsComponent.LinearVelocity.LengthSquared() >= 0.04f;
+            var moving = physicsComponent.LinearVelocity.LengthSquared() >= bladesComponent.MinDrivingSpeed * bladesComponent.MinDrivingSpeed;
             if (moving)
                 MowTile(entity, Transform(uid));
 
@@ -82,7 +79,7 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
             else
                 continue;
 
-            bladesComponent.NextDriveSound = _gameTiming.CurTime + DriveSoundInterval;
+            bladesComponent.NextDriveSound = _gameTiming.CurTime + bladesComponent.DriveSoundInterval;
             Dirty(uid, bladesComponent);
         }
     }
@@ -96,7 +93,7 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
         var contacts = _physicsSystem.GetContacts(mower.Owner);
         while (contacts.MoveNext(out var contact))
         {
-            if (contact.IsTouching && contact.OurFixture(mower.Owner).Id == BladeFixture)
+            if (contact.IsTouching && contact.OurFixture(mower.Owner).Id == mower.Comp.BladeFixture)
                 _touching.Add(contact.OtherEnt(mower.Owner));
         }
 
@@ -135,10 +132,10 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
 
             if ((dead && !humanoid) || (zombie && (prone || dead)))
             {
-                HitWithBlades(mower, victimUid, riderUid, "ks-lawn-mower-gib");
+                HitWithBlades(mower, victimUid, riderUid, mower.Comp.GibPopup);
                 // The server tells the victim's client; the rider's has no use for it.
                 if (_netManager.IsServer)
-                    _cameraSystem.KickCamera(victimUid, direction * 0.3f);
+                    _cameraSystem.KickCamera(victimUid, direction * mower.Comp.VictimCameraKick);
 
                 // Does nothing on a client, so the body goes when the server's state arrives.
                 _gibbingSystem.Gib(victimUid, user: riderUid);
@@ -146,8 +143,8 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
             }
             else if (!dead && humanoid && prone)
             {
-                HitWithBlades(mower, victimUid, riderUid, "ks-lawn-mower-crush");
-                _stunSystem.TryKnockdown(victimUid, TimeSpan.FromSeconds(10));
+                HitWithBlades(mower, victimUid, riderUid, mower.Comp.CrushPopup);
+                _stunSystem.TryKnockdown(victimUid, mower.Comp.CrushKnockdownTime);
                 CrushVictim(mower, victimUid, riderUid);
                 crushed = true;
             }
@@ -156,13 +153,13 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
                 _damageableSystem.TryChangeDamage(victimUid, mower.Comp.BumpDamage, ignoreResistances: true, origin: riderUid);
                 _audioSystem.PlayPredicted(mower.Comp.BumpSound, victimUid, riderUid);
                 var away = offset.LengthSquared() > 0.001f ? offset.Normalized() : direction;
-                _throwingSystem.TryThrow(victimUid, away * 4f, baseThrowSpeed: 6f, recoil: false, doSpin: false, playSound: false);
+                _throwingSystem.TryThrow(victimUid, away * mower.Comp.BumpThrowDistance, baseThrowSpeed: mower.Comp.BumpThrowSpeed, recoil: false, doSpin: false, playSound: false);
             }
         }
 
         // The rider's client kicks its own camera as it predicts the hit, so the server sends none.
         if (crushed && _netManager.IsClient && _gameTiming.IsFirstTimePredicted)
-            _cameraSystem.KickCamera(riderUid, -direction * 0.15f);
+            _cameraSystem.KickCamera(riderUid, -direction * mower.Comp.RiderCameraKick);
 
         return crushed;
     }
@@ -174,8 +171,8 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
         _audioSystem.PlayPredicted(mower.Comp.BladeSound, mower.Owner, riderUid);
 
         // Bleeding out spills a puddle, which is the server's to spawn.
-        if (_netManager.IsServer && HasComp<BloodstreamComponent>(victimUid) && _bloodstreamSystem.TryBleedOut(victimUid, 4))
-            mower.Comp.BloodyTiles = 4;
+        if (_netManager.IsServer && HasComp<BloodstreamComponent>(victimUid) && _bloodstreamSystem.TryBleedOut(victimUid, mower.Comp.BleedAmount))
+            mower.Comp.BloodyTiles = mower.Comp.TracksTiles;
     }
 
     /// <summary>

@@ -20,25 +20,25 @@ public sealed partial class KsLawnmowerAppearanceSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAppearanceChanged(Entity<KsLawnmowerComponent> entity, ref AppearanceChangeEvent args)
     {
-        RefreshName(entity.Owner);
+        RefreshName(entity);
     }
 
     private void RefreshNames()
     {
         var query = EntityQueryEnumerator<KsLawnmowerComponent>();
-        while (query.MoveNext(out var uid, out _))
+        while (query.MoveNext(out var uid, out var component))
         {
-            RefreshName(uid);
+            RefreshName((uid, component));
         }
     }
 
-    private void RefreshName(EntityUid uid)
+    private void RefreshName(Entity<KsLawnmowerComponent> entity)
     {
         // A mower spawned from the emagged prototype already has its localized name.
-        if (_appearanceSystem.TryGetData<bool>(uid, KsLawnmowerVisuals.SafetyDisabled, out var disabled) && disabled &&
-            MetaData(uid).EntityPrototype?.ID != SharedKsLawnmowerSystem.EmaggedPrototype.Id)
+        if (_appearanceSystem.TryGetData<bool>(entity.Owner, KsLawnmowerVisuals.SafetyDisabled, out var disabled) && disabled &&
+            MetaData(entity.Owner).EntityPrototype?.ID != entity.Comp.EmaggedPrototype.Id)
         {
-            _lawnMowerSystem.ApplyEmaggedName(uid);
+            _lawnMowerSystem.ApplyEmaggedName(entity);
         }
     }
 }

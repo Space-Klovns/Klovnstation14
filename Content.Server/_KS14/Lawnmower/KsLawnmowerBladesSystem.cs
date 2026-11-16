@@ -33,12 +33,6 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    private static readonly ProtoId<ContentTileDefinition> MowedAstroGrass = "FloorMowedAstroGrass";
-    private static readonly ProtoId<DecalPrototype> WheelTracks = "KsLawnmowerBloodTracks";
-    private static readonly ProtoId<EmotePrototype> Scream = "Scream";
-    private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
-    private static readonly ResPath GrassDecalSprite = new("/Textures/Decals/Flora/flora_grass.rsi");
-
     protected override void MowTile(Entity<KsLawnmowerBladesComponent> mower, TransformComponent transformComponent)
     {
         if (transformComponent.GridUid is not { } gridUid ||
@@ -56,7 +50,7 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
 
         mower.Comp.LastTile = tileKey;
         if (mower.Comp.MowableTiles.Contains(_tileDefinitions[tile.Tile.TypeId].ID))
-            _mapSystem.SetTile(gridUid, gridComponent, tile.GridIndices, new Tile(ProtoMan.Index(MowedAstroGrass).TileId));
+            _mapSystem.SetTile(gridUid, gridComponent, tile.GridIndices, new Tile(ProtoMan.Index(mower.Comp.MowedTile).TileId));
 
         var tileOrigin = new Vector2(tile.GridIndices.X, tile.GridIndices.Y) * gridComponent.TileSize;
         var tileCenter = tileOrigin + new Vector2(gridComponent.TileSize * 0.5f);
@@ -66,7 +60,7 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
             if (decalCenter.X < tileOrigin.X || decalCenter.X >= tileOrigin.X + gridComponent.TileSize ||
                 decalCenter.Y < tileOrigin.Y || decalCenter.Y >= tileOrigin.Y + gridComponent.TileSize ||
                 !ProtoMan.TryIndex<DecalPrototype>(decal.Id, out var prototype) ||
-                prototype.Sprite is not SpriteSpecifier.Rsi sprite || sprite.RsiPath != GrassDecalSprite)
+                prototype.Sprite is not SpriteSpecifier.Rsi sprite || sprite.RsiPath != mower.Comp.MowableDecalSprite)
             {
                 continue;
             }
@@ -78,8 +72,8 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
             return;
 
         var rotation = _transformSystem.GetWorldRotation(transformComponent) - _transformSystem.GetWorldRotation(gridUid);
-        if (_decalSystem.TryAddDecal(WheelTracks.Id, new EntityCoordinates(gridUid, tileOrigin), out _,
-            color: Color.FromHex("#8f1818").WithAlpha(mower.Comp.BloodyTiles / 4f), rotation: rotation, cleanable: true))
+        if (_decalSystem.TryAddDecal(mower.Comp.TracksDecal.Id, new EntityCoordinates(gridUid, tileOrigin), out _,
+            color: mower.Comp.TracksColor.WithAlpha((float)mower.Comp.BloodyTiles / mower.Comp.TracksTiles), rotation: rotation, cleanable: true))
         {
             mower.Comp.BloodyTiles--;
         }
@@ -88,25 +82,27 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
     protected override void CrushVictim(Entity<KsLawnmowerBladesComponent> mower, EntityUid victimUid, EntityUid riderUid)
     {
         if (_mobStateSystem.IsAlive(victimUid))
-            _chatSystem.TryEmoteWithChat(victimUid, ProtoMan.Index(Scream), ignoreActionBlocker: true);
+            _chatSystem.TryEmoteWithChat(victimUid, ProtoMan.Index(mower.Comp.CrushEmote), ignoreActionBlocker: true);
 
-        ApplyCrushDamage(victimUid, riderUid, mower.Comp.CrushDamage);
+        ApplyCrushDamage(mower, victimUid, riderUid);
     }
 
-    private void ApplyCrushDamage(EntityUid victimUid, EntityUid riderUid, FixedPoint2 amount)
+    private void ApplyCrushDamage(Entity<KsLawnmowerBladesComponent> mower, EntityUid victimUid, EntityUid riderUid)
     {
+        var amount = mower.Comp.CrushDamage;
+        var damageType = mower.Comp.CrushDamageType;
         if (!TryComp<DamageableComponent>(victimUid, out var damageableComponent))
             return;
 
         var currentDamage = _damageableSystem.GetPositiveDamage((victimUid, damageableComponent));
         var totalDamage = currentDamage.GetTotal();
         if (_mobThresholdSystem.TryGetDeadThreshold(victimUid, out var lethalDamage))
-            amount = FixedPoint2.Min(amount, lethalDamage.Value + 10 - totalDamage);
+            amount = FixedPoint2.Min(amount, lethalDamage.Value + mower.Comp.CrushLethalOvershoot - totalDamage);
 
         // Keep the corpse intact even for species whose death and gib thresholds are close together.
         if (TryComp<DestructibleComponent>(victimUid, out var destructibleComponent))
         {
-            var bluntDamage = currentDamage.DamageDict.GetValueOrDefault(Blunt);
+            var typeDamage = currentDamage.DamageDict.GetValueOrDefault(damageType);
             foreach (var threshold in destructibleComponent.Thresholds)
             {
                 if (!threshold.Behaviors.Any(behavior => behavior is GibBehavior))
@@ -115,7 +111,7 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
                 var remaining = threshold.Trigger switch
                 {
                     DamageTrigger total => total.Damage - totalDamage,
-                    DamageTypeTrigger blunt when blunt.DamageType == Blunt => blunt.Damage - bluntDamage,
+                    DamageTypeTrigger typed when typed.DamageType == damageType => typed.Damage - typeDamage,
                     _ => FixedPoint2.MaxValue,
                 };
 
@@ -125,7 +121,7 @@ public sealed partial class KsLawnmowerBladesSystem : SharedKsLawnmowerBladesSys
 
         if (amount > FixedPoint2.Zero)
         {
-            var damage = new DamageSpecifier(ProtoMan.Index(Blunt), amount);
+            var damage = new DamageSpecifier(ProtoMan.Index(damageType), amount);
             _damageableSystem.TryChangeDamage((victimUid, damageableComponent), damage,
                 ignoreResistances: true, origin: riderUid, ignoreGlobalModifiers: true);
         }
