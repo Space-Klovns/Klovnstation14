@@ -179,7 +179,9 @@ public static class KsTguiItemListRows
         if (userInterface.CurrentlyHovered != list || item.Region is not { } region)
             return false;
 
-        var local = (userInterface.MousePositionScaled.Position - list.GlobalPosition) * list.UIScale;
+        // In the list's own pixels, from its pixel position, as the engine's click test is: scaling a virtual offset instead
+        //     drifts from the rows' regions by the rounding of every ancestor's position at a UI scale other than 1.
+        var local = userInterface.MousePositionScaled.Position * list.UIScale - (Vector2) list.GlobalPixelPosition;
         return region.Contains(local);
     }
 }

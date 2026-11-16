@@ -197,7 +197,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             return;
         }
 
-        var a = InverseScalePosition(args.RelativePosition);
+        // InverseScalePosition works in pixels (MidPoint and MinimapScale are), so the click is taken in pixels too.
+        var a = InverseScalePosition(args.RelativePixelPosition);
         var relativeWorldPos = new Vector2(a.X, -a.Y);
         relativeWorldPos = _rotation.Value.RotateVec(relativeWorldPos);
         var coords = _coordinates.Value.Offset(relativeWorldPos);
@@ -212,7 +213,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             return EntityCoordinates.Invalid;
         }
 
-        var pos = screen.Position / UIScale - GlobalPosition;
+        // In pixels, as InverseScalePosition takes them.
+        var pos = screen.Position - (Vector2) GlobalPixelPosition;
 
         var a = InverseScalePosition(pos);
         var relativeWorldPos = new Vector2(a.X, -a.Y);

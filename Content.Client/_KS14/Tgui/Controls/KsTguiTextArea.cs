@@ -429,7 +429,9 @@ public sealed partial class KsTguiTextArea : Control
         _edit.Measure(availableSize);
 
         var font = _edit.TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
-        var height = font.GetLineHeight(1f) * _rows + 2f * VerticalMargin;
+        // The line height at the real scale, as the text edit lays its lines out, back in UI units: at scale 1 it rounds
+        //     differently, and the edit could show a scrollbar for rows that fit.
+        var height = font.GetLineHeight(UIScale) / UIScale * _rows + 2f * VerticalMargin;
         var width = _fluid ? _edit.DesiredSize.X : DefaultWidth;
         return new Vector2(MathF.Max(width, 2f * HorizontalMargin), MathF.Max(height, _edit.DesiredSize.Y));
     }
