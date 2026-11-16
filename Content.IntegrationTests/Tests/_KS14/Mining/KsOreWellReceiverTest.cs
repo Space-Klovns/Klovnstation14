@@ -4,7 +4,9 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.OreWell;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.OreWell;
 using Content.Shared.Interaction;
 using Content.Shared.Power.EntitySystems;
@@ -23,16 +25,27 @@ namespace Content.IntegrationTests.Tests._KS14.Mining;
 ///         switched on, and it keeps what it could not hand over yet as debt.
 /// </summary>
 /// <remarks>
-///     The receiver runs on a fixed 30 second cycle that is not tied to anything a test can set, so the tests wait
-///         for a delivery to appear rather than for a fixed number of ticks. The first cycle in a pooled pair may
-///         start at any point, which is why none of this counts ticks.
+///     The cycle length is forced to <see cref="TestIntervalSeconds"/>, and every amount and wait below is worked out
+///         from it, so retuning the live cycle changes nothing here. The first cycle may still come at any point,
+///         which is why the tests wait for a delivery to appear rather than counting ticks.
 /// </remarks>
 [TestFixture]
 [TestOf(typeof(OreWellReceiverSystem))]
+[EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.OreWellReceiverInterval), TestIntervalSeconds)]
 public sealed class KsOreWellReceiverTest : GameTest
 {
     // Server only: the receiver is a server system.
     public override PoolSettings PoolSettings => PsDisconnected;
+
+    /// <summary>
+    ///     The delivery cycle for every test here, in seconds.
+    /// </summary>
+    private const float TestIntervalSeconds = 10f;
+
+    // Ore per second of the test wells below, which must match their YAML.
+    private const float HalfRate = 0.5f;
+    private const float QuarterRate = 0.25f;
+    private const float OverAStackRate = 4.5f;
 
     private static readonly EntProtoId ReceiverEnabled = "OreRetrievalMatrixEnabled";
     private static readonly EntProtoId ReceiverSwitchedOff = "OreRetrievalMatrix";
@@ -41,7 +54,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     // One ore type with a fixed rate per second, so what a cycle delivers is a number that can be worked out by hand.
     private readonly ProtoId<OreWellSettingPrototype> _halfPerSecond = "KsTestOreWellHalf";
     private readonly ProtoId<OreWellSettingPrototype> _quarterPerSecond = "KsTestOreWellQuarter";
-    private readonly ProtoId<OreWellSettingPrototype> _oneAndAHalfPerSecond = "KsTestOreWellOneAndAHalf";
+    private readonly ProtoId<OreWellSettingPrototype> _overAStackPerCycle = "KsTestOreWellOverAStack";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -59,14 +72,17 @@ public sealed class KsOreWellReceiverTest : GameTest
   possibleResourceTypes:
   - SteelOre
 
-# More than a stack of steel ore (30) per cycle.
+# 45 a cycle at the test interval: more than a stack of steel ore (30), less than two.
 - type: oreWellSetting
-  id: KsTestOreWellOneAndAHalf
-  totalResourceRateRange: 1.5,1.5
+  id: KsTestOreWellOverAStack
+  totalResourceRateRange: 4.5,4.5
   resourceCountRange: 1,1
   possibleResourceTypes:
   - SteelOre
 ";
+
+    /// <returns>What a well with this rate makes over one cycle.</returns>
+    private static float PerCycle(float rate) => rate * TestIntervalSeconds;
 
     private async Task<EntityUid> SpawnWellAsync(EntityUid grid, ProtoId<OreWellSettingPrototype> setting)
     {
@@ -151,8 +167,9 @@ public sealed class KsOreWellReceiverTest : GameTest
         var before = 0;
         await Server.WaitPost(() => before = OreEverywhere());
 
-        // 70 seconds covers two whole cycles whatever point of the cycle the pair is at.
-        for (var second = 0; second < 70; second++)
+        // Two whole cycles, whatever point of the cycle the pair is at, and some to spare.
+        var seconds = (int)MathF.Ceiling(TestIntervalSeconds * 2f) + 10;
+        for (var second = 0; second < seconds; second++)
         {
             await Pair.RunTicksSync(tickRate);
 
@@ -171,7 +188,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     private async Task RunTwoCyclesAsync()
     {
         var tickRate = (int)Server.ResolveDependency<IGameTiming>().TickRate;
-        await Pair.RunTicksSync(tickRate * 65);
+        await Pair.RunTicksSync(tickRate * ((int)MathF.Ceiling(TestIntervalSeconds * 2f) + 5));
     }
 
     private OreWellReceiverComponent Receiver(EntityUid uid) => SEntMan.GetComponent<OreWellReceiverComponent>(uid);
@@ -187,8 +204,8 @@ public sealed class KsOreWellReceiverTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            // 0.5 ore/second over the 30 second cycle, all of it to the only receiver.
-            Assert.That(OreAt(receiver), Is.EqualTo(15));
+            // A whole cycle's worth, all of it to the only receiver.
+            Assert.That(OreAt(receiver), Is.EqualTo((int)PerCycle(HalfRate)));
             Assert.That(Receiver(receiver).Debt, Is.Empty);
         });
     }
@@ -209,7 +226,7 @@ public sealed class KsOreWellReceiverTest : GameTest
             Assert.That(OreAt(unpowered), Is.Zero, "no power, no ore");
 
             // The control: the same cycle delivered to the one that has power, and the dead one took no share of it.
-            Assert.That(OreAt(powered), Is.EqualTo(15));
+            Assert.That(OreAt(powered), Is.EqualTo((int)PerCycle(HalfRate)));
         });
 
         // Once power is back it joins in, and the well's output is split between the two.
@@ -220,11 +237,14 @@ public sealed class KsOreWellReceiverTest : GameTest
         await Server.WaitPost(() => before = OreAt(powered));
         Assert.That(await RunUntilADeliveryAsync(), Is.True);
 
+        var share = PerCycle(HalfRate) / 2f;
+        Assert.That(share % 1f, Is.Not.Zero, "precondition: a share has a fraction, so something is owed");
+
         await Server.WaitAssertion(() =>
         {
-            Assert.That(OreAt(unpowered), Is.EqualTo(7), "half of 15, rounded down");
-            Assert.That(OreAt(powered) - before, Is.EqualTo(7));
-            Assert.That(Receiver(unpowered).Debt[SteelOre], Is.EqualTo(0.5f).Within(0.0001f), "and the half ore each is owed");
+            Assert.That(OreAt(unpowered), Is.EqualTo((int)share), "half a cycle's worth, rounded down");
+            Assert.That(OreAt(powered) - before, Is.EqualTo((int)share));
+            Assert.That(Receiver(unpowered).Debt[SteelOre], Is.EqualTo(share % 1f).Within(0.0001f), "and the fraction each is owed");
         });
     }
 
@@ -247,7 +267,7 @@ public sealed class KsOreWellReceiverTest : GameTest
         // Press the button.
         await Server.WaitPost(() => SEntMan.EventBus.RaiseLocalEvent(receiver, new ActivateInWorldEvent(receiver, receiver, complex: true)));
         Assert.That(await RunUntilADeliveryAsync(), Is.True, "switching it on must start the deliveries");
-        await Server.WaitAssertion(() => Assert.That(OreAt(receiver), Is.EqualTo(15)));
+        await Server.WaitAssertion(() => Assert.That(OreAt(receiver), Is.EqualTo((int)PerCycle(HalfRate))));
 
         // And again to turn it off.
         await Server.WaitPost(() => SEntMan.EventBus.RaiseLocalEvent(receiver, new ActivateInWorldEvent(receiver, receiver, complex: true)));
@@ -287,19 +307,23 @@ public sealed class KsOreWellReceiverTest : GameTest
         await SpawnWellAsync(testMap.Grid, _quarterPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
-        // 0.25 ore/second is 7.5 per cycle: 7 now, half an ore owed.
+        // A cycle's worth with half an ore left over: the whole ore now, the half owed.
+        var perCycle = PerCycle(QuarterRate);
+        Assert.That(perCycle % 1f, Is.EqualTo(0.5f).Within(0.0001f), "precondition: a cycle leaves half an ore over");
+
         Assert.That(await RunUntilADeliveryAsync(), Is.True);
         await Server.WaitAssertion(() =>
         {
-            Assert.That(OreAt(receiver), Is.EqualTo(7));
+            Assert.That(OreAt(receiver), Is.EqualTo((int)perCycle));
             Assert.That(Receiver(receiver).Debt[SteelOre], Is.EqualTo(0.5f).Within(0.0001f));
         });
 
-        // Next cycle: 7.5 + the 0.5 owed = 8 whole ore, nothing left over. 15 over two cycles is the real rate.
+        // Next cycle: another cycle's worth plus the half owed comes out whole, nothing left over. Two cycles' worth
+        //      over two cycles is the real rate.
         Assert.That(await RunUntilADeliveryAsync(), Is.True);
         await Server.WaitAssertion(() =>
         {
-            Assert.That(OreAt(receiver), Is.EqualTo(15));
+            Assert.That(OreAt(receiver), Is.EqualTo((int)(perCycle * 2f)));
             Assert.That(Receiver(receiver).Debt, Is.Empty, "a debt that is paid off is removed");
         });
     }
@@ -308,10 +332,14 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task AFullStackIsNotExceededAndTheRestIsOwed()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, _oneAndAHalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _overAStackPerCycle);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
-        // 1.5 ore/second is 45 per cycle, and a stack of steel ore holds 30.
+        // A cycle makes more than a stack of steel ore holds, but less than two.
+        var perCycle = PerCycle(OverAStackRate);
+        var maxCount = SProtoMan.Index(SteelOre).MaxCount ?? int.MaxValue;
+        Assert.That(perCycle, Is.GreaterThan(maxCount).And.LessThan(maxCount * 2), "precondition: between one and two stacks a cycle");
+
         Assert.That(await RunUntilADeliveryAsync(), Is.True);
 
         await Server.WaitAssertion(() =>
@@ -325,8 +353,8 @@ public sealed class KsOreWellReceiverTest : GameTest
                     stackCounts.Add(stack.Comp.Count);
             }
 
-            Assert.That(stackCounts, Is.EqualTo(new[] { 30 }), "one full stack, no oversized one");
-            Assert.That(Receiver(receiver).Debt[SteelOre], Is.EqualTo(15f).Within(0.0001f), "the other 15 are owed, not lost");
+            Assert.That(stackCounts, Is.EqualTo(new[] { maxCount }), "one full stack, no oversized one");
+            Assert.That(Receiver(receiver).Debt[SteelOre], Is.EqualTo(perCycle - maxCount).Within(0.0001f), "the rest is owed, not lost");
         });
     }
 }
