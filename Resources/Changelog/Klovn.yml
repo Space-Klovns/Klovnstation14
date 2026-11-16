@@ -3022,3 +3022,13 @@ Entries:
       message: Several tgui controls behave correctly at UI scales other than 100%.
   id: 270
   time: '2026-11-16T14:01:29.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        When a S.P.A.M. task is finished, the notice now goes to whoever is
+        holding a logged-in S.P.A.M., rather than whoever carries the ID card.
+    - type: Fix
+      message: Deleting an ID card now logs out the S.P.A.M. tablets logged in with it.
+  id: 271
+  time: '2026-11-16T18:00:24.0000000+00:00'
