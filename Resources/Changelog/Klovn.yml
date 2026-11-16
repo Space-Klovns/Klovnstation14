@@ -2984,3 +2984,41 @@ Entries:
       message: Lasers now puff smoke on things they can't damage, the same as bullets.
   id: 269
   time: '2026-11-16T12:44:57.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        The tgui chat no longer drops the first letter you type, and your typing
+        bubble goes away when you stop.
+    - type: Tweak
+      message: In the separated layout, the say box opens under your mouse pointer.
+    - type: Fix
+      message: Text in the lobby chat can be selected.
+    - type: Fix
+      message: >-
+        You can type a temperature into a thermomachine without it being wiped
+        every second.
+    - type: Fix
+      message: tgui dropdowns stay attached to their button when you scroll.
+    - type: Tweak
+      message: Syndicate and wizard communications consoles use their own tgui themes.
+    - type: Tweak
+      message: Baron UI windows now have every feature the tgui ones have.
+    - type: Fix
+      message: The temperature gate is in the RPD's pumps and valves section.
+    - type: Fix
+      message: The "access denied" popup on lockers shows once, in your language.
+    - type: Tweak
+      message: >-
+        The guidebook's boiling point calculator shows each input's result under
+        it.
+    - type: Tweak
+      message: The lobby background is no longer blurred.
+    - type: Fix
+      message: >-
+        Long lists, like the admin player list, can be scrolled to their last
+        entry.
+    - type: Fix
+      message: Several tgui controls behave correctly at UI scales other than 100%.
+  id: 270
+  time: '2026-11-16T14:01:29.0000000+00:00'
