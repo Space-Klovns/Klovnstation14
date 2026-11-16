@@ -54,7 +54,7 @@
 
   It gives you a bearing, not a position, and it reads back the RADAR RANGE of what it hears, so you learn how far the other ship can see before it gets to use that against you.
 
-  There are two ways to turn a bearing into a real fix. Have an ally on your datalink listen to the same emitter from a different angle and let the bearings cross, or select the emitter on the console and run a signal analysis, which takes [color=orange][protodata="KsMachineElint" comp="KsElint" member="AnalysisTime" format="N0"/] seconds[/color] of uninterrupted listening and peels out the emitter's size, mass and top speed along the way.
+  There are two ways to turn a bearing into a real fix. Have an ally on your datalink listen to the same emitter from a different angle and let the bearings cross, or select the emitter on the console and run a signal analysis, which takes [color=orange][protodata="KsMachineElint" comp="KsElint" member="AnalysisSeconds" format="N0"/] seconds[/color] of uninterrupted listening and peels out the emitter's size, mass and top speed along the way.
 
   One warning: an ELINT array goes deaf while your own ship is emitting. If your radar or your jammer is on, your ELINT is useless.
 

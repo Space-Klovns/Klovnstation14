@@ -447,9 +447,9 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
         if (_bootStartedAt != TimeSpan.MinValue)
         {
             var bootSince = (_timing.CurTime - _bootStartedAt).TotalSeconds;
-            if (bootSince < Hud.BootDuration && !reduced)
+            if (bootSince < Hud.BootDuration.TotalSeconds && !reduced)
             {
-                var progress = (float) (bootSince / Hud.BootDuration);
+                var progress = (float) (bootSince / Hud.BootDuration.TotalSeconds);
                 var flicker = Hud.Boot.Eval(bootSince, reducedMotion: false);
                 // The blink rides a rising envelope: dark strobing at first,
                 // settling to full brightness as the boot completes.
@@ -468,7 +468,7 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
             return;
 
         var since = (_timing.CurTime - _tabSwitchedAt).TotalSeconds;
-        if (since < Hud.TabFlickerDuration && !reduced)
+        if (since < Hud.TabFlickerDuration.TotalSeconds && !reduced)
         {
             var flicker = Hud.TabFlicker.Eval(since, reducedMotion: false);
             Contents.Modulate = Color.White.WithAlpha(Math.Clamp(flicker, 0f, 1f));
