@@ -115,7 +115,7 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
 
         // The time only runs once the task is tracked. Until then the card says how long it would get.
         if (task.EndTime == null)
-            _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-duration", ("time", KsSalvageTabletTaskWindow.FormatTime(taskPrototype.Duration)));
+            _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-duration", ("time", KsTguiTimeDisplay.FormatTime(taskPrototype.Duration)));
     }
 
     /// <summary>
@@ -132,6 +132,6 @@ public sealed class KsSalvageTabletTaskCard : ContainerButton
             return;
 
         _shownSeconds = seconds;
-        _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-time-left", ("time", KsSalvageTabletTaskWindow.FormatTime(timeLeft)));
+        _timeLabel.Text = Loc.GetString("ks-salvage-tablet-task-time-left", ("time", KsTguiTimeDisplay.FormatTime(timeLeft)));
     }
 }

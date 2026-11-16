@@ -32,6 +32,7 @@ The window size is on `<Window width={} height={}>`: use it for `SetSize`. Base 
 | --- | --- |
 | `width={5}`, `height`, `fontSize` (plain units) | number × 12: 60px |
 | `mt={1}`, `mb`, `m`, `p` (half units) | number × 6: 6px |
+| A time: `value` in deciseconds (`TimeDisplay`, tg's `SECONDS`), `interval`/`time` in ms (`Blink`) | A `TimeSpan`, converted once where the tg number is read. No KsTgui API takes a time as a bare number |
 | `<Stack>` / `<Stack vertical>` | `BoxContainer` with `SeparationOverride="6"` (gap is 0.5em) |
 | `<Stack.Item grow>`, `<Stack fill>` | `HorizontalExpand` / `VerticalExpand` |
 | `<Stack.Divider>`, `<Divider>` | `HSeparator`, or the `LowDivider` class |
@@ -83,7 +84,7 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `LabeledControls`, `.Item` | `KsTguiLabeledControls`, `KsTguiLabeledControlsItem` | `AddItem(label, content)`; `Wrap`. Items spread edge to edge (space-between), 3px in from the sides, every one as tall as the row; the label at the bottom, the content halfway between the top and it |
 | `Dialog`, `Dialog.Button` | `KsTguiDialog`, `KsTguiDialogButton` | Covers its parent (put it in a stacking host like a `KsTguiDimmer`). `Title`, `Body`, `AddButton(text, onPressed)`, `DialogWidth` (370), `DialogHeight`, `OnClose`. Title and buttons are 14px mono (`KsTguiFonts.GetMonoFont(14)`); the body's font is the caller's to set |
 | `RestrictedInput` | `KsTguiRestrictedInput` | `: LineEdit`. Green border, lighter focused, red once `IsInvalid` (out of `MinValue`..`MaxValue`, or off whole steps without `AllowFloats`); nothing is clamped. `-` negates, text right-aligned by a left margin. `OnValueChanged`/`OnEnter`/`OnEscape`/`OnBlurred`/`OnValidationChanged`, `SetValue` (ignored while focused) |
-| `TimeDisplay` | `KsTguiTimeDisplay` | `: Label`. `Value` in deciseconds, `Auto` up/down (1 s ticks, floors at 0, restarts only on a changed `Value`), `ShortFormat`, `Format` |
+| `TimeDisplay` | `KsTguiTimeDisplay` | `: Label`. `Value` a `TimeSpan`, `Auto` up/down (1 s ticks, floors at 0, restarts only on a changed `Value`), `ShortFormat`, `Format` (`Func<TimeSpan, string>`). `FormatTime(TimeSpan)` writes plain text the same way |
 | `Blink` | `KsTguiBlink` | One child. `Interval`/`Time` in ms (1000 each); keeps its room while hidden. Starts visible for a whole period, as tg's timer does |
 | `FitText` | `KsTguiFitText` | `Text`, `TextMaxWidth`, `MaxFontSize`, `AcceptableDifference`; tg's 10-round binary search (`KsTguiFitText.Fit`), `FitFontSize` |
 | `MenuBar`, `.Dropdown`, `.MenuItem`, `.MenuItemToggle`, `.Submenu`, `.Separator` | `KsTguiMenuBar`, `KsTguiMenuBarDropdown` (`AddItem`/`AddToggle`/`AddSubmenu`/`AddSeparator`), `KsTguiMenuBarItem`, `KsTguiMenuBarSubmenu`, `KsTguiMenuBarSeparator` | Menus open in engine popups. The bar holds tg's open-menu and open-on-hover state (click toggles both). Submenus open/close after a 0.25 s hover. Clicking an item leaves the menu open, as tg |

@@ -367,7 +367,7 @@ public sealed partial class KsSalvageTabletOrderWindow : FancyWindow
         var total = CartTotal();
         OrderButton.Disabled = waitSeconds > 0 || total <= 0 || total > _points;
         OrderButton.Text = waitSeconds > 0
-            ? Loc.GetString("ks-salvage-tablet-order-button-wait", ("time", KsSalvageTabletTaskWindow.FormatTime(wait)))
+            ? Loc.GetString("ks-salvage-tablet-order-button-wait", ("time", KsTguiTimeDisplay.FormatTime(wait)))
             : Loc.GetString("ks-salvage-tablet-order-button");
     }
 }

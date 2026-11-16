@@ -289,23 +289,25 @@ public sealed class KsTguiNewControlsTest : GameTest
         });
     }
 
-    [TestCase(0f, "00:00:00")]
-    [TestCase(10f, "00:00:01")]
-    [TestCase(9f, "00:00:00")]
-    [TestCase(610f, "00:01:01")]
-    [TestCase(36610f, "01:01:01")]
-    public void TimeDisplayDefaultFormat(float deciseconds, string expected)
+    [TestCase(0.0, "00:00:00")]
+    [TestCase(1.0, "00:00:01")]
+    [TestCase(0.9, "00:00:00")]
+    [TestCase(61.0, "00:01:01")]
+    [TestCase(3661.0, "01:01:01")]
+    [TestCase(-5.0, "00:00:00")]
+    public void TimeDisplayDefaultFormat(double seconds, string expected)
     {
-        Assert.That(KsTguiTimeDisplay.FormatTime(deciseconds), Is.EqualTo(expected));
+        Assert.That(KsTguiTimeDisplay.FormatTime(TimeSpan.FromSeconds(seconds)), Is.EqualTo(expected));
     }
 
-    [TestCase(36610f, "1h1m1s")]
-    [TestCase(600f, "1m")]
-    [TestCase(30f, "3s")]
-    [TestCase(0f, "")]
-    public void TimeDisplayShortFormat(float deciseconds, string expected)
+    [TestCase(3661.0, "1h1m1s")]
+    [TestCase(60.0, "1m")]
+    [TestCase(3.0, "3s")]
+    [TestCase(0.0, "")]
+    [TestCase(-5.0, "")]
+    public void TimeDisplayShortFormat(double seconds, string expected)
     {
-        Assert.That(KsTguiTimeDisplay.FormatTime(deciseconds, shortFormat: true), Is.EqualTo(expected));
+        Assert.That(KsTguiTimeDisplay.FormatTime(TimeSpan.FromSeconds(seconds), shortFormat: true), Is.EqualTo(expected));
     }
 
     [Test]
@@ -313,7 +315,7 @@ public sealed class KsTguiNewControlsTest : GameTest
     {
         await Client.WaitPost(() =>
         {
-            var display = new KsTguiTimeDisplay { Value = 30f, Auto = KsTguiTimeAuto.Down };
+            var display = new KsTguiTimeDisplay { Value = TimeSpan.FromSeconds(3), Auto = KsTguiTimeAuto.Down };
             Assert.That(display.Text, Is.EqualTo("00:00:03"));
 
             display.Tick();
@@ -321,12 +323,12 @@ public sealed class KsTguiNewControlsTest : GameTest
             display.Tick();
             display.Tick();
             display.Tick();
-            Assert.That(display.Shown, Is.EqualTo(0f), "Counting down stops at zero.");
+            Assert.That(display.Shown, Is.EqualTo(TimeSpan.Zero), "Counting down stops at zero.");
 
             // The same value again does not restart; another does.
-            display.Value = 30f;
-            Assert.That(display.Shown, Is.EqualTo(0f));
-            display.Value = 50f;
+            display.Value = TimeSpan.FromSeconds(3);
+            Assert.That(display.Shown, Is.EqualTo(TimeSpan.Zero));
+            display.Value = TimeSpan.FromSeconds(5);
             Assert.That(display.Text, Is.EqualTo("00:00:05"));
 
             display.Auto = KsTguiTimeAuto.Up;
@@ -337,9 +339,9 @@ public sealed class KsTguiNewControlsTest : GameTest
             display.Tick();
             Assert.That(display.Text, Is.EqualTo("00:00:06"), "Without auto nothing counts.");
 
-            display.Format = deciseconds => $"T{deciseconds}";
-            display.Value = 70f;
-            Assert.That(display.Text, Is.EqualTo("T70"), "A custom format replaces the default.");
+            display.Format = time => $"T{time.TotalSeconds}";
+            display.Value = TimeSpan.FromSeconds(7);
+            Assert.That(display.Text, Is.EqualTo("T7"), "A custom format replaces the default.");
         });
     }
 
