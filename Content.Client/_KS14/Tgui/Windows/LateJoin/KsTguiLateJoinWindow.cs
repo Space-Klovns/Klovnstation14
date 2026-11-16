@@ -68,6 +68,16 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         return (card, luminance > 0.5f ? Color.Black : Color.White);
     }
 
+    /// <summary>
+    ///     How the cards look under Baron: Baron's dark translucent panel, with the department's colour only as an accent
+    ///         (the card's border, the title's underline and a bar beside each job), as tgui's solid colours would clash with
+    ///         Baron's grain.
+    /// </summary>
+    public static readonly Color BaronCardBackground = Color.FromHex("#1B1B1E").WithAlpha(0.55f);
+    public static readonly Color BaronTitleBackground = Color.FromHex("#141416").WithAlpha(0.8f);
+    public static readonly Color BaronTitleText = Color.FromHex("#E6E8EA");
+    public static readonly Color BaronSlotsText = Color.FromHex("#A9B0B6");
+
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IClientConsoleHost _consoleHost = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
@@ -86,6 +96,11 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
     private readonly BoxContainer _body;
     private readonly KsTguiButton _crewManifestButton;
     private readonly List<StationView> _stations = new();
+
+    /// <summary>
+    ///     Whether the cards take Baron's look, read once: a theme change makes a new window.
+    /// </summary>
+    private readonly bool _baron = !KsTguiTheme.ReadEnabled();
 
     private int _shownSeconds = -1;
 
@@ -310,11 +325,12 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         StationView view)
     {
         var (color, textColor) = DepartmentLook(department);
+        var titleText = _baron ? BaronTitleText : textColor;
         var titleLabel = new Label
         {
             Text = Loc.GetString(department.Name),
             FontOverride = _fonts.GetFont(15, FontKind.Bold),
-            FontColorOverride = textColor,
+            FontColorOverride = titleText,
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
             ClipText = true,
@@ -323,7 +339,7 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         var slotsLabel = new Label
         {
             FontOverride = _fonts.GetFont(13),
-            FontColorOverride = textColor,
+            FontColorOverride = _baron ? BaronSlotsText : textColor,
             VerticalAlignment = VAlignment.Center,
         };
 
@@ -335,8 +351,8 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         {
             PanelOverride = new StyleBoxFlat
             {
-                BackgroundColor = color,
-                BorderColor = Darken(color, 50f),
+                BackgroundColor = _baron ? BaronTitleBackground : color,
+                BorderColor = _baron ? color : Darken(color, 50f),
                 BorderThickness = new Thickness(0f, 0f, 0f, 2f),
                 ContentMarginLeftOverride = 6f,
                 ContentMarginRightOverride = 6f,
@@ -365,7 +381,7 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         foreach (var job in jobs)
         {
             var icon = _sprites.Frame0(_prototypeManager.Index(job.Icon).Icon);
-            var entry = new KsTguiJobEntry(job.ID, job.LocalizedName, color, textColor, isCommand, icon, _fonts);
+            var entry = new KsTguiJobEntry(job.ID, job.LocalizedName, color, textColor, isCommand, icon, _fonts, _baron);
             entry.SetAmount(available[job.ID]);
 
             if (!_jobRequirements.IsAllowed(job, profile, out var reason))
@@ -384,7 +400,14 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
 
         var card = new PanelContainer
         {
-            PanelOverride = new StyleBoxFlat { BackgroundColor = color },
+            PanelOverride = _baron
+                ? new StyleBoxFlat
+                {
+                    BackgroundColor = BaronCardBackground,
+                    BorderColor = Darken(color, 40f),
+                    BorderThickness = new Thickness(1f),
+                }
+                : new StyleBoxFlat { BackgroundColor = color },
             ToolTip = Loc.GetString("late-join-gui-jobs-amount-in-department-tooltip",
                 ("departmentName", Loc.GetString(department.Name))),
         };
@@ -482,14 +505,22 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
 
 /// <summary>
 ///     One job in a department card: tgui's fluid job button, in the department's colour, with the job's icon, name (bold
-///         for command jobs) and open slots.
+///         for command jobs) and open slots. Under Baron, a dark row with a bar in the department's colour instead.
 /// </summary>
 public sealed class KsTguiJobEntry : ContainerButton
 {
     private static readonly Color UnavailableBackground = Color.FromHex("#949494");
     private static readonly Color UnavailableText = Color.FromHex("#616161");
 
+    private static readonly Color BaronNormal = Color.FromHex("#2A2D31").WithAlpha(0.85f);
+    private static readonly Color BaronHovered = Color.FromHex("#3A3F45");
+    private static readonly Color BaronUnavailable = Color.FromHex("#1E1F22").WithAlpha(0.85f);
+    private static readonly Color BaronText = Color.FromHex("#DADDE0");
+    private static readonly Color BaronUnavailableText = Color.FromHex("#6B6F73");
+    private const float BaronBarWidth = 3f;
+
     private readonly Color _text;
+    private readonly Color _unavailableText;
     private readonly Label _nameLabel;
     private readonly Label _slotsLabel;
     private readonly BoxContainer _row;
@@ -512,14 +543,28 @@ public sealed class KsTguiJobEntry : ContainerButton
         Color textColor,
         bool command,
         Texture? icon,
-        KsTguiFonts fonts)
+        KsTguiFonts fonts,
+        bool baron = false)
     {
         JobId = jobId;
-        _text = textColor;
 
-        _normalBox = MakeBox(KsTguiLateJoinWindow.Darken(departmentColor, 10f));
-        _hoveredBox = MakeBox(departmentColor);
-        _disabledBox = MakeBox(UnavailableBackground);
+        if (baron)
+        {
+            _text = BaronText;
+            _unavailableText = BaronUnavailableText;
+            _normalBox = MakeBox(BaronNormal, departmentColor);
+            _hoveredBox = MakeBox(BaronHovered, departmentColor);
+            _disabledBox = MakeBox(BaronUnavailable, KsTguiLateJoinWindow.Darken(departmentColor, 60f));
+        }
+        else
+        {
+            _text = textColor;
+            _unavailableText = UnavailableText;
+            _normalBox = MakeBox(KsTguiLateJoinWindow.Darken(departmentColor, 10f));
+            _hoveredBox = MakeBox(departmentColor);
+            _disabledBox = MakeBox(UnavailableBackground);
+        }
+
         StyleBoxOverride = _normalBox;
         HorizontalExpand = true;
 
@@ -558,12 +603,15 @@ public sealed class KsTguiJobEntry : ContainerButton
         TooltipSupplier = _ => _tooltipText == null ? null : MakeTooltip(_tooltipText);
     }
 
-    private static StyleBoxFlat MakeBox(Color color)
+    /// <param name="bar">Baron's bar on the left, in the department's colour; none under tgui.</param>
+    private static StyleBoxFlat MakeBox(Color color, Color? bar = null)
     {
         return new StyleBoxFlat
         {
             BackgroundColor = color,
-            ContentMarginLeftOverride = 6f,
+            BorderColor = bar ?? default,
+            BorderThickness = bar == null ? default : new Thickness(BaronBarWidth, 0f, 0f, 0f),
+            ContentMarginLeftOverride = bar == null ? 6f : 6f + BaronBarWidth,
             ContentMarginRightOverride = 6f,
             ContentMarginTopOverride = 3f,
             ContentMarginBottomOverride = 3f,
@@ -601,7 +649,7 @@ public sealed class KsTguiJobEntry : ContainerButton
         _row.AddChild(new KsTguiIcon
         {
             Glyph = KsTguiIcons.Lock,
-            IconColor = UnavailableText,
+            IconColor = _unavailableText,
             VerticalAlignment = VAlignment.Center,
             Margin = new Thickness(4f, 0f, 0f, 0f),
         });
@@ -629,7 +677,7 @@ public sealed class KsTguiJobEntry : ContainerButton
             _ => _normalBox,
         };
 
-        var text = DrawMode == DrawModeEnum.Disabled ? UnavailableText : _text;
+        var text = DrawMode == DrawModeEnum.Disabled ? _unavailableText : _text;
         _nameLabel.FontColorOverride = text;
         _slotsLabel.FontColorOverride = text;
     }
