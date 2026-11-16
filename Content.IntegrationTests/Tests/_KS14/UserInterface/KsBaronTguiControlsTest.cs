@@ -15,7 +15,7 @@ using Robust.Shared.Maths;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     Since #480 Baron opens the ported tgui windows, so its sheet has to style the tgui control library: a selected button,
+///     Baron opens the ported tgui windows, so its sheet has to style the tgui control library: a selected button,
 ///         a coloured notice and a selected list row must look different from a plain one, a section's title gets a line, and
 ///         a ported window gets the room Baron's taller header takes. Under tgui none of Baron's rules may apply.
 /// </summary>

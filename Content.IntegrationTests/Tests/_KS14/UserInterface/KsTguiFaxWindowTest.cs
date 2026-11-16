@@ -23,7 +23,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The fax machine's BUI opens the tgui window under both themes since #480, and the tgui
+///     The fax machine's BUI opens the tgui window under both themes, and the tgui
 ///         window's buttons send what the stock window's do.
 /// </summary>
 [TestOf(typeof(KsTguiFaxWindow))]

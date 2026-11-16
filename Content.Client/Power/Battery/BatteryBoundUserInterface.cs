@@ -34,7 +34,7 @@ public sealed partial class BatteryBoundUserInterface : BoundUserInterface, IBui
 
         _pred = new BuiPredictionState(this, _gameTiming);
 
-        _menu = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window, under both themes since #480 */
+        _menu = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
             ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Battery.KsTguiBatteryWindow>()
             : this.CreateWindow<BatteryMenu>();
         _menu.SetEntity(Owner);

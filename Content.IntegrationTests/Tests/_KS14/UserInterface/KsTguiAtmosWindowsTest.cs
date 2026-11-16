@@ -27,7 +27,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The gas devices' bound user interfaces open the tgui window under both themes since #480, and
+///     The gas devices' bound user interfaces open the tgui window under both themes, and
 ///         each tgui window raises the actions the stock window does.
 /// </summary>
 [TestOf(typeof(KsTguiAtmosWindows))]

@@ -7,7 +7,7 @@ using Content.Shared._KS14.CCVar;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     What the stock windows did that their tgui ports had dropped, now that Baron opens the ports too (#480).
+///     What the stock windows did that their tgui ports had dropped, now that Baron opens the ports too.
 /// </summary>
 [TestOf(typeof(KsTguiPdaWindow))]
 public sealed class KsTguiPortGapsTest : GameTest

@@ -25,7 +25,7 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The cargo console BUI opens the tgui window under both themes since #480, and every action the
+///     The cargo console BUI opens the tgui window under both themes, and every action the
 ///         tgui window offers raises its event.
 /// </summary>
 [TestOf(typeof(KsTguiCargoConsoleWindow))]

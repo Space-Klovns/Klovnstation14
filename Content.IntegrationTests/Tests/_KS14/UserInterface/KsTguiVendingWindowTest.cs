@@ -22,7 +22,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The vending machine's BUI opens the tgui window under both themes since #480, and the tgui
+///     The vending machine's BUI opens the tgui window under both themes, and the tgui
 ///         window's products and categories send what the stock list does.
 /// </summary>
 [TestOf(typeof(KsTguiVendingWindow))]

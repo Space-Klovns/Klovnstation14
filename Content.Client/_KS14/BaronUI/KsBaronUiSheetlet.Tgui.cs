@@ -8,7 +8,7 @@ using static Content.Client.Stylesheets.StylesheetHelpers;
 namespace Content.Client._KS14.BaronUI;
 
 /// <summary>
-///     Baron's rules for the tgui control library. Since #480 Baron opens the ported tgui windows too, and without these their
+///     Baron's rules for the tgui control library. Baron opens the ported tgui windows too, and without these their
 ///         controls fall through to Baron's global defaults: every button the same brown, a selected one indistinguishable,
 ///         notice boxes opaque dark panels, list selection invisible. Everything here is Baron-only: the tgui sheet never
 ///         contains these rules, so the tgui look is untouched.

@@ -34,7 +34,7 @@ public sealed class KsTguiSection : KsSectionPanel
 
     /// <summary>
     ///     The body under Baron: its old flat <c>#1B1B1E</c>, translucent, so the window's grainy texture shows through while the
-    ///         sections still read as groups and their text stays legible (#480). Tgui never reads it; it draws the sheet's box.
+    ///         sections still read as groups and their text stays legible. Tgui never reads it; it draws the sheet's box.
     /// </summary>
     public static readonly Color BaronBody = Color.FromHex("#1B1B1E").WithAlpha(0.35f);
 

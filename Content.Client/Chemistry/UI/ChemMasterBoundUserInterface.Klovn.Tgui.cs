@@ -7,7 +7,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Chemistry.UI;
 
-// The tgui-styled window, picked in place of the stock one (under both themes since #480).
+// The tgui-styled window, picked in place of the stock one.
 public sealed partial class ChemMasterBoundUserInterface
 {
     [ViewVariables]

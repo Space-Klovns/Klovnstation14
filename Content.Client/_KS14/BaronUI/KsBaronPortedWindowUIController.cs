@@ -11,7 +11,7 @@ namespace Content.Client._KS14.BaronUI;
 /// <summary>
 ///     Gives a ported tgui window opened under Baron the room Baron's taller header takes. The ports state tg's own
 ///         <c>width</c>/<c>height</c>, which assume tgui's 32px title bar; Baron's frame is about 40px taller, so the same
-///         height would leave the contents that much short (#480). Under tgui nothing here runs, so tg's sizes are unchanged.
+///         height would leave the contents that much short. Under tgui nothing here runs, so tg's sizes are unchanged.
 /// </summary>
 /// <remarks>
 ///     Done once per window, when it is first opened under Baron. A window open when the theme is switched keeps its size

@@ -26,7 +26,7 @@ public sealed partial class FaxBoundUi : BoundUserInterface
         base.Open();
 
         // KS14 start: the tgui theme gets its own layout
-        _window = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: under both themes since #480 */
+        _window = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
             ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Fax.KsTguiFaxWindow>()
             : (Content.Client._KS14.Tgui.Windows.Fax.IKsFaxWindow)this.CreateWindow<FaxWindow>();
         // KS14 end

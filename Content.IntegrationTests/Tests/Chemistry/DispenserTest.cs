@@ -37,7 +37,7 @@ public sealed class DispenserTest : InteractionTest
 
         // Re-eject using the button directly instead of sending a BUI event. This test is really just a test of the
         // bui/window helper methods.
-        // KS14 start: the window the BUI opens is the tgui port under both themes since #480
+        // KS14 start: the window the BUI opens is the tgui port, under either theme
         // await ClickControl<ReagentDispenserWindow>(nameof(ReagentDispenserWindow.EjectButton));
         await ClickControl<Content.Client._KS14.Tgui.Windows.Chem.KsTguiReagentDispenserWindow>(
             nameof(Content.Client._KS14.Tgui.Windows.Chem.KsTguiReagentDispenserWindow.EjectButton));

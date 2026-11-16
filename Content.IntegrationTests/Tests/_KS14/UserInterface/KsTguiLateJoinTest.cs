@@ -16,7 +16,7 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The tgui late join window: the lobby gets it under both themes since #480, and every job row and the random button reach
+///     The tgui late join window: the lobby gets it under both themes, and every job row and the random button reach
 ///         the same selection the stock window makes.
 /// </summary>
 [TestOf(typeof(KsTguiLateJoinWindow))]
@@ -43,7 +43,7 @@ public sealed class KsTguiLateJoinTest : GameTest
             var window = KsLateJoinWindowFactory.Create();
             try
             {
-                // Since #480 both themes get the ported window.
+                // Both themes get the ported window.
                 Assert.That(window, Is.TypeOf<KsTguiLateJoinWindow>());
             }
             finally

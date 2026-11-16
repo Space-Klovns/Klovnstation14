@@ -16,7 +16,7 @@ using Robust.Client.UserInterface.Controls;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The wires BUI opens the tgui window under both themes since #480, and the tgui window's buttons
+///     The wires BUI opens the tgui window under both themes, and the tgui window's buttons
 ///         raise the same actions.
 /// </summary>
 [TestOf(typeof(KsTguiWiresWindow))]

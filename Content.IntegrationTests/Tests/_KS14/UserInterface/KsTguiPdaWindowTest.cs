@@ -24,7 +24,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The PDA's BUI opens the tgui window under both themes since #480, and the window's controls send
+///     The PDA's BUI opens the tgui window under both themes, and the window's controls send
 ///         what the stock ones do: the flashlight, the ID and pen ejects, the ringtone, and running and closing a program.
 /// </summary>
 [TestOf(typeof(KsTguiPdaWindow))]

@@ -21,7 +21,7 @@ using Robust.Shared.Map;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The disposal unit, mailing unit and battery BUIs open the tgui window under both themes since #480, and every control of the tgui windows raises its action.
+///     The disposal unit, mailing unit and battery BUIs open the tgui window under both themes, and every control of the tgui windows raises its action.
 /// </summary>
 [TestOf(typeof(KsTguiDisposalWindow))]
 public sealed class KsTguiDisposalBatteryWindowTest : GameTest

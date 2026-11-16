@@ -16,7 +16,7 @@ public sealed partial class CargoOrderConsoleBoundUserInterface
     private KsTguiCargoConsoleWindow? _ksTguiMenu;
 
     /// <summary>
-    ///     Opens the tgui window instead of the stock one, under both themes since #480.
+    ///     Opens the tgui window instead of the stock one.
     /// </summary>
     private bool KsOpenTguiWindow()
     {

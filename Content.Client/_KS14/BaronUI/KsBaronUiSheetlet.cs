@@ -222,7 +222,7 @@ public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
-            // The ported tgui windows, which Baron opens too since #480 (KsBaronUiSheetlet.Tgui.cs).
+            // The ported tgui windows, which Baron opens too (KsBaronUiSheetlet.Tgui.cs).
             .. TguiControlRules(regularFont, boldFont, regularFontSmall),
 
             // After the tgui control rules: the cart's - and + are transparent tgui buttons, and their own rules, as
@@ -255,7 +255,7 @@ public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoDisabled()
                 .Box(empty).Modulate(Color.White),
 
-            // The cart's - and + are tgui buttons, which Baron styles since #480 with rules on the KsTguiButton type; these,
+            // The cart's - and + are tgui buttons, which Baron styles with rules on the KsTguiButton type; these,
             //      as specific and later, keep them bare.
             .. new[]
             {

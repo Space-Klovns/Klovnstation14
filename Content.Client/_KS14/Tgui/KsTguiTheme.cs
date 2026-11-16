@@ -19,7 +19,7 @@ public static class KsTguiTheme
     }
 
     /// <summary>
-    ///     Whether a bound interface opens its ported tgui window rather than the stock one. Since #480 both themes open
+    ///     Whether a bound interface opens its ported tgui window rather than the stock one. Both themes open
     ///         the ported windows, Baron skinning them through its own rules (<c>KsBaronUiSheetlet.Tgui.cs</c>), so one
     ///         window carries every feature. The stock windows are kept, unopened, so upstream merges stay small.
     /// </summary>

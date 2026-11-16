@@ -11,7 +11,7 @@ public sealed partial class DisposalUnitBoundUserInterface
     [ViewVariables] private KsTguiDisposalWindow? _tguiWindow;
 
     /// <summary>
-    ///     Opens tgui's layout (under both themes since #480). False leaves the stock window to the caller.
+    ///     Opens tgui's layout. False leaves the stock window to the caller.
     /// </summary>
     private bool OpenTgui()
     {

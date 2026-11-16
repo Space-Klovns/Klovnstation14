@@ -23,7 +23,7 @@ using Robust.Shared.GameObjects;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The APC and air alarm BUIs open the tgui window under both themes since #480, and every button of
+///     The APC and air alarm BUIs open the tgui window under both themes, and every button of
 ///         the tgui windows raises its action.
 /// </summary>
 [TestOf(typeof(KsTguiApcWindow))]

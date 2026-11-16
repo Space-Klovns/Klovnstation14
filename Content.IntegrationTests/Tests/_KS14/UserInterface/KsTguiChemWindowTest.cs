@@ -25,7 +25,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The reagent dispenser's and the ChemMaster's BUIs open the tgui window under both themes since #480,
+///     The reagent dispenser's and the ChemMaster's BUIs open the tgui window under both themes,
 ///         and each tgui window's controls send what the stock window's do.
 /// </summary>
 [TestOf(typeof(KsTguiReagentDispenserWindow))]
