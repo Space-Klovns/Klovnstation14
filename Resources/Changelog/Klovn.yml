@@ -2956,3 +2956,11 @@ Entries:
       message: Tourniquets fully stop bleeding again
   id: 266
   time: '2026-11-16T10:02:38.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        When a S.P.A.M. task is finished, the notice goes to whoever is carrying
+        the ID card.
+  id: 267
+  time: '2026-11-16T11:10:04.0000000+00:00'
