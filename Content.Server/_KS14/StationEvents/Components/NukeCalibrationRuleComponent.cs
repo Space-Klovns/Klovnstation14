@@ -26,11 +26,11 @@ public sealed partial class NukeCalibrationRuleComponent : Component
     [DataField]
     public EntityUid AffectedNuke;
     [DataField]
-    public float NukeTimer = 180f;
+    public TimeSpan NukeTimer = TimeSpan.FromSeconds(180);
     [DataField]
     public float AutoDisarmChance = 0.5f;
     [DataField]
-    public float TimeUntilFirstAnnouncement = 25f;
+    public TimeSpan TimeUntilFirstAnnouncement = TimeSpan.FromSeconds(25);
     [DataField]
     public bool FirstAnnouncementMade = false;
 }

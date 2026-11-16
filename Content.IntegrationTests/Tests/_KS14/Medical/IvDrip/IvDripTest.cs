@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Pair;

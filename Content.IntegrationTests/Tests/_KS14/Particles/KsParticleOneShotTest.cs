@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Numerics;
 using Content.Client._KS14.Particles;
 using Content.IntegrationTests.Fixtures;

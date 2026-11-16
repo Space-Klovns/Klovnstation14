@@ -265,8 +265,7 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
         if (TerminatingOrDeleted(entity.Owner))
             return false;
 
-        var duration = TimeSpan.FromSeconds(
-            Math.Max(lowerZLevelEntity.Comp.Depth, KsZLevelSystem.MinimumDepth) * entity.Comp.SecondsPerDepth);
+        var duration = entity.Comp.TimePerDepth * Math.Max(lowerZLevelEntity.Comp.Depth, KsZLevelSystem.MinimumDepth);
 
         var curTime = _gameTiming.CurTime;
         var activeComponent = EnsureComp<ActiveZLevelElevatorComponent>(entity.Owner);

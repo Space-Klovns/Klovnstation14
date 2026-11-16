@@ -47,7 +47,7 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
                 if (!_transform.AnchorEntity(nuke, nukeTransform))
                     continue;
 
-            _nukeSystem.SetRemainingTime(nuke, component.NukeTimer);
+            _nukeSystem.SetRemainingTime(nuke, (float)component.NukeTimer.TotalSeconds);
             _nukeSystem.ArmBomb(nuke, nukeComponent);
             component.AffectedNuke = nuke;
 
@@ -101,8 +101,8 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
         if (component.FirstAnnouncementMade == true)
             return;
 
-        component.TimeUntilFirstAnnouncement -= frameTime;
-        if (component.TimeUntilFirstAnnouncement > 0f)
+        component.TimeUntilFirstAnnouncement -= TimeSpan.FromSeconds(frameTime);
+        if (component.TimeUntilFirstAnnouncement > TimeSpan.Zero)
             return;
 
         component.FirstAnnouncementMade = true;
