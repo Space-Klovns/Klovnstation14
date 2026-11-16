@@ -121,6 +121,22 @@ The arts and the novels they come from are listed in `martial_arts.yml`. Short-l
 (Dugu's counter, Great Shift, the Dragon Palm combo) lives in server components written only by
 `MartialArtsSystem`.
 
+### Fighting styles and wuxia weapons
+
+- **Styles** (`WuxiaStyleSystem`): the Drunken Fist, Eagle Claw and Wing Chun are `Body` martial arts whose
+  manuals add `WuxiaStyleComponent`. Punches (bare-handed melee hits), shoves (`DisarmedEvent`, listened for on every
+  `MobStateComponent`) and grabs (`PullStartedMessage`) on the same opponent build a streak; the right streak lands a
+  combo. A streak resets after five seconds or on a new opponent. The Drunken Fist hits harder and may sway out of
+  the way the drunker you are; Wing Chun's Sticky Hands turns aside one blow. Each style teaches Recall Teachings
+  (lists the combos privately) and Challenge to Duel.
+- **Weapons** (`WuxiaWeaponSystem`, crafted from the construction menu): the meteor hammer (two-tile reach, may yank
+  the target closer), rope dart (stings someone up to four tiles away and may tear their held item loose), butterfly
+  swords (faster in pairs, worked out in shared `ButterflySwordSystem` because attack rate is predicted), iron fan
+  (cuts deeper thrown), bamboo staff (wielded sweeps, splits after six), plum blossom needles (a cultivator's needle
+  slows), willow-leaf flying daggers (more damage from a cultivator, by realm) and smoke pellets. A Sect Master issues
+  sect jian at the plaque, one per member; in a member's hand the sword strikes harder and tires its target.
+  In-hand sprites borrow vanilla ones; icons come from `cultivation_icons.py`.
+
 ## The Body Molding Art
 
 The other road: the flesh itself is tempered instead of gathering qi. `BodyCultivatorComponent`, written only by
@@ -160,7 +176,7 @@ and copyright metadata. Run them from the repository root with Pillow installed.
 ## Tests
 
 `Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
-the body path, the Demonic Path, the jianghu, sects and sworn brotherhood, and `CultivationLocaleTest` checks every cultivation locale key resolves
+the body path, the Demonic Path, the jianghu, sects, sworn brotherhood, fighting styles and weapons, and `CultivationLocaleTest` checks every cultivation locale key resolves
 (`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
 concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
 by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads

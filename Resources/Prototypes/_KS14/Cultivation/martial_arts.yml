@@ -82,3 +82,38 @@
   kind: Body
   components:
   - type: MuscleTendon
+
+# Fighting styles: punch, shove and grab streaks land combos. Anyone can learn them.
+
+- type: martialArt
+  id: KsDrunkenFist
+  name: martial-art-drunken-fist-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: DrunkenFist
+
+- type: martialArt
+  id: KsEagleClaw
+  name: martial-art-eagle-claw-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: EagleClaw
+
+- type: martialArt
+  id: KsWingChun
+  name: martial-art-wing-chun-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: WingChun

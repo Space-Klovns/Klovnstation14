@@ -146,6 +146,12 @@ public sealed partial class SectComponent : Component
 
     [DataField]
     public int MissionsCompleted;
+
+    /// <summary>
+    ///     Swords issued at the plaque; one per member.
+    /// </summary>
+    [DataField]
+    public int JianIssued;
 }
 
 /// <summary>
@@ -270,4 +276,80 @@ public sealed partial class SwornVengeanceComponent : Component
 
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan ExpiresAt;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class MeteorHammerComponent : Component
+{
+    [DataField]
+    public float PullChance = 0.35f;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class RopeDartComponent : Component
+{
+    [DataField]
+    public float Range = 4f;
+
+    [DataField]
+    public float Damage = 8f;
+
+    [DataField]
+    public float DisarmChance = 0.4f;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class BambooStaffComponent : Component
+{
+    [DataField]
+    public float SweepChance = 0.3f;
+
+    [DataField]
+    public TimeSpan SweepDuration = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>
+    ///     Sweeps left before the bamboo splits.
+    /// </summary>
+    [DataField]
+    public int SweepsLeft = 6;
+}
+
+/// <summary>
+///     A sword issued at a sect's plaque, one per member.
+/// </summary>
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem), typeof(JianghuSystem))]
+public sealed partial class SectJianComponent : Component
+{
+    [DataField]
+    public EntityUid? Sect;
+
+    [DataField]
+    public float MemberBonusDamage = 5f;
+
+    [DataField]
+    public float MemberStaminaDamage = 8f;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class AcupointNeedleComponent : Component
+{
+    [DataField]
+    public TimeSpan SlowDuration = TimeSpan.FromSeconds(2);
+
+    [DataField]
+    public float SlowMultiplier = 0.5f;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class FlyingDaggerComponent : Component
+{
+    [DataField]
+    public float BonusPerRealm = 3f;
+}
+
+[RegisterComponent, Access(typeof(WuxiaWeaponSystem))]
+public sealed partial class SmokePelletComponent : Component
+{
+    [DataField]
+    public Robust.Shared.Prototypes.EntProtoId Smoke = "KsSmokePelletCloud";
 }

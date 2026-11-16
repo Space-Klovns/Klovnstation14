@@ -181,3 +181,19 @@ jianghu-direction-SouthWest = southwest
 jianghu-direction-West = west
 jianghu-direction-NorthWest = northwest
 jianghu-direction-Invalid = nearby
+
+## Sect swords and wuxia weapons
+
+jianghu-plaque-option-jian = Issue a sect jian
+jianghu-jian-all-issued = Every member already has a sword. Recruit more disciples first.
+jianghu-jian-name = jian of the {$sect}
+jianghu-jian-issued = {CAPITALIZE(THE($user))} takes a sword from the rack beneath the plaque.
+wuxia-sect-jian-examine = In a member's hand it strikes truer and tires the one it cuts.
+wuxia-meteor-hammer-yank = The rope of {POSS-ADJ($user)} meteor hammer wraps around {THE($target)} and yanks {OBJECT($target)} closer!
+wuxia-rope-dart-coiling = You're still coiling the cord!
+wuxia-rope-dart-stings = {CAPITALIZE(POSS-ADJ($user))} rope dart darts out and stings {THE($target)}!
+wuxia-rope-dart-tears = The cord snaps back and tears {THE($item)} out of {POSS-ADJ($target)} hand!
+wuxia-bamboo-sweep = {CAPITALIZE(THE($user))} sweeps {POSS-ADJ($target)} legs out with the bamboo staff!
+wuxia-bamboo-splits = The bamboo staff splits down its length and falls apart!
+wuxia-needle-acupoint = A needle strikes an acupoint and your limbs grow heavy!
+wuxia-smoke-pellet-crushed = {CAPITALIZE(THE($user))} crushes something and vanishes into a cloud of smoke!

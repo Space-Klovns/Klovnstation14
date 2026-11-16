@@ -131,3 +131,15 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: dugu_counter }
   - type: InstantAction
     event: !type:DuguCounterActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionWuxiaRecallTeachings
+  name: Recall Teachings
+  description: Remember the combos of your fighting style. Punch, shove and grab the same opponent in the right order to land them.
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: recall_teachings }
+  - type: InstantAction
+    event: !type:RecallTeachingsActionEvent

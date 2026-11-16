@@ -34,6 +34,8 @@ public sealed partial class JianghuSystem
     private const string PetitionRefuseOption = "petition-refuse";
     private const string TournamentOption = "tournament";
     private const string BowOption = "bow";
+    private const string JianOption = "jian";
+    private static readonly EntProtoId SectJianPrototype = "KsSectJian";
 
     private const int MaxSectNameLength = 32;
     private const float FellowshipRange = 5f;
@@ -338,6 +340,7 @@ public sealed partial class JianghuSystem
             _mcqDialogueSystem.StartDialogue(entity, args.User, new McqDialogueData[]
             {
                 new("jianghu-plaque-option-tournament", TournamentOption),
+                new("jianghu-plaque-option-jian", JianOption),
                 new("jianghu-plaque-option-bow", BowOption),
             });
             return;
@@ -388,6 +391,9 @@ public sealed partial class JianghuSystem
             case TournamentOption:
                 TryProclaimTournament(sect, args.Actor);
                 break;
+            case JianOption:
+                TryIssueJian(sect, args.Actor);
+                break;
         }
     }
 
@@ -430,6 +436,26 @@ public sealed partial class JianghuSystem
         args.PushMarkup(Loc.GetString("jianghu-plaque-help"));
         foreach (var rankingLine in RankingLines())
             args.PushMarkup(rankingLine);
+    }
+
+    /// <summary>
+    ///     The master takes a sword from the rack beneath the plaque: one for every member.
+    /// </summary>
+    public EntityUid? TryIssueJian(Entity<SectComponent> sect, EntityUid masterUid)
+    {
+        if (sect.Comp.JianIssued >= sect.Comp.Members.Count)
+        {
+            _popupSystem.PopupEntity(Loc.GetString("jianghu-jian-all-issued"), masterUid, masterUid);
+            return null;
+        }
+
+        sect.Comp.JianIssued++;
+        var jianUid = Spawn(SectJianPrototype, Transform(masterUid).Coordinates);
+        EnsureComp<SectJianComponent>(jianUid).Sect = sect;
+        _metaDataSystem.SetEntityName(jianUid, Loc.GetString("jianghu-jian-name", ("sect", sect.Comp.SectName)));
+        _handsSystem.PickupOrDrop(masterUid, jianUid, checkActionBlocker: false);
+        _popupSystem.PopupEntity(Loc.GetString("jianghu-jian-issued", ("user", masterUid)), masterUid, type: PopupType.Medium);
+        return jianUid;
     }
 
     #endregion

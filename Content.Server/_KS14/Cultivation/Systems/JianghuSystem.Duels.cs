@@ -75,6 +75,13 @@ public sealed partial class JianghuSystem
     }
 
     [SubscribeLocalEvent]
+    private void OnStylistChallenge(Entity<WuxiaStyleComponent> entity, ref ChallengeDuelActionEvent args)
+    {
+        if (!args.Handled)
+            args.Handled = TryChallenge(entity, args.Target);
+    }
+
+    [SubscribeLocalEvent]
     private void OnBodyCultivatorChallenge(Entity<BodyCultivatorComponent> entity, ref ChallengeDuelActionEvent args)
     {
         if (!args.Handled)

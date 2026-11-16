@@ -11,7 +11,13 @@
       "name": "art_dragon_palm"
     },
     {
+      "name": "art_drunken_fist"
+    },
+    {
       "name": "art_dugu"
+    },
+    {
+      "name": "art_eagle_claw"
     },
     {
       "name": "art_golden_bell"
@@ -39,6 +45,9 @@
     },
     {
       "name": "art_star_absorbing"
+    },
+    {
+      "name": "art_wing_chun"
     },
     {
       "name": "body_molding_art"

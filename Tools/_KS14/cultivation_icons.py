@@ -140,6 +140,7 @@ ACTIONS.update({
     "duel": ("决", "red"),
     "yield": ("让", "tan"),
     "found_sect": ("宗", "gold"),
+    "recall_teachings": ("忆", "tan"),
     "sect_transmission": ("讯", "jade"),
     "declare_rivalry": ("敌", "red"),
 })
@@ -170,6 +171,9 @@ ART_MANUALS = {
     "art_ladder_cloud": ("云", "silver"),
     "art_dugu": ("独", "silver"),
     "art_muscle_tendon": ("筋", "brown"),
+    "art_drunken_fist": ("醉", "orange"),
+    "art_eagle_claw": ("鹰", "tan"),
+    "art_wing_chun": ("咏", "blue"),
 }
 
 MANUALS = {
@@ -184,6 +188,9 @@ MANUALS = {
     "art_ladder_cloud": ("云", "silver"),
     "art_dugu": ("独", "silver"),
     "art_muscle_tendon": ("筋", "brown"),
+    "art_drunken_fist": ("醉", "orange"),
+    "art_eagle_claw": ("鹰", "tan"),
+    "art_wing_chun": ("咏", "blue"),
 }
 
 # Legendary armor: the vanilla vest, gradient-mapped onto a new palette (dark, mid, light).
@@ -354,6 +361,64 @@ def incense(lit):
     return image
 
 
+def wuxia_weapon(kind):
+    """The ordinary wuxia weapons and hidden weapons, drawn diagonally like vanilla item icons."""
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    steel, edge, dark = (186, 192, 204, 255), (236, 240, 246, 255), (70, 74, 86, 255)
+    wood, red, gold = (122, 78, 40, 255), (186, 34, 34, 255), (214, 170, 60, 255)
+    if kind == "meteor_hammer":
+        draw.arc((6, 6, 26, 26), 200, 340, fill=(150, 120, 80, 255), width=1)
+        draw.line((9, 17, 23, 17), fill=(150, 120, 80, 255))
+        for cx, cy in ((7, 20), (25, 20)):
+            draw.ellipse((cx - 4, cy - 4, cx + 4, cy + 4), fill=dark, outline=(30, 30, 36, 255))
+            draw.point((cx - 1, cy - 2), fill=edge)
+    elif kind == "rope_dart":
+        draw.line((4, 28, 12, 18, 8, 12, 16, 8), fill=red, width=1)
+        draw.polygon([(16, 8), (26, 3), (22, 11)], fill=steel, outline=dark)
+        draw.line((17, 8, 24, 5), fill=edge)
+    elif kind == "butterfly_sword":
+        draw.polygon([(12, 20), (25, 5), (28, 6), (15, 22)], fill=steel, outline=dark)
+        draw.line((14, 20, 26, 6), fill=edge)
+        draw.arc((6, 18, 16, 28), 90, 270, fill=gold, width=2)
+        draw.line((8, 26, 12, 22), fill=wood, width=3)
+    elif kind == "iron_fan":
+        for angle in range(200, 341, 20):
+            radians = math.radians(angle)
+            draw.line((16, 26, 16 + 13 * math.cos(radians), 26 + 13 * math.sin(radians)), fill=dark)
+        draw.pieslice((3, 13, 29, 39), 200, 340, fill=(150, 30, 30, 230), outline=dark)
+        draw.arc((3, 13, 29, 39), 200, 340, fill=edge)
+        draw.ellipse((14, 24, 18, 28), fill=gold)
+    elif kind == "bamboo_staff":
+        draw.line((4, 28, 28, 4), fill=(150, 168, 72, 255), width=3)
+        for t in (0.25, 0.5, 0.75):
+            x, y = 4 + 24 * t, 28 - 24 * t
+            draw.line((x - 2, y - 2, x + 2, y + 2), fill=(96, 112, 40, 255), width=1)
+    elif kind == "sect_jian":
+        draw.line((10, 22, 27, 5), fill=steel, width=2)
+        draw.line((11, 21, 27, 5), fill=edge)
+        draw.line((7, 19, 13, 25), fill=gold, width=2)
+        draw.line((5, 27, 9, 23), fill=wood, width=2)
+        draw.line((4, 28, 3, 31), fill=red, width=2)
+    elif kind == "needles":
+        for offset in (-3, 0, 3):
+            draw.line((8 + offset, 26, 24 + offset, 6), fill=steel)
+            draw.point((24 + offset, 6), fill=edge)
+        draw.ellipse((5, 24, 9, 28), fill=red)
+    elif kind == "flying_dagger":
+        draw.polygon([(10, 22), (26, 5), (24, 10), (13, 23)], fill=steel, outline=dark)
+        draw.line((11, 21, 25, 6), fill=edge)
+        draw.line((6, 25, 11, 21), fill=wood, width=2)
+        draw.line((5, 26, 2, 29), fill=red)
+    elif kind == "smoke_pellet":
+        draw.ellipse((10, 14, 22, 26), fill=(214, 200, 160, 255), outline=(120, 100, 70, 255))
+        draw.line((16, 14, 16, 8), fill=(120, 100, 70, 255))
+        draw.line((16, 8, 19, 6), fill=(120, 100, 70, 255))
+        for x, y in ((12, 18), (19, 21), (15, 23)):
+            draw.point((x, y), fill=(90, 80, 70, 255))
+    return image
+
+
 def array_circle(glyph, colour, font_path):
     """A floor circle of trigrams around a glyph."""
     face, rim = PALETTE[colour]
@@ -453,6 +518,8 @@ def main():
         "sect_plaque": sect_plaque(args.font),
         "incense": incense(lit=False),
         "incense_lit": incense(lit=True),
+        **{kind: wuxia_weapon(kind) for kind in ("meteor_hammer", "rope_dart", "butterfly_sword", "iron_fan", "bamboo_staff",
+                                                 "sect_jian", "needles", "flying_dagger", "smoke_pellet")},
         "array_gathering": array_circle("聚", "jade", args.font),
         "array_barrier": array_circle("阵", "gold", args.font),
         "array_alarm": array_circle("警", "orange", args.font),
