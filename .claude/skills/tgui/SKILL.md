@@ -150,6 +150,43 @@ Rules for a port:
 - **Strings** go in `Resources/Locale/<culture>/_KS14/tgui/<feature>.ftl`, in en-US and ru-RU. Reuse existing keys first.
 - **Test:** the BUI opens your window under both themes, and each action reaches the server.
 
+### Making a port read as Baron
+
+**tgui comes first.** A port is drawn for tgui, 1:1 with tg. Baron has to map onto it, but never at tgui's cost:
+don't change a tgui colour, size, sheetlet rule or palette token to suit Baron. Under tgui a screenshot must not move by
+a pixel. Baron's look is added on top, by rules that only the Baron sheet has.
+
+**How a port ends up in tgui's colours under Baron.** Anything a style rule sets follows the theme on its own: the
+classes `KsBaronUiSheetlet.Tgui.cs` restyles, and the style properties the self-drawing controls read. A colour set in
+code never goes through a stylesheet, so Baron gets tgui's look there. That covers:
+- `PanelOverride`, `StyleBoxOverride` or `new StyleBoxFlat { BackgroundColor = ... }` filling a surface;
+- a control that draws itself (`Draw`, `KsTguiStyleBox`) from `KsTguiPalettes` constants;
+- `FontColorOverride` with a tgui-only shade, such as `KsTguiPalettes.Label` or `PrimaryBase`.
+
+Seen so far:
+- the late join cards were filled with tg's solid department colours;
+- the lathe's category tabs had tg's blue selection bar.
+
+Text in status colours (`Good`/`Average`/`Bad`), reagent swatches and other colours that carry meaning are fine under
+both themes. Leave them alone.
+
+**How to handle it, in order of preference:**
+1. **Use the library.** `KsTguiButton`, `KsTguiSection`, `KsTguiNoticeBox` and `KsTguiList` rows already have Baron rules.
+   So do the self-drawing controls: progress bar, slider, tabs, knob, gauge, number input and text area.
+2. **A surface a control draws itself:** read the colour from a style property, with tg's value as the fallback in the
+   control. Set the property only in `KsBaronUiSheetlet.Tgui.cs`, so tgui keeps the fallback. Reuse an existing
+   `KsTguiSheetlet.StylePropertyTab*`/`Input*`/`Progress*` before adding one to `KsTguiSheetlet.Themes.cs`. Read it in
+   `StylePropertiesChanged`, as `KsTguiTabItem` and `KsTguiFabricatorTab` do.
+3. **A whole layout tg colours by data** (the late join's department cards): read `KsTguiTheme.ReadEnabled()` once when the
+   window is built, and give Baron its own colours in a separate branch. Keep tg's branch exactly as it was. Under Baron,
+   use the data colour as an accent only (a border, an underline, a bar) on Baron's dark translucent panel
+   (`KsTguiSection.BaronBody`-like), never as a fill.
+
+For new tgui UI, every colour you set in code is a question to ask: what does Baron show here? Then:
+- Add a test that reads the resolved colour under both themes, as `KsBaronTguiControlsTest.FabricatorTabFollowsTheTheme`
+  and `KsTguiLateJoinTest.TheCardsFollowTheTheme` do. It must equal tg's under tgui and differ under Baron.
+- Take a Baron screenshot (game-screenshots skill).
+
 ## Designing an original window
 
 For a window tg never had (a KS14 console, a new machine). It must read as tgui: the same few shapes, tg's own control for each

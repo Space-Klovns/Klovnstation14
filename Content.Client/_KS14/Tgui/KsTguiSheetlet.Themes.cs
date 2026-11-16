@@ -18,6 +18,7 @@ public sealed partial class KsTguiSheetlet
     public const string StylePropertyTabSelectedText = "ks-tgui-tab-selected-text";
     public const string StylePropertyTabSelectedWash = "ks-tgui-tab-selected-wash";
     public const string StylePropertyTabHoverWash = "ks-tgui-tab-hover-wash";
+    public const string StylePropertyTabIndicator = "ks-tgui-tab-indicator";
     public const string StylePropertyWindowBase = "ks-tgui-window-base";
     public const string StylePropertyDimmer = "ks-tgui-dimmer";
     public const string StylePropertyWindowDimmer = "ks-tgui-window-dimmer";
