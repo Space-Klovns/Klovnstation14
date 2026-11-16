@@ -74,6 +74,7 @@ public sealed partial class KsFlashProbeSystem : EntitySystem
         Shots.Add(_gameTiming.CurTick.Value);
     }
 
+
 }
 
 /// <summary>
@@ -85,6 +86,21 @@ public sealed class KsGhostShotTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
+
+    /// <summary>
+    ///     How many shots into the fight it is ended: enough to compare shots with flashes, few enough that nobody has run dry.
+    /// </summary>
+    private const int ShotsBeforeTheFightEnds = 12;
+
+    /// <summary>
+    ///     How long the fight gets to come to that, at most, in ticks.
+    /// </summary>
+    private const int MaxFightTicks = 900;
+
+    /// <summary>
+    ///     A shot within this many ticks of the fight's end means it was still on.
+    /// </summary>
+    private const int FightStillOnTicks = 60;
 
     [Test]
     public async Task TestEveryFlashIsAShot()
@@ -111,6 +127,10 @@ public sealed class KsGhostShotTest : GameTest
 
             var watcherUid = SpawnAt(entManager, "MobHuman", gridUid, 0, 6);
             entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(watcherUid);
+
+            // Only watching: of no faction, so nobody's hostile. Left as it spawns it is one more thing for the operatives
+            //   to shoot at, and the fight below does not end when the test ends it.
+            entManager.System<Content.Shared.NPC.Systems.NpcFactionSystem>().ClearFactions(watcherUid);
             Server.PlayerMan.SetAttachedEntity(ServerSession!, watcherUid);
         });
 
@@ -134,12 +154,21 @@ public sealed class KsGhostShotTest : GameTest
         });
         await Server.WaitPost(() => serverProbe.Shots.Clear());
 
-        await Pair.RunTicksSync(450);
+        // Until the fight is well under way, and no longer: it has to be on when it ends, and they have only so much ammunition.
+        var shotsFired = 0;
+        for (var tick = 0; tick < MaxFightTicks && shotsFired < ShotsBeforeTheFightEnds; tick += 5)
+        {
+            await Pair.RunTicksSync(5);
+            await Server.WaitPost(() => shotsFired = serverProbe.Shots.Count);
+        }
 
         // The fight ends: nothing left to shoot at.
-        await Server.WaitPost(() => entManager.DeleteEntity(hostileUid));
         uint fightEnded = 0;
-        await Server.WaitPost(() => fightEnded = Server.Timing.CurTick.Value);
+        await Server.WaitPost(() =>
+        {
+            entManager.DeleteEntity(hostileUid);
+            fightEnded = Server.Timing.CurTick.Value;
+        });
 
         await Pair.RunTicksSync(450);
 
@@ -186,6 +215,7 @@ public sealed class KsGhostShotTest : GameTest
             Assert.That(flashes.Count(tick => tick > fightEnded + 30), Is.Zero, "no flashes once the shooting has stopped");
             Assert.That(effects.Count(effect => effect.Tick > fightEnded + 30), Is.Zero, "and no effects from anywhere else either");
             Assert.That(shots.Count(tick => tick > fightEnded), Is.Zero, "the test needs the shooting to have stopped");
+            Assert.That(shots.Count(tick => tick + FightStillOnTicks > fightEnded), Is.Not.Zero, "and to have been going on until then");
 
             // A shot or two either side of when the counting started. Past that, something is being shown that was never fired.
             Assert.That(System.Math.Abs(flashes.Count - shots.Count), Is.LessThanOrEqualTo(2), "one flash a shot");
