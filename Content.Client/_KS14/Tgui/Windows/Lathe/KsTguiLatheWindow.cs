@@ -218,6 +218,9 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     /// </summary>
     private void ApplyLayout(bool autolathe)
     {
+        // Baron's taller header, once the window has been opened under it; 0 under tgui.
+        var baronExtra = Content.Client._KS14.BaronUI.KsBaronPortedWindowUIController.ExtraHeight(this);
+
         _autolatheLayout = autolathe;
 
         ContentsContainer.RemoveAllChildren();
@@ -233,8 +236,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         {
             // Autolathe.tsx is 670x600. The queue sits under the designs, so they keep the width: beside them they would be left
             //      with less than half of it. It is only there while it has something to show.
-            MinSize = new Vector2(670f, 450f);
-            SetSize = new Vector2(670f, 600f);
+            MinSize = new Vector2(670f, 450f + baronExtra);
+            SetSize = new Vector2(670f, 600f + baronExtra);
 
             _queueSection.Fill = false;
             _queueSection.MinWidth = 0f;
@@ -254,8 +257,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         }
         else
         {
-            MinSize = new Vector2(760f, 450f);
-            SetSize = new Vector2(940f, 600f);
+            MinSize = new Vector2(760f, 450f + baronExtra);
+            SetSize = new Vector2(940f, 600f + baronExtra);
 
             _queueSection.Fill = true;
             _queueSection.MinWidth = 250f;
@@ -379,12 +382,13 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         foreach (var (category, tabItem) in _categoryTabItems)
             tabItem.Count = categoryCounts.GetValueOrDefault(category);
 
-        const int quantity = 1;
-
         var sortedRecipesToShow = recipesToShow.OrderBy(_lathe.GetRecipeName);
 
         var oldChildCount = _recipeList.ChildCount;
         _entityManager.TryGetComponent(Entity, out LatheComponent? lathe);
+
+        // A click queues the lathe's default amount, as the stock menu's amount box started at: 1 but for the ore processor.
+        var quantity = Math.Max(1, lathe?.DefaultProductionAmount ?? 1);
 
         var idx = 0;
         foreach (var prototype in sortedRecipesToShow)
@@ -408,6 +412,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 row = (KsTguiLatheRecipeRow)_recipeList.GetChild(idx);
             }
 
+            row.ClickAmount = quantity;
             row.SetRecipe(prototype, costs, canProduce, canProduceFive, canProduceTen, MaxPrints(prototype), () => GetRecipeDisplayControl(prototype));
             idx++;
         }

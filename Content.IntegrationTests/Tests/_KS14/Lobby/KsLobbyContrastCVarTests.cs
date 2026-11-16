@@ -44,9 +44,9 @@ public sealed class KsLobbyContrastCVarTests : GameTest
                 Assert.That(lobby.KsViewport.KsDrawShader, Is.Null, "cvar off, viewport");
             });
 
-            // Character setup still blurs with the cvar off.
+            // Character setup doesn't blur the backdrop: with the cvar off it has no shader either.
             await Client.WaitPost(() => lobby.SwitchState(LobbyGui.LobbyGuiState.CharacterSetup));
-            await Client.WaitAssertion(() => Assert.That(lobby.Background.ShaderOverride, Is.Not.Null, "blur"));
+            await Client.WaitAssertion(() => Assert.That(lobby.Background.ShaderOverride, Is.Null, "no blur in character setup"));
 
             // Out of the tree the lobby no longer follows the cvar: switching it back on changes nothing here.
             await Client.WaitPost(() =>

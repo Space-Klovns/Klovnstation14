@@ -55,6 +55,12 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     private bool _canProduceTen;
     private int _maxAmount;
 
+    /// <summary>
+    ///     How many a click on the design queues: tg's 1, or the lathe's <c>DefaultProductionAmount</c> where it sets one (the
+    ///         ore processor's 10), which the stock menu put in its amount box.
+    /// </summary>
+    public int ClickAmount { get; set; } = 1;
+
     public KsTguiLatheRecipeRow(LatheSystem latheSystem)
     {
         _latheSystem = latheSystem;
@@ -77,11 +83,11 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         titleRow.AddChild(_displayContainer);
         titleRow.AddChild(_nameLabel);
         _titleButton.AddChild(titleRow);
-        _titleButton.TooltipSupplier = _ => CostTooltip(1);
+        _titleButton.TooltipSupplier = _ => CostTooltip(ClickAmount);
         _titleButton.OnPressed += _ =>
         {
             if (_canProduce)
-                OnBuild?.Invoke(_recipeId, 1); // tg: multiplier: 1
+                OnBuild?.Invoke(_recipeId, ClickAmount); // tg: multiplier: 1, or the lathe's own default
         };
         _titleButton.DrawModeRefreshed += () => RefreshLook(_titleButton);
         AddChild(_titleButton);

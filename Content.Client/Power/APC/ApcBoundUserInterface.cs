@@ -20,7 +20,7 @@ namespace Content.Client.Power.APC
         protected override void Open()
         {
             base.Open();
-            _menu = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled() /* KS14: tgui window */
+            _menu = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
                 ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Apc.KsTguiApcWindow>()
                 : this.CreateWindow<ApcMenu>();
             _menu.SetEntity(Owner);

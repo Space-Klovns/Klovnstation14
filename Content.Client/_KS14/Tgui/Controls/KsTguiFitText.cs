@@ -139,7 +139,22 @@ public sealed partial class KsTguiFitText : Control
         if (size <= 0 || string.IsNullOrEmpty(text))
             return 0f;
 
-        return StringWidth(_fonts.GetFont(size), text, scale: 1f);
+        // At the scale it is drawn at, back in UI units: glyph advances round per scale, so a width at scale 1 can overflow
+        //     the cell at another.
+        var scale = UIScale;
+        return StringWidth(_fonts.GetFont(size), text, scale) / scale;
+    }
+
+    protected override void UIScaleChanged()
+    {
+        base.UIScaleChanged();
+        Refit();
+    }
+
+    protected override void EnteredTree()
+    {
+        base.EnteredTree();
+        Refit();
     }
 
     /// <summary>

@@ -23,7 +23,7 @@ using Robust.Shared.GameObjects;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The APC and air alarm BUIs open the tgui window with the theme on and the stock one with it off, and every button of
+///     The APC and air alarm BUIs open the tgui window under both themes, and every button of
 ///         the tgui windows raises its action.
 /// </summary>
 [TestOf(typeof(KsTguiApcWindow))]
@@ -54,23 +54,20 @@ public sealed class KsTguiApcAirAlarmWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var window = typeof(ApcBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
-            Assert.That(window is KsTguiApcWindow, Is.EqualTo(tgui));
-            Assert.That(window is ApcMenu, Is.EqualTo(!tgui));
+            Assert.That(window is KsTguiApcWindow, Is.True);
+            Assert.That(window is ApcMenu, Is.False);
 
-            if (tgui)
-            {
-                var apcWindow = (KsTguiApcWindow)window;
-                apcWindow.SetAccessEnabled(true);
+            var apcWindow = (KsTguiApcWindow)window;
+            apcWindow.SetAccessEnabled(true);
 
-                var breakerPresses = 0;
-                apcWindow.OnBreaker += () => breakerPresses++;
+            var breakerPresses = 0;
+            apcWindow.OnBreaker += () => breakerPresses++;
 
-                var buttons = new List<KsTguiButton>();
-                Collect(apcWindow, buttons);
-                Assert.That(buttons, Has.Count.EqualTo(1));
-                Press(buttons[0]);
-                Assert.That(breakerPresses, Is.EqualTo(1));
-            }
+            var buttons = new List<KsTguiButton>();
+            Collect(apcWindow, buttons);
+            Assert.That(buttons, Has.Count.EqualTo(1));
+            Press(buttons[0]);
+            Assert.That(breakerPresses, Is.EqualTo(1));
 
             bui.Dispose();
         });
@@ -96,14 +93,8 @@ public sealed class KsTguiApcAirAlarmWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var window = typeof(AirAlarmBoundUserInterface).GetField("_window", Any)!.GetValue(bui);
-            Assert.That(window is KsTguiAirAlarmWindow, Is.EqualTo(tgui));
-            Assert.That(window is AirAlarmWindow, Is.EqualTo(!tgui));
-
-            if (!tgui)
-            {
-                bui.Dispose();
-                return;
-            }
+            Assert.That(window is KsTguiAirAlarmWindow, Is.True);
+            Assert.That(window is AirAlarmWindow, Is.False);
 
             var airWindow = (KsTguiAirAlarmWindow)window;
             airWindow.SetAccessEnabled(true);

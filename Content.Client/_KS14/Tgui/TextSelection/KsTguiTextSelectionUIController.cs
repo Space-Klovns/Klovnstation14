@@ -504,7 +504,8 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
             if (ancestor.HasStyleClass(DefaultWindow.StyleClassWindowHeader))
                 return false;
 
-            if (ancestor is LobbyGui)
+            // The lobby's own text is not, but its chat is, as in game. The walk goes up, so the chat is met first.
+            if (ancestor is LobbyGui && !inChat)
                 return false;
 
             if (ancestor is ChatBox)

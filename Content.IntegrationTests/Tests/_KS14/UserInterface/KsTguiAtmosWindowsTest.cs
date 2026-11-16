@@ -27,7 +27,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The gas devices' bound user interfaces open the tgui window under the tgui theme and the stock one otherwise, and
+///     The gas devices' bound user interfaces open the tgui window under both themes, and
 ///         each tgui window raises the actions the stock window does.
 /// </summary>
 [TestOf(typeof(KsTguiAtmosWindows))]
@@ -75,8 +75,8 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.Any(window => window.GetType() == tguiWindow), Is.EqualTo(tgui));
-            Assert.That(windows.Any(window => window.GetType() == stockWindow), Is.EqualTo(!tgui));
+            Assert.That(windows.Any(window => window.GetType() == tguiWindow), Is.True);
+            Assert.That(windows.Any(window => window.GetType() == stockWindow), Is.False);
         });
     }
 

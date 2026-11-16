@@ -296,8 +296,8 @@ public sealed class KsTguiMaterialListTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiOreSiloWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<OreSiloMenu>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiOreSiloWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<OreSiloMenu>().Any(), Is.False);
         });
     }
 

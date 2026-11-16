@@ -86,10 +86,6 @@ public sealed class KsWindowContentsFitTest : GameTest
                 if (type.IsAbstract || !modLoader.IsContentType(type) || type.GetConstructor(Type.EmptyTypes) == null)
                     continue;
 
-                // tgui's own windows never open under Baron, whose header is taller.
-                if (!tgui && type.Namespace?.StartsWith("Content.Client._KS14.Tgui") == true)
-                    continue;
-
                 var window = (FancyWindow)typeFactory.CreateInstance(type, oneOff: true, inject: false);
 
                 // Closed again before layout runs: arranging an empty window isn't what's being tested, and some

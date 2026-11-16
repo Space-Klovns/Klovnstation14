@@ -10,6 +10,6 @@ public static class KsLateJoinWindowFactory
 {
     public static BaseWindow Create()
     {
-        return KsTguiTheme.ReadEnabled() ? new KsTguiLateJoinWindow() : new LateJoinGui();
+        return KsTguiTheme.UsePortedWindows() ? new KsTguiLateJoinWindow() : new LateJoinGui();
     }
 }

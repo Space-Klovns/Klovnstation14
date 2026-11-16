@@ -27,6 +27,11 @@ namespace Content.Client.Communications.UI
             _menu.OnBroadcast += BroadcastButtonPressed;
             _menu.OnAlertLevel += AlertLevelSelected;
             _menu.OnEmergencyLevel += EmergencyShuttleButtonPressed; // KS14: Evac reason text
+
+            // KS14 start: an antagonist's console opens in its own tgui theme
+            if (EntMan.TryGetComponent<Content.Shared._KS14.Tgui.KsTguiUiThemeComponent>(Owner, out var ksTheme))
+                _menu.KsTheme = ksTheme.Theme;
+            // KS14 end
         }
 
         public void AlertLevelSelected(string level)

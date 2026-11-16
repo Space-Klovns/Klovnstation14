@@ -86,7 +86,7 @@
 
 - type: rcd
   id: KsTemperatureGate
-  category: AtmosphericUtility
+  category: PumpsValves
   sprite: /Textures/_KS14/Interface/Radial/RPD/temperature_gate.png
   mode: ConstructObject
   prototype: KsTemperatureGate

@@ -24,7 +24,19 @@ public sealed class KsTguiSection : KsSectionPanel
     /// </summary>
     public const string StyleClassNestedTitle = "KsTguiSectionNestedTitle";
 
+    /// <summary>
+    ///     On the title row of every section, for a theme that draws it differently from a bare <see cref="KsSectionTitle"/>.
+    ///         The tgui sheet has no rule for it; Baron gives it a line (<c>KsBaronUiSheetlet.Tgui.cs</c>).
+    /// </summary>
+    public const string StyleClassTitleRow = "KsTguiSectionTitleRow";
+
     private static readonly Thickness BodyPadding = new(6f, 8f, 6f, 8f);
+
+    /// <summary>
+    ///     The body under Baron: its old flat <c>#1B1B1E</c>, translucent, so the window's grainy texture shows through while the
+    ///         sections still read as groups and their text stays legible. Tgui never reads it; it draws the sheet's box.
+    /// </summary>
+    public static readonly Color BaronBody = Color.FromHex("#1B1B1E").WithAlpha(0.35f);
 
     private readonly BoxContainer _root;
     private readonly KsSectionTitle _titlePanel;
@@ -47,7 +59,7 @@ public sealed class KsTguiSection : KsSectionPanel
 
     public KsTguiSection()
     {
-        BaronColor = Color.FromHex("#1B1B1E");
+        BaronColor = BaronBody;
 
         _titleLabel = new Label();
         _titleLabel.AddStyleClass(StyleClass.LabelHeading);
@@ -56,6 +68,7 @@ public sealed class KsTguiSection : KsSectionPanel
         _titleRow = new TitleRow(_titleLabel, _buttonsSlot);
 
         _titlePanel = new KsSectionTitle { Visible = false };
+        _titlePanel.AddStyleClass(StyleClassTitleRow);
         _titlePanel.AddChild(_titleRow);
 
         _content = new BoxContainer
@@ -231,6 +244,9 @@ public sealed class KsTguiSection : KsSectionPanel
 
         _depth = depth;
         Transparent = depth > 0;
+
+        // Under Baron too, a nested section lets the outer body show rather than darkening it a second time.
+        BaronColor = depth > 0 ? null : BaronBody;
         if (depth > 0)
             _titlePanel.AddStyleClass(StyleClassNestedTitle);
         else

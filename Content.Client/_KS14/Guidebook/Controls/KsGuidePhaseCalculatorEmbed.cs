@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Content.Client.Guidebook.Richtext;
 using Content.Client.Message;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
@@ -19,6 +20,11 @@ namespace Content.Client._KS14.Guidebook.Controls;
 ///         from the same curve pipes use: <c>&lt;KsGuidePhaseCalculatorEmbed/&gt;</c>, or with
 ///         <c>Reagents="Water,Ammonia"</c> to list only those. By default it lists every reagent with Fluidmos data.
 /// </summary>
+/// <remarks>
+///     Each input has its own answer right under it, in a section of their own: the pressure gives the boiling point, the
+///         temperature the vapor pressure, and neither changes the other's. The melting and critical points belong to the
+///         substance alone, so they sit outside it, under the substance's dropdown.
+/// </remarks>
 [UsedImplicitly]
 public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumentTag
 {
@@ -30,7 +36,9 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
     private readonly OptionButton _reagentButton = new() { HorizontalExpand = true };
     private readonly LineEdit _pressureEdit = new() { Text = "101.325", HorizontalExpand = true };
     private readonly LineEdit _temperatureEdit = new() { Text = "293.15", HorizontalExpand = true };
-    private readonly RichTextLabel _result = new() { HorizontalExpand = true, Margin = new Thickness(0, 6, 0, 0) };
+    private readonly RichTextLabel _pressureResult = new() { HorizontalExpand = true, Margin = new Thickness(0, 0, 0, 4) };
+    private readonly RichTextLabel _temperatureResult = new() { HorizontalExpand = true };
+    private readonly RichTextLabel _substanceResult = new() { HorizontalExpand = true, Margin = new Thickness(0, 4, 0, 0) };
     private readonly List<ReagentPrototype> _reagents = new();
 
     public KsGuidePhaseCalculatorEmbed()
@@ -51,7 +59,26 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
     /// </summary>
     public IReadOnlyList<ReagentPrototype> Reagents => _reagents;
 
-    public string ResultText => _result.GetMessage() ?? string.Empty;
+    /// <summary>
+    ///     What the pressure gives: where the substance boils at it.
+    /// </summary>
+    public string PressureResultText => _pressureResult.GetMessage() ?? string.Empty;
+
+    /// <summary>
+    ///     What the temperature gives: the substance's vapor pressure at it. Empty when the substance never boils.
+    /// </summary>
+    public string TemperatureResultText => _temperatureResult.Visible ? _temperatureResult.GetMessage() ?? string.Empty : string.Empty;
+
+    /// <summary>
+    ///     What belongs to the substance alone: where it melts, and its critical point.
+    /// </summary>
+    public string SubstanceResultText => _substanceResult.GetMessage() ?? string.Empty;
+
+    /// <summary>
+    ///     Every answer shown, one per line.
+    /// </summary>
+    public string ResultText => string.Join("\n", new[] { PressureResultText, TemperatureResultText, SubstanceResultText }
+        .Where(text => text.Length > 0));
 
     public bool TryParseTag(Dictionary<string, string> args, [NotNullWhen(true)] out Control? control)
     {
@@ -96,17 +123,27 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         _reagentButton.OnItemSelected += args =>
         {
             _reagentButton.SelectId(args.Id);
-            UpdateResult();
+            UpdateResults();
         };
-        _pressureEdit.OnTextChanged += _ => UpdateResult();
-        _temperatureEdit.OnTextChanged += _ => UpdateResult();
+        _pressureEdit.OnTextChanged += _ => UpdatePressureResult();
+        _temperatureEdit.OnTextChanged += _ => UpdateTemperatureResult();
 
         AddChild(MakeRow("ks-guidebook-phase-calculator-reagent", _reagentButton));
-        AddChild(MakeRow("ks-guidebook-phase-calculator-pressure", _pressureEdit));
-        AddChild(MakeRow("ks-guidebook-phase-calculator-temperature", _temperatureEdit));
-        AddChild(_result);
 
-        UpdateResult();
+        // A tgui section under the tgui theme, a dark panel under Baron: either way, a box that says these inputs and their
+        //      answers go together, and that the substance's own points below don't depend on them.
+        var inputs = new KsTguiSection { Margin = new Thickness(0, 4, 0, 0) };
+        var inputsBox = new BoxContainer { Orientation = LayoutOrientation.Vertical, HorizontalExpand = true };
+        inputsBox.AddChild(MakeRow("ks-guidebook-phase-calculator-pressure", _pressureEdit));
+        inputsBox.AddChild(_pressureResult);
+        inputsBox.AddChild(MakeRow("ks-guidebook-phase-calculator-temperature", _temperatureEdit));
+        inputsBox.AddChild(_temperatureResult);
+        inputs.XamlChildren.Add(inputsBox);
+        AddChild(inputs);
+
+        AddChild(_substanceResult);
+
+        UpdateResults();
         control = this;
         return true;
     }
@@ -119,60 +156,109 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         _reagentButton.SelectId(reagentIndex);
         _pressureEdit.Text = pressure;
         _temperatureEdit.Text = temperature;
-        UpdateResult();
+        UpdateResults();
     }
 
-    private void UpdateResult()
+    /// <summary>
+    ///     Types a pressure alone, as a player would, for tests.
+    /// </summary>
+    public void SetPressure(string pressure)
+    {
+        _pressureEdit.Text = pressure;
+        UpdatePressureResult();
+    }
+
+    /// <summary>
+    ///     Types a temperature alone, as a player would, for tests.
+    /// </summary>
+    public void SetTemperature(string temperature)
+    {
+        _temperatureEdit.Text = temperature;
+        UpdateTemperatureResult();
+    }
+
+    private bool TryGetProperties([NotNullWhen(true)] out KsFluidReagentProperties? properties)
     {
         var reagent = _reagents[Math.Clamp(_reagentButton.SelectedId, 0, _reagents.Count - 1)];
-        var propertiesSystem = _entitySystemManager.GetEntitySystem<KsFluidmosPropertiesSystem>();
-        if (!propertiesSystem.TryGetProperties(reagent.ID, out var properties))
+        return _entitySystemManager.GetEntitySystem<KsFluidmosPropertiesSystem>().TryGetProperties(reagent.ID, out properties);
+    }
+
+    /// <summary>
+    ///     The substance changed: every answer is new.
+    /// </summary>
+    private void UpdateResults()
+    {
+        UpdatePressureResult();
+        UpdateTemperatureResult();
+        UpdateSubstanceResult();
+    }
+
+    private void UpdatePressureResult()
+    {
+        if (!TryGetProperties(out var properties))
         {
-            _result.SetMarkup(string.Empty);
+            _pressureResult.SetMarkup(string.Empty);
             return;
         }
 
-        var lines = new List<string>();
-        var pressure = ParseNumber(_pressureEdit.Text);
-        var temperature = ParseNumber(_temperatureEdit.Text);
-
+        // Nothing makes it boil: one answer for both inputs, in the pressure's place, and the temperature's is hidden.
         if (!properties.Volatile)
         {
-            lines.Add(Loc.GetString("ks-guidebook-phase-calculator-never-boils"));
+            _pressureResult.SetMarkup(Loc.GetString("ks-guidebook-phase-calculator-never-boils"));
+            return;
         }
-        else
+
+        var pressure = ParseNumber(_pressureEdit.Text);
+        if (pressure is not > 0f)
         {
-            var boilingPoint = pressure is > 0f
-                ? KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure.Value)
-                : float.NaN;
-            var vaporPressure = temperature is > 0f
-                ? KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature.Value)
-                : float.NaN;
-
-            // Either one meaning it never boils makes the other moot, and would contradict it: one line says so instead. A
-            //     vapor pressure under the pipes' own floor is one they treat as not evaporating at all.
-            if (float.IsPositiveInfinity(boilingPoint))
-            {
-                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-never-boils-pressure"));
-            }
-            else if (vaporPressure < KsFluidmos.MinActivePressure)
-            {
-                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-never-boils-temperature"));
-            }
-            else
-            {
-                lines.Add(float.IsNaN(boilingPoint)
-                    ? Loc.GetString("ks-guidebook-phase-calculator-bad-pressure")
-                    : Loc.GetString("ks-guidebook-phase-calculator-boils", ("kelvin", boilingPoint), ("celsius", boilingPoint - Atmospherics.T0C)));
-                lines.Add(float.IsNaN(vaporPressure)
-                    ? Loc.GetString("ks-guidebook-phase-calculator-bad-temperature")
-                    : Loc.GetString("ks-guidebook-phase-calculator-vapor-pressure", ("kpa", vaporPressure)));
-            }
+            _pressureResult.SetMarkup(Loc.GetString("ks-guidebook-phase-calculator-bad-pressure"));
+            return;
         }
 
-        lines.Add(properties.Freezable
-            ? Loc.GetString("ks-guidebook-phase-calculator-melts", ("kelvin", properties.MeltingPoint), ("celsius", properties.MeltingPoint - Atmospherics.T0C))
-            : Loc.GetString("ks-guidebook-phase-calculator-never-freezes"));
+        var boilingPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure.Value);
+        _pressureResult.SetMarkup(float.IsPositiveInfinity(boilingPoint)
+            ? Loc.GetString("ks-guidebook-phase-calculator-never-boils-pressure")
+            : Loc.GetString("ks-guidebook-phase-calculator-boils", ("kelvin", boilingPoint), ("celsius", boilingPoint - Atmospherics.T0C)));
+    }
+
+    private void UpdateTemperatureResult()
+    {
+        if (!TryGetProperties(out var properties) || !properties.Volatile)
+        {
+            _temperatureResult.Visible = false;
+            _temperatureResult.SetMarkup(string.Empty);
+            return;
+        }
+
+        _temperatureResult.Visible = true;
+        var temperature = ParseNumber(_temperatureEdit.Text);
+        if (temperature is not > 0f)
+        {
+            _temperatureResult.SetMarkup(Loc.GetString("ks-guidebook-phase-calculator-bad-temperature"));
+            return;
+        }
+
+        // A vapor pressure under the pipes' own floor is one they treat as not evaporating at all.
+        var vaporPressure = KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature.Value);
+        _temperatureResult.SetMarkup(vaporPressure < KsFluidmos.MinActivePressure
+            ? Loc.GetString("ks-guidebook-phase-calculator-never-boils-temperature")
+            : Loc.GetString("ks-guidebook-phase-calculator-vapor-pressure", ("kpa", vaporPressure)));
+    }
+
+    private void UpdateSubstanceResult()
+    {
+        if (!TryGetProperties(out var properties))
+        {
+            _substanceResult.SetMarkup(string.Empty);
+            return;
+        }
+
+        var lines = new List<string>
+        {
+            properties.Freezable
+                ? Loc.GetString("ks-guidebook-phase-calculator-melts", ("kelvin", properties.MeltingPoint), ("celsius", properties.MeltingPoint - Atmospherics.T0C))
+                : Loc.GetString("ks-guidebook-phase-calculator-never-freezes"),
+        };
 
         if (properties.Linked && float.IsFinite(properties.CriticalTemperature))
         {
@@ -183,7 +269,7 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         }
 
         // Markup, so the numbers stand out from the words around them.
-        _result.SetMarkup(string.Join("\n", lines));
+        _substanceResult.SetMarkup(string.Join("\n", lines));
     }
 
     /// <summary>

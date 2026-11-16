@@ -31,7 +31,7 @@ namespace Content.Client.PDA
         private void CreateMenu()
         {
             // KS14 start: tgui theme gets its own window
-            _menu = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled()
+            _menu = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
                 ? this.CreateWindowCenteredLeft<Content.Client._KS14.Tgui.Windows.Pda.KsTguiPdaWindow>()
                 : this.CreateWindowCenteredLeft<PdaMenu>();
             // KS14 end

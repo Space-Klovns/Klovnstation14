@@ -1,18 +1,15 @@
-using System.Globalization;
 using System.Numerics;
-using Content.Shared._KS14.CCVar;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 
 namespace Content.Client._KS14.Tgui.Chat;
 
 /// <summary>
 ///     The floating window tgui-say lives in when the chat has no docked bar: a <see cref="KsTguiSayBar"/> with a drag zone at
-///         its right edge. It sits in the game screen's layout container, shown by the chat-focus keybinds and hidden when
-///         the message is sent or escaped. Where it was dragged to is kept.
+///         its right edge. It sits in the game screen's layout container, shown by the chat-focus keybinds just under the
+///         mouse pointer, where the player is looking, and hidden when the message is sent or escaped.
 /// </summary>
 public sealed partial class KsTguiSayWindow : Control
 {
@@ -22,11 +19,11 @@ public sealed partial class KsTguiSayWindow : Control
     public const float GripWidth = 14f;
 
     /// <summary>
-    ///     Where it first opens, as a fraction of the screen: low and central, above the hotbar.
+    ///     How far under the pointer its top edge opens, so the pointer doesn't cover the text.
     /// </summary>
-    private static readonly Vector2 DefaultPosition = new(0.5f, 0.74f);
+    public const float PointerGap = 16f;
 
-    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
 
     private readonly BoxContainer _row;
     private readonly Grip _grip;
@@ -57,36 +54,29 @@ public sealed partial class KsTguiSayWindow : Control
     }
 
     /// <summary>
-    ///     Opens it at its remembered place, or at the default.
+    ///     Opens it just under the mouse pointer.
     /// </summary>
     public void Open()
+    {
+        OpenUnder(_userInterfaceManager.MousePositionScaled.Position);
+    }
+
+    /// <summary>
+    ///     Opens it centred under a point of the screen, in UI units, kept on screen.
+    /// </summary>
+    public void OpenUnder(Vector2 pointer)
     {
         if (Parent == null)
             return;
 
         Visible = true;
-        MoveTo(RememberedPosition());
+        var local = pointer - Parent.GlobalPosition;
+        MoveTo(new Vector2(local.X - KsTguiSayBar.WindowWidth / 2f, local.Y + PointerGap));
     }
 
     public void Close()
     {
         Visible = false;
-    }
-
-    private Vector2 RememberedPosition()
-    {
-        var fraction = DefaultPosition;
-        var parts = _configurationManager.GetCVar(KsCCVars.TguiSayPosition).Split(',');
-        if (parts.Length == 2
-            && float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var x)
-            && float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var y)
-            && float.IsFinite(x) && float.IsFinite(y))
-        {
-            fraction = new Vector2(x, y);
-        }
-
-        var size = Parent!.Size;
-        return new Vector2(fraction.X * size.X - KsTguiSayBar.WindowWidth / 2f, fraction.Y * size.Y);
     }
 
     /// <summary>
@@ -104,19 +94,6 @@ public sealed partial class KsTguiSayWindow : Control
 
         LayoutContainer.SetAnchorPreset(this, LayoutContainer.LayoutPreset.TopLeft);
         LayoutContainer.SetPosition(this, position);
-    }
-
-    private void RememberPosition()
-    {
-        if (Parent == null || Parent.Size.X <= 0f || Parent.Size.Y <= 0f)
-            return;
-
-        var centre = new Vector2(Position.X + KsTguiSayBar.WindowWidth / 2f, Position.Y);
-        // TODO SANDBOX: string.Create(CultureInfo.InvariantCulture, $"...") would say this in one line, but isn't whitelisted.
-        var fractionX = (centre.X / Parent.Size.X).ToString("0.####", CultureInfo.InvariantCulture);
-        var fractionY = (centre.Y / Parent.Size.Y).ToString("0.####", CultureInfo.InvariantCulture);
-        var text = fractionX + "," + fractionY;
-        _configurationManager.SetCVar(KsCCVars.TguiSayPosition, text);
     }
 
     /// <summary>
@@ -153,7 +130,6 @@ public sealed partial class KsTguiSayWindow : Control
                 return;
 
             _grabOffset = null;
-            _window.RememberPosition();
             args.Handle();
         }
 

@@ -6,6 +6,8 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui;
 using Content.Client._KS14.Tgui.TextSelection;
+using Content.Client.Lobby.UI;
+using Content.Client.UserInterface.Systems.Chat.Widgets;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
@@ -418,5 +420,48 @@ public sealed class KsTguiTextSelectionTest : GameTest
             Assert.That(controller.SelectedText, Is.Null);
             window!.Close();
         });
+    }
+    /// <summary>
+    ///     The lobby's chat output is selectable, as the chat in game is; the rest of the lobby is not (#457).
+    /// </summary>
+    [Test]
+    public async Task TheLobbyChatIsSelectable()
+    {
+        await SetTheme(true);
+
+        LobbyGui? lobby = null;
+        await Client.WaitPost(() =>
+        {
+            lobby = new LobbyGui();
+            Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.AddChild(lobby);
+        });
+        await Pair.RunTicksSync(5);
+
+        try
+        {
+            await Client.WaitAssertion(() =>
+            {
+                var controller = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<KsTguiTextSelectionUIController>();
+                var chatOutput = Descendants(Descendants(lobby!).OfType<ChatBox>().Single()).OfType<OutputPanel>().Single();
+                Assert.That(controller.IsSelectable(chatOutput), Is.True, "the lobby chat's output");
+
+                var lobbyLabel = Descendants(lobby!).OfType<Label>().First(label => !Descendants(Descendants(lobby!).OfType<ChatBox>().Single()).Contains(label));
+                Assert.That(controller.IsSelectable(lobbyLabel), Is.False, "a label of the lobby's own");
+            });
+        }
+        finally
+        {
+            await Client.WaitPost(() => lobby!.Orphan());
+        }
+    }
+
+    private static IEnumerable<Control> Descendants(Control control)
+    {
+        foreach (var child in control.Children)
+        {
+            yield return child;
+            foreach (var descendant in Descendants(child))
+                yield return descendant;
+        }
     }
 }

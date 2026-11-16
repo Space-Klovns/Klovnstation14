@@ -27,7 +27,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The lathe's BUI opens the tgui window under the tgui theme and the stock menu otherwise, and the tgui window's
+///     The lathe's BUI opens the tgui window under both themes, and the tgui window's
 ///         designs, queue and material bar send what the stock menu does.
 /// </summary>
 [TestOf(typeof(KsTguiLatheWindow))]
@@ -79,8 +79,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiLatheWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<LatheMenu>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiLatheWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<LatheMenu>().Any(), Is.False);
         });
     }
 
@@ -1027,23 +1027,19 @@ public sealed class KsTguiLatheWindowTest : GameTest
         bool Shows(string text)
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children;
-            Control window = tgui ? windows.OfType<KsTguiLatheWindow>().Single() : windows.OfType<LatheMenu>().Single();
-            return tgui
-                ? Descendants<KsTguiLabeledListItem>(window).Any(item => item.Visible && item.Text == text)
-                : Descendants<Label>(window).Any(label => label.Visible && label.Text == text);
+            // Both themes open the tgui window.
+            var window = windows.OfType<KsTguiLatheWindow>().Single();
+            return Descendants<KsTguiLabeledListItem>(window).Any(item => item.Visible && item.Text == text);
         }
 
-        string Expected(int points) => tgui
-            ? Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-number", ("number", points))
-            : Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
+        string Expected(int points) => Robust.Shared.Localization.Loc.GetString("ks-salvage-tablet-number", ("number", points));
 
         await SetPoints(42f);
         await Client.WaitAssertion(() =>
         {
             Assert.That(Shows(Expected(42)), Is.True, "The window must show the points the smelter holds.");
-            if (tgui)
-                Assert.That(Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single().QueueShown, Is.True,
-                    "A smelter's section must show even with nothing queued.");
+            Assert.That(Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single().QueueShown, Is.True,
+                "A smelter's section must show even with nothing queued.");
         });
 
         await SetPoints(0f);

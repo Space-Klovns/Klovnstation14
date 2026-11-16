@@ -21,7 +21,7 @@ namespace Content.Client.Wires.UI
         {
             base.Open();
             // KS14 start: tgui theme gets its own window
-            if (Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled())
+            if (Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */)
             {
                 _ksTguiMenu = this.CreateWindow<Content.Client._KS14.Tgui.Windows.Wires.KsTguiWiresWindow>();
                 _ksTguiMenu.OnAction += PerformAction;

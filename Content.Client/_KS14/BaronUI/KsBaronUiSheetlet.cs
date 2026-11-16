@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Client._KS14.SalvageTablet;
 using Content.Client._KS14.Tgui;
 using Content.Client.Resources;
@@ -18,7 +19,7 @@ namespace Content.Client._KS14.BaronUI;
 /// Provides the Baron UI chrome without extending the upstream stylesheet configuration interfaces.
 /// The textures are temporary assets imported from brapmine's Baron UI implementation.
 /// </summary>
-public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
+public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
 {
     public const string ButtonStyle1 = "KsBaronButtonStyle1";
     public const string ButtonStyle2 = "KsBaronButtonStyle2";
@@ -221,6 +222,11 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
+            // The ported tgui windows, which Baron opens too (KsBaronUiSheetlet.Tgui.cs).
+            .. TguiControlRules(regularFont, boldFont, regularFontSmall),
+
+            // After the tgui control rules: the cart's - and + are transparent tgui buttons, and their own rules, as
+            //      specific as the transparent button's, win by coming later.
             .. KsSalvageTabletStyleClasses.Rules(
                 tracked: Color.FromHex("#5BA85B"),
                 requested: Color.FromHex("#E8A33D"),
@@ -248,6 +254,21 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
                 .Box(empty).Modulate(Color.White),
             E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoDisabled()
                 .Box(empty).Modulate(Color.White),
+
+            // The cart's - and + are tgui buttons, which Baron styles with rules on the KsTguiButton type; these,
+            //      as specific and later, keep them bare.
+            .. new[]
+            {
+                ContainerButton.StylePseudoClassNormal,
+                ContainerButton.StylePseudoClassHover,
+                ContainerButton.StylePseudoClassPressed,
+                ContainerButton.StylePseudoClassDisabled,
+            }.Select(pseudo => E<Content.Client._KS14.Tgui.Controls.KsTguiButton>()
+                .Class(ContainerButton.StyleClassButton)
+                .Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Pseudo(pseudo)
+                .Box(empty)
+                .Modulate(Color.White)),
         ];
     }
 

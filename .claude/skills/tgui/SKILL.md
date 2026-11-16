@@ -119,7 +119,12 @@ dark overlays on near-base content only. A light colour over varied content, or 
 
 ## Porting a tgui interface 1:1
 
-The stock window stays, because it's what Baron shows. The pattern, as in `Content.Client/_KS14/Tgui/Windows/Fax/`:
+**Both themes open the port**: the BUI's choice reads `KsTguiTheme.UsePortedWindows()` (always true), and Baron skins
+the control library through `KsBaronUiSheetlet.Tgui.cs` (tinted button_3 per colour, green selected, flat notice colours, a
+section title line, Baron colours for the self-drawing controls). A port must therefore work under Baron too: no class that only
+the tgui sheet styles may carry meaning on its own, and `KsBaronPortedWindowUIController` adds Baron's taller header to a stated
+height when the window opens (a window that restates its height later adds `KsBaronPortedWindowUIController.ExtraHeight(this)`).
+The stock window stays in the tree, unopened, to keep upstream merges small. The pattern, as in `Content.Client/_KS14/Tgui/Windows/Fax/`:
 
 1. New window in `Content.Client/_KS14/Tgui/Windows/<Feature>/KsTgui<Feature>Window.cs`, `: FancyWindow`, so it gets the
    title bar and drag. Title, size, then contents built from the library.
@@ -128,7 +133,7 @@ The stock window stays, because it's what Baron shows. The pattern, as in `Conte
 3. The stock BUI picks, in a marked block:
    ```csharp
    // KS14 start: the tgui theme gets its own layout
-   _window = KsTguiTheme.ReadEnabled()
+   _window = KsTguiTheme.UsePortedWindows()
        ? this.CreateWindow<KsTguiFaxWindow>()
        : (IKsFaxWindow)this.CreateWindow<FaxWindow>();
    // KS14 end
@@ -143,7 +148,7 @@ Rules for a port:
   server already supports it or it's a small addition.
 - **Don't change networking** unless it's essential.
 - **Strings** go in `Resources/Locale/<culture>/_KS14/tgui/<feature>.ftl`, in en-US and ru-RU. Reuse existing keys first.
-- **Test:** the BUI opens your window with the theme on and the stock one with it off, and each action reaches the server.
+- **Test:** the BUI opens your window under both themes, and each action reaches the server.
 
 ## Designing an original window
 

@@ -17,7 +17,7 @@ public sealed partial class OreSiloBoundUserInterface(EntityUid owner, Enum uiKe
         base.Open();
 
         // KS14 start: the tgui theme opens its own window
-        _menu = KsTguiTheme.ReadEnabled()
+        _menu = KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
             ? this.CreateWindow<KsTguiOreSiloWindow>()
             : this.CreateWindow<OreSiloMenu>();
         // KS14 end
