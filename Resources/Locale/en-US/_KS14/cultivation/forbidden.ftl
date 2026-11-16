@@ -64,6 +64,7 @@ cultivation-talisman-seals-jiangshi = {CAPITALIZE(THE($user))} slaps a talisman 
 
 cultivation-exploding-heart-dead = There's no heart left to burst.
 cultivation-exploding-heart-already = Five points are already lodged there.
+cultivation-exploding-heart-duel = Not in an honor duel!
 cultivation-exploding-heart-armored = {CAPITALIZE(THE($user))} jabs five fingers at {POSS-ADJ($target)} chest, but the armour turns them aside!
 cultivation-exploding-heart-struck = {CAPITALIZE(POSS-ADJ($user))} fingers dart five times against {POSS-ADJ($target)} chest, too fast to follow!
 cultivation-exploding-heart-victim = Five points around your heart burn like coals. Something is counting your steps. Stand still and find a cultivator to unseal it!

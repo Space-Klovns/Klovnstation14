@@ -135,6 +135,12 @@ ACTIONS.update({
     "summon_beast": ("召", "jade"),
 })
 
+# The jianghu.
+ACTIONS.update({
+    "duel": ("决", "red"),
+    "yield": ("让", "tan"),
+})
+
 # The Demonic Path.
 ACTIONS.update({
     "devouring_art": ("噬", "crimson"),

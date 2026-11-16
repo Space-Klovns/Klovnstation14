@@ -67,6 +67,23 @@ The arts are in `ForbiddenArtsSystem.ForbiddenTechniques`, granted by realm alon
 Every art adds taint, which fades by two a minute and lowers breakthrough readiness by up to 30. Spiritual Sense
 smells the path, gu worms, jiangshi, a planted palm and the stained hands that struck it.
 
+## The jianghu
+
+`JianghuSystem`, the martial world.
+
+- **Face** is reputation, kept in `JianghuFaceComponent` on the *mind* so it survives a change of body. A body
+  whose mind has been noticed gets `JianghuExamineComponent`, which shows the title (Rising Talent at 5, Renowned
+  Hero at 15, Martial Legend at 30; Shamed below 0, Disgraced at -10) and any recent disgrace on examine.
+- **Honor duels:** cultivators and body cultivators get Challenge to Duel. Consent goes through the McqDialogue
+  prompt: a challenger holding something is first asked whether to wager it, then the one challenged can accept,
+  accept wagering what they hold, or refuse (unanswered challenges lapse after 20 seconds). Stakes wait in a
+  container on their owner. The duel ends when a fighter is down, stamina-critical or three quarters of the way to
+  critical condition, yields, flees past 12 tiles, vanishes, or three minutes pass (a draw: both gain 1 face and keep
+  their stakes). The winner gains 5 face and every stake; the loser loses 2, or 5 for fleeing. Winner and
+  cultivators watching gain insight, at most every two minutes. A third party who damages a duelist is disgraced for
+  ten minutes and loses 5 face. `HonorDuelResolvingEvent` lets anything raise the face a win is worth;
+  `HonorDuelFinishedEvent` reports the result. The Exploding Heart Palm can't be used in a duel.
+
 ## Martial arts
 
 `martialArt` prototypes, learned from `MartialArtManualComponent` items through `SharedMartialArtsSystem`:
@@ -120,8 +137,8 @@ and copyright metadata. Run them from the repository root with Pillow installed.
 ## Tests
 
 `Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
-the body path and the Demonic Path, and `CultivationLocaleTest` checks every cultivation locale key resolves
+the body path, the Demonic Path and the jianghu, and `CultivationLocaleTest` checks every cultivation locale key resolves
 (`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
-concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) have been checked
+concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
 by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads
 as "not dead". The rest still need the same check.

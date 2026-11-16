@@ -42,6 +42,7 @@ public sealed partial class CultivationSystem : EntitySystem
     public static readonly (EntProtoId Action, CultivationRealm Realm)[] UniversalTechniques =
     {
         ("ActionCultivationSpiritualSense", CultivationRealm.QiCondensation),
+        ("ActionJianghuDuel", CultivationRealm.QiCondensation),
         ("ActionCultivationEmptyPalm", CultivationRealm.QiCondensation),
         ("ActionCultivationQinggong", CultivationRealm.QiCondensation),
         ("ActionCultivationWriteTalisman", CultivationRealm.QiCondensation),

@@ -47,6 +47,13 @@ public sealed partial class ForbiddenArtsSystem
             return;
         }
 
+        // An honor duel is fought with honor.
+        if (HasComp<HonorDuelComponent>(entity) || HasComp<HonorDuelComponent>(victimUid))
+        {
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-duel"), entity, entity);
+            return;
+        }
+
         if (HasComp<ExplodingHeartComponent>(victimUid))
         {
             _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-already"), entity, entity);

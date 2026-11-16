@@ -97,7 +97,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationExplodingHeartPalm
   name: Five-Point Exploding Heart Palm
-  description: Strike five points around the heart of someone beside you. After five steps, one more for every realm they stand above you, their heart bursts. Standing still is safe. Acupoint Sealing or two cycles of meditation undo it. Heavy armour turns your fingers aside, and your palms reek of it for five minutes. 60 qi.
+  description: Strike five points around the heart of someone beside you. After five steps, one more for every realm they stand above you, their heart bursts. Standing still is safe. Acupoint Sealing or two cycles of meditation undo it. Heavy armour turns your fingers aside, it can't be used in an honor duel, and your palms reek of it for five minutes. 60 qi.
   components:
   - type: Action
     useDelay: 180

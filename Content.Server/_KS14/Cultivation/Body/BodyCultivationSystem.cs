@@ -52,6 +52,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         ("ActionBodyForge", 0),
         ("ActionBodyTribulation", 0),
+        ("ActionJianghuDuel", 0),
         ("ActionBodyBreathOfRenewal", 1),
         ("ActionBodyIronShirt", 2),
         ("ActionBodyMountainLeap", 2),
