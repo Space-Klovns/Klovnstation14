@@ -144,9 +144,9 @@ public sealed class KsTguiLateJoinTest : GameTest
                     .First(department => department.Roles.Contains(JanitorJob));
                 var (departmentColor, _) = KsTguiLateJoinWindow.DepartmentLook(department);
 
-                var rowBox = (StyleBoxFlat) entry.StyleBoxOverride!;
-                Control? parent = entry;
-                PanelContainer? card = null;
+                var rowBox = (StyleBoxFlat) entry.StyleBoxOverride;
+                Control parent = entry;
+                PanelContainer card = null;
                 while (parent != null && card == null)
                 {
                     parent = parent.Parent;
@@ -155,7 +155,7 @@ public sealed class KsTguiLateJoinTest : GameTest
                 }
 
                 Assert.That(card, Is.Not.Null, "the job row sits in a department card");
-                var cardBox = (StyleBoxFlat) card!.PanelOverride!;
+                var cardBox = (StyleBoxFlat) card.PanelOverride;
 
                 if (tgui)
                 {
