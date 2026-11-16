@@ -83,7 +83,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     private async Task<EntityUid> SpawnReceiverAsync(EntityUid grid, EntProtoId prototype, float x, bool powered)
     {
         EntityUid receiver = default;
-        var stacksBefore = new HashSet<EntityUid>();
+        HashSet<EntityUid> stacksBefore = [];
         await Server.WaitPost(() =>
         {
             stacksBefore = SEntMan.AllEntities<StackComponent>().Select(stack => stack.Owner).ToHashSet();
@@ -107,8 +107,8 @@ public sealed class KsOreWellReceiverTest : GameTest
                     SEntMan.DeleteEntity(stack.Owner);
             }
 
-            foreach (var receiverComponent in SEntMan.AllEntities<OreWellReceiverComponent>())
-                receiverComponent.Comp.Debt.Clear();
+            foreach (var receiverEntity in SEntMan.AllEntities<OreWellReceiverComponent>())
+                receiverEntity.Comp.Debt.Clear();
         });
 
         return receiver;
