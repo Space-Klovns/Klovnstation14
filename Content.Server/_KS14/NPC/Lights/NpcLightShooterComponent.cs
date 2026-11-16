@@ -38,30 +38,30 @@ public sealed partial class NpcLightShooterComponent : Component
     public float FightLightLevel = 0.25f;
 
     /// <summary>
-    ///     How long after a failed or abandoned attempt, in seconds, before it tries another.
+    ///     How long after a failed or abandoned attempt before it tries another.
     /// </summary>
     [DataField]
-    public float Cooldown = 8f;
+    public TimeSpan Cooldown = TimeSpan.FromSeconds(8);
 
     /// <summary>
-    ///     How long after a light has gone out, in seconds, before it goes for the next: a room has more than one, and the
+    ///     How long after a light has gone out before it goes for the next: a room has more than one, and the
     ///         squad does not wait long at its door.
     /// </summary>
     [DataField]
-    public float SuccessCooldown = 0.4f;
+    public TimeSpan SuccessCooldown = TimeSpan.FromSeconds(0.4);
 
     /// <summary>
-    ///     The most one attempt takes, in seconds: aiming, locking on and firing until the light goes out. After that it is
+    ///     The most one attempt takes: aiming, locking on and firing until the light goes out. After that it is
     ///         given up on.
     /// </summary>
     [DataField]
-    public float TaskTime = 2.5f;
+    public TimeSpan TaskTime = TimeSpan.FromSeconds(2.5);
 
     /// <summary>
-    ///     How long a hostile out of sight is still counted for a fight, in seconds since it was last seen or called out.
+    ///     How long a hostile out of sight is still counted for a fight, since it was last seen or called out.
     /// </summary>
     [DataField]
-    public float LostContactAge = 5f;
+    public TimeSpan LostContactAge = TimeSpan.FromSeconds(5);
 
     /// <summary>
     ///     How much of the dark a hostile has to see through for its lights to be left alone, from 0 to 1.
@@ -70,10 +70,10 @@ public sealed partial class NpcLightShooterComponent : Component
     public float HostileDarkVision = 0.5f;
 
     /// <summary>
-    ///     How often it looks for a light, in seconds.
+    ///     How often it looks for a light.
     /// </summary>
     [DataField]
-    public float UpdateInterval = 0.3f;
+    public TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.3);
 
     #region State
 

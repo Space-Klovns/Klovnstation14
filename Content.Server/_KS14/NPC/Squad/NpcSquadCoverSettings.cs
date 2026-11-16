@@ -60,10 +60,10 @@ public sealed partial class NpcSquadCoverSettings
     public float WallPreference = 0.25f;
 
     /// <summary>
-    ///     How long a cover plan lasts before being worked out again, in seconds.
+    ///     How long a cover plan lasts before being worked out again.
     /// </summary>
     [DataField]
-    public float PlanLifetime = 15f;
+    public TimeSpan PlanLifetime = TimeSpan.FromSeconds(15);
 
     /// <summary>
     ///     How far, in tiles, the reported threat has to move before the plan is worked out again.
@@ -75,11 +75,11 @@ public sealed partial class NpcSquadCoverSettings
     public float ClaimClearanceRadius = 1.5f;
 
     /// <summary>
-    ///     How long after a threat was last reported, in seconds, the squad still goes to it rather than holding
+    ///     How long after a threat was last reported the squad still goes to it rather than holding
     ///         where its leader is. Stops a squad chasing forever after something it cannot reach.
     /// </summary>
     [DataField]
-    public float ThreatObjectiveLifetime = 40f;
+    public TimeSpan ThreatObjectiveLifetime = TimeSpan.FromSeconds(40);
 
     /// <summary>
     ///     How much cover positions in kill zones - spots where the squad's own have recently gone down - are

@@ -239,7 +239,10 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     [DataField] public string ClaimDurationKey = "CampingTime";
 
-    [DataField] public float ClaimTtlBuffer = 5f;
+    /// <summary>
+    /// Added to the <see cref="ClaimDurationKey"/> duration, so a claim outlives the stay it was made for.
+    /// </summary>
+    [DataField] public TimeSpan ClaimTtlBuffer = TimeSpan.FromSeconds(5);
 
     /// <summary>
     /// Mirrors <see cref="UtilityOperator.InvalidatePlanOnNoHighest"/>: if true, the plan is invalidated when

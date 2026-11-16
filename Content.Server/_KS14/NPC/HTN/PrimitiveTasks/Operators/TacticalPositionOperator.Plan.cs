@@ -229,7 +229,7 @@ public sealed partial class TacticalPositionOperator
     private TimeSpan GetClaimTtl(NPCBlackboard blackboard)
     {
         var duration = blackboard.GetValueOrDefault<float>(ClaimDurationKey, _entityManager);
-        return TimeSpan.FromSeconds(duration + ClaimTtlBuffer);
+        return TimeSpan.FromSeconds(duration) + ClaimTtlBuffer;
     }
 
     public void ConditionalShutdown(NPCBlackboard blackboard)

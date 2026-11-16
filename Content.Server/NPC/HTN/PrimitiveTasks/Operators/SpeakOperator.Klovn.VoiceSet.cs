@@ -35,7 +35,7 @@ public sealed partial class SpeakOperator
     {
         return _npcVoiceSystem.TryPickCalloutLine(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner),
             callout.Callout,
-            TimeSpan.FromSeconds(callout.Cooldown),
+            callout.Cooldown,
             out line);
     }
 
@@ -52,7 +52,7 @@ public sealed partial class SpeakOperator
     {
         /// <summary>
         ///     A callout (<see cref="NpcCallout"/>), in the speaker's voice: only an NPC whose voice set makes it says
-        ///         anything, and no more often than <see cref="Cooldown"/> seconds. The task succeeds either way.
+        ///         anything, and no more often than once per <see cref="Cooldown"/>. The task succeeds either way.
         /// </summary>
         public sealed partial class VoiceCalloutSpeakOperatorSpeech : SpeakOperatorSpeech
         {
@@ -60,7 +60,7 @@ public sealed partial class SpeakOperator
             public NpcCallout Callout;
 
             [DataField]
-            public float Cooldown;
+            public TimeSpan Cooldown;
         }
     }
 }
