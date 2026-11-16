@@ -8,6 +8,8 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Roles;
+using Robust.Client.Graphics;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -105,6 +107,70 @@ public sealed class KsTguiLateJoinTest : GameTest
                 Assert.That(selected, Has.Count.EqualTo(1));
                 Assert.That(selected[0].Station, Is.EqualTo(firstStation));
                 Assert.That(selected[0].Job, Is.Not.EqualTo((string)ClownJob));
+            }
+            finally
+            {
+                window.Dispose();
+            }
+        });
+    }
+
+    /// <summary>
+    ///     tgui fills the cards and rows with the department's colour; Baron keeps its dark panels and uses the colour only
+    ///         as an accent.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TheCardsFollowTheTheme(bool tgui)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        var station = new NetEntity(901);
+        await Client.WaitPost(() =>
+        {
+            var window = new KsTguiLateJoinWindow((_, _) => { });
+            try
+            {
+                window.Populate(
+                    new Dictionary<NetEntity, string> { [station] = "First" },
+                    new Dictionary<NetEntity, Dictionary<ProtoId<JobPrototype>, int?>>
+                    {
+                        [station] = new() { [JanitorJob] = 2 },
+                    });
+
+                var entry = window.JobEntries.Single();
+                var department = Client.ResolveDependency<IPrototypeManager>().EnumeratePrototypes<DepartmentPrototype>()
+                    .First(department => department.Roles.Contains(JanitorJob));
+                var (departmentColor, _) = KsTguiLateJoinWindow.DepartmentLook(department);
+
+                var rowBox = (StyleBoxFlat) entry.StyleBoxOverride;
+                Control parent = entry;
+                PanelContainer card = null;
+                while (parent != null && card == null)
+                {
+                    parent = parent.Parent;
+                    if (parent is PanelContainer { ToolTip: not null } panel)
+                        card = panel;
+                }
+
+                Assert.That(card, Is.Not.Null, "the job row sits in a department card");
+                var cardBox = (StyleBoxFlat) card.PanelOverride;
+
+                if (tgui)
+                {
+                    Assert.That(cardBox.BackgroundColor, Is.EqualTo(departmentColor), "tgui's card is the department's colour");
+                    Assert.That(rowBox.BorderThickness.Left, Is.Zero, "tgui's row has no bar");
+                }
+                else
+                {
+                    Assert.That(cardBox.BackgroundColor, Is.EqualTo(KsTguiLateJoinWindow.BaronCardBackground),
+                        "Baron's card is its dark panel");
+                    Assert.That(rowBox.BackgroundColor, Is.Not.EqualTo(KsTguiLateJoinWindow.Darken(departmentColor, 10f)),
+                        "Baron's row is not filled with the department's colour");
+                    Assert.That(rowBox.BorderColor, Is.EqualTo(departmentColor), "Baron's row has a bar in the department's colour");
+                    Assert.That(rowBox.BorderThickness.Left, Is.GreaterThan(0f));
+                }
             }
             finally
             {

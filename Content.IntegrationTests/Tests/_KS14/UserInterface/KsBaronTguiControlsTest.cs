@@ -3,6 +3,7 @@ using Content.Client._KS14.BaronUI;
 using Content.Client._KS14.Tgui;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Windows.Fax;
+using Content.Client._KS14.Tgui.Windows.Lathe;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
@@ -164,6 +165,41 @@ public sealed class KsBaronTguiControlsTest : GameTest
             window.Close();
             window.OpenCentered();
             Assert.That(window.SetHeight, Is.EqualTo(grown));
+            window.Close();
+        });
+    }
+
+    /// <summary>
+    ///     The lathe's category tabs draw their own box: tg's blue bar on the selected one under tgui, Baron's colour under
+    ///         Baron.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task FabricatorTabFollowsTheTheme(bool tgui)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        DefaultWindow window = null;
+        KsTguiFabricatorTab tab = null;
+        await Client.WaitPost(() =>
+        {
+            tab = new KsTguiFabricatorTab { Text = "Tools", Selected = true };
+            window = new DefaultWindow { Title = "Lathe" };
+            window.Contents.AddChild(tab);
+            window.OpenCentered();
+        });
+        await Pair.RunTicksSync(30);
+
+        await Client.WaitAssertion(() =>
+        {
+            tab.ForceRunStyleUpdate();
+            var bar = ((KsTguiStyleBox) tab.StyleBoxOverride!).BorderColor;
+            if (tgui)
+                Assert.That(bar, Is.EqualTo(KsTguiPalettes.PrimaryBase), "tgui keeps tg's blue bar");
+            else
+                Assert.That(bar, Is.Not.EqualTo(KsTguiPalettes.PrimaryBase), "Baron's bar is not tg's blue");
+
             window.Close();
         });
     }
