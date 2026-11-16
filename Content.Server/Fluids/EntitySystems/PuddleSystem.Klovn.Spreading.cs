@@ -26,8 +26,9 @@ public sealed partial class PuddleSystem
 
     /// <summary>
     ///     Whether <see cref="OnPuddleSpread"/> should run for this puddle: false only for an overflowing puddle with no
-    ///         free tile beside it, level with (within <see cref="KsLevelTolerance"/>) or below every neighbour it could
-    ///         flow into.
+    ///         free tile beside it, which <see cref="OnPuddleSpread"/> would move nothing out of: it is level with (within
+    ///         <see cref="KsLevelTolerance"/>) or below every neighbour, or neither of its transfers has anything to give
+    ///         the ones that are lower.
     /// </summary>
     /// <remarks>
     ///     Such a puddle stays an active spreader, as any overflowing puddle does, and would split off its overflow
@@ -47,17 +48,50 @@ public sealed partial class PuddleSystem
         if (overflowVolume <= FixedPoint2.Zero)
             return true;
 
+        // What its second transfer shares between this puddle and its neighbours.
+        var totalVolume = FixedPoint2.Zero;
         foreach (var neighborUid in args.Neighbors)
         {
-            if (!_puddleQuery.TryGetComponent(neighborUid, out var neighborPuddleComponent) ||
-                !_solutionContainerSystem.ResolveSolution(neighborUid, neighborPuddleComponent.SolutionName, ref neighborPuddleComponent.Solution, out var neighborSolution) ||
-                CanFullyEvaporate(neighborSolution))
+            if (KsTryGetSpreadNeighbor(neighborUid, out _, out var neighborSolution))
+                totalVolume += neighborSolution.Volume;
+        }
+
+        foreach (var neighborUid in args.Neighbors)
+        {
+            if (!KsTryGetSpreadNeighbor(neighborUid, out var neighborPuddleComponent, out var neighborSolution))
                 continue;
 
-            if (neighborSolution.Volume + KsLevelTolerance < overflowVolume + KsGetOverflowVolume(neighborPuddleComponent, neighborSolution))
+            // Its first transfer: a neighbour below its own overflow volume is topped up to it.
+            var neighborOverflowVolume = KsGetOverflowVolume(neighborPuddleComponent, neighborSolution);
+            if (neighborSolution.Volume < neighborOverflowVolume)
+                return true;
+
+            var sourceVolume = overflowVolume + neighborOverflowVolume;
+            if (neighborSolution.Volume + KsLevelTolerance >= sourceVolume)
+                continue;
+
+            // Its second: a lower neighbour is brought up to the average of them all, which is rounded down to 0.01u. So
+            //   a puddle a few 0.01u above neighbours that are level with each other has an average no higher than
+            //   they already are, and gives them nothing however far past the tolerance it is.
+            var idealAverageVolume = (totalVolume + sourceVolume) / (args.Neighbors.Count + 1);
+            if (idealAverageVolume <= sourceVolume && idealAverageVolume > neighborSolution.Volume)
                 return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     A neighbouring puddle <see cref="OnPuddleSpread"/> would consider flowing into, and what it holds.
+    /// </summary>
+    private bool KsTryGetSpreadNeighbor(
+        EntityUid neighborUid,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out PuddleComponent? neighborPuddleComponent,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Content.Shared.Chemistry.Components.Solution? neighborSolution)
+    {
+        neighborSolution = null;
+        return _puddleQuery.TryGetComponent(neighborUid, out neighborPuddleComponent) &&
+            _solutionContainerSystem.ResolveSolution(neighborUid, neighborPuddleComponent.SolutionName, ref neighborPuddleComponent.Solution, out neighborSolution) &&
+            !CanFullyEvaporate(neighborSolution);
     }
 }
