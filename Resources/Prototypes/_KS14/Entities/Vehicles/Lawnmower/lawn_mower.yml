@@ -47,10 +47,21 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 150
+        damage: 250
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+  - type: Repairable
+    doAfterDelay: 3
+  # Smokes from the engine at its front once half broken, until welded back below it.
+  - type: KsParticles
+    prototype: KsSmokeBurningSmall
+    emitting: false
+    # The sprite sits low in its tile; the engine is a fifth of a tile ahead of that, whichever way it faces.
+    offset: 0,-0.05
+    rotatingOffset: 0,-0.2
+  - type: KsDamagedParticles
+    threshold: 75
   - type: InputMover
   - type: MovementSpeedModifier
     baseWalkSpeed: 2.5
@@ -75,7 +86,7 @@
       params:
         volume: -5
     bumpSound:
-      path: /Audio/_KS14/Vehicles/Lawnmower/hit_kick.ogg
+      path: /Audio/Effects/hit_kick.ogg
     bladeSound:
       path: /Audio/_KS14/Vehicles/Lawnmower/chainsawhit.ogg
     crushSound:

@@ -10,8 +10,6 @@ ent-KsLawnmowerEmagged = кроваво-красная газонокосилк�
 ent-KsClothingUniformGrillingShorts = шорты для гриля
     .desc = Для тех, кто только и мечтает жарить на гриле.
 
-ks-uplink-lawn-mower-name = Кроваво-красная газонокосилка
-ks-uplink-lawn-mower-desc = Бензиновая газонокосилка с сиденьем и отключённой защитой. Срезает высокую траву и всё, что попадёт под ножи.
 ks-lawn-mower-already-emagged = Защита газонокосилки уже отключена.
 ks-lawn-mower-gib = { CAPITALIZE($mower) } перемалывает { $victim } до состояния фарша!
 ks-lawn-mower-crush = { CAPITALIZE($mower) } давит { $victim }, как садовый измельчитель!

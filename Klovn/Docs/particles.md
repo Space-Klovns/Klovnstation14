@@ -156,7 +156,8 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 | `drift` | 0 | m/s, sampled afresh every step: a random walk. |
 | `driftMode` | `Offset` | `Offset`: `drift` is a jolt to each step's motion, velocity untouched (chaotic: sparks, embers). `Accelerate`: added to the velocity every 0.1 s, as BYOND does (OpenDream applies it as an acceleration against friction), so particles wander smoothly; DM values port unchanged. |
 
-The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
+The component adds a `color` multiplied over everything, an `offset` in metres (and a `rotatingOffset`
+added to it that turns with the entity while the emitter stays in its frame: smoke from a vehicle's front), a `rotation` that turns the
 whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `speed` that
 multiplies starting velocities alone (a harder throw), an `amount` that multiplies how many spawn (burst,
 rate and the most alive at once: a heavier hit), a `scale` that scales positions, velocities and sizes

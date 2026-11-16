@@ -34,7 +34,7 @@ public sealed partial class KsLawnmowerAppearanceSystem : EntitySystem
 
     private void RefreshName(EntityUid uid)
     {
-        // A mower bought from the uplink already has the emagged prototype's localized name.
+        // A mower spawned from the emagged prototype already has its localized name.
         if (_appearanceSystem.TryGetData<bool>(uid, KsLawnmowerVisuals.SafetyDisabled, out var disabled) && disabled &&
             MetaData(uid).EntityPrototype?.ID != SharedKsLawnmowerSystem.EmaggedPrototype.Id)
         {

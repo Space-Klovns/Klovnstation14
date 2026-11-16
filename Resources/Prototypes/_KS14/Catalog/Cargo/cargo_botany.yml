@@ -1,0 +1,9 @@
+- type: cargoProduct
+  id: KsHydroponicsLawnmower
+  icon:
+    sprite: _KS14/Vehicles/Lawnmower/lawnmower.rsi
+    state: lawnmower
+  product: KsLawnmower
+  cost: 5000
+  category: cargoproduct-category-name-hydroponics
+  group: market

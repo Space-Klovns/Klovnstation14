@@ -91,7 +91,7 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
 
         if (_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
         {
-            _popupSystem.PopupClient(KsPopupMessage.Create("ks-lawn-mower-already-emagged"), args.UserUid, args.UserUid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-lawn-mower-already-emagged"), args.UserUid, args.UserUid);
             return;
         }
 
