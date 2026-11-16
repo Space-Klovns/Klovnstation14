@@ -44,7 +44,8 @@ public sealed partial class KsParticlesCommand : LocalizedEntityCommands
                 if (i + 1 >= args.Length ||
                     !float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds) ||
                     !float.IsFinite(seconds) ||
-                    seconds <= 0f)
+                    seconds <= 0f ||
+                    seconds >= TimeSpan.MaxValue.TotalSeconds)
                 {
                     shell.WriteError(Loc.GetString("cmd-ksparticles-bad-lifetime"));
                     return;

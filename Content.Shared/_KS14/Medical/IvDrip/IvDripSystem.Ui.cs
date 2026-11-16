@@ -92,10 +92,7 @@ public sealed partial class IvDripSystem
 
     private static TimeSpan ClampInterval(IvDripComponent component, TimeSpan interval)
     {
-        if (interval < component.MinimumInjectionInterval)
-            return component.MinimumInjectionInterval;
-
-        return interval > component.MaximumInjectionInterval ? component.MaximumInjectionInterval : interval;
+        return MathHelper.Max(component.MinimumInjectionInterval, MathHelper.Min(interval, component.MaximumInjectionInterval));
     }
 
     /// <summary>

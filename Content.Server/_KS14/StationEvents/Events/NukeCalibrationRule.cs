@@ -31,6 +31,7 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
             return;
 
         component.AffectedStation = affectedStation.Value;
+        component.FirstAnnouncementAt = Timing.CurTime + component.FirstAnnouncementDelay;
 
         var nukeQuery = AllEntityQuery<NukeComponent, TransformComponent>();
         while (nukeQuery.MoveNext(out var nuke, out var nukeComponent, out var nukeTransform))
@@ -101,8 +102,7 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
         if (component.FirstAnnouncementMade == true)
             return;
 
-        component.TimeUntilFirstAnnouncement -= TimeSpan.FromSeconds(frameTime);
-        if (component.TimeUntilFirstAnnouncement > TimeSpan.Zero)
+        if (component.FirstAnnouncementAt is not { } announceAt || Timing.CurTime < announceAt)
             return;
 
         component.FirstAnnouncementMade = true;

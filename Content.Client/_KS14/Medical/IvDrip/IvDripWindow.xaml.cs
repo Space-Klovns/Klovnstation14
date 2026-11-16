@@ -39,6 +39,13 @@ public sealed partial class IvDripWindow : FancyWindow
     private string _lastAmountText = string.Empty;
     private string _lastIntervalText = string.Empty;
 
+    /// <summary>
+    ///     The interval bounds from the last state, which a typed interval is clamped to before it is rounded:
+    ///         rounding anything near <see cref="TimeSpan.MaxValue"/> overflows.
+    /// </summary>
+    private TimeSpan _minimumInterval = TimeSpan.Zero;
+    private TimeSpan _maximumInterval = TimeSpan.Zero;
+
     public IvDripWindow()
     {
         RobustXamlLoader.Load(this);
@@ -73,6 +80,9 @@ public sealed partial class IvDripWindow : FancyWindow
 
         IntervalSlider.Disabled = !state.CanSetInjectionInterval;
         IntervalInput.Editable = state.CanSetInjectionInterval;
+        _minimumInterval = state.MinimumInjectionInterval;
+        _maximumInterval = state.MaximumInjectionInterval;
+
         // The slider and the text box count in seconds.
         IntervalSlider.MinValue = (float)state.MinimumInjectionInterval.TotalSeconds;
         IntervalSlider.MaxValue = (float)state.MaximumInjectionInterval.TotalSeconds;
@@ -96,12 +106,12 @@ public sealed partial class IvDripWindow : FancyWindow
         if (text == _lastIntervalText)
             return;
 
-        // Rounded as the server rounds it, so that the value sent up matches the one that comes back.
-        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds) &&
-            double.IsFinite(seconds) &&
-            Math.Abs(seconds) < TimeSpan.MaxValue.TotalSeconds)
-        {
-            OnIntervalChanged?.Invoke(IvDripSystem.RoundInterval(TimeSpan.FromSeconds(seconds)));
-        }
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds) || !double.IsFinite(seconds))
+            return;
+
+        // Clamped in seconds, which a typed number can't overflow, then rounded as the server rounds it, so that the
+        //      value sent up matches the one that comes back.
+        seconds = Math.Min(Math.Max(seconds, _minimumInterval.TotalSeconds), _maximumInterval.TotalSeconds);
+        OnIntervalChanged?.Invoke(IvDripSystem.RoundInterval(TimeSpan.FromSeconds(seconds)));
     }
 }

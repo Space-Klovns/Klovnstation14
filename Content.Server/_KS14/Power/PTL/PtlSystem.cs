@@ -79,9 +79,7 @@ public sealed partial class PtlSystem : EntitySystem
 
     private void OnSetDelayMessage(Entity<PtlComponent> entity, ref PtlSetDelayMessage args)
     {
-        entity.Comp.ShootDelay = args.Delay < entity.Comp.MinShootDelay
-            ? entity.Comp.MinShootDelay
-            : args.Delay > entity.Comp.MaxShootDelay ? entity.Comp.MaxShootDelay : args.Delay;
+        entity.Comp.ShootDelay = MathHelper.Max(entity.Comp.MinShootDelay, MathHelper.Min(args.Delay, entity.Comp.MaxShootDelay));
 
         _audioSystem.PlayPvs(_soundSparks, entity.Owner);
         UpdateUiState(entity);

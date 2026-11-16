@@ -99,7 +99,7 @@ public sealed class KsTguiTimeDisplay : Label
     /// </summary>
     public static string FormatTime(TimeSpan time, bool shortFormat = false)
     {
-        var totalSeconds = time > TimeSpan.Zero ? (long)Math.Floor(time.TotalSeconds) : 0L;
+        var totalSeconds = time > TimeSpan.Zero ? time.Ticks / TimeSpan.TicksPerSecond : 0L;
         var hours = totalSeconds / 3600L;
         var minutes = totalSeconds % 3600L / 60L;
         var seconds = totalSeconds % 60L;
@@ -135,7 +135,7 @@ public sealed class KsTguiTimeDisplay : Label
 
     private void Refresh()
     {
-        Text = Format != null ? Format(_shown) : FormatTime(_shown, _shortFormat);
+        Text = Format != null ? Format(_shown) : FormatTime(_shown, shortFormat: _shortFormat);
     }
 
     protected override void FrameUpdate(FrameEventArgs args)

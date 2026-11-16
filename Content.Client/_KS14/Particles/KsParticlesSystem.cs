@@ -47,11 +47,6 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     /// </summary>
     public const int MaxStepsPerFrame = 5;
 
-    /// <summary>
-    ///     Steps per second allowed on a prototype, so a typo cannot ask for a million.
-    /// </summary>
-    public const float MaxTickRate = 240f;
-
     private const int InitialCapacity = 16;
     private const float DegreesToRadians = MathF.PI / 180f;
 
@@ -271,7 +266,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
         emitterComponent.Sprites = GetSpriteSet(prototype);
         TryMatchPredictedEffect(entity, emitterComponent);
-        emitterComponent.TickLength = 1f / Math.Clamp(prototype.TickRate, 1f, MaxTickRate);
+        emitterComponent.TickLength = prototype.TickLength;
         emitterComponent.UsesZ = prototype.Position.CanProduceZ || prototype.Velocity.CanProduceZ || prototype.Drift.CanProduceZ;
 
         // Only an emitter that collides keeps walls; every other tests nothing.
