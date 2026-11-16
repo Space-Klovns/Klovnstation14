@@ -484,6 +484,11 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         var ev = new MaterialEntityInsertedEvent(material);
         RaiseLocalEvent(receiver, ref ev);
 
+        // KS14 start: who put in what, and how much of it was taken
+        var ksInsertedEvent = new Content.Shared._KS14.Materials.KsMaterialEntityInsertedEvent(user, toInsert, maximumMultiplier);
+        RaiseLocalEvent(receiver, ref ksInsertedEvent);
+        // KS14 end
+
         // KS14: moved ts to shared
         _audio.PlayPredicted(storage.InsertingSound, receiver, user);
         _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-insert-item",

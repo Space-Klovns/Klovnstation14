@@ -1,3 +1,4 @@
+using Content.Client._KS14.SalvageTablet;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Tooltips;
 using Content.Client._KS14.Tgui.Windows.Materials;
@@ -91,6 +92,9 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         _titleButton.DrawModeRefreshed += () => RefreshLook(_titleButton);
         AddChild(_titleButton);
 
+        // Not tg: a right click asks the salvagers for what the recipe is short of.
+        KsLatheRequestPopup.Attach(_titleButton, () => !_canProduce, () => LatheUid, () => OnRequest?.Invoke(_recipeId));
+
         _fiveButton = MakeAmountButton(5);
         _tenButton = MakeAmountButton(10);
 
@@ -160,6 +164,12 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     ///     The recipe and how many to make.
     /// </summary>
     public event Action<string, int>? OnBuild;
+    public event Action<string>? OnRequest;
+
+    /// <summary>
+    ///     The lathe the row belongs to, whose material-request cooldown a right click shows.
+    /// </summary>
+    public EntityUid? LatheUid;
 
     private KsTguiButton MakeAmountButton(int amount)
     {

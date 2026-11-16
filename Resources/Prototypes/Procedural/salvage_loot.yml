@@ -120,12 +120,14 @@
     - !type:BiomeMarkerLoot
       proto: OreIron
 
-- type: salvageLoot
-  id: OreCoal
-  guaranteed: true
-  loots:
-    - !type:BiomeMarkerLoot
-      proto: OreCoal
+# KS14 start: coal is no longer mined
+#- type: salvageLoot
+#  id: OreCoal
+#  guaranteed: true
+#  loots:
+#    - !type:BiomeMarkerLoot
+#      proto: OreCoal
+# KS14 end
 
 - type: salvageLoot
   id: OreQuartz

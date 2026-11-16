@@ -1,3 +1,5 @@
+using System.Linq;
+using Content.Client._KS14.SalvageTablet;
 using Content.Client._KS14.Tgui;
 using Content.Client.Resources;
 using Content.Client.Stylesheets;
@@ -220,9 +222,53 @@ public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
-
             // The ported tgui windows, which Baron opens too since #480 (KsBaronUiSheetlet.Tgui.cs).
             .. TguiControlRules(regularFont, boldFont, regularFontSmall),
+
+            // After the tgui control rules: the cart's - and + are transparent tgui buttons, and their own rules, as
+            //      specific as the transparent button's, win by coming later.
+            .. KsSalvageTabletStyleClasses.Rules(
+                tracked: Color.FromHex("#5BA85B"),
+                requested: Color.FromHex("#E8A33D"),
+                low: Color.FromHex("#D9443B")),
+            .. SalvageTabletAmountButtonRules(),
+        ];
+    }
+
+    /// <summary>
+    ///     The S.P.A.M. cart's bare - and +: no plate in any state, and no tint on the nothing it draws. Each state needs its
+    ///         own rule, as the button rules set a box and a tint per state.
+    /// </summary>
+    private static StyleRule[] SalvageTabletAmountButtonRules()
+    {
+        var empty = new StyleBoxEmpty();
+        return
+        [
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoNormal()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoHovered()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoPressed()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoDisabled()
+                .Box(empty).Modulate(Color.White),
+
+            // The cart's - and + are tgui buttons, which Baron styles since #480 with rules on the KsTguiButton type; these,
+            //      as specific and later, keep them bare.
+            .. new[]
+            {
+                ContainerButton.StylePseudoClassNormal,
+                ContainerButton.StylePseudoClassHover,
+                ContainerButton.StylePseudoClassPressed,
+                ContainerButton.StylePseudoClassDisabled,
+            }.Select(pseudo => E<Content.Client._KS14.Tgui.Controls.KsTguiButton>()
+                .Class(ContainerButton.StyleClassButton)
+                .Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Pseudo(pseudo)
+                .Box(empty)
+                .Modulate(Color.White)),
         ];
     }
 

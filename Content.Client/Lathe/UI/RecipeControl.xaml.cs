@@ -10,6 +10,8 @@ namespace Content.Client.Lathe.UI;
 public sealed partial class RecipeControl : Control
 {
     public Action<string>? OnButtonPressed;
+    public Action<string>? KsOnRequestPressed; // KS14
+    public EntityUid? KsLatheUid; // KS14: whose material-request cooldown a right click shows
     public Func<string> TooltipTextSupplier;
 
     private ProtoId<LatheRecipePrototype> _recipeId;
@@ -31,6 +33,7 @@ public sealed partial class RecipeControl : Control
             OnButtonPressed?.Invoke(_recipeId);
         };
         Button.TooltipSupplier = SupplyTooltip;
+        Content.Client._KS14.SalvageTablet.KsLatheRequestPopup.Attach(Button, () => Button.Disabled, () => KsLatheUid, () => KsOnRequestPressed?.Invoke(_recipeId)); // KS14: right click asks the salvagers for what the recipe is short of
     }
 
     public void SetRecipe(LatheRecipePrototype recipe)

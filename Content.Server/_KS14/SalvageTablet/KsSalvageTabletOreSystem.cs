@@ -1,0 +1,123 @@
+using Content.Shared._KS14.SalvageTablet;
+using Content.Shared._KS14.Stacks;
+using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Stacks;
+using Content.Shared.Storage;
+using Robust.Shared.Containers;
+
+namespace Content.Server._KS14.SalvageTablet;
+
+/// <summary>
+///     Counts ore that enters an ore bag toward the ore tasks of the S.P.A.M. attached to the bag.
+///
+///     Ore reaches a bag two ways: as its own entity, or as units merged into a stack already inside. Both are counted
+///         here, and each unit only once: a stack remembers how many of its units have been counted.
+/// </summary>
+public sealed partial class KsSalvageTabletOreSystem : EntitySystem
+{
+    [Dependency] private KsSalvageTabletSystem _salvageTabletSystem = default!;
+    [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private EntityQuery<StackComponent> _stackQuery = default!;
+    [Dependency] private EntityQuery<KsSalvageTabletCountedOreComponent> _countedQuery = default!;
+    [Dependency] private EntityQuery<KsSalvageTabletOreBagComponent> _oreBagQuery = default!;
+    [Dependency] private EntityQuery<KsSalvageTabletComponent> _tabletQuery = default!;
+    [Dependency] private EntityQuery<StorageComponent> _storageQuery = default!;
+
+    /// <summary>
+    ///     How many units of the stack have been counted already.
+    /// </summary>
+    public int GetCounted(Entity<StackComponent> stackEntity)
+    {
+        // Units that were used up took their count with them.
+        return _countedQuery.TryComp(stackEntity.Owner, out var countedComponent)
+            ? Math.Min(countedComponent.Counted, stackEntity.Comp.Count)
+            : 0;
+    }
+
+    /// <summary>
+    ///     Offers units of ore to the tasks of the tablet attached to the bag.
+    /// </summary>
+    /// <returns>Whether a task wanted them, which is when they stop being countable.</returns>
+    private bool TryCount(Entity<KsSalvageTabletOreBagComponent> bagEntity, StackComponent stackComponent, int amount)
+    {
+        if (amount <= 0 ||
+            _itemSlotsSystem.GetItemOrNull(bagEntity.Owner, bagEntity.Comp.Slot) is not { } tabletUid ||
+            !_tabletQuery.TryComp(tabletUid, out var tabletComponent) ||
+            !_salvageTabletSystem.TryGetAccount((tabletUid, tabletComponent), out var accountEntity))
+            return false;
+
+        var stackType = stackComponent.StackTypeId;
+        return _salvageTabletSystem.Advance<KsSalvageOreObjective>(accountEntity.AsNullable(), objective => objective.Stack == stackType, amount);
+    }
+
+    private bool IsInBagStorage(EntityUid uid, out Entity<KsSalvageTabletOreBagComponent> bagEntity)
+    {
+        bagEntity = default;
+        if (!_containerSystem.TryGetContainingContainer(uid, out var container) ||
+            !_oreBagQuery.TryComp(container.Owner, out var oreBagComponent) ||
+            !_storageQuery.TryComp(container.Owner, out var storageComponent) ||
+            storageComponent.Container != container)
+            return false;
+
+        bagEntity = (container.Owner, oreBagComponent);
+        return true;
+    }
+
+    /// <summary>
+    ///     Ore put in the bag as its own entity.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnInserted(Entity<KsSalvageTabletOreBagComponent> entity, ref EntInsertedIntoContainerMessage args)
+    {
+        if (!_stackQuery.TryComp(args.Entity, out var stackComponent) ||
+            !_storageQuery.TryComp(entity.Owner, out var storageComponent) ||
+            storageComponent.Container != args.Container)
+            return;
+
+        var uncounted = stackComponent.Count - GetCounted((args.Entity, stackComponent));
+        if (TryCount(entity, stackComponent, uncounted))
+            EnsureComp<KsSalvageTabletCountedOreComponent>(args.Entity).Counted = stackComponent.Count;
+    }
+
+    /// <summary>
+    ///     Units moving from one stack to another: the counted ones stay counted, and the rest are counted now if they
+    ///         are moving into a bag.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnTransfer(Entity<StackComponent> entity, ref KsStackTransferEvent args)
+    {
+        if (!_stackQuery.TryComp(args.Donor, out var donorStackComponent))
+            return;
+
+        // Counted units move first, so a stack can never hand its uncounted ones over twice.
+        var movedCounted = Math.Min(GetCounted((args.Donor, donorStackComponent)), args.Amount);
+        if (_countedQuery.TryComp(args.Donor, out var donorCountedComponent))
+            donorCountedComponent.Counted = Math.Min(donorCountedComponent.Counted, donorStackComponent.Count) - movedCounted;
+
+        var movedUncounted = args.Amount - movedCounted;
+        if (movedUncounted > 0 && IsInBagStorage(entity.Owner, out var bagEntity) && TryCount(bagEntity, entity.Comp, movedUncounted))
+            movedCounted = args.Amount;
+
+        if (movedCounted <= 0)
+            return;
+
+        // Clamped as it is read: the receiving stack may have lost counted units since.
+        var recipientCounted = GetCounted(entity);
+        EnsureComp<KsSalvageTabletCountedOreComponent>(entity.Owner).Counted = recipientCounted + movedCounted;
+    }
+
+    /// <summary>
+    ///     A split leaves no way to tell which units went where, so both halves keep as many counted as they can hold.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnSplit(Entity<KsSalvageTabletCountedOreComponent> entity, ref StackSplitEvent args)
+    {
+        if (!_stackQuery.TryComp(args.NewId, out var newStackComponent))
+            return;
+
+        var counted = Math.Min(entity.Comp.Counted, newStackComponent.Count);
+        if (counted > 0)
+            EnsureComp<KsSalvageTabletCountedOreComponent>(args.NewId).Counted = counted;
+    }
+}
