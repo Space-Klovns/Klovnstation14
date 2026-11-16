@@ -35,7 +35,7 @@ public sealed partial class KsParticlesCommand : LocalizedEntityCommands
         }
 
         EntityUid? targetUid = shell.Player?.AttachedEntity;
-        float? lifetime = null;
+        TimeSpan? lifetime = null;
 
         for (var i = 1; i < args.Length; i++)
         {
@@ -50,7 +50,7 @@ public sealed partial class KsParticlesCommand : LocalizedEntityCommands
                     return;
                 }
 
-                lifetime = seconds;
+                lifetime = TimeSpan.FromSeconds(seconds);
                 continue;
             }
 
@@ -71,8 +71,8 @@ public sealed partial class KsParticlesCommand : LocalizedEntityCommands
         if (uid is not { } emitterUid)
             return;
 
-        if (lifetime is { } seconds2)
-            EntityManager.EnsureComponent<TimedDespawnComponent>(emitterUid).Lifetime = seconds2;
+        if (lifetime is { } despawnAfter)
+            EntityManager.EnsureComponent<TimedDespawnComponent>(emitterUid).Lifetime = (float)despawnAfter.TotalSeconds;
 
         shell.WriteLine(Loc.GetString("cmd-ksparticles-success",
             ("prototype", prototype.ID),

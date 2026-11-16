@@ -404,7 +404,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
             }
         }
 
-        var emitting = particlesComponent.Emitting && (prototype.EmitDuration is not { } emitDuration || emitterComponent.Age < emitDuration);
+        var emitting = particlesComponent.Emitting && (prototype.EmitDuration is not { } emitDuration || emitterComponent.Age < (float)emitDuration.TotalSeconds);
         emitterComponent.Age += dt;
 
         if (emitting)

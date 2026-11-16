@@ -120,7 +120,7 @@ Emitter-wide, no generators (BYOND's "affect entire set" group):
 | `count` | 100 | Most particles alive at once. |
 | `spawning` | 10 | Particles per second. |
 | `burst` | 0 | Spawned all at once when the emitter starts. |
-| `emitDuration` | none | Seconds the emitter spawns for; then it stops and the live particles finish. |
+| `emitDuration` | none | How long the emitter spawns for (a `TimeSpan`: `1.5` is seconds, `2m` minutes); then it stops and the live particles finish. |
 | `oneShot` | false | Delete the emitter's entity once its last particle has died. Needs a finite `lifespan`, and a `burst` or an `emitDuration`. |
 | `size` | 3 × 3 | Culling box about the emitter, metres. Not a clip: particles outside it still draw. The live particles' real extent is tracked as well. |
 | `bounds` | none | `Box2` about the emitter; particles outside it die (`bound1`/`bound2`). |

@@ -118,7 +118,7 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
             prototype.OneShotLifetime is not { } lifetime)
             return;
 
-        EnsureComp<TimedDespawnComponent>(entity.Owner).Lifetime = lifetime;
+        EnsureComp<TimedDespawnComponent>(entity.Owner).Lifetime = (float)lifetime.TotalSeconds;
     }
 
     #endregion
