@@ -26,11 +26,13 @@ namespace Content.Shared.Voting
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
+            Content.Shared._KS14.Network.KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
             CanCall = buffer.ReadBoolean();
             buffer.ReadPadBits();
             WhenCanCallVote = TimeSpan.FromTicks(buffer.ReadInt64());
 
             var lenVotes = buffer.ReadByte();
+            buffer.AssertAtLeastSize(lenVotes * (sizeof(byte) + sizeof(long)));
             VotesUnavailable = new (StandardVoteType type, TimeSpan whenAvailable)[lenVotes];
             for (var i = 0; i < lenVotes; i++)
             {

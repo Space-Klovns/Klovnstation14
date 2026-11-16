@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Network;
 using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
@@ -33,14 +34,16 @@ public sealed class KsVoiceFrameMessage : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
+        KsNetMessageLimits.AssertNotReceivedByServer(this);
+
         Source = buffer.ReadNetEntity();
         Sequence = buffer.ReadUInt16();
         Codec = (KsVoiceCodec)buffer.ReadByte();
         StreamStart = buffer.ReadBoolean();
 
         var length = (int)buffer.ReadUInt16();
-        if (length > MaxPayloadBytes)
-            throw new InvalidOperationException($"Voice payload of {length} bytes exceeds {MaxPayloadBytes}.");
+        KsNetMessageLimits.AssertAtMost(length, MaxPayloadBytes);
+        buffer.AssertAtLeastSize(length);
 
         Payload = new byte[length];
         buffer.ReadBytes(Payload, 0, length);
