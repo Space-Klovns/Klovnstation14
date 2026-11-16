@@ -92,6 +92,12 @@ public sealed partial class JianghuSystem
             return false;
         }
 
+        if (RefusesChallenge(challengerUid, opponentUid))
+        {
+            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-beneath-notice", ("target", opponentUid)), challengerUid, challengerUid);
+            return false;
+        }
+
         if (IsBusy(challengerUid) || IsBusy(opponentUid))
         {
             _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-busy"), challengerUid, challengerUid);

@@ -38,3 +38,10 @@ public record struct CultivationAllyCheckEvent(EntityUid Other, bool Ally = fals
 /// </summary>
 [ByRefEvent]
 public record struct CultivationBreakthroughReadinessEvent(int Readiness);
+
+/// <summary>
+///     Raised on a cultivator as a meditation cycle's insight is worked out, so anything that helps them learn (fellow
+///         sect members nearby, a place in the Martial World Ranking) can add to the multiplier.
+/// </summary>
+[ByRefEvent]
+public record struct CultivationInsightMultiplierEvent(float Multiplier);

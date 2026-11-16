@@ -139,6 +139,9 @@ ACTIONS.update({
 ACTIONS.update({
     "duel": ("决", "red"),
     "yield": ("让", "tan"),
+    "found_sect": ("宗", "gold"),
+    "sect_transmission": ("讯", "jade"),
+    "declare_rivalry": ("敌", "red"),
 })
 
 # The Demonic Path.
@@ -318,6 +321,23 @@ def blood_slip(font_path):
     return image
 
 
+def sect_plaque(font_path):
+    """A lacquered red board in a gilded frame, carrying the character for a sect."""
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    # Two posts and a little roof over the board.
+    draw.rectangle((7, 10, 9, 30), fill=(92, 44, 22, 255))
+    draw.rectangle((22, 10, 24, 30), fill=(92, 44, 22, 255))
+    draw.polygon([(4, 9), (16, 3), (27, 9), (24, 11), (7, 11)], fill=(40, 34, 32, 255), outline=(20, 16, 14, 255))
+    draw.rectangle((9, 11, 22, 26), fill=(206, 160, 52, 255))
+    draw.rectangle((10, 12, 21, 25), fill=(150, 28, 26, 255))
+    mask = glyph_layer("宗", font_path, 10, 32, threshold=60)
+    shifted = Image.new("L", (32, 32), 0)
+    shifted.paste(mask, (0, 3))
+    image.paste(Image.new("RGBA", (32, 32), (246, 214, 110, 255)), (0, 0), shifted)
+    return image
+
+
 def array_circle(glyph, colour, font_path):
     """A floor circle of trigrams around a glyph."""
     face, rim = PALETTE[colour]
@@ -414,6 +434,7 @@ def main():
         "talisman": talisman(args.font),
         "jade_slip": jade_slip(args.font),
         "blood_slip": blood_slip(args.font),
+        "sect_plaque": sect_plaque(args.font),
         "array_gathering": array_circle("聚", "jade", args.font),
         "array_barrier": array_circle("阵", "gold", args.font),
         "array_alarm": array_circle("警", "orange", args.font),

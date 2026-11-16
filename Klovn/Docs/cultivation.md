@@ -83,6 +83,22 @@ smells the path, gu worms, jiangshi, a planted palm and the stained hands that s
   cultivators watching gain insight, at most every two minutes. A third party who damages a duelist is disgraced for
   ten minutes and loses 5 face. `HonorDuelResolvingEvent` lets anything raise the face a win is worth;
   `HonorDuelFinishedEvent` reports the result. The Exploding Heart Palm can't be used in a duel.
+- **Sects:** Found Sect (Foundation, 50 qi) asks for a name through `QuickDialogSystem` and makes a sect: a
+  `SectComponent` on an entity of its own in nullspace, so it outlives its plaque, with the members' minds
+  (`SectMemberComponent`). The `KsSectPlaque` (`SectPlaqueComponent`) is a mild qi source; others touch it to petition
+  the master through McqDialogue, and the master proclaims tournaments there. Members get Sect Transmission (a
+  private chat line to every member) and meditate more insightfully near each other (+10% each, up to 30%, through
+  `CultivationInsightMultiplierEvent`). The master gets Declare Rivalry, aimed at a member or plaque of another sect;
+  beating a rival in a duel is worth 5 more face. A destroyed plaque costs every member 2 face.
+- **Sect missions:** two minutes after founding, and five after each one ends, a sect is set a mission (refine pills,
+  win duels, meditate by the plaque, recruit, defeat heart demons) with twenty minutes to do it. Finishing gives every
+  member 15 insight and 3 face. Pill progress waits on the alchemy port.
+- **Martial World Ranking:** ten places, decided only by duels: beat someone ranked above you and take their place,
+  beat someone unranked and join the list. The same pair can only move each other once every five minutes. Rank one
+  is First Under Heaven, announced station-wide, and refuses challenges from outside the top five; the top three
+  meditate 10% more insightfully. The ranking is round state on the system, and drops minds that no longer exist.
+- **Tournaments:** a Sect Master's proclamation (one every 30 minutes) makes duels worth double face for ten minutes;
+  whoever wins the most is crowned Martial Champion for 10 face and 30 insight.
 
 ## Martial arts
 
@@ -137,7 +153,7 @@ and copyright metadata. Run them from the repository root with Pillow installed.
 ## Tests
 
 `Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
-the body path, the Demonic Path and the jianghu, and `CultivationLocaleTest` checks every cultivation locale key resolves
+the body path, the Demonic Path, the jianghu and sects, and `CultivationLocaleTest` checks every cultivation locale key resolves
 (`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
 concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
 by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads

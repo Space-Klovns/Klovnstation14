@@ -47,6 +47,7 @@ public sealed partial class CultivationSystem : EntitySystem
         ("ActionCultivationQinggong", CultivationRealm.QiCondensation),
         ("ActionCultivationWriteTalisman", CultivationRealm.QiCondensation),
         ("ActionCultivationRealmPressure", CultivationRealm.FoundationEstablishment),
+        ("ActionJianghuFoundSect", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationAcupointSealing", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationTransmitLaw", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationConcealment", CultivationRealm.FoundationEstablishment),
@@ -390,7 +391,9 @@ public sealed partial class CultivationSystem : EntitySystem
                 _popupSystem.PopupEntity(Loc.GetString("cultivation-forced-circulation-backlash"), entity, entity, type: PopupType.MediumCaution);
         }
 
-        _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * insightMultiplier);
+        var insightEvent = new CultivationInsightMultiplierEvent(insightMultiplier);
+        RaiseLocalEvent(entity, ref insightEvent);
+        _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * insightEvent.Multiplier);
         _cultivationSystem.AddQi(entity.AsNullable(), entity.Comp.MeditateQi * multiplier);
 
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Server._KS14.Cultivation.Components;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.Cultivation.Components;
@@ -32,6 +33,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
 
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private JianghuSystem _jianghuSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private NPCRetaliationSystem _npcRetaliationSystem = default!;
     [Dependency] private SharedCultivationSystem _cultivationSystem = default!;
@@ -103,6 +105,8 @@ public sealed partial class HeartDemonSystem : EntitySystem
 
         if (_cultivatorQuery.HasComp(host))
             _cultivationSystem.SetDaoHeartTempered(host, true);
+
+        _jianghuSystem.SectMissionProgress(host, SectMission.HeartDemon, 1);
 
         _popupSystem.PopupEntity(Loc.GetString("heart-demon-defeated"), host, host, type: PopupType.Large);
     }

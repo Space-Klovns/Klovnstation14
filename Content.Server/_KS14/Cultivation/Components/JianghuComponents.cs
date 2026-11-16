@@ -77,3 +77,90 @@ public sealed partial class DuelChallengedComponent : Component
     [DataField]
     public EntityUid Challenger;
 }
+
+public enum SectMission : byte
+{
+    Pills,
+    Duel,
+    Meditate,
+    Recruit,
+    HeartDemon,
+}
+
+/// <summary>
+///     A sect. It lives on an entity of its own outside the station, so it outlasts its plaque.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(JianghuSystem))]
+public sealed partial class SectComponent : Component
+{
+    [DataField]
+    public string SectName = string.Empty;
+
+    /// <summary>
+    ///     The master's mind.
+    /// </summary>
+    [DataField]
+    public EntityUid Master;
+
+    /// <summary>
+    ///     Every member's mind, the master's included.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid> Members = new();
+
+    /// <summary>
+    ///     Other sects sworn as rivals.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid> Rivals = new();
+
+    [DataField]
+    public EntityUid? Plaque;
+
+    [DataField]
+    public SectMission? Mission;
+
+    [DataField]
+    public int MissionGoal;
+
+    [DataField]
+    public int MissionProgress;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan MissionDeadline;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan NextMission;
+
+    [DataField]
+    public int MissionsCompleted;
+}
+
+/// <summary>
+///     A sect's gate. Others ask to join here; the master proclaims tournaments here.
+/// </summary>
+[RegisterComponent, Access(typeof(JianghuSystem))]
+public sealed partial class SectPlaqueComponent : Component
+{
+    [DataField]
+    public EntityUid? Sect;
+
+    /// <summary>
+    ///     Who is waiting on the master's answer.
+    /// </summary>
+    [DataField]
+    public EntityUid? Petitioner;
+}
+
+/// <summary>
+///     On a mind: the sect it belongs to.
+/// </summary>
+[RegisterComponent, Access(typeof(JianghuSystem))]
+public sealed partial class SectMemberComponent : Component
+{
+    [DataField]
+    public EntityUid Sect;
+
+    [DataField]
+    public EntityUid? TransmissionAction;
+}

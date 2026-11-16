@@ -3,6 +3,7 @@ using Content.Shared.Examine;
 using Content.Shared.Mind;
 using Content.Shared.Popups;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Cultivation.Systems;
 
@@ -23,6 +24,8 @@ public sealed partial class JianghuSystem : EntitySystem
         var now = _gameTiming.CurTime;
         UpdateChallenges(now);
         UpdateDuels(now);
+        UpdateSects(now);
+        UpdateTournament(now);
     }
 
     #region Face
@@ -101,6 +104,7 @@ public sealed partial class JianghuSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnJianghuExamined(Entity<JianghuExamineComponent> entity, ref ExaminedEvent args)
     {
+        ExamineStanding(entity, ref args);
         if (!TryFaceComponent(entity, out var faceComponent))
             return;
 
@@ -109,6 +113,35 @@ public sealed partial class JianghuSystem : EntitySystem
 
         if (_gameTiming.CurTime < faceComponent.DishonoredUntil)
             args.PushMarkup(Loc.GetString("jianghu-examine-dishonored", ("target", entity.Owner)));
+    }
+
+    /// <summary>
+    ///     Sect, ranking and champion: everything the jianghu knows about someone beyond their face.
+    /// </summary>
+    private void ExamineStanding(Entity<JianghuExamineComponent> entity, ref ExaminedEvent args)
+    {
+        if (GetSect(entity) is { } sect)
+        {
+            var relation = "none";
+            if (GetSect(args.Examiner) is { } examinerSect)
+                relation = examinerSect.Owner == sect.Owner ? "fellow" : examinerSect.Comp.Rivals.Contains(sect) ? "rival" : "none";
+
+            args.PushMarkup(Loc.GetString("jianghu-examine-sect", ("target", entity.Owner),
+                ("rank", Loc.GetString(SectRank(sect, entity))), ("sect", FormattedMessage.EscapeText(sect.Comp.SectName)),
+                ("relation", relation)));
+        }
+
+        if (!_mindSystem.TryGetMind(entity, out var mindId, out _))
+            return;
+
+        if (Champion == mindId)
+            args.PushMarkup(Loc.GetString("jianghu-examine-champion", ("target", entity.Owner)));
+
+        var rank = RankOfMind(mindId);
+        if (rank == 1)
+            args.PushMarkup(Loc.GetString("jianghu-examine-first", ("target", entity.Owner)));
+        else if (rank > 0)
+            args.PushMarkup(Loc.GetString("jianghu-examine-ranked", ("target", entity.Owner), ("rank", rank)));
     }
 
     #endregion

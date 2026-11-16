@@ -119,6 +119,9 @@
       "name": "corpse_puppet"
     },
     {
+      "name": "declare_rivalry"
+    },
+    {
       "name": "devouring_art"
     },
     {
@@ -147,6 +150,9 @@
     },
     {
       "name": "forget_law"
+    },
+    {
+      "name": "found_sect"
     },
     {
       "name": "furnace_burst"
@@ -210,6 +216,9 @@
     },
     {
       "name": "sea_of_flames"
+    },
+    {
+      "name": "sect_transmission"
     },
     {
       "name": "six_meridians"

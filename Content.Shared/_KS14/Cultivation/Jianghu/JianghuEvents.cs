@@ -33,3 +33,22 @@ public record struct HonorDuelResolvingEvent(EntityUid Winner, EntityUid Loser, 
 /// </summary>
 [ByRefEvent]
 public readonly record struct HonorDuelFinishedEvent(EntityUid FighterOne, EntityUid FighterTwo, EntityUid? Winner, EntityUid? Loser, HonorDuelOutcome Outcome);
+
+/// <summary>
+///     Found a sect where you stand. The name is asked for in a dialog.
+/// </summary>
+public sealed partial class FoundSectActionEvent : InstantActionEvent
+{
+    [DataField]
+    public float QiCost = 50f;
+}
+
+/// <summary>
+///     A telepathic message to every member of your sect.
+/// </summary>
+public sealed partial class SectTransmissionActionEvent : InstantActionEvent;
+
+/// <summary>
+///     As Sect Master, declare the sect of the target (a member, or their plaque) your sworn rival.
+/// </summary>
+public sealed partial class DeclareRivalryActionEvent : EntityTargetActionEvent;
