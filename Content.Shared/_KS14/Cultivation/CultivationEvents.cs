@@ -29,3 +29,9 @@ public readonly record struct CultivationRealmChangedEvent(CultivationRealm OldR
 /// </summary>
 [ByRefEvent]
 public record struct CultivationAllyCheckEvent(EntityUid Other, bool Ally = false);
+
+/// <summary>
+///     Raised on a cultivator when their breakthrough readiness is assessed, so anything that steadies them can add to it.
+/// </summary>
+[ByRefEvent]
+public record struct CultivationBreakthroughReadinessEvent(int Readiness);

@@ -534,19 +534,19 @@ public sealed partial class BodyArtSystem : EntitySystem
         // Only someone who has already set foot on the path (read the primer) can be taken on.
         if (!_bodyCultivatorQuery.TryComp(discipleUid, out var discipleComponent) || _cultivatorQuery.HasComp(discipleUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-discipleUid-not-on-path", ("target", discipleUid)), entity, entity);
+            _popupSystem.PopupEntity(Loc.GetString("body-disciple-not-on-path", ("target", discipleUid)), entity, entity);
             return;
         }
 
         if (discipleComponent.Committed)
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-discipleUid-already", ("target", discipleUid)), entity, entity);
+            _popupSystem.PopupEntity(Loc.GetString("body-disciple-already", ("target", discipleUid)), entity, entity);
             return;
         }
 
         _bodySystem.Commit((discipleUid, discipleComponent));
         _bodySystem.AddTempering((discipleUid, discipleComponent), 30f);
-        _popupSystem.PopupEntity(Loc.GetString("body-discipleUid-accepted", ("user", entity.Owner), ("target", discipleUid)), discipleUid, type: PopupType.Large);
+        _popupSystem.PopupEntity(Loc.GetString("body-disciple-accepted", ("user", entity.Owner), ("target", discipleUid)), discipleUid, type: PopupType.Large);
     }
 
     #endregion

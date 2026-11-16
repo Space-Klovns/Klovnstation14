@@ -75,7 +75,7 @@ public sealed class MartialArtsTest : GameTest
                 Assert.That(artsSystem.TryLearn(cultivatorUid, "KsStarAbsorbing"), Is.EqualTo(MartialArtLearnResult.Learned));
                 Assert.That(SEntMan.HasComponent<DarkArtsComponent>(cultivatorUid), Is.True, "A dark art left no mark.");
                 Assert.That(artsSystem.TryLearn(cultivatorUid, "KsNineYang"), Is.EqualTo(MartialArtLearnResult.NoRoom),
-                    "A secondUid qi art fit at Qi Condensation.");
+                    "A second qi art fit at Qi Condensation.");
             }
 
             cultivationSystem.BreakThrough(SEntity<CultivatorComponent>(cultivatorUid));
@@ -135,7 +135,7 @@ public sealed class MartialArtsTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(damageableSystem.GetTotalDamage(defenderUid), Is.EqualTo(FixedPoint2.Zero), "The countered blow still landed.");
-                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attackerUid was not cut by the counter.");
+                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attacker was not cut by the counter.");
             }
 
             // The counter is spent: the next blow lands.
@@ -167,7 +167,7 @@ public sealed class MartialArtsTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attackerUid was not pricked.");
+                Assert.That(damageableSystem.GetTotalDamage(attackerUid), Is.GreaterThan(FixedPoint2.Zero), "The attacker was not pricked.");
                 Assert.That(damageableSystem.GetTotalDamage(wearerUid), Is.LessThan(FixedPoint2.New(10)),
                     "The armor neither softened the blow nor stopped the thorns bouncing back.");
             }
@@ -221,7 +221,7 @@ public sealed class MartialArtsTest : GameTest
                 var ev = new DragonPalmActionEvent { Performer = userUid, Target = targetUid };
                 SEntMan.EventBus.RaiseLocalEvent(userUid, ev);
                 Assert.That(ev.Handled, Is.True, "The palm did not go off.");
-                Assert.That(SComp<DragonPalmComboComponent>(targetUid).Stacks, Is.EqualTo(i), "The palms did not build on each otherUid.");
+                Assert.That(SComp<DragonPalmComboComponent>(targetUid).Stacks, Is.EqualTo(i), "The palms did not build on each other.");
             }
         });
     }

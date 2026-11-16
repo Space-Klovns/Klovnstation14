@@ -140,7 +140,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]

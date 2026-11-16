@@ -79,3 +79,16 @@ cultivation-spring-mending = Warm green qi flows from {THE($user)} into {THE($ta
 cultivation-myriad-spring = A myriad springs well up around {THE($user)}.
 cultivation-rooted-stance = {CAPITALIZE(THE($user))} sinks into a rooted stance, immovable as a mountain.
 cultivation-mountain-collapse = {CAPITALIZE(THE($user))} brings the mountain down!
+
+## Breakthrough and heart demons
+
+cultivation-readiness-stable = Readiness {$readiness}: stable. Endure heaven's lightning and you will break through.
+cultivation-readiness-risky = Readiness {$readiness}: risky. Internal injuries weigh on you; rest at a qi source, fill your dantian or temper your Dao heart first.
+cultivation-lightning-strikes = Tribulation lightning crashes down on {THE($user)}!
+cultivation-lightning-grounded = A bolt of tribulation lightning is drawn into {THE($rod)}!
+heart-demon-name = heart demon of {$host}
+heart-demon-summoned = A twisted copy of {THE($host)} tears itself free!
+heart-demon-shatters = The heart demon shatters like a broken mirror!
+heart-demon-defeated = You faced your own doubts and won. Your Dao heart is tempered: your next breakthrough will be steadier.
+heart-demon-not-yours = The demon is gone, but you weren't there to face it. Your doubts remain.
+heart-demon-returns = {CAPITALIZE(THE($host))}'s heart demon climbs back inside {OBJECT($host)}!

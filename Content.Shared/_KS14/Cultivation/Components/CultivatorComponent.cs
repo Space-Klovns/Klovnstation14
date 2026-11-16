@@ -96,14 +96,44 @@ public sealed partial class CultivatorComponent : Component
     [DataField]
     public int MeditationsSinceHeal;
 
+    /// <summary>
+    ///     Each breakthrough is endured in cycles of this long while heaven's lightning falls.
+    /// </summary>
     [DataField]
-    public TimeSpan BreakthroughDuration = TimeSpan.FromSeconds(15);
+    public TimeSpan BreakthroughCycle = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    ///     Readiness before anything else is counted. 70 or more always succeeds.
+    /// </summary>
+    [DataField]
+    public int BaseReadiness = 50;
 
     [DataField]
-    public float BaseDeviationChance = 0.1f;
+    public int ReadinessPerInjury = 20;
+
+    /// <summary>
+    ///     Cycles left in a running breakthrough, and its readiness.
+    /// </summary>
+    [DataField]
+    public int BreakthroughCyclesLeft;
 
     [DataField]
-    public float DeviationChancePerInjury = 0.2f;
+    public int BreakthroughReadiness;
+
+    /// <summary>
+    ///     Beat your own heart demon and the next breakthrough is steadier.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool DaoHeartTempered;
+
+    /// <summary>
+    ///     Forced Circulation: meditation gathers twice the insight, at the risk of injury every cycle.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool ForcedCirculation;
+
+    [DataField]
+    public float ForcedCirculationRisk = 0.25f;
 
     [DataField]
     public TimeSpan ReadManualDuration = TimeSpan.FromSeconds(5);

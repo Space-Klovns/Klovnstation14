@@ -550,13 +550,13 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_cultivatorQuery.HasComp(userUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-qi-cultivator"), userUid, userUid);
+            _popupSystem.PopupEntity(Loc.GetString("body-manual-qi-cultivator"), userUid, userUid);
             return;
         }
 
         if (_bodyCultivatorQuery.TryComp(userUid, out var bodyComponent) && (bodyComponent.Committed || !manualEntity.Comp.Commits))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-known"), userUid, userUid);
+            _popupSystem.PopupEntity(Loc.GetString("body-manual-known"), userUid, userUid);
             return;
         }
 
@@ -569,7 +569,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -583,11 +583,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (manualEntity.Comp.Commits)
         {
             _bodySystem.Commit((args.User, bodyComponent));
-            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-committed"), args.User, args.User, type: PopupType.Large);
+            _popupSystem.PopupEntity(Loc.GetString("body-manual-committed"), args.User, args.User, type: PopupType.Large);
         }
         else
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manualEntity-primer"), args.User, args.User, type: PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("body-manual-primer"), args.User, args.User, type: PopupType.Medium);
         }
     }
 

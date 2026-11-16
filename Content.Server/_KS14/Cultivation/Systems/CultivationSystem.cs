@@ -1,3 +1,5 @@
+using Content.Server.Lightning;
+using Content.Server.Lightning.Components;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Systems;
@@ -11,6 +13,7 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Popups;
 using Robust.Server.Audio;
 using Robust.Shared.Audio;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
@@ -30,6 +33,20 @@ public sealed partial class CultivationSystem : EntitySystem
     private static readonly TimeSpan RegenInterval = TimeSpan.FromSeconds(1);
     private static readonly SoundSpecifier BreakthroughSound = new SoundPathSpecifier("/Audio/Effects/church_bell1.ogg");
     private static readonly SoundSpecifier DeviationSound = new SoundPathSpecifier("/Audio/Magic/disintegrate.ogg");
+    private static readonly SoundSpecifier ThunderSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
+    private static readonly EntProtoId TribulationCloud = "KsTribulationCloud";
+    private static readonly EntProtoId TribulationLightning = "KsTribulationLightning";
+
+    /// <summary>
+    ///     Chance per breakthrough cycle that heaven's lightning falls.
+    /// </summary>
+    private const float LightningChance = 0.35f;
+
+    /// <summary>
+    ///     Chance a qi deviation tears a heart demon loose.
+    /// </summary>
+    private const float HeartDemonChance = 0.5f;
+
     private static readonly SoundSpecifier LearnSound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
 
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -37,6 +54,8 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private HeartDemonSystem _heartDemonSystem = default!;
+    [Dependency] private LightningSystem _lightningSystem = default!;
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private SharedCultivationSystem _cultivationSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
@@ -49,6 +68,7 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private EntityQuery<NineYangComponent> _nineYangQuery = default!;
 
     private readonly HashSet<Entity<CultivationQiSourceComponent>> _qiSources = new();
+    private readonly HashSet<Entity<LightningTargetComponent>> _lightningTargets = new();
 
     /// <summary>
     ///     New cultivators still owed a starting manual.
@@ -305,6 +325,25 @@ public sealed partial class CultivationSystem : EntitySystem
 
     #region Breakthrough
 
+    /// <summary>
+    ///     How ready someone is to break through, 70 or more being certain. Anything that helps (pills, a tempered
+    ///         Dao heart, an inheritance) adds to it through <see cref="CultivationBreakthroughReadinessEvent"/>.
+    /// </summary>
+    public int BreakthroughReadiness(Entity<CultivatorComponent> entity)
+    {
+        var readiness = entity.Comp.BaseReadiness - entity.Comp.ReadinessPerInjury * entity.Comp.InternalInjury;
+        if (QiSourceMultiplier(entity) > 1f)
+            readiness += 15;
+        if (entity.Comp.Qi >= _cultivationSystem.GetMaxQi(entity.Comp) * 0.9f)
+            readiness += 10;
+        if (entity.Comp.DaoHeartTempered)
+            readiness += 15;
+
+        var ev = new CultivationBreakthroughReadinessEvent(readiness);
+        RaiseLocalEvent(entity, ref ev);
+        return ev.Readiness;
+    }
+
     [SubscribeLocalEvent]
     private void OnBreakthroughAction(Entity<CultivatorComponent> entity, ref CultivationBreakthroughActionEvent args)
     {
@@ -326,30 +365,92 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, entity, entity.Comp.BreakthroughDuration, new CultivationBreakthroughDoAfterEvent(), entity)
+        StartBreakthrough(entity);
+    }
+
+    /// <summary>
+    ///     Begin enduring heaven's tribulation: three cycles, and two more for every realm already climbed.
+    /// </summary>
+    public bool StartBreakthrough(Entity<CultivatorComponent> entity)
+    {
+        var readiness = BreakthroughReadiness(entity);
+        var doAfterArgs = new DoAfterArgs(EntityManager, entity, entity.Comp.BreakthroughCycle, new CultivationBreakthroughDoAfterEvent(), entity)
         {
             BreakOnMove = true,
-            BreakOnDamage = true,
             NeedHand = false,
         };
 
-        if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        if (!_doAfterSystem.TryStartDoAfter(doAfterArgs))
+            return false;
+
+        _cultivationSystem.SetBreakthrough(entity.Comp, 3 + 2 * (int)entity.Comp.Realm, readiness);
+        _audioSystem.PlayPvs(ThunderSound, entity);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _popupSystem.PopupEntity(Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
+            ("readiness", readiness)), entity, entity, type: PopupType.Medium);
+        return true;
     }
 
     [SubscribeLocalEvent]
     private void OnBreakthroughDoAfter(Entity<CultivatorComponent> entity, ref CultivationBreakthroughDoAfterEvent args)
     {
-        if (args.Cancelled || args.Handled)
+        if (args.Handled)
             return;
 
         args.Handled = true;
-
-        var chance = SharedCultivationSystem.DeviationChance(entity.Comp.BaseDeviationChance, entity.Comp.DeviationChancePerInjury, entity.Comp.InternalInjury);
-        if (_robustRandom.Prob(chance))
+        if (args.Cancelled)
+        {
+            // Stopping halfway is its own deviation.
+            _cultivationSystem.SetBreakthrough(entity.Comp, 0, 0);
             Deviate(entity);
-        else
+            return;
+        }
+
+        CallLightning(entity);
+
+        var cyclesLeft = entity.Comp.BreakthroughCyclesLeft - 1;
+        _cultivationSystem.SetBreakthrough(entity.Comp, cyclesLeft, entity.Comp.BreakthroughReadiness);
+        if (cyclesLeft > 0)
+        {
+            args.Repeat = true;
+            return;
+        }
+
+        var readiness = entity.Comp.BreakthroughReadiness;
+        _cultivationSystem.SetBreakthrough(entity.Comp, 0, 0);
+        if (_robustRandom.Prob(SharedCultivationSystem.BreakthroughChance(readiness)))
             BreakThrough(entity);
+        else
+            Deviate(entity);
+    }
+
+    /// <summary>
+    ///     Heaven notices. A bolt may fall on the one breaking through, unless a grounding rod nearby draws it away.
+    /// </summary>
+    private void CallLightning(Entity<CultivatorComponent> entity)
+    {
+        if (!_robustRandom.Prob(LightningChance))
+            return;
+
+        var coordinates = Transform(entity).Coordinates;
+        var cloudUid = Spawn(TribulationCloud, coordinates.Offset(new System.Numerics.Vector2(0f, 3f)));
+
+        _lightningTargets.Clear();
+        _entityLookupSystem.GetEntitiesInRange(coordinates, 6f, _lightningTargets);
+        foreach (var rod in _lightningTargets)
+        {
+            if (!_robustRandom.Prob(0.6f))
+                continue;
+
+            _lightningSystem.ShootLightning(cloudUid, rod.Owner, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-lightning-grounded", ("rod", rod.Owner)), rod.Owner, type: PopupType.Small);
+            return;
+        }
+
+        _lightningSystem.ShootLightning(cloudUid, entity, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
+        var damage = 5f + 5f * (float)entity.Comp.Realm;
+        _damageableSystem.TryChangeDamage(entity.Owner, Damage("Shock", damage), ignoreResistances: true, interruptsDoAfters: false);
+        _popupSystem.PopupEntity(Loc.GetString("cultivation-lightning-strikes", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -369,7 +470,7 @@ public sealed partial class CultivationSystem : EntitySystem
             ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), entity, type: PopupType.Large);
 
         if (newRealm == CultivationRealm.FoundationEstablishment)
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-secondUid-law-slot"), entity, entity, type: PopupType.Medium);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-second-law-slot"), entity, entity, type: PopupType.Medium);
     }
 
     /// <summary>
@@ -387,6 +488,10 @@ public sealed partial class CultivationSystem : EntitySystem
 
         _audioSystem.PlayPvs(DeviationSound, entity);
         _popupSystem.PopupEntity(Loc.GetString("cultivation-deviation", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+
+        // Doubt tears free and takes your face.
+        if (_robustRandom.Prob(HeartDemonChance))
+            _heartDemonSystem.Summon(entity.Owner);
     }
 
     #endregion
@@ -404,21 +509,21 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-gibberish"), userUid, userUid);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-gibberish"), userUid, userUid);
             return;
         }
 
         if (_cultivationSystem.KnowsLaw(cultivatorComponent, manualEntity.Comp.Law))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-known"), userUid, userUid);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-known"), userUid, userUid);
             return;
         }
 
         if (cultivatorComponent.Laws.Count >= SharedCultivationSystem.LawSlots(cultivatorComponent.Realm))
         {
             _popupSystem.PopupEntity(Loc.GetString(cultivatorComponent.Realm < CultivationRealm.FoundationEstablishment
-                ? "cultivation-manualEntity-no-room-yet"
-                : "cultivation-manualEntity-no-room"), userUid, userUid);
+                ? "cultivation-manual-no-room-yet"
+                : "cultivation-manual-no-room"), userUid, userUid);
             return;
         }
 
@@ -431,7 +536,7 @@ public sealed partial class CultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manualEntity-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]

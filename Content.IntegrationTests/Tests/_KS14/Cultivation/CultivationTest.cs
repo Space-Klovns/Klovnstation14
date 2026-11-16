@@ -136,11 +136,11 @@ public sealed class CultivationTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, metal), Is.True, "Could not learn a firstUid law.");
-                Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Metal), Is.True, "The firstUid law learned is not the Root Law.");
-                Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, FlyingSword), Is.True, "The Root Law's firstUid technique was not granted.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, metal), Is.True, "Could not learn a first law.");
+                Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Metal), Is.True, "The first law learned is not the Root Law.");
+                Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, FlyingSword), Is.True, "The Root Law's first technique was not granted.");
                 Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, SwordRain), Is.False, "A Golden Core technique was granted at Qi Condensation.");
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.False, "A secondUid law fit before Foundation Establishment.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.False, "A second law fit before Foundation Establishment.");
             }
 
             cultivationSystem.BreakThrough(cultivatorEntity);
@@ -148,7 +148,7 @@ public sealed class CultivationTest : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.True, "Foundation Establishment did not open a secondUid law slot.");
+                Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, water), Is.True, "Foundation Establishment did not open a second law slot.");
                 Assert.That(sharedCultivationSystem.HasTechnique(cultivatorEntity.Comp, StillWater), Is.True, "The Complementary Law's technique was not granted.");
                 Assert.That(sharedCultivationSystem.HasRoot(cultivatorUid, CultivationElement.Water), Is.False, "The Complementary Law replaced the Root Law.");
                 Assert.That(cultivationSystem.TryLearnFromManual(cultivatorUid, fire), Is.False, "A third law fit.");
@@ -288,7 +288,7 @@ public sealed class CultivationTest : GameTest
                 Assert.That(damageableSystem.GetTotalDamage(rootedUid).Float(), Is.EqualTo(control * 0.75f).Within(0.01f),
                     "Rooted Mountain Stance did not soften the blow.");
                 Assert.That(SEntMan.GetComponent<MovementSpeedModifierComponent>(rootedUid).CurrentWalkSpeed,
-                    Is.EqualTo(baseWalkSpeed * 0.6f).Within(0.01f), "Rooted Mountain Stance did not slow its userUid.");
+                    Is.EqualTo(baseWalkSpeed * 0.6f).Within(0.01f), "Rooted Mountain Stance did not slow its user.");
             }
         });
 
@@ -327,7 +327,7 @@ public sealed class CultivationTest : GameTest
                 Assert.That(cultivatorComponent.MeditateActionEntity, Is.Not.Null, "No meditate action was granted.");
                 Assert.That(cultivatorComponent.BreakthroughActionEntity, Is.Not.Null, "No breakthrough action was granted.");
                 Assert.That(held.Count(SEntMan.HasComponent<CultivationManualComponent>), Is.EqualTo(1),
-                    "Exactly one starting manualEntity was not put in hand.");
+                    "Exactly one starting manual was not put in hand.");
             }
         });
     }
@@ -347,14 +347,107 @@ public sealed class CultivationTest : GameTest
     }
 
     [Test]
+    public async Task TestBreakthroughReadiness()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var cultivationSystem = SEntMan.System<CultivationSystem>();
+            var sharedCultivationSystem = SEntMan.System<SharedCultivationSystem>();
+            var cultivatorUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
+            var cultivatorEntity = SEntity<CultivatorComponent>(cultivatorUid);
+
+            var baseline = cultivationSystem.BreakthroughReadiness(cultivatorEntity);
+            sharedCultivationSystem.AddInternalInjury(cultivatorUid, stacks: 1);
+            var injured = cultivationSystem.BreakthroughReadiness(cultivatorEntity);
+            sharedCultivationSystem.SetDaoHeartTempered(cultivatorUid, true);
+            var tempered = cultivationSystem.BreakthroughReadiness(cultivatorEntity);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(injured, Is.EqualTo(baseline - cultivatorEntity.Comp.ReadinessPerInjury), "Internal injury did not weigh on readiness.");
+                Assert.That(tempered, Is.EqualTo(injured + 15), "A tempered Dao heart did not steady the breakthrough.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestBreakthroughEndsInTheNextRealm()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid cultivatorUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            var sharedCultivationSystem = SEntMan.System<SharedCultivationSystem>();
+            cultivatorUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
+            var cultivatorEntity = SEntity<CultivatorComponent>(cultivatorUid);
+
+            // Full insight, a full dantian and a tempered Dao heart: a stable breakthrough.
+            sharedCultivationSystem.AddInsight(cultivatorUid, 1000f);
+            sharedCultivationSystem.AddQi(cultivatorUid, 1000f);
+            sharedCultivationSystem.SetDaoHeartTempered(cultivatorUid, true);
+            Assert.That(SEntMan.System<CultivationSystem>().BreakthroughReadiness(cultivatorEntity), Is.GreaterThanOrEqualTo(70));
+            Assert.That(SEntMan.System<CultivationSystem>().StartBreakthrough(cultivatorEntity), Is.True, "The breakthrough did not start.");
+        });
+
+        // Three cycles of three seconds at Qi Condensation.
+        await RunSeconds(11);
+
+        await Server.WaitAssertion(() =>
+        {
+            var cultivatorComponent = SComp<CultivatorComponent>(cultivatorUid);
+            Assert.That(cultivatorComponent.Realm, Is.EqualTo(CultivationRealm.FoundationEstablishment),
+                $"A stable breakthrough endured to the end did not reach the next realm (insight {cultivatorComponent.Insight}, injury {cultivatorComponent.InternalInjury}, cycles left {cultivatorComponent.BreakthroughCyclesLeft}).");
+        });
+    }
+
+    [Test]
+    public async Task TestHeartDemonBeatenOrReturned()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid beatenHostUid = default;
+        EntityUid neglectedHostUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            var heartDemonSystem = SEntMan.System<HeartDemonSystem>();
+            beatenHostUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
+            neglectedHostUid = SEntMan.SpawnEntity("KsTestCultivator", map.GridCoords);
+
+            var demonUid = heartDemonSystem.Summon(beatenHostUid);
+            Assert.That(demonUid, Is.Not.Null, "No heart demon tore free.");
+            Assert.That(heartDemonSystem.Summon(beatenHostUid), Is.EqualTo(demonUid), "A second demon tore free while the first was loose.");
+
+            // Killed right beside its host, short of being gibbed.
+            SEntMan.System<DamageableSystem>().TryChangeDamage(demonUid!.Value, Blunt(220), ignoreResistances: true);
+
+            heartDemonSystem.Summon(neglectedHostUid, lifetime: System.TimeSpan.FromSeconds(1));
+        });
+
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(SComp<CultivatorComponent>(beatenHostUid).DaoHeartTempered, Is.True, "Beating your own heart demon did not temper your Dao heart.");
+                Assert.That(SComp<CultivatorComponent>(neglectedHostUid).InternalInjury, Is.EqualTo(2), "A demon left to run out the clock did not climb back in.");
+            }
+        });
+    }
+
+    [Test]
     public void TestPureRules()
     {
         using (Assert.EnterMultipleScope())
         {
             Assert.That(SharedCultivationSystem.RegenMultiplier(0.25f, 0), Is.EqualTo(1f));
             Assert.That(SharedCultivationSystem.RegenMultiplier(0.25f, 5), Is.Zero, "Qi recovery went negative.");
-            Assert.That(SharedCultivationSystem.DeviationChance(0.1f, 0.2f, 2), Is.EqualTo(0.5f).Within(0.0001f));
-            Assert.That(SharedCultivationSystem.DeviationChance(0.1f, 0.2f, 9), Is.EqualTo(1f), "Deviation chance went above certain.");
+            Assert.That(SharedCultivationSystem.BreakthroughChance(70), Is.EqualTo(1f), "A stable breakthrough is not certain.");
+            Assert.That(SharedCultivationSystem.BreakthroughChance(50), Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(SharedCultivationSystem.BreakthroughChance(-40), Is.EqualTo(0.05f).Within(0.0001f), "A hopeless breakthrough has no chance at all.");
             Assert.That(SharedCultivationSystem.LawSlots(CultivationRealm.QiCondensation), Is.EqualTo(1));
             Assert.That(SharedCultivationSystem.LawSlots(CultivationRealm.NascentSoul), Is.EqualTo(2));
         }

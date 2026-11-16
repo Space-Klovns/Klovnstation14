@@ -29,11 +29,11 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Chance that a breakthrough fails into a qi deviation.
+    ///     Chance a breakthrough succeeds at a given readiness: certain from 70, otherwise between 5% and 95%.
     /// </summary>
-    public static float DeviationChance(float baseChance, float perInjury, int injury)
+    public static float BreakthroughChance(int readiness)
     {
-        return Math.Clamp(baseChance + perInjury * injury, 0f, 1f);
+        return readiness >= 70 ? 1f : (float)Math.Clamp(readiness, 5, 95) / 100f;
     }
 
     /// <summary>
@@ -246,6 +246,30 @@ public sealed partial class SharedCultivationSystem : EntitySystem
         entity.Comp.Laws.Add(law);
         Dirty(entity);
         return true;
+    }
+
+    public void SetBreakthrough(CultivatorComponent cultivator, int cyclesLeft, int readiness)
+    {
+        cultivator.BreakthroughCyclesLeft = cyclesLeft;
+        cultivator.BreakthroughReadiness = readiness;
+    }
+
+    public void SetDaoHeartTempered(Entity<CultivatorComponent?> entity, bool tempered)
+    {
+        if (!_cultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return;
+
+        entity.Comp.DaoHeartTempered = tempered;
+        Dirty(entity);
+    }
+
+    public void SetForcedCirculation(Entity<CultivatorComponent?> entity, bool forced)
+    {
+        if (!_cultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
+            return;
+
+        entity.Comp.ForcedCirculation = forced;
+        Dirty(entity);
     }
 
     public void SetNextRegen(CultivatorComponent cultivator, TimeSpan next)
