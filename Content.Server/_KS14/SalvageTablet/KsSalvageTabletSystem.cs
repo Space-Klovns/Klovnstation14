@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Content.Server._KS14.SupplyPod;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.SalvageTablet;
@@ -335,7 +336,9 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     public bool TryGetAccount(Entity<KsSalvageTabletComponent> tabletEntity, out Entity<KsMinerAccountComponent> accountEntity)
     {
         accountEntity = default;
-        if (tabletEntity.Comp.BoundCard is not { } cardUid || !_accountQuery.TryComp(cardUid, out var accountComponent))
+        if (tabletEntity.Comp.BoundCard is not { } cardUid ||
+            !_accountQuery.TryComp(cardUid, out var accountComponent) ||
+            accountComponent.LifeStage > ComponentLifeStage.Running)
             return false;
 
         accountEntity = (cardUid, accountComponent);
@@ -343,22 +346,14 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Whoever carries the account's ID card right now, however deep: in a hand, the ID slot, a PDA or a wallet.
-    ///         Worked out each time rather than stored, so it follows the card when it changes hands.
+    ///     The mob carrying an item right now, however deep: in a hand, a pocket, a bag, or clipped to an ore bag
+    ///         someone holds. Worked out each time rather than stored, so it follows the item when it changes hands.
     /// </summary>
-    /// <returns>False when nobody carries it: on the floor, in a locker, or anywhere else a card legitimately is.</returns>
-    public bool TryGetCardHolder(Entity<KsMinerAccountComponent> accountEntity, out EntityUid holderUid)
+    /// <returns>False when no mob carries it: on the floor, in a locker, or anywhere else an item legitimately is.</returns>
+    public bool TryGetHolder(EntityUid itemUid, out EntityUid holderUid)
     {
         holderUid = default;
-
-        // Accounts are only ever made on ID cards, at login. One anywhere else is a bug.
-        if (!_idCardQuery.HasComp(accountEntity.Owner))
-        {
-            Log.Error($"{ToPrettyString(accountEntity.Owner)} has a {nameof(KsMinerAccountComponent)} but is not an ID card.");
-            return false;
-        }
-
-        var currentUid = accountEntity.Owner;
+        var currentUid = itemUid;
         while (_containerSystem.TryGetContainingContainer(currentUid, out var container))
         {
             currentUid = container.Owner;
@@ -379,18 +374,26 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         accountEntity.Comp.Points += points;
         accountEntity.Comp.Reputation += taskPrototype.Reputation;
 
-        // Paid either way. The news goes to whoever carries the card, as that is who is doing its tasks.
-        if (!TryGetCardHolder(accountEntity, out var salvagerUid))
-            return;
+        // Paid either way. The news goes to whoever holds a tablet logged in with the account, each of them once,
+        //      with their own tablet's sound. Nobody holding one hears nothing.
+        var rankedUp = GetRank(accountEntity) > rankBefore;
+        var told = new HashSet<EntityUid>();
+        foreach (var tabletUid in accountEntity.Comp.Tablets)
+        {
+            if (!_tabletQuery.TryComp(tabletUid, out var tabletComponent) ||
+                !TryGetHolder(tabletUid, out var holderUid) ||
+                !told.Add(holderUid))
+                continue;
 
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-complete", ("points", points), ("reputation", taskPrototype.Reputation)),
-            salvagerUid,
-            salvagerUid,
-            type: PopupType.Medium);
-        PlayToSalvager(accountEntity, salvagerUid, tabletComponent => tabletComponent.CompleteSound);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-task-complete", ("points", points), ("reputation", taskPrototype.Reputation)),
+                holderUid,
+                holderUid,
+                type: PopupType.Medium);
+            _audioSystem.PlayGlobal(tabletComponent.CompleteSound, holderUid);
 
-        if (GetRank(accountEntity) > rankBefore)
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-rank-up"), salvagerUid, salvagerUid, type: PopupType.Large);
+            if (rankedUp)
+                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-salvage-tablet-rank-up"), holderUid, holderUid, type: PopupType.Large);
+        }
     }
 
     /// <summary>
@@ -403,21 +406,6 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
         {
             if (_tabletQuery.TryComp(tabletUid, out var tabletComponent))
                 _audioSystem.PlayPvs(tabletComponent.FailSound, tabletUid);
-        }
-    }
-
-    /// <summary>
-    ///     Plays one of the sounds of a tablet logged in with the account, to its salvager alone.
-    /// </summary>
-    private void PlayToSalvager(Entity<KsMinerAccountComponent> accountEntity, EntityUid salvagerUid, Func<KsSalvageTabletComponent, SoundSpecifier?> pickSound)
-    {
-        foreach (var tabletUid in accountEntity.Comp.Tablets)
-        {
-            if (!_tabletQuery.TryComp(tabletUid, out var tabletComponent))
-                continue;
-
-            _audioSystem.PlayGlobal(pickSound(tabletComponent), salvagerUid);
-            return;
         }
     }
 
@@ -527,6 +515,29 @@ public sealed partial class KsSalvageTabletSystem : EntitySystem
     {
         if (entity.Comp.BoundCard is { } cardUid && _accountQuery.TryComp(cardUid, out var accountComponent))
             accountComponent.Tablets.Remove(entity.Owner);
+    }
+
+    /// <summary>
+    ///     The account is going, with its card or on its own: every tablet logged in with it is logged out, so none
+    ///         is left pointing at a card that has no account. Copied first, as logging out edits the set.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnAccountShutdown(Entity<KsMinerAccountComponent> entity, ref ComponentShutdown args)
+    {
+        foreach (var tabletUid in entity.Comp.Tablets.ToArray())
+        {
+            if (!_tabletQuery.TryComp(tabletUid, out var tabletComponent) || tabletComponent.BoundCard != entity.Owner)
+                continue;
+
+            tabletComponent.BoundCard = null;
+            if (tabletComponent.LifeStage > ComponentLifeStage.Running)
+                continue;
+
+            Dirty(tabletUid, tabletComponent);
+            UpdateUi((tabletUid, tabletComponent));
+        }
+
+        entity.Comp.Tablets.Clear();
     }
 
     /// <summary>
