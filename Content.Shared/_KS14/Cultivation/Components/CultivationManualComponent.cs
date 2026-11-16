@@ -12,6 +12,12 @@ public sealed partial class CultivationManualComponent : Component
 {
     [DataField(required: true)]
     public ProtoId<CultivationLawPrototype> Law;
+
+    /// <summary>
+    ///     A master's transmission: even a mortal who studies it awakens as a cultivator.
+    /// </summary>
+    [DataField]
+    public bool Awakens;
 }
 
 /// <summary>

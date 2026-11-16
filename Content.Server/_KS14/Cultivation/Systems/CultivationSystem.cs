@@ -1,6 +1,7 @@
 using Content.Server.Lightning;
 using Content.Server.Lightning.Components;
 using Content.Shared._KS14.Cultivation;
+using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Shared._KS14.Cultivation.Systems;
@@ -584,7 +585,15 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-gibberish"), userUid, userUid);
+            // Only a master's transmission can awaken a mortal, and never one committed to the path of the flesh.
+            if (!manualEntity.Comp.Awakens
+                || TryComp<BodyCultivatorComponent>(userUid, out var bodyComponent) && bodyComponent.Committed)
+            {
+                _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-gibberish"), userUid, userUid);
+                return;
+            }
+
+            StartReading(userUid, manualEntity, TimeSpan.FromSeconds(10));
             return;
         }
 
@@ -602,7 +611,12 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, userUid, cultivatorComponent.ReadManualDuration, new CultivationReadManualDoAfterEvent(), manualEntity, used: manualEntity)
+        StartReading(userUid, manualEntity, cultivatorComponent.ReadManualDuration);
+    }
+
+    private void StartReading(EntityUid userUid, EntityUid manualUid, TimeSpan duration)
+    {
+        var doAfterArgs = new DoAfterArgs(EntityManager, userUid, duration, new CultivationReadManualDoAfterEvent(), manualUid, used: manualUid)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
@@ -611,7 +625,7 @@ public sealed partial class CultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualUid)), userUid, type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -621,6 +635,12 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
 
         args.Handled = true;
+        if (!_cultivatorQuery.HasComp(args.User) && manualEntity.Comp.Awakens)
+        {
+            EnsureComp<CultivatorComponent>(args.User);
+            _popupSystem.PopupEntity(Loc.GetString("cultivation-awakened"), args.User, args.User, type: PopupType.Large);
+        }
+
         TryLearnFromManual(args.User, manualEntity);
     }
 

@@ -272,6 +272,25 @@ public sealed partial class SharedCultivationSystem : EntitySystem
         Dirty(entity);
     }
 
+    /// <summary>
+    ///     Let go of a law. The Root Law can never be released.
+    /// </summary>
+    public bool TryForgetLaw(Entity<CultivatorComponent?> entity, ProtoId<CultivationLawPrototype> law)
+    {
+        if (!_cultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false)
+            || entity.Comp.Laws.Count < 2 || entity.Comp.Laws[0] == law || !entity.Comp.Laws.Remove(law))
+            return false;
+
+        Dirty(entity);
+        return true;
+    }
+
+    /// <returns>The action entity the technique was granted as, if it was.</returns>
+    public EntityUid? ForgetTechnique(CultivatorComponent cultivator, EntProtoId actionProto)
+    {
+        return cultivator.TechniqueActions.Remove(actionProto, out var actionUid) ? actionUid : null;
+    }
+
     public void SetNextRegen(CultivatorComponent cultivator, TimeSpan next)
     {
         cultivator.NextRegen = next;
