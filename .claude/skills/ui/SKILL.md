@@ -370,8 +370,8 @@ ever shrinks.
 - **Sandbox:** no `stackalloc` (CLAUDE.md §6). `SandboxTest` is the only check.
 - **UI has no `SCREEN_TEXTURE`**, so a post-process blur of the UI is impossible. Blurring something in UI means a
   shader that samples `TEXTURE` set on the control that draws the texture (`TextureRect.ShaderOverride`, or
-  `UseShader` around the draw). The lobby's `KsLobbyContrast` (`_KS14/Shaders/lobby_contrast.swsl`) does this with its
-  `blurRadius` uniform (in texels). There is no standalone blur shader: write one only when something needs it.
+  `UseShader` around the draw), as the lobby's `KsLobbyContrast` (`_KS14/Shaders/lobby_contrast.swsl`) does for its
+  dimming. There is no blur shader: the lobby's was removed on purpose, so write one only when something needs it.
 
 ## Localisation in UI
 
@@ -472,8 +472,7 @@ Fonts, text and countdown:
   driven only by `LobbyGui.KsSetCountdown(caption, value)`. Round started or ready-state refresh hides both; paused
   shows the caption over `PAUSED`; "starting soon" and "right now" show the value alone.
 - Disabled menu buttons (Observe before the round) draw at about 28% alpha.
-- **Dimming is frosted glass**: inside the mask the art is blurred (6 texels, only where the mask is above zero),
-  luminance is eased down to `maxLuminance` 0.07 through a soft knee (starting at 60% of it, never brightening) and
+- **Dimming**: inside the mask the art stays sharp (the lobby is never blurred), its luminance is eased down to `maxLuminance` 0.07 through a soft knee (starting at 60% of it, never brightening) and
   desaturated 30%. While it is active `RightSide.PanelOverride` is a `StyleBoxEmpty`, so the right fade doesn't
   stack into a stripe; it returns to null otherwise (`KsApplyContrastShader`).
 - `CharacterPreview` is right-aligned (`Margin="0 0 40 0"`) and vertically centred between two `VerticalExpand`
@@ -488,7 +487,7 @@ Fonts, text and countdown:
   only through such a map (`GameTicker.Klovn.ForcedLobbyBackground.cs`). The client only displays
   `ClientGameTicker.LobbyBackground`; never pick art client-side.
 
-Bottom bar and blur:
+Bottom bar:
 - `LobbyGui` is `KsRoot` (vertical, anchored Wide) holding `MainContainer` (expand) and `KsBottomBar`: a full-width
   hairline, then a `KsLobbyBottomBar` panel (black, alpha 0.85) around the song/background labels and the
   `LinkBanner`/`DevInfoBanner`. It stays visible in character setup. `KsFadeBottom` is kept: it softens the
@@ -497,13 +496,12 @@ Bottom bar and blur:
   parent-child forms, like Negative) gives a green label and a faint green box.
 - **Backdrop shader** (`LobbyGui.Klovn.Contrast.cs`, `KsLobbyContrast` = `_KS14/Shaders/lobby_contrast.swsl`): one
   `InstanceUnique()` created in the constructor, on `Background.ShaderOverride` and `KsViewport.KsDrawShader` whenever
-  the cvar `klovn.lobby.adaptive_contrast` (CLIENTONLY, default on) or the character-setup blur is active, else null.
+  the cvar `klovn.lobby.adaptive_contrast` (CLIENTONLY, default on) is on, else null.
   It caps the linear luminance (`maxLuminance` 0.07, about 7:1 against #E6E6E6) of bright pixels under up to four
   padded regions (`KsMenuColumn`, `CharacterPreview`, `RightSide`, `CharacterSetupState`, only while visible in the
-  tree); dark pixels are untouched. `blurRadius` 14 in `SwitchState(CharacterSetup)` makes it the blur too
-  (`strength` 0 when the cvar is off).
+  tree); dark pixels are untouched. It doesn't blur: the backdrop stays sharp, character setup included.
   - Dimming applies to the lobby art only: `strength` is 0 while the lobby-view camera (`KsViewportContainer`) is
-    shown, since it shows the live game. Only the blur still reaches the camera.
+    shown, since it shows the live game, and the shader is off then.
   - Each region is fully dimmed inside and fades out over `feather` **screen pixels outside** its edge (64 × UI scale).
     It uses a rounded box distance scaled by `quadPixelSize`, so corners fade radially and the feather isn't
     stretched by the aspect ratio.

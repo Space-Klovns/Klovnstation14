@@ -9,12 +9,10 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Lobby.UI;
 
-// The lobby backdrop shader: dims bright art under the text regions (cvar) and blurs it in character setup.
-// One ShaderInstance serves both, since a control has only one ShaderOverride.
+// The lobby backdrop shader: dims bright art under the text regions (cvar). The backdrop is never blurred.
 public sealed partial class LobbyGui
 {
     private static readonly ProtoId<ShaderPrototype> KsContrastShaderId = "KsLobbyContrast";
-    private const float KsBlurRadius = 14f;
     private const float KsRegionPaddingPixels = 16f;
     private const float KsFeatherPixels = 64f; // how far past a region's edge the dimming fades out
     private const int KsMaxRegions = 4;
@@ -26,7 +24,6 @@ public sealed partial class LobbyGui
     private ShaderInstance? _contrastShader;
     private Action<bool>? _contrastCVarHandler;
     private bool _contrastEnabled;
-    private bool _blurActive;
     private bool _contrastDirty = true;
     private readonly Control[] _contrastRegionControls = new Control[KsMaxRegions];
     private readonly string[] _regionParameters = ["region0", "region1", "region2", "region3"];
@@ -38,7 +35,7 @@ public sealed partial class LobbyGui
         _contrastRegionControls[0] = KsMenuColumn;
         _contrastRegionControls[1] = CharacterPreview;
         _contrastRegionControls[2] = RightSide;
-        _contrastRegionControls[3] = CharacterSetupState; // text over the blurred backdrop in character setup
+        _contrastRegionControls[3] = CharacterSetupState; // text over the backdrop in character setup
 
         // Rects are recomputed lazily in Draw when one of these says the layout moved (see KsMarkContrastDirty).
         OnResized += KsMarkContrastDirty;
@@ -96,12 +93,6 @@ public sealed partial class LobbyGui
         _contrastCVarHandler = null;
     }
 
-    private void KsSetBlurActive(bool blurActive)
-    {
-        _blurActive = blurActive;
-        KsApplyContrastShader();
-    }
-
     private void KsMarkContrastDirty(Control control)
     {
         _contrastDirty = true;
@@ -121,16 +112,13 @@ public sealed partial class LobbyGui
         // Only the lobby art is dimmed. The camera shows the live game, which the dimming would misrepresent, and
         //      lobby art changes only between rounds, so the regions are all that ever needs recomputing.
         var contrast = _contrastEnabled && !KsViewportContainer.Visible;
-        var active = contrast || _blurActive;
-        var shader = active ? _contrastShader : null;
+        var shader = contrast ? _contrastShader : null;
         Background.ShaderOverride = shader;
         KsViewport.KsDrawShader = shader;
 
         // The dimming already darkens the chat column, so the right-edge fade would stack on it as a visible stripe.
         RightSide.PanelOverride = contrast ? _noPanel : null;
 
-        _contrastShader.SetParameter("blurRadius", _blurActive ? KsBlurRadius : 0f);
-        // With the cvar off the regions are cleared, leaving a pure blur.
         _contrastShader.SetParameter("strength", contrast ? 1f : 0f);
         _contrastDirty = true;
     }
