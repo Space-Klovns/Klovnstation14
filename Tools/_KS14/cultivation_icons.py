@@ -338,6 +338,22 @@ def sect_plaque(font_path):
     return image
 
 
+def incense(lit):
+    """Three sticks of incense tied with red thread; lit, their tips glow and smoke curls up."""
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    for x in (13, 16, 19):
+        draw.line((x, 9, x, 27), fill=(150, 98, 52, 255), width=2)
+        draw.line((x, 22, x, 27), fill=(120, 30, 26, 255), width=2)
+    draw.line((12, 19, 20, 19), fill=(206, 34, 34, 255), width=2)
+    if lit:
+        for x in (13, 16, 19):
+            draw.rectangle((x, 7, x + 1, 9), fill=(255, 132, 40, 255))
+        for index, (x, y) in enumerate(((14, 4), (17, 2), (20, 5), (15, 0))):
+            draw.point((x, y), fill=(216, 208, 192, 200 - index * 30))
+    return image
+
+
 def array_circle(glyph, colour, font_path):
     """A floor circle of trigrams around a glyph."""
     face, rim = PALETTE[colour]
@@ -435,6 +451,8 @@ def main():
         "jade_slip": jade_slip(args.font),
         "blood_slip": blood_slip(args.font),
         "sect_plaque": sect_plaque(args.font),
+        "incense": incense(lit=False),
+        "incense_lit": incense(lit=True),
         "array_gathering": array_circle("聚", "jade", args.font),
         "array_barrier": array_circle("阵", "gold", args.font),
         "array_alarm": array_circle("警", "orange", args.font),

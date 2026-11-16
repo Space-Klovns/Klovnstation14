@@ -23,6 +23,18 @@ public sealed partial class JianghuFaceComponent : Component
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextDuelInsight;
+
+    /// <summary>
+    ///     Until when everyone remembers they betrayed a sworn sibling.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan OathbrokenUntil;
+
+    /// <summary>
+    ///     Anyone can swear brotherhood, but only once a round.
+    /// </summary>
+    [DataField]
+    public bool OathSworn;
 }
 
 /// <summary>
@@ -163,4 +175,99 @@ public sealed partial class SectMemberComponent : Component
 
     [DataField]
     public EntityUid? TransmissionAction;
+}
+
+/// <summary>
+///     Sworn siblings: "We were not born on the same day, but we will die on the same day." Lives on an entity of its
+///         own, like a sect.
+/// </summary>
+[RegisterComponent, Access(typeof(JianghuSystem))]
+public sealed partial class SwornBondComponent : Component
+{
+    public const int MaxMembers = 3;
+
+    /// <summary>
+    ///     The siblings' minds.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid> Members = new();
+
+    /// <summary>
+    ///     When each sibling last struck another, by striker mind.
+    /// </summary>
+    [DataField]
+    public Dictionary<EntityUid, List<TimeSpan>> Strikes = new();
+
+    /// <summary>
+    ///     When each sibling's next "badly hurt" warning may go out, by mind.
+    /// </summary>
+    [DataField]
+    public Dictionary<EntityUid, TimeSpan> HurtWarnings = new();
+}
+
+/// <summary>
+///     On a mind: the oath it is sworn to.
+/// </summary>
+[RegisterComponent, Access(typeof(JianghuSystem))]
+public sealed partial class SwornMemberComponent : Component
+{
+    [DataField]
+    public EntityUid Bond;
+}
+
+/// <summary>
+///     A bundle of incense. Lit, it can be offered to someone to swear brotherhood.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(JianghuSystem))]
+public sealed partial class SwornIncenseComponent : Component
+{
+    [DataField]
+    public bool Lit;
+
+    [DataField]
+    public TimeSpan BurnTime = TimeSpan.FromMinutes(2);
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan BurnsOutAt;
+
+    [DataField]
+    public EntityUid? Offerer;
+
+    [DataField]
+    public EntityUid? Offeree;
+}
+
+/// <summary>
+///     A sworn sibling fights beside them: they tire less and strike harder.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(JianghuSystem))]
+public sealed partial class SwornTogetherComponent : Component
+{
+    [DataField]
+    public float StaminaMultiplier = 0.75f;
+
+    [DataField]
+    public float BonusDamage = 2f;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ExpiresAt;
+}
+
+/// <summary>
+///     A sworn sibling is dead. Grief turns to fury.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(JianghuSystem))]
+public sealed partial class SwornVengeanceComponent : Component
+{
+    [DataField]
+    public float StaminaMultiplier = 0.5f;
+
+    [DataField]
+    public float BonusDamage = 5f;
+
+    [DataField]
+    public float SpeedMultiplier = 1.2f;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ExpiresAt;
 }

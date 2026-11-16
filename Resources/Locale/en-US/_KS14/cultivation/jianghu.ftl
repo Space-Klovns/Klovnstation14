@@ -141,3 +141,43 @@ jianghu-tournament-champion = The Martial Tournament is over! {$name} is crowned
    *[other] {$wins} victories
 }!
 jianghu-reason-champion = crowned Martial Champion
+
+## Sworn brotherhood
+
+jianghu-incense-unlit = Use it in hand to light it.
+jianghu-incense-lit = It's lit. Use it on someone beside you to offer an oath of brotherhood.
+jianghu-incense-lights = {CAPITALIZE(THE($user))} lights the incense. Fragrant smoke curls upward.
+jianghu-incense-light-first = Light the incense first.
+jianghu-incense-burns-down = The incense burns down to ash.
+jianghu-oath-no-mind = {CAPITALIZE(THE($target))} has no mind to swear with.
+jianghu-oath-already-sworn = {CAPITALIZE(THE($target))} is already sworn to others.
+jianghu-oath-once = {CAPITALIZE(THE($target))} has already sworn an oath this round.
+jianghu-oath-full = An oath can bind no more than three.
+jianghu-oath-offered = {CAPITALIZE(THE($user))} offers lit incense to {THE($target)} and asks {OBJECT($target)} to swear brotherhood.
+jianghu-oath-option-swear = Swear the oath of brotherhood
+jianghu-oath-option-refuse = Refuse
+jianghu-oath-declined = {CAPITALIZE(THE($target))} declines your oath.
+jianghu-oath-kneel = {CAPITALIZE(THE($user))} and {THE($target)} kneel together before the burning incense.
+jianghu-oath-words-one = We were not born on the same day...
+jianghu-oath-words-two = ...but we will die on the same day!
+jianghu-oath-sworn = You are sworn siblings! Near each other you tire less and strike harder, and you will feel it when they are hurt.
+jianghu-sworn-direction = to the {$direction}
+jianghu-sworn-far-away = somewhere far away
+jianghu-sworn-hurt = Your heart lurches. Your sworn sibling {$name} is badly hurt {$where}!
+jianghu-sworn-struck-sibling = You strike your own sworn sibling. Keep at it, and the oath is broken.
+jianghu-sworn-died = Your sworn sibling {$name} has died! Grief turns to fury!
+jianghu-vengeance-cools = Your fury cools into a cold, quiet grief.
+jianghu-sworn-betrayal = {CAPITALIZE(THE($user))} has betrayed {POSS-ADJ($user)} sworn sibling, {THE($target)}!
+jianghu-sworn-broken = {$name} has betrayed the oath! Your bond is broken.
+jianghu-reason-betrayal = betrayed a sworn sibling
+jianghu-examine-sworn = {CAPITALIZE(SUBJECT($target))} {CONJUGATE-BE($target)} sworn sibling to {$siblings}.
+jianghu-examine-oathbreaker = [color=#d06a6a]{CAPITALIZE(SUBJECT($target))} betrayed {POSS-ADJ($target)} own sworn sibling. Oathbreaker.[/color]
+jianghu-direction-North = north
+jianghu-direction-NorthEast = northeast
+jianghu-direction-East = east
+jianghu-direction-SouthEast = southeast
+jianghu-direction-South = south
+jianghu-direction-SouthWest = southwest
+jianghu-direction-West = west
+jianghu-direction-NorthWest = northwest
+jianghu-direction-Invalid = nearby

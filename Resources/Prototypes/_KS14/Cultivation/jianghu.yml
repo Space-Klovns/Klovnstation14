@@ -99,3 +99,26 @@
     range: 3
     multiplier: 1.25
   - type: SectPlaque
+
+# Three sticks of incense for swearing brotherhood. Light it in hand, then use it on someone beside you.
+- type: entity
+  parent: BaseItem
+  id: KsSwornIncense
+  name: bundle of incense
+  description: Three sticks of sandalwood incense tied with red thread. Light it and offer it to someone to swear brotherhood.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    layers:
+    - state: incense
+      map: [ "enum.SwornIncenseVisuals.Lit" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SwornIncenseVisuals.Lit:
+        enum.SwornIncenseVisuals.Lit:
+          True: { state: incense_lit }
+          False: { state: incense }
+  - type: SwornIncense

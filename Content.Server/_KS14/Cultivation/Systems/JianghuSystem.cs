@@ -26,6 +26,8 @@ public sealed partial class JianghuSystem : EntitySystem
         UpdateDuels(now);
         UpdateSects(now);
         UpdateTournament(now);
+        UpdateBonds(now);
+        UpdateIncense(now);
     }
 
     #region Face
@@ -113,6 +115,9 @@ public sealed partial class JianghuSystem : EntitySystem
 
         if (_gameTiming.CurTime < faceComponent.DishonoredUntil)
             args.PushMarkup(Loc.GetString("jianghu-examine-dishonored", ("target", entity.Owner)));
+
+        if (_gameTiming.CurTime < faceComponent.OathbrokenUntil)
+            args.PushMarkup(Loc.GetString("jianghu-examine-oathbreaker", ("target", entity.Owner)));
     }
 
     /// <summary>
@@ -129,6 +134,19 @@ public sealed partial class JianghuSystem : EntitySystem
             args.PushMarkup(Loc.GetString("jianghu-examine-sect", ("target", entity.Owner),
                 ("rank", Loc.GetString(SectRank(sect, entity))), ("sect", FormattedMessage.EscapeText(sect.Comp.SectName)),
                 ("relation", relation)));
+        }
+
+        if (GetBond(entity) is { } bond && _mindSystem.TryGetMind(entity, out var examinedMind, out _))
+        {
+            var siblingNames = new List<string>();
+            foreach (var siblingMind in bond.Comp.Members)
+            {
+                if (siblingMind != examinedMind && TryComp<Content.Shared.Mind.MindComponent>(siblingMind, out var siblingComponent)
+                    && siblingComponent.CharacterName is { } siblingName)
+                    siblingNames.Add(FormattedMessage.EscapeText(siblingName));
+            }
+
+            args.PushMarkup(Loc.GetString("jianghu-examine-sworn", ("target", entity.Owner), ("siblings", string.Join(", ", siblingNames))));
         }
 
         if (!_mindSystem.TryGetMind(entity, out var mindId, out _))

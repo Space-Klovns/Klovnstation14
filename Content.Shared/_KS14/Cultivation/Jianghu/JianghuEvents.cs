@@ -1,4 +1,6 @@
 using Content.Shared.Actions;
+using Content.Shared.DoAfter;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Cultivation.Jianghu;
 
@@ -52,3 +54,15 @@ public sealed partial class SectTransmissionActionEvent : InstantActionEvent;
 ///     As Sect Master, declare the sect of the target (a member, or their plaque) your sworn rival.
 /// </summary>
 public sealed partial class DeclareRivalryActionEvent : EntityTargetActionEvent;
+
+/// <summary>
+///     Kneeling together before the incense to swear brotherhood.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed partial class SwornOathDoAfterEvent : SimpleDoAfterEvent;
+
+[Serializable, NetSerializable]
+public enum SwornIncenseVisuals : byte
+{
+    Lit,
+}

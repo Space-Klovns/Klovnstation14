@@ -99,6 +99,13 @@ smells the path, gu worms, jiangshi, a planted palm and the stained hands that s
   meditate 10% more insightfully. The ranking is round state on the system, and drops minds that no longer exist.
 - **Tournaments:** a Sect Master's proclamation (one every 30 minutes) makes duels worth double face for ten minutes;
   whoever wins the most is crowned Martial Champion for 10 face and 30 insight.
+- **Sworn brotherhood:** a lit `KsSwornIncense` used on someone asks them (McqDialogue) to swear; after kneeling
+  together they share a `SwornBondComponent` (its own entity, minds as members, at most three, one oath a round).
+  Siblings within nine tiles get `SwornTogetherComponent` (less stamina damage, harder unarmed blows; melee events
+  are only raised on the weapon, so armed blows don't get the bonus), feel it when a sibling is badly hurt and which
+  way to run, and fly into `SwornVengeanceComponent` when one dies. Three strikes on a sibling within 20 seconds, or
+  the killing blow, breaks the oath: the bond dissolves, the betrayer loses 10 face, is marked an oathbreaker for 20
+  minutes, and a cultivator's guilt summons a heart demon. Sparring in an honor duel doesn't count.
 
 ## Martial arts
 
@@ -153,7 +160,7 @@ and copyright metadata. Run them from the repository root with Pillow installed.
 ## Tests
 
 `Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
-the body path, the Demonic Path, the jianghu and sects, and `CultivationLocaleTest` checks every cultivation locale key resolves
+the body path, the Demonic Path, the jianghu, sects and sworn brotherhood, and `CultivationLocaleTest` checks every cultivation locale key resolves
 (`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
 concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
 by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads
