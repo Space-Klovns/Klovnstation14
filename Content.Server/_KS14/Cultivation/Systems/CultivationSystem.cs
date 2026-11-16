@@ -90,6 +90,7 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
     [Dependency] private EntityQuery<GreatSageComponent> _greatSageQuery = default!;
@@ -244,9 +245,9 @@ public sealed partial class CultivationSystem : EntitySystem
 
             if (GrantTechnique(entity, combo.Action))
             {
-                _popupSystem.PopupEntity(Loc.GetString("cultivation-combo-resonates",
+                _noticeSystem.Notify(entity, Loc.GetString("cultivation-combo-resonates",
                     ("one", Loc.GetString($"cultivation-element-{combo.ElementOne}")),
-                    ("two", Loc.GetString($"cultivation-element-{combo.ElementTwo}"))), entity, entity, type: PopupType.Medium);
+                    ("two", Loc.GetString($"cultivation-element-{combo.ElementTwo}"))), type: PopupType.Medium);
             }
         }
     }
@@ -280,19 +281,19 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (!_cultivationSystem.TrySpendQi((userUid, cultivatorComponent), qiCost))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-not-enough-qi"), userUid, userUid, type: PopupType.SmallCaution);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-not-enough-qi"), type: PopupType.SmallCaution);
             return false;
         }
 
         // Any technique gives away a concealed cultivator.
         if (RemComp<CultivationConcealedComponent>(userUid))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-concealment-broken"), userUid, userUid, type: PopupType.SmallCaution);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-concealment-broken"), type: PopupType.SmallCaution);
 
         var backlashChance = cultivatorComponent.BacklashChancePerInjury * (float)cultivatorComponent.InternalInjury;
         if (backlashChance > 0f && _robustRandom.Prob(backlashChance))
         {
             _damageableSystem.TryChangeDamage(userUid, Damage("Blunt", 5), ignoreResistances: true, interruptsDoAfters: false);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-backlash"), userUid, userUid, type: PopupType.MediumCaution);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-backlash"), type: PopupType.MediumCaution);
         }
 
         return true;
@@ -326,7 +327,7 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
 
         if (_cultivationSystem.AddInternalInjury(entity.AsNullable()))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-internal-injury"), entity, entity, type: PopupType.MediumCaution);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-internal-injury"), type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -369,7 +370,7 @@ public sealed partial class CultivationSystem : EntitySystem
         if (!_doAfterSystem.TryStartDoAfter(doAfterArgs))
             return false;
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-meditate-start", ("user", entity.Owner)), entity, type: PopupType.Small);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-meditate-start", ("user", entity.Owner)), type: PopupType.Small);
         return true;
     }
 
@@ -388,7 +389,7 @@ public sealed partial class CultivationSystem : EntitySystem
             // Twice the insight, driven past the safe limit.
             insightMultiplier *= 2f;
             if (_robustRandom.Prob(entity.Comp.ForcedCirculationRisk) && _cultivationSystem.AddInternalInjury(entity.AsNullable()))
-                _popupSystem.PopupEntity(Loc.GetString("cultivation-forced-circulation-backlash"), entity, entity, type: PopupType.MediumCaution);
+                _noticeSystem.Notify(entity, Loc.GetString("cultivation-forced-circulation-backlash"), type: PopupType.MediumCaution);
         }
 
         var insightEvent = new CultivationInsightMultiplierEvent(insightMultiplier);
@@ -397,14 +398,14 @@ public sealed partial class CultivationSystem : EntitySystem
         _cultivationSystem.AddQi(entity.AsNullable(), entity.Comp.MeditateQi * multiplier);
 
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-injury-eased"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-injury-eased"));
 
         var meditatedEvent = new CultivationMeditatedEvent();
         RaiseLocalEvent(entity, ref meditatedEvent);
 
         if (_cultivationSystem.ReadyToBreakThrough(entity.Comp))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-ready-to-break-through"), entity, entity, type: PopupType.Medium);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-ready-to-break-through"), type: PopupType.Medium);
             return;
         }
 
@@ -447,14 +448,14 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (_cultivationSystem.GetInsightRequired(entity.Comp) is not { } required)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-at-peak"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-at-peak"));
             return;
         }
 
         if (entity.Comp.Insight < required)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-not-ready",
-                ("insight", (int)entity.Comp.Insight), ("required", (int)required)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-not-ready",
+                ("insight", (int)entity.Comp.Insight), ("required", (int)required)));
             return;
         }
 
@@ -484,9 +485,9 @@ public sealed partial class CultivationSystem : EntitySystem
 
         _cultivationSystem.SetBreakthrough(entity.Comp, 3 + 2 * (int)entity.Comp.Realm, readiness);
         _audioSystem.PlayPvs(ThunderSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), entity, type: PopupType.Medium);
-        _popupSystem.PopupEntity(Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
-            ("readiness", readiness)), entity, entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), type: PopupType.Medium);
+        _noticeSystem.Notify(entity, Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
+            ("readiness", readiness)), type: PopupType.Medium);
         return true;
     }
 
@@ -542,14 +543,14 @@ public sealed partial class CultivationSystem : EntitySystem
                 continue;
 
             _lightningSystem.ShootLightning(cloudUid, rod.Owner, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-lightning-grounded", ("rod", rod.Owner)), rod.Owner, type: PopupType.Small);
+            _noticeSystem.Announce(rod.Owner, Loc.GetString("cultivation-lightning-grounded", ("rod", rod.Owner)), type: PopupType.Small);
             return;
         }
 
         _lightningSystem.ShootLightning(cloudUid, entity, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
         var damage = 5f + 5f * (float)entity.Comp.Realm;
         _damageableSystem.TryChangeDamage(entity.Owner, Damage("Shock", damage), ignoreResistances: true, interruptsDoAfters: false);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-lightning-strikes", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-lightning-strikes", ("user", entity.Owner)), type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -565,11 +566,11 @@ public sealed partial class CultivationSystem : EntitySystem
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-30));
 
         _audioSystem.PlayPvs(BreakthroughSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-breakthrough-success",
-            ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), entity, type: PopupType.Large);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-breakthrough-success",
+            ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), type: PopupType.Large);
 
         if (newRealm == CultivationRealm.FoundationEstablishment)
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-second-law-slot"), entity, entity, type: PopupType.Medium);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-second-law-slot"), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -586,7 +587,7 @@ public sealed partial class CultivationSystem : EntitySystem
             _cultivationSystem.AddInternalInjury(entity.AsNullable());
 
         _audioSystem.PlayPvs(DeviationSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-deviation", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-deviation", ("user", entity.Owner)), type: PopupType.LargeCaution);
 
         // Doubt tears free and takes your face.
         if (_robustRandom.Prob(HeartDemonChance))
@@ -612,7 +613,7 @@ public sealed partial class CultivationSystem : EntitySystem
             if (!manualEntity.Comp.Awakens
                 || TryComp<BodyCultivatorComponent>(userUid, out var bodyComponent) && bodyComponent.Committed)
             {
-                _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-gibberish"), userUid, userUid);
+                _noticeSystem.Notify(userUid, Loc.GetString("cultivation-manual-gibberish"));
                 return;
             }
 
@@ -622,15 +623,15 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (_cultivationSystem.KnowsLaw(cultivatorComponent, manualEntity.Comp.Law))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-known"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-manual-known"));
             return;
         }
 
         if (cultivatorComponent.Laws.Count >= SharedCultivationSystem.LawSlots(cultivatorComponent.Realm))
         {
-            _popupSystem.PopupEntity(Loc.GetString(cultivatorComponent.Realm < CultivationRealm.FoundationEstablishment
+            _noticeSystem.Notify(userUid, Loc.GetString(cultivatorComponent.Realm < CultivationRealm.FoundationEstablishment
                 ? "cultivation-manual-no-room-yet"
-                : "cultivation-manual-no-room"), userUid, userUid);
+                : "cultivation-manual-no-room"));
             return;
         }
 
@@ -648,7 +649,7 @@ public sealed partial class CultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualUid)), userUid, type: PopupType.Small);
+            _noticeSystem.Announce(userUid, Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualUid)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -661,7 +662,7 @@ public sealed partial class CultivationSystem : EntitySystem
         if (!_cultivatorQuery.HasComp(args.User) && manualEntity.Comp.Awakens)
         {
             EnsureComp<CultivatorComponent>(args.User);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-awakened"), args.User, args.User, type: PopupType.Large);
+            _noticeSystem.Notify(args.User, Loc.GetString("cultivation-awakened"), type: PopupType.Large);
         }
 
         TryLearnFromManual(args.User, manualEntity);
@@ -679,11 +680,11 @@ public sealed partial class CultivationSystem : EntitySystem
 
         GrantTechniques((userUid, cultivatorComponent));
         _audioSystem.PlayPvs(LearnSound, userUid);
-        _popupSystem.PopupEntity(Loc.GetString(isRoot ? "cultivation-learned-root" : "cultivation-learned-complementary",
-            ("law", Loc.GetString(law.Name))), userUid, userUid, type: PopupType.Medium);
+        _noticeSystem.Notify(userUid, Loc.GetString(isRoot ? "cultivation-learned-root" : "cultivation-learned-complementary",
+            ("law", Loc.GetString(law.Name))), type: PopupType.Medium);
 
         if (isRoot)
-            _popupSystem.PopupEntity(Loc.GetString(law.RootDescription), userUid, userUid, type: PopupType.Small);
+            _noticeSystem.Notify(userUid, Loc.GetString(law.RootDescription), type: PopupType.Small);
 
         return true;
     }

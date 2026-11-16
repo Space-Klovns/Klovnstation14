@@ -16,6 +16,7 @@ public sealed partial class JianghuSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
 
     public override void Update(float frameTime)
     {
@@ -76,9 +77,8 @@ public sealed partial class JianghuSystem : EntitySystem
             return;
 
         faceComponent.Face += amount;
-        _popupSystem.PopupEntity(Loc.GetString(amount > 0 ? "jianghu-face-gained" : "jianghu-face-lost",
-                ("reason", Loc.GetString(reason)), ("face", faceComponent.Face)),
-            bodyUid, bodyUid, type: amount > 0 ? PopupType.Medium : PopupType.MediumCaution);
+        _noticeSystem.Notify(bodyUid, Loc.GetString(amount > 0 ? "jianghu-face-gained" : "jianghu-face-lost",
+                ("reason", Loc.GetString(reason)), ("face", faceComponent.Face)), type: amount > 0 ? PopupType.Medium : PopupType.MediumCaution);
     }
 
     private void Dishonor(EntityUid bodyUid, TimeSpan duration)

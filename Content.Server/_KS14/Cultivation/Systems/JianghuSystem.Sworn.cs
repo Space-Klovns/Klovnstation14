@@ -174,7 +174,7 @@ public sealed partial class JianghuSystem
                 continue;
 
             RemCompDeferred<SwornVengeanceComponent>(bodyUid);
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-vengeance-cools"), bodyUid, bodyUid);
+            _noticeSystem.Notify(bodyUid, Loc.GetString("jianghu-vengeance-cools"));
         }
     }
 
@@ -201,8 +201,7 @@ public sealed partial class JianghuSystem
                 ? Loc.GetString("jianghu-sworn-direction", ("direction",
                     Loc.GetString($"jianghu-direction-{(hurtPosition.Position - siblingPosition.Position).ToWorldAngle().GetDir()}")))
                 : Loc.GetString("jianghu-sworn-far-away");
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-sworn-hurt", ("name", Name(hurtUid)), ("where", where)),
-                siblingUid, siblingUid, type: PopupType.LargeCaution);
+            _noticeSystem.Notify(siblingUid, Loc.GetString("jianghu-sworn-hurt", ("name", Name(hurtUid)), ("where", where)), type: PopupType.LargeCaution);
         }
     }
 
@@ -227,7 +226,7 @@ public sealed partial class JianghuSystem
         if (strikes.Count >= BetrayalStrikes)
             Betray(bond, strikerUid, entity);
         else if (strikes.Count == 1)
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-sworn-struck-sibling"), strikerUid, strikerUid, type: PopupType.MediumCaution);
+            _noticeSystem.Notify(strikerUid, Loc.GetString("jianghu-sworn-struck-sibling"), type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -256,7 +255,7 @@ public sealed partial class JianghuSystem
         {
             EnsureComp<SwornVengeanceComponent>(siblingUid).ExpiresAt = now + SwornVengeanceDuration;
             _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(siblingUid);
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-sworn-died", ("name", Name(entity))), siblingUid, siblingUid, type: PopupType.LargeCaution);
+            _noticeSystem.Notify(siblingUid, Loc.GetString("jianghu-sworn-died", ("name", Name(entity))), type: PopupType.LargeCaution);
         }
     }
 
@@ -265,12 +264,11 @@ public sealed partial class JianghuSystem
     /// </summary>
     public void Betray(Entity<SwornBondComponent> bond, EntityUid betrayerUid, EntityUid betrayedUid)
     {
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-sworn-betrayal", ("user", betrayerUid), ("target", betrayedUid)),
-            betrayerUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(betrayerUid, Loc.GetString("jianghu-sworn-betrayal", ("user", betrayerUid), ("target", betrayedUid)), type: PopupType.LargeCaution);
         foreach (var siblingUid in SiblingBodies(bond.Comp))
         {
             if (siblingUid != betrayerUid)
-                _popupSystem.PopupEntity(Loc.GetString("jianghu-sworn-broken", ("name", Name(betrayerUid))), siblingUid, siblingUid, type: PopupType.LargeCaution);
+                _noticeSystem.Notify(siblingUid, Loc.GetString("jianghu-sworn-broken", ("name", Name(betrayerUid))), type: PopupType.LargeCaution);
         }
 
         if (EnsureFaceComponent(betrayerUid) is { } faceComponent)
@@ -353,7 +351,7 @@ public sealed partial class JianghuSystem
         entity.Comp.Lit = true;
         entity.Comp.BurnsOutAt = _gameTiming.CurTime + entity.Comp.BurnTime;
         _appearanceSystem.SetData(entity, SwornIncenseVisuals.Lit, true);
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-incense-lights", ("user", args.User)), args.User);
+        _noticeSystem.Announce(args.User, Loc.GetString("jianghu-incense-lights", ("user", args.User)));
     }
 
     [SubscribeLocalEvent]
@@ -366,14 +364,14 @@ public sealed partial class JianghuSystem
         args.Handled = true;
         if (!entity.Comp.Lit)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-incense-light-first"), args.User, args.User);
+            _noticeSystem.Notify(args.User, Loc.GetString("jianghu-incense-light-first"));
             return;
         }
 
         var existing = GetBond(args.User) ?? GetBond(otherUid);
         if (existing is { } fullBond && fullBond.Comp.Members.Count >= SwornBondComponent.MaxMembers)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-oath-full"), args.User, args.User);
+            _noticeSystem.Notify(args.User, Loc.GetString("jianghu-oath-full"));
             return;
         }
 
@@ -381,14 +379,14 @@ public sealed partial class JianghuSystem
         {
             if (OathProblem(swearerUid, existing) is { } problem)
             {
-                _popupSystem.PopupEntity(Loc.GetString(problem, ("target", swearerUid)), args.User, args.User);
+                _noticeSystem.Notify(args.User, Loc.GetString(problem, ("target", swearerUid)));
                 return;
             }
         }
 
         entity.Comp.Offerer = args.User;
         entity.Comp.Offeree = otherUid;
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-oath-offered", ("user", args.User), ("target", otherUid)), args.User, type: PopupType.Medium);
+        _noticeSystem.Announce(args.User, Loc.GetString("jianghu-oath-offered", ("user", args.User), ("target", otherUid)), type: PopupType.Medium);
         _mcqDialogueSystem.StartDialogue(entity, otherUid, new McqDialogueData[]
         {
             new("jianghu-oath-option-swear", SwearOption),
@@ -404,7 +402,7 @@ public sealed partial class JianghuSystem
 
         if (args.Id != SwearOption)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-oath-declined", ("target", args.Actor)), offererUid, offererUid);
+            _noticeSystem.Notify(offererUid, Loc.GetString("jianghu-oath-declined", ("target", args.Actor)));
             return;
         }
 
@@ -417,7 +415,7 @@ public sealed partial class JianghuSystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-oath-kneel", ("user", offererUid), ("target", args.Actor)), offererUid, type: PopupType.Medium);
+            _noticeSystem.Announce(offererUid, Loc.GetString("jianghu-oath-kneel", ("user", offererUid), ("target", args.Actor)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -433,7 +431,7 @@ public sealed partial class JianghuSystem
         _chatSystem.TrySendInGameICMessage(args.User, Loc.GetString("jianghu-oath-words-one"), InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
         _chatSystem.TrySendInGameICMessage(otherUid, Loc.GetString("jianghu-oath-words-two"), InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
         foreach (var swornUid in new[] { args.User, otherUid })
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-oath-sworn"), swornUid, swornUid, type: PopupType.Large);
+            _noticeSystem.Notify(swornUid, Loc.GetString("jianghu-oath-sworn"), type: PopupType.Large);
 
         QueueDel(entity);
     }
@@ -446,7 +444,7 @@ public sealed partial class JianghuSystem
             if (!incenseComponent.Lit || now < incenseComponent.BurnsOutAt || EntityManager.IsQueuedForDeletion(incenseUid))
                 continue;
 
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-incense-burns-down"), incenseUid);
+            _noticeSystem.Announce(incenseUid, Loc.GetString("jianghu-incense-burns-down"));
             QueueDel(incenseUid);
         }
     }

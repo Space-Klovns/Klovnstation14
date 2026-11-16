@@ -57,6 +57,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedProjectileSystem _projectileSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -169,20 +170,20 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
             args.Handled = true;
             bearerComponent.Artifact = heldUid;
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-bound", ("item", heldUid.Value)), entity, entity, type: PopupType.Medium);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-bound", ("item", heldUid.Value)), type: PopupType.Medium);
             return;
         }
 
         if (bearerComponent.Artifact is not { } artifactUid || TerminatingOrDeleted(artifactUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-none"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-none"));
             return;
         }
 
         var recallRange = args.BaseRecallRange + 3f * (float)entity.Comp.Realm;
         if (!_transformSystem.InRange((artifactUid, null), (entity.Owner, null), recallRange))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-too-far"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-too-far"));
             return;
         }
 
@@ -192,7 +193,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         _transformSystem.SetCoordinates(artifactUid, Transform(entity).Coordinates);
         _handsSystem.PickupOrDrop(entity, artifactUid, checkActionBlocker: false);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-recalled", ("item", artifactUid)), entity, entity);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-recalled", ("item", artifactUid)));
     }
 
     [SubscribeLocalEvent]
@@ -204,7 +205,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         if (!TryComp<ArtifactBearerComponent>(entity, out var bearerComponent) || bearerComponent.Artifact is not { } artifactUid
             || TerminatingOrDeleted(artifactUid) || !_handsSystem.IsHolding(entity.Owner, artifactUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-must-hold"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-must-hold"));
             return;
         }
 
@@ -215,8 +216,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
         _damageableSystem.TryChangeDamage(args.Target, CultivationSystem.Damage("Slash", args.BonusDamage), origin: entity);
         _audioSystem.PlayPvs(SwordSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-artifact-strike", ("user", entity.Owner), ("item", artifactUid), ("target", args.Target)),
-            args.Target, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-artifact-strike", ("user", entity.Owner), ("item", artifactUid), ("target", args.Target)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -237,7 +237,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         }
 
         _stanceSystem.ApplyHaste(entity, args.Duration, 1.5f);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-riding", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-riding", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -250,7 +250,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         var formationComponent = EnsureComp<SwordFormationComponent>(entity);
         formationComponent.EndTime = _gameTiming.CurTime + args.Duration;
         _audioSystem.PlayPvs(SwordSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-formation", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-formation", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Cancelled = true;
         QueueDel(args.ProjUid);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-formation-parry"), entity, type: PopupType.Small);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-formation-parry"), type: PopupType.Small);
     }
 
     #endregion
@@ -282,7 +282,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _stunSystem.TryStanding(args.Target);
         RemComp<CultivationSnaredComponent>(args.Target);
         _audioSystem.PlayPvs(WaterSound, args.Target);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-calm-heart", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.Small);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-calm-heart", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -293,7 +293,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Handled = true;
         _stanceSystem.ApplyTurtleBreathing(entity, args.Duration);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-turtle-breathing", ("user", entity.Owner)), entity, type: PopupType.Small);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-turtle-breathing", ("user", entity.Owner)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -305,7 +305,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         EnsureComp<MirrorLakeComponent>(entity).EndTime = _gameTiming.CurTime + args.Duration;
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-mirror-lake", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-mirror-lake", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -337,7 +337,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Handled = true;
         _flammableSystem.AdjustFireStacks(args.Target, 1f, ignite: true);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-kindle", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.Small);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-kindle", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -361,7 +361,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(FireSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-furnace-burst", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-furnace-burst", ("user", entity.Owner)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -374,7 +374,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", args.SelfDamage), ignoreResistances: true, interruptsDoAfters: false);
         _sharedCultivationSystem.AddQi(entity.AsNullable(), args.QiGain);
         _stanceSystem.ApplyHaste(entity, args.Duration, 1.3f);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-burning-blood", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-burning-blood", ("user", entity.Owner)), type: PopupType.MediumCaution);
     }
 
     #endregion
@@ -390,7 +390,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         _stanceSystem.ApplyGoldenBellQi(entity, TimeSpan.FromSeconds(args.BaseSeconds + (float)entity.Comp.Realm));
         _audioSystem.PlayPvs(BellSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-golden-bell-qi", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-golden-bell-qi", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -402,7 +402,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         _stanceSystem.ApplyDharmaIdol(entity, args.Duration, 0.6f);
         _audioSystem.PlayPvs(BellSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-dharma-idol", ("user", entity.Owner)), entity, type: PopupType.Large);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-dharma-idol", ("user", entity.Owner)), type: PopupType.Large);
     }
 
     [SubscribeLocalEvent]
@@ -419,7 +419,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         palmComponent.Caster = entity;
         palmComponent.Damage = args.Damage;
         palmComponent.SlamAt = _gameTiming.CurTime + TimeSpan.FromSeconds(1);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-buddha-palm-shadow"), shadowUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(shadowUid, Loc.GetString("cultivation-buddha-palm-shadow"), type: PopupType.LargeCaution);
     }
 
     private void SlamBuddhaPalm(Entity<BuddhaPalmShadowComponent> entity)
@@ -463,7 +463,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(GrowthSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-verdant-growth", ("user", entity.Owner), ("count", _plants.Count)), entity, type: PopupType.Small);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-verdant-growth", ("user", entity.Owner), ("count", _plants.Count)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -474,8 +474,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Handled = true;
         _stanceSystem.ApplySnare(args.Target, args.Duration, 0f);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-binding-vines", ("user", entity.Owner), ("target", args.Target)),
-            args.Target, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-binding-vines", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
     }
 
     #endregion
@@ -497,7 +496,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-steam-veil", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-steam-veil", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -533,7 +532,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         var moltenComponent = EnsureComp<MoltenStepComponent>(entity);
         moltenComponent.EndTime = _gameTiming.CurTime + args.Duration;
         moltenComponent.LastPosition = _transformSystem.GetMapCoordinates(entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-molten-step", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-molten-step", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     /// <summary>

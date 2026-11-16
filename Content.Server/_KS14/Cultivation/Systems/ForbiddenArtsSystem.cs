@@ -107,6 +107,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     [Dependency] private SharedJobSystem _jobSystem = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedRoleSystem _roleSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
@@ -244,19 +245,19 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
 
         if (entity.Comp.Spent)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-scripture-spent"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-scripture-spent"));
             return;
         }
 
         if (_demonicQuery.TryComp(userUid, out var demonicComponent) && (demonicComponent.Master || entity.Comp.Transmission))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-scripture-known"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-scripture-known"));
             return;
         }
 
         if (TryComp<BodyCultivatorComponent>(userUid, out var bodyComponent) && bodyComponent.Committed)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-scripture-flesh"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-scripture-flesh"));
             return;
         }
 
@@ -277,7 +278,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-scripture-start", ("user", userUid), ("book", entity.Owner)), userUid, type: PopupType.SmallCaution);
+            _noticeSystem.Announce(userUid, Loc.GetString("cultivation-scripture-start", ("user", userUid), ("book", entity.Owner)), type: PopupType.SmallCaution);
     }
 
     private bool IsAntagonist(EntityUid uid)
@@ -294,7 +295,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         _jitteringSystem.DoJitter(userUid, TimeSpan.FromSeconds(10), refresh: true);
         _sharedCultivationSystem.AddInternalInjury(userUid);
         _audioSystem.PlayPvs(CurseSound, userUid);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-scripture-deviation", ("user", userUid)), userUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(userUid, Loc.GetString("cultivation-scripture-deviation", ("user", userUid)), type: PopupType.LargeCaution);
     }
 
     [SubscribeLocalEvent]
@@ -307,8 +308,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         var master = !entity.Comp.Transmission;
         MakeDemonic(args.User, master);
         _audioSystem.PlayPvs(CurseSound, args.User);
-        _popupSystem.PopupEntity(Loc.GetString(master ? "cultivation-demonic-master" : "cultivation-demonic-disciple"),
-            args.User, args.User, type: PopupType.Large);
+        _noticeSystem.Notify(args.User, Loc.GetString(master ? "cultivation-demonic-master" : "cultivation-demonic-disciple"), type: PopupType.Large);
         _adminLogger.Add(LogType.Action, LogImpact.High,
             $"{ToPrettyString(args.User):player} took up the Demonic Path as a {(master ? "master" : "disciple")}");
 
@@ -326,7 +326,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
 
         if (!_demonicQuery.TryComp(entity, out var demonicComponent) || !demonicComponent.Master)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-demonic-not-master"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-demonic-not-master"));
             return;
         }
 
@@ -338,7 +338,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         _handsSystem.PickupOrDrop(entity, transmissionUid, checkActionBlocker: false);
         _sharedCultivationSystem.AddInsight(entity.AsNullable(), 10f);
         AddTaint(entity, 4f);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-demonic-transmit", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-demonic-transmit", ("user", entity.Owner)), type: PopupType.MediumCaution);
     }
 
     #endregion
@@ -354,13 +354,13 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         var victimUid = args.Target;
         if (_mobStateSystem.IsAlive(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-resists"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-resists"));
             return;
         }
 
         if (HasComp<DevouredComponent>(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-husk"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-husk"));
             return;
         }
 
@@ -377,8 +377,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-start", ("user", entity.Owner), ("target", victimUid)),
-            entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-devour-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -405,7 +404,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             }
 
             _sharedCultivationSystem.AddInsight(entity.AsNullable(), 5f);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-drained", ("target", victimUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-drained", ("target", victimUid)));
             _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(entity):player} drained {ToPrettyString(victimUid):target} with the Devouring Art");
             return;
         }
@@ -430,12 +429,11 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             var stolenInsight = victimCultivator.Insight / 4f;
             _sharedCultivationSystem.ScaleInsight((victimUid, victimCultivator), 0.75f);
             insight += stolenInsight;
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-cultivator", ("target", victimUid)), entity, entity, type: PopupType.MediumCaution);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-cultivator", ("target", victimUid)), type: PopupType.MediumCaution);
         }
 
         _sharedCultivationSystem.AddInsight(entity.AsNullable(), insight);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-devour-corpse", ("user", entity.Owner), ("target", victimUid)),
-            entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-devour-corpse", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
         _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(entity):player} devoured the corpse of {ToPrettyString(victimUid):target}");
     }
 
@@ -458,13 +456,13 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         var hostUid = args.Target;
         if (_mobStateSystem.IsDead(hostUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-dead"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-gu-dead"));
             return;
         }
 
         if (HasComp<GuWormComponent>(hostUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-already", ("target", hostUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-gu-already", ("target", hostUid)));
             return;
         }
 
@@ -479,8 +477,8 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         wormComponent.NextSip = now + GuSipInterval;
         AddTaint(entity, 3f);
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-sting"), hostUid, hostUid, type: PopupType.SmallCaution);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-planted", ("target", hostUid)), entity, entity);
+        _noticeSystem.Notify(hostUid, Loc.GetString("cultivation-gu-sting"), type: PopupType.SmallCaution);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-gu-planted", ("target", hostUid)));
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(entity):player} planted a gu worm in {ToPrettyString(hostUid):target}");
     }
 
@@ -501,7 +499,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
 
         if (hostEntities.Count == 0)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-none"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-gu-none"));
             return;
         }
 
@@ -512,7 +510,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         foreach (var hostEntity in hostEntities)
             StirWorm(hostEntity);
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-stirred"), entity, entity);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-gu-stirred"));
     }
 
     /// <summary>
@@ -524,7 +522,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         _damageableSystem.TryChangeDamage(host.Owner, CultivationSystem.Damage("Poison", 15f), ignoreResistances: true);
         _staminaSystem.TakeStaminaDamage(host, 30f);
         _vomitSystem.Vomit(host, force: true);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-chewing", ("target", host.Owner)), host, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(host, Loc.GetString("cultivation-gu-chewing", ("target", host.Owner)), type: PopupType.LargeCaution);
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(host.Comp.Master):player} stirred the gu worm in {ToPrettyString(host.Owner):target}");
         RemComp<GuWormComponent>(host);
     }
@@ -548,9 +546,9 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     private void ExpelWorm(Entity<GuWormComponent> host)
     {
         _vomitSystem.Vomit(host, force: true);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-expelled", ("target", host.Owner)), host, type: PopupType.Medium);
+        _noticeSystem.Announce(host, Loc.GetString("cultivation-gu-expelled", ("target", host.Owner)), type: PopupType.Medium);
         if (host.Comp.Master is { } masterUid)
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-gu-died"), masterUid, masterUid, type: PopupType.SmallCaution);
+            _noticeSystem.Notify(masterUid, Loc.GetString("cultivation-gu-died"), type: PopupType.SmallCaution);
 
         RemCompDeferred<GuWormComponent>(host);
     }
@@ -568,13 +566,13 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         var victimUid = args.Target;
         if (_mobStateSystem.IsDead(victimUid) || !_mindSystem.TryGetMind(victimUid, out _, out _))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-search-no-soul"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-soul-search-no-soul"));
             return;
         }
 
         if (!IsHelpless(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-search-not-helpless", ("target", victimUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-soul-search-not-helpless", ("target", victimUid)));
             return;
         }
 
@@ -591,9 +589,8 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
 
         args.Handled = true;
         _jitteringSystem.DoJitter(victimUid, args.Duration, refresh: true);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-search-start", ("user", entity.Owner), ("target", victimUid)),
-            entity, type: PopupType.MediumCaution);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-search-felt"), victimUid, victimUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-soul-search-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
+        _noticeSystem.Notify(victimUid, Loc.GetString("cultivation-soul-search-felt"), type: PopupType.LargeCaution);
     }
 
     /// <summary>
@@ -653,7 +650,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         // Being rummaged through leaves a mark.
         _damageableSystem.TryChangeDamage(victimUid, CultivationSystem.Damage("Cellular", 10f), ignoreResistances: true, origin: entity);
         _jitteringSystem.DoJitter(victimUid, TimeSpan.FromSeconds(15), refresh: true);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-search-seen"), victimUid, victimUid, type: PopupType.MediumCaution);
+        _noticeSystem.Notify(victimUid, Loc.GetString("cultivation-soul-search-seen"), type: PopupType.MediumCaution);
         _sharedCultivationSystem.AddInsight(entity.AsNullable(), 10f);
         AddTaint(entity, 5f);
         _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(entity):player} soul searched {ToPrettyString(victimUid):target}");
@@ -680,7 +677,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
 
         if (FindEscape(entity, args.MinDistance, args.MaxDistance) is not { } destinationCoordinates)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-blood-escape-nowhere"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-blood-escape-nowhere"));
             return;
         }
 
@@ -688,7 +685,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-blood-escape", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-blood-escape", ("user", entity.Owner)), type: PopupType.LargeCaution);
 
         // A quarter of the way to critical condition, spat out as blood.
         var lifeCost = 25f;

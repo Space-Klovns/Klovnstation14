@@ -63,6 +63,7 @@ public sealed partial class WuxiaStyleSystem : EntitySystem
     [Dependency] private SharedDrunkSystem _drunkSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -226,8 +227,7 @@ public sealed partial class WuxiaStyleSystem : EntitySystem
                 break;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString($"wuxia-combo-{combo}", ("user", attackerUid), ("target", defenderUid)),
-            defenderUid, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(defenderUid, Loc.GetString($"wuxia-combo-{combo}", ("user", attackerUid), ("target", defenderUid)), type: PopupType.MediumCaution);
         if (Loc.TryGetString($"wuxia-shout-{combo}", out var shout))
             _chatSystem.TrySendInGameICMessage(attackerUid, shout, InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
     }
@@ -272,8 +272,8 @@ public sealed partial class WuxiaStyleSystem : EntitySystem
             return;
 
         args.Damage *= 0f;
-        _popupSystem.PopupEntity(Loc.GetString(entity.Comp.Style == WuxiaStyle.WingChun ? "wuxia-sticky-deflect" : "wuxia-drunken-sway",
-            ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString(entity.Comp.Style == WuxiaStyle.WingChun ? "wuxia-sticky-deflect" : "wuxia-drunken-sway",
+            ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     #endregion

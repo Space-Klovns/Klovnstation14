@@ -41,8 +41,8 @@ public sealed partial class CultivationSystem
         _heartDemonSystem.Summon(entity, lifetime: TimeSpan.FromSeconds(AscensionCycles * entity.Comp.BreakthroughCycle.TotalSeconds));
         _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("cultivation-ascension-begins", ("user", entity.Owner)),
             Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
-        _popupSystem.PopupEntity(Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
-            ("readiness", readiness)), entity, entity, type: PopupType.Medium);
+        _noticeSystem.Notify(entity, Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
+            ("readiness", readiness)), type: PopupType.Medium);
         return true;
     }
 
@@ -99,6 +99,6 @@ public sealed partial class CultivationSystem
         _cultivationSystem.AddInternalInjury(entity.AsNullable(), stacks: entity.Comp.MaxInternalInjury);
         _damageableSystem.TryChangeDamage(entity.Owner, Damage("Shock", 40f), ignoreResistances: true, interruptsDoAfters: false);
         _audioSystem.PlayPvs(DeviationSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-ascension-failed", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-ascension-failed", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 }

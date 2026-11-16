@@ -31,6 +31,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
     [Dependency] private NPCRetaliationSystem _npcRetaliationSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [SubscribeLocalEvent]
@@ -43,7 +44,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
         if (!TryComp<HTNComponent>(beastUid, out var htnComponent) || HasComp<HumanoidProfileComponent>(beastUid)
             || _mobStateSystem.IsDead(beastUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-beast-unfit", ("target", beastUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-beast-unfit", ("target", beastUid)));
             return;
         }
 
@@ -71,7 +72,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
         _npcSystem.SetBlackboard(beastUid, NPCBlackboard.FollowTarget, new EntityCoordinates(entity, System.Numerics.Vector2.Zero), htnComponent);
         _npcSystem.WakeNPC(beastUid, htnComponent);
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-beast-contracted", ("user", entity.Owner), ("target", beastUid)), beastUid, type: PopupType.Medium);
+        _noticeSystem.Announce(beastUid, Loc.GetString("cultivation-beast-contracted", ("user", entity.Owner), ("target", beastUid)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -83,13 +84,13 @@ public sealed partial class SpiritBeastSystem : EntitySystem
         if (!TryComp<SpiritBeastMasterComponent>(entity, out var masterComponent) || masterComponent.Beast is not { } beastUid
             || TerminatingOrDeleted(beastUid) || _mobStateSystem.IsDead(beastUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-beast-none"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-beast-none"));
             return;
         }
 
         if (!_transformSystem.InRange((beastUid, null), (entity.Owner, null), args.Range))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-beast-too-far"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-beast-too-far"));
             return;
         }
 
@@ -98,7 +99,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
 
         args.Handled = true;
         _transformSystem.SetCoordinates(beastUid, Transform(entity).Coordinates);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-beast-summoned", ("target", beastUid)), beastUid, type: PopupType.Medium);
+        _noticeSystem.Announce(beastUid, Loc.GetString("cultivation-beast-summoned", ("target", beastUid)), type: PopupType.Medium);
     }
 
     /// <summary>

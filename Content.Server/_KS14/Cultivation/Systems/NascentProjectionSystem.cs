@@ -27,6 +27,7 @@ public sealed partial class NascentProjectionSystem : EntitySystem
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
 
     public override void Update(float frameTime)
     {
@@ -59,7 +60,7 @@ public sealed partial class NascentProjectionSystem : EntitySystem
 
         _mindSystem.TransferTo(mindId, soulUid);
         _actionsSystem.AddAction(soulUid, ReturnAction);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-departs", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-soul-departs", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -102,7 +103,7 @@ public sealed partial class NascentProjectionSystem : EntitySystem
         {
             _mindSystem.TransferTo(mindId, body);
             RemComp<SoulDepartedComponent>(body);
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-soul-returns", ("user", body)), body, type: PopupType.Medium);
+            _noticeSystem.Announce(body, Loc.GetString("cultivation-soul-returns", ("user", body)), type: PopupType.Medium);
         }
 
         QueueDel(entity);

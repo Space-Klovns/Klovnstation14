@@ -51,6 +51,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -90,8 +91,8 @@ public sealed partial class BodyArtSystem : EntitySystem
     {
         if (!_bodySystem.CanExert(entity.Comp, exhaustion))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-art-too-exhausted",
-                ("exhaustion", (int)entity.Comp.Exhaustion), ("cost", (int)exhaustion)), entity, entity, type: PopupType.SmallCaution);
+            _noticeSystem.Notify(entity, Loc.GetString("body-art-too-exhausted",
+                ("exhaustion", (int)entity.Comp.Exhaustion), ("cost", (int)exhaustion)), type: PopupType.SmallCaution);
             return false;
         }
 
@@ -177,8 +178,9 @@ public sealed partial class BodyArtSystem : EntitySystem
 
     /// <summary>
     ///     Smash everything breakable around a point: windows, grilles, tables and machines always; walls by tier.
+    ///         Below the tier that breaks them, walls still take <paramref name="wallChip"/>, so a few blows bring one down.
     /// </summary>
-    public void Smash(MapCoordinates centre, float radius, float power, int wallTier, EntityUid userUid)
+    public void Smash(MapCoordinates centre, float radius, float power, int wallTier, EntityUid userUid, float wallChip = 0f)
     {
         _breakables.Clear();
         _entityLookupSystem.GetEntitiesInRange(centre, radius, _breakables, flags: LookupFlags.Static | LookupFlags.Dynamic);
@@ -192,9 +194,16 @@ public sealed partial class BodyArtSystem : EntitySystem
             {
                 // Plain walls give way to the first tier; reinforced ones are built to take several times as much.
                 if (wallTier <= 0)
-                    continue;
+                {
+                    if (wallChip <= 0f)
+                        continue;
 
-                damage = wallTier >= 2 ? 1500f : 400f;
+                    damage = wallChip;
+                }
+                else
+                {
+                    damage = wallTier >= 2 ? 1500f : 400f;
+                }
             }
             else if (_tagSystem.HasTag(breakableEntity.Owner, WindowTag))
             {
@@ -355,7 +364,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         _bodySystem.ApplyIronShirt(entity, duration, 0.5f);
         Shout(entity, "body-art-iron-shirt");
-        _popupSystem.PopupEntity(Loc.GetString("body-art-iron-shirt-on", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("body-art-iron-shirt-on", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -397,12 +406,12 @@ public sealed partial class BodyArtSystem : EntitySystem
         Shout(entity, "body-art-earth-stomp");
         foreach (var victimUid in MobsAround(centre, radius, entity))
         {
-            if (Hit(entity, victimUid, (float)(5 + stage), TimeSpan.FromSeconds(1 + 0.2 * stage)) && mountain)
+            if (Hit(entity, victimUid, (float)(8 + 2 * stage), TimeSpan.FromSeconds(1 + 0.2 * stage)) && mountain)
                 HurlFrom(victimUid, centre.Position, 2f + stage / 3f, entity);
         }
 
-        if (stage >= 6)
-            Smash(centre, radius, (float)(40 + 10 * stage), 0, entity);
+        // The floor heaves: what stands around you breaks, and walls crack.
+        Smash(centre, radius, (float)(30 + 15 * stage), WallTier(stage), entity, wallChip: (float)(10 * stage));
 
         _audioSystem.PlayPvs(RumbleSound, entity);
     }
@@ -430,7 +439,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         if (_mobStateQuery.HasComp(args.Target))
         {
-            if (Hit(entity, args.Target, (float)(10 + 2 * arms + 2 * stage), TimeSpan.FromSeconds(1 + 0.2 * stage)))
+            if (Hit(entity, args.Target, (float)(15 + 2 * arms + 3 * stage), TimeSpan.FromSeconds(1 + 0.2 * stage)))
                 _throwingSystem.TryThrow(args.Target, Vector2.Normalize(direction) * (3f + stage / 2f), baseThrowSpeed: 12f, user: entity, recoil: false);
 
             if (stage >= 7)
@@ -440,7 +449,9 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         // At a wall, door or machine: from Jade Marrow the punch blasts a trench through it and what's behind it.
         var fistTier = stage >= 7 ? 2 : (stage >= 4 ? 1 : 0);
-        Smash(_transformSystem.GetMapCoordinates(args.Target), 0.5f, (float)(60 + 20 * stage), fistTier, entity);
+        // Below Jade Marrow a wall doesn't give way at once, but it cracks, and a few punches bring it down.
+        Smash(_transformSystem.GetMapCoordinates(args.Target), 0.5f, (float)(60 + 20 * stage), fistTier, entity,
+            wallChip: (float)(60 + 30 * stage));
         if (stage >= 4)
         {
             var depth = stage >= 9 ? 9 : (stage >= 8 ? 6 : (stage >= 7 ? 4 : stage - 3));
@@ -470,8 +481,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             HurlFrom(args.Target, _transformSystem.GetMapCoordinates(entity).Position, 3f, entity);
 
         _audioSystem.PlayPvs(PunchSound, args.Target);
-        _popupSystem.PopupEntity(Loc.GetString("body-art-hundred-fists-hit", ("user", entity.Owner), ("target", args.Target), ("blows", blows)),
-            args.Target, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(args.Target, Loc.GetString("body-art-hundred-fists-hit", ("user", entity.Owner), ("target", args.Target), ("blows", blows)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -484,7 +494,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         // Wrench dislocations and fractures back into place: it heals blunt trauma above all.
         var heal = 10f + 3f * (float)entity.Comp.Stage;
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", -heal), ignoreResistances: true, interruptsDoAfters: false);
-        _popupSystem.PopupEntity(Loc.GetString("body-art-bone-setting", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("body-art-bone-setting", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -497,7 +507,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         if (_bodySystem.GetStance(entity) == args.Stance)
         {
             _bodySystem.SetStance(entity, null);
-            _popupSystem.PopupEntity(Loc.GetString("body-stance-relax"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-stance-relax"));
             return;
         }
 
@@ -508,7 +518,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("body-stance-settling", ("user", entity.Owner)), entity, type: PopupType.Small);
+            _noticeSystem.Announce(entity, Loc.GetString("body-stance-settling", ("user", entity.Owner)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -519,7 +529,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         args.Handled = true;
         _bodySystem.SetStance(entity, args.Stance);
-        _popupSystem.PopupEntity(Loc.GetString($"body-stance-{args.Stance}"), entity, entity, type: PopupType.Medium);
+        _noticeSystem.Notify(entity, Loc.GetString($"body-stance-{args.Stance}"), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -534,19 +544,19 @@ public sealed partial class BodyArtSystem : EntitySystem
         // Only someone who has already set foot on the path (read the primer) can be taken on.
         if (!_bodyCultivatorQuery.TryComp(discipleUid, out var discipleComponent) || _cultivatorQuery.HasComp(discipleUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-disciple-not-on-path", ("target", discipleUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-disciple-not-on-path", ("target", discipleUid)));
             return;
         }
 
         if (discipleComponent.Committed)
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-disciple-already", ("target", discipleUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-disciple-already", ("target", discipleUid)));
             return;
         }
 
         _bodySystem.Commit((discipleUid, discipleComponent));
         _bodySystem.AddTempering((discipleUid, discipleComponent), 30f);
-        _popupSystem.PopupEntity(Loc.GetString("body-disciple-accepted", ("user", entity.Owner), ("target", discipleUid)), discipleUid, type: PopupType.Large);
+        _noticeSystem.Announce(discipleUid, Loc.GetString("body-disciple-accepted", ("user", entity.Owner), ("target", discipleUid)), type: PopupType.Large);
     }
 
     #endregion
@@ -562,7 +572,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         args.Handled = true;
         // The Body Molding Art itself: flesh is clay to be shaped again.
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-(30f + 5f * (float)entity.Comp.Stage)));
-        _popupSystem.PopupEntity(Loc.GetString("body-art-remold", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("body-art-remold", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -584,7 +594,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         for (var step = 1; step <= length; step++)
         {
             var point = new MapCoordinates(origin.Position + direction * step, origin.MapId);
-            Smash(point, 0.5f, (float)(80 + 10 * stage), stage >= 6 ? 1 : 0, entity);
+            Smash(point, 0.5f, (float)(80 + 10 * stage), stage >= 6 ? 1 : 0, entity, wallChip: (float)(20 * stage));
             foreach (var victimUid in MobsAround(point, 0.8f, entity))
             {
                 if (!bowled.Add(victimUid))
@@ -608,13 +618,13 @@ public sealed partial class BodyArtSystem : EntitySystem
         args.Handled = true;
         _bodySystem.ApplyBloodBoil(entity, TimeSpan.FromSeconds(15), args.CrashExhaustion);
         Shout(entity, "body-art-blood-boil");
-        _popupSystem.PopupEntity(Loc.GetString("body-art-blood-boil-on", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("body-art-blood-boil-on", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
     private void OnBloodBoilEnded(Entity<BodyCultivatorComponent> entity, ref BodyBloodBoilEndedEvent args)
     {
-        _popupSystem.PopupEntity(Loc.GetString("body-art-blood-boil-crash"), entity, entity, type: PopupType.MediumCaution);
+        _noticeSystem.Notify(entity, Loc.GetString("body-art-blood-boil-crash"), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -648,7 +658,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         if (!TryComp<PullerComponent>(entity, out var pullerComponent) || pullerComponent.Pulling is not { } victimUid
             || !_mobStateQuery.HasComp(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-art-hurl-needs-grab"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-art-hurl-needs-grab"));
             return;
         }
 
@@ -705,7 +715,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         _bodySystem.ApplyVajra(entity, duration);
         Shout(entity, "body-art-vajra");
         _audioSystem.PlayPvs(BellSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("body-art-vajra-on", ("user", entity.Owner)), entity, type: PopupType.Large);
+        _noticeSystem.Announce(entity, Loc.GetString("body-art-vajra-on", ("user", entity.Owner)), type: PopupType.Large);
     }
 
     [SubscribeLocalEvent]

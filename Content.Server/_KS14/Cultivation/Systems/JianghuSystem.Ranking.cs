@@ -119,7 +119,7 @@ public sealed partial class JianghuSystem
         var pairKey = winnerMind.Id < loserMind.Id ? (winnerMind, loserMind) : (loserMind, winnerMind);
         if (_rankingPairCooldowns.TryGetValue(pairKey, out var pairCooldown) && _gameTiming.CurTime < pairCooldown)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-ranking-weighed"), winnerUid, winnerUid);
+            _noticeSystem.Notify(winnerUid, Loc.GetString("jianghu-ranking-weighed"));
             return;
         }
 
@@ -148,9 +148,9 @@ public sealed partial class JianghuSystem
 
         _rankingPairCooldowns[pairKey] = _gameTiming.CurTime + RankingPairCooldown;
         EnsureComp<JianghuExamineComponent>(winnerUid);
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-ranking-climbed", ("rank", RankOfMind(winnerMind))), winnerUid, winnerUid, type: PopupType.Large);
+        _noticeSystem.Notify(winnerUid, Loc.GetString("jianghu-ranking-climbed", ("rank", RankOfMind(winnerMind))), type: PopupType.Large);
         if (loserRank > 0)
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-ranking-fell", ("rank", RankOfMind(loserMind))), loserUid, loserUid, type: PopupType.MediumCaution);
+            _noticeSystem.Notify(loserUid, Loc.GetString("jianghu-ranking-fell", ("rank", RankOfMind(loserMind))), type: PopupType.MediumCaution);
 
         if (FirstUnderHeaven() == winnerMind && oldFirst != winnerMind)
         {
@@ -205,14 +205,14 @@ public sealed partial class JianghuSystem
     {
         if (TournamentRunning)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-tournament-running"), proclaimerUid, proclaimerUid);
+            _noticeSystem.Notify(proclaimerUid, Loc.GetString("jianghu-tournament-running"));
             return false;
         }
 
         if (_gameTiming.CurTime < _tournamentCooldownUntil)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-tournament-cooldown",
-                ("minutes", (int)Math.Ceiling((_tournamentCooldownUntil - _gameTiming.CurTime).TotalMinutes))), proclaimerUid, proclaimerUid);
+            _noticeSystem.Notify(proclaimerUid, Loc.GetString("jianghu-tournament-cooldown",
+                ("minutes", (int)Math.Ceiling((_tournamentCooldownUntil - _gameTiming.CurTime).TotalMinutes))));
             return false;
         }
 
@@ -232,7 +232,7 @@ public sealed partial class JianghuSystem
 
         var wins = _tournamentWins.GetValueOrDefault(winnerMind) + 1;
         _tournamentWins[winnerMind] = wins;
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-tournament-wins", ("user", winnerUid), ("wins", wins)), winnerUid);
+        _noticeSystem.Announce(winnerUid, Loc.GetString("jianghu-tournament-wins", ("user", winnerUid), ("wins", wins)));
     }
 
     public void ConcludeTournament()

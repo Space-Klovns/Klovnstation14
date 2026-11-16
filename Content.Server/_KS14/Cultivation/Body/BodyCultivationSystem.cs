@@ -85,6 +85,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -185,8 +186,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         foreach (var power in args.NewlyUnlocked)
         {
             EntityManager.AddComponents(entity, power.Components, removeExisting: false);
-            _popupSystem.PopupEntity(Loc.GetString("body-power-unlocked",
-                ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), entity, entity, type: PopupType.Medium);
+            _noticeSystem.Notify(entity, Loc.GetString("body-power-unlocked",
+                ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), type: PopupType.Medium, alsoToChat: true);
         }
     }
 
@@ -291,7 +292,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             if (direction.LengthSquared() > 0.0001f)
             {
                 _throwingSystem.TryThrow(victimUid, Vector2.Normalize(direction) * 3f, baseThrowSpeed: 8f, user: entity, recoil: false);
-                _popupSystem.PopupEntity(Loc.GetString("body-punch-hurl", ("user", entity.Owner), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
+                _noticeSystem.Announce(victimUid, Loc.GetString("body-punch-hurl", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
                 return;
             }
         }
@@ -299,7 +300,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (entity.Comp.PunchKnockdownChance > 0f && _robustRandom.Prob(entity.Comp.PunchKnockdownChance))
         {
             _stunSystem.TryKnockdown(victimUid, TimeSpan.FromSeconds(1.5));
-            _popupSystem.PopupEntity(Loc.GetString("body-punch-topple", ("user", entity.Owner), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
+            _noticeSystem.Announce(victimUid, Loc.GetString("body-punch-topple", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
         }
     }
 
@@ -316,15 +317,15 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         args.Handled = true;
         if (_bodySystem.WeakestGroup(entity.Comp) is not { } group)
         {
-            _popupSystem.PopupEntity(Loc.GetString(_bodySystem.ReadyForTribulation(entity.Comp)
+            _noticeSystem.Notify(entity, Loc.GetString(_bodySystem.ReadyForTribulation(entity.Comp)
                 ? "body-forge-ready-for-tribulation"
-                : "body-forge-all-capped"), entity, entity);
+                : "body-forge-all-capped"));
             return;
         }
 
         if (entity.Comp.Tempering < 1f)
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-forge-no-tempering"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-forge-no-tempering"));
             return;
         }
 
@@ -343,8 +344,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-forge-start", ("user", entity.Owner),
-                ("part", Loc.GetString($"body-group-{group}"))), entity, type: PopupType.Small);
+            _noticeSystem.Announce(entity, Loc.GetString("body-forge-start", ("user", entity.Owner),
+                ("part", Loc.GetString($"body-group-{group}"))), type: PopupType.Small);
         }
     }
 
@@ -363,8 +364,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (gained > 0)
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-forge-level", ("part", Loc.GetString($"body-group-{group}")),
-                ("level", SharedBodyCultivationSystem.GetLevel(entity.Comp, group))), entity, entity, type: PopupType.Medium);
+            _noticeSystem.Notify(entity, Loc.GetString("body-forge-level", ("part", Loc.GetString($"body-group-{group}")),
+                ("level", SharedBodyCultivationSystem.GetLevel(entity.Comp, group))), type: PopupType.Medium);
         }
 
         // Carry on into the next weakest part while there's tempering left to pour.
@@ -372,7 +373,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             _bodySystem.SetForgeTarget(entity.Comp, null);
             if (_bodySystem.ReadyForTribulation(entity.Comp))
-                _popupSystem.PopupEntity(Loc.GetString("body-forge-ready-for-tribulation"), entity, entity, type: PopupType.Medium);
+                _noticeSystem.Notify(entity, Loc.GetString("body-forge-ready-for-tribulation"), type: PopupType.Medium);
             return;
         }
 
@@ -415,9 +416,9 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         args.Handled = true;
         if (!_bodySystem.ReadyForTribulation(entity.Comp))
         {
-            _popupSystem.PopupEntity(Loc.GetString(entity.Comp.Stage >= SharedBodyCultivationSystem.StageCap(entity.Comp)
+            _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= SharedBodyCultivationSystem.StageCap(entity.Comp)
                 ? (entity.Comp.Committed ? "body-tribulation-peak" : "body-tribulation-mortal-cap")
-                : "body-tribulation-not-ready"), entity, entity);
+                : "body-tribulation-not-ready"));
             return;
         }
 
@@ -441,7 +442,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return false;
 
         _bodySystem.SetTribulation(entity.Comp, cycles, readiness);
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-start", ("user", entity.Owner), ("readiness", readiness)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-start", ("user", entity.Owner), ("readiness", readiness)), type: PopupType.LargeCaution);
         return true;
     }
 
@@ -486,8 +487,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         var stageName = Loc.GetString($"body-stage-{entity.Comp.Stage}");
         _audioSystem.PlayPvs(StageSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-success", ("user", entity.Owner), ("stage", stageName)), entity, type: PopupType.Large);
-        _popupSystem.PopupEntity(Loc.GetString($"body-stage-{entity.Comp.Stage}-benefits"), entity, entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-success", ("user", entity.Owner), ("stage", stageName)), type: PopupType.Large);
+        _noticeSystem.Notify(entity, Loc.GetString($"body-stage-{entity.Comp.Stage}-benefits"), type: PopupType.Medium);
     }
 
     private void FailTribulation(Entity<BodyCultivatorComponent> entity)
@@ -495,7 +496,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _bodySystem.SetTribulation(entity.Comp, 0, 0);
         _bodySystem.AddExhaustion(entity.AsNullable(), 30f);
         _stunSystem.TryKnockdown(entity.Owner, TimeSpan.FromSeconds(3));
-        _popupSystem.PopupEntity(Loc.GetString("body-tribulation-fail", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-fail", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -510,13 +511,13 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_gameTiming.CurTime < entity.Comp.EternalHeartReady)
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-recovering"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("body-eternal-heart-recovering"));
             return;
         }
 
         _bodySystem.SetEternalHeartReady(entity.Comp, _gameTiming.CurTime + entity.Comp.EternalHeartCooldown);
         _bodySystem.SetEternalHeartRevive(entity.Comp, _gameTiming.CurTime + EternalHeartDelay);
-        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-refuses"), entity, entity, type: PopupType.Large);
+        _noticeSystem.Notify(entity, Loc.GetString("body-eternal-heart-refuses"), type: PopupType.Large);
     }
 
     private void EternalHeartRevive(Entity<BodyCultivatorComponent> entity)
@@ -533,7 +534,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         _mobStateSystem.ChangeMobState(entity, MobState.Alive);
         _audioSystem.PlayPvs(HeartSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("body-eternal-heart-restarts", ("user", entity.Owner)), entity, type: PopupType.Large);
+        _noticeSystem.Announce(entity, Loc.GetString("body-eternal-heart-restarts", ("user", entity.Owner)), type: PopupType.Large);
     }
 
     #endregion
@@ -551,13 +552,13 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_cultivatorQuery.HasComp(userUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-qi-cultivator"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("body-manual-qi-cultivator"));
             return;
         }
 
         if (_bodyCultivatorQuery.TryComp(userUid, out var bodyComponent) && (bodyComponent.Committed || !manualEntity.Comp.Commits))
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-known"), userUid, userUid);
+            _noticeSystem.Notify(userUid, Loc.GetString("body-manual-known"));
             return;
         }
 
@@ -570,7 +571,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfterArgs))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), userUid, type: PopupType.Small);
+            _noticeSystem.Announce(userUid, Loc.GetString("cultivation-manual-start", ("user", userUid), ("manual", manualEntity.Owner)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -584,11 +585,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (manualEntity.Comp.Commits)
         {
             _bodySystem.Commit((args.User, bodyComponent));
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-committed"), args.User, args.User, type: PopupType.Large);
+            _noticeSystem.Notify(args.User, Loc.GetString("body-manual-committed"), type: PopupType.Large);
         }
         else
         {
-            _popupSystem.PopupEntity(Loc.GetString("body-manual-primer"), args.User, args.User, type: PopupType.Medium);
+            _noticeSystem.Notify(args.User, Loc.GetString("body-manual-primer"), type: PopupType.Medium);
         }
     }
 

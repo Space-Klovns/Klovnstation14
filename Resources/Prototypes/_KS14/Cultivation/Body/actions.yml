@@ -73,7 +73,7 @@
   parent: BaseActionBodyArt
   id: ActionBodyEarthStomp
   name: Earth-Shattering Stomp
-  description: Drive your heel into the floor and knock down everyone around you, wider and harder with your stage. In the Mountain stance it throws them back. 20 exhaustion.
+  description: Drive your heel into the floor and knock down everyone around you, wider and harder with your stage. Furniture and windows nearby break and walls crack; from Bronze Bones the walls give way. In the Mountain stance it throws people back. 20 exhaustion.
   components:
   - type: Action
     useDelay: 25
@@ -85,7 +85,7 @@
   parent: BaseActionBodyArt
   id: ActionBodyShatteringFist
   name: Shattering Fist
-  description: Put your whole forged body behind one punch. People are hurled away; from Jade Marrow a punch at a wall or machine blasts a trench through it, deeper every stage. 25 exhaustion.
+  description: Put your whole forged body behind one punch. People are hurled away; walls crack under it, and a few punches bring one down. From Jade Marrow a punch at a wall or machine blasts a trench through it, deeper every stage. 25 exhaustion.
   components:
   - type: Action
     useDelay: 15

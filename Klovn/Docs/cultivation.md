@@ -158,8 +158,16 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   and punch bonuses add up. Health bonuses are applied by raising the critical and dead thresholds. Components a
   power grants are added the first time it unlocks.
 - **Arts** (`BodyArtSystem`) cost exhaustion, which drains back on its own, and come back 5% faster per stage.
-  Most scale with stage, and from stage 6 they break walls (`BodyArtSystem.WallTier`). Anyone further along the
-  path braces against them: half damage and no knockdown.
+  Most scale with stage. The stomp, Shattering Fist and Bull Charge smash furniture and windows at any stage and
+  chip walls (`wallChip`), so a few blows bring a wall down; from stage 6 walls give way at once
+  (`BodyArtSystem.WallTier`). Anyone further along the path braces against them: half damage and no knockdown.
+
+## Messages
+
+Popups raised over the same entity in the same tick are drawn on top of each other. Every popup over an entity in
+the server cultivation code goes through `CultivationNoticeSystem` instead: `Notify` for the entity's own eyes,
+`Announce` for everyone who can see it. Messages over one entity show one at a time, 1.2 seconds apart. New body
+powers are also written to chat, so the details can be read again.
 
 ## Legendary armor
 

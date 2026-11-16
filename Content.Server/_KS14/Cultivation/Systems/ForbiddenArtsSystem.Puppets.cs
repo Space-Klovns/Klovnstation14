@@ -43,7 +43,7 @@ public sealed partial class ForbiddenArtsSystem
         var corpseUid = args.Target;
         if (!_mobStateSystem.IsDead(corpseUid) || !HasComp<HumanoidProfileComponent>(corpseUid) || HasComp<JiangshiComponent>(corpseUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-puppet-unfit", ("target", corpseUid)), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-puppet-unfit", ("target", corpseUid)));
             return;
         }
 
@@ -83,8 +83,7 @@ public sealed partial class ForbiddenArtsSystem
         }
 
         AddTaint(entity, 5f);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-puppet-rises", ("user", entity.Owner), ("target", puppetUid)),
-            puppetUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(puppetUid, Loc.GetString("cultivation-puppet-rises", ("user", entity.Owner), ("target", puppetUid)), type: PopupType.LargeCaution);
         _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(entity):player} raised the corpse of {ToPrettyString(corpseUid):target} as a jiangshi");
     }
 
@@ -107,7 +106,7 @@ public sealed partial class ForbiddenArtsSystem
             return;
 
         DropCorpse(puppetUid);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-puppet-collapses", ("target", puppetUid)), puppetUid, type: PopupType.Medium);
+        _noticeSystem.Announce(puppetUid, Loc.GetString("cultivation-puppet-collapses", ("target", puppetUid)), type: PopupType.Medium);
         QueueDel(puppetUid);
     }
 

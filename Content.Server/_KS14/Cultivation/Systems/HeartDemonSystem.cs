@@ -38,6 +38,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
     [Dependency] private NPCRetaliationSystem _npcRetaliationSystem = default!;
     [Dependency] private SharedCultivationSystem _cultivationSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
 
@@ -79,7 +80,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
             _npcRetaliationSystem.TryRetaliate((demonUid, retaliationComponent), hostUid);
 
         _audioSystem.PlayPvs(SummonSound, hostUid);
-        _popupSystem.PopupEntity(Loc.GetString("heart-demon-summoned", ("host", hostUid)), hostUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(hostUid, Loc.GetString("heart-demon-summoned", ("host", hostUid)), type: PopupType.LargeCaution);
         return demonUid;
     }
 
@@ -96,10 +97,10 @@ public sealed partial class HeartDemonSystem : EntitySystem
         if (hostUid is not { } host || TerminatingOrDeleted(host))
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("heart-demon-shatters"), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("heart-demon-shatters"), type: PopupType.Medium);
         if (!_transformSystem.InRange((entity.Owner, null), (host, null), VictoryRange))
         {
-            _popupSystem.PopupEntity(Loc.GetString("heart-demon-not-yours"), host, host, type: PopupType.Medium);
+            _noticeSystem.Notify(host, Loc.GetString("heart-demon-not-yours"), type: PopupType.Medium);
             return;
         }
 
@@ -108,7 +109,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
 
         _jianghuSystem.SectMissionProgress(host, SectMission.HeartDemon, 1);
 
-        _popupSystem.PopupEntity(Loc.GetString("heart-demon-defeated"), host, host, type: PopupType.Large);
+        _noticeSystem.Notify(host, Loc.GetString("heart-demon-defeated"), type: PopupType.Large);
     }
 
     /// <summary>
@@ -128,7 +129,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
             _cultivationSystem.SetDaoHeartTempered((host, cultivatorComponent), false);
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("heart-demon-returns", ("host", host)), host, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(host, Loc.GetString("heart-demon-returns", ("host", host)), type: PopupType.LargeCaution);
     }
 }
 

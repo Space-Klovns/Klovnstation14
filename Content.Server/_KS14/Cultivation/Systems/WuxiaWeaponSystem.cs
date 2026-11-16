@@ -31,6 +31,7 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -53,7 +54,7 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
             return;
 
         _transformSystem.SetWorldPosition(victimUid, _transformSystem.GetWorldPosition(victimUid) + Vector2.Normalize(offset));
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-meteor-hammer-yank", ("user", args.User), ("target", victimUid)), victimUid, type: PopupType.Medium);
+        _noticeSystem.Announce(victimUid, Loc.GetString("wuxia-meteor-hammer-yank", ("user", args.User), ("target", victimUid)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -69,16 +70,16 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
         args.Handled = true;
         if (TryComp<UseDelayComponent>(entity, out var useDelayComponent) && !_useDelaySystem.TryResetDelay((entity, useDelayComponent), checkDelayed: true))
         {
-            _popupSystem.PopupEntity(Loc.GetString("wuxia-rope-dart-coiling"), args.User, args.User);
+            _noticeSystem.Notify(args.User, Loc.GetString("wuxia-rope-dart-coiling"));
             return;
         }
 
         _damageableSystem.TryChangeDamage(victimUid, CultivationSystem.Damage("Piercing", entity.Comp.Damage), origin: args.User);
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-rope-dart-stings", ("user", args.User), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(victimUid, Loc.GetString("wuxia-rope-dart-stings", ("user", args.User), ("target", victimUid)), type: PopupType.MediumCaution);
 
         if (_handsSystem.GetActiveItem(victimUid) is { } heldUid && _robustRandom.Prob(entity.Comp.DisarmChance)
             && _handsSystem.TryDrop(victimUid, heldUid, checkActionBlocker: false))
-            _popupSystem.PopupEntity(Loc.GetString("wuxia-rope-dart-tears", ("target", victimUid), ("item", heldUid)), victimUid, type: PopupType.Medium);
+            _noticeSystem.Announce(victimUid, Loc.GetString("wuxia-rope-dart-tears", ("target", victimUid), ("item", heldUid)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -96,13 +97,13 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
             return;
 
         _stunSystem.TryKnockdown(victimUid, entity.Comp.SweepDuration, refresh: true);
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-bamboo-sweep", ("user", args.User), ("target", victimUid)), victimUid, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(victimUid, Loc.GetString("wuxia-bamboo-sweep", ("user", args.User), ("target", victimUid)), type: PopupType.MediumCaution);
 
         entity.Comp.SweepsLeft--;
         if (entity.Comp.SweepsLeft > 0)
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-bamboo-splits"), args.User, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(args.User, Loc.GetString("wuxia-bamboo-splits"), type: PopupType.MediumCaution);
         QueueDel(entity);
     }
 
@@ -137,7 +138,7 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
             return;
 
         _stanceSystem.ApplySnare(args.Target, entity.Comp.SlowDuration, entity.Comp.SlowMultiplier);
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-needle-acupoint"), args.Target, args.Target, type: PopupType.MediumCaution);
+        _noticeSystem.Notify(args.Target, Loc.GetString("wuxia-needle-acupoint"), type: PopupType.MediumCaution);
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ public sealed partial class WuxiaWeaponSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("wuxia-smoke-pellet-crushed", ("user", args.User)), args.User, type: PopupType.Medium);
+        _noticeSystem.Announce(args.User, Loc.GetString("wuxia-smoke-pellet-crushed", ("user", args.User)), type: PopupType.Medium);
         Pop(entity, Transform(args.User).Coordinates);
     }
 

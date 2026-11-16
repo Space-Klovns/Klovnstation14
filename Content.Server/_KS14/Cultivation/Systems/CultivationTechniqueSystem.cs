@@ -49,6 +49,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
@@ -144,7 +145,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(SwordSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sword-rain", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-rain", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     #endregion
@@ -164,7 +165,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _flammableSystem.AdjustFireStacks(args.Target, stacks, ignite: true);
 
         _audioSystem.PlayPvs(FireSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-burning-palm", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-burning-palm", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -181,7 +182,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(FireSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-sea-of-flames", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-sea-of-flames", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -199,7 +200,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _cultivationStanceSystem.ApplyWard(entity, args.Duration, args.DamageMultiplier, releaseWave);
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-still-water", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-still-water", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -219,7 +220,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-ward-wave", ("user", entity.Owner)), entity, type: PopupType.MediumCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-ward-wave", ("user", entity.Owner)), type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
@@ -239,7 +240,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-tidal-surge", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-tidal-surge", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 
     #endregion
@@ -263,7 +264,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(HealSound, args.Target);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-spring-mending", ("user", entity.Owner), ("target", args.Target)), args.Target, type: PopupType.Small);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-spring-mending", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
 
     [SubscribeLocalEvent]
@@ -281,7 +282,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(HealSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     #endregion
@@ -302,7 +303,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _cultivationStanceSystem.ApplyRootedStance(entity, args.Duration, damageMultiplier, args.SpeedMultiplier);
 
         _audioSystem.PlayPvs(EarthSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-rooted-stance", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-rooted-stance", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     [SubscribeLocalEvent]
@@ -323,7 +324,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(EarthSound, entity);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-mountain-collapse", ("user", entity.Owner)), entity, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(entity, Loc.GetString("cultivation-mountain-collapse", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 
     #endregion

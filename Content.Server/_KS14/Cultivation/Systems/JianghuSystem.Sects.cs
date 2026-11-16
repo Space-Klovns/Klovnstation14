@@ -114,7 +114,7 @@ public sealed partial class JianghuSystem
         EntityUid? rivalryUid = null;
         _actionsSystem.AddAction(founderUid, ref rivalryUid, RivalryAction);
 
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-sect-founded", ("user", founderUid), ("sect", sectName)), founderUid, type: PopupType.Large);
+        _noticeSystem.Announce(founderUid, Loc.GetString("jianghu-sect-founded", ("user", founderUid), ("sect", sectName)), type: PopupType.Large);
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(founderUid):player} founded the sect {sectName}");
         return sect;
     }
@@ -234,13 +234,13 @@ public sealed partial class JianghuSystem
 
         if (IsSectMaster(entity))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-sect-already-master"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("jianghu-sect-already-master"));
             return;
         }
 
         if (entity.Comp.Qi < args.QiCost || !TryComp<ActorComponent>(entity, out var actorComponent))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-not-enough-qi"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-not-enough-qi"));
             return;
         }
 
@@ -288,7 +288,7 @@ public sealed partial class JianghuSystem
 
         if (!IsSectMaster(entity) || GetSect(entity) is not { } sect)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-rivalry-not-master"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("jianghu-rivalry-not-master"));
             return;
         }
 
@@ -300,7 +300,7 @@ public sealed partial class JianghuSystem
 
         if (rivalSect is not { } rival || rival.Owner == sect.Owner || sect.Comp.Rivals.Contains(rival))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-rivalry-no-target"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("jianghu-rivalry-no-target"));
             return;
         }
 
@@ -348,7 +348,7 @@ public sealed partial class JianghuSystem
 
         if (sectComponent.Members.Contains(userMindId))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-plaque-bow", ("mission", MissionText(sectComponent))), args.User, args.User);
+            _noticeSystem.Notify(args.User, Loc.GetString("jianghu-plaque-bow", ("mission", MissionText(sectComponent))));
             return;
         }
 
@@ -356,13 +356,13 @@ public sealed partial class JianghuSystem
         if (!TryComp<MindComponent>(sectComponent.Master, out var masterMind) || masterMind.OwnedEntity is not { } masterUid
             || !HasComp<ActorComponent>(masterUid) || !_mobStateSystem.IsAlive(masterUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-petition-no-master"), args.User, args.User);
+            _noticeSystem.Notify(args.User, Loc.GetString("jianghu-petition-no-master"));
             return;
         }
 
         entity.Comp.Petitioner = args.User;
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-petition-sent", ("sect", sectComponent.SectName)), args.User, args.User);
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-petition-received", ("user", args.User)), masterUid, masterUid);
+        _noticeSystem.Notify(args.User, Loc.GetString("jianghu-petition-sent", ("sect", sectComponent.SectName)));
+        _noticeSystem.Notify(masterUid, Loc.GetString("jianghu-petition-received", ("user", args.User)));
         _mcqDialogueSystem.StartDialogue(entity, masterUid, new McqDialogueData[]
         {
             new("jianghu-petition-option-accept", PetitionAcceptOption),
@@ -386,7 +386,7 @@ public sealed partial class JianghuSystem
                 break;
             case PetitionRefuseOption when entity.Comp.Petitioner is { } petitionerUid:
                 entity.Comp.Petitioner = null;
-                _popupSystem.PopupEntity(Loc.GetString("jianghu-petition-refused"), petitionerUid, petitionerUid);
+                _noticeSystem.Notify(petitionerUid, Loc.GetString("jianghu-petition-refused"));
                 break;
             case TournamentOption:
                 TryProclaimTournament(sect, args.Actor);
@@ -445,7 +445,7 @@ public sealed partial class JianghuSystem
     {
         if (sect.Comp.JianIssued >= sect.Comp.Members.Count)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-jian-all-issued"), masterUid, masterUid);
+            _noticeSystem.Notify(masterUid, Loc.GetString("jianghu-jian-all-issued"));
             return null;
         }
 
@@ -454,7 +454,7 @@ public sealed partial class JianghuSystem
         EnsureComp<SectJianComponent>(jianUid).Sect = sect;
         _metaDataSystem.SetEntityName(jianUid, Loc.GetString("jianghu-jian-name", ("sect", sect.Comp.SectName)));
         _handsSystem.PickupOrDrop(masterUid, jianUid, checkActionBlocker: false);
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-jian-issued", ("user", masterUid)), masterUid, type: PopupType.Medium);
+        _noticeSystem.Announce(masterUid, Loc.GetString("jianghu-jian-issued", ("user", masterUid)), type: PopupType.Medium);
         return jianUid;
     }
 

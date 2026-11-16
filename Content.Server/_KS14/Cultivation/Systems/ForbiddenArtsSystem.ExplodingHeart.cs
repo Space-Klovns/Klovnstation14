@@ -43,20 +43,20 @@ public sealed partial class ForbiddenArtsSystem
         var victimUid = args.Target;
         if (_mobStateSystem.IsDead(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-dead"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-dead"));
             return;
         }
 
         // An honor duel is fought with honor.
         if (HasComp<HonorDuelComponent>(entity) || HasComp<HonorDuelComponent>(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-duel"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-duel"));
             return;
         }
 
         if (HasComp<ExplodingHeartComponent>(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-already"), entity, entity);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-already"));
             return;
         }
 
@@ -68,8 +68,7 @@ public sealed partial class ForbiddenArtsSystem
 
         if (ChestTurnsFingers(victimUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-armored", ("user", entity.Owner), ("target", victimUid)),
-                victimUid, type: PopupType.Medium);
+            _noticeSystem.Announce(victimUid, Loc.GetString("cultivation-exploding-heart-armored", ("user", entity.Owner), ("target", victimUid)), type: PopupType.Medium);
             return;
         }
 
@@ -99,11 +98,9 @@ public sealed partial class ForbiddenArtsSystem
 
         EnsureComp<ExplodingHeartStainComponent>(striker).ExpiresAt = _gameTiming.CurTime + StainDuration;
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-struck", ("user", striker.Owner), ("target", victimUid)),
-            victimUid, type: PopupType.MediumCaution);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-victim"), victimUid, victimUid, type: PopupType.LargeCaution);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-planted", ("target", victimUid), ("steps", steps)),
-            striker, striker);
+        _noticeSystem.Announce(victimUid, Loc.GetString("cultivation-exploding-heart-struck", ("user", striker.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
+        _noticeSystem.Notify(victimUid, Loc.GetString("cultivation-exploding-heart-victim"), type: PopupType.LargeCaution);
+        _noticeSystem.Notify(striker, Loc.GetString("cultivation-exploding-heart-planted", ("target", victimUid), ("steps", steps)));
         _adminLogger.Add(LogType.Action, LogImpact.High,
             $"{ToPrettyString(striker):player} struck {ToPrettyString(victimUid):target} with the Five-Point Exploding Heart Palm ({steps} steps)");
     }
@@ -150,8 +147,7 @@ public sealed partial class ForbiddenArtsSystem
 
         if (entity.Comp.StepsLeft <= 2)
         {
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-pounding", ("steps", entity.Comp.StepsLeft)),
-                entity, entity, type: PopupType.LargeCaution);
+            _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-pounding", ("steps", entity.Comp.StepsLeft)), type: PopupType.LargeCaution);
         }
     }
 
@@ -171,9 +167,9 @@ public sealed partial class ForbiddenArtsSystem
         _sharedCultivationSystem.AddInternalInjury(victimUid, stacks: 2);
         _audioSystem.PlayPvs(CurseSound, victimUid);
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-burst", ("target", victimUid)), victimUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(victimUid, Loc.GetString("cultivation-exploding-heart-burst", ("target", victimUid)), type: PopupType.LargeCaution);
         if (!_mobStateSystem.IsDead(victimUid))
-            _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-remember", ("caster", casterName)), victimUid, victimUid, type: PopupType.Large);
+            _noticeSystem.Notify(victimUid, Loc.GetString("cultivation-exploding-heart-remember", ("caster", casterName)), type: PopupType.Large);
 
         _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(victimUid):player}'s heart burst from the Five-Point Exploding Heart Palm (struck by {casterName})");
     }
@@ -185,8 +181,8 @@ public sealed partial class ForbiddenArtsSystem
     {
         var casterName = entity.Comp.CasterName;
         RemComp<ExplodingHeartComponent>(entity);
-        _popupSystem.PopupEntity(Loc.GetString(how, ("target", entity.Owner)), entity, type: PopupType.Medium);
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-remember", ("caster", casterName)), entity, entity, type: PopupType.Large);
+        _noticeSystem.Announce(entity, Loc.GetString(how, ("target", entity.Owner)), type: PopupType.Medium);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-remember", ("caster", casterName)), type: PopupType.Large);
     }
 
     [SubscribeLocalEvent]
@@ -206,7 +202,7 @@ public sealed partial class ForbiddenArtsSystem
             return;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("cultivation-exploding-heart-calming"), entity, entity);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-exploding-heart-calming"));
     }
 
     [SubscribeLocalEvent]

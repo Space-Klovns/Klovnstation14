@@ -95,19 +95,19 @@ public sealed partial class JianghuSystem
     {
         if (opponentUid == challengerUid || !_mindSystem.TryGetMind(opponentUid, out _, out _) || !_mobStateSystem.IsAlive(opponentUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-cannot-answer"), challengerUid, challengerUid);
+            _noticeSystem.Notify(challengerUid, Loc.GetString("jianghu-duel-cannot-answer"));
             return false;
         }
 
         if (RefusesChallenge(challengerUid, opponentUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-beneath-notice", ("target", opponentUid)), challengerUid, challengerUid);
+            _noticeSystem.Notify(challengerUid, Loc.GetString("jianghu-duel-beneath-notice", ("target", opponentUid)));
             return false;
         }
 
         if (IsBusy(challengerUid) || IsBusy(opponentUid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-busy"), challengerUid, challengerUid);
+            _noticeSystem.Notify(challengerUid, Loc.GetString("jianghu-duel-busy"));
             return false;
         }
 
@@ -118,7 +118,7 @@ public sealed partial class JianghuSystem
 
         if (WagerCandidate(challengerUid) is { } stakeUid)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-wager-ask", ("stake", stakeUid)), challengerUid, challengerUid);
+            _noticeSystem.Notify(challengerUid, Loc.GetString("jianghu-duel-wager-ask", ("stake", stakeUid)));
             _mcqDialogueSystem.StartDialogue(opponentUid, challengerUid, new McqDialogueData[]
             {
                 new("jianghu-duel-option-wager", WagerOption),
@@ -166,8 +166,7 @@ public sealed partial class JianghuSystem
     {
         var opponentUid = challenger.Comp.Target;
         challenger.Comp.ExpiresAt = _gameTiming.CurTime + ChallengeTimeout;
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-challenge", ("user", challenger.Owner), ("target", opponentUid)),
-            challenger, type: PopupType.Medium);
+        _noticeSystem.Announce(challenger, Loc.GetString("jianghu-duel-challenge", ("user", challenger.Owner), ("target", opponentUid)), type: PopupType.Medium);
 
         var options = new List<McqDialogueData> { new("jianghu-duel-option-accept", AcceptOption) };
         if (WagerCandidate(opponentUid) != null)
@@ -188,7 +187,7 @@ public sealed partial class JianghuSystem
 
         if (args.Id == RefuseOption)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-refused", ("user", opponentUid), ("target", entity.Owner)), opponentUid);
+            _noticeSystem.Announce(opponentUid, Loc.GetString("jianghu-duel-refused", ("user", opponentUid), ("target", entity.Owner)));
             CancelChallenge(entity);
             return;
         }
@@ -222,7 +221,7 @@ public sealed partial class JianghuSystem
             if (now < challengeComponent.ExpiresAt || challengeComponent.LifeStage > ComponentLifeStage.Running)
                 continue;
 
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-unanswered"), challengerUid, challengerUid);
+            _noticeSystem.Notify(challengerUid, Loc.GetString("jianghu-duel-unanswered"));
             CancelChallenge((challengerUid, challengeComponent));
         }
     }
@@ -243,7 +242,7 @@ public sealed partial class JianghuSystem
         if (stakeContainer.ContainedEntity != null || !_containerSystem.Insert(stakeUid, stakeContainer))
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-stake-laid", ("user", fighterUid), ("stake", stakeUid)), fighterUid, type: PopupType.Medium);
+        _noticeSystem.Announce(fighterUid, Loc.GetString("jianghu-duel-stake-laid", ("user", fighterUid), ("stake", stakeUid)), type: PopupType.Medium);
     }
 
     private void ReturnStake(EntityUid fighterUid)
@@ -287,7 +286,7 @@ public sealed partial class JianghuSystem
                 duelComponent.YieldAction = yieldUid;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-begins", ("one", oneUid), ("two", twoUid)), oneUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(oneUid, Loc.GetString("jianghu-duel-begins", ("one", oneUid), ("two", twoUid)), type: PopupType.LargeCaution);
     }
 
     private void UpdateDuels(TimeSpan now)
@@ -340,7 +339,7 @@ public sealed partial class JianghuSystem
         EntityUid? loserUid = winnerUid == null ? null : winnerUid == oneUid ? twoUid : oneUid;
         if (winnerUid is not { } winner || loserUid is not { } loser)
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-draw", ("one", oneUid), ("two", twoUid)), oneUid, type: PopupType.Large);
+            _noticeSystem.Announce(oneUid, Loc.GetString("jianghu-duel-draw", ("one", oneUid), ("two", twoUid)), type: PopupType.Large);
             AdjustFace(oneUid, 1, "jianghu-reason-draw");
             AdjustFace(twoUid, 1, "jianghu-reason-draw");
             ReturnStake(oneUid);
@@ -348,8 +347,8 @@ public sealed partial class JianghuSystem
         }
         else
         {
-            _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-won", ("winner", winner), ("loser", loser),
-                ("how", Loc.GetString($"jianghu-duel-how-{outcome}"))), winner, type: PopupType.LargeCaution);
+            _noticeSystem.Announce(winner, Loc.GetString("jianghu-duel-won", ("winner", winner), ("loser", loser),
+                ("how", Loc.GetString($"jianghu-duel-how-{outcome}"))), type: PopupType.LargeCaution);
 
             var resolvingEvent = new HonorDuelResolvingEvent(winner, loser, 5);
             RaiseLocalEvent(ref resolvingEvent);
@@ -405,7 +404,7 @@ public sealed partial class JianghuSystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-yields", ("user", entity.Owner)), entity, type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString("jianghu-duel-yields", ("user", entity.Owner)), type: PopupType.Medium);
         FinishDuel(entity, entity.Comp.Opponent, winnerUid: entity.Comp.Opponent, outcome: HonorDuelOutcome.Yielded);
     }
 
@@ -422,7 +421,7 @@ public sealed partial class JianghuSystem
 
         Dishonor(meddlerUid, DishonorDuration);
         AdjustFace(meddlerUid, -5, "jianghu-reason-interfered");
-        _popupSystem.PopupEntity(Loc.GetString("jianghu-duel-interference", ("user", meddlerUid)), meddlerUid, type: PopupType.LargeCaution);
+        _noticeSystem.Announce(meddlerUid, Loc.GetString("jianghu-duel-interference", ("user", meddlerUid)), type: PopupType.LargeCaution);
     }
 
     [SubscribeLocalEvent]
