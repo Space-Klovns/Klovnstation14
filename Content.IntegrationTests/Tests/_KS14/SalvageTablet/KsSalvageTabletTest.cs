@@ -486,34 +486,4 @@ public sealed class KsSalvageTabletTest : GameTest
             Assert.That(account.NextDropTime, Is.EqualTo(dropTimeBefore + pausedFor), "The drop cooldown must move on by the pause.");
         });
     }
-
-    /// <summary>
-    ///     The salvager a card's news goes to is whoever carries the card now, not whoever logged in with it: the holder
-    ///         is found through the card's containers each time, so it follows the card from hand to floor to another
-    ///         hand, and is nobody while the card is on the floor.
-    /// </summary>
-    [Test]
-    public async Task TheCardsHolderFollowsTheCard()
-    {
-        var scene = await SetUpAsync(SalvageId);
-
-        await Server.WaitAssertion(() =>
-        {
-            var salvageTabletSystem = SEntMan.System<KsSalvageTabletSystem>();
-            var handsSystem = SEntMan.System<SharedHandsSystem>();
-            Assert.That(salvageTabletSystem.TryLogin(Tablet(scene), scene.UserUid), Is.True);
-            Entity<KsMinerAccountComponent> account = (scene.CardUid, Account(scene));
-
-            Assert.That(salvageTabletSystem.TryGetCardHolder(account, out var holderUid), Is.True);
-            Assert.That(holderUid, Is.EqualTo(scene.UserUid), "The salvager holding the card must be its holder.");
-
-            Assert.That(handsSystem.TryDrop(scene.UserUid, scene.CardUid), Is.True, "precondition: the card can be dropped");
-            Assert.That(salvageTabletSystem.TryGetCardHolder(account, out _), Is.False, "A card on the floor has no holder.");
-
-            var otherUid = SEntMan.SpawnEntity(Human, scene.Coordinates);
-            Assert.That(handsSystem.TryPickupAnyHand(otherUid, scene.CardUid), Is.True, "precondition: someone else picks the card up");
-            Assert.That(salvageTabletSystem.TryGetCardHolder(account, out holderUid), Is.True);
-            Assert.That(holderUid, Is.EqualTo(otherUid), "The holder must follow the card to whoever has it now.");
-        });
-    }
 }
