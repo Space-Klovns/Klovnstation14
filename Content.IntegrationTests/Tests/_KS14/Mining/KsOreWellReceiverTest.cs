@@ -83,8 +83,10 @@ public sealed class KsOreWellReceiverTest : GameTest
     private async Task<EntityUid> SpawnReceiverAsync(EntityUid grid, EntProtoId prototype, float x, bool powered)
     {
         EntityUid receiver = default;
+        var stacksBefore = new HashSet<EntityUid>();
         await Server.WaitPost(() =>
         {
+            stacksBefore = SEntMan.AllEntities<StackComponent>().Select(stack => stack.Owner).ToHashSet();
             receiver = SEntMan.SpawnEntity(prototype, new EntityCoordinates(grid, new Vector2(x, 0.5f)));
 
             // Actually unpowered: the machine needs power and there is none. Powered: it does not need any.
@@ -94,6 +96,21 @@ public sealed class KsOreWellReceiverTest : GameTest
         });
 
         await Pair.RunTicksSync(3);
+
+        // The cycle can come round in the ticks above, and then the delivery a test waits for is the second one, on
+        //      top of this one and its debt. Undo it, so the receivers start empty and owe nothing whenever it fell.
+        await Server.WaitPost(() =>
+        {
+            foreach (var stack in SEntMan.AllEntities<StackComponent>().ToList())
+            {
+                if (stack.Comp.StackTypeId == SteelOre && !stacksBefore.Contains(stack.Owner))
+                    SEntMan.DeleteEntity(stack.Owner);
+            }
+
+            foreach (var receiverComponent in SEntMan.AllEntities<OreWellReceiverComponent>())
+                receiverComponent.Comp.Debt.Clear();
+        });
+
         return receiver;
     }
 
