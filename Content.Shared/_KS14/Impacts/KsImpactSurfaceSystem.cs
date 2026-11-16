@@ -41,7 +41,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedStorageSystem _storageSystem = default!;
-    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private BloodSpray.BloodSpraySystem _bloodSpraySystem = default!;
@@ -92,6 +92,21 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// </summary>
     private const float EntrySurfaceOffset = 0.05f;
 
+    /// <summary>
+    ///     The target <see cref="GetEntryPoint"/> casts against, for <see cref="_isNotEntryTarget"/>: one delegate for
+    ///         every cast, not one a cast.
+    /// </summary>
+    private EntityUid _entryTargetUid;
+
+    private Func<EntityUid, bool> _isNotEntryTarget = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _isNotEntryTarget = uid => uid != _entryTargetUid;
+    }
+
     // TGMC's playsound(source, sound_bounce, 50, TRUE, ...): half volume, varied.
     private static readonly AudioParams RicochetParams = AudioParams.Default.WithVolume(-6f).WithVariation(0.1f);
 
@@ -102,24 +117,31 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <param name="worldDirection">Which way the projectile was flying. The smoke and debris fly back against it.</param>
     /// <param name="rawDamage">The projectile's damage before anything resisted it.</param>
     /// <param name="dealtDamage">The damage the hit dealt, if any.</param>
-    public void PlayImpact(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
+    /// <returns>
+    ///     Whether the hit rang off armour (<see cref="HitsArmor"/>), whose sound takes the place of the hit sound
+    ///         <c>SharedGunSystem.PlayImpactSound</c> would play: the caller plays that only when this is false.
+    /// </returns>
+    public bool PlayImpact(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
     {
         if (_netManager.IsServer || TerminatingOrDeleted(target))
-            return;
+            return false;
 
         var ballistic = IsBallistic(rawDamage);
 
         // A mob gets sparks off its armour when that soaked the hit, else only what its own surface gives it (a
         //      borg's sparks); flesh has the blood spray instead.
         ProtoId<KsImpactMaterialPrototype> materialId;
+        var hitsArmor = false;
         if (_mobStateQuery.HasComp(target))
         {
             if (HitsArmor(target, rawDamage, dealtDamage))
             {
                 PlayHere(ArmorSound, coordinates, null);
-                // What little got through comes out the far side.
-                _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
+                // What little got through comes out the far side; none, if the armour stopped it all.
+                if (dealtDamage != null && dealtDamage.GetTotal() > 0)
+                    _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
                 materialId = ArmorMaterial;
+                hitsArmor = true;
             }
             else if (_surfaceQuery.HasComp(target))
             {
@@ -127,7 +149,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
             }
             else
             {
-                return;
+                return false;
             }
         }
         else
@@ -136,7 +158,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         }
 
         if (!ProtoMan.TryIndex(materialId, out var material))
-            return;
+            return hitsArmor;
 
         coordinates = GetEntryPoint(target, coordinates, worldDirection);
         var localRotation = GetLocalRotation(coordinates, -worldDirection);
@@ -147,7 +169,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         SpawnImpactParticles(material.Smoke, coordinates, localRotation, amount, speed);
         if (!ballistic)
-            return;
+            return hitsArmor;
 
         SpawnImpactParticles(material.Debris, coordinates, localRotation, amount, speed);
         foreach (var extraDebris in material.ExtraDebris)
@@ -155,6 +177,8 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         if (material.Sound != null && _random.Prob(material.SoundChance))
             PlayHere(material.Sound, coordinates, RicochetParams);
+
+        return hitsArmor;
     }
 
     /// <summary>
@@ -232,7 +256,8 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <summary>
     ///     Whether a hit on <paramref name="target"/> rang off its armour: a ballistic hit on a mob that its armour
     ///         soaked (<see cref="IsSoaked"/>). <see cref="PlayImpact"/> plays the armour's sound for it, which takes the
-    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, so its callers skip that.
+    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, and says so; a caller that
+    ///         plays the hit sound apart from it (a hitscan's effects) asks this instead.
     /// </summary>
     public bool HitsArmor(EntityUid target, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
     {
@@ -265,9 +290,14 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// <summary>
     ///     Where the shot came into <paramref name="target"/>: the projectile is often found inside or past a wall by
     ///         the time its contact is handled, and its impact would come out of the far side. Casts back along the
-    ///         shot from a little behind it, against the target alone, and takes the nearest hit, stepped back off the
-    ///         surface. Leaves <paramref name="coordinates"/> as they are when nothing is found.
+    ///         shot from a little behind it, against the target's own shapes alone, and takes the nearest hit, stepped
+    ///         back off the surface. Leaves <paramref name="coordinates"/> as they are when nothing is found.
     /// </summary>
+    /// <remarks>
+    ///     Not <c>IntersectRayWithPredicate</c>: that tests only bounding boxes, by slabs, and a ray along an axis
+    ///         starting on a box's lower edge gets 0 * infinity there, a NaN distance, so the impact was spawned at NaN
+    ///         and threw (a round fired due east from a whole or half tile).
+    /// </remarks>
     private EntityCoordinates GetEntryPoint(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection)
     {
         if (worldDirection.LengthSquared() <= float.Epsilon)
@@ -276,20 +306,24 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
         var direction = Vector2.Normalize(worldDirection);
         var start = mapCoordinates.Position - direction * EntryCastBack;
-        var ray = new CollisionRay(start, direction, (int)CollisionGroup.AllMask);
 
-        float? nearest = null;
-        foreach (var hit in _physicsSystem.IntersectRayWithPredicate(mapCoordinates.MapId, ray, target,
-                     static (uid, targetUid) => uid != targetUid, maxLength: EntryCastBack * 2f, returnOnFirstHit: false))
-        {
-            if (nearest == null || hit.Distance < nearest)
-                nearest = hit.Distance;
-        }
+        _entryTargetUid = target;
+        var result = _rayCastSystem.CastRayClosest(mapCoordinates.MapId,
+            start,
+            direction * EntryCastBack,
+            new QueryFilter
+            {
+                LayerBits = (long)CollisionGroup.AllMask,
+                MaskBits = (long)CollisionGroup.AllMask,
+                IsIgnored = _isNotEntryTarget,
+            });
+        _entryTargetUid = EntityUid.Invalid;
 
         // Nothing between the cast's start and the projectile: it stopped short of the surface, where it is.
-        if (nearest is not { } distance || distance >= EntryCastBack)
+        if (!result.Hit)
             return coordinates;
 
+        var distance = result.Results[0].Fraction * EntryCastBack;
         var entry = start + direction * Math.Max(0f, distance - EntrySurfaceOffset);
         return _transformSystem.ToCoordinates(coordinates.EntityId, new MapCoordinates(entry, mapCoordinates.MapId));
     }

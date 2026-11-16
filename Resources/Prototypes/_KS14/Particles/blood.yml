@@ -155,3 +155,9 @@
 - type: ksParticles
   parent: KsDismemberGibSplatter
   id: KsHeavyHitGibSplatter
+
+# The little that gets through armour, out of the exit wound (BloodSpraySystem.SpawnExitWoundMist). Its own id, so it
+#   does not take the place of the hit's own spray, the same prototype from the same mob on the same tick.
+- type: ksParticles
+  parent: KsBloodSplatterMist
+  id: KsExitWoundMist

@@ -41,6 +41,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
     };
 
     private static readonly ProtoId<KsParticlesPrototype> SplatterMistParticles = "KsBloodSplatterMist";
+    private static readonly ProtoId<KsParticlesPrototype> ExitWoundMistParticles = "KsExitWoundMist";
     private static readonly ProtoId<KsParticlesPrototype> SplatterSpriteParticles = "KsBloodSplatterSprite";
     private static readonly ProtoId<KsParticlesPrototype> GibExplosionParticles = "KsBloodExplosion";
     private static readonly ProtoId<KsParticlesPrototype> GibSplatterParticles = "KsGibSplatter";
@@ -326,7 +327,9 @@ public sealed partial class BloodSpraySystem : EntitySystem
         var transformComponent = Transform(entity.Owner);
         var parentRotation = transformComponent.ParentUid.IsValid() ? _transformSystem.GetWorldRotation(transformComponent.ParentUid) : Angle.Zero;
         var localRotation = Angle.FromWorldVec(Vector2.Normalize(worldDirection)) - parentRotation;
-        SpawnBloodParticles(SplatterMistParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed: 1f, amount: MinSprayAmount);
+        // Its own prototype: the hit's own spray is the splatter mist from this mob this tick, and a predicted effect is
+        //      told apart by those three, so the same one would be dropped as a re-prediction of the other.
+        SpawnBloodParticles(ExitWoundMistParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed: 1f, amount: MinSprayAmount);
     }
 
     /// <summary>
