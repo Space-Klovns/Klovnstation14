@@ -2948,3 +2948,11 @@ Entries:
       message: Coal is removed.
   id: 265
   time: '2026-11-15T22:12:17.0000000+00:00'
+- author: JoeHammad
+  changes:
+    - type: Tweak
+      message: Tourniquets are now tiny size and slightly heal brute damage
+    - type: Tweak
+      message: Tourniquets fully stop bleeding again
+  id: 266
+  time: '2026-11-16T10:02:38.0000000+00:00'
