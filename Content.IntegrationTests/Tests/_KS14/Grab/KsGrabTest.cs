@@ -46,6 +46,9 @@ public sealed class KsGrabTest : GameTest
 
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Crate = "CrateGenericSteel";
+    private static readonly ProtoId<KsGrabStagePrototype> AggressiveStage = "KsGrabAggressive";
+    private static readonly ProtoId<KsGrabStagePrototype> NeckStage = "KsGrabNeck";
+    private static readonly ProtoId<KsGrabStagePrototype> StrangleStage = "KsGrabStrangle";
     private readonly EntProtoId _rigged = "KsGrabTestRiggedHuman";
     private readonly EntProtoId _wall = "KsGrabTestWall";
     private readonly EntProtoId _npc = "KsGrabTestNpcHuman";
@@ -261,7 +264,7 @@ public sealed class KsGrabTest : GameTest
 
         // The grip can only be tightened once a second, and has to draw the victim in first.
         await RunSeconds(1);
-        var neckTime = SProtoMan.Index<KsGrabStagePrototype>("KsGrabNeck").UpgradeTime.TotalSeconds;
+        var neckTime = SProtoMan.Index(NeckStage).UpgradeTime.TotalSeconds;
 
         await Server.WaitAssertion(() =>
         {
@@ -279,7 +282,7 @@ public sealed class KsGrabTest : GameTest
             CtrlClick(grabberUid, victimUid);
         });
 
-        var strangle = SProtoMan.Index<KsGrabStagePrototype>("KsGrabStrangle");
+        var strangle = SProtoMan.Index(StrangleStage);
         await RunSeconds(strangle.UpgradeTime.TotalSeconds + strangle.DamageInterval.TotalSeconds * 2);
 
         await Server.WaitAssertion(() =>
@@ -301,7 +304,7 @@ public sealed class KsGrabTest : GameTest
     public async Task AggressiveGripDrawsTheVictimIn()
     {
         var (grabberUid, victimUid) = await SetUp();
-        var aggressive = SProtoMan.Index<KsGrabStagePrototype>("KsGrabAggressive");
+        var aggressive = SProtoMan.Index(AggressiveStage);
         Assert.That(aggressive.HoldDistance, Is.Not.Null, "The aggressive grip must draw the victim in.");
 
         await GrabAggressively(grabberUid, victimUid);

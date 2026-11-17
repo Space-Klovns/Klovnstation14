@@ -17,7 +17,7 @@ namespace Content.Client._KS14.Hud;
 ///     tgstation's throw and resist buttons, stacked beside the hotbar: throw mode on top, lit while it is on, and
 ///         resist below. Hidden for anything without throw mode, such as a ghost or a borg.
 /// </summary>
-public sealed class KsCombatHudButtons : BoxContainer
+public sealed partial class KsCombatHudButtons : BoxContainer
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;

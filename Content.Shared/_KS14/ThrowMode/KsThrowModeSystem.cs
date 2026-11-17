@@ -1,7 +1,7 @@
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared.Input;
+using Content.Shared._KS14.Input;
 using Content.Shared.Popups;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Player;
@@ -26,7 +26,7 @@ public sealed partial class KsThrowModeSystem : EntitySystem
         SubscribeAllEvent<KsThrowModeThrowEvent>(OnThrowRequest);
 
         CommandBinds.Builder
-            .Bind(ContentKeyFunctions.KsToggleThrowMode, InputCmdHandler.FromDelegate(OnToggleKey, handle: false))
+            .Bind(KsKeyFunctions.ToggleThrowMode, InputCmdHandler.FromDelegate(OnToggleKey, handle: false))
             .Register<KsThrowModeSystem>();
     }
 

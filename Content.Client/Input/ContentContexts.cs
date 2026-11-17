@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Input; // KS14
 using Content.Shared.Input;
 using Robust.Shared.Input;
 
@@ -65,11 +66,11 @@ namespace Content.Client.Input
             human.AddFunction(ContentKeyFunctions.AltUseItemInHand);
             human.AddFunction(ContentKeyFunctions.OpenCharacterMenu);
             human.AddFunction(ContentKeyFunctions.OpenEmotesMenu);
-            human.AddFunction(ContentKeyFunctions.KsOpenLanguageMenu); // KS14
-            human.AddFunction(ContentKeyFunctions.KsVoicePushToTalk); // KS14
+            human.AddFunction(KsKeyFunctions.OpenLanguageMenu); // KS14
+            human.AddFunction(KsKeyFunctions.VoicePushToTalk); // KS14
             human.AddFunction(ContentKeyFunctions.ActivateItemInWorld);
             human.AddFunction(ContentKeyFunctions.ThrowItemInHand);
-            human.AddFunction(ContentKeyFunctions.KsToggleThrowMode); // KS14
+            human.AddFunction(KsKeyFunctions.ToggleThrowMode); // KS14
             human.AddFunction(ContentKeyFunctions.AltActivateItemInWorld);
             human.AddFunction(ContentKeyFunctions.TryPullObject);
             human.AddFunction(ContentKeyFunctions.MovePulledObject);
