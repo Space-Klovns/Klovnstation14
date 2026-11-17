@@ -64,6 +64,33 @@ law manual in hand.
   the stone. The master speaks only into the bearer's head (an action, not local chat), can lend them 30 qi every three
   minutes, and while awake the bearer meditates 25% faster. A bible pressed to the ring banishes the master.
 
+## Legendary artifacts
+
+One legendary turns up in maintenance each round (`CultivationLootSystem.SpawnLegendary`); unclaimed ones give
+themselves away to cultivators at 8 and 20 minutes. `LegendarySystem` (and its partial files) runs them, prototypes in
+`legendary.yml`, sprites from SS13 in `legendary.rsi`. Every blow from one is true damage (`LegendaryHit`), and each
+answers the body path through `LegendaryTrait`: BreaksDefence ends Iron Shirt and the Vajra Golden Body, WearsDown
+exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand uses or actions the item grants while held.
+
+- **Ganjiang and Moye**: paired (one person holding both, or two side by side) they hit harder and spin the Twin Dragon
+  Sword Storm; apart, one tugs towards the other.
+- **Heaven Reliant Sword**: cuts structures like mud; the Heaven-Cleaving Stroke cuts a 14 by 3 line through
+  everything, reinforced walls included.
+- **Dragon Slaying Saber**: holding it makes you First Under Heaven (`JianghuSystem.ClaimFirstUnderHeaven`); woken in
+  hand, its next blow is the Dragon Slaying Strike. With the Heaven Reliant Sword in hand, a verb on the saber shatters
+  both and drops the Nine Yin Manual and the Wumu Yishu.
+- **Ruyi Jingu Bang**: grows (reach 3) and shrinks in hand; Thirteen Thousand Jin slams a line down; Pluck Hairs sends
+  two clones (`KsSageClone`); set down grown, it plants itself and only its planter can lift it.
+- **Purple-Gold Gourd**: Call Their Name; a real answer (`IsAnswer`) within six seconds sucks them in to dissolve. The
+  dead come out as `KsGourdElixir`.
+- **Plantain Fan**: Hurricane (a cone), Typhoon (in hand, all around), Firestorm (whips fires onward).
+- **Bagua Mirror**: the Eight Trigrams Seal (`CultivationSealedComponent`, checked by techniques, body arts and martial
+  arts) on cultivators in sight, burns the undead and demonic, flashes everyone else; reflects shots while held.
+- **Qiankun Pouch**: a huge storage; Swallow Heaven and Earth in hand, Release Heaven and Earth as an action; someone
+  beside its holder can hide in its world (alt verb on the holder).
+- **Nine Yin Manual / Wumu Yishu** (`InheritanceManualComponent`): one reader each learns the Nine Yin White Bone Claw or
+  the Command of the Wumu Yishu (`WumuFormationSystem`: faster, half stamina damage).
+
 ## The Demonic Path
 
 `ForbiddenArtsSystem`. The Heaven-Devouring Demonic Scripture (`KsDemonicScripture`, 18 TC in the uplink) can only be

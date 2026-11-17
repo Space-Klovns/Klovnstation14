@@ -191,6 +191,9 @@ public sealed partial class MartialArtsSystem : EntitySystem
     /// </summary>
     public bool TryPayStamina(EntityUid userUid, float cost)
     {
+        if (_cultivationSystem.IsSealed(userUid))
+            return false;
+
         if (_staminaSystem.TryTakeStamina(userUid, cost))
         {
             _visualsSystem.Cast(userUid, FxColour.Qi);

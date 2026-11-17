@@ -35,6 +35,23 @@ public sealed partial class CultivationLootSystem : EntitySystem
     private static readonly EntProtoId DemonicScripture = "KsDemonicScripture";
     private static readonly EntProtoId AncestralRing = "KsAncestralRing";
 
+    /// <summary>
+    ///     One legendary turns up each round. The pairs come together: Ganjiang and Moye side by side, the sword and the
+    ///         saber in two different places.
+    /// </summary>
+    private static readonly EntProtoId[][] Legendaries =
+    {
+        new EntProtoId[] { "KsGanjiang", "KsMoye" },
+        new EntProtoId[] { "KsHeavenReliantSword" },
+        new EntProtoId[] { "KsRuyiJinguBang" },
+        new EntProtoId[] { "KsPurpleGoldGourd" },
+        new EntProtoId[] { "KsPlantainFan" },
+        new EntProtoId[] { "KsBaguaMirror" },
+        new EntProtoId[] { "KsQiankunPouch" },
+    };
+
+    private static readonly EntProtoId DragonSaber = "KsDragonSlayingSaber";
+
     private const int MaintenanceQiManuals = 3;
     private const int MaintenanceMartialManuals = 2;
     private const float ScriptureChance = 0.3f;
@@ -71,6 +88,7 @@ public sealed partial class CultivationLootSystem : EntitySystem
             SpawnAt(_robustRandom.Pick(MartialManuals), maintenance, gridUid);
 
         SpawnAt(AncestralRing, maintenance, gridUid);
+        SpawnLegendary(maintenance, gridUid);
         SpawnAt(BodyMoldingArt, maintenance, gridUid);
         SpawnAt(BodyPrimer, maintenance, gridUid);
         if (_robustRandom.Prob(ScriptureChance))
@@ -79,6 +97,24 @@ public sealed partial class CultivationLootSystem : EntitySystem
         var library = SpotsBeside(gridUid, "Bookshelf");
         SpawnAt(_robustRandom.Pick(QiManuals), library, gridUid);
         SpawnAt(BodyPrimer, library, gridUid);
+    }
+
+    /// <summary>
+    ///     Hide one legendary artifact (or pair) in the maintenance tunnels.
+    /// </summary>
+    public void SpawnLegendary(List<EntityCoordinates> spots, EntityUid gridUid)
+    {
+        var legendary = _robustRandom.Pick(Legendaries);
+        var first = spots.Count > 0 ? _robustRandom.PickAndTake(spots) : RandomSpot(gridUid);
+        if (first is not { } spot)
+            return;
+
+        foreach (var prototype in legendary)
+            Spawn(prototype, spot);
+
+        // The Heaven Reliant Sword's other half lies somewhere else entirely.
+        if (legendary[0] == "KsHeavenReliantSword")
+            SpawnAt(DragonSaber, spots, gridUid);
     }
 
     private void SpawnAt(EntProtoId prototype, List<EntityCoordinates> spots, EntityUid gridUid)

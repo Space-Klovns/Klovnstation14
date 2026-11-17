@@ -277,9 +277,30 @@ public sealed partial class CultivationSystem : EntitySystem
     ///     Pay for a technique. Fails with a popup if there isn't enough qi. With internal injuries, paying can twist
     ///         the meridians and hurt you, but the technique still goes off.
     /// </summary>
+    /// <summary>
+    ///     Is their cultivation sealed by the eight trigrams? Tells them so if it is.
+    /// </summary>
+    public bool IsSealed(EntityUid uid)
+    {
+        if (!TryComp<CultivationSealedComponent>(uid, out var sealedComponent))
+            return false;
+
+        if (_gameTiming.CurTime >= sealedComponent.Until)
+        {
+            RemComp<CultivationSealedComponent>(uid);
+            return false;
+        }
+
+        _noticeSystem.Notify(uid, Loc.GetString("legendary-sealed"), type: PopupType.SmallCaution);
+        return true;
+    }
+
     public bool TryUseTechnique(EntityUid userUid, float qiCost)
     {
         if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
+            return false;
+
+        if (IsSealed(userUid))
             return false;
 
         if (!_cultivationSystem.TrySpendQi((userUid, cultivatorComponent), qiCost))

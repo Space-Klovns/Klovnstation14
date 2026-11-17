@@ -237,6 +237,23 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         Recalculate((entity, entity.Comp));
     }
 
+    /// <summary>
+    ///     Iron Shirt, the Vajra Golden Body and Blood Boil all end at once: cut through, or sealed away.
+    /// </summary>
+    public bool BreakHardening(EntityUid uid)
+    {
+        if (!TryComp<BodyHardeningComponent>(uid, out var hardeningComponent))
+            return false;
+
+        var now = _gameTiming.CurTime;
+        var broke = hardeningComponent.IronShirtEnd > now || hardeningComponent.VajraEnd > now;
+        hardeningComponent.IronShirtEnd = now;
+        hardeningComponent.VajraEnd = now;
+        hardeningComponent.BloodBoilEnd = now;
+        Dirty(uid, hardeningComponent);
+        return broke;
+    }
+
     public void AddExhaustion(Entity<BodyCultivatorComponent?> entity, float amount)
     {
         if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))

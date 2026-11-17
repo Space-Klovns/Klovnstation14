@@ -70,6 +70,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
+    [Dependency] private CultivationSystem _cultivationSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -108,6 +109,9 @@ public sealed partial class BodyArtSystem : EntitySystem
     /// </summary>
     private bool TryExert(Entity<BodyCultivatorComponent> entity, float exhaustion, FxColour colour = FxColour.Earth)
     {
+        if (_cultivationSystem.IsSealed(entity))
+            return false;
+
         if (!_bodySystem.CanExert(entity.Comp, exhaustion))
         {
             _noticeSystem.Notify(entity, Loc.GetString("body-art-too-exhausted",
@@ -355,7 +359,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     /// <summary>
     ///     A shockwave tearing down a line: everyone in it is hit and hurled along it, and it smashes what it passes.
     /// </summary>
-    private void ShatterLine(EntityUid userUid, Vector2 origin, Vector2 direction, int length, int halfWidth, float damage, int wallTier)
+    public void ShatterLine(EntityUid userUid, Vector2 origin, Vector2 direction, int length, int halfWidth, float damage, int wallTier)
     {
         var mapId = _transformSystem.GetMapId(userUid);
         direction = Vector2.Normalize(direction);

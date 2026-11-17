@@ -43,6 +43,8 @@ PALETTE = {
 
 ACTIONS = {
     "meditate": ("禅", "jade"),
+    "nine_yin_claw": ("爪", "violet"),
+    "wumu_command": ("军", "crimson"),
     "ring_speak": ("语", "tan"),
     "lend_qi": ("借", "gold"),
     "breakthrough": ("破", "gold"),
@@ -176,6 +178,8 @@ ART_MANUALS = {
     "art_drunken_fist": ("醉", "orange"),
     "art_eagle_claw": ("鹰", "tan"),
     "art_wing_chun": ("咏", "blue"),
+    "art_nine_yin": ("阴", "violet"),
+    "art_wumu": ("岳", "crimson"),
 }
 
 MANUALS = {

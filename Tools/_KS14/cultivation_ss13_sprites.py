@@ -779,6 +779,9 @@ def main():
     treasures.append(("spirit_herb_plant", [spirit_herb(planted=True, glow_phase=phase / 6 * math.tau) for phase in range(6)], [0.2] * 6))
     write_rsi("treasures", (32, 32), treasures)
 
+    artifacts = read_dmi(os.path.join(icons, "cultivation_artifacts.dmi"))
+    write_rsi("legendary", (32, 32), [plain(artifacts, name) for name in artifacts])
+
     write_rsi("wuxia_riding", (64, 64), [plain(riding, "sword_ride"), plain(riding, "qi_cloud")])
     write_rsi("wuxia_96", (96, 96), [
         plain(effects96, "storm_cloud"),

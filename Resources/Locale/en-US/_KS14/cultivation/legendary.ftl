@@ -1,0 +1,126 @@
+## Legendary artifacts
+
+legendary-true-damage = Its blows are true damage that ignore armour and any body's tempering.
+legendary-trait-breaks-defence = It cuts straight through Iron Shirt and the Vajra Golden Body.
+legendary-trait-wears-down = Every blow knocks the breath out of a body cultivator.
+legendary-trait-crushes-tempered = The more tempered the body it strikes, the harder it lands.
+legendary-legend = [italic]{$legend}[/italic]
+legendary-cuts-golden-body = The blade cuts through {THE($target)}'s golden body like silk!
+legendary-omen = A treasure's light rises from somewhere {$where}. Something legendary lies unclaimed.
+legendary-sealed = The eight trigrams lock your meridians. Your cultivation is sealed!
+
+## Ganjiang and Moye
+
+legendary-twin-legend = The swordsmith Ganjiang and his wife Moye forged a pair of swords, one male and one female. Held together, they long for each other.
+legendary-twin-power = Held together (by you, or by two people standing side by side), the pair strike twice as hard and can be used in hand to unleash the Twin Dragon Sword Storm, five seconds of slashing everything around you. Apart, use one in hand to sense where the other is.
+legendary-twin-resting = The swords are resting!
+legendary-twin-shout = TWIN DRAGON SWORD STORM!!
+legendary-twin-storm = {CAPITALIZE(THE($user))} spins into a whirlwind of blue and silver steel!
+legendary-twin-silent = {CAPITALIZE(THE($item))} is silent. Its partner is nowhere in this world.
+legendary-twin-far = {CAPITALIZE(THE($item))} strains faintly towards {THE($partner)}, somewhere very far away.
+legendary-twin-tug = {CAPITALIZE(THE($item))} tugs towards {THE($partner)}, {$distance} tiles to the {$direction}, {$where}.
+legendary-twin-reunited = Ganjiang and Moye hum as they are reunited.
+
+## Heaven Reliant Sword
+
+legendary-reliant-legend = "Supreme in the martial world is the Dragon Slaying Saber. Who dares not obey? If the Heaven Reliant Sword does not appear, who can contend with it?"
+legendary-reliant-power = Its Heaven-Cleaving Stroke looses a blade of light fourteen tiles long and three wide that slices through people, doors and even reinforced walls. It cuts through doors, windows, machines and walls like mud.
+legendary-reliant-gathering = The blade is gathering light!
+legendary-reliant-shout = HEAVEN-CLEAVING STROKE!!
+
+## Dragon Slaying Saber
+
+legendary-saber-legend = "Supreme in the martial world is the Dragon Slaying Saber." Legend says it holds a secret, revealed only when it meets the Heaven Reliant Sword.
+legendary-saber-power = Every blow hurls its target and cracks the floor. Use it in hand to wake the dragon: your next blow within ten seconds is the Dragon Slaying Strike, a cataclysm that flattens everything within three tiles and brings down even reinforced walls. Whoever holds it is First Under Heaven.
+legendary-saber-first = Whoever holds the Dragon Slaying Saber rules the martial world. You are First Under Heaven, and everyone will want it from you.
+legendary-saber-sleeps = The dragon sleeps!
+legendary-saber-wakes = The golden dragon on {THE($user)}'s saber opens its eyes!
+legendary-saber-shout = DRAGON SLAYING STRIKE!!
+legendary-saber-strike = {CAPITALIZE(THE($user))} brings the Dragon Slaying Saber down and a golden dragon erupts from the blade!
+legendary-secret-verb = Strike with the Heaven Reliant Sword
+legendary-secret-verb-message = Strike the Dragon Slaying Saber with the Heaven Reliant Sword. Both will shatter.
+legendary-secret-revealed = {CAPITALIZE(THE($user))} brings the Heaven Reliant Sword down on the Dragon Slaying Saber! Both blades shatter, and something falls from within!
+jianghu-saber-claimed = {$name} has claimed the Dragon Slaying Saber, and is First Under Heaven!
+
+## Ruyi Jingu Bang
+
+legendary-ruyi-legend = The As-You-Will Gold-Banded Cudgel. It weighs thirteen thousand five hundred jin and grows or shrinks at its master's word.
+legendary-ruyi-power = Grown, it strikes three tiles away and sends people flying. Thirteen Thousand Jin stretches it to the heavens and brings it down along a three-wide path, walls included. Pluck Hairs sends two copies of you to fight someone. Set down at full size, it stands upright and nobody but you can lift it.
+legendary-ruyi-grow = Grow!
+legendary-ruyi-shrink = Shrink!
+legendary-ruyi-grows = The needle in {THE($user)}'s hand becomes a mighty golden-banded staff!
+legendary-ruyi-shrinks = {CAPITALIZE(THE($user))}'s staff shrinks back down into a tiny golden needle.
+legendary-ruyi-planted = {CAPITALIZE(THE($item))} slams down upright and stands like a pillar. The floor creaks under it.
+legendary-ruyi-wont-budge = It weighs thirteen thousand five hundred jin. It won't move for you.
+legendary-ruyi-needle = It's a needle right now. Make it grow first.
+legendary-ruyi-heavy = The staff is heavy!
+legendary-ruyi-shout = THIRTEEN THOUSAND JIN!!
+legendary-ruyi-hairs-regrow = Your hairs need to regrow!
+legendary-ruyi-hairs-shout = Clones of the Great Sage!
+legendary-ruyi-hairs = {CAPITALIZE(THE($user))} plucks a few hairs, blows on them, and two copies leap out!
+
+## Purple-Gold Gourd
+
+legendary-gourd-legend = From the Journey to the West. Whoever answers when the gourd's holder calls their name is sucked inside, to be slowly dissolved.
+legendary-gourd-power = No realm or body is too strong for it. Only a real answer counts (yes, what, here, their own name, a question back). Whoever is inside slowly dissolves, and a body cultivator's training melts away with them. Whoever dies inside comes out as a potent elixir. Use it in hand to uncork it.
+legendary-gourd-full = The gourd is already full!
+legendary-gourd-gathering = The gourd is still gathering its strength.
+legendary-gourd-urge = {CAPITALIZE(THE($user))} calls your name, pointing a purple gourd at you... You feel a strong urge to answer.
+legendary-gourd-sucked = {CAPITALIZE(THE($target))} answers, and is sucked into the purple gourd with a loud SHLOOP!
+legendary-gourd-inside = It's dark and smells of wine in here, and your skin is starting to sting. Struggle to break out (it takes a while).
+legendary-gourd-squirm = You start squirming against the cork...
+legendary-gourd-released = Someone tumbles out of {THE($item)} in a puff of wine-scented smoke!
+legendary-gourd-distilled = {CAPITALIZE(THE($item))} gurgles, and spits out what's left, and a glowing purple pill.
+legendary-gourd-occupied = Something inside is thumping and shouting.
+legendary-elixir-face = Something in its glow looks a lot like {$name}.
+legendary-elixir-cultivator = A tide of stolen essence surges into your foundation.
+legendary-elixir-body = Stolen essence sinks into your bones.
+legendary-elixir-mortal = Warmth floods through you. You feel strong, and a little sick.
+
+## Plantain Fan
+
+legendary-fan-legend = The Iron Fan Princess's treasure. One wave of it blows a man fifty thousand li away. Here, it's the length of a corridor, but still.
+legendary-fan-power = Its Hurricane, nine tiles deep, hurls everyone ten tiles away, snuffs out fire and shatters glass. Use it in hand for a typhoon all around you. Firestorm fans the flames the other way, into a firestorm.
+legendary-fan-resting = The fan is resting!
+legendary-fan-hurricane = HURRICANE!!
+legendary-fan-typhoon = TYPHOON!!
+legendary-fan-firestorm = FIRESTORM!!
+legendary-fan-no-fire = There's no fire that way to fan.
+
+## Bagua Mirror
+
+legendary-mirror-legend = Hung over doorways to turn away evil spirits. In a cultivator's hand it does a great deal more.
+legendary-mirror-power = Use it in hand for the Eight Trigrams Seal: every cultivator who sees the light (qi or body) has their cultivation sealed for twenty seconds. The undead and the wicked burn. Held, it turns shots aside.
+legendary-mirror-dim = The mirror is dim!
+legendary-mirror-shout = EIGHT TRIGRAMS SEAL!!
+legendary-mirror-sears = The mirror's light sears your evil qi!
+legendary-mirror-sealed = The eight trigrams lock around your meridians and sinews! Your cultivation is sealed!
+
+## Qiankun Pouch
+
+legendary-pouch-legend = Qian and Kun, heaven and earth. The inside of this pouch is larger than the outside, which is the point.
+legendary-pouch-power = Use it in hand to Swallow Heaven and Earth: every loose item within five tiles flies into the pouch. Release Heaven and Earth hurls everything inside at a spot. Someone beside its holder can step into its world to hide for up to thirty seconds.
+legendary-pouch-wind = The pouch is full of wind!
+legendary-pouch-swallow = SWALLOW HEAVEN AND EARTH!
+legendary-pouch-swallowed = {$count ->
+    [0] Nothing vanishes into the pouch.
+    [one] One thing vanishes into the pouch.
+   *[other] {$count} things vanish into the pouch.
+}
+legendary-pouch-release = RELEASE HEAVEN AND EARTH!
+legendary-pouch-empty = The pouch is empty!
+legendary-pouch-settling = The pouch is still settling!
+legendary-pouch-hide-verb = Hide in their Qiankun Pouch
+legendary-pouch-let-out-verb = Let them out of the pouch
+legendary-pouch-inside = You step into a quiet little world of mountains and clouds. Move to step back out.
+
+## The secret of the saber and the sword
+
+legendary-manual-crumbles = The pages crumble as you open them. Whatever it held has already passed to someone else.
+legendary-manual-known = You already know everything this book holds.
+legendary-nine-yin-learned = You have learned the Nine Yin White Bone Claw! Use it on someone beside you: it tears their meridians and leaves them reeling.
+legendary-nine-yin-shout = Nine Yin White Bone Claw!
+legendary-nine-yin-rakes = {CAPITALIZE(THE($user))}'s fingers turn bone-white and rake through {THE($target)}!
+legendary-wumu-learned = You have learned the Command of the Wumu Yishu! Rally the people around you into an unbreakable formation.
+legendary-wumu-shout = Shake a mountain, easy! Shake my army, impossible!
+legendary-wumu-formation = You fall into formation. You will not break.

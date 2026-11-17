@@ -39,6 +39,7 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private CultivationLootSystem _lootSystem = default!;
+    [Dependency] private LegendarySystem _legendarySystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NavMapSystem _navMapSystem = default!;
@@ -55,6 +56,14 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     /// </summary>
     private TimeSpan _nextBloom;
 
+    /// <summary>
+    ///     When unclaimed legendary artifacts give themselves away to cultivators, as SS13 did eight and twenty minutes
+    ///         into the round.
+    /// </summary>
+    private readonly List<TimeSpan> _omens = new();
+
+    private static readonly TimeSpan[] OmenTimes = { TimeSpan.FromMinutes(8), TimeSpan.FromMinutes(20) };
+
     public override void Initialize()
     {
         base.Initialize();
@@ -64,6 +73,7 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     private void OnRoundRestart(RoundRestartCleanupEvent args)
     {
         _nextBloom = TimeSpan.Zero;
+        _omens.Clear();
     }
 
     public override void Update(float frameTime)
@@ -74,11 +84,19 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
         if (_nextBloom == TimeSpan.Zero)
         {
             _nextBloom = now + _robustRandom.Next(FirstBloomMin, FirstBloomMax);
+            foreach (var omenTime in OmenTimes)
+                _omens.Add(now + omenTime);
         }
         else if (now >= _nextBloom)
         {
             _nextBloom = now + _robustRandom.Next(BloomMin, BloomMax);
             TryBloom();
+        }
+
+        if (_omens.Count > 0 && now >= _omens[0])
+        {
+            _omens.RemoveAt(0);
+            _legendarySystem.Omen(Sensers());
         }
 
         var plants = EntityQueryEnumerator<SpiritHerbPlantComponent>();

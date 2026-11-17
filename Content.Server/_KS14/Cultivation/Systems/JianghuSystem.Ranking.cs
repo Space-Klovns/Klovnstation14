@@ -160,6 +160,28 @@ public sealed partial class JianghuSystem
     }
 
     /// <summary>
+    ///     Someone takes the top of the ranking outright (the Dragon Slaying Saber does that), and the station hears.
+    /// </summary>
+    public void ClaimFirstUnderHeaven(EntityUid bodyUid, string announcementLocId)
+    {
+        if (!_mindSystem.TryGetMind(bodyUid, out var mindId, out _))
+            return;
+
+        PruneRanking();
+        if (FirstUnderHeaven() == mindId)
+            return;
+
+        _ranking.Remove(mindId);
+        _ranking.Insert(0, mindId);
+        if (_ranking.Count > RankingSize)
+            _ranking.RemoveRange(RankingSize, _ranking.Count - RankingSize);
+
+        EnsureComp<JianghuExamineComponent>(bodyUid);
+        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(announcementLocId, ("name", Name(bodyUid))),
+            Loc.GetString("jianghu-ranking-sender"), colorOverride: SectColor);
+    }
+
+    /// <summary>
     ///     First Under Heaven is beneath challenges from anyone outside the top five.
     /// </summary>
     public bool RefusesChallenge(EntityUid challengerUid, EntityUid opponentUid)
