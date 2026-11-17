@@ -3040,3 +3040,11 @@ Entries:
         turn into Blood Red Lawnmover
   id: 272
   time: '2026-11-17T10:16:17.0000000+00:00'
+- author: cocothegogo
+  changes:
+    - type: Add
+      message: >-
+        Added space alligators that can knock you down, latch onto a leg, and
+        rip it off with a death roll.
+  id: 273
+  time: '2026-11-17T10:16:40.0000000+00:00'
