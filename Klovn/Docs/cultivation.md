@@ -98,6 +98,21 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
 - **Nine Yin Manual / Wumu Yishu** (`InheritanceManualComponent`): one reader each learns the Nine Yin White Bone Claw or
   the Command of the Wumu Yishu (`WumuFormationSystem`: faster, half stamina damage).
 
+## Heirs
+
+Ported from SS13 `inheritance.dm` (`InheritanceSystem`). Swearing brotherhood grants **Name Your Heir**. Taking a
+disciple (Body Molding) or having your transmitted jade slip awakened does too. The heir must be a disciple or sworn
+sibling; pointing the action at yourself clears the choice. The lineage is kept on the mind.
+
+When the master dies, a golden streak flies to a living, humanoid heir, unless an Eternal Heart revival is pending.
+What passes on:
+- **Qi master:** half the insight. A qi heir is filled to their threshold and learns one of the master's laws if they
+  have a free slot. A committed body heir gets tempering instead.
+- **Body master:** half the tempering invested passes on the same way.
+
+The master's cultivation is wiped either way. The heir also gets `InheritanceBlessingComponent`, so their next
+breakthrough or Tribulation of Flesh cannot fail.
+
 ## The Demonic Path
 
 `ForbiddenArtsSystem`. The Heaven-Devouring Demonic Scripture (`KsDemonicScripture`, 18 TC in the uplink) can only be

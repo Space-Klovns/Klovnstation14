@@ -80,6 +80,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private AncestralRingSystem _ringSystem = default!;
+    [Dependency] private InheritanceSystem _inheritanceSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -698,6 +699,7 @@ public sealed partial class CultivationSystem : EntitySystem
         {
             EnsureComp<CultivatorComponent>(args.User);
             _noticeSystem.Notify(args.User, Loc.GetString("cultivation-awakened"), type: PopupType.Large);
+            _inheritanceSystem.SlipAwakened(manualEntity, args.User);
         }
 
         TryLearnFromManual(args.User, manualEntity);

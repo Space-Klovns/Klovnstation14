@@ -1,0 +1,13 @@
+inheritance-no-heir = You name no heir. Your cultivation will die with you.
+inheritance-not-candidate = {CAPITALIZE(THE($target))} is neither your disciple nor your sworn sibling.
+inheritance-named = You name {THE($target)} as your heir.
+inheritance-named-heir = You feel a thread of qi tie itself to your heart. {CAPITALIZE(THE($user))} has named you their heir.
+inheritance-scatters = Your cultivation reaches for your heir... but finds no one living to receive it. It scatters.
+inheritance-arrives = A streak of light finds you and sinks into your chest. {$master}'s cultivation is yours now. {$legacy} Your next breakthrough (or Tribulation of Flesh) cannot fail.
+inheritance-legacy-tempering = It burns into your flesh as tempering.
+inheritance-legacy-foundation = Your foundation fills.
+inheritance-legacy-law = Your foundation fills, and your master's {$law} blooms in your meridians!
+inheritance-legacy-insight = It settles into your foundation as insight.
+inheritance-legacy-bones = It sinks into your bones and sinews.
+inheritance-streak-leaves = A streak of golden light tears free of {THE($user)}'s body and shoots away!
+inheritance-streak-arrives = A streak of golden light plunges into {THE($user)}'s chest!

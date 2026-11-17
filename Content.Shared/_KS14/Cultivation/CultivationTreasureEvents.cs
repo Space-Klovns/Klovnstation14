@@ -20,3 +20,8 @@ public sealed partial class RingElderLendQiActionEvent : InstantActionEvent
 
 [Serializable, NetSerializable]
 public sealed partial class SpiritHerbPickDoAfterEvent : SimpleDoAfterEvent;
+
+/// <summary>
+///     Point at a disciple or sworn sibling to name them heir to your cultivation; point at yourself to name no heir.
+/// </summary>
+public sealed partial class NameHeirActionEvent : EntityTargetActionEvent;

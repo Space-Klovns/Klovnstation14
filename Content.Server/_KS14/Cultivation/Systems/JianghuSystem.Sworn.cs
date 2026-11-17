@@ -46,6 +46,7 @@ public sealed partial class JianghuSystem
     /// </summary>
     private const float BadlyHurtFraction = 0.5f;
 
+    [Dependency] private InheritanceSystem _inheritanceSystem = default!;
     [Dependency] private HeartDemonSystem _heartDemonSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
@@ -122,6 +123,9 @@ public sealed partial class JianghuSystem
             EnsureComp<SwornMemberComponent>(mindId).Bond = bond;
             if (EnsureFaceComponent(bodyUid) is { } faceComponent)
                 faceComponent.OathSworn = true;
+
+            // A sworn sibling can be named heir.
+            _inheritanceSystem.GrantNameHeir(bodyUid);
 
             _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(bodyUid):player} swore brotherhood");
         }

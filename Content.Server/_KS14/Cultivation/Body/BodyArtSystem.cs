@@ -71,6 +71,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationSystem _cultivationSystem = default!;
+    [Dependency] private InheritanceSystem _inheritanceSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -714,6 +715,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         _bodySystem.Commit((discipleUid, discipleComponent));
         _bodySystem.AddTempering((discipleUid, discipleComponent), 30f);
+        _inheritanceSystem.RecordDisciple(entity, discipleUid);
         _noticeSystem.Announce(discipleUid, Loc.GetString("body-disciple-accepted", ("user", entity.Owner), ("target", discipleUid)), type: PopupType.Large);
     }
 

@@ -50,6 +50,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     /// </summary>
     private const float AlarmRange = 3f;
 
+    [Dependency] private InheritanceSystem _inheritanceSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -402,6 +403,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         var manualComponent = EnsureComp<CultivationManualComponent>(slipUid);
         manualComponent.Law = rootLaw;
         manualComponent.Awakens = true;
+        _inheritanceSystem.MarkSlip(slipUid, entity);
         _handsSystem.PickupOrDrop(entity, slipUid, checkActionBlocker: false);
 
         // Teaching is its own kind of insight.

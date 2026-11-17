@@ -43,6 +43,7 @@ PALETTE = {
 
 ACTIONS = {
     "meditate": ("禅", "jade"),
+    "name_heir": ("嗣", "gold"),
     "nine_yin_claw": ("爪", "violet"),
     "wumu_command": ("军", "crimson"),
     "ring_speak": ("语", "tan"),

@@ -277,6 +277,37 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         Dirty(entity);
     }
 
+    /// <summary>
+    ///     Everything forged into the body, as tempering points: every part's levels and progress, plus what's pending.
+    /// </summary>
+    public static float TotalInvested(BodyCultivatorComponent bodyCultivator)
+    {
+        var total = bodyCultivator.Tempering;
+        foreach (var (group, level) in bodyCultivator.Levels)
+        {
+            for (var reached = 1; reached <= level; reached++)
+                total += PartCost(reached);
+
+            total += bodyCultivator.Progress.GetValueOrDefault(group);
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    ///     The forged body has left: every part returns to plain flesh, back to the very start of the path.
+    /// </summary>
+    public void ResetBody(Entity<BodyCultivatorComponent> entity)
+    {
+        entity.Comp.Stage = 0;
+        entity.Comp.Tempering = 0f;
+        entity.Comp.Levels.Clear();
+        entity.Comp.Progress.Clear();
+        Recalculate(entity);
+        Dirty(entity);
+        UpdateAlerts(entity);
+    }
+
     public void AdvanceStage(Entity<BodyCultivatorComponent?> entity)
     {
         if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false)
