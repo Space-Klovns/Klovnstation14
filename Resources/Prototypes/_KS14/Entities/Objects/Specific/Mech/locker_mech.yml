@@ -4,9 +4,18 @@
   name: locker mech
   description: A locker held upright by scavenged struts, airlock servos, and a tension belt.
   components:
+  - type: Sprite
+    sprite: _KS14/Objects/Specific/Mech/locker_mech.rsi
+    layers:
+    - map: [ "enum.MechVisualLayers.Base" ]
+      state: lockermech
   - type: KsLockerMech
   - type: Mech
     # Reuse the native pilot action slot. The belt takes the place of swappable equipment.
+    baseState: lockermech
+    openState: lockermech-open
+    # The source sprite sheet has no separate wreck state.
+    brokenState: lockermech-open
     mechCycleAction: KsActionLockerMechTip
     maxEquipmentAmount: 0
     maxIntegrity: 125
