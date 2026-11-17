@@ -1,0 +1,9 @@
+- type: entity
+  parent: RehydratableAnimalCube
+  id: KsSpaceAlligatorCube
+  name: alligator cube
+  description: Just add water! Then mind your legs.
+  components:
+  - type: Rehydratable
+    possibleSpawns:
+    - KsMobSpaceAlligator

@@ -80,4 +80,6 @@
     spawned:
     - id: FoodMeat
       amount: 2
+    - id: KsClothingHeadHatGatorCloak
+      prob: 0.2
   - type: KsAlligator

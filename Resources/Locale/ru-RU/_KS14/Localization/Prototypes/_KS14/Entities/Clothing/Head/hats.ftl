@@ -6,3 +6,6 @@ ent-ClothingHeadHatCapotain = шляпа пилигрима
 # Resources\Prototypes\_KS14\Entities\Clothing\Head\hats.yml
 ent-ClothingHeadHatDunce = шапочка дурака
     .desc = для лучших сотрудников
+# Resources\Prototypes\_KS14\Entities\Clothing\Head\hats.yml
+ent-KsClothingHeadHatGatorCloak = плащ из аллигатора
+    .desc = Чешуйчатый зелёный плащ. Его глаза смотрят на вас...

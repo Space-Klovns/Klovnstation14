@@ -12,3 +12,10 @@ ent-KsAlligatorMigration = Alligator Migration
     .desc = Hostile space alligators enter maintenance.
 
 station-event-ks-alligator-migration-announcement = Attention. Space alligators have been sighted in the maintenance tunnels. Keep clear and report sightings to Security.
+
+# KsSpaceAlligatorCube
+ent-KsSpaceAlligatorCube = alligator cube
+    .desc = Just add water! Then mind your legs.
+
+# KsSpawnMobSpaceAlligator
+ent-KsSpawnMobSpaceAlligator = Space Alligator Spawner
