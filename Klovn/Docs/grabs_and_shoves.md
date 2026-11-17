@@ -259,6 +259,12 @@ Resolution order in `ResolveShove`:
 5. **Free**: the old impulse push plus `KsStatusEffectStaggered` through
    `MovementModStatusSystem.TryUpdateMovementSpeedModDuration` (refreshes, never stacks).
 
+**Stagger visuals.** The stagger is what makes a wall shove knock down, so it shows: the status effect has
+`KsStaggerVisuals` (`amplitude`, `period`), and `KsStaggerVisualsSystem` (client) sways the sprite of whoever has it
+from side to side, on every client that sees them, until the effect ends. The sway is the sprite's `Offset`, driven
+from `FrameUpdate` on real time; the offset to restore is kept on the mob in the client-only
+`KsStaggerSwayComponent`.
+
 `KnockIntoObstacle` and `KnockIntoWall` are public and take the popups to show, so anything that sends someone
 flying (a thrown grab victim, below) knocks them over the same way.
 

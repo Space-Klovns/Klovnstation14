@@ -26,7 +26,7 @@ public sealed partial class ComplexShoveComponent : Component
     ///     Shorter than <see cref="ProbeDistance"/>: a table or a person has to be right behind them.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public float ObstacleProbeDistance = 0.75f;
+    public float ObstacleProbeDistance = 0.4f;
 
     /// <summary>
     ///     Someone lying within this distance of an obstacle's centre is already on it, and isn't sent onto it again.

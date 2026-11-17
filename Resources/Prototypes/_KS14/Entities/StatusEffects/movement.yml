@@ -1,5 +1,8 @@
-# tgstation's stagger: a shove with a shield slows you down for a few seconds.
+# tgstation's stagger: a shove with nothing to knock you over slows you down for a few seconds, and you sway while it
+# lasts. A shove against a wall then puts you down.
 - type: entity
   parent: StatusEffectSlowdown
   id: KsStatusEffectStaggered
   name: staggered
+  components:
+  - type: KsStaggerVisuals
