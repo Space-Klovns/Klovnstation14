@@ -39,6 +39,6 @@ public sealed partial class KsLawnmowerAppearanceSystem : EntitySystem
             MetaData(entity.Owner).EntityPrototype?.ID != entity.Comp.EmaggedPrototype.Id)
         {
             _lawnMowerSystem.ApplyEmaggedName(entity);
-        }
+        } 
     }
 }
