@@ -377,7 +377,8 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
         emitterComponent.MapId = transformComponent.MapID;
         emitterComponent.Rotation = rotation;
-        emitterComponent.Origin = worldPosition + rotation.RotateVec(particlesComponent.Offset);
+        emitterComponent.Origin = worldPosition + rotation.RotateVec(particlesComponent.Offset) +
+            worldRotation.RotateVec(particlesComponent.RotatingOffset);
         emitterComponent.Matrix = prototype.Space == KsParticleSpace.Local
             ? prototype.Transform * Matrix3Helpers.CreateTransform(emitterComponent.Origin, rotation, new Vector2(particlesComponent.Scale))
             : Matrix3x2.Identity;

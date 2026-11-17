@@ -1,0 +1,9 @@
+- type: !PartialOnly loadoutGroup
+  id: ChefJumpsuit
+  loadouts:
+  - KsGrillingShorts
+
+- type: !PartialOnly vendingMachineInventory
+  id: ChefDrobeInventory
+  startingInventory:
+    KsClothingUniformGrillingShorts: 2

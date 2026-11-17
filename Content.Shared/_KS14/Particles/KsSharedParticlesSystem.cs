@@ -171,6 +171,15 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
         Dirty(entity);
     }
 
+    public void SetRotatingOffset(Entity<KsParticlesComponent?> entity, Vector2 rotatingOffset)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.RotatingOffset == rotatingOffset)
+            return;
+
+        entity.Comp.RotatingOffset = rotatingOffset;
+        Dirty(entity);
+    }
+
     public void SetRotation(Entity<KsParticlesComponent?> entity, Angle rotation)
     {
         if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Rotation.Equals(rotation))

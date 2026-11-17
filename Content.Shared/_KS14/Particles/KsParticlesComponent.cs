@@ -38,6 +38,14 @@ public sealed partial class KsParticlesComponent : Component
     public Vector2 Offset;
 
     /// <summary>
+    ///     Added to <see cref="Offset"/>, and always turned with the entity, while the emitter itself stays in its
+    ///         usual frame: smoke from the front of a vehicle, wherever it faces, that still rises straight up. Zero
+    ///         rotation faces south, so the front is <c>0, -distance</c>.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 RotatingOffset;
+
+    /// <summary>
     ///     Turns the whole emitter, counter-clockwise, on top of the frame it would otherwise be in (see
     ///         <see cref="KsParticlesPrototype.FollowRotation"/>): a spray aimed one way. Unlike turning the entity, this
     ///         works on the bare emitter entity, which doesn't rotate.
