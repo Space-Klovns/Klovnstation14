@@ -10,13 +10,18 @@ using Content.Shared._KS14.ThrowMode;
 using Content.Shared.CombatMode;
 using Content.Shared.Gravity;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Input;
 using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Standing;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Melee;
 using NUnit.Framework;
+using Robust.Client.GameObjects;
+using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -38,8 +43,10 @@ public sealed class KsGrabThrowPredictionTest : GameTest
 
     private static readonly EntProtoId Human = "MobHuman";
 
-    [Test]
-    public async Task ClientPredictsTheThrowFromTheThrower()
+    /// <param name="throwKey">Whether the throw key is pressed (Ctrl+Q by default), or a click made in throw mode.</param>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ClientPredictsTheThrowFromTheThrower(bool throwKey)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid grabberUid = default;
@@ -91,7 +98,7 @@ public sealed class KsGrabThrowPredictionTest : GameTest
             hands.SetActiveHand(grabberUid, hand);
 
             SEntMan.System<KsThrowModeSystem>().SetEnabled((grabberUid, SEntMan.GetComponent<KsThrowModeComponent>(grabberUid)),
-                true, popup: false);
+                !throwKey, popup: false);
         });
 
         await Pair.RunTicksSync(10);
@@ -106,8 +113,29 @@ public sealed class KsGrabThrowPredictionTest : GameTest
             var held = (transformSystem.GetWorldPosition(clientVictimUid) - transformSystem.GetWorldPosition(clientGrabberUid)).Length();
             Assert.That(held, Is.GreaterThan(MaxSidewaysDrift), "The victim must be held at arm's length for this to show anything.");
 
-            // What a click in throw mode sends. The client runs its own prediction of it at once.
-            CEntMan.RaisePredictiveEvent(new KsThrowModeThrowEvent(target));
+            // Either way the client runs its own prediction of the throw at once.
+            if (throwKey)
+            {
+                // The throw key, through the client's input system as a key press goes.
+                var inputManager = Client.ResolveDependency<IInputManager>();
+                var timing = Client.ResolveDependency<IGameTiming>();
+                var function = ContentKeyFunctions.ThrowItemInHand;
+                var message = new ClientFullInputCmdMessage(timing.CurTick, timing.TickFraction,
+                    inputManager.NetworkBindMap.KeyFunctionID(function))
+                {
+                    State = BoundKeyState.Down,
+                    Coordinates = CEntMan.GetCoordinates(target),
+                    Uid = EntityUid.Invalid,
+                };
+
+                CEntMan.System<InputSystem>().HandleInputCommand(Client.ResolveDependency<IPlayerManager>().LocalSession,
+                    function, message);
+            }
+            else
+            {
+                // What a click in throw mode sends.
+                CEntMan.RaisePredictiveEvent(new KsThrowModeThrowEvent(target));
+            }
 
             var start = (transformSystem.GetWorldPosition(clientVictimUid) - transformSystem.GetWorldPosition(clientGrabberUid)).Length();
             Assert.Multiple(() =>
@@ -117,9 +145,9 @@ public sealed class KsGrabThrowPredictionTest : GameTest
             });
         });
 
-        // The flight itself, tick by tick, on the client alone: thrown north, the victim only ever goes north. Snapping
-        // back towards where they were held, or hanging in place until the server catches up, is what an unpredicted
-        // throw looks like.
+        // The flight itself, tick by tick: thrown north, the victim only ever goes north on the client, and stays in
+        // line with the thrower. Snapping back towards where they were held is what a throw lost on re-prediction
+        // looks like. The test server answers within a tick, so this can't show how the wait for a far server looks.
         var lastY = float.MinValue;
         var firstY = 0f;
         for (var tick = 1; tick <= WatchedTicks; tick++)
@@ -148,7 +176,7 @@ public sealed class KsGrabThrowPredictionTest : GameTest
     }
 
     /// <summary>
-    ///     How many ticks the flight is watched for: well past the round trip to the server.
+    ///     How many ticks the flight is watched for.
     /// </summary>
     private const int WatchedTicks = 15;
 

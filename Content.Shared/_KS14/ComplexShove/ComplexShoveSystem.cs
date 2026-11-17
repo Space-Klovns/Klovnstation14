@@ -12,6 +12,7 @@ using Content.Shared.Database;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Inventory.VirtualItem;
+using Content.Shared.Jittering;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
@@ -54,6 +55,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedBuckleSystem _buckleSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private SharedJitteringSystem _jitteringSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -169,6 +171,12 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             shover.Comp.StaggerEffect,
             shover.Comp.StaggerTime,
             shover.Comp.StaggerSpeedModifier);
+
+        if (shover.Comp.StaggerJitterAmplitude > 0f)
+        {
+            _jitteringSystem.DoJitter(target, shover.Comp.StaggerTime, refresh: true,
+                amplitude: shover.Comp.StaggerJitterAmplitude, frequency: shover.Comp.StaggerJitterFrequency);
+        }
 
         return KsShoveOutcome.Pushed;
     }

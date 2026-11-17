@@ -614,6 +614,11 @@ public sealed partial class KsGrabSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnThrownHit(Entity<KsGrabThrownComponent> thrown, ref ThrowDoHitEvent args)
     {
+        // Removed already, by an earlier hit this tick: a deferred removal leaves the component in place until the
+        // tick ends, and two things hit at once (a window and its grille) would both slam them.
+        if (thrown.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
         var thrower = thrown.Comp.Thrower;
         if (args.Target == thrower || !TryComp<KsGrabberComponent>(thrower, out var grabber))
             return;

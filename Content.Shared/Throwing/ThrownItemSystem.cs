@@ -72,7 +72,7 @@ namespace Content.Shared.Throwing
             if (args.OtherEntity == component.Thrower)
                 return;
 
-            ThrowCollideInteraction(component, args.OurEntity, args.OtherEntity);
+            QueueHit/* KS14: was ThrowCollideInteraction(component, ...), hits are now raised in priority order after the step */(args.OurEntity, args.OtherEntity);
         }
 
         private void PreventCollision(EntityUid uid, ThrownItemComponent component, ref PreventCollideEvent args)

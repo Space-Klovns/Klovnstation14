@@ -17,6 +17,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Gravity;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item.ItemToggle;
+using Content.Shared.Jittering;
 using Content.Shared.Movement.Components;
 using Content.Shared.StatusEffectNew;
 using Content.Shared.Stunnable;
@@ -250,6 +251,7 @@ public sealed class KsShoveTest : GameTest
             {
                 Assert.That(IsKnockedDown(targetUid), Is.False, "The first shove into a wall must not knock down.");
                 Assert.That(IsStaggered(targetUid), "The first shove into a wall must stagger.");
+                Assert.That(SEntMan.HasComponent<JitteringComponent>(targetUid), "Someone staggered must visibly jitter.");
                 Assert.That(SEntMan.GetComponent<PhysicsComponent>(targetUid).LinearVelocity.Length(), Is.GreaterThan(0f),
                     "A shove into a wall must still push.");
             });

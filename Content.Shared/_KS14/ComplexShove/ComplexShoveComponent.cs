@@ -119,6 +119,16 @@ public sealed partial class ComplexShoveComponent : Component
     public float StaggerSpeedModifier = 0.85f;
 
     /// <summary>
+    ///     How hard someone staggered jitters while it lasts, so that everyone, the shover above all, can see that a
+    ///         shove against a wall will now put them down. Zero shows nothing.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float StaggerJitterAmplitude = 5f;
+
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float StaggerJitterFrequency = 4f;
+
+    /// <summary>
     ///     Push force applied to targets who are standing.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]

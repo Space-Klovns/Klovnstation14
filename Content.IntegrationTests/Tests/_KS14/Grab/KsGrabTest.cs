@@ -20,6 +20,8 @@ using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Standing;
+using Content.Shared._KS14.ComplexShove;
+using Content.Shared.FixedPoint;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Melee;
@@ -51,6 +53,7 @@ public sealed class KsGrabTest : GameTest
     private static readonly ProtoId<KsGrabStagePrototype> StrangleStage = "KsGrabStrangle";
     private readonly EntProtoId _rigged = "KsGrabTestRiggedHuman";
     private readonly EntProtoId _wall = "KsGrabTestWall";
+    private readonly EntProtoId _priorityObstacle = "KsGrabTestPriorityObstacle";
     private readonly EntProtoId _npc = "KsGrabTestNpcHuman";
 
     [TestPrototypes]
@@ -109,6 +112,15 @@ public sealed class KsGrabTest : GameTest
         mask:
         - FullTileMask
         hard: true
+
+# Solid like the wall, but something to be shoved into, and hit before anything else it shares a tile with.
+- type: entity
+  parent: KsGrabTestWall
+  id: KsGrabTestPriorityObstacle
+  components:
+  - type: KsShoveObstacle
+    knockdownTime: 9
+  - type: KsThrowHitPriority
 ";
 
     private async Task<(EntityUid Grabber, EntityUid Victim)> SetUp(EntProtoId? grabber = null, EntProtoId? victim = null,
@@ -592,6 +604,69 @@ public sealed class KsGrabTest : GameTest
 
             var start = (transformSystem.GetWorldPosition(victimUid) - transformSystem.GetWorldPosition(grabberUid)).Length();
             Assert.That(start, Is.LessThan(0.01f), "A thrown victim must start from where their thrower stands.");
+        });
+    }
+
+    /// <summary>
+    ///     A victim thrown at two things on one tile, as a window over its grille, slams into the one with the higher
+    ///         hit priority, whichever physics happens to find first, and only into that one: one knockdown, one
+    ///         lot of impact damage.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ThrownVictimHitsTheHigherPriorityOnce(bool prioritySpawnedFirst)
+    {
+        var (grabberUid, victimUid) = await SetUp();
+        EntityUid obstacleUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            var coordinates = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(3f, 0f));
+            if (prioritySpawnedFirst)
+                obstacleUid = SEntMan.SpawnEntity(_priorityObstacle, coordinates);
+
+            SEntMan.SpawnEntity(_wall, coordinates);
+            if (!prioritySpawnedFirst)
+                obstacleUid = SEntMan.SpawnEntity(_priorityObstacle, coordinates);
+        });
+
+        await GrabAggressively(grabberUid, victimUid);
+
+        // Brought down first: only someone down can be thrown.
+        await Server.WaitPost(() => Shove(grabberUid, victimUid));
+        await RunSeconds(1);
+
+        var timing = Server.ResolveDependency<IGameTiming>();
+        var throwTime = TimeSpan.Zero;
+        var damageBefore = FixedPoint2.Zero;
+        await Server.WaitAssertion(() =>
+        {
+            throwTime = timing.CurTime;
+            damageBefore = SEntMan.System<DamageableSystem>().GetAllDamage(victimUid).GetTotal();
+            SelectGrabHand(grabberUid);
+            var target = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(6f, 0f));
+            Assert.That(SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target));
+        });
+
+        await RunSeconds(1.5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var grabber = SEntMan.GetComponent<KsGrabberComponent>(grabberUid);
+            var obstacle = SEntMan.GetComponent<KsShoveObstacleComponent>(obstacleUid);
+            Assert.That(obstacle.KnockdownTime, Is.GreaterThan(grabber.ThrowWallKnockdownTime + TimeSpan.FromSeconds(2)),
+                "This test needs the obstacle's knockdown to stand out from the wall's.");
+
+            // Longer than the wall's knockdown could have left: it was the obstacle they slammed into.
+            Assert.That(SEntMan.TryGetComponent<KnockedDownComponent>(victimUid, out var knockedDown) &&
+                        knockedDown.NextUpdate > throwTime + grabber.ThrowWallKnockdownTime + TimeSpan.FromSeconds(1),
+                "The victim must slam into the one with the higher hit priority.");
+
+            var damage = SEntMan.System<DamageableSystem>().GetAllDamage(victimUid).GetTotal() - damageBefore;
+            // Hitting something at speed hurts a little by itself, so not exactly one lot, but well short of two.
+            var impact = grabber.ThrowImpactDamage!;
+            Assert.That(damage, Is.GreaterThanOrEqualTo(impact.GetTotal()).And.LessThan(impact.GetTotal() * 2),
+                "Only the first hit counts: one lot of impact damage.");
         });
     }
 

@@ -259,11 +259,9 @@ Resolution order in `ResolveShove`:
 5. **Free**: the old impulse push plus `KsStatusEffectStaggered` through
    `MovementModStatusSystem.TryUpdateMovementSpeedModDuration` (refreshes, never stacks).
 
-**Stagger visuals.** The stagger is what makes a wall shove knock down, so it shows: the status effect has
-`KsStaggerVisuals` (`amplitude`, `period`), and `KsStaggerVisualsSystem` (client) sways the sprite of whoever has it
-from side to side, on every client that sees them, until the effect ends. The sway is the sprite's `Offset`, driven
-from `FrameUpdate` on real time; the offset to restore is kept on the mob in the client-only
-`KsStaggerSwayComponent`.
+**Stagger visuals.** The stagger is what makes a wall shove knock down, so it shows: whoever is staggered jitters
+for as long as it lasts, through the stock `SharedJitteringSystem.DoJitter` (`StaggerJitterAmplitude` and
+`StaggerJitterFrequency` on `ComplexShove`; amplitude 0 shows nothing).
 
 `KnockIntoObstacle` and `KnockIntoWall` are public and take the popups to show, so anything that sends someone
 flying (a thrown grab victim, below) knocks them over the same way.
@@ -407,6 +405,18 @@ that can't grab) leaves the victim to land as any thrown thing does:
   (`DealImpactDamage`).
 - `ThrowWallKnockdownTime`, `ThrowWallSound`, `ThrowWallPopups` and `ThrowWallResistedPopups` for a wall.
 - `ThrowObstaclePopups`, shown instead of the obstacle's own.
+
+**Only the first hit counts, and which is first is decided.** Two things are often hit in the same tick: a window
+and the grille under it share a hitbox. Two rules keep that from being chance:
+- `KsGrabSystem.OnThrownHit` ignores a hit once the `KsGrabThrown` marker's removal is under way. The removal is
+  deferred to the end of the tick, so without this a second hit in the same tick slammed them again: two popups, two
+  lots of damage.
+- Every throw's hits are raised in order of `KsThrowHitPriorityComponent` on what was hit (default 0; `Window` has 1),
+  not in the order physics found them. `ThrownItemSystem` (a `KS14` edit, in `ThrownItemSystem.Klovn.HitOrder.cs`)
+  gathers the hits of a physics step and raises them when it ends (`PhysicsUpdateAfterSolveEvent`), sorted. It drops
+  a pair reported twice (each of the thrown thing's fixtures reports it) and stops raising hits for something an
+  earlier hit moved elsewhere, as embedding does; raising them inside the step used to do both by accident. This
+  applies to anything thrown, not only people.
 
 **Where the throw starts.** `ThrowHeldItem` aims from the thrower to the click, and an item leaves from the thrower's
 position because that is where a dropped hand item is. A held victim is up to a hold distance away, so

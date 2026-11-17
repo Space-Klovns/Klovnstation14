@@ -11,7 +11,7 @@
     <GuideEntityEmbed Entity="WallSolid" Caption=""/>
   </Box>
 
-  - [bold]Nothing behind them.[/bold] They stumble back and are slowed for a few seconds. You can see it: they sway on their feet until it passes.
+  - [bold]Nothing behind them.[/bold] They stumble back and are slowed for a few seconds. You can see it: they shake until it passes.
   - [bold]A table.[/bold] They're shoved up onto it and knocked down for a few seconds.
   - [bold]An open closet or locker.[/bold] They end up inside, and it slams shut on them. The same goes for anyone thrown into one, and for anyone shoved while standing in one. A shut one knocks them down, as a wall does.
   - [bold]Another person.[/bold] They knock each other over. The one they were shoved into gets back up much sooner. Someone lying on the floor, a body included, doesn't count: the shove carries over them.
