@@ -31,6 +31,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
     [Dependency] private NPCRetaliationSystem _npcRetaliationSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -52,6 +53,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
 
         // One contract at a time: the old beast goes free.
         var masterComponent = EnsureComp<SpiritBeastMasterComponent>(entity);

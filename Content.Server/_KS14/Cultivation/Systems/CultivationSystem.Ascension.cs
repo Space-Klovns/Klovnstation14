@@ -83,6 +83,7 @@ public sealed partial class CultivationSystem
     /// </summary>
     public void Ascend(Entity<CultivatorComponent> entity)
     {
+        _visualsSystem.Breakthrough(entity);
         _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("cultivation-ascended", ("user", entity.Owner)),
             Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
         _audioSystem.PlayPvs(BreakthroughSound, entity);

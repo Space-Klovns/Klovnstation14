@@ -64,6 +64,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -129,6 +130,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Wave(entity, FxColour.Sense, big: true);
         var found = 0;
         foreach (var otherUid in MobsAround(entity, args.Range))
         {
@@ -174,6 +176,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var direction = _transformSystem.GetMapCoordinates(args.Target).Position - _transformSystem.GetMapCoordinates(entity).Position;
         if (direction.LengthSquared() < 0.0001f)
             direction = new Vector2(0f, 1f);
@@ -195,6 +198,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Motes(entity, FxColour.Qi, TimeSpan.FromSeconds(1));
         var maxDistance = args.BaseDistance + 2f * (float)entity.Comp.Realm;
         if (offset.Length() > maxDistance)
             offset = Vector2.Normalize(offset) * maxDistance;
@@ -220,7 +224,9 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
 
         args.Handled = true;
         _audioSystem.PlayPvs(StepSound, entity);
+        _visualsSystem.Wave(entity, FxColour.Void);
         _transformSystem.SetCoordinates(entity, args.Target);
+        _visualsSystem.Wave(entity, FxColour.Void);
         _audioSystem.PlayPvs(StepSound, entity);
     }
 
@@ -257,6 +263,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
 
         // Anything that answers the seal (an Exploding Heart Palm waiting to go off) gets first claim on it.
         var ev = new AcupointSealedEvent(entity);

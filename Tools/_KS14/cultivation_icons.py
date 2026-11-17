@@ -419,6 +419,36 @@ def wuxia_weapon(kind):
     return image
 
 
+def floor_crack(seed):
+    """A dark star of cracks where something hit the floor far too hard, with chipped rubble round the crater."""
+    import random
+    rng = random.Random(seed)
+    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    dark, mid = (14, 12, 12), (46, 42, 40)
+    centre = (16 + rng.randint(-2, 2), 16 + rng.randint(-2, 2))
+    for branch in range(rng.randint(7, 10)):
+        angle = branch * 2 * math.pi / 9 + rng.uniform(-0.3, 0.3)
+        x, y = centre
+        length = rng.randint(11, 17)
+        for step in range(length):
+            angle += rng.uniform(-0.45, 0.45)
+            nx, ny = x + math.cos(angle) * 1.3, y + math.sin(angle) * 1.3
+            width = 3 if step < 3 else (2 if step < 8 else 1)
+            draw.line((x, y, nx, ny), fill=dark + (235 - step * 6,), width=width)
+            if rng.random() < 0.25 and step > 2:
+                fork = angle + rng.choice((-1, 1)) * rng.uniform(0.5, 1.0)
+                draw.line((nx, ny, nx + math.cos(fork) * 5, ny + math.sin(fork) * 5), fill=dark + (170,))
+            x, y = nx, ny
+    radius = rng.randint(4, 6)
+    draw.ellipse((centre[0] - radius, centre[1] - radius, centre[0] + radius, centre[1] + radius), fill=dark + (220,))
+    draw.ellipse((centre[0] - radius + 2, centre[1] - radius + 2, centre[0] + radius - 2, centre[1] + radius - 2), fill=(6, 5, 5, 240))
+    for _ in range(rng.randint(6, 10)):
+        rx, ry = centre[0] + rng.randint(-9, 9), centre[1] + rng.randint(-9, 9)
+        draw.rectangle((rx, ry, rx + 1, ry + rng.randint(0, 1)), fill=mid + (230,))
+    return image
+
+
 def array_circle(glyph, colour, font_path):
     """A floor circle of trigrams around a glyph."""
     face, rim = PALETTE[colour]
@@ -536,6 +566,7 @@ def main():
                         os.path.join(meter_path, f"{digit}.png"))
         write_rsi(meter_path, {"base": meter_plate(glyph, colour, args.font)},
                   extra_copyright="; digits from essence_counter.rsi: Created by EmoGarbage404")
+    write_rsi(os.path.join(TEXTURES, "cracks.rsi"), {f"crack{index}": floor_crack(seed=index * 7919) for index in range(1, 5)})
     write_rsi(os.path.join(TEXTURES, "internal_injury.rsi"),
               {f"injury{stacks}": injury_alert(stacks, args.font) for stacks in range(1, 4)})
 

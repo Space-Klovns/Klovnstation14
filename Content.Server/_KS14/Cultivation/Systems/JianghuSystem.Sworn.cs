@@ -430,6 +430,9 @@ public sealed partial class JianghuSystem
 
         _chatSystem.TrySendInGameICMessage(args.User, Loc.GetString("jianghu-oath-words-one"), InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
         _chatSystem.TrySendInGameICMessage(otherUid, Loc.GetString("jianghu-oath-words-two"), InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
+        _visualsSystem.Wave(args.User, FxColour.Gold, big: true);
+        _visualsSystem.Motes(args.User, FxColour.Gold, TimeSpan.FromSeconds(3));
+        _visualsSystem.Motes(otherUid, FxColour.Gold, TimeSpan.FromSeconds(3));
         foreach (var swornUid in new[] { args.User, otherUid })
             _noticeSystem.Notify(swornUid, Loc.GetString("jianghu-oath-sworn"), type: PopupType.Large);
 

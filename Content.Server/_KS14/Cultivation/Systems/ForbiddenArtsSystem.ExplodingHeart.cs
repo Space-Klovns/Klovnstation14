@@ -64,6 +64,7 @@ public sealed partial class ForbiddenArtsSystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         AddTaint(entity, 6f);
 
         if (ChestTurnsFingers(victimUid))
@@ -158,6 +159,8 @@ public sealed partial class ForbiddenArtsSystem
         var casterUid = entity.Comp.Caster;
         RemComp<ExplodingHeartComponent>(victimUid);
 
+        _visualsSystem.Wave(victimUid, FxColour.Blood, big: true);
+        _visualsSystem.Spark(victimUid, FxColour.Blood);
         var burstDamage = CultivationSystem.Damage("Blunt", 35f);
         burstDamage.DamageDict.Add("Piercing", FixedPoint2.New(35));
         burstDamage.DamageDict.Add("Bloodloss", FixedPoint2.New(20));

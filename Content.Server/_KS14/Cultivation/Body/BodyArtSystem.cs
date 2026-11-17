@@ -21,6 +21,11 @@ using Robust.Shared.Audio;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Content.Server.Decals;
+using Content.Shared._KS14.Explosion.Shockwave;
+using Content.Shared.Camera;
+using Robust.Shared.Player;
+using Robust.Shared.Random;
 
 namespace Content.Server._KS14.Cultivation.Body;
 
@@ -39,8 +44,20 @@ public sealed partial class BodyArtSystem : EntitySystem
     private static readonly SoundSpecifier RoarSound = new SoundPathSpecifier("/Audio/Animals/lizard_happy.ogg");
     private static readonly ProtoId<TagPrototype> WindowTag = "Window";
     private static readonly ProtoId<TagPrototype> WallTag = "Wall";
+    private static readonly EntProtoId ShockwaveEffect = "KsBodyShockwave";
+    private static readonly EntProtoId DustEffect = "KsBodyDust";
+    private const string CraterDecal = "KsCrater";
+    private static readonly string[] CrackDecals = { "KsCrack1", "KsCrack2", "KsCrack3", "KsCrack4" };
+
+    /// <summary>
+    ///     Every body art hits this much harder than its listed base. The arts were tuned too gently.
+    /// </summary>
+    private const float ArtDamageMultiplier = 1.6f;
 
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private DecalSystem _decalSystem = default!;
+    [Dependency] private SharedCameraRecoilSystem _cameraRecoilSystem = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private BodyCultivationSystem _bodyCultivationSystem = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
@@ -51,6 +68,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -97,6 +115,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         }
 
         _bodySystem.AddExhaustion(entity.AsNullable(), exhaustion);
+        _visualsSystem.Cast(entity, FxColour.Earth);
         return true;
     }
 
@@ -132,6 +151,8 @@ public sealed partial class BodyArtSystem : EntitySystem
         if (victimUid == userUid || !_mobStateQuery.TryComp(victimUid, out var mobStateComponent) || _mobStateSystem.IsDead(victimUid, component: mobStateComponent))
             return false;
 
+        damage *= ArtDamageMultiplier;
+        _visualsSystem.Strike(userUid, victimUid, FxColour.Earth);
         if (PathPower(victimUid) > PathPower(userUid))
         {
             _damageableSystem.TryChangeDamage(victimUid, CultivationSystem.Damage("Blunt", damage / 2f), origin: userUid);
@@ -168,6 +189,89 @@ public sealed partial class BodyArtSystem : EntitySystem
         return found;
     }
 
+    #region Effects
+
+    /// <summary>
+    ///     What a heavy blow to the world leaves: a shockwave rippling out, cracked floor, dust, and the camera of
+    ///         everyone close by jolted.
+    /// </summary>
+    /// <param name="strength">Roughly 1 for a stomp, up to 3 for the arts that shake the whole area.</param>
+    public void Impact(MapCoordinates centre, float radius, float strength, bool shockwave = true)
+    {
+        if (shockwave)
+        {
+            var waveUid = Spawn(ShockwaveEffect, centre);
+            var waveComponent = EnsureComp<KsShockwaveComponent>(waveUid);
+            waveComponent.StartTime = _gameTiming.CurTime;
+            waveComponent.Width = 0.6f + 0.3f * strength;
+            waveComponent.FalloffPower = MathF.Max(10f, 40f - 8f * strength);
+            Dirty(waveUid, waveComponent);
+        }
+
+        _visualsSystem.WaveAt(centre, FxColour.Earth, big: strength >= 1.5f);
+        Crater(centre);
+        Crack(centre, radius, chance: 0.35f + 0.15f * strength);
+
+        var puffs = (int)MathF.Ceiling(2f * strength);
+        for (var puff = 0; puff < puffs; puff++)
+            Spawn(DustEffect, centre.Offset(_robustRandom.NextVector2(radius * 0.6f)));
+
+        // Everyone nearby feels it underfoot.
+        foreach (var feelerUid in MobsAround(centre, radius * 2.5f + 2f, EntityUid.Invalid))
+        {
+            if (!HasComp<ActorComponent>(feelerUid))
+                continue;
+
+            var away = _transformSystem.GetMapCoordinates(feelerUid).Position - centre.Position;
+            var kick = away.LengthSquared() < 0.01f ? _robustRandom.NextVector2(1f) : Vector2.Normalize(away);
+            _cameraRecoilSystem.KickCamera(feelerUid, kick * (0.25f * strength));
+        }
+    }
+
+    /// <summary>
+    ///     A crater punched into the floor right where the blow landed.
+    /// </summary>
+    public void Crater(MapCoordinates centre)
+    {
+        var coordinates = _transformSystem.ToCoordinates(centre);
+        if (!HasComp<Robust.Shared.Map.Components.MapGridComponent>(coordinates.EntityId))
+            return;
+
+        // The crater sprite is two tiles wide; decals sit by their bottom-left corner, so centre it on the tile.
+        var snapped = new EntityCoordinates(coordinates.EntityId,
+            new Vector2(MathF.Floor(coordinates.Position.X) - 0.5f, MathF.Floor(coordinates.Position.Y) - 0.5f));
+        _decalSystem.TryAddDecal(CraterDecal, snapped, out _, cleanable: true);
+    }
+
+    /// <summary>
+    ///     Leave cracks on the floor tiles around a point. Janitors can scrub them away.
+    /// </summary>
+    public void Crack(MapCoordinates centre, float radius, float chance)
+    {
+        var reach = (int)MathF.Ceiling(radius);
+        for (var x = -reach; x <= reach; x++)
+        {
+            for (var y = -reach; y <= reach; y++)
+            {
+                if (x * x + y * y > radius * radius + 0.5f || !_robustRandom.Prob(chance))
+                    continue;
+
+                var tileCentre = new MapCoordinates(centre.Position + new Vector2((float)x, (float)y), centre.MapId);
+                var coordinates = _transformSystem.ToCoordinates(tileCentre);
+                if (!HasComp<Robust.Shared.Map.Components.MapGridComponent>(coordinates.EntityId))
+                    continue;
+
+                // Decals are placed by their bottom-left corner: snap to the tile.
+                var snapped = new EntityCoordinates(coordinates.EntityId,
+                    new Vector2(MathF.Floor(coordinates.Position.X), MathF.Floor(coordinates.Position.Y)));
+                _decalSystem.TryAddDecal(_robustRandom.Pick(CrackDecals), snapped, out _,
+                    rotation: Angle.FromDegrees(90 * _robustRandom.Next(4)), cleanable: true);
+            }
+        }
+    }
+
+    #endregion
+
     /// <summary>
     ///     What walls a stage can break: 0 none, 1 plain walls, 2 reinforced walls too.
     /// </summary>
@@ -182,6 +286,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     /// </summary>
     public void Smash(MapCoordinates centre, float radius, float power, int wallTier, EntityUid userUid, float wallChip = 0f)
     {
+        Crack(centre, radius, chance: 0.5f);
         _breakables.Clear();
         _entityLookupSystem.GetEntitiesInRange(centre, radius, _breakables, flags: LookupFlags.Static | LookupFlags.Dynamic);
         foreach (var breakableEntity in _breakables)
@@ -230,6 +335,8 @@ public sealed partial class BodyArtSystem : EntitySystem
             {
                 var point = new MapCoordinates(origin + direction * step + side * offset, mapId);
                 Smash(point, 0.5f, 120f, wallTier, userUid);
+                if (offset == 0)
+                    Spawn(DustEffect, point);
                 foreach (var victimUid in MobsAround(point, 0.6f, userUid))
                 {
                     if (!hit.Add(victimUid))
@@ -291,7 +398,10 @@ public sealed partial class BodyArtSystem : EntitySystem
             Smash(centre, MathF.Max(landingComponent.Radius, 1f), landingComponent.Smash, 0, sourceUid);
 
         if (landingComponent.Radius > 0f || landingComponent.HurtSelf)
+        {
             _audioSystem.PlayPvs(ImpactSound, entity);
+            Impact(centre, MathF.Max(landingComponent.Radius, 1f), strength: landingComponent.HurtSelf ? 0.5f : 1.5f);
+        }
     }
 
     #endregion
@@ -400,18 +510,19 @@ public sealed partial class BodyArtSystem : EntitySystem
         args.Handled = true;
         var stage = entity.Comp.Stage;
         var centre = _transformSystem.GetMapCoordinates(entity);
-        var radius = 1.5f + stage / 3f;
+        var radius = 2f + (float)stage / 3f;
         var mountain = _bodySystem.GetStance(entity) == BodyStance.Mountain;
 
         Shout(entity, "body-art-earth-stomp");
         foreach (var victimUid in MobsAround(centre, radius, entity))
         {
-            if (Hit(entity, victimUid, (float)(8 + 2 * stage), TimeSpan.FromSeconds(1 + 0.2 * stage)) && mountain)
+            if (Hit(entity, victimUid, (float)(10 + 3 * stage), TimeSpan.FromSeconds(1 + 0.2 * stage)) && mountain)
                 HurlFrom(victimUid, centre.Position, 2f + stage / 3f, entity);
         }
 
         // The floor heaves: what stands around you breaks, and walls crack.
-        Smash(centre, radius, (float)(30 + 15 * stage), WallTier(stage), entity, wallChip: (float)(10 * stage));
+        Smash(centre, radius, (float)(30 + 15 * stage), WallTier(stage), entity, wallChip: (float)(25 * stage));
+        Impact(centre, radius, strength: 1f + (float)stage / 4f);
 
         _audioSystem.PlayPvs(RumbleSound, entity);
     }
@@ -436,6 +547,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         Shout(entity, "body-art-shattering-fist");
         _audioSystem.PlayPvs(PunchSound, args.Target);
+        Impact(_transformSystem.GetMapCoordinates(args.Target), 0.8f, strength: 0.8f + (float)stage / 5f);
 
         if (_mobStateQuery.HasComp(args.Target))
         {
@@ -451,7 +563,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         var fistTier = stage >= 7 ? 2 : (stage >= 4 ? 1 : 0);
         // Below Jade Marrow a wall doesn't give way at once, but it cracks, and a few punches bring it down.
         Smash(_transformSystem.GetMapCoordinates(args.Target), 0.5f, (float)(60 + 20 * stage), fistTier, entity,
-            wallChip: (float)(60 + 30 * stage));
+            wallChip: (float)(100 + 40 * stage));
         if (stage >= 4)
         {
             var depth = stage >= 9 ? 9 : (stage >= 8 ? 6 : (stage >= 7 ? 4 : stage - 3));
@@ -481,6 +593,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             HurlFrom(args.Target, _transformSystem.GetMapCoordinates(entity).Position, 3f, entity);
 
         _audioSystem.PlayPvs(PunchSound, args.Target);
+        Impact(_transformSystem.GetMapCoordinates(args.Target), 0.6f, strength: 0.6f, shockwave: false);
         _noticeSystem.Announce(args.Target, Loc.GetString("body-art-hundred-fists-hit", ("user", entity.Owner), ("target", args.Target), ("blows", blows)), type: PopupType.MediumCaution);
     }
 
@@ -594,13 +707,14 @@ public sealed partial class BodyArtSystem : EntitySystem
         for (var step = 1; step <= length; step++)
         {
             var point = new MapCoordinates(origin.Position + direction * step, origin.MapId);
-            Smash(point, 0.5f, (float)(80 + 10 * stage), stage >= 6 ? 1 : 0, entity, wallChip: (float)(20 * stage));
+            Smash(point, 0.5f, (float)(80 + 10 * stage), stage >= 6 ? 1 : 0, entity, wallChip: (float)(40 * stage));
+            Spawn(DustEffect, point);
             foreach (var victimUid in MobsAround(point, 0.8f, entity))
             {
                 if (!bowled.Add(victimUid))
                     continue;
 
-                if (Hit(entity, victimUid, (float)(8 + stage), TimeSpan.FromSeconds(1.5)))
+                if (Hit(entity, victimUid, (float)(10 + 2 * stage), TimeSpan.FromSeconds(1.5)))
                     _throwingSystem.TryThrow(victimUid, new Vector2(-direction.Y, direction.X) * 2f, baseThrowSpeed: 10f, user: entity, recoil: false);
             }
         }
@@ -698,6 +812,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         Shout(entity, "body-art-sky-splitting-palm");
         ShatterLine(entity, _transformSystem.GetMapCoordinates(entity).Position, direction, 7 + stage, stage >= 8 ? 1 : 0, (float)(10 + 2 * stage), WallTier(stage));
+        Impact(_transformSystem.GetMapCoordinates(entity), 1.5f, strength: 2f);
         _audioSystem.PlayPvs(RumbleSound, entity);
     }
 
@@ -750,6 +865,7 @@ public sealed partial class BodyArtSystem : EntitySystem
                 _damageableSystem.TryChangeDamage(breakableEntity.Owner, CultivationSystem.Damage("Structural", 40f), origin: userUid);
         }
 
+        Impact(centre, quakeComponent.Radius, strength: 2.5f);
         _audioSystem.PlayPvs(RumbleSound, userUid);
     }
 
@@ -778,6 +894,7 @@ public sealed partial class BodyArtSystem : EntitySystem
                 _damageableSystem.TryChangeDamage(breakableEntity.Owner, CultivationSystem.Damage("Structural", 300f), origin: entity);
         }
 
+        Impact(centre, 7f, strength: 3f);
         _audioSystem.PlayPvs(RoarSound, entity, audioParams: AudioParams.Default.WithVolume(8f).WithPitchScale(0.5f));
     }
 

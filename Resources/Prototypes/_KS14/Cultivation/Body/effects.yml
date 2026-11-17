@@ -1,0 +1,90 @@
+# What a body art leaves behind: cracked floors, a shockwave rippling the air, and dust.
+
+- type: decal
+  id: KsCrack1
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack1
+
+- type: decal
+  id: KsCrack2
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack2
+
+- type: decal
+  id: KsCrack3
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack3
+
+- type: decal
+  id: KsCrack4
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack4
+
+# Ripples the air out from the impact, using the explosion shockwave shader.
+- type: entity
+  id: KsBodyShockwave
+  categories: [ HideSpawnMenu ]
+  name: shockwave
+  components:
+  - type: KsShockwave
+    falloffPower: 30
+    sharpness: 8
+    width: 0.9
+  - type: TimedDespawn
+    lifetime: 1.5
+
+- type: entity
+  id: KsBodyDust
+  categories: [ HideSpawnMenu ]
+  name: dust
+  description: A cloud of pulverised floor.
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    state: chemsmoke
+    color: "#8a7f72aa"
+    drawdepth: Effects
+  - type: TimedDespawn
+    lifetime: 1.2
+
+- type: decal
+  id: KsCrater
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/crater.rsi
+    state: crater
+
+# Fire for show: it lights the room and flickers out. What actually burns is up to the technique.
+- type: entity
+  id: KsFxFlame
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: Effects/fire.rsi
+    drawdepth: Effects
+    layers:
+    - state: 2
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8a2a"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2
+  - type: TimedDespawn
+    lifetime: 2

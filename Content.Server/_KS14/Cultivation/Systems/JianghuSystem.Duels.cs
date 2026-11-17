@@ -46,6 +46,7 @@ public sealed partial class JianghuSystem
     /// </summary>
     private const float BeatenDamageFraction = 0.75f;
 
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private McqDialogueSystem _mcqDialogueSystem = default!;
@@ -286,6 +287,7 @@ public sealed partial class JianghuSystem
                 duelComponent.YieldAction = yieldUid;
         }
 
+        _visualsSystem.Wave(oneUid, FxColour.Blood, big: true);
         _noticeSystem.Announce(oneUid, Loc.GetString("jianghu-duel-begins", ("one", oneUid), ("two", twoUid)), type: PopupType.LargeCaution);
     }
 

@@ -57,6 +57,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedProjectileSystem _projectileSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
@@ -213,6 +214,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
         _damageableSystem.TryChangeDamage(args.Target, CultivationSystem.Damage("Slash", args.BonusDamage), origin: entity);
         _audioSystem.PlayPvs(SwordSound, entity);
@@ -278,6 +280,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _stunSystem.TryUnstun(args.Target);
         _stunSystem.TryStanding(args.Target);
         RemComp<CultivationSnaredComponent>(args.Target);
@@ -336,6 +339,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(args.Target, 0.3f, 2);
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _flammableSystem.AdjustFireStacks(args.Target, 1f, ignite: true);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-kindle", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
@@ -347,6 +352,9 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(entity, args.Range, 14);
+        _visualsSystem.Wave(entity, FxColour.Fire, big: true);
+        _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 1.5f);
         foreach (var victimUid in Hostiles(entity, args.Range))
             _flammableSystem.AdjustFireStacks(victimUid, 2f, ignite: true);
 
@@ -371,6 +379,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(entity, 0.4f, 4);
+        _visualsSystem.Motes(entity, FxColour.Fire, args.Duration);
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", args.SelfDamage), ignoreResistances: true, interruptsDoAfters: false);
         _sharedCultivationSystem.AddQi(entity.AsNullable(), args.QiGain);
         _stanceSystem.ApplyHaste(entity, args.Duration, 1.3f);
@@ -473,6 +483,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _stanceSystem.ApplySnare(args.Target, args.Duration, 0f);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-binding-vines", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
     }
@@ -529,6 +540,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(entity, 0.5f, 4);
         var moltenComponent = EnsureComp<MoltenStepComponent>(entity);
         moltenComponent.EndTime = _gameTiming.CurTime + args.Duration;
         moltenComponent.LastPosition = _transformSystem.GetMapCoordinates(entity);

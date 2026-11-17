@@ -1,6 +1,5 @@
 - type: alert
   id: KsQi
-  category: Health
   icons:
   - sprite: /Textures/_KS14/Cultivation/qi_counter.rsi
     state: qi

@@ -90,6 +90,7 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
@@ -289,6 +290,10 @@ public sealed partial class CultivationSystem : EntitySystem
         if (RemComp<CultivationConcealedComponent>(userUid))
             _noticeSystem.Notify(userUid, Loc.GetString("cultivation-concealment-broken"), type: PopupType.SmallCaution);
 
+        // Every technique shows: a ring of qi in the colour of the caster's Root Law.
+        if (qiCost > 0f)
+            _visualsSystem.Cast(userUid);
+
         var backlashChance = cultivatorComponent.BacklashChancePerInjury * (float)cultivatorComponent.InternalInjury;
         if (backlashChance > 0f && _robustRandom.Prob(backlashChance))
         {
@@ -400,6 +405,7 @@ public sealed partial class CultivationSystem : EntitySystem
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-injury-eased"));
 
+        _visualsSystem.Motes(entity, _visualsSystem.ColourOf(entity), TimeSpan.FromSeconds(2));
         var meditatedEvent = new CultivationMeditatedEvent();
         RaiseLocalEvent(entity, ref meditatedEvent);
 
@@ -566,6 +572,7 @@ public sealed partial class CultivationSystem : EntitySystem
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-30));
 
         _audioSystem.PlayPvs(BreakthroughSound, entity);
+        _visualsSystem.Breakthrough(entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-breakthrough-success",
             ("user", entity.Owner), ("realm", Loc.GetString($"cultivation-realm-{newRealm}"))), type: PopupType.Large);
 
@@ -578,6 +585,7 @@ public sealed partial class CultivationSystem : EntitySystem
     /// </summary>
     public void Deviate(Entity<CultivatorComponent> entity)
     {
+        _visualsSystem.Wave(entity, FxColour.Blood, big: true);
         _cultivationSystem.ScaleInsight(entity.AsNullable(), 0.5f);
 
         // The backlash is a heavy blow in its own right; only add the stack ourselves if it didn't already.

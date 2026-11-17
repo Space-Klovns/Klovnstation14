@@ -49,6 +49,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -136,6 +137,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Wave(entity, FxColour.Metal, big: true);
         var direction = DirectionTo(entity, args.Target);
 
         for (var i = 0; i < args.Count; i++)
@@ -159,6 +161,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(args.Target, 0.3f, 3);
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var stacks = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Fire) ? args.FireStacks * 2f : args.FireStacks;
 
         _damageableSystem.TryChangeDamage(args.Target, CultivationSystem.Damage("Heat", args.HeatDamage), origin: entity);
@@ -175,6 +179,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Flames(entity, 3f, 18);
+        _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         foreach (var victimUid in MobsAround(entity, args.Range))
         {
             if (!_sharedCultivationSystem.IsAlly(entity, victimUid))
@@ -230,6 +236,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Wave(entity, FxColour.Water, big: true);
         foreach (var victimUid in MobsAround(entity, args.Range))
         {
             if (_sharedCultivationSystem.IsAlly(entity, victimUid))
@@ -254,6 +261,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _damageableSystem.HealEvenly(args.Target, FixedPoint2.New(-args.Heal), origin: entity);
 
         if (_sharedCultivationSystem.HasRoot(entity, CultivationElement.Wood))
@@ -274,6 +282,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Wave(entity, FxColour.Wood, big: true);
+        _visualsSystem.Motes(entity, FxColour.Wood, TimeSpan.FromSeconds(3));
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-args.Heal), origin: entity);
         foreach (var friendUid in MobsAround(entity, args.Range))
         {
@@ -313,6 +323,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Wave(entity, FxColour.Earth, big: true);
+        _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 2f);
         var damage = CultivationSystem.Damage("Blunt", args.BluntDamage);
         foreach (var victimUid in MobsAround(entity, args.Range))
         {

@@ -176,6 +176,26 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
 
 Each step goes through the same code as play, so techniques, arts and powers are granted as usual.
 
+## Visual and sound effects
+
+`CultivationVisualsSystem` is the one place effects come from.
+
+- **Bursts** are short-lived entities in ten colours (`FxColour`; prototypes `KsFx<Kind><Colour>` in
+  `visual_effects.yml`, generated with their sprites by `Tools/_KS14/cultivation_effects.py`): a ring of qi (`Wave`),
+  a hit `Spark`, rising `Motes`, a pillar of light, and the explosion shockwave shader rippling the air. Each is
+  unshaded and carries its own coloured, fading point light.
+- **`Cast`** runs on every technique (from `CultivationSystem.TryUseTechnique`, body arts' `TryExert`, stamina arts
+  and forbidden arts) in the caster's colour: their Root Law's element, earth for the body, blood for the Demonic
+  Path. It grows with `Power` (realm, or a third of body stage): a ring and a sound; then motes; then a great wave;
+  and at the peak a shockwave. Each colour has its own sound cue, louder with power. `Strike` marks targets.
+- **Auras** follow lasting states: `Initialize` lists which component (and condition) wears which aura, dome or
+  floor sigil, and `Update` attaches and removes them. Add a line there for any new lasting state.
+- **Fire** techniques spawn real flame sprites that light the room (`Flames`); they are for show, the technique does
+  the burning.
+- **Body arts** also call `BodyArtSystem.Impact`: a crater decal at the centre, crack decals around it (cleanable),
+  dust, and a camera kick for everyone nearby, all scaled by stage.
+- A successful breakthrough or Tribulation of Flesh plays `Breakthrough`: pillar, great golden wave, shockwave, motes.
+
 ## Messages
 
 Popups raised over the same entity in the same tick are drawn on top of each other. Every popup over an entity in

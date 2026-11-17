@@ -54,6 +54,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
     [Dependency] private SharedMartialArtsSystem _martialArtsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedProjectileSystem _projectileSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
@@ -191,7 +192,10 @@ public sealed partial class MartialArtsSystem : EntitySystem
     public bool TryPayStamina(EntityUid userUid, float cost)
     {
         if (_staminaSystem.TryTakeStamina(userUid, cost))
+        {
+            _visualsSystem.Cast(userUid, FxColour.Qi);
             return true;
+        }
 
         _noticeSystem.Notify(userUid, Loc.GetString("martial-art-too-tired"), type: PopupType.SmallCaution);
         return false;
@@ -249,6 +253,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var targetUid = args.Target;
         var currentTime = _gameTiming.CurTime;
 
@@ -308,6 +313,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var gained = Drain(entity, args.Target, args.QiDrain, args.MortalStaminaDamage, args.MortalQiGain);
 
         _audioSystem.PlayPvs(DrainSound, entity);
@@ -321,6 +327,7 @@ public sealed partial class MartialArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var gained = Drain(entity, args.Target, args.QiDrain, args.MortalStaminaDamage, args.MortalQiGain);
         _sharedCultivationSystem.AddInsight(args.Target, -args.InsightDrain);
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-args.Heal), origin: entity);

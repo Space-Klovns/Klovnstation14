@@ -115,6 +115,7 @@ public sealed partial class JianghuSystem
         _actionsSystem.AddAction(founderUid, ref rivalryUid, RivalryAction);
 
         _noticeSystem.Announce(founderUid, Loc.GetString("jianghu-sect-founded", ("user", founderUid), ("sect", sectName)), type: PopupType.Large);
+        _visualsSystem.Wave(plaqueUid, FxColour.Gold, big: true);
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(founderUid):player} founded the sect {sectName}");
         return sect;
     }

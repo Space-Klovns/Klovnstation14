@@ -85,6 +85,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -361,6 +362,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         var gained = _bodySystem.Forge(entity.AsNullable(), group, 5f);
         _staminaSystem.TakeStaminaDamage(entity, 8f);
         _audioSystem.PlayPvs(ForgeSound, entity);
+        _visualsSystem.Motes(entity, FxColour.Earth, TimeSpan.FromSeconds(1.5));
 
         if (gained > 0)
         {
@@ -463,6 +465,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", (float)(3 + entity.Comp.Stage)), ignoreResistances: true, interruptsDoAfters: false);
         _staminaSystem.TakeStaminaDamage(entity, 6f);
         _audioSystem.PlayPvs(CrackSound, entity);
+        _visualsSystem.Spark(entity, FxColour.Earth);
 
         var left = entity.Comp.TribulationCyclesLeft - 1;
         _bodySystem.SetTribulation(entity.Comp, left, entity.Comp.TribulationReadiness);
@@ -485,6 +488,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _bodySystem.SetTribulation(entity.Comp, 0, 0);
         _bodySystem.AdvanceStage(entity.AsNullable());
 
+        _visualsSystem.Breakthrough(entity);
         var stageName = Loc.GetString($"body-stage-{entity.Comp.Stage}");
         _audioSystem.PlayPvs(StageSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-success", ("user", entity.Owner), ("stage", stageName)), type: PopupType.Large);

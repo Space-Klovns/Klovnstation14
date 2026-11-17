@@ -107,6 +107,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     [Dependency] private SharedJobSystem _jobSystem = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedRoleSystem _roleSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
@@ -187,8 +188,11 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     /// </summary>
     public void AddTaint(EntityUid uid, float amount)
     {
-        if (_demonicQuery.TryComp(uid, out var demonicComponent))
-            demonicComponent.Taint += amount;
+        if (!_demonicQuery.TryComp(uid, out var demonicComponent))
+            return;
+
+        demonicComponent.Taint += amount;
+        _visualsSystem.Cast(uid, FxColour.Blood);
     }
 
     [SubscribeLocalEvent]
@@ -377,6 +381,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-devour-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
     }
 
@@ -470,6 +475,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         var now = _gameTiming.CurTime;
         var wormComponent = EnsureComp<GuWormComponent>(hostUid);
         wormComponent.Master = entity;
@@ -588,6 +594,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         _jitteringSystem.DoJitter(victimUid, args.Duration, refresh: true);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-soul-search-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
         _noticeSystem.Notify(victimUid, Loc.GetString("cultivation-soul-search-felt"), type: PopupType.LargeCaution);
