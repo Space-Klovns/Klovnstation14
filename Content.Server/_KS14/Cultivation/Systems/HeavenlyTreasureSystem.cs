@@ -50,6 +50,7 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
+    [Dependency] private WuxiaWorldRuleSystem _ruleSystem = default!;
 
     /// <summary>
     ///     When the next treasure blooms. Zero until the cycle starts with the round.
@@ -79,6 +80,14 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
+
+        // Heaven only stirs in a wuxia round.
+        if (!_ruleSystem.WuxiaActive())
+        {
+            _nextBloom = TimeSpan.Zero;
+            _omens.Clear();
+            return;
+        }
 
         var now = _gameTiming.CurTime;
         if (_nextBloom == TimeSpan.Zero)

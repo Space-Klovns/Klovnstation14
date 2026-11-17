@@ -1,4 +1,3 @@
-using Content.Server.Station.Events;
 using Content.Server.Station.Systems;
 using Content.Shared.Doors.Components;
 using Content.Shared.Maps;
@@ -66,20 +65,6 @@ public sealed partial class CultivationLootSystem : EntitySystem
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private TurfSystem _turfSystem = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<StationPostInitEvent>(OnStationPostInit);
-    }
-
-    private void OnStationPostInit(ref StationPostInitEvent args)
-    {
-        if (_stationSystem.GetLargestGrid(args.Station.AsNullable()) is not { } gridUid)
-            return;
-
-        SpawnLoot(gridUid);
-    }
 
     /// <summary>
     ///     Hide the round's cultivation loot about a station grid.

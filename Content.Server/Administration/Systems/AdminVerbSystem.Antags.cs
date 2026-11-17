@@ -33,6 +33,7 @@ public sealed partial class AdminVerbSystem
     private static readonly EntProtoId DefaultChangelingRule = "Changeling";
     // KS14
     private static readonly EntProtoId DefaultAnchorlessRule = "Anchorless"; //KS14
+    private static readonly EntProtoId DefaultCultivatorRule = "KsCultivators"; //KS14
     private static readonly EntProtoId ParadoxCloneRuleId = "ParadoxCloneSpawn";
     private static readonly EntProtoId DefaultWizardRule = "Wizard";
     private static readonly EntProtoId DefaultNinjaRule = "NinjaSpawn";
@@ -190,6 +191,21 @@ public sealed partial class AdminVerbSystem
             Message = string.Join(": ", anchorlessName, Loc.GetString("admin-verb-make-anchorless")),
         };
         args.Verbs.Add(anchorless);
+
+        var cultivatorName = Loc.GetString("admin-verb-text-make-cultivator");
+        Verb cultivator = new()
+        {
+            Text = cultivatorName,
+            Category = VerbCategory.Antag,
+            Icon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "meditate"),
+            Act = () =>
+            {
+                _antag.ForceMakeAntag<Content.Server._KS14.Cultivation.CultivatorRuleComponent>(targetPlayer, DefaultCultivatorRule);
+            },
+            Impact = LogImpact.High,
+            Message = string.Join(": ", cultivatorName, Loc.GetString("admin-verb-make-cultivator")),
+        };
+        args.Verbs.Add(cultivator);
         // KS14 end
 
         var paradoxCloneName = Loc.GetString("admin-verb-text-make-paradox-clone");

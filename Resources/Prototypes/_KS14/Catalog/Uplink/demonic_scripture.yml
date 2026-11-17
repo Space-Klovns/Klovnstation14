@@ -1,9 +1,0 @@
-- type: listing
-  id: UplinkDemonicScripture
-  name: uplink-demonic-scripture-name
-  description: uplink-demonic-scripture-desc
-  productEntity: KsDemonicScripture
-  cost:
-    Telecrystal: 18
-  categories:
-  - UplinkDisruption

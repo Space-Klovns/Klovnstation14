@@ -197,3 +197,4 @@ wuxia-bamboo-sweep = {CAPITALIZE(THE($user))} sweeps {POSS-ADJ($target)} legs ou
 wuxia-bamboo-splits = The bamboo staff splits down its length and falls apart!
 wuxia-needle-acupoint = A needle strikes an acupoint and your limbs grow heavy!
 wuxia-smoke-pellet-crushed = {CAPITALIZE(THE($user))} crushes something and vanishes into a cloud of smoke!
+construction-step-condition-wuxia-round = Only in a wuxia round.

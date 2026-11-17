@@ -374,6 +374,8 @@
 
 - type: construction
   id: KsMeteorHammer
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsMeteorHammer
   startNode: start
   targetNode: done
@@ -382,6 +384,8 @@
 
 - type: construction
   id: KsRopeDart
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsRopeDart
   startNode: start
   targetNode: done
@@ -390,6 +394,8 @@
 
 - type: construction
   id: KsButterflySword
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsButterflySword
   startNode: start
   targetNode: done
@@ -398,6 +404,8 @@
 
 - type: construction
   id: KsIronFan
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsIronFan
   startNode: start
   targetNode: done
@@ -406,6 +414,8 @@
 
 - type: construction
   id: KsBambooStaff
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsBambooStaff
   startNode: start
   targetNode: done
@@ -414,6 +424,8 @@
 
 - type: construction
   id: KsPlumBlossomNeedle
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsPlumBlossomNeedle
   startNode: start
   targetNode: done
@@ -422,6 +434,8 @@
 
 - type: construction
   id: KsFlyingDagger
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsFlyingDagger
   startNode: start
   targetNode: done
@@ -430,6 +444,8 @@
 
 - type: construction
   id: KsSmokePellet
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsSmokePellet
   startNode: start
   targetNode: done
@@ -438,6 +454,8 @@
 
 - type: construction
   id: KsSwornIncense
+  conditions:
+  - !type:WuxiaRoundCondition
   graph: KsSwornIncense
   startNode: start
   targetNode: done
