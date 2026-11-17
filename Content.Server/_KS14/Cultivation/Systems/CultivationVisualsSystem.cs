@@ -86,7 +86,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     public static readonly EntProtoId QiCloud = "KsFxQiCloud";
 
     /// <summary>
-    ///     The layered SS13 cues (temple bells, guqin phrases, chimes), mixed down by Tools/_KS14/cultivation_sounds.py.
+    ///     The layered SS13 cues (temple bells, guqin phrases, chimes), mixed down into single files.
     /// </summary>
     public static readonly SoundSpecifier GreatBellSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/great_bell.ogg");
     public static readonly SoundSpecifier TempleBellSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/temple_bell.ogg");

@@ -209,7 +209,7 @@ The arts and the novels they come from are listed in `martial_arts.yml`. Short-l
   (cuts deeper thrown), bamboo staff (wielded sweeps, splits after six), plum blossom needles (a cultivator's needle
   slows), willow-leaf flying daggers (more damage from a cultivator, by realm) and smoke pellets. A Sect Master issues
   sect jian at the plaque, one per member; in a member's hand the sword strikes harder and tires its target.
-  In-hand sprites borrow vanilla ones; icons come from `cultivation_icons.py`.
+  In-hand sprites borrow vanilla ones.
 
 ## The Body Molding Art
 
@@ -255,7 +255,7 @@ Each step goes through the same code as play, so techniques, arts and powers are
 `CultivationVisualsSystem` is the one place effects come from.
 
 - **Bursts** are short-lived entities in ten colours (`FxColour`; prototypes `KsFx<Kind><Colour>` in
-  `visual_effects.yml`, generated with their sprites by `Tools/_KS14/cultivation_effects.py`): a ring of qi (`Wave`),
+  `visual_effects.yml`, sprites in `qi_effects.rsi`): a ring of qi (`Wave`),
   a hit `Spark`, rising `Motes`, a pillar of light, and the explosion shockwave shader rippling the air. Each is
   unshaded and carries its own coloured, fading point light.
 - **`Cast`** runs on every technique (from `CultivationSystem.TryUseTechnique`, body arts' `TryExert`, stamina arts
@@ -277,7 +277,7 @@ Each step goes through the same code as play, so techniques, arts and powers are
 
 ### Effects ported from SS13
 
-`Tools/_KS14/cultivation_ss13_sprites.py` converts the SurfShack13 cultivation DMIs to RSIs (`wuxia_32`, `wuxia_64`,
+The SurfShack13 cultivation DMIs were converted to RSIs (`wuxia_32`, `wuxia_64`,
 `wuxia_96`, `wuxia_128`, `buddha_palm`; prototypes in `wuxia_effects.yml`). SS13 moved these with `animate()` at
 runtime; SS14 has no server-side tweening, so the motion is baked into frames. An animated state loops, so each effect
 despawns as its one run ends.
@@ -299,12 +299,11 @@ despawns as its one run ends.
   vortex, rings of a roar or of realm pressure, the ground splitting open, a meteor for Falling Mountain, an iron or golden
   sheen over the body, healing glows, and mists of blood, steam, dust and shadow. Formation arrays are the SS13 sigils.
 
-Icons come from `Tools/_KS14/cultivation_icons.py` (studded, bevelled medallions for actions, bound manuals for
-martial arts). Run `Tools/_KS14/cultivation_ss13_sprites.py` after it: where SS13 drew an item better (the element and
-body manuals, needles, flying dagger, smoke pellet, talisman, sect plaque) its sprite replaces ours.
+Action icons are studded, bevelled medallions and martial-art manuals are bound books. Where SS13 drew an item better
+(the element and body manuals, needles, flying dagger, smoke pellet, talisman, sect plaque) its sprite is used.
 
-`Tools/_KS14/cultivation_sounds.py` mixes SS13's layered sounds into single files in `Audio/_KS14/Cultivation`: the
-great bell and temple bell, guqin phrases, wind chimes, the qinggong whoosh, a mountain falling, and the ascension.
+`Audio/_KS14/Cultivation` holds SS13's layered sounds mixed into single files: the great bell and temple bell, guqin
+phrases, wind chimes, the qinggong whoosh, a mountain falling, and the ascension.
 
 ## Messages
 
@@ -321,15 +320,13 @@ Armor pieces are plain clothing prototypes with `Armor` coefficients plus a mark
 - `GreatSageRegaliaComponent` marks the three pieces of the Great Sage's regalia. Wearing all three in their own
   slots adds `GreatSageComponent` (less damage, faster qi).
 
-The sprites are hand-placed pixel grids in `Tools/_KS14/cultivation_armor.py`, fitted to the human body parts;
-technique medallions and manuals come from `Tools/_KS14/cultivation_icons.py`. Both write their RSIs with license
-and copyright metadata. Run them from the repository root with Pillow installed.
+The sprites are hand-placed pixel art fitted to the human body parts.
 
 ## Tests
 
 `Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
 the body path, the Demonic Path, the jianghu, sects, sworn brotherhood, fighting styles and weapons, and `CultivationLocaleTest` checks every cultivation locale key resolves
-(`Tools/_KS14/check_cultivation_locale.py` does the same without a build). The Dugu counter, Eternal Heart,
+The Dugu counter, Eternal Heart,
 concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
 by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads
 as "not dead". The rest still need the same check.

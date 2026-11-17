@@ -1,7 +1,7 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Ported from the SurfShack13 cultivation port; animations baked by Tools/_KS14/cultivation_ss13_sprites.py",
+  "copyright": "Ported from the SurfShack13 cultivation port",
   "size": {
     "x": 128,
     "y": 128
