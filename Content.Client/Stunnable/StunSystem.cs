@@ -26,9 +26,10 @@ public sealed partial class StunSystem : SharedStunSystem
         SubscribeLocalEvent<StunVisualsComponent, ComponentInit>(OnComponentInit);
         SubscribeLocalEvent<StunVisualsComponent, AppearanceChangeEvent>(OnAppearanceChanged);
 
-        CommandBinds.Builder
-            .BindAfter(EngineKeyFunctions.UseSecondary, new PointerInputCmdHandler(OnUseSecondary, true, true), typeof(SharedInteractionSystem))
-            .Register<StunSystem>();
+        // KS14: removed, right-clicking yourself in combat mode no longer forces you to your feet at once
+        // CommandBinds.Builder
+        //     .BindAfter(EngineKeyFunctions.UseSecondary, new PointerInputCmdHandler(OnUseSecondary, true, true), typeof(SharedInteractionSystem))
+        //     .Register<StunSystem>();
     }
 
     private bool OnUseSecondary(in PointerInputCmdHandler.PointerInputCmdArgs args)

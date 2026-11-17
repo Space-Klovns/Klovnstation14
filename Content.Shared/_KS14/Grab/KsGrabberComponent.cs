@@ -60,6 +60,13 @@ public sealed partial class KsGrabberComponent : Component
     public float ReelRate = 4f;
 
     /// <summary>
+    ///     A thrown victim leaves from the grabber's own position, as anything thrown from a hand does. This is how
+    ///         long their sprite takes to slide there from where they were held, so that they don't visibly jump.
+    /// </summary>
+    [DataField]
+    public TimeSpan ThrowPullInTime = TimeSpan.FromSeconds(0.1);
+
+    /// <summary>
     ///     Popups when someone this grabber threw slams into a shove obstacle (a person, a table), instead of the
     ///         obstacle's own. Each gets <c>shover</c>, <c>target</c> and <c>obstacle</c>.
     /// </summary>

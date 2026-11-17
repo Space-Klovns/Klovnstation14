@@ -43,6 +43,8 @@ never deals stamina damage. The outcome, checked in this order:
 | A table behind them | Put onto the table and knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_TABLE`) |
 | A person behind them | Both knocked down | 3 s, person behind 1.1 s | 2 s, person behind 0.1 s |
 | A person lying behind them (a corpse, someone knocked down) | As if nothing were behind them | — | — |
+| An open closet behind them | Put inside, and it shuts on them | — | the same |
+| A shut closet behind them | Knocked down against it | 3 s | 2 s |
 | A wall or anything else solid | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
@@ -121,7 +123,8 @@ Every value above lives in `Resources/Prototypes/_KS14/Grab/stages.yml`.
 ## Fireman carry
 
 Anyone lying down within reach can be carried: alt-clicking them (or dragging their sprite onto your own) lifts them
-onto your back after 5 s (tgstation's `carrydelay`), replacing any grab on them. tgstation needs an aggressive grab
+onto your back after 3 s (tgstation's `carrydelay` is 5 s, or 3 s with its quick-carry trait), replacing any grab on
+them. tgstation needs an aggressive grab
 first; this server doesn't. It needs both hands free, a hand holding them counting as free. The carried person:
 - rides along parented to the carrier, with no collision
 - can't move or stand
@@ -175,6 +178,13 @@ player who toggled it, at tgstation's 25% scaled by the interface volume setting
   - `KsGrabStageChangedEvent`: martial arts, pummelling
   - `KsGrabResistAttemptEvent`: grab-resistant species, staggered victims
   - `KsPullToggleAttemptEvent`: anything else ctrl-click on a pulled thing should do
+
+## Standing up
+
+Upstream lets someone knocked down force themselves to their feet at once, for stamina, by right-clicking themselves
+in combat mode. That bind is removed (a `KS14` edit in `Content.Client/Stunnable/StunSystem.cs`): with shoves and
+pins putting people on the floor, an instant way up undid them. Standing up the usual way, and clicking the
+knocked-down alert, are unchanged.
 
 ## Not ported
 
@@ -313,6 +323,10 @@ the usual downed rules.
 - the HUD resist button: the client raises `KsResistRequestEvent`, `KsResistSystem` raises `KsResistAttemptEvent` on
   the player, and the first restraint holding them (grab, then carry) handles it
 
+`KsResistAttemptEvent` also reaches cuffs: `KsCuffResistSystem` handles it on `CuffableComponent`, ordered after the
+grab and the carry, and starts the same breakout as clicking the cuffed alert. So someone cuffed and held breaks the
+grip first and the cuffs next, tgstation's order.
+
 Nobody incapacitated or stunned resists. A stage that doesn't block movement just lets go. Otherwise:
 - `ResistCooldown` applies
 - `KsGrabResistAttemptEvent` lets other systems change the chance
@@ -365,15 +379,31 @@ that can't grab) leaves the victim to land as any thrown thing does:
 - `ThrowWallKnockdownTime`, `ThrowWallSound`, `ThrowWallPopups` and `ThrowWallResistedPopups` for a wall.
 - `ThrowObstaclePopups`, shown instead of the obstacle's own.
 
-#### Thrown into an open closet
+**Where the throw starts.** `ThrowHeldItem` aims from the thrower to the click, and an item leaves from the thrower's
+position because that is where a dropped hand item is. A held victim is up to a hold distance away, so
+`BringToThrower` moves them onto the thrower before the throw, and the throw then leaves from there as it is aimed.
+So that nothing is seen to jump, the victim's sprite is slid over instead: the thrower's client raises
+`KsThrownFromHandsEvent` on the victim as it predicts the throw, the server sends `KsThrownFromHandsMessage` to
+everyone else, and `KsThrownFromHandsVisualsSystem` (client) animates `SpriteComponent.Offset` from where they were
+drawn to zero over `KsGrabber.ThrowPullInTime` (0.1 s). Someone carried is already at the carrier's position, and is
+put down there, so a carry needs none of this.
 
-Not part of the grab: `KsEntityStorageCatchThrownComponent` (`Content.Shared/_KS14/Storage/`) goes on any
-`EntityStorage` entity, and `ClosetBase` has it. Anything thrown that passes its `whitelist` (mobs, by default) and
-hits the storage while it stands open ends up inside, with the door shut: a thrown grab victim, someone thrown off a
-carrier's back, or a mob thrown by anything else. `KsEntityStorageCatchThrownSystem` (shared) handles
-`ThrowHitByEvent` on the storage. It is predicted for whoever throws: their client simulates what they throw
-(`PredictedThrownItemComponent`), so it sees the hit, shuts the door and plays its sound at once, with the thrower
-passed as the closing `user` so the server leaves them out of its own sound.
+#### Thrown or shoved into an open closet
+
+Not part of the grab: `KsEntityStorageCatchComponent` (`Content.Shared/_KS14/Storage/`) goes on any `EntityStorage`
+entity, and `ClosetBase` has it. Anyone who passes its `whitelist` (mobs, by default) and is sent into the storage
+while it stands open ends up inside, with the door shut. `KsEntityStorageCatchSystem.TryCatch` does it, reached two
+ways:
+- **Thrown**: `ThrowHitByEvent` on the storage, for a thrown grab victim, someone thrown off a carrier's back, or a
+  mob thrown by anything else.
+- **Shoved**: `KsShoveCollideEvent`, which a shove raises on a `KsShoveObstacle`, so a storage that catches the shoved
+  needs that component too. `ClosetBase` has it (priority 5, between people and tables). Handling the event replaces
+  the knockdown, so a shut closet is something solid to be knocked down against and an open one swallows them.
+
+It is shared, and predicted for whoever does it: a shove is predicted, and a client simulates what it throws
+(`PredictedThrownItemComponent`), so it sees the hit, shuts the door and plays its sound at once. Whoever sent them in
+is passed as the closing `user`, so the server leaves them out of its own sound, and is named in the component's
+`Popups` (`user`, `target`, `storage`). With no user, nothing is said.
 - An open closet's fixture keeps `BulletImpassable`, which the non-hard throwing fixture's `ThrownItem` mask hits,
   though nobody walking is stopped by it. That is why the event fires at all.
 - It closes the storage first, then inserts. An open `EntityStorage` reports that anything can be inserted and
@@ -499,8 +529,10 @@ NPC toggles go through `SetInCombatMode` and make no sound.
   (escape chance 0 and 1), release, throw.
 - `Tests/_KS14/Grab/KsFiremanCarryTest.cs`: lift, requirements, put down, wriggle free, carrier deleted.
 - `Tests/_KS14/Grab/KsThrowModeTest.cs`: a real client sends the throw request, in and out of throw mode.
-- `Tests/_KS14/Storage/KsEntityStorageCatchThrownTest.cs`: an open closet catches a thrown person and shuts; a closed
-  one doesn't, and an open one lets a thrown item be.
+- `Tests/_KS14/Storage/KsEntityStorageCatchTest.cs`: an open closet catches a thrown or shoved person and shuts; a
+  closed one doesn't (a shove into it knocks down), and an open one lets a thrown item be.
+- `Tests/_KS14/Grab/KsCuffResistTest.cs`: resisting while cuffed starts breaking out; with nothing to resist, nothing
+  takes the attempt.
 
 The floor ctrl-click release and the move-key resist go through input handlers no test drives yet. Check them in
 game.

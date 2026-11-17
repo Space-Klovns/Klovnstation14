@@ -15,7 +15,7 @@ public sealed partial class KsFiremanCarrierComponent : Component
     ///     How long lifting someone takes.
     /// </summary>
     [DataField]
-    public TimeSpan CarryTime = TimeSpan.FromSeconds(5);
+    public TimeSpan CarryTime = TimeSpan.FromSeconds(3);
 
     /// <summary>
     ///     How long someone being carried needs to wriggle free.

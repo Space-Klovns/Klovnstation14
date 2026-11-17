@@ -568,6 +568,34 @@ public sealed class KsGrabTest : GameTest
     }
 
     /// <summary>
+    ///     A thrown victim leaves from where the thrower stands, as an item leaves a hand, not from where they were held.
+    /// </summary>
+    [Test]
+    public async Task ThrownVictimLeavesFromTheThrower()
+    {
+        var (grabberUid, victimUid) = await SetUp();
+        await GrabAggressively(grabberUid, victimUid);
+
+        // Brought down first: only someone down can be thrown.
+        await Server.WaitPost(() => Shove(grabberUid, victimUid));
+        await RunSeconds(1);
+
+        await Server.WaitAssertion(() =>
+        {
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
+            var held = (transformSystem.GetWorldPosition(victimUid) - transformSystem.GetWorldPosition(grabberUid)).Length();
+            Assert.That(held, Is.GreaterThan(0.2f), "The victim must be held at arm's length for this to show anything.");
+
+            SelectGrabHand(grabberUid);
+            var target = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(0f, 6f));
+            Assert.That(SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target));
+
+            var start = (transformSystem.GetWorldPosition(victimUid) - transformSystem.GetWorldPosition(grabberUid)).Length();
+            Assert.That(start, Is.LessThan(0.01f), "A thrown victim must start from where their thrower stands.");
+        });
+    }
+
+    /// <summary>
     ///     A victim thrown into someone knocks both over; thrown into a wall, they go down.
     /// </summary>
     [TestCase(true)]

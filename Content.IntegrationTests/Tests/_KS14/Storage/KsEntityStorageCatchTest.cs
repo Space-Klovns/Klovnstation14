@@ -5,10 +5,13 @@ using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Gravity;
 using Content.Shared._KS14.Storage;
+using Content.Shared.CombatMode;
 using Content.Shared.Gravity;
 using Content.Shared.Storage.Components;
 using Content.Shared.Storage.EntitySystems;
+using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
+using Content.Shared.Weapons.Melee;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -20,12 +23,12 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Storage;
 
 /// <summary>
-///     Someone thrown into an open closet lands inside it, and it shuts on them. A closed closet catches nobody, and an
-///         open one lets a thrown item be.
+///     Someone thrown or shoved into an open closet lands inside it, and it shuts on them. A closed closet catches
+///         nobody, and an open one lets a thrown item be.
 /// </summary>
 [TestFixture]
-[TestOf(typeof(KsEntityStorageCatchThrownSystem))]
-public sealed class KsEntityStorageCatchThrownTest : GameTest
+[TestOf(typeof(KsEntityStorageCatchSystem))]
+public sealed class KsEntityStorageCatchTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
 
@@ -39,7 +42,8 @@ public sealed class KsEntityStorageCatchThrownTest : GameTest
   parent: ClosetBase
   id: KsCatchThrownTestCloset
   components:
-  - type: KsEntityStorageCatchThrown
+  - type: KsEntityStorageCatch
+  - type: KsShoveObstacle
 ";
 
     /// <param name="throwMob">Whether a person is thrown, or an item.</param>
@@ -93,6 +97,64 @@ public sealed class KsEntityStorageCatchThrownTest : GameTest
                 $"A{(open ? "n" : "")} {state} closet must{(expectCaught ? "" : " not")} catch {what} thrown into it.");
             Assert.That(storage.Open, Is.EqualTo(open && !expectCaught),
                 expectCaught ? "The closet must shut on whoever it catches." : $"The closet must stay {state}.");
+        });
+    }
+
+    /// <summary>
+    ///     A shove into an open closet puts them inside; into a shut one it knocks them down against it.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task OpenClosetCatchesTheShoved(bool open)
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid shoverUid = default;
+        EntityUid targetUid = default;
+        EntityUid closetUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            var mapSystem = SEntMan.System<SharedMapSystem>();
+            for (var x = -1; x < 5; x++)
+            {
+                mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, 0), testMap.Tile.Tile);
+            }
+
+            var gravityComponent = SEntMan.EnsureComponent<GravityComponent>(testMap.Grid.Owner);
+            SEntMan.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
+
+            // The shover, the target a tile east, and the closet a tile beyond the target.
+            shoverUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            targetUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            closetUid = SEntMan.SpawnEntity(_closet, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+            if (open)
+                SEntMan.System<SharedEntityStorageSystem>().OpenStorage(closetUid);
+
+            SEntMan.System<SharedCombatModeSystem>().SetInCombatMode(shoverUid, true);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var meleeSystem = SEntMan.System<SharedMeleeWeaponSystem>();
+            Assert.That(meleeSystem.TryGetWeapon(shoverUid, out var weaponUid, out var weapon));
+            meleeSystem.AttemptDisarmAttack(shoverUid, weaponUid, weapon!, targetUid);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var storage = SEntMan.GetComponent<EntityStorageComponent>(closetUid);
+            Assert.That(storage.Contents.Contains(targetUid), Is.EqualTo(open),
+                open ? "Someone shoved into an open closet must land inside it." : "A shut closet must catch nobody.");
+            Assert.That(storage.Open, Is.False, "The closet must shut on whoever it catches.");
+            if (!open)
+            {
+                Assert.That(SEntMan.HasComponent<KnockedDownComponent>(targetUid),
+                    "Someone shoved into a shut closet must be knocked down against it.");
+            }
         });
     }
 }

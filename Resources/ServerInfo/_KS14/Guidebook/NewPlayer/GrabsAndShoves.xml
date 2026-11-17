@@ -13,6 +13,7 @@
 
   - [bold]Nothing behind them.[/bold] They stumble back and are slowed for a few seconds.
   - [bold]A table.[/bold] They're shoved up onto it and knocked down for a few seconds.
+  - [bold]An open closet or locker.[/bold] They end up inside, and it slams shut on them. The same goes for anyone thrown into one. A shut one knocks them down, as a wall does.
   - [bold]Another person.[/bold] They knock each other over. The one they were shoved into gets back up much sooner. Someone lying on the floor, a body included, doesn't count: the shove carries over them.
   - [bold]A wall, or anything else solid.[/bold] They're knocked down for a few seconds.
   - [bold]They're already on the floor.[/bold] The first shove kicks them onto their side, and they can't move for a few seconds. The next one, if there's a wall behind them, knocks everything out of their hands. Otherwise, and after that, shoving them only pushes them along until they've stood back up. Nobody on the floor gets slowed by a shove.
@@ -44,7 +45,7 @@
   Anyone lying on the floor can be carried, no grip needed. With both hands free (a hand holding them counts as free), [color=yellow][bold][keybind="AltActivateItemInWorld"][/bold][/color] them, or drag their sprite onto your own, then hold still for a few seconds to lift them onto your back. Carrying takes both hands and slows you a little. Click the carrying alert, or drop a hand you carry them with, to put them down, or throw them off your back like anything else you hold.
 
   ## Breaking free
-  If someone holds you tighter than a loose grip, a red alert shows how tightly. Press the resist button beside your pockets, click the alert, or try to walk, to struggle. Each attempt has a chance to break free, lower the tighter the grip, and failing tires you out. You can only struggle every couple of seconds, and not at all while stunned or out cold.
+  If someone holds you tighter than a loose grip, a red alert shows how tightly. Press the resist button beside your pockets, click the alert, or try to walk, to struggle. The resist button also works on handcuffs, once nobody holds you. Each attempt has a chance to break free, lower the tighter the grip, and failing tires you out. You can only struggle every couple of seconds, and not at all while stunned or out cold.
 
   If you're carried, do the same to wriggle off their back. It takes a moment, and you can't while in critical condition, asleep or stunned.
 
