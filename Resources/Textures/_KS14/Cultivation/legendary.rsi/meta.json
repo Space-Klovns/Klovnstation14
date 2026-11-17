@@ -131,7 +131,15 @@
       "name": "xuanyuan_sword"
     },
     {
-      "name": "green_dragon_blade"
+      "name": "green_dragon_blade",
+      "delays": [
+        [
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ]
+      ]
     },
     {
       "name": "seven_star_sword"
@@ -143,7 +151,19 @@
       "name": "universe_ring"
     },
     {
-      "name": "wind_fire_wheels"
+      "name": "wind_fire_wheels",
+      "delays": [
+        [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ]
+      ]
     }
   ]
 }

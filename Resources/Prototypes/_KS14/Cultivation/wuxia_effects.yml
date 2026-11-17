@@ -246,13 +246,14 @@
   name: golden bell
   components:
   - type: Sprite
-    sprite: _KS14/Cultivation/wuxia_64.rsi
+    sprite: _KS14/Cultivation/temple.rsi
     drawdepth: Effects
     noRot: true
     layers:
     - state: golden_bell
       shader: unshaded
-      offset: 0, 0.125
+      scale: 0.5, 0.5
+      offset: 0, 0.2
   - type: PointLight
     color: "#ffcc33"
     radius: 2.5
@@ -295,14 +296,14 @@
   name: dharma idol
   components:
   - type: Sprite
-    sprite: _KS14/Cultivation/wuxia_64.rsi
-    drawdepth: Overdoors
+    sprite: _KS14/Cultivation/temple.rsi
+    drawdepth: SmallMobs
     noRot: true
     layers:
     - state: dharma_idol
       shader: unshaded
-      color: "#ffffffcc"
-      offset: 0, 0.5
+      color: "#ffffffe6"
+      offset: 0, 0.8
   - type: PointLight
     color: "#ffd55a"
     radius: 3.5

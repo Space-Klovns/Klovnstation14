@@ -501,8 +501,8 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
 
         Spawn(PillarEffect, centre);
         WaveAt(centre, FxColour.Gold, big: true);
-        Shockwave(centre, strength: 2.5f);
-        Distort(centre, FxDistortion.Roar);
+        // Only a light ripple of the air: the lightning, the pillar and the golden wave carry the moment.
+        Shockwave(centre, strength: 1f);
         Motes(uid, FxColour.Gold, TimeSpan.FromSeconds(3));
         Boom(AscendSound, centre, volume: 4f, range: 30f);
     }
