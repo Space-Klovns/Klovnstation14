@@ -72,6 +72,9 @@ public sealed partial class LegendarySystem : EntitySystem
         UpdateRuyiSlams(now);
         UpdateGourds(now);
         UpdatePouches(now);
+        UpdatePagodas(now);
+        UpdateRings(now);
+        UpdateWheels();
     }
 
     #region Legendary blows
@@ -114,7 +117,8 @@ public sealed partial class LegendarySystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnArtifactMeleeHit(Entity<LegendaryArtifactComponent> entity, ref MeleeHitEvent args)
     {
-        if (!args.IsHit || args.HitEntities.Count == 0)
+        // The six treasures work out their own blows.
+        if (!args.IsHit || args.HitEntities.Count == 0 || HasComp<LegendaryTreasureHitComponent>(entity))
             return;
 
         // A shrunken staff is just a needle.

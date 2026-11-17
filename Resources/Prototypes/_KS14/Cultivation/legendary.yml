@@ -471,3 +471,168 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: wumu_command }
   - type: InstantAction
     event: !type:WumuCommandActionEvent
+
+# ---------------------------------------------------------------- six more treasures
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsXuanyuanSword
+  name: Xuanyuan Sword
+  description: A broad golden jian engraved with the sun, moon and stars on one face and mountains and rivers on the other. It is unbearably heavy with authority.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: xuanyuan_sword
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/claymore.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 18
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendaryArtifact
+    traits: BreaksDefence
+    legend: legendary-xuanyuan-legend
+    power: legendary-xuanyuan-power
+  - type: LegendaryTreasureHit
+  - type: XuanyuanSword
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsGreenDragonBlade
+  name: Green Dragon Crescent Blade
+  description: A towering guandao with a crescent blade and a green dragon coiled at its base. It weighs eighty-two jin and it is not for the dishonourable.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: green_dragon_blade
+  - type: Item
+    size: Huge
+    sprite: Objects/Weapons/Melee/spear.rsi
+  - type: MeleeWeapon
+    range: 1.5
+    damage:
+      types:
+        Slash: 10
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Slash: 14
+  - type: LegendaryArtifact
+    traits: WearsDown
+    legend: legendary-dragon-blade-legend
+    power: legendary-dragon-blade-power
+  - type: LegendaryTreasureHit
+  - type: GreenDragonBlade
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsSevenStarSword
+  name: Seven-Star Sword
+  description: A dark jian inlaid with seven golden studs in the shape of the Northern Dipper. Each one glows a little brighter with every blow.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: seven_star_sword
+  - type: Item
+    sprite: Objects/Weapons/Melee/katana.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 20
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: PointLight
+    color: "#ffe27a"
+    radius: 1.5
+    energy: 0
+  - type: LegendaryArtifact
+    legend: legendary-seven-star-legend
+    power: legendary-seven-star-power
+  - type: LegendaryTreasureHit
+  - type: SevenStarSword
+  - type: ActionGrant
+    actions:
+    - ActionKsSevenStars
+  - type: ItemActionGrant
+    actions:
+    - ActionKsSevenStars
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsLinglongPagoda
+  name: Linglong Pagoda
+  description: A small golden pagoda of seven exquisite tiers, cool and heavy in the hand. Something about its doors makes you not want to look too closely.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: linglong_pagoda
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-pagoda-legend
+    power: legendary-pagoda-power
+  - type: LinglongPagoda
+  - type: ContainerContainer
+    containers:
+      ks-pagoda: !type:ContainerSlot
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsUniverseRing
+  name: Universe Ring
+  description: A heavy golden bracelet, as wide as a palm. It hums when it's thrown, and it always knows its way home.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: universe_ring
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-universe-ring-legend
+    power: legendary-universe-ring-power
+  - type: UniverseRing
+
+- type: entity
+  parent: ClothingShoesBase
+  id: KsWindFireWheels
+  name: Wind Fire Wheels
+  description: A pair of spinning wheels wreathed in flame, worn on the feet. They want to go fast. They do not want to stop.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: wind_fire_wheels
+  - type: Clothing
+    sprite: Clothing/Shoes/Boots/combatboots.rsi
+  - type: ClothingSpeedModifier
+    walkModifier: 1.5
+    sprintModifier: 1.5
+  - type: NoSlip
+  - type: PointLight
+    color: "#ff7a2c"
+    radius: 1.5
+    energy: 1
+  - type: LegendaryArtifact
+    legend: legendary-wheels-legend
+    power: legendary-wheels-power
+  - type: WindFireWheels
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsSevenStars
+  name: Seven Stars of the Northern Dipper
+  description: With all seven stars lit, release a river of starlight down a line seven tiles long.
+  components:
+  - type: Action
+    useDelay: 2
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: seven_star_sword }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:SevenStarsActionEvent

@@ -269,4 +269,73 @@ public sealed class LegendaryTest : GameTest
             }
         });
     }
+
+    [Test]
+    public async Task TestXuanyuanRejectsTheUnworthy()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var handsSystem = SEntMan.System<SharedHandsSystem>();
+            var commonerUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var emperorUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            SEntMan.EnsureComponent<SonOfHeavenComponent>(emperorUid);
+
+            handsSystem.TryPickupAnyHand(commonerUid, SEntMan.SpawnEntity("KsXuanyuanSword", map.GridCoords));
+            handsSystem.TryPickupAnyHand(emperorUid, SEntMan.SpawnEntity("KsXuanyuanSword", map.GridCoords));
+            var damageableSystem = SEntMan.System<DamageableSystem>();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(damageableSystem.GetTotalDamage(commonerUid), Is.GreaterThan(FixedPoint2.Zero), "The sword didn't burn an unworthy hand.");
+                Assert.That(damageableSystem.GetTotalDamage(emperorUid), Is.EqualTo(FixedPoint2.Zero), "The sword burned the Son of Heaven.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestPagodaSealsAndReleases()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var legendarySystem = SEntMan.System<LegendarySystem>();
+            var containerSystem = SEntMan.System<Robust.Shared.Containers.SharedContainerSystem>();
+            var victimUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var pagodaUid = SEntMan.SpawnEntity("KsLinglongPagoda", map.GridCoords);
+            var pagoda = (pagodaUid, SEntMan.GetComponent<LinglongPagodaComponent>(pagodaUid));
+
+            legendarySystem.Seal(pagoda, victimUid);
+            var sealedIn = containerSystem.IsEntityInContainer(victimUid);
+            legendarySystem.ReleasePagoda(pagoda);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(sealedIn, Is.True, "The pagoda sealed nobody.");
+                Assert.That(containerSystem.IsEntityInContainer(victimUid), Is.False, "The pagoda didn't let them out.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestSevenStarsNeedAllSeven()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var userUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var swordUid = SEntMan.SpawnEntity("KsSevenStarSword", map.GridCoords);
+            var ev = new SevenStarsActionEvent { Performer = userUid, Target = map.GridCoords.Offset(new Vector2(4f, 0f)) };
+            SEntMan.EventBus.RaiseLocalEvent(swordUid, ev);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(ev.Handled, Is.False, "The Seven Stars went off without a star lit.");
+                Assert.That(SEntMan.System<LegendarySystem>().HonourDamage(userUid), Is.InRange(4f, 24f));
+            }
+        });
+    }
 }

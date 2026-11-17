@@ -309,3 +309,115 @@ public sealed partial class InheritanceManualComponent : Component
     [DataField]
     public bool Used;
 }
+
+/// <summary>
+///     The one heaven has mandated, the Son of Heaven. The Xuanyuan Sword answers only to them.
+/// </summary>
+[RegisterComponent]
+public sealed partial class SonOfHeavenComponent : Component;
+
+/// <summary>
+///     The Xuanyuan Sword: in the Son of Heaven's hands every blow staggers and knocks down; anyone else is burned.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class XuanyuanSwordComponent : Component
+{
+    [DataField]
+    public float WorthyDamage = 14f;
+
+    [DataField]
+    public float UnworthyBurn = 15f;
+}
+
+/// <summary>
+///     The Green Dragon Crescent Blade: wielded, it reaches two tiles, and bites as hard as its wielder's honour.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class GreenDragonBladeComponent : Component
+{
+    [DataField]
+    public float WieldedReach = 2.5f;
+
+    [DataField]
+    public float UnwieldedReach = 1.5f;
+}
+
+/// <summary>
+///     The Seven-Star Sword: every blow lights a star; with all seven lit, the Seven Stars pour out.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class SevenStarSwordComponent : Component
+{
+    [DataField]
+    public int Stars;
+
+    public const int MaxStars = 7;
+}
+
+/// <summary>
+///     The Linglong Pagoda: thrown at someone, it swells over them and seals them inside.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(LegendarySystem))]
+public sealed partial class LinglongPagodaComponent : Component
+{
+    public const string ContainerId = "ks-pagoda";
+
+    [DataField]
+    public EntityUid? Sealed;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ReleaseAt;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan NextSeal;
+
+    [DataField]
+    public TimeSpan SealTime = TimeSpan.FromSeconds(20);
+
+    [DataField]
+    public TimeSpan Cooldown = TimeSpan.FromSeconds(90);
+}
+
+/// <summary>
+///     Nezha's Universe Ring: thrown, it ricochets to two more people and flies home.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(LegendarySystem))]
+public sealed partial class UniverseRingComponent : Component
+{
+    [DataField]
+    public EntityUid? Thrower;
+
+    [DataField]
+    public int BouncesLeft;
+
+    [ViewVariables]
+    public HashSet<EntityUid> HitThisThrow = new();
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan NextFlight;
+
+    [DataField]
+    public bool Returning;
+
+    [DataField]
+    public float Damage = 12f;
+}
+
+/// <summary>
+///     Nezha's Wind Fire Wheels: worn, they leave burning footprints, and they don't like to stop.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class WindFireWheelsComponent : Component
+{
+    [DataField]
+    public MapCoordinates? LastPosition;
+
+    [DataField]
+    public float SkidChance = 0.1f;
+}
+
+/// <summary>
+///     Marks the six treasures whose blows <see cref="LegendarySystem"/> works out per treasure.
+/// </summary>
+[RegisterComponent]
+public sealed partial class LegendaryTreasureHitComponent : Component;

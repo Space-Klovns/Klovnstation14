@@ -622,6 +622,105 @@ def spirit_herb(size=32, glow_phase=0.0, planted=False):
     return image
 
 
+# ---------------------------------------------------------------- the six treasures SS13 never had sprites for
+
+GOLD = (236, 190, 72, 255)
+GOLD_DARK = (150, 104, 30, 255)
+GOLD_LIGHT = (255, 236, 150, 255)
+OUTLINE = (40, 28, 16, 255)
+
+
+def outlined(image):
+    """A one-pixel dark outline around everything drawn, the way item sprites read at a glance."""
+    alpha = image.getchannel("A").point(lambda value: 255 if value > 0 else 0)
+    grown = alpha.filter(ImageFilter.MaxFilter(3))
+    edge = Image.new("RGBA", image.size, OUTLINE)
+    result = Image.new("RGBA", image.size)
+    result.paste(edge, (0, 0), grown)
+    result.alpha_composite(image)
+    return result
+
+
+def jian(blade, blade_light, guard, grip, studs=None, broad=False):
+    """A straight double-edged sword lying corner to corner."""
+    image = Image.new("RGBA", (32, 32))
+    draw = ImageDraw.Draw(image)
+    width = 3 if broad else 2
+    draw.line((7, 25, 26, 6), fill=blade, width=width + 1)
+    draw.line((8, 24, 26, 6), fill=blade_light, width=1)
+    draw.line((4, 22, 10, 28), fill=guard, width=2)
+    draw.line((3, 29, 7, 25), fill=grip, width=2)
+    draw.point((2, 30), fill=guard)
+    for x, y in studs or []:
+        draw.point((x, y), fill=GOLD_LIGHT)
+    return outlined(image)
+
+
+def xuanyuan_sword():
+    image = jian(GOLD, GOLD_LIGHT, GOLD_DARK, (120, 30, 30, 255), broad=True)
+    draw = ImageDraw.Draw(image)
+    # The sun and the moon engraved on the blade.
+    draw.point((20, 12), fill=(255, 120, 60, 255))
+    draw.point((15, 17), fill=(220, 230, 255, 255))
+    return image
+
+
+def seven_star_sword():
+    dipper = [(11, 21), (13, 19), (15, 17), (17, 15), (19, 14), (21, 11), (23, 10)]
+    return jian((60, 62, 74, 255), (110, 114, 130, 255), GOLD_DARK, (40, 40, 48, 255), studs=dipper)
+
+
+def green_dragon_blade():
+    """A guandao: a long haft with a crescent blade and a green dragon at its base."""
+    image = Image.new("RGBA", (32, 32))
+    draw = ImageDraw.Draw(image)
+    draw.line((3, 30, 22, 11), fill=(120, 72, 36, 255), width=2)
+    draw.polygon([(20, 13), (29, 2), (30, 9), (25, 15)], fill=(200, 212, 220, 255))
+    draw.line((21, 12, 29, 3), fill=(240, 246, 250, 255))
+    draw.ellipse((18, 12, 23, 17), fill=(60, 170, 90, 255))
+    draw.point((20, 14), fill=(230, 255, 230, 255))
+    draw.line((3, 30, 5, 28), fill=GOLD_DARK, width=2)
+    return outlined(image)
+
+
+def linglong_pagoda():
+    """A small golden pagoda of seven tiers."""
+    image = Image.new("RGBA", (32, 32))
+    draw = ImageDraw.Draw(image)
+    for tier in range(7):
+        y = 27 - tier * 3
+        half = 9 - tier
+        draw.rectangle((16 - half + 1, y - 2, 16 + half - 1, y), fill=GOLD if tier % 2 == 0 else (220, 170, 60, 255))
+        draw.line((16 - half - 1, y - 2, 16 + half + 1, y - 2), fill=GOLD_DARK)
+        draw.point((16, y - 1), fill=(90, 40, 30, 255))
+    draw.line((16, 3, 16, 6), fill=GOLD_LIGHT)
+    return outlined(image)
+
+
+def universe_ring():
+    """Nezha's golden bangle, wide as a palm."""
+    image = Image.new("RGBA", (32, 32))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((5, 7, 27, 25), outline=GOLD, width=4)
+    draw.arc((5, 7, 27, 25), start=190, end=270, fill=GOLD_LIGHT, width=1)
+    draw.arc((9, 11, 23, 21), start=0, end=180, fill=GOLD_DARK, width=1)
+    return outlined(image)
+
+
+def wind_fire_wheels():
+    """Two spinning wheels wreathed in flame."""
+    image = Image.new("RGBA", (32, 32))
+    draw = ImageDraw.Draw(image)
+    for cx in (10, 22):
+        for angle in range(0, 360, 45):
+            x, y = cx + math.cos(math.radians(angle)) * 7, 18 + math.sin(math.radians(angle)) * 7
+            draw.polygon([(x, y), (x + 2, y - 4), (x + 3, y)], fill=(255, 120, 30, 255))
+        draw.ellipse((cx - 5, 13, cx + 5, 23), outline=GOLD, width=2)
+        draw.line((cx - 4, 18, cx + 4, 18), fill=GOLD_DARK)
+        draw.line((cx, 14, cx, 22), fill=GOLD_DARK)
+    return outlined(image)
+
+
 # Every art effect: (prototype id, state, tint or None, scale, light colour or None, draw depth).
 ART_PROTOTYPES = [
     ("KsFxArtPalmQi", "palm_qi", None, 1.0, "#78c8ff", "Effects"),
@@ -780,7 +879,14 @@ def main():
     write_rsi("treasures", (32, 32), treasures)
 
     artifacts = read_dmi(os.path.join(icons, "cultivation_artifacts.dmi"))
-    write_rsi("legendary", (32, 32), [plain(artifacts, name) for name in artifacts])
+    write_rsi("legendary", (32, 32), [plain(artifacts, name) for name in artifacts] + [
+        ("xuanyuan_sword", [xuanyuan_sword()], None),
+        ("green_dragon_blade", [green_dragon_blade()], None),
+        ("seven_star_sword", [seven_star_sword()], None),
+        ("linglong_pagoda", [linglong_pagoda()], None),
+        ("universe_ring", [universe_ring()], None),
+        ("wind_fire_wheels", [wind_fire_wheels()], None),
+    ])
 
     write_rsi("wuxia_riding", (64, 64), [plain(riding, "sword_ride"), plain(riding, "qi_cloud")])
     write_rsi("wuxia_96", (96, 96), [

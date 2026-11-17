@@ -68,3 +68,8 @@ public sealed partial class WumuCommandActionEvent : InstantActionEvent
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(30);
 }
+
+/// <summary>
+///     The Seven-Star Sword, all seven stars lit: a river of starlight pours out down a line.
+/// </summary>
+public sealed partial class SevenStarsActionEvent : WorldTargetActionEvent;

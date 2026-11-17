@@ -48,6 +48,12 @@ public sealed partial class CultivationLootSystem : EntitySystem
         new EntProtoId[] { "KsPlantainFan" },
         new EntProtoId[] { "KsBaguaMirror" },
         new EntProtoId[] { "KsQiankunPouch" },
+        new EntProtoId[] { "KsXuanyuanSword" },
+        new EntProtoId[] { "KsGreenDragonBlade" },
+        new EntProtoId[] { "KsSevenStarSword" },
+        new EntProtoId[] { "KsLinglongPagoda" },
+        new EntProtoId[] { "KsUniverseRing" },
+        new EntProtoId[] { "KsWindFireWheels" },
     };
 
     private static readonly EntProtoId DragonSaber = "KsDragonSlayingSaber";

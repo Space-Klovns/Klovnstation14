@@ -124,3 +124,31 @@ legendary-nine-yin-rakes = {CAPITALIZE(THE($user))}'s fingers turn bone-white an
 legendary-wumu-learned = You have learned the Command of the Wumu Yishu! Rally the people around you into an unbreakable formation.
 legendary-wumu-shout = Shake a mountain, easy! Shake my army, impossible!
 legendary-wumu-formation = You fall into formation. You will not break.
+
+## Six more treasures
+
+legendary-xuanyuan-legend = The sword of the Yellow Emperor, first ruler under heaven. It answers only to the one heaven has mandated.
+legendary-xuanyuan-power = In the hands of the Son of Heaven every blow staggers and knocks down, and cuts through Iron Shirt. Anyone else who picks it up is burned by its authority, and it is just a heavy sword in their hands.
+legendary-xuanyuan-accepts = The Xuanyuan Sword settles into your hand as if it had been waiting for you. Heaven approves.
+legendary-xuanyuan-rejects = The hilt blazes like the sun! The Xuanyuan Sword does not accept you.
+legendary-dragon-blade-legend = The blade of Guan Yu, the God of War, the most loyal man under heaven.
+legendary-dragon-blade-power = Wield it in both hands to strike from further away. Its blows grow with the wielder's face in the jianghu, and fade for the shamed. They wear a body cultivator down.
+legendary-dragon-blade-honour = In your hands its legendary blows would deal {$damage} (your face: {$face}).
+legendary-seven-star-legend = Cao Cao's treasured sword, whose seven stars are said to hold the power of the Northern Dipper.
+legendary-seven-star-power = Every blow on someone lights one of its seven stars. With all seven lit, release the Seven Stars: a burst of starlight that cuts everyone in a line, then the stars go dark again.
+legendary-seven-star-lit = Star {$stars} of seven lights up.
+legendary-seven-star-all = All seven stars blaze! Release them.
+legendary-seven-star-unlit = Only {$stars} of its seven stars are lit.
+legendary-seven-star-examine = {$stars} of its seven stars are lit.
+legendary-seven-star-shout = SEVEN STARS OF THE NORTHERN DIPPER!!
+legendary-pagoda-legend = Li Jing, the Pagoda-Bearing Heavenly King, holds it in his palm. Whoever it falls upon is sealed inside.
+legendary-pagoda-power = Throw it at someone: they are sealed inside for twenty seconds, harmless and unharmable, and come out dazed. A qi ward or the Golden Bell turns it aside, and it needs a minute and a half to open its doors again.
+legendary-pagoda-seals = {CAPITALIZE(THE($item))} swells into a towering golden pagoda and slams down over {THE($target)}!
+legendary-pagoda-bounces = {CAPITALIZE(THE($item))} bounces off {THE($target)}'s defences!
+legendary-pagoda-released = The pagoda's doors swing open. Your head is ringing.
+legendary-pagoda-occupied = Someone is sealed inside. Its doors won't open for a while yet.
+legendary-pagoda-closed = Its doors are still closed.
+legendary-universe-ring-legend = Nezha's Qiankun Quan, the Heaven and Earth Ring. Thrown, it smashes one demon after another and returns to his hand.
+legendary-universe-ring-power = Throw it: after the first hit it ricochets to up to two more people nearby, then flies back to you. Keep a hand free to catch it.
+legendary-wheels-legend = Nezha's wheels of wind and fire, which carried the boy god across heaven and earth.
+legendary-wheels-power = Worn, you move far faster and leave burning footprints behind you, and you sometimes skid a step further than you meant to.

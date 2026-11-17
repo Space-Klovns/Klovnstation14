@@ -88,6 +88,13 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
   arts) on cultivators in sight, burns the undead and demonic, flashes everyone else; reflects shots while held.
 - **Qiankun Pouch**: a huge storage; Swallow Heaven and Earth in hand, Release Heaven and Earth as an action; someone
   beside its holder can hide in its world (alt verb on the holder).
+- **Xuanyuan Sword**: answers only to the Son of Heaven (`SonOfHeavenComponent`, given by the Mandate of Heaven);
+  anyone else is burned picking it up.
+- **Green Dragon Crescent Blade**: wielded, reaches further; its blows follow the wielder's face in the jianghu.
+- **Seven-Star Sword**: each blow lights a star; with all seven, the Seven Stars cut down a line.
+- **Linglong Pagoda**: thrown at someone, seals them inside for twenty seconds (a ward or the Golden Bell turns it).
+- **Universe Ring**: thrown, ricochets to two more people and flies home.
+- **Wind Fire Wheels**: shoes; much faster, no slipping, burning footprints, and the odd skid.
 - **Nine Yin Manual / Wumu Yishu** (`InheritanceManualComponent`): one reader each learns the Nine Yin White Bone Claw or
   the Command of the Wumu Yishu (`WumuFormationSystem`: faster, half stamina damage).
 
