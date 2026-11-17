@@ -126,8 +126,14 @@ public sealed partial class AdminLogsEui : BaseEui
                         Limit = _clientBatchSize
                     };
 
+                    var filter = _filter; // KS14: see below
                     var roundId = _filter.Round ??= CurrentRoundId;
                     await LoadFromDb(roundId);
+
+                    // KS14 start: a newer request came in while this one was loading, and answers for both
+                    if (_filter != filter)
+                        break;
+                    // KS14 end
 
                     SendLogs(true);
                     break;
@@ -157,8 +163,30 @@ public sealed partial class AdminLogsEui : BaseEui
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        var logs = await Task.Run(async () => await _adminLogs.All(_filter, _adminLogListPool.Get),
-            _filter.CancellationToken);
+        // KS14 start: the filter these logs are for, which a newer request replaces while they are being fetched. Its
+        //   logs were then counted into the new filter as already sent, so the new search skipped that many of its own
+        //   and came back short or empty: a search made as the window opened, behind the window's own first request.
+        var filter = _filter;
+        List<SharedAdminLog> logs;
+        try
+        {
+            logs = await Task.Run(async () => await _adminLogs.All(filter, _adminLogListPool.Get),
+                filter.CancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // replaced, or the window closed
+        }
+
+        if (_filter != filter)
+        {
+            _adminLogListPool.Return(logs);
+            return;
+        }
+        // KS14 end
+        // KS14: removed, fetched above for the filter it was started with
+        /* var logs = await Task.Run(async () => await _adminLogs.All(_filter, _adminLogListPool.Get),
+            _filter.CancellationToken); */
 
         if (logs.Count > 0)
         {

@@ -6,6 +6,9 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Execution;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC.HTN;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
@@ -33,6 +36,8 @@ public sealed class KsNpcExecutionOffhandKnifeTest : GameTest
     // A string, not an EntProtoId: the linter checks those, and the Redacted are in the private submodule, which it may lack.
     private const string Spawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
+    private static readonly Robust.Shared.Prototypes.ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
+
     [Test]
     public async Task TestExecutesOnceWithAKnifeInTheOtherHand()
     {
@@ -49,9 +54,6 @@ public sealed class KsNpcExecutionOffhandKnifeTest : GameTest
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-8, -8), new Vector2i(8, 8)).Owner;
             GiveGravity(entManager, gridUid);
             SpawnAt(entManager, Spawner, gridUid, -3, 0);
-            victimUid = SpawnAt(entManager, "MobHuman", gridUid, 2, 0);
-            entManager.RemoveComponent<Content.Server.Atmos.Components.BarotraumaComponent>(victimUid);
-            entManager.RemoveComponent<Content.Server.Body.Components.RespiratorComponent>(victimUid);
         });
 
         await Pair.RunTicksSync(120);
@@ -61,7 +63,7 @@ public sealed class KsNpcExecutionOffhandKnifeTest : GameTest
             var enumerator = entManager.EntityQueryEnumerator<NpcSquadMemberComponent, TransformComponent>();
             while (enumerator.MoveNext(out var uid, out _, out var transformComponent))
             {
-                if (transformComponent.MapID == map.MapId && uid != victimUid)
+                if (transformComponent.MapID == map.MapId)
                     npcUid = uid;
             }
 
@@ -84,7 +86,18 @@ public sealed class KsNpcExecutionOffhandKnifeTest : GameTest
             var empty = handsSystem.EnumerateHands((npcUid, handsComponent)).First(h => h != inactive);
             handsSystem.TrySetActiveHand((npcUid, handsComponent), empty);
 
-            entManager.System<MobStateSystem>().ChangeMobState(victimUid, MobState.Critical);
+            // The hostile only now, and already down. Standing there while the Redacted spawned, it was a fight: armed still,
+            //   it cooked and threw grenades in those four seconds. The first put the hostile down, which is what let one
+            //   execution finish it; another landing after this killed it with no execution at all.
+            victimUid = SpawnAt(entManager, "MobHuman", gridUid, 2, 0);
+            entManager.RemoveComponent<Content.Server.Atmos.Components.BarotraumaComponent>(victimUid);
+            entManager.RemoveComponent<Content.Server.Body.Components.RespiratorComponent>(victimUid);
+
+            // Down as anyone is who is: by the damage that takes, not by the state alone, which leaves it unhurt.
+            var criticalDamage = entManager.System<MobThresholdSystem>().GetThresholdForState(victimUid, MobState.Critical);
+            entManager.System<DamageableSystem>().TryChangeDamage(victimUid,
+                new DamageSpecifier(Server.ProtoMan.Index(BluntDamage), criticalDamage), ignoreResistances: true);
+            Assert.That(entManager.System<MobStateSystem>().IsCritical(victimUid), "the test needs the hostile down, and not dead");
         });
 
         var log = new System.Text.StringBuilder();
