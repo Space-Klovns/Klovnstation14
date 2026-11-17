@@ -23,8 +23,10 @@ public sealed class CultivationAdminTest : GameTest
 
     private bool HasAction(EntityUid uid, string actionId)
     {
+        // Known techniques count whether they're on the bar or put away in the Techniques menu.
         return SEntMan.System<SharedActionsSystem>().GetActions(uid)
-            .Any(action => SEntMan.GetComponent<MetaDataComponent>(action).EntityPrototype?.ID == actionId);
+                   .Any(action => SEntMan.GetComponent<MetaDataComponent>(action).EntityPrototype?.ID == actionId)
+               || SEntMan.System<Content.Server._KS14.Cultivation.Systems.CultivationLoadoutSystem>().Knows(uid, actionId);
     }
 
     [Test]

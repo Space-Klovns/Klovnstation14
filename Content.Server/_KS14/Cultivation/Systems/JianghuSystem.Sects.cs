@@ -112,7 +112,8 @@ public sealed partial class JianghuSystem
         AddMember(sect, founderUid);
 
         EntityUid? rivalryUid = null;
-        _actionsSystem.AddAction(founderUid, ref rivalryUid, RivalryAction);
+        if (_actionsSystem.AddAction(founderUid, ref rivalryUid, RivalryAction))
+            _loadoutSystem.Learned(founderUid, rivalryUid.Value);
 
         _noticeSystem.Announce(founderUid, Loc.GetString("jianghu-sect-founded", ("user", founderUid), ("sect", sectName)), type: PopupType.Large);
         _visualsSystem.Wave(plaqueUid, FxColour.Gold, big: true);
@@ -156,7 +157,10 @@ public sealed partial class JianghuSystem
 
         EntityUid? transmissionUid = null;
         if (_actionsSystem.AddAction(bodyUid, ref transmissionUid, TransmissionAction))
+        {
             memberComponent.TransmissionAction = transmissionUid;
+            _loadoutSystem.Learned(bodyUid, transmissionUid.Value);
+        }
 
         AnnounceToSect(sect, Loc.GetString("jianghu-sect-joined", ("name", Name(bodyUid)), ("rank", Loc.GetString(SectRank(sect, bodyUid)))));
         if (mindId != sect.Comp.Master)
@@ -169,7 +173,7 @@ public sealed partial class JianghuSystem
             return;
 
         if (TryComp<SectMemberComponent>(mindId, out var memberComponent))
-            _actionsSystem.RemoveAction(bodyUid, memberComponent.TransmissionAction);
+            _loadoutSystem.Forget(bodyUid, memberComponent.TransmissionAction);
 
         RemComp<SectMemberComponent>(mindId);
     }

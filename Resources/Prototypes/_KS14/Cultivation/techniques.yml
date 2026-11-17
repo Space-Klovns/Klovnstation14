@@ -494,3 +494,16 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: summon_beast }
   - type: InstantAction
     event: !type:SummonBeastActionEvent
+
+# Opens the radial menu of every technique the cultivator knows; only a handful are equipped at once.
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsTechniques
+  name: Techniques
+  description: Choose which of your techniques, arts and jianghu actions are ready on your action bar. Everything you know is kept; only a few can be equipped at once.
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: recall_teachings }
+  - type: InstantAction
+    event: !type:TechniqueMenuActionEvent

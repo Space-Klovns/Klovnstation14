@@ -13,6 +13,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class JianghuSystem : EntitySystem
 {
+    [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;

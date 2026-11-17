@@ -36,6 +36,16 @@ public sealed class BodyArtDamageTest : GameTest
     private void PerformGranted(EntityUid userUid, string actionId, EntityUid? target)
     {
         var actionsSystem = SEntMan.System<SharedActionsSystem>();
+        // A technique put away in the Techniques menu is equipped first, as a player would.
+        if (SEntMan.TryGetComponent<Content.Shared._KS14.Cultivation.Components.CultivationLoadoutComponent>(userUid, out var loadout))
+        {
+            foreach (var known in loadout.Learned)
+            {
+                if (!loadout.Equipped.Contains(known) && SEntMan.GetComponent<MetaDataComponent>(known).EntityPrototype?.ID == actionId)
+                    actionsSystem.AddActionDirect(userUid, known);
+            }
+        }
+
         foreach (var action in actionsSystem.GetActions(userUid))
         {
             if (SEntMan.GetComponent<MetaDataComponent>(action).EntityPrototype?.ID != actionId)

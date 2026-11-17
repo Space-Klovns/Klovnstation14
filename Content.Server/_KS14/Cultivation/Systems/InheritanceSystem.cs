@@ -27,6 +27,7 @@ public sealed partial class InheritanceSystem : EntitySystem
 {
     private static readonly EntProtoId NameHeirAction = "ActionKsNameHeir";
 
+    [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private JianghuSystem _jianghuSystem = default!;
@@ -79,13 +80,17 @@ public sealed partial class InheritanceSystem : EntitySystem
 
     public void GrantNameHeir(EntityUid uid)
     {
+        if (_loadoutSystem.Knows(uid, NameHeirAction))
+            return;
+
         foreach (var action in _actionsSystem.GetActions(uid))
         {
             if (MetaData(action).EntityPrototype?.ID == NameHeirAction.Id)
                 return;
         }
 
-        _actionsSystem.AddAction(uid, NameHeirAction);
+        if (_actionsSystem.AddAction(uid, NameHeirAction) is { } heirActionUid)
+            _loadoutSystem.Learned(uid, heirActionUid);
     }
 
     /// <summary>

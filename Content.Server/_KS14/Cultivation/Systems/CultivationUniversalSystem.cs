@@ -50,6 +50,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     /// </summary>
     private const float AlarmRange = 3f;
 
+    [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private InheritanceSystem _inheritanceSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -515,7 +516,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         foreach (var actionProto in lost)
         {
             if (_sharedCultivationSystem.ForgetTechnique(entity.Comp, actionProto) is { } actionUid)
-                _actionsSystem.RemoveAction(entity.Owner, actionUid);
+                _loadoutSystem.Forget(entity.Owner, actionUid);
         }
 
         _noticeSystem.Notify(entity, Loc.GetString("cultivation-forget-done", ("law", Loc.GetString(law.Name))), type: PopupType.Medium);

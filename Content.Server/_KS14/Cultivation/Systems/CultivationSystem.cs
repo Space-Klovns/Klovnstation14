@@ -79,6 +79,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
     private static readonly SoundSpecifier LearnSound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
 
+    [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private AncestralRingSystem _ringSystem = default!;
     [Dependency] private InheritanceSystem _inheritanceSystem = default!;
@@ -268,6 +269,7 @@ public sealed partial class CultivationSystem : EntitySystem
             return false;
 
         _cultivationSystem.RecordTechnique(entity.Comp, action, actionUid.Value);
+        _loadoutSystem.Learned(entity, actionUid.Value);
         return true;
     }
 

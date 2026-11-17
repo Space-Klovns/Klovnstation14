@@ -103,7 +103,11 @@ public sealed partial class SharedMartialArtsSystem : EntitySystem
 
             EntityUid? actionUid = null;
             if (_actionsSystem.AddAction(uid, ref actionUid, actionProto))
+            {
                 artistComponent.Actions[actionProto] = actionUid.Value;
+                var learnedEvent = new CultivationTechniqueLearnedEvent(actionUid.Value);
+                RaiseLocalEvent(uid, ref learnedEvent);
+            }
         }
 
         EntityManager.AddComponents(uid, art.Components, removeExisting: false);

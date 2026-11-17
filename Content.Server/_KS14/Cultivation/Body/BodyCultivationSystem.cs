@@ -74,6 +74,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         ("ActionBodyPrimordialRoar", 9),
     };
 
+    [Dependency] private Content.Server._KS14.Cultivation.Systems.CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -217,6 +218,10 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             _bodySystem.RecordTechnique(entity.Comp, action, actionUid.Value);
             if (TryComp<ActionComponent>(actionUid, out var actionComponent) && actionComponent.UseDelay is { } useDelay)
                 _bodySystem.RecordBaseCooldown(entity.Comp, action, useDelay);
+
+            // Forging and the Tribulation always stay on the bar; the arts go through the Techniques menu.
+            if (action.Id is not ("ActionBodyForge" or "ActionBodyTribulation"))
+                _loadoutSystem.Learned(entity, actionUid.Value);
         }
 
         ScaleCooldowns(entity);
