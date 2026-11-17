@@ -1,5 +1,5 @@
 # Effects ported from the SurfShack13 cultivation sprites. Their SS13 animations (the falling palm, the rift snapping
-# open, the flying rubble) are baked into the frames by Tools/_KS14/cultivation_ss13_sprites.py; an animated state loops,
+# open, the flying rubble) are baked into the frames; an animated state loops,
 # so each one despawns as its single run ends.
 
 # Buddha's Palm: drawn at native size on a tall canvas whose landing point sits 80 pixels below its centre, so each size
