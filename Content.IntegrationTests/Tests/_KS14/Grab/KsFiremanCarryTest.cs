@@ -18,6 +18,8 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
+using Content.Shared.DoAfter;
+using Content.Shared.Standing;
 using Content.Shared.Stunnable;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -117,6 +119,16 @@ public sealed class KsFiremanCarryTest : GameTest
                $"down: {SEntMan.HasComponent<KnockedDownComponent>(victimUid)}";
     }
 
+    /// <summary>
+    ///     Whether a do-after of theirs is still under way. A cancelled one stays on the component for a moment, to
+    ///         show its bar going red, so the component alone doesn't say.
+    /// </summary>
+    private bool HasRunningDoAfter(EntityUid uid)
+    {
+        return SEntMan.TryGetComponent<DoAfterComponent>(uid, out var doAfters) &&
+               doAfters.DoAfters.Values.Any(doAfter => !doAfter.Cancelled && !doAfter.Completed);
+    }
+
     private async Task Lift(EntityUid carrierUid, EntityUid victimUid)
     {
         await Server.WaitAssertion(() => Assert.That(DragOntoSelf(carrierUid, victimUid), "The carry must start."));
@@ -152,6 +164,40 @@ public sealed class KsFiremanCarryTest : GameTest
     /// <summary>
     ///     Alt-clicking someone held and lying down offers the carry as the default alternative action.
     /// </summary>
+    /// <summary>
+    ///     A lift under way is called off as soon as it stops being possible, not left to run out and then fail.
+    /// </summary>
+    [Test]
+    public async Task LiftStopsWhenTheyGetUp()
+    {
+        var (carrierUid, victimUid) = await SetUp(grab: false, prone: true, pull: false);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(DragOntoSelf(carrierUid, victimUid), "The carry must start.");
+            Assert.That(HasRunningDoAfter(carrierUid), "Lifting someone must be a do-after.");
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(HasRunningDoAfter(carrierUid), "The lift must still be under way.");
+            SEntMan.RemoveComponent<KnockedDownComponent>(victimUid);
+            Assert.That(SEntMan.System<StandingStateSystem>().IsDown(victimUid), Is.False, "The victim must be back on their feet.");
+        });
+
+        // Far less than the lift takes: only the every-tick check can have ended it.
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(HasRunningDoAfter(carrierUid), Is.False,
+                "A lift must stop as soon as whoever is being lifted gets up.");
+            Assert.That(IsCarried(carrierUid, victimUid), Is.False);
+        });
+    }
+
     [Test]
     public async Task AltClickOffersTheCarry()
     {

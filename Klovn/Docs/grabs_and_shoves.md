@@ -368,8 +368,10 @@ that can't grab) leaves the victim to land as any thrown thing does:
 Not part of the grab: `KsEntityStorageCatchThrownComponent` (`Content.Shared/_KS14/Storage/`) goes on any
 `EntityStorage` entity, and `ClosetBase` has it. Anything thrown that passes its `whitelist` (mobs, by default) and
 hits the storage while it stands open ends up inside, with the door shut: a thrown grab victim, someone thrown off a
-carrier's back, or a mob thrown by anything else. `KsEntityStorageCatchThrownSystem` (server, like upstream's
-`ThrowInsertContainerSystem`) handles `ThrowHitByEvent` on the storage:
+carrier's back, or a mob thrown by anything else. `KsEntityStorageCatchThrownSystem` (shared) handles
+`ThrowHitByEvent` on the storage. It is predicted for whoever throws: their client simulates what they throw
+(`PredictedThrownItemComponent`), so it sees the hit, shuts the door and plays its sound at once, with the thrower
+passed as the closing `user` so the server leaves them out of its own sound.
 - An open closet's fixture keeps `BulletImpassable`, which the non-hard throwing fixture's `ThrownItem` mask hits,
   though nobody walking is stopped by it. That is why the event fires at all.
 - It closes the storage first, then inserts. An open `EntityStorage` reports that anything can be inserted and
@@ -401,6 +403,9 @@ server doesn't. Any pull on the victim is stopped when the carry starts.
 - the victim is down and the carrier isn't
 - neither is in a container or carried
 - the carrier has `KsFiremanCarrier.HandsNeeded` (2) hands that are empty or hold the grab, which the carry frees
+
+The lift is a do-after that asks `CanCarry` again every tick (`ExtraCheck`, `AttemptFrequency.EveryTick`), so it is
+called off the moment it stops being possible (they got up, a hand filled), not left to run out and then fail.
 
 After `CarryTime` the system:
 - stops the pull

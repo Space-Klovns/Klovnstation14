@@ -133,6 +133,9 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
             BreakOnMove = true,
             BlockDuplicate = true,
             NeedHand = false,
+            // The lift stops the moment it stops being possible: they got up, a hand filled, one of them was put away.
+            ExtraCheck = () => CanCarry(carrier, victim, popup: false),
+            AttemptFrequency = AttemptFrequency.EveryTick,
         };
 
         if (!_doAfterSystem.TryStartDoAfter(doAfter))
