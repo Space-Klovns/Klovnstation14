@@ -35,7 +35,7 @@
   - type: MobThresholds
     thresholds:
       0: Alive
-      80: Dead
+      130: Dead
   - type: Fixtures
     fixtures:
       fix1:
@@ -63,6 +63,7 @@
       path: /Audio/Effects/bite.ogg
     damage:
       types:
+        Slash: 5
         Piercing: 10
   - type: StaminaDamageOnHit
     damage: 25
