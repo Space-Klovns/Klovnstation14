@@ -6,7 +6,7 @@ public sealed partial class KsNearbyEntitiesSystem : SharedKsNearbyEntitiesSyste
 {
     /// <summary>
     ///     Item crafting is started and checked by the server, which tells the user what is missing.
-    /// </summary>
+    /// </summary> 
     public override bool AllPresent(EntityUid user, List<KsNearbyEntityEntry> entries)
     {
         return true;
