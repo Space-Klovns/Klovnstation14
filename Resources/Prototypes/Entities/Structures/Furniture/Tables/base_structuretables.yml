@@ -34,6 +34,15 @@
     bonkDamage:
       types:
         Blunt: 4
+  # KS14 start: shoving someone into a table puts them on it
+  - type: KsShoveObstacle
+    placeOnto: true
+    priority: 10
+    sound: /Audio/_KS14/Effects/Shove/tableslam.ogg
+    othersPopup: ks-shove-onto-others
+    userPopup: ks-shove-onto-user
+    targetPopup: ks-shove-onto-target
+  # KS14 end
   - type: Clickable
   - type: FootstepModifier
     footstepSoundCollection:

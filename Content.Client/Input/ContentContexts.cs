@@ -69,6 +69,7 @@ namespace Content.Client.Input
             human.AddFunction(ContentKeyFunctions.KsVoicePushToTalk); // KS14
             human.AddFunction(ContentKeyFunctions.ActivateItemInWorld);
             human.AddFunction(ContentKeyFunctions.ThrowItemInHand);
+            human.AddFunction(ContentKeyFunctions.KsToggleThrowMode); // KS14
             human.AddFunction(ContentKeyFunctions.AltActivateItemInWorld);
             human.AddFunction(ContentKeyFunctions.TryPullObject);
             human.AddFunction(ContentKeyFunctions.MovePulledObject);

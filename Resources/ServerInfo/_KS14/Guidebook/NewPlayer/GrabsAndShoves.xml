@@ -1,0 +1,57 @@
+<Document>
+  # Shoving and Grabbing
+  Fists aren't the only way to win a scuffle. A good shove knocks people off their feet, and a good grip holds them there, or carries them away.
+
+  ## Shoving
+  Turn on combat mode and [color=yellow][bold][keybind="UseSecondary"][/bold][/color] someone next to you to shove them away from you. A shove never tires anyone out: what it does depends on what's behind them.
+
+  <Box>
+    <GuideEntityEmbed Entity="Table"/>
+    <GuideEntityEmbed Entity="MobHuman" Caption=""/>
+    <GuideEntityEmbed Entity="WallSolid" Caption=""/>
+  </Box>
+
+  - [bold]Nothing behind them.[/bold] They stumble back and are slowed for a few seconds.
+  - [bold]A table.[/bold] They're shoved up onto it and knocked down for a few seconds.
+  - [bold]Another person.[/bold] They knock each other over. The one they were shoved into gets back up much sooner.
+  - [bold]A wall, or anything else solid.[/bold] They're knocked down for a few seconds.
+  - [bold]They're already on the floor.[/bold] The first shove kicks them onto their side, and they can't move for a few seconds. The next one, if there's a wall behind them, knocks everything out of their hands. Otherwise, and after that, shoving them only pushes them along until they've stood back up. Nobody on the floor gets slowed by a shove.
+  - [bold]They're in critical condition or exhausted.[/bold] A shove only pushes them along: no knockdowns, kicks or pins.
+  - [bold]You're holding them tight.[/bold] The shove pins them to the floor instead, and they stay there until they break free or you let go.
+
+  ## Grabbing
+  [color=yellow][bold][keybind="TryPullObject"][/bold][/color] an object to pull it along. Pulling doesn't take a hand. Press [color=yellow][bold][keybind="ReleasePulledObject"][/bold][/color], click the pulling alert, or, outside combat mode, ctrl-click an empty bit of floor to let go.
+
+  Ctrl-clicking a person grabs them the same way: a loose grip they can simply walk out of. Dragging someone who is lying down slows you down.
+
+  In combat mode, ctrl-click someone you already hold to tighten your grip, one step at a time. The first step needs a second after you grab them.
+
+  - [bold]Aggressive.[/bold] Takes one of your hands and draws them in close. They can't walk away, but they can still use their hands, so expect to be hit.
+  - [bold]Neck.[/bold] Takes a few seconds of holding still. Pins them to the floor and makes them harder to shake off. Deals no damage.
+  - [bold]Strangle.[/bold] Takes a few more seconds, and only works up close. They start to suffocate, and they have the worst odds of breaking free.
+
+  Everyone around sees you tighten your grip, and you can be interrupted by moving.
+
+  ## What a tight grip lets you do
+  - [bold]Pin them.[/bold] Shove them while you hold them, as above.
+  - [bold]Throw them.[/bold] Only once they're on the floor. Make the hand holding them your active hand, then throw it at where they should go with [color=yellow][bold][keybind="ThrowItemInHand"][/bold][/color], or with throw mode on, just click there. A neck grip or tighter throws them harder. Whatever they slam into knocks them over as a shove would, and hurts: another person goes down with them, both bruised, and a wall puts them on the floor.
+  - [bold]Let go.[/bold] Dropping the hand that holds them lets go, as does [color=yellow][bold][keybind="ReleasePulledObject"][/bold][/color].
+
+  ## Throw mode
+  The throw button beside your pockets, or [color=yellow][bold][keybind="KsToggleThrowMode"][/bold][/color] once you've bound it in the controls, turns throw mode on and off. While it's on, every click throws what's in your active hand at the spot you clicked, until you turn it off. With an empty hand, clicks work as usual.
+
+  ## Carrying
+  Anyone lying on the floor can be carried, no grip needed. With both hands free (a hand holding them counts as free), [color=yellow][bold][keybind="AltActivateItemInWorld"][/bold][/color] them, or drag their sprite onto your own, then hold still for a few seconds to lift them onto your back. Carrying takes both hands and slows you a little. Click the carrying alert, or drop a hand you carry them with, to put them down, or throw them off your back like anything else you hold.
+
+  ## Breaking free
+  If someone holds you tighter than a loose grip, a red alert shows how tightly. Press the resist button beside your pockets, click the alert, or try to walk, to struggle. Each attempt has a chance to break free, lower the tighter the grip, and failing tires you out. You can only struggle every couple of seconds, and not at all while stunned or out cold.
+
+  If you're carried, do the same to wriggle off their back. It takes a moment, and you can't while in critical condition, asleep or stunned.
+
+  ## Tips
+  - [bold]Shove towards something.[/bold] A shove into a table, a wall or a friend of theirs puts them down; a shove into empty space only slows them.
+  - [bold]Kick them while they're down[/bold] to keep them down a little longer, then once more against a wall to disarm them. That's all you get until they stand up.
+  - [bold]Grab, shove, throw.[/bold] Pinning someone is what lets you throw them.
+  - [bold]Keep a hand free.[/bold] You can't grip anyone harder than a pull with both hands full.
+  - [bold]Struggle early.[/bold] Breaking an aggressive grip is far easier than breaking a strangle.
+</Document>

@@ -976,9 +976,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         Interaction.DoContactInteraction(user, target);
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
-        AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
-
-        _audio.PlayPredicted/* KS14: use predicted variant */(ksWeaponAttempt.SuccessSound /* KS14: was combatMode.DisarmSuccessSound */, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        _audio.PlayPredicted/* KS14: use predicted variant */(ksWeaponAttempt.SuccessSound /* KS14: was combatMode.DisarmSuccessSound */, target.Value, user /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
         // KS14 end
 
         // Nothing handled it so abort.
@@ -1000,6 +998,10 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         }
 
         // KS14: Moved interaction, admin logs, and sound up
+
+        // KS14: the handler already told everyone what happened
+        if (eventArgs.KsPopupHandled)
+            return true;
 
         var targetEnt = Identity.Entity(target.Value, EntityManager);
         var userEnt = Identity.Entity(user, EntityManager);

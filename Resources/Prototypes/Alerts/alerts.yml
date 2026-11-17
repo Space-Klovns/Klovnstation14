@@ -13,6 +13,7 @@
     - alertType: Ensnared
     - category: Buckled
     - alertType: Pulling
+    - category: KsGrabbed # KS14
     - alertType: Walking
     - category: Piloting
     - alertType: Corporeal

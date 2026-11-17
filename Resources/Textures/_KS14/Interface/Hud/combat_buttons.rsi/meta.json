@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/blob/master/icons/hud/screen_midnight.dmi, cropped to the button for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 16
+  },
+  "states": [
+    {
+      "name": "throw_off"
+    },
+    {
+      "name": "throw_on"
+    },
+    {
+      "name": "resist"
+    }
+  ]
+}

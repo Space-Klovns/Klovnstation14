@@ -29,6 +29,7 @@ namespace Content.Shared.Input
         public static readonly BoundKeyFunction OpenEmotesMenu = "OpenEmotesMenu";
         public static readonly BoundKeyFunction KsOpenLanguageMenu = "KsOpenLanguageMenu"; // KS14
         public static readonly BoundKeyFunction KsVoicePushToTalk = "KsVoicePushToTalk"; // KS14
+        public static readonly BoundKeyFunction KsToggleThrowMode = "KsToggleThrowMode"; // KS14
         public static readonly BoundKeyFunction OpenCraftingMenu = "OpenCraftingMenu";
         public static readonly BoundKeyFunction OpenGuidebook = "OpenGuidebook";
         public static readonly BoundKeyFunction OpenInventoryMenu = "OpenInventoryMenu";

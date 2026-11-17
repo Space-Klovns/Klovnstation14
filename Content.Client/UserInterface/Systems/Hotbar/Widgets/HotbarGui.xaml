@@ -3,6 +3,7 @@
     xmlns:inventory="clr-namespace:Content.Client.UserInterface.Systems.Inventory.Controls"
     xmlns:hands="clr-namespace:Content.Client.UserInterface.Systems.Hands.Controls"
     xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Hotbar.Widgets"
+    xmlns:ksHud="clr-namespace:Content.Client._KS14.Hud"
     Name="HotbarInterface"
     VerticalExpand="True"
     VerticalAlignment="Bottom"
@@ -71,6 +72,8 @@
                 ExpandBackwards="True"
                 Columns="6"
                 />
+            <!-- KS14: tgstation's throw and resist buttons, after the suit storage slot -->
+            <ksHud:KsCombatHudButtons Margin="4 0 0 2"/>
         </BoxContainer>
     </BoxContainer>
 </widgets:HotbarGui>

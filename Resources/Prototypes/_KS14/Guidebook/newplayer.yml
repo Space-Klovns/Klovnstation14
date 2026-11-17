@@ -1,0 +1,4 @@
+- type: guideEntry # KS14
+  id: KsGrabsAndShoves
+  name: guide-entry-ks-grabs-and-shoves
+  text: "/ServerInfo/_KS14/Guidebook/NewPlayer/GrabsAndShoves.xml"

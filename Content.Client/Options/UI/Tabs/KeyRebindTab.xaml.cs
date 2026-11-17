@@ -205,6 +205,7 @@ namespace Content.Client.Options.UI.Tabs
             AddButton(ContentKeyFunctions.OpenBackpack);
             AddButton(ContentKeyFunctions.OpenBelt);
             AddButton(ContentKeyFunctions.ThrowItemInHand);
+            AddButton(ContentKeyFunctions.KsToggleThrowMode); // KS14
             AddButton(ContentKeyFunctions.TryPullObject);
             AddButton(ContentKeyFunctions.MovePulledObject);
             AddButton(ContentKeyFunctions.ReleasePulledObject);

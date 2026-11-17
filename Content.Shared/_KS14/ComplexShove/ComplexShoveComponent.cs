@@ -1,60 +1,73 @@
 using Content.Shared.Physics;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.ComplexShove;
 
 /// <summary>
-///     Added to entities that can wallshoves, etc..
+///     Added to entities whose shoves knock people over, tgstation style:
+///         onto tables, into other people and against walls,
+///         and onto their side when they are already down.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 public sealed partial class ComplexShoveComponent : Component
 {
     /// <summary>
-    ///     Amount of stamina damage an entity being wallshoved
-    ///         must have in order to be knocked down.
-    /// </summary>
-    [DataField, ViewVariables]
-    public float WallshoveKnockdownStaminaDamageThreshold = 35f;
-
-    /// <summary>
-    ///     Knockdown duration done to wallshoved people
-    /// </summary>
-    [DataField, ViewVariables]
-    public TimeSpan WallshoveKnockdownDuration = TimeSpan.FromSeconds(1f);
-
-    /// <summary>
-    ///     Fraction of stamina crit threshold of a shoved person,
-    ///         that is the amount of stamina damage done to them when wallshoving.
-    ///
-    ///     E.g. if this is 0.25 (25%), then you would only need to
-    ///         wallshove ANYTHING 4 times to stamcrit (assumning no stamregen)
-    /// </summary>
-    [DataField, ViewVariables]
-    public float WallshoveStaminaDamageFraction = 0.25f;
-
-    /// <summary>
-    ///     Fraction of stamina crit threshold of a shoved person,
-    ///         that is the amount of stamina damage done to them when doing a basic shove.
-    ///
-    ///     E.g. if this is 0.25 (25%), then you would only need to
-    ///         basicshove ANYTHING 4 times to stamcrit (assumning no stamregen)
-    /// </summary>
-    [DataField, ViewVariables]
-    public float BasicShoveStaminaDamageFraction = 0.05f;
-
-    /// <summary>
-    ///     Maximum distance from a person getting shoved to a wall
-    ///         or some other solid object, for the wallshove to be counted.
+    ///     How far past the shoved entity to look for what they are shoved into, about one tile.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public float WallshoveRange = 1.8f;
+    public float ProbeDistance = 1f;
 
     /// <summary>
-    ///     Collision *mask* used in the raycast to detect if a wallshove
-    ///         should be applied.
+    ///     Radius of the area at the end of the probe searched for a <see cref="KsShoveObstacleComponent"/>.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public long WallshoveCollisionMask = (long)(CollisionGroup.Impassable | CollisionGroup.MidImpassable);
+    public float ProbeRadius = 0.35f;
+
+    /// <summary>
+    ///     Collision *mask* of the raycast that finds walls and other solid things with no obstacle component.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public long CollisionMask = (long)(CollisionGroup.Impassable | CollisionGroup.MidImpassable);
+
+    /// <summary>
+    ///     Knockdown when the shoved entity hits a wall, or anything solid with no obstacle component.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan BlockedKnockdownTime = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    ///     Sound played when the shoved entity hits a wall.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? BlockedSound = new SoundCollectionSpecifier("MetalThud");
+
+    /// <summary>
+    ///     Paralysis when shoving someone who is already down. It can't be renewed until they stand up again.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan ChainParalyzeTime = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    ///     Whether shoving someone down, once kicked over, against a wall or anything solid with no obstacle component
+    ///         makes them drop what they hold. Obstacles decide for themselves with
+    ///         <see cref="KsShoveObstacleComponent.DisarmsAgainst"/>.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public bool DisarmAgainstWalls = true;
+
+    /// <summary>
+    ///     Slowdown status given by a shove that has nothing to knock the target over.
+    /// </summary>
+    [DataField]
+    public EntProtoId StaggerEffect = "KsStatusEffectStaggered";
+
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan StaggerTime = TimeSpan.FromSeconds(3);
+
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float StaggerSpeedModifier = 0.85f;
 
     /// <summary>
     ///     Push force applied to targets who are standing.

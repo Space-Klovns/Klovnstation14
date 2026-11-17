@@ -1,0 +1,69 @@
+# tgstation's grab levels (GRAB_PASSIVE, GRAB_AGGRESSIVE, GRAB_NECK, GRAB_KILL). A grabber climbs them in the order
+# its KsGrabber lists them, by ctrl-clicking whoever it pulls. See Klovn/Docs/grabs_and_shoves.md.
+
+# A plain pull: the victim walks off whenever they like.
+- type: ksGrabStage
+  id: KsGrabPassive
+  proneDragSpeedModifier: 0.7
+  enterOthersPopup: ks-grab-passive-others
+  enterUserPopup: ks-grab-passive-user
+
+# Instant from a pull. Takes a hand and holds the victim in place; they keep their hands.
+- type: ksGrabStage
+  id: KsGrabAggressive
+  takesHand: true
+  holdDistance: 0.6 # drawn in close
+  blocksVictimMovement: true
+  escapeChance: 0.6
+  resistFailStaminaDamageMin: 12
+  resistFailStaminaDamageMax: 23
+  grabberSpeedModifier: 0.85
+  allowsThrow: true
+  victimAlert: KsGrabbedAggressive
+  enterOthersPopup: ks-grab-aggressive-others
+  enterUserPopup: ks-grab-aggressive-user
+  enterTargetPopup: ks-grab-aggressive-target
+
+# No damage, but pins the victim to the floor and is harder to break.
+- type: ksGrabStage
+  id: KsGrabNeck
+  upgradeTime: 3
+  takesHand: true
+  holdDistance: 0.4
+  requiredDistance: 0.8
+  blocksVictimMovement: true
+  floorsVictim: true
+  escapeChance: 0.3
+  resistFailStaminaDamageMin: 12
+  resistFailStaminaDamageMax: 23
+  grabberSpeedModifier: 0.75
+  allowsThrow: true
+  throwSpeedModifier: 1.5
+  victimAlert: KsGrabbedNeck
+  enterOthersPopup: ks-grab-neck-others
+  enterUserPopup: ks-grab-neck-user
+  enterTargetPopup: ks-grab-neck-target
+
+# Suffocates the victim, who has the worst odds of getting away.
+- type: ksGrabStage
+  id: KsGrabStrangle
+  upgradeTime: 3
+  takesHand: true
+  holdDistance: 0.4
+  requiredDistance: 0.6 # only chokes up close
+  blocksVictimMovement: true
+  floorsVictim: true
+  escapeChance: 0.2
+  resistFailStaminaDamageMin: 12
+  resistFailStaminaDamageMax: 23
+  grabberSpeedModifier: 0.65
+  damage:
+    types:
+      Asphyxiation: 1.5
+  damagePopup: ks-grab-strangle-damage
+  allowsThrow: true
+  throwSpeedModifier: 1.5
+  victimAlert: KsGrabbedStrangle
+  enterOthersPopup: ks-grab-strangle-others
+  enterUserPopup: ks-grab-strangle-user
+  enterTargetPopup: ks-grab-strangle-target

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Grab; // KS14
 using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
@@ -485,6 +486,13 @@ public sealed partial class PullingSystem : EntitySystem
 
         if (pullable.Comp.Puller == pullerUid)
         {
+            // KS14 start: let a grab tighten instead of letting go
+            var ksToggleAttempt = new KsPullToggleAttemptEvent(pullerUid, pullable);
+            RaiseLocalEvent(pullerUid, ref ksToggleAttempt);
+            if (ksToggleAttempt.Handled)
+                return true;
+            // KS14 end
+
             return TryStopPull(pullable, pullable.Comp);
         }
 
