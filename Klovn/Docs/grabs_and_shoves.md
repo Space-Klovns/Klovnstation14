@@ -457,6 +457,11 @@ the local entity's `KsThrowModeComponent` each frame to light the throw button, 
 show itself again. That was the first version's bug; `KsCombatHudButtonsTest` checks it on a real game screen. Buttons raise predicted network events, as the action UI does. Nothing headless draws, so its look
 is only checked in game.
 
+The resist button shows `resist_on` while it is held down, and for at least 0.2 s after a click so a quick one still
+registers, then `resist_off`. The Klovnstation 14 options tab can hide both buttons (`klovn.hud.combat_buttons`,
+client-only, archived). That one does hide the container, so the hotbar closes up; the cvar callback, subscribed only
+while the control is in the tree, is what shows it again.
+
 ### Combat mode sounds
 
 `SharedCombatModeSystem.OnActionPerform` (a `KS14` edit) raises `KsCombatModeToggledEvent` on the performer. The client's

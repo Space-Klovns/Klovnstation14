@@ -6,10 +6,14 @@ using Content.Client._KS14.Hud;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.Hotbar.Widgets;
 using Content.IntegrationTests.Fixtures;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ThrowMode;
 using NUnit.Framework;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Player;
 using Robust.UnitTesting.Pool;
 
@@ -62,6 +66,51 @@ public sealed class KsCombatHudButtonsTest : GameTest
             var index = siblings.IndexOf(buttons);
             Assert.That(index, Is.GreaterThan(0));
             Assert.That(siblings[index - 1].Name, Is.EqualTo("MainHotbar"), "The buttons must come right after the main hotbar slots.");
+        });
+    }
+
+    /// <summary>
+    ///     The option in the Klovnstation 14 tab hides both buttons and brings them back, live.
+    /// </summary>
+    [Test]
+    public async Task OptionHidesTheButtons()
+    {
+        await Pair.RunTicksSync(10);
+        var config = Client.ResolveDependency<IConfigurationManager>();
+        KsCombatHudButtons? buttons = null;
+
+        await Client.WaitAssertion(() =>
+        {
+            buttons = Find<KsCombatHudButtons>(Client.ResolveDependency<IUserInterfaceManager>().ActiveScreen!);
+            Assert.That(buttons, Is.Not.Null);
+            Assert.That(buttons!.Visible, "The buttons must show by default.");
+            config.SetCVar(KsCCVars.CombatHudButtons, false);
+        });
+        await Pair.RunTicksSync(2);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(buttons!.Visible, Is.False, "Turning the option off must hide the buttons.");
+            config.SetCVar(KsCCVars.CombatHudButtons, true);
+        });
+        await Pair.RunTicksSync(2);
+
+        await Client.WaitAssertion(() =>
+            Assert.That(buttons!.Visible && buttons.ResistButton.Visible, "Turning the option back on must show them again."));
+    }
+
+    /// <summary>
+    ///     Every state the buttons switch between is in the RSI, so neither ever draws as nothing.
+    /// </summary>
+    [Test]
+    public async Task ButtonStatesExist()
+    {
+        await Client.WaitAssertion(() =>
+        {
+            var rsi = Client.ResolveDependency<IResourceCache>()
+                .GetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / "_KS14/Interface/Hud/combat_buttons.rsi").RSI;
+            foreach (var state in new[] { "throw_off", "throw_on", "resist_off", "resist_on" })
+                Assert.That(rsi.TryGetState(state, out _), $"combat_buttons.rsi is missing {state}.");
         });
     }
 

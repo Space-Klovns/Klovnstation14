@@ -1,6 +1,7 @@
 # KS14: automatically translated; see _KS14/Localization/translation-review.tsv.
 
 ks-ui-options-action-folders = Включить папки с файлами действий
+ks-ui-options-combat-hud-buttons = Показывать кнопки броска и сопротивления
 ks-ui-options-action-layout-persistence = Запомните расположение панели действий и папок
 ks-ui-options-ambient-occlusion = Включить фоновое затенение
 ks-ui-options-ambient-occlusion-entities = Фоновое затенение у предметов и конструкций
