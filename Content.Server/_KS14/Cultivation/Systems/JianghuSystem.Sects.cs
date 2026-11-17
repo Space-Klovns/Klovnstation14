@@ -43,6 +43,7 @@ public sealed partial class JianghuSystem
     private const float FellowshipBonusPerMember = 0.1f;
     private const float MaxFellowshipBonus = 0.3f;
     private const float SwornTogetherBonus = 0.15f;
+    private const float LiegeBonus = 0.1f;
     private const float PlaqueMeditationRange = 5f;
 
     private static readonly string[] SectWords = { "sect", "school", "palace", "pavilion", "hall", "gate", "manor" };
@@ -573,7 +574,51 @@ public sealed partial class JianghuSystem
     public float CompanyBonus(EntityUid bodyUid)
     {
         return FellowshipBonus(bodyUid) + RankingInsightBonusFor(bodyUid)
-               + (HasComp<SwornTogetherComponent>(bodyUid) ? SwornTogetherBonus : 0f);
+               + (HasComp<SwornTogetherComponent>(bodyUid) ? SwornTogetherBonus : 0f)
+               + (GetSect(bodyUid) is { Comp.Liege: { } liege } && HasComp<MandateOfHeavenComponent>(liege) ? LiegeBonus : 0f)
+               + _mandateSystem.CultivationBonus(bodyUid);
+    }
+
+    /// <summary>
+    ///     A sect master swears the sect's fealty to a ruler who holds the Mandate of Heaven.
+    /// </summary>
+    public void SwearFealty(Entity<SectComponent> sect, EntityUid rulerUid)
+    {
+        sect.Comp.Liege = rulerUid;
+        AnnounceToSect(sect, Loc.GetString("mandate-fealty-sworn", ("ruler", Name(rulerUid))));
+        _noticeSystem.Notify(rulerUid, Loc.GetString("mandate-fealty-accepted", ("sect", sect.Comp.SectName)), PopupType.Medium);
+    }
+
+    /// <summary>
+    ///     A ruler lost the Mandate: every oath sworn to them ends.
+    /// </summary>
+    public void EndFealty(EntityUid rulerUid)
+    {
+        var sects = EntityQueryEnumerator<SectComponent>();
+        while (sects.MoveNext(out var uid, out var sectComponent))
+        {
+            if (sectComponent.Liege != rulerUid)
+                continue;
+
+            sectComponent.Liege = null;
+            AnnounceToSect((uid, sectComponent), Loc.GetString("mandate-fealty-ended"));
+        }
+    }
+
+    /// <summary>
+    ///     How many sects are sworn to a ruler.
+    /// </summary>
+    public int SectsSwornTo(EntityUid rulerUid)
+    {
+        var count = 0;
+        var sects = EntityQueryEnumerator<SectComponent>();
+        while (sects.MoveNext(out _, out var sectComponent))
+        {
+            if (sectComponent.Liege == rulerUid)
+                count++;
+        }
+
+        return count;
     }
 
     private float FellowshipBonus(EntityUid bodyUid)

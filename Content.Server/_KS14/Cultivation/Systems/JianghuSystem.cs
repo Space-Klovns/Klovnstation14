@@ -13,6 +13,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class JianghuSystem : EntitySystem
 {
+    [Dependency] private MandateSystem _mandateSystem = default!;
     [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
@@ -80,6 +81,20 @@ public sealed partial class JianghuSystem : EntitySystem
         faceComponent.Face += amount;
         _noticeSystem.Notify(bodyUid, Loc.GetString(amount > 0 ? "jianghu-face-gained" : "jianghu-face-lost",
                 ("reason", Loc.GetString(reason)), ("face", faceComponent.Face)), type: amount > 0 ? PopupType.Medium : PopupType.MediumCaution);
+    }
+
+    /// <summary>
+    ///     An imperial pardon: disgrace wiped away, lost face restored, and a little more besides.
+    /// </summary>
+    public void Pardon(EntityUid bodyUid)
+    {
+        if (EnsureFaceComponent(bodyUid) is not { } faceComponent)
+            return;
+
+        faceComponent.DishonoredUntil = TimeSpan.Zero;
+        if (faceComponent.Face < 0)
+            AdjustFace(bodyUid, -faceComponent.Face, "jianghu-reason-pardoned");
+        AdjustFace(bodyUid, 3, "jianghu-reason-pardoned");
     }
 
     private void Dishonor(EntityUid bodyUid, TimeSpan duration)

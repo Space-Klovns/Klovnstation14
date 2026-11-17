@@ -16,7 +16,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class CultivationLootSystem : EntitySystem
 {
-    private static readonly EntProtoId[] QiManuals =
+    public static readonly EntProtoId[] QiManuals =
     {
         "CultivationManualMetal", "CultivationManualWood", "CultivationManualWater", "CultivationManualFire", "CultivationManualEarth",
     };
@@ -29,7 +29,7 @@ public sealed partial class CultivationLootSystem : EntitySystem
         "MartialManualEagleClaw", "MartialManualWingChun",
     };
 
-    private static readonly EntProtoId BodyMoldingArt = "BodyManualMoldingArt";
+    public static readonly EntProtoId BodyMoldingArt = "BodyManualMoldingArt";
     private static readonly EntProtoId BodyPrimer = "BodyManualCopperSkinPrimer";
     private static readonly EntProtoId DemonicScripture = "KsDemonicScripture";
     private static readonly EntProtoId AncestralRing = "KsAncestralRing";
@@ -88,6 +88,15 @@ public sealed partial class CultivationLootSystem : EntitySystem
         var library = SpotsBeside(gridUid, "Bookshelf");
         SpawnAt(_robustRandom.Pick(QiManuals), library, gridUid);
         SpawnAt(BodyPrimer, library, gridUid);
+    }
+
+    /// <summary>
+    ///     A legendary artifact (or pair) appears at a spot, as from the Imperial Treasury.
+    /// </summary>
+    public void SpawnLegendaryAt(MapCoordinates coordinates)
+    {
+        foreach (var artifact in _robustRandom.Pick(Legendaries))
+            Spawn(artifact, coordinates);
     }
 
     /// <summary>

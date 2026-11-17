@@ -129,6 +129,12 @@ public sealed partial class SectComponent : Component
     [DataField]
     public EntityUid? Plaque;
 
+    /// <summary>
+    ///     The ruler this sect has sworn fealty to (their body), if any. Members cultivate faster under their rule.
+    /// </summary>
+    [DataField]
+    public EntityUid? Liege;
+
     [DataField]
     public SectMission? Mission;
 

@@ -1,0 +1,166 @@
+# The Mandate of Heaven, ported from SurfShack13. See MandateSystem.
+
+- type: entity
+  parent: BaseItem
+  id: KsJadeSeal
+  name: jade seal
+  description: A heavy seal of green jade topped with a coiled dragon. The characters on its face read "Having received the Mandate from Heaven, may the reign be long and prosperous."
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/mandate.rsi
+    state: jade_seal
+  - type: Item
+    size: Small
+  - type: JadeSeal
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2
+    energy: 1.5
+
+- type: entity
+  id: KsFxDragonAura
+  categories: [ HideSpawnMenu ]
+  name: imperial dragon
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    layers:
+    - state: dragon_aura
+      shader: unshaded
+      color: "#ffffffcc"
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+
+- type: entity
+  abstract: true
+  parent: BaseActionCultivation
+  id: BaseActionKsMandate
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsImperialDecree
+  name: Imperial Decree
+  description: Proclaim a decree with heaven's authority. Your people nearby are rallied, faster and with their strength restored. The Son of Heaven's decrees reach the whole station.
+  components:
+  - type: Action
+    useDelay: 90
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: imperial_decree }
+  - type: InstantAction
+    event: !type:ImperialDecreeActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandateKneel
+  name: Kneel!
+  description: Command everyone around you whose cultivation is no greater than yours to kneel. They are forced to the floor. The Son of Heaven's command reaches further and lasts longer.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_kneel }
+  - type: InstantAction
+    event: !type:MandateKneelActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandateTreasury
+  name: Imperial Treasury
+  description: Open the Imperial Treasury - spirit herbs, talismans, gold and diamond, a manual, and sometimes a legendary artifact. Once, and once more for every age the dynasty lasts.
+  components:
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_treasury }
+  - type: InstantAction
+    event: !type:MandateTreasuryActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandatePardon
+  name: Imperial Pardon
+  description: Pardon someone - their disgrace in the jianghu is wiped away and their lost face restored.
+  components:
+  - type: Action
+    useDelay: 300
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_pardon }
+  - type: TargetAction
+    range: 7
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MindContainer
+    event: !type:MandatePardonActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandateJinyiwei
+  name: Appoint Jinyiwei
+  description: Appoint someone as your Jinyiwei, an imperial guard (one, two for the Son of Heaven), if they accept. They are warned whenever you are attacked, and cultivate a little faster. Use it on a guard to dismiss them.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_jinyiwei }
+  - type: TargetAction
+    range: 7
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MindContainer
+    event: !type:MandateJinyiweiActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandateFealty
+  name: Accept Fealty
+  description: Offer to accept a sect master's fealty. If they swear it, their sect cultivates faster under your rule, and every sworn sect (up to three) strengthens your protection and Dragon Qi.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_fealty }
+  - type: TargetAction
+    range: 7
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MindContainer
+    event: !type:MandateFealtyActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandateEnnoble
+  name: Ennoble
+  description: Grant someone a noble title (up to three nobles, one more for every age of the dynasty). Nobles cultivate faster. Use it on a noble to strip their title. Titles fall with the throne.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_ennoble }
+  - type: TargetAction
+    range: 7
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MindContainer
+    event: !type:MandateEnnobleActionEvent
+
+- type: entity
+  parent: BaseActionKsMandate
+  id: ActionKsMandatePunishment
+  name: Heaven's Punishment
+  description: Name someone and heaven strikes them with lightning three times. Once per reign, and once more if the dynasty reaches its third age.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: mandate_punishment }
+  - type: TargetAction
+    range: 9
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - MobState
+    event: !type:MandatePunishmentActionEvent

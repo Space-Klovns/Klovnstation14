@@ -20,6 +20,7 @@ public sealed partial class WuxiaWorldRuleSystem : GameRuleSystem<WuxiaWorldRule
 
     [Dependency] private CultivationLootSystem _lootSystem = default!;
     [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private MandateSystem _mandateSystem = default!;
 
     /// <summary>
     ///     A cultivator turned up this tick; the world wakes on the next update rather than in the middle of their
@@ -63,6 +64,8 @@ public sealed partial class WuxiaWorldRuleSystem : GameRuleSystem<WuxiaWorldRule
             if (_stationSystem.GetLargestGrid(stationUid) is { } gridUid)
                 _lootSystem.SpawnLoot(gridUid);
         }
+        // Heaven grants its Mandate to the heads of staff already aboard.
+        _mandateSystem.GrantExistingHeads();
     }
 
     protected override void Ended(EntityUid uid, WuxiaWorldRuleComponent component, GameRuleComponent gameRule, GameRuleEndedEvent args)

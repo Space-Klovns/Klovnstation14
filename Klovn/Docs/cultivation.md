@@ -113,6 +113,33 @@ What passes on:
 The master's cultivation is wiped either way. The heir also gets `InheritanceBlessingComponent`, so their next
 breakthrough or Tribulation of Flesh cannot fail.
 
+## The Mandate of Heaven
+
+Ported from SS13 `mandate_of_heaven.dm` and `mandate_powers.dm` (`MandateSystem`). In a wuxia round each head of staff
+rules their department with heaven's blessing, and the Captain is the Son of Heaven (`SonOfHeavenComponent`, which
+the Xuanyuan Sword answers to). Heads already aboard get theirs when the jianghu wakes.
+
+**What a ruler has:**
+- a golden aura (a dragon for the Son);
+- Dragon Qi: the weak who strike them are slowed, and later knocked down;
+- Heaven's Protection: 10-20% less damage, and one fatal blow turned aside every 6-10 minutes, with lightning for
+  the attacker;
+- Heaven's Fortune: a 5-10% chance a blow misses;
+- +10/+15 breakthrough and Tribulation readiness, and faster cultivation.
+
+All of these grow with the dynasty's age (15, 30 and 60 minutes).
+
+**Powers** go through the Techniques menu: Imperial Decree (rallies their people; station-wide for the Son), Kneel!,
+Imperial Treasury (herbs, talismans, gold, a manual, sometimes a legendary), Imperial Pardon, Appoint Jinyiwei and
+Accept Fealty (both need the other player to accept). The Son also has Ennoble and Heaven's Punishment (three bolts).
+
+**Losing it:** the Mandate is withdrawn on death, after three minutes in cuffs, or after a minute with a demoted ID.
+A jade seal falls, carrying the lineage, and an omen tells the station. Raising the seal in hand (eight seconds)
+claims the Mandate. Whoever struck the ruler down is marked a regicide for five minutes, and no seal answers them.
+
+Nobles (+15%), Jinyiwei (+10%) and members of sects sworn to a ruler (+10%) cultivate faster
+(`JianghuSystem.CompanyBonus`).
+
 ## The Demonic Path
 
 `ForbiddenArtsSystem`. The Heaven-Devouring Demonic Scripture (`KsDemonicScripture`, 18 TC in the uplink) can only be

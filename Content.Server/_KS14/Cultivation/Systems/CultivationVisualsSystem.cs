@@ -43,6 +43,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId MirrorBubbleEffect = "KsFxMirrorBubble";
     private static readonly EntProtoId DharmaIdolEffect = "KsFxDharmaIdol";
     private static readonly EntProtoId StormCloudEffect = "KsFxStormCloud";
+    private static readonly EntProtoId DragonAuraEffect = "KsFxDragonAura";
     private static readonly EntProtoId HeartDemonEffect = "KsFxHeartDemonAura";
     private static readonly EntProtoId BeastEffect = "KsFxBeastAura";
     private static readonly EntProtoId SwordRideEffect = "KsFxSwordRide";
@@ -153,6 +154,8 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         AddAura<CultivationHasteComponent>("Aura", FxColour.Qi);
         AddAura<SoulDepartedComponent>("Aura", FxColour.Void);
         AddAura<NascentProjectionComponent>("Aura", FxColour.Gold);
+        AddAura<MandateOfHeavenComponent>("Aura", FxColour.Gold);
+        AddAura<SonOfHeavenComponent>(DragonAuraEffect);
         AddAura<CultivatorComponent>(StormCloudEffect, component => ((CultivatorComponent)component).BreakthroughCyclesLeft > 0);
 
         // Martial arts and the jianghu.
