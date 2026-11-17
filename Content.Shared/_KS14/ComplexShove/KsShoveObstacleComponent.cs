@@ -1,3 +1,4 @@
+using Content.Shared._KS14.KsPopup;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
@@ -45,14 +46,8 @@ public sealed partial class KsShoveObstacleComponent : Component
     public SoundSpecifier? Sound;
 
     /// <summary>
-    ///     Popups for onlookers, the shover and the shoved entity. Each gets <c>shover</c>, <c>target</c> and <c>obstacle</c>.
+    ///     Popups for the shover, the shoved entity and onlookers. Each gets <c>shover</c>, <c>target</c> and <c>obstacle</c>.
     /// </summary>
     [DataField]
-    public LocId OthersPopup = "ks-shove-into-others";
-
-    [DataField]
-    public LocId UserPopup = "ks-shove-into-user";
-
-    [DataField]
-    public LocId TargetPopup = "ks-shove-into-target";
+    public KsAudiencePopups Popups = new("ks-shove-into-user", "ks-shove-into-target", "ks-shove-into-others");
 }

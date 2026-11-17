@@ -30,12 +30,9 @@ public sealed partial class KsCombatHudButtons : BoxContainer
     /// </summary>
     private const int IconWidth = 32;
 
-    private readonly TextureButton _throwButton;
-    private readonly TextureButton _resistButton;
+    public TextureButton ThrowButton { get; }
 
-    public TextureButton ThrowButton => _throwButton;
-
-    public TextureButton ResistButton => _resistButton;
+    public TextureButton ResistButton { get; }
 
     private bool? _shownThrowEnabled;
 
@@ -50,24 +47,24 @@ public sealed partial class KsCombatHudButtons : BoxContainer
         // The two 32x16 icons, scaled so that together they are exactly one inventory slot.
         var scale = new Vector2(SlotControl.DefaultButtonSize / (float)IconWidth);
 
-        _throwButton = new TextureButton
+        ThrowButton = new TextureButton
         {
             ToolTip = Loc.GetString("ks-hud-throw-tooltip"),
             HorizontalAlignment = HAlignment.Center,
             Scale = scale,
         };
-        _throwButton.OnPressed += _ => _entityManager.RaisePredictiveEvent(new KsToggleThrowModeEvent());
-        AddChild(_throwButton);
+        ThrowButton.OnPressed += _ => _entityManager.RaisePredictiveEvent(new KsToggleThrowModeEvent());
+        AddChild(ThrowButton);
 
-        _resistButton = new TextureButton
+        ResistButton = new TextureButton
         {
             ToolTip = Loc.GetString("ks-hud-resist-tooltip"),
             HorizontalAlignment = HAlignment.Center,
             TextureNormal = GetTexture("resist"),
             Scale = scale,
         };
-        _resistButton.OnPressed += _ => _entityManager.RaisePredictiveEvent(new KsResistRequestEvent());
-        AddChild(_resistButton);
+        ResistButton.OnPressed += _ => _entityManager.RaisePredictiveEvent(new KsResistRequestEvent());
+        AddChild(ResistButton);
 
         UpdateThrowButton(false);
         SetButtonsVisible(false);
@@ -91,8 +88,8 @@ public sealed partial class KsCombatHudButtons : BoxContainer
 
     private void SetButtonsVisible(bool visible)
     {
-        _throwButton.Visible = visible;
-        _resistButton.Visible = visible;
+        ThrowButton.Visible = visible;
+        ResistButton.Visible = visible;
     }
 
     private void UpdateThrowButton(bool enabled)
@@ -101,7 +98,7 @@ public sealed partial class KsCombatHudButtons : BoxContainer
             return;
 
         _shownThrowEnabled = enabled;
-        _throwButton.TextureNormal = GetTexture(enabled ? "throw_on" : "throw_off");
+        ThrowButton.TextureNormal = GetTexture(enabled ? "throw_on" : "throw_off");
     }
 
     /// <summary>

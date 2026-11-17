@@ -1,7 +1,7 @@
+using Content.Shared._KS14.Input;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared._KS14.Input;
 using Content.Shared.Popups;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Player;
@@ -22,9 +22,6 @@ public sealed partial class KsThrowModeSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeAllEvent<KsToggleThrowModeEvent>(OnToggleRequest);
-        SubscribeAllEvent<KsThrowModeThrowEvent>(OnThrowRequest);
-
         CommandBinds.Builder
             .Bind(KsKeyFunctions.ToggleThrowMode, InputCmdHandler.FromDelegate(OnToggleKey, handle: false))
             .Register<KsThrowModeSystem>();
@@ -42,6 +39,7 @@ public sealed partial class KsThrowModeSystem : EntitySystem
             Toggle(player);
     }
 
+    [EventSubscription]
     private void OnToggleRequest(KsToggleThrowModeEvent args, EntitySessionEventArgs session)
     {
         if (session.SenderSession.AttachedEntity is { } player)
@@ -54,6 +52,7 @@ public sealed partial class KsThrowModeSystem : EntitySystem
             SetEnabled((player, throwMode), !throwMode.Enabled, popup: true);
     }
 
+    [EventSubscription]
     private void OnThrowRequest(KsThrowModeThrowEvent args, EntitySessionEventArgs session)
     {
         if (session.SenderSession.AttachedEntity is not { } player || !TryComp<KsThrowModeComponent>(player, out var throwMode) ||

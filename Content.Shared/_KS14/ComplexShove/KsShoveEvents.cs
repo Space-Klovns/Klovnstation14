@@ -11,22 +11,23 @@ public record struct KsShoveCollideEvent(EntityUid Shover, EntityUid Target, Ent
 }
 
 /// <summary>
-///     Raised on the shoved entity before a shove is resolved. Handle it to replace the shove entirely, as a grab
-///         does to pin its victim.
+///     Raised on the shoved entity once per shove, before it is resolved. Handle it to replace the shove entirely,
+///         popups included, as a grab does to pin its victim.
 /// </summary>
 [ByRefEvent]
-public record struct KsBeforeShoveEvent(EntityUid Shover, EntityUid Target)
+public record struct KsShoveAttemptEvent(EntityUid Shover, EntityUid Target)
 {
     public bool Handled;
 }
 
 /// <summary>
-///     Raised on someone down, about to be shoved, to decide whether the shove can knock things out of their hands.
+///     Raised on someone down and already kicked over, to ask whether a shove can knock things out of their hands.
 ///     <see cref="Allowed"/> starts from the data: true against a wall (<c>ComplexShoveComponent.DisarmAgainstWalls</c>)
 ///         or an obstacle with <c>KsShoveObstacleComponent.DisarmsAgainst</c>. Change it to make something else count.
+///     A pure question: handlers change only the event.
 /// </summary>
 [ByRefEvent]
-public record struct KsShoveDisarmCheckEvent(EntityUid Shover, EntityUid Target, EntityUid? Obstacle, bool Allowed)
+public record struct KsCanShoveDisarmEvent(EntityUid Shover, EntityUid Target, EntityUid? Obstacle, bool Allowed)
 {
     public bool Allowed = Allowed;
 }
@@ -65,7 +66,7 @@ public enum KsShoveOutcome : byte
     Disarmed,
 
     /// <summary>
-    ///     Something else took the shove, through <see cref="KsBeforeShoveEvent"/>.
+    ///     Something else took the shove, through <see cref="KsShoveAttemptEvent"/>.
     /// </summary>
     Handled,
 }

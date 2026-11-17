@@ -10,19 +10,18 @@ public sealed partial class KsFiremanCarryVisualsSystem : EntitySystem
 {
     [Dependency] private SpriteSystem _spriteSystem = default!;
 
-    /// <summary>
-    ///     Draw depth of each carried entity before it was lifted.
-    /// </summary>
-    private readonly Dictionary<EntityUid, int> _originalDrawDepths = new();
-
+    // ComponentStartup is a by-value class event, which has no Entity<T> handler form.
     [SubscribeLocalEvent]
     private void OnStartup(EntityUid uid, KsBeingCarriedComponent component, ComponentStartup args)
     {
         if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        _originalDrawDepths[uid] = sprite.DrawDepth;
-        var carrierDepth = CompOrNull<SpriteComponent>(component.Carrier)?.DrawDepth ?? sprite.DrawDepth;
+        // Already raised, by a carry that state is re-applying: the depth to restore is the one remembered then.
+        if (!EnsureComp<KsCarriedVisualsComponent>(uid, out var visuals))
+            visuals.OriginalDrawDepth = sprite.DrawDepth;
+
+        var carrierDepth = CompOrNull<SpriteComponent>(component.Carrier)?.DrawDepth ?? visuals.OriginalDrawDepth;
         _spriteSystem.SetDrawDepth((uid, sprite), carrierDepth + 1);
     }
 
@@ -30,12 +29,13 @@ public sealed partial class KsFiremanCarryVisualsSystem : EntitySystem
     private void OnCarryEnded(Entity<KsBeingCarriedComponent> carried, ref KsCarryEndedEvent args)
     {
         var uid = carried.Owner;
-        if (!_originalDrawDepths.Remove(uid, out var drawDepth) || TerminatingOrDeleted(uid) ||
-            !TryComp<SpriteComponent>(uid, out var sprite))
-        {
+        if (TerminatingOrDeleted(uid) || !TryComp<KsCarriedVisualsComponent>(uid, out var visuals))
             return;
-        }
 
-        _spriteSystem.SetDrawDepth((uid, sprite), drawDepth);
+        if (TryComp<SpriteComponent>(uid, out var sprite))
+            _spriteSystem.SetDrawDepth((uid, sprite), visuals.OriginalDrawDepth);
+
+        // Nothing enumerates these, and the next carry must find it gone to remember the depth afresh.
+        RemComp(uid, visuals);
     }
 }

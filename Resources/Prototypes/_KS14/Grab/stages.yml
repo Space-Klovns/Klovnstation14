@@ -5,8 +5,9 @@
 - type: ksGrabStage
   id: KsGrabPassive
   proneDragSpeedModifier: 0.7
-  enterOthersPopup: ks-grab-passive-others
-  enterUserPopup: ks-grab-passive-user
+  enterPopups:
+    user: ks-grab-passive-user
+    others: ks-grab-passive-others
 
 # Instant from a pull. Takes a hand and holds the victim in place; they keep their hands.
 - type: ksGrabStage
@@ -20,9 +21,10 @@
   grabberSpeedModifier: 0.85
   allowsThrow: true
   victimAlert: KsGrabbedAggressive
-  enterOthersPopup: ks-grab-aggressive-others
-  enterUserPopup: ks-grab-aggressive-user
-  enterTargetPopup: ks-grab-aggressive-target
+  enterPopups:
+    user: ks-grab-aggressive-user
+    target: ks-grab-aggressive-target
+    others: ks-grab-aggressive-others
 
 # No damage, but pins the victim to the floor and is harder to break.
 - type: ksGrabStage
@@ -39,10 +41,15 @@
   grabberSpeedModifier: 0.75
   allowsThrow: true
   throwSpeedModifier: 1.5
+  throwPopups:
+    user: ks-grab-throw-hard-user
+    target: ks-grab-throw-hard-target
+    others: ks-grab-throw-hard-others
   victimAlert: KsGrabbedNeck
-  enterOthersPopup: ks-grab-neck-others
-  enterUserPopup: ks-grab-neck-user
-  enterTargetPopup: ks-grab-neck-target
+  enterPopups:
+    user: ks-grab-neck-user
+    target: ks-grab-neck-target
+    others: ks-grab-neck-others
 
 # Suffocates the victim, who has the worst odds of getting away.
 - type: ksGrabStage
@@ -63,7 +70,12 @@
   damagePopup: ks-grab-strangle-damage
   allowsThrow: true
   throwSpeedModifier: 1.5
+  throwPopups:
+    user: ks-grab-throw-hard-user
+    target: ks-grab-throw-hard-target
+    others: ks-grab-throw-hard-others
   victimAlert: KsGrabbedStrangle
-  enterOthersPopup: ks-grab-strangle-others
-  enterUserPopup: ks-grab-strangle-user
-  enterTargetPopup: ks-grab-strangle-target
+  enterPopups:
+    user: ks-grab-strangle-user
+    target: ks-grab-strangle-target
+    others: ks-grab-strangle-others

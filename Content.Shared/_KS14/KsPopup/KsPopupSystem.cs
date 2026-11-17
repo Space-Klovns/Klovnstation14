@@ -19,19 +19,24 @@ public sealed partial class KsPopupSystem : EntitySystem
     }
 
     /// <summary>
-    ///     One message for the one acting, one for the one acted on and one for everyone else who can see it.
+    ///     Shows each of <paramref name="popups"/> to its own audience, at <paramref name="uid"/>: whoever acts, whoever
+    ///         it is done to, and everyone else who can see it. Every message gets the same <paramref name="arguments"/>.
     ///     Safe to call from predicted code: the user's client shows theirs at once.
     /// </summary>
-    public void PopupUserTargetOthers(EntityUid uid, EntityUid userUid, EntityUid targetUid,
-        KsPopupMessage userMessage, KsPopupMessage targetMessage, KsPopupMessage othersMessage,
-        PopupType type = PopupType.Small)
+    public void PopupUserTargetOthers(EntityUid uid, EntityUid userUid, EntityUid targetUid, KsAudiencePopups popups,
+        PopupType type, params (string, object)[] arguments)
     {
-        _popupSystem.PopupEntity(userMessage, uid, userUid, type);
-        if (targetUid != userUid)
-            _popupSystem.PopupEntity(targetMessage, uid, targetUid, type);
+        if (popups.User is { } userMessage)
+            _popupSystem.PopupEntity(new KsPopupMessage(userMessage, arguments), uid, userUid, type);
+
+        if (popups.Target is { } targetMessage && targetUid != userUid)
+            _popupSystem.PopupEntity(new KsPopupMessage(targetMessage, arguments), uid, targetUid, type);
+
+        if (popups.Others is not { } othersMessage)
+            return;
 
         var others = Filter.Pvs(uid, entityManager: EntityManager)
             .RemoveWhereAttachedEntity(entity => entity == userUid || entity == targetUid);
-        _popupSystem.PopupEntity(othersMessage, uid, others, true, type);
+        _popupSystem.PopupEntity(new KsPopupMessage(othersMessage, arguments), uid, others, true, type);
     }
 }

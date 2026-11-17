@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared._KS14.ComplexShove;
+using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared._KS14.Resist;
@@ -53,9 +54,9 @@ public sealed partial class KsGrabSystem : EntitySystem
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
     [Dependency] private PullingSystem _pullingSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
@@ -72,29 +73,13 @@ public sealed partial class KsGrabSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
 
-    /// <summary>
-    ///     How long a stage that floors its victim knocks them down for. Standing up is blocked for as long as
-    ///         they are held, so this only has to cover the fall.
-    /// </summary>
-    private static readonly TimeSpan FloorKnockdownTime = TimeSpan.FromSeconds(2);
+    private static readonly KsAudiencePopups PinPopups = new("ks-grab-pin-user", "ks-grab-pin-target", "ks-grab-pin-others");
 
-    /// <summary>
-    ///     Chance per hit of damage that the victim is told about it, so a strangle is felt but not spammed.
-    /// </summary>
-    private const float DamagePopupChance = 0.25f;
+    private static readonly KsAudiencePopups ResistSuccessPopups =
+        new("ks-grab-resist-success-user", "ks-grab-resist-success-target", "ks-grab-resist-success-others");
 
-    /// <summary>
-    ///     How fast a tightening grip draws the victim in, in metres per second. Quick, since the change of distance
-    ///         interrupts do-afters on the victim (a carry, the next grip) for as long as it lasts.
-    /// </summary>
-    private const float ReelRate = 4f;
-
-    /// <summary>
-    ///     A thrown victim's knockdown against a wall when the thrower has no shove of their own to take it from.
-    /// </summary>
-    private static readonly TimeSpan WallKnockdownTime = TimeSpan.FromSeconds(3);
-
-    private static readonly SoundSpecifier WallHitSound = new SoundCollectionSpecifier("MetalThud");
+    private static readonly KsAudiencePopups ResistFailPopups =
+        new("ks-grab-resist-fail-user", "ks-grab-resist-fail-target", "ks-grab-resist-fail-others");
 
     #region Grabber
 
@@ -199,8 +184,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (!_standingStateSystem.IsDown(victim))
         {
             args.Cancelled = true;
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-grab-throw-need-down", ("victim", Identity.Entity(victim, EntityManager))),
-                grabber, grabber);
+            PopupGrabber(grabber, victim, "ks-grab-throw-need-down");
             return;
         }
 
@@ -209,12 +193,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         args.ThrowSpeed *= stage.ThrowSpeedModifier;
         MarkThrown(victim, grabber);
 
-        var hard = stage.ThrowSpeedModifier > 1f;
-        PopupThree(victim, grabber, victim,
-            hard ? "ks-grab-throw-hard-user" : "ks-grab-throw-user",
-            hard ? "ks-grab-throw-hard-target" : "ks-grab-throw-target",
-            hard ? "ks-grab-throw-hard-others" : "ks-grab-throw-others",
-            PopupType.MediumCaution);
+        PopupGrab(grabber, victim, user: grabber, stage.ThrowPopups, PopupType.MediumCaution);
 
         _adminLogger.Add(LogType.Action, LogImpact.Medium,
             $"{ToPrettyString(grabber):user} threw {ToPrettyString(victim):target} out of a grab");
@@ -231,8 +210,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         // Anything past a pull is an attack.
         if (!_combatModeSystem.IsInCombatMode(grabber))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-grab-need-combat", ("victim", Identity.Entity(victim, EntityManager))),
-                grabber, grabber);
+            PopupGrabber(grabber, victim, "ks-grab-need-combat");
             return false;
         }
 
@@ -245,15 +223,14 @@ public sealed partial class KsGrabSystem : EntitySystem
         var next = grabber.Comp.Stage + 1;
         if (next >= grabber.Comp.Stages.Count)
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-grab-max", ("victim", Identity.Entity(victim, EntityManager))),
-                grabber, grabber);
+            PopupGrabber(grabber, victim, "ks-grab-max");
             return false;
         }
 
         if (!CanReach(grabber, victim, next))
             return false;
 
-        var nextStage = _prototypeManager.Index(grabber.Comp.Stages[next]);
+        var nextStage = ProtoMan.Index(grabber.Comp.Stages[next]);
         if (nextStage.UpgradeTime <= TimeSpan.Zero)
         {
             EnterStage(grabber, victim, GetStage(grabber), next);
@@ -272,8 +249,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (!_doAfterSystem.TryStartDoAfter(doAfter))
             return false;
 
-        PopupThree(victim, grabber, victim, nextStage.StartUserPopup, nextStage.StartTargetPopup, nextStage.StartOthersPopup,
-            PopupType.MediumCaution);
+        PopupGrab(grabber, victim, user: grabber, nextStage.StartPopups, PopupType.MediumCaution);
         return true;
     }
 
@@ -282,19 +258,17 @@ public sealed partial class KsGrabSystem : EntitySystem
     /// </summary>
     private bool CanReach(Entity<KsGrabberComponent> grabber, EntityUid victim, int stageIndex)
     {
-        var stage = _prototypeManager.Index(grabber.Comp.Stages[stageIndex]);
+        var stage = ProtoMan.Index(grabber.Comp.Stages[stageIndex]);
         if (!IsCloseEnough(grabber, victim, stage))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-grab-too-far", ("victim", Identity.Entity(victim, EntityManager))),
-                grabber, grabber);
+            PopupGrabber(grabber, victim, "ks-grab-too-far");
             return false;
         }
 
         if (!stage.TakesHand || IsHoldingInHand(grabber, victim) || _handsSystem.TryGetEmptyHand(grabber.Owner, out _))
             return true;
 
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-grab-need-hand", ("victim", Identity.Entity(victim, EntityManager))),
-            grabber, grabber);
+        PopupGrabber(grabber, victim, "ks-grab-need-hand");
         return false;
     }
 
@@ -309,7 +283,7 @@ public sealed partial class KsGrabSystem : EntitySystem
 
     private void EnterStage(Entity<KsGrabberComponent> grabber, EntityUid victim, KsGrabStagePrototype? oldStage, int stageIndex)
     {
-        var stage = _prototypeManager.Index(grabber.Comp.Stages[stageIndex]);
+        var stage = ProtoMan.Index(grabber.Comp.Stages[stageIndex]);
         grabber.Comp.Stage = stageIndex;
         grabber.Comp.NextDamage = _gameTiming.CurTime + stage.DamageInterval;
 
@@ -330,7 +304,7 @@ public sealed partial class KsGrabSystem : EntitySystem
 
         _actionBlockerSystem.UpdateCanMove(victim);
         if (stage.FloorsVictim)
-            _stunSystem.TryKnockdown(victim, FloorKnockdownTime, drop: false);
+            _stunSystem.TryKnockdown(victim, grabber.Comp.FloorKnockdownTime, drop: false);
 
         _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(grabber);
         UpdateVictimAlert(victim, oldStage, stage);
@@ -338,7 +312,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (oldStage != null)
             _audioSystem.PlayPredicted(stage.Sound, victim, grabber, AudioParams.Default.WithVariation(0.05f));
 
-        PopupThree(victim, grabber, victim, stage.EnterUserPopup, stage.EnterTargetPopup, stage.EnterOthersPopup,
+        PopupGrab(grabber, victim, user: grabber, stage.EnterPopups,
             stage.BlocksVictimMovement ? PopupType.MediumCaution : PopupType.Small);
 
         if (oldStage != null)
@@ -405,7 +379,7 @@ public sealed partial class KsGrabSystem : EntitySystem
     ///         instead of shoving them away.
     /// </summary>
     [SubscribeLocalEvent]
-    private void OnBeforeShove(Entity<KsGrabbableComponent> victim, ref KsBeforeShoveEvent args)
+    private void OnShoveAttempt(Entity<KsGrabbableComponent> victim, ref KsShoveAttemptEvent args)
     {
         if (args.Handled || !TryGetGrabber(victim, out var grabber, out var stage) || grabber.Value.Owner != args.Shover ||
             !stage.BlocksVictimMovement || grabber.Value.Comp.Pinned || _standingStateSystem.IsDown(victim.Owner))
@@ -413,7 +387,7 @@ public sealed partial class KsGrabSystem : EntitySystem
             return;
         }
 
-        if (!_stunSystem.TryKnockdown(victim.Owner, FloorKnockdownTime, drop: false))
+        if (!_stunSystem.TryKnockdown(victim.Owner, grabber.Value.Comp.FloorKnockdownTime, drop: false))
             return;
 
         args.Handled = true;
@@ -421,8 +395,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         Dirty(grabber.Value);
 
         _audioSystem.PlayPredicted(stage.Sound, victim, args.Shover, AudioParams.Default.WithVariation(0.05f));
-        PopupThree(victim, args.Shover, victim, "ks-grab-pin-user", "ks-grab-pin-target", "ks-grab-pin-others",
-            PopupType.MediumCaution);
+        PopupGrab(args.Shover, victim, user: args.Shover, PinPopups, PopupType.MediumCaution);
         _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
             $"{ToPrettyString(args.Shover):user} pinned {ToPrettyString(victim):target} to the floor");
     }
@@ -514,8 +487,7 @@ public sealed partial class KsGrabSystem : EntitySystem
 
         if (random.Prob(Math.Clamp(attempt.Chance, 0f, 1f)))
         {
-            PopupThree(victim, victim, grabber.Value, "ks-grab-resist-success-user", "ks-grab-resist-success-target",
-                "ks-grab-resist-success-others", PopupType.MediumCaution);
+            PopupGrab(grabber.Value, victim, user: victim, ResistSuccessPopups, PopupType.MediumCaution);
             _adminLogger.Add(LogType.Action, LogImpact.Low,
                 $"{ToPrettyString(victim):user} broke free of {ToPrettyString(grabber):target}'s {stage.ID}");
 
@@ -529,8 +501,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (staminaDamage > 0f)
             _staminaSystem.TakeStaminaDamage(victim, staminaDamage, source: grabber, visual: false);
 
-        PopupThree(victim, victim, grabber.Value, "ks-grab-resist-fail-user", "ks-grab-resist-fail-target",
-            "ks-grab-resist-fail-others", PopupType.SmallCaution);
+        PopupGrab(grabber.Value, victim, user: victim, ResistFailPopups, PopupType.SmallCaution);
         return false;
     }
 
@@ -546,57 +517,62 @@ public sealed partial class KsGrabSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var reelQuery = EntityQueryEnumerator<KsGrabberComponent, PullerComponent>();
-        while (reelQuery.MoveNext(out var uid, out var grabber, out var puller))
-        {
-            if (puller.Pulling is { } victim && GetStage((uid, grabber)) is { HoldDistance: { } holdDistance })
-                ReelIn(victim, holdDistance, frameTime);
-        }
-
-        // Damage is dealt by the server, as breathing is: predicting it would only flicker the health bar.
-        if (_netManager.IsClient)
-            return;
-
+        var isClient = _netManager.IsClient;
         var curTime = _gameTiming.CurTime;
 
-        // A move key only raises MoveInputEvent when it is pressed, so someone holding a direction would struggle once.
-        // Keep struggling for them as often as the cooldown allows, as tgstation does.
-        var struggleQuery = EntityQueryEnumerator<KsGrabbableComponent, InputMoverComponent>();
-        while (struggleQuery.MoveNext(out var uid, out var grabbable, out var mover))
-        {
-            if (curTime >= grabbable.NextResist && mover.HasDirectionalMovement &&
-                GetHeldStage(uid) is { BlocksVictimMovement: true })
-            {
-                TryResist((uid, grabbable));
-            }
-        }
         var query = EntityQueryEnumerator<KsGrabberComponent, PullerComponent>();
-        while (query.MoveNext(out var uid, out var grabber, out var puller))
+        while (query.MoveNext(out var uid, out var grabberComponent, out var puller))
         {
-            if (puller.Pulling is not { } victim || curTime < grabber.NextDamage || !HasComp<KsGrabbableComponent>(victim) ||
-                GetStage((uid, grabber)) is not { Damage: { } damage } stage)
+            if (puller.Pulling is not { } victim || !TryComp<KsGrabbableComponent>(victim, out var grabbable) ||
+                GetStage((uid, grabberComponent)) is not { } stage)
             {
                 continue;
             }
 
-            // Out of reach, the grip can't choke: nothing is dealt until they're close again.
-            if (!IsCloseEnough(uid, victim, stage))
+            if (stage.HoldDistance is { } holdDistance)
+                ReelIn(victim, holdDistance, grabberComponent.ReelRate * frameTime);
+
+            // The rest is the server's alone: predicting damage would only flicker the health bar, as with breathing.
+            if (isClient)
                 continue;
 
-            grabber.NextDamage = curTime + stage.DamageInterval;
-            Dirty(uid, grabber);
+            // A move key only raises MoveInputEvent when it is pressed, so someone holding a direction would struggle
+            // once. Keep struggling for them as often as the cooldown allows, as tgstation does.
+            if (stage.BlocksVictimMovement && curTime >= grabbable.NextResist &&
+                CompOrNull<InputMoverComponent>(victim)?.HasDirectionalMovement == true &&
+                TryResist((victim, grabbable)))
+            {
+                continue;
+            }
 
-            _damageableSystem.ChangeDamage(victim, damage, ignoreResistances: true, interruptsDoAfters: false, origin: uid);
-            if (stage.DamagePopup is { } popup && _robustRandom.Prob(DamagePopupChance))
-                _popupSystem.PopupEntity(KsPopupMessage.Create(popup), victim, victim, PopupType.MediumCaution);
+            DealStageDamage((uid, grabberComponent), victim, stage, curTime);
         }
     }
 
     /// <summary>
-    ///     Shortens the pull's joint towards <paramref name="holdDistance"/> a little each tick, drawing the victim in
-    ///         rather than snapping them there. The pull joint is a hard limit at its maximum length, so this is a reel.
+    ///     Deals the stage's <see cref="KsGrabStagePrototype.Damage"/> once its interval is up.
     /// </summary>
-    private void ReelIn(EntityUid victim, float holdDistance, float frameTime)
+    private void DealStageDamage(Entity<KsGrabberComponent> grabber, EntityUid victim, KsGrabStagePrototype stage,
+        TimeSpan curTime)
+    {
+        // Out of reach, the grip can't choke: nothing is dealt until they're close again.
+        if (stage.Damage is not { } damage || curTime < grabber.Comp.NextDamage || !IsCloseEnough(grabber, victim, stage))
+            return;
+
+        grabber.Comp.NextDamage = curTime + stage.DamageInterval;
+        Dirty(grabber);
+
+        _damageableSystem.ChangeDamage(victim, damage, ignoreResistances: true, interruptsDoAfters: false, origin: grabber);
+        if (stage.DamagePopup is { } popup && _robustRandom.Prob(stage.DamagePopupChance))
+            _popupSystem.PopupEntity(KsPopupMessage.Create(popup), victim, victim, PopupType.MediumCaution);
+    }
+
+    /// <summary>
+    ///     Shortens the pull's joint towards <paramref name="holdDistance"/> by <paramref name="reelDistance"/>,
+    ///         drawing the victim in a little each tick rather than snapping them there. The pull joint is a hard limit
+    ///         at its maximum length, so this is a reel.
+    /// </summary>
+    private void ReelIn(EntityUid victim, float holdDistance, float reelDistance)
     {
         if (!TryComp<PullableComponent>(victim, out var pullable) || pullable.PullJointId is not { } jointId ||
             !TryComp<JointComponent>(victim, out var joints) || !joints.GetJoints.TryGetValue(jointId, out var joint) ||
@@ -605,7 +581,7 @@ public sealed partial class KsGrabSystem : EntitySystem
             return;
         }
 
-        distance.MaxLength = MathF.Max(holdDistance, distance.MaxLength - ReelRate * frameTime);
+        distance.MaxLength = MathF.Max(holdDistance, distance.MaxLength - reelDistance);
         distance.Length = MathF.Min(distance.Length, distance.MaxLength);
         distance.MinLength = MathF.Min(distance.MinLength, distance.Length);
 
@@ -628,35 +604,36 @@ public sealed partial class KsGrabSystem : EntitySystem
 
     /// <summary>
     ///     A victim thrown into someone, or into a wall or table, is knocked down by it as a shove would knock them down,
-    ///         and knocks over whoever they hit.
+    ///         and knocks over whoever they hit. How hard is the thrower's <see cref="KsGrabberComponent"/>'s to say.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnThrownHit(Entity<KsGrabThrownComponent> thrown, ref ThrowDoHitEvent args)
     {
         var thrower = thrown.Comp.Thrower;
-        if (args.Target == thrower)
+        if (args.Target == thrower || !TryComp<KsGrabberComponent>(thrower, out var grabber))
             return;
 
-        var grabber = CompOrNull<KsGrabberComponent>(thrower);
         if (TryComp<KsShoveObstacleComponent>(args.Target, out var obstacle))
         {
-            RemCompDeferred<KsGrabThrownComponent>(thrown);
-            _complexShoveSystem.KnockIntoObstacle(thrower, thrown, (args.Target, obstacle), "ks-grab-thrown-into-");
-            DealImpactDamage(thrown, grabber?.ThrowImpactDamage, thrower);
+            _complexShoveSystem.KnockIntoObstacle(thrower, thrown, (args.Target, obstacle), grabber.ThrowObstaclePopups);
 
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
             if (obstacle.CollateralKnockdownTime != null)
-                DealImpactDamage(args.Target, grabber?.ThrowCollateralDamage, thrower);
+                DealImpactDamage(args.Target, grabber.ThrowCollateralDamage, thrower);
+        }
+        else if (CompOrNull<PhysicsComponent>(args.Target)?.BodyType == BodyType.Static)
+        {
+            _complexShoveSystem.KnockIntoWall(thrower, thrown, grabber.ThrowWallKnockdownTime, grabber.ThrowWallSound,
+                grabber.ThrowWallPopups, grabber.ThrowWallResistedPopups);
+        }
+        else
+        {
             return;
         }
 
-        if (TryComp<PhysicsComponent>(args.Target, out var physics) && physics.BodyType == BodyType.Static)
-        {
-            RemCompDeferred<KsGrabThrownComponent>(thrown);
-            var knockdownTime = CompOrNull<ComplexShoveComponent>(thrower)?.BlockedKnockdownTime ?? WallKnockdownTime;
-            _complexShoveSystem.KnockIntoWall(thrower, thrown, knockdownTime, WallHitSound, "ks-grab-thrown-wall-");
-            DealImpactDamage(thrown, grabber?.ThrowImpactDamage, thrower);
-        }
+        // Only the first thing they slam into counts.
+        RemCompDeferred<KsGrabThrownComponent>(thrown);
+        DealImpactDamage(thrown, grabber.ThrowImpactDamage, thrower);
     }
 
     /// <summary>
@@ -694,7 +671,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (grabber.Comp.Stage < 0 || grabber.Comp.Stage >= grabber.Comp.Stages.Count)
             return null;
 
-        return _prototypeManager.Index(grabber.Comp.Stages[grabber.Comp.Stage]);
+        return ProtoMan.Index(grabber.Comp.Stages[grabber.Comp.Stage]);
     }
 
     /// <summary>
@@ -732,30 +709,22 @@ public sealed partial class KsGrabSystem : EntitySystem
     #endregion
 
     /// <summary>
-    ///     Shows each of three optional messages to its own audience, each with <c>grabber</c> and <c>victim</c>.
+    ///     Shows a grab's popups at the victim, each with <c>grabber</c> and <c>victim</c>.
     /// </summary>
-    private void PopupThree(EntityUid victim, EntityUid user, EntityUid target, LocId? userMessage, LocId? targetMessage,
-        LocId? othersMessage, PopupType type)
+    /// <param name="user">Whichever of the two acts: the grabber tightening, or the victim resisting.</param>
+    private void PopupGrab(EntityUid grabber, EntityUid victim, EntityUid user, KsAudiencePopups popups, PopupType type)
     {
-        // The victim is always the one held, whoever acts.
-        var grabber = user == victim ? target : user;
-        var arguments = new (string, object)[]
-        {
+        _ksPopupSystem.PopupUserTargetOthers(victim, user, user == victim ? grabber : victim, popups, type,
             ("grabber", Identity.Entity(grabber, EntityManager)),
-            ("victim", Identity.Entity(victim, EntityManager)),
-        };
+            ("victim", Identity.Entity(victim, EntityManager)));
+    }
 
-        if (userMessage is { } userId)
-            _popupSystem.PopupEntity(new KsPopupMessage(userId, arguments), victim, user, type);
-
-        if (targetMessage is { } targetId && target != user)
-            _popupSystem.PopupEntity(new KsPopupMessage(targetId, arguments), victim, target, type);
-
-        if (othersMessage is { } othersId)
-        {
-            var others = Filter.Pvs(victim, entityManager: EntityManager)
-                .RemoveWhereAttachedEntity(entity => entity == user || entity == target);
-            _popupSystem.PopupEntity(new KsPopupMessage(othersId, arguments), victim, others, true, type);
-        }
+    /// <summary>
+    ///     Tells only the grabber something about their grip on <paramref name="victim"/>.
+    /// </summary>
+    private void PopupGrabber(EntityUid grabber, EntityUid victim, LocId message)
+    {
+        _popupSystem.PopupEntity(KsPopupMessage.Create(message, ("victim", Identity.Entity(victim, EntityManager))),
+            grabber, grabber);
     }
 }

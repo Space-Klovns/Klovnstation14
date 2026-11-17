@@ -1,3 +1,4 @@
+using Content.Shared._KS14.KsPopup;
 using Content.Shared.Alert;
 using Content.Shared.Damage;
 using Robust.Shared.Audio;
@@ -97,6 +98,13 @@ public sealed partial class KsGrabStagePrototype : IPrototype
     public LocId? DamagePopup;
 
     /// <summary>
+    ///     Chance per hit of <see cref="Damage"/> that <see cref="DamagePopup"/> is shown, so a strangle is felt but
+    ///         not spammed.
+    /// </summary>
+    [DataField]
+    public float DamagePopupChance = 0.25f;
+
+    /// <summary>
     ///     Whether throwing the grab's hand throws the victim. Needs <see cref="TakesHand"/>.
     /// </summary>
     [DataField]
@@ -104,6 +112,12 @@ public sealed partial class KsGrabStagePrototype : IPrototype
 
     [DataField]
     public float ThrowSpeedModifier = 1f;
+
+    /// <summary>
+    ///     Popups when the victim is thrown out of this stage. Each gets <c>grabber</c> and <c>victim</c>.
+    /// </summary>
+    [DataField]
+    public KsAudiencePopups ThrowPopups = new("ks-grab-throw-user", "ks-grab-throw-target", "ks-grab-throw-others");
 
     /// <summary>
     ///     Alert shown to the victim instead of the usual pulled alert. Clicking it resists.
@@ -119,24 +133,12 @@ public sealed partial class KsGrabStagePrototype : IPrototype
     ///         Each gets <c>grabber</c> and <c>victim</c>.
     /// </summary>
     [DataField]
-    public LocId StartOthersPopup = "ks-grab-start-others";
-
-    [DataField]
-    public LocId StartUserPopup = "ks-grab-start-user";
-
-    [DataField]
-    public LocId StartTargetPopup = "ks-grab-start-target";
+    public KsAudiencePopups StartPopups = new("ks-grab-start-user", "ks-grab-start-target", "ks-grab-start-others");
 
     /// <summary>
-    ///     Popups when the grab reaches this stage. Each gets <c>grabber</c> and <c>victim</c>. Null shows nothing to
-    ///         that audience, as for a plain pull, whose victim already gets the pulling system's popup.
+    ///     Popups when the grab reaches this stage. Each gets <c>grabber</c> and <c>victim</c>. An audience left out
+    ///         is shown nothing, as for a plain pull, whose victim already gets the pulling system's popup.
     /// </summary>
     [DataField]
-    public LocId? EnterOthersPopup;
-
-    [DataField]
-    public LocId? EnterUserPopup;
-
-    [DataField]
-    public LocId? EnterTargetPopup;
+    public KsAudiencePopups EnterPopups;
 }

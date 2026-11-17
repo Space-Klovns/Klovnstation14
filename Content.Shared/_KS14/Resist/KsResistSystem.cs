@@ -9,13 +9,7 @@ namespace Content.Shared._KS14.Resist;
 /// </summary>
 public sealed partial class KsResistSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeAllEvent<KsResistRequestEvent>(OnResistRequest);
-    }
-
+    [EventSubscription]
     private void OnResistRequest(KsResistRequestEvent args, EntitySessionEventArgs session)
     {
         if (session.SenderSession.AttachedEntity is { } player)

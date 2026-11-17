@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Content.Shared._KS14.KsPopup;
-using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Climbing.Components;
 using Content.Shared.Climbing.Systems;
@@ -28,6 +27,8 @@ namespace Content.Shared._KS14.ComplexShove;
 /// <summary>
 ///     tgstation's shove. Resolved in this order:
 ///     <list type="number">
+///         <item>Someone in crit or stamina crit is only pushed.</item>
+///         <item><see cref="KsShoveAttemptEvent"/> lets something else take the shove, as a grab does to pin its victim.</item>
 ///         <item>Someone already down is kicked onto their side and paralyzed, once until they stand up.</item>
 ///         <item>Someone shoved into a <see cref="KsShoveObstacleComponent"/> (a table, another person) is knocked over by it.</item>
 ///         <item>Someone shoved against a wall or anything else solid is knocked down.</item>
@@ -47,13 +48,21 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
 
+    /// <summary>
+    ///     The stock disarm's popups (<c>prefix + popup-message-...</c>), kept for a shove that only pushes.
+    /// </summary>
+    private const string PushPopupPrefix = "disarm-action-shove-";
+
+    /// <summary>
+    ///     Scratch set for <see cref="TryGetObstacle"/>.
+    /// </summary>
     private readonly HashSet<Entity<KsShoveObstacleComponent>> _obstacles = new();
 
+    // StoodEvent is a by-value class event, which has no Entity<T> handler form.
     [SubscribeLocalEvent]
     private void OnStood(EntityUid uid, KsShoveParalyzedComponent component, StoodEvent args)
     {
@@ -63,22 +72,28 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnDisarmed(Entity<StandingStateComponent> target, ref DisarmedEvent args)
     {
-        if (args.Handled || !TryComp<ComplexShoveComponent>(args.Source, out var shove) ||
+        if (args.Handled || !TryComp<ComplexShoveComponent>(args.Source, out var shoveComponent) ||
             !TryGetShoveDirection(args.Source, target, out var direction, out var targetPosition))
         {
             return;
         }
 
         args.Handled = true;
-        var shover = (args.Source, shove);
-        var outcome = ResolveShove(shover, target, direction.Value, targetPosition.Value, out var obstacle, ref args);
+        Entity<ComplexShoveComponent> shover = (args.Source, shoveComponent);
+        var outcome = ResolveShove(shover, target, direction.Value, targetPosition.Value, out var obstacle);
+
+        // A plain push keeps the stock popups. Every other outcome has already told everyone what happened.
+        if (outcome == KsShoveOutcome.Pushed)
+            args.PopupPrefix = PushPopupPrefix;
+        else
+            args.KsPopupHandled = true;
 
         var shovedEvent = new KsShovedEvent(args.Source, target, outcome, obstacle);
         RaiseLocalEvent(target, ref shovedEvent);
     }
 
     private KsShoveOutcome ResolveShove(Entity<ComplexShoveComponent> shover, Entity<StandingStateComponent> target,
-        Vector2 direction, MapCoordinates targetPosition, out EntityUid? obstacle, ref DisarmedEvent args)
+        Vector2 direction, MapCoordinates targetPosition, out EntityUid? obstacle)
     {
         obstacle = null;
 
@@ -86,49 +101,36 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         if (_mobStateSystem.IsIncapacitated(target) || CompOrNull<StaminaComponent>(target)?.Critical == true)
         {
             Push(shover, target, direction, targetDown: true);
-            args.PopupPrefix = "disarm-action-shove-";
             return KsShoveOutcome.Pushed;
         }
 
-        var before = new KsBeforeShoveEvent(shover, target);
-        RaiseLocalEvent(target, ref before);
-        if (before.Handled)
-        {
-            args.KsPopupHandled = true;
+        var attempt = new KsShoveAttemptEvent(shover, target);
+        RaiseLocalEvent(target, ref attempt);
+        if (attempt.Handled)
             return KsShoveOutcome.Handled;
-        }
 
         // Someone already down can't be knocked down again: they're kicked over, then disarmed against a wall, then only
-        // pushed.
+        // pushed, with no stagger either: that waits until they've stood up.
         if (_standingStateSystem.IsDown(target.AsNullable()))
         {
-            var canDisarm = CanDisarmAgainst(shover, target, targetPosition, direction);
-            var downOutcome = KickWhileDown(shover, target, canDisarm);
-            if (downOutcome != KsShoveOutcome.Pushed)
-            {
-                args.KsPopupHandled = true;
-                return downOutcome;
-            }
+            var downOutcome = KickWhileDown(shover, target, targetPosition, direction);
+            if (downOutcome == KsShoveOutcome.Pushed)
+                Push(shover, target, direction, targetDown: true);
 
-            // No stagger either: that waits until they've stood up.
-            Push(shover, target, direction, targetDown: true);
-            args.PopupPrefix = "disarm-action-shove-";
-            return KsShoveOutcome.Pushed;
+            return downOutcome;
         }
 
-        var probe = targetPosition.Offset(direction * shover.Comp.ProbeDistance);
-        if (TryGetObstacle(shover, target, probe, out var found))
+        if (TryGetObstacle(shover, target, targetPosition, direction, out var found))
         {
             obstacle = found.Value.Owner;
-            args.KsPopupHandled = true;
             KnockIntoObstacle(shover, target, found.Value);
             return KsShoveOutcome.Obstacle;
         }
 
         if (IsBlocked(shover, targetPosition, direction))
         {
-            args.KsPopupHandled = true;
-            KnockIntoWall(shover, target, shover.Comp.BlockedKnockdownTime, shover.Comp.BlockedSound, "ks-shove-wall-");
+            KnockIntoWall(shover, target, shover.Comp.BlockedKnockdownTime, shover.Comp.BlockedSound,
+                shover.Comp.BlockedPopups, shover.Comp.BlockedResistedPopups);
             return KsShoveOutcome.Blocked;
         }
 
@@ -138,14 +140,13 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             shover.Comp.StaggerTime,
             shover.Comp.StaggerSpeedModifier);
 
-        args.PopupPrefix = "disarm-action-shove-";
         return KsShoveOutcome.Pushed;
     }
 
     /// <summary>
     ///     Whether what is behind <paramref name="target"/> lets a shove knock things out of their hands: a wall, by
     ///         <see cref="ComplexShoveComponent.DisarmAgainstWalls"/>, or an obstacle with
-    ///         <see cref="KsShoveObstacleComponent.DisarmsAgainst"/>. <see cref="KsShoveDisarmCheckEvent"/> has the last word.
+    ///         <see cref="KsShoveObstacleComponent.DisarmsAgainst"/>. <see cref="KsCanShoveDisarmEvent"/> has the last word.
     /// </summary>
     public bool CanDisarmAgainst(Entity<ComplexShoveComponent> shover, EntityUid target, MapCoordinates targetPosition,
         Vector2 direction)
@@ -153,8 +154,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         EntityUid? surface = null;
         var allowed = false;
 
-        var probe = targetPosition.Offset(direction * shover.Comp.ProbeDistance);
-        if (TryGetObstacle(shover, target, probe, out var obstacle))
+        if (TryGetObstacle(shover, target, targetPosition, direction, out var obstacle))
         {
             surface = obstacle.Value.Owner;
             allowed = obstacle.Value.Comp.DisarmsAgainst;
@@ -164,7 +164,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             allowed = shover.Comp.DisarmAgainstWalls;
         }
 
-        var check = new KsShoveDisarmCheckEvent(shover, target, surface, allowed);
+        var check = new KsCanShoveDisarmEvent(shover, target, surface, allowed);
         RaiseLocalEvent(target, ref check);
         return check.Allowed;
     }
@@ -173,9 +173,9 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     ///     A shove on someone lying down: the first kicks them onto their side and paralyzes them, the next, against a
     ///         wall, makes them drop everything they hold. Neither repeats until they have stood up again.
     /// </summary>
-    /// <param name="canDisarm">Whether this shove pins them against something that knocks things out of their hands.</param>
     /// <returns><see cref="KsShoveOutcome.Pushed"/> when there is nothing left to do but push them.</returns>
-    private KsShoveOutcome KickWhileDown(Entity<ComplexShoveComponent> shover, EntityUid target, bool canDisarm)
+    private KsShoveOutcome KickWhileDown(Entity<ComplexShoveComponent> shover, EntityUid target,
+        MapCoordinates targetPosition, Vector2 direction)
     {
         if (!TryComp<KsShoveParalyzedComponent>(target, out var paralyzed))
         {
@@ -187,13 +187,13 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             }
 
             EnsureComp<KsShoveParalyzedComponent>(target);
-            PopupShove(shover, target, "ks-shove-paralyze-");
+            PopupShove(shover, target, shover.Comp.ParalyzePopups);
             _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
                 $"{ToPrettyString(shover):user} kicked {ToPrettyString(target):target} onto their side");
             return KsShoveOutcome.Paralyzed;
         }
 
-        if (paralyzed.Disarmed || !canDisarm)
+        if (paralyzed.Disarmed || !CanDisarmAgainst(shover, target, targetPosition, direction))
             return KsShoveOutcome.Pushed;
 
         paralyzed.Disarmed = true;
@@ -206,33 +206,33 @@ public sealed partial class ComplexShoveSystem : EntitySystem
                 _handsSystem.TryDrop(target, hand, checkActionBlocker: false);
         }
 
-        PopupShove(shover, target, "ks-shove-disarm-");
+        PopupShove(shover, target, shover.Comp.DisarmPopups);
         _adminLogger.Add(LogType.DisarmedAction, LogImpact.Medium,
             $"{ToPrettyString(shover):user} kicked everything out of {ToPrettyString(target):target}'s hands");
         return KsShoveOutcome.Disarmed;
     }
 
-    private void PopupShove(EntityUid shover, EntityUid target, string prefix)
+    private void PopupShove(EntityUid shover, EntityUid target, KsAudiencePopups popups)
     {
-        var shoverName = Identity.Entity(shover, EntityManager);
-        var targetName = Identity.Entity(target, EntityManager);
-        _ksPopupSystem.PopupUserTargetOthers(target, shover, target,
-            KsPopupMessage.Create(prefix + "user", ("target", targetName)),
-            KsPopupMessage.Create(prefix + "target", ("shover", shoverName)),
-            KsPopupMessage.Create(prefix + "others", ("shover", shoverName), ("target", targetName)),
-            PopupType.MediumCaution);
+        _ksPopupSystem.PopupUserTargetOthers(target, shover, target, popups, PopupType.MediumCaution,
+            ("shover", Identity.Entity(shover, EntityManager)),
+            ("target", Identity.Entity(target, EntityManager)));
     }
 
-    private bool TryGetObstacle(EntityUid shover, EntityUid target, MapCoordinates probe,
-        [NotNullWhen(true)] out Entity<KsShoveObstacleComponent>? obstacle)
+    /// <summary>
+    ///     The <see cref="KsShoveObstacleComponent"/> behind <paramref name="target"/>, at the end of the shover's probe.
+    /// </summary>
+    private bool TryGetObstacle(Entity<ComplexShoveComponent> shover, EntityUid target, MapCoordinates targetPosition,
+        Vector2 direction, [NotNullWhen(true)] out Entity<KsShoveObstacleComponent>? obstacle)
     {
         obstacle = null;
         _obstacles.Clear();
-        _entityLookupSystem.GetEntitiesInRange(probe, Comp<ComplexShoveComponent>(shover).ProbeRadius, _obstacles);
+        var probe = targetPosition.Offset(direction * shover.Comp.ProbeDistance);
+        _entityLookupSystem.GetEntitiesInRange(probe, shover.Comp.ProbeRadius, _obstacles);
 
         foreach (var candidate in _obstacles)
         {
-            if (candidate.Owner == shover || candidate.Owner == target)
+            if (candidate.Owner == shover.Owner || candidate.Owner == target)
                 continue;
 
             if (obstacle == null || candidate.Comp.Priority > obstacle.Value.Comp.Priority)
@@ -247,9 +247,9 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     ///         whoever the obstacle is with it. Also used for a grabbed person thrown into one.
     /// </summary>
     /// <param name="source">Who sent them flying, for the popups, sounds and logs.</param>
-    /// <param name="popupPrefix">Replaces the obstacle's popups with <c>prefix + user/target/others</c>.</param>
+    /// <param name="popups">Shown instead of the obstacle's own <see cref="KsShoveObstacleComponent.Popups"/>.</param>
     public void KnockIntoObstacle(EntityUid source, EntityUid target, Entity<KsShoveObstacleComponent> obstacle,
-        string? popupPrefix = null)
+        KsAudiencePopups? popups = null)
     {
         var collide = new KsShoveCollideEvent(source, target, obstacle);
         RaiseLocalEvent(obstacle, ref collide);
@@ -265,17 +265,11 @@ public sealed partial class ComplexShoveSystem : EntitySystem
 
         _audioSystem.PlayPredicted(obstacle.Comp.Sound, obstacle, source, AudioParams.Default.WithVariation(0.05f));
 
-        var shoverName = Identity.Entity(source, EntityManager);
-        var targetName = Identity.Entity(target, EntityManager);
-        var obstacleName = Identity.Entity(obstacle, EntityManager);
-        _ksPopupSystem.PopupUserTargetOthers(target, source, target,
-            KsPopupMessage.Create(popupPrefix != null ? popupPrefix + "user" : obstacle.Comp.UserPopup,
-                ("shover", shoverName), ("target", targetName), ("obstacle", obstacleName)),
-            KsPopupMessage.Create(popupPrefix != null ? popupPrefix + "target" : obstacle.Comp.TargetPopup,
-                ("shover", shoverName), ("target", targetName), ("obstacle", obstacleName)),
-            KsPopupMessage.Create(popupPrefix != null ? popupPrefix + "others" : obstacle.Comp.OthersPopup,
-                ("shover", shoverName), ("target", targetName), ("obstacle", obstacleName)),
-            PopupType.MediumCaution);
+        _ksPopupSystem.PopupUserTargetOthers(target, source, target, popups ?? obstacle.Comp.Popups,
+            PopupType.MediumCaution,
+            ("shover", Identity.Entity(source, EntityManager)),
+            ("target", Identity.Entity(target, EntityManager)),
+            ("obstacle", Identity.Entity(obstacle, EntityManager)));
 
         _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
             $"{ToPrettyString(source):user} sent {ToPrettyString(target):target} into {ToPrettyString(obstacle):obstacle}");
@@ -284,14 +278,14 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     /// <summary>
     ///     Knocks <paramref name="target"/> down against a wall, or anything solid with no obstacle component.
     /// </summary>
-    /// <param name="popupPrefix">Popups are <c>prefix + user/target/others</c>, or <c>prefix + resisted-...</c> when
-    ///     the knockdown didn't take, such as while weightless.</param>
+    /// <param name="resistedPopups">Shown instead of <paramref name="popups"/> when the knockdown didn't take, such as
+    ///     while weightless.</param>
     public void KnockIntoWall(EntityUid source, EntityUid target, TimeSpan knockdownTime, SoundSpecifier? sound,
-        string popupPrefix)
+        KsAudiencePopups popups, KsAudiencePopups resistedPopups)
     {
         var knockedDown = _stunSystem.TryKnockdown(target, knockdownTime, drop: false);
         _audioSystem.PlayPredicted(sound, target, source, AudioParams.Default.WithVariation(0.05f));
-        PopupShove(source, target, knockedDown ? popupPrefix : popupPrefix + "resisted-");
+        PopupShove(source, target, knockedDown ? popups : resistedPopups);
 
         if (knockedDown)
         {

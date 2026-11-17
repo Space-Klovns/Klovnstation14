@@ -273,7 +273,7 @@ namespace Content.Shared.Interaction
                 return false;
 
             // KS14 start: ctrl-clicking the floor outside combat mode lets go of whatever you pull
-            if (!uid.IsValid() || !HasComp<PullableComponent>(uid) && Transform(uid).Anchored)
+            if (!uid.IsValid() || (!HasComp<PullableComponent>(uid) && Transform(uid).Anchored))
             {
                 if (TryComp<PullerComponent>(userEntity, out var ksPuller) &&
                     TryComp<PullableComponent>(ksPuller.Pulling, out var ksPulled) &&

@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._KS14.Grab;
+using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.Resist;
 using Content.Shared.Throwing;
 using Content.Shared.Verbs;
@@ -35,8 +36,8 @@ using Robust.Shared.Timing;
 namespace Content.Shared._KS14.Carrying;
 
 /// <summary>
-///     tgstation's fireman carry. Holding someone lying down in a grab that allows it, drag them onto yourself to
-///         lift them onto your back. They ride along until you put them down, fall over yourself, or they wriggle free.
+///     tgstation's fireman carry. Alt-click someone lying down, or drag them onto yourself, to lift them onto your
+///         back; no grab is needed. They ride along until you put them down, fall over yourself, or they wriggle free.
 /// </summary>
 public sealed partial class KsFiremanCarrySystem : EntitySystem
 {
@@ -46,6 +47,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private KsGrabSystem _grabSystem = default!;
+    [Dependency] private KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
     [Dependency] private PullingSystem _pullingSystem = default!;
@@ -59,9 +61,16 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
 
     /// <summary>
-    ///     tgstation's fireman carry needs both arms.
+    ///     Priority of the carry among alt-click verbs: above the rest, so alt-clicking someone you can carry lifts them.
     /// </summary>
-    private const int HandsNeeded = 2;
+    private const int CarryVerbPriority = 10;
+
+    private static readonly KsAudiencePopups StartPopups = new("ks-carry-start-user", "ks-carry-start-target", "ks-carry-start-others");
+    private static readonly KsAudiencePopups FailPopups = new("ks-carry-fail-user", "ks-carry-fail-target", "ks-carry-fail-others");
+    private static readonly KsAudiencePopups DonePopups = new("ks-carry-done-user", "ks-carry-done-target", "ks-carry-done-others");
+    private static readonly KsAudiencePopups DropPopups = new("ks-carry-drop-user", "ks-carry-drop-target", "ks-carry-drop-others");
+    private static readonly KsAudiencePopups EscapePopups = new("ks-carry-escape-user", "ks-carry-escape-target", "ks-carry-escape-others");
+    private static readonly KsAudiencePopups ThrowPopups = new("ks-carry-throw-user", "ks-carry-throw-target", "ks-carry-throw-others");
 
     public override void Initialize()
     {
@@ -106,7 +115,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         {
             Text = Loc.GetString("ks-carry-verb"),
             Act = () => TryStartCarry(user, uid),
-            Priority = 10,
+            Priority = CarryVerbPriority,
         });
     }
 
@@ -129,7 +138,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         if (!_doAfterSystem.TryStartDoAfter(doAfter))
             return false;
 
-        PopupThree(victim, carrier, victim, "ks-carry-start-user", "ks-carry-start-target", "ks-carry-start-others");
+        PopupCarry(carrier, victim, user: carrier, StartPopups);
         return true;
     }
 
@@ -142,7 +151,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         args.Handled = true;
         if (!CanCarry(uid, victim, popup: true))
         {
-            PopupThree(victim, uid, victim, "ks-carry-fail-user", "ks-carry-fail-target", "ks-carry-fail-others");
+            PopupCarry(uid, victim, user: uid, FailPopups);
             return;
         }
 
@@ -155,8 +164,9 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     /// </summary>
     public bool CanCarry(EntityUid carrier, EntityUid victim, bool popup)
     {
-        if (carrier == victim || !HasComp<KsFiremanCarrierComponent>(carrier) || HasComp<KsCarryingComponent>(carrier) ||
-            HasComp<KsBeingCarriedComponent>(carrier) || HasComp<KsBeingCarriedComponent>(victim))
+        if (carrier == victim || !TryComp<KsFiremanCarrierComponent>(carrier, out var carrierComponent) ||
+            HasComp<KsCarryingComponent>(carrier) || HasComp<KsBeingCarriedComponent>(carrier) ||
+            HasComp<KsBeingCarriedComponent>(victim))
         {
             return false;
         }
@@ -164,14 +174,18 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         if (!_standingStateSystem.IsDown(victim) || _standingStateSystem.IsDown(carrier))
         {
             if (popup)
-                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-carry-need-prone", ("carried", Identity.Entity(victim, EntityManager))), carrier, carrier);
+            {
+                _popupSystem.PopupEntity(
+                    KsPopupMessage.Create("ks-carry-need-prone", ("carried", Identity.Entity(victim, EntityManager))), carrier, carrier);
+            }
+
             return false;
         }
 
         if (_containerSystem.IsEntityInContainer(carrier) || _containerSystem.IsEntityInContainer(victim))
             return false;
 
-        // A carry takes both hands; the one holding the grab is freed by it.
+        // A carry takes hands; one holding the grab is freed by it.
         var freeHands = 0;
         foreach (var hand in _handsSystem.EnumerateHands(carrier))
         {
@@ -182,10 +196,14 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
             }
         }
 
-        if (freeHands < HandsNeeded)
+        if (freeHands < carrierComponent.HandsNeeded)
         {
             if (popup)
-                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-carry-need-hands", ("carried", Identity.Entity(victim, EntityManager))), carrier, carrier);
+            {
+                _popupSystem.PopupEntity(
+                    KsPopupMessage.Create("ks-carry-need-hands", ("carried", Identity.Entity(victim, EntityManager))), carrier, carrier);
+            }
+
             return false;
         }
 
@@ -206,7 +224,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         carried.Carrier = carrier;
         Dirty(victim, carried);
 
-        for (var i = 0; i < HandsNeeded; i++)
+        for (var i = 0; i < carrier.Comp.HandsNeeded; i++)
         {
             _virtualItemSystem.TrySpawnVirtualItemInHand(victim, carrier, silent: true);
         }
@@ -219,7 +237,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         _alertsSystem.ShowAlert(carrier.Owner, carrier.Comp.CarryingAlert);
         _alertsSystem.ShowAlert(victim, carrier.Comp.CarriedAlert);
 
-        PopupThree(victim, carrier, victim, "ks-carry-done-user", "ks-carry-done-target", "ks-carry-done-others");
+        PopupCarry(carrier, victim, user: carrier, DonePopups);
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(carrier):user} started carrying {ToPrettyString(victim):target}");
     }
 
@@ -255,31 +273,38 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
             RemComp(carrier, carrying);
         }
 
-        var carrierComp = CompOrNull<KsFiremanCarrierComponent>(carrier);
-        if (!TerminatingOrDeleted(uid))
+        var carrierComponent = CompOrNull<KsFiremanCarrierComponent>(carrier);
+        var carriedAlive = !TerminatingOrDeleted(uid);
+        var carrierAlive = !TerminatingOrDeleted(carrier);
+
+        if (carriedAlive)
         {
-            if (Transform(uid).ParentUid == carrier && !TerminatingOrDeleted(carrier))
-                _transformSystem.PlaceNextTo(uid, carrier);
-            else if (Transform(uid).ParentUid == carrier)
-                _transformSystem.AttachToGridOrMap(uid);
+            if (Transform(uid).ParentUid == carrier)
+            {
+                // A carrier being deleted can't be stood next to, but mustn't take its child along either.
+                if (carrierAlive)
+                    _transformSystem.PlaceNextTo(uid, carrier);
+                else
+                    _transformSystem.AttachToGridOrMap(uid);
+            }
 
             _physicsSystem.SetCanCollide(uid, true);
             _actionBlockerSystem.UpdateCanMove(uid);
-            if (carrierComp != null)
-                _alertsSystem.ClearAlert(uid, carrierComp.CarriedAlert);
+            if (carrierComponent != null)
+                _alertsSystem.ClearAlert(uid, carrierComponent.CarriedAlert);
         }
 
-        if (TerminatingOrDeleted(carrier))
+        if (!carrierAlive)
             return;
 
         _virtualItemSystem.DeleteInHandsMatching(carrier, uid);
         _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(carrier);
-        if (carrierComp != null)
-            _alertsSystem.ClearAlert(carrier, carrierComp.CarryingAlert);
+        if (carrierComponent != null)
+            _alertsSystem.ClearAlert(carrier, carrierComponent.CarryingAlert);
 
-        if (!TerminatingOrDeleted(uid))
+        if (carriedAlive)
         {
-            PopupThree(uid, carrier, uid, "ks-carry-drop-user", "ks-carry-drop-target", "ks-carry-drop-others");
+            PopupCarry(carrier, uid, user: carrier, DropPopups);
             _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(carrier):user} stopped carrying {ToPrettyString(uid):target}");
         }
     }
@@ -436,7 +461,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         };
 
         if (_doAfterSystem.TryStartDoAfter(doAfter))
-            PopupThree(carried, carried, carried.Comp.Carrier, "ks-carry-escape-user", "ks-carry-escape-target", "ks-carry-escape-others");
+            PopupCarry(carried.Comp.Carrier, carried, user: carried, EscapePopups);
     }
 
     /// <summary>
@@ -453,7 +478,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         args.ItemUid = carried;
         _grabSystem.MarkThrown(carried, carrier);
 
-        PopupThree(carried, carrier, carried, "ks-carry-throw-user", "ks-carry-throw-target", "ks-carry-throw-others");
+        PopupCarry(carrier, carried, user: carrier, ThrowPopups);
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(carrier):user} threw {ToPrettyString(carried):target} off their back");
     }
 
@@ -477,23 +502,13 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     #endregion
 
     /// <summary>
-    ///     Shows each message to its own audience, each with <c>carrier</c> and <c>carried</c>.
+    ///     Shows a carry's popups at the carried, each with <c>carrier</c> and <c>carried</c>.
     /// </summary>
-    private void PopupThree(EntityUid carried, EntityUid user, EntityUid target, string userMessage, string targetMessage,
-        string othersMessage)
+    /// <param name="user">Whichever of the two acts: the carrier lifting, or the carried wriggling.</param>
+    private void PopupCarry(EntityUid carrier, EntityUid carried, EntityUid user, KsAudiencePopups popups)
     {
-        var carrier = user == carried ? target : user;
-        var arguments = new (string, object)[]
-        {
+        _ksPopupSystem.PopupUserTargetOthers(carried, user, user == carried ? carrier : carried, popups, PopupType.Small,
             ("carrier", Identity.Entity(carrier, EntityManager)),
-            ("carried", Identity.Entity(carried, EntityManager)),
-        };
-
-        _popupSystem.PopupEntity(new KsPopupMessage(userMessage, arguments), carried, user);
-        _popupSystem.PopupEntity(new KsPopupMessage(targetMessage, arguments), carried, target);
-
-        var others = Filter.Pvs(carried, entityManager: EntityManager)
-            .RemoveWhereAttachedEntity(entity => entity == user || entity == target);
-        _popupSystem.PopupEntity(new KsPopupMessage(othersMessage, arguments), carried, others, true);
+            ("carried", Identity.Entity(carried, EntityManager)));
     }
 }

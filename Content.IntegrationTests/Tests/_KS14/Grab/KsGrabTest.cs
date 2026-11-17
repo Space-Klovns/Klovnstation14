@@ -63,7 +63,8 @@ public sealed class KsGrabTest : GameTest
   resistFailStaminaDamageMin: 10
   resistFailStaminaDamageMax: 10
   victimAlert: KsGrabbedAggressive
-  enterUserPopup: ks-grab-aggressive-user
+  enterPopups:
+    user: ks-grab-aggressive-user
 
 - type: ksGrabStage
   id: KsGrabTestAlwaysEscape
@@ -71,7 +72,8 @@ public sealed class KsGrabTest : GameTest
   blocksVictimMovement: true
   escapeChance: 1
   victimAlert: KsGrabbedAggressive
-  enterUserPopup: ks-grab-aggressive-user
+  enterPopups:
+    user: ks-grab-aggressive-user
 
 - type: entity
   parent: MobHuman

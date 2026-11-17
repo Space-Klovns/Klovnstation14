@@ -24,6 +24,13 @@ public sealed partial class KsFiremanCarrierComponent : Component
     public TimeSpan EscapeTime = TimeSpan.FromSeconds(2);
 
     /// <summary>
+    ///     How many of the carrier's hands a carry takes, each of which must be empty or holding the one lifted.
+    ///     tgstation's fireman carry needs both arms.
+    /// </summary>
+    [DataField]
+    public int HandsNeeded = 2;
+
+    /// <summary>
     ///     Speed multiplier of the carrier while carrying.
     /// </summary>
     [DataField]

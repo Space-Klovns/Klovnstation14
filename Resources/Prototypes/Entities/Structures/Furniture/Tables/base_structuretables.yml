@@ -39,9 +39,10 @@
     placeOnto: true
     priority: 10
     sound: /Audio/_KS14/Effects/Shove/tableslam.ogg
-    othersPopup: ks-shove-onto-others
-    userPopup: ks-shove-onto-user
-    targetPopup: ks-shove-onto-target
+    popups:
+      user: ks-shove-onto-user
+      target: ks-shove-onto-target
+      others: ks-shove-onto-others
   # KS14 end
   - type: Clickable
   - type: FootstepModifier
