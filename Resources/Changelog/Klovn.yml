@@ -3032,3 +3032,11 @@ Entries:
       message: Deleting an ID card now logs out the S.P.A.M. tablets logged in with it.
   id: 271
   time: '2026-11-16T18:00:24.0000000+00:00'
+- author: cocothegogo
+  changes:
+    - type: Add
+      message: >-
+        Added the rideable lawnmower, purchaseable at cargo. Can be emagged to
+        turn into Blood Red Lawnmover
+  id: 272
+  time: '2026-11-17T10:16:17.0000000+00:00'
