@@ -942,8 +942,9 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         );
 
         var prob = predictedRandom.Prob(chance);
-        if (!Timing.IsFirstTimePredicted)
-            return !prob;
+        // Not skipped on later prediction passes: each one starts again from the server's state, so what the shove
+        // does (a knockdown, a closet shutting on someone) has to be done again, or it flickers back until the server
+        // answers. Sounds and popups keep to the first pass by themselves.
         // KS14 End
 
         // KS14: don't diverge
@@ -991,7 +992,9 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
             var flashFilter = _netMan.IsClient ? Filter.Local() : Filter.PvsExcept(user, entityManager: EntityManager);
             // nice you can't use [] initialiser because of sandboxing gg
-            _colorFlashEffectSystem.RaiseEffect(Color.Azure, new() { target.Value }, flashFilter);
+            // Once, now that the rest runs on every prediction pass.
+            if (Timing.IsFirstTimePredicted)
+                _colorFlashEffectSystem.RaiseEffect(Color.Azure, new() { target.Value }, flashFilter);
             // KS14 End
 
             return false;

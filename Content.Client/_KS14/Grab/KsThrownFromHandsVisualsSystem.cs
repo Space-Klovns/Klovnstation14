@@ -13,6 +13,7 @@ namespace Content.Client._KS14.Grab;
 public sealed partial class KsThrownFromHandsVisualsSystem : EntitySystem
 {
     [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     private const string AnimationKey = "ks-thrown-from-hands";
 
@@ -53,6 +54,10 @@ public sealed partial class KsThrownFromHandsVisualsSystem : EntitySystem
             _animationPlayerSystem.Stop(thrown.Owner, AnimationKey);
             restOffset = Vector2.Zero;
         }
+
+        // The animation only writes its first frame on the next frame update. Their body has already moved, so
+        // without this they would be drawn at the thrower for a frame, then back where they were, then slide.
+        _spriteSystem.SetOffset(thrown.AsNullable(), restOffset + offset);
 
         var duration = (float)time.TotalSeconds;
         _animationPlayerSystem.Play(thrown.Owner, new Animation

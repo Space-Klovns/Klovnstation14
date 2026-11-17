@@ -44,6 +44,14 @@ public sealed partial class KsShoveObstacleComponent : Component
     public bool IgnoredWhileDown;
 
     /// <summary>
+    ///     Whether this obstacle also takes a shove on someone standing in it, wherever they are shoved from, before
+    ///         anything else is considered: an open closet swallows whoever stands in its doorway. It only does so
+    ///         through a <see cref="KsShoveCollideEvent"/> handler; with none, the shove goes on as usual.
+    /// </summary>
+    [DataField]
+    public bool TakesWhoStandsInIt;
+
+    /// <summary>
     ///     When several obstacles are behind the shoved entity, the one with the highest priority is used.
     /// </summary>
     [DataField]

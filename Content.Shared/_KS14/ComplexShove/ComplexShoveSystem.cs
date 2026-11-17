@@ -18,6 +18,7 @@ using Content.Shared.Standing;
 using Content.Shared.Stunnable;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Systems;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -96,6 +97,10 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         Vector2 direction, MapCoordinates targetPosition, out EntityUid? obstacle)
     {
         obstacle = null;
+
+        // Someone standing in something that takes them, an open closet, goes into it whatever else is true of them.
+        if (TryShoveIntoStoodIn(shover, target, targetPosition, out obstacle))
+            return KsShoveOutcome.Obstacle;
 
         // Someone already out of the fight, in crit or stamina crit, is only pushed: nothing to knock down, kick or pin.
         if (_mobStateSystem.IsIncapacitated(target) || CompOrNull<StaminaComponent>(target)?.Critical == true)
@@ -220,6 +225,49 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Offers the shove to each <see cref="KsShoveObstacleComponent.TakesWhoStandsInIt"/> obstacle the target stands
+    ///         in, highest priority first, until one handles its <see cref="KsShoveCollideEvent"/>.
+    /// </summary>
+    private bool TryShoveIntoStoodIn(Entity<ComplexShoveComponent> shover, EntityUid target, MapCoordinates targetPosition,
+        out EntityUid? obstacle)
+    {
+        obstacle = null;
+        _obstacles.Clear();
+        _entityLookupSystem.GetEntitiesInRange(targetPosition, shover.Comp.ProbeRadius, _obstacles);
+
+        // Copied out: a handler may shove something on, which looks obstacles up again.
+        var stoodIn = new ValueList<Entity<KsShoveObstacleComponent>>();
+        foreach (var candidate in _obstacles)
+        {
+            if (candidate.Comp.TakesWhoStandsInIt && candidate.Owner != shover.Owner && candidate.Owner != target)
+                stoodIn.Add(candidate);
+        }
+
+        stoodIn.Sort(static (a, b) => b.Comp.Priority.CompareTo(a.Comp.Priority));
+        foreach (var candidate in stoodIn)
+        {
+            if (!RaiseCollide(shover, target, candidate))
+                continue;
+
+            obstacle = candidate.Owner;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Lets the obstacle replace what being sent into it does.
+    /// </summary>
+    /// <returns>Whether it did.</returns>
+    private bool RaiseCollide(EntityUid source, EntityUid target, EntityUid obstacle)
+    {
+        var collide = new KsShoveCollideEvent(source, target, obstacle);
+        RaiseLocalEvent(obstacle, ref collide);
+        return collide.Handled;
+    }
+
+    /// <summary>
     ///     The <see cref="KsShoveObstacleComponent"/> behind <paramref name="target"/>, at the end of the shover's probe.
     /// </summary>
     private bool TryGetObstacle(Entity<ComplexShoveComponent> shover, EntityUid target, MapCoordinates targetPosition,
@@ -254,9 +302,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     public void KnockIntoObstacle(EntityUid source, EntityUid target, Entity<KsShoveObstacleComponent> obstacle,
         KsAudiencePopups? popups = null)
     {
-        var collide = new KsShoveCollideEvent(source, target, obstacle);
-        RaiseLocalEvent(obstacle, ref collide);
-        if (collide.Handled)
+        if (RaiseCollide(source, target, obstacle))
             return;
 
         if (obstacle.Comp.PlaceOnto && HasComp<ClimbableComponent>(obstacle))

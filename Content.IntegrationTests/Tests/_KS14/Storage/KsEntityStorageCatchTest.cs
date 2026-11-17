@@ -44,6 +44,7 @@ public sealed class KsEntityStorageCatchTest : GameTest
   components:
   - type: KsEntityStorageCatch
   - type: KsShoveObstacle
+    takesWhoStandsInIt: true
 ";
 
     /// <param name="throwMob">Whether a person is thrown, or an item.</param>
@@ -101,11 +102,15 @@ public sealed class KsEntityStorageCatchTest : GameTest
     }
 
     /// <summary>
-    ///     A shove into an open closet puts them inside; into a shut one it knocks them down against it.
+    ///     A shove into an open closet puts them inside; into a shut one it knocks them down against it. Someone
+    ///         standing in an open closet goes into it whichever way they are shoved, rather than on past it.
     /// </summary>
-    [TestCase(true)]
-    [TestCase(false)]
-    public async Task OpenClosetCatchesTheShoved(bool open)
+    /// <param name="open">Whether the closet stands open.</param>
+    /// <param name="standingInIt">Whether the target stands in the closet, or a tile in front of it.</param>
+    [TestCase(true, false)]
+    [TestCase(false, false)]
+    [TestCase(true, true)]
+    public async Task OpenClosetCatchesTheShoved(bool open, bool standingInIt)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid shoverUid = default;
@@ -123,10 +128,10 @@ public sealed class KsEntityStorageCatchTest : GameTest
             var gravityComponent = SEntMan.EnsureComponent<GravityComponent>(testMap.Grid.Owner);
             SEntMan.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
 
-            // The shover, the target a tile east, and the closet a tile beyond the target.
+            // The shover, the target a tile east, and the closet a tile beyond the target, or under them.
             shoverUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             targetUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
-            closetUid = SEntMan.SpawnEntity(_closet, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+            closetUid = SEntMan.SpawnEntity(_closet, new EntityCoordinates(testMap.Grid, standingInIt ? 1.5f : 2.5f, 0.5f));
             if (open)
                 SEntMan.System<SharedEntityStorageSystem>().OpenStorage(closetUid);
 

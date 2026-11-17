@@ -64,7 +64,7 @@ public sealed partial class KsGrabberComponent : Component
     ///         long their sprite takes to slide there from where they were held, so that they don't visibly jump.
     /// </summary>
     [DataField]
-    public TimeSpan ThrowPullInTime = TimeSpan.FromSeconds(0.1);
+    public TimeSpan ThrowPullInTime = TimeSpan.FromSeconds(0.15);
 
     /// <summary>
     ///     Popups when someone this grabber threw slams into a shove obstacle (a person, a table), instead of the

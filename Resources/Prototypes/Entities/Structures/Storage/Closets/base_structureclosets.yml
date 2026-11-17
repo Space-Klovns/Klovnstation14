@@ -63,6 +63,7 @@
   - type: KsEntityStorageCatch
   - type: KsShoveObstacle
     priority: 5
+    takesWhoStandsInIt: true
     sound:
       collection: MetalThud
   # KS14 end

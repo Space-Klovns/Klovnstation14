@@ -43,7 +43,7 @@ never deals stamina damage. The outcome, checked in this order:
 | A table behind them | Put onto the table and knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_TABLE`) |
 | A person behind them | Both knocked down | 3 s, person behind 1.1 s | 2 s, person behind 0.1 s |
 | A person lying behind them (a corpse, someone knocked down) | As if nothing were behind them | — | — |
-| An open closet behind them | Put inside, and it shuts on them | — | the same |
+| An open closet behind them, or under them | Put inside, and it shuts on them | — | the same |
 | A shut closet behind them | Knocked down against it | 3 s | 2 s |
 | A wall or anything else solid | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
@@ -218,6 +218,9 @@ shover has `ComplexShoveComponent`. There is no same-tile rule: standing over so
 
 Resolution order in `ResolveShove`:
 
+0. **Standing in something that takes them**: an obstacle with `TakesWhoStandsInIt` under the target is offered the
+   shove first (`TryShoveIntoStoodIn`), through its `KsShoveCollideEvent`. An open closet handles it and swallows
+   them, whichever way they were shoved and whatever state they are in. Unhandled, the shove goes on below.
 0. **Out of the fight**: a target incapacitated (crit, dead) or in stamina crit is only pushed. Nothing below runs.
 1. **`KsShoveAttemptEvent`** on the target: a handler can take the whole shove (a grab pinning its victim).
 2. **Target already down** (`KickWhileDown`), always resolved here, never knocked into anything again:
@@ -246,6 +249,11 @@ flying (a thrown grab victim, below) knocks them over the same way.
 
 `KsShovedEvent` reports the outcome afterwards. Shoves do **no stamina damage**: the stamina handler for
 `DisarmedEvent` in `SharedStaminaSystem` is commented out with a `KS14` marker.
+
+**Prediction.** `DoDisarm` runs in full on every prediction pass, not only the first (a `KS14` edit). Each pass
+starts again from the server's state, so whatever a shove does has to be done again. When it was skipped on later
+passes, a closet shut on someone flapped open again a tick later on the shover's client, until the server answered.
+Sounds and popups keep to the first pass by themselves, and the colour flash is gated on it.
 
 Popups: `OnDisarmed` decides from the outcome, in one place. A plain push (`KsShoveOutcome.Pushed`) keeps the stock
 `PopupPrefix = "disarm-action-shove-"`. Every other outcome has shown its own, so it sets
@@ -385,7 +393,9 @@ position because that is where a dropped hand item is. A held victim is up to a 
 So that nothing is seen to jump, the victim's sprite is slid over instead: the thrower's client raises
 `KsThrownFromHandsEvent` on the victim as it predicts the throw, the server sends `KsThrownFromHandsMessage` to
 everyone else, and `KsThrownFromHandsVisualsSystem` (client) animates `SpriteComponent.Offset` from where they were
-drawn to zero over `KsGrabber.ThrowPullInTime` (0.1 s). Someone carried is already at the carrier's position, and is
+drawn to zero over `KsGrabber.ThrowPullInTime` (0.15 s). It sets the starting offset itself as well: an animation
+only writes its first frame on the next frame update, and for that one frame the victim would be drawn at the
+thrower, then back where they were. Someone carried is already at the carrier's position, and is
 put down there, so a carry needs none of this.
 
 #### Thrown or shoved into an open closet
@@ -399,6 +409,8 @@ ways:
 - **Shoved**: `KsShoveCollideEvent`, which a shove raises on a `KsShoveObstacle`, so a storage that catches the shoved
   needs that component too. `ClosetBase` has it (priority 5, between people and tables). Handling the event replaces
   the knockdown, so a shut closet is something solid to be knocked down against and an open one swallows them.
+  The closet also has `takesWhoStandsInIt`, so someone standing in its open doorway is shoved into it rather than on
+  past it (step 0 of the shove's order).
 
 It is shared, and predicted for whoever does it: a shove is predicted, and a client simulates what it throws
 (`PredictedThrownItemComponent`), so it sees the hit, shuts the door and plays its sound at once. Whoever sent them in
@@ -531,6 +543,9 @@ NPC toggles go through `SetInCombatMode` and make no sound.
 - `Tests/_KS14/Grab/KsThrowModeTest.cs`: a real client sends the throw request, in and out of throw mode.
 - `Tests/_KS14/Storage/KsEntityStorageCatchTest.cs`: an open closet catches a thrown or shoved person and shuts; a
   closed one doesn't (a shove into it knocks down), and an open one lets a thrown item be.
+- `Tests/_KS14/Storage/KsEntityStorageCatchPredictionTest.cs` and `Tests/_KS14/Grab/KsGrabThrowPredictionTest.cs`:
+  what the acting player's own client predicts, on a real connected client. The closet shuts on the shoved at once
+  and stays shut on every tick after; a thrown victim starts at the thrower, in flight, with the slide under way.
 - `Tests/_KS14/Grab/KsCuffResistTest.cs`: resisting while cuffed starts breaking out; with nothing to resist, nothing
   takes the attempt.
 
