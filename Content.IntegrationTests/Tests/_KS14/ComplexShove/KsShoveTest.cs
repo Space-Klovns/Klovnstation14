@@ -9,8 +9,10 @@ using Content.Shared._KS14.ShoveWeapon;
 using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
 using Content.Server.Gravity;
+using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Gravity;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item.ItemToggle;
@@ -295,6 +297,36 @@ public sealed class KsShoveTest : GameTest
                 Assert.That(IsKnockedDown(behindUid.Value), "The person shoved into must be knocked down.");
                 Assert.That(KnockdownLeft(targetUid), Is.EqualTo(obstacle.KnockdownTime.TotalSeconds).Within(0.1));
                 Assert.That(KnockdownLeft(behindUid.Value), Is.EqualTo(obstacle.CollateralKnockdownTime!.Value.TotalSeconds).Within(0.1));
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A body on the floor isn't something to be shoved into: the shove carries over it as over open floor.
+    /// </summary>
+    [Test]
+    public async Task CorpseBehindIsShovedOver()
+    {
+        var (shoverUid, targetUid, corpseUid) = await SetUp(_human, behind: _human);
+
+        await Server.WaitAssertion(() =>
+        {
+            // Real damage, as forcing the state alone would be undone by the damage thresholds.
+            var damage = new DamageSpecifier { DamageDict = { ["Blunt"] = 300 } };
+            SEntMan.System<DamageableSystem>().ChangeDamage(corpseUid!.Value, damage, ignoreResistances: true);
+            Assert.That(SEntMan.System<MobStateSystem>().IsDead(corpseUid.Value), "This test needs a corpse.");
+        });
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            Shove(shoverUid, targetUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(IsKnockedDown(targetUid), Is.False, "A corpse behind must not knock the target over.");
+                Assert.That(IsStaggered(targetUid), "A shove over a corpse must push and stagger as in the open.");
+                Assert.That(IsKnockedDown(corpseUid!.Value), Is.False, "A corpse must not be knocked about by the shove.");
             });
         });
     }

@@ -97,6 +97,7 @@
   # KS14 start: shoving someone into a person knocks both over
   - type: KsShoveObstacle
     collateralKnockdownTime: 1.1
+    ignoredWhileDown: true
     sound: /Audio/Effects/hit_kick.ogg
   # KS14 end
   - type: MeleeWeapon

@@ -42,11 +42,13 @@ never deals stamina damage. The outcome, checked in this order:
 | Target already down, after that | Only pushed; no stagger | — | — |
 | A table behind them | Put onto the table and knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_TABLE`) |
 | A person behind them | Both knocked down | 3 s, person behind 1.1 s | 2 s, person behind 0.1 s |
+| A person lying behind them (a corpse, someone knocked down) | As if nothing were behind them | — | — |
 | A wall or anything else solid | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
 "Behind" means within about a tile past the target, along the line from the shover through the target. Tables and
-people are found with an entity lookup for `KsShoveObstacleComponent`; anything else solid with a static raycast.
+people are found with an entity lookup for `KsShoveObstacleComponent`, skipping any with `IgnoredWhileDown` (people)
+that are lying down; anything else solid with a static raycast.
 The raycast catches walls, airlocks, windows and machines. Someone already down is never knocked into anything
 again, and never staggered.
 

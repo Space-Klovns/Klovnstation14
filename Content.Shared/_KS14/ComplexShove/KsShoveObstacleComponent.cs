@@ -37,6 +37,13 @@ public sealed partial class KsShoveObstacleComponent : Component
     public bool DisarmsAgainst;
 
     /// <summary>
+    ///     Whether this obstacle stops counting while it lies on the floor, as a corpse or someone knocked down does:
+    ///         the shove carries over them, and they aren't knocked about.
+    /// </summary>
+    [DataField]
+    public bool IgnoredWhileDown;
+
+    /// <summary>
     ///     When several obstacles are behind the shoved entity, the one with the highest priority is used.
     /// </summary>
     [DataField]

@@ -235,6 +235,9 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             if (candidate.Owner == shover.Owner || candidate.Owner == target)
                 continue;
 
+            if (candidate.Comp.IgnoredWhileDown && _standingStateSystem.IsDown(candidate.Owner))
+                continue;
+
             if (obstacle == null || candidate.Comp.Priority > obstacle.Value.Comp.Priority)
                 obstacle = candidate;
         }
