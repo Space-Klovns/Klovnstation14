@@ -40,6 +40,45 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId StormCloudEffect = "KsFxStormCloud";
     private static readonly EntProtoId HeartDemonEffect = "KsFxHeartDemonAura";
     private static readonly EntProtoId BeastEffect = "KsFxBeastAura";
+    private static readonly EntProtoId SwordRideEffect = "KsFxSwordRide";
+    private static readonly EntProtoId SwordOrbitEffect = "KsFxSwordOrbit";
+
+    // Each technique's own animation (wuxia_arts.yml).
+    public static readonly EntProtoId ArtPalmQi = "KsFxArtPalmQi";
+    public static readonly EntProtoId ArtPalmFire = "KsFxArtPalmFire";
+    public static readonly EntProtoId ArtPalmBlood = "KsFxArtPalmBlood";
+    public static readonly EntProtoId ArtPalmGold = "KsFxArtPalmGold";
+    public static readonly EntProtoId ArtSwordRain = "KsFxArtSwordRain";
+    public static readonly EntProtoId ArtSwordOrbit = "KsFxArtSwordOrbit";
+    public static readonly EntProtoId ArtTalismanFlare = "KsFxArtTalismanFlare";
+    public static readonly EntProtoId ArtEmbers = "KsFxArtEmbers";
+    public static readonly EntProtoId ArtPetals = "KsFxArtPetals";
+    public static readonly EntProtoId ArtPetalsBig = "KsFxArtPetalsBig";
+    public static readonly EntProtoId ArtGoldMotes = "KsFxArtGoldMotes";
+    public static readonly EntProtoId ArtVoidMotes = "KsFxArtVoidMotes";
+    public static readonly EntProtoId ArtFistGold = "KsFxArtFistGold";
+    public static readonly EntProtoId ArtFistEarth = "KsFxArtFistEarth";
+    public static readonly EntProtoId ArtFistQi = "KsFxArtFistQi";
+    public static readonly EntProtoId ArtBarrage = "KsFxArtBarrage";
+    public static readonly EntProtoId ArtFireRing = "KsFxArtFireRing";
+    public static readonly EntProtoId ArtFireRingBig = "KsFxArtFireRingBig";
+    public static readonly EntProtoId ArtBloodVortex = "KsFxArtBloodVortex";
+    public static readonly EntProtoId ArtRoarBlood = "KsFxArtRoarBlood";
+    public static readonly EntProtoId ArtRoarGold = "KsFxArtRoarGold";
+    public static readonly EntProtoId ArtRoarSense = "KsFxArtRoarSense";
+    public static readonly EntProtoId ArtFissures = "KsFxArtFissures";
+    public static readonly EntProtoId ArtFissuresBig = "KsFxArtFissuresBig";
+    public static readonly EntProtoId ArtFallingStar = "KsFxArtFallingStar";
+    public static readonly EntProtoId ArtSheenIron = "KsFxArtSheenIron";
+    public static readonly EntProtoId ArtSheenGold = "KsFxArtSheenGold";
+    public static readonly EntProtoId ArtMendWood = "KsFxArtMendWood";
+    public static readonly EntProtoId ArtMendBone = "KsFxArtMendBone";
+    public static readonly EntProtoId ArtMendWater = "KsFxArtMendWater";
+    public static readonly EntProtoId ArtMistBlood = "KsFxArtMistBlood";
+    public static readonly EntProtoId ArtMistSteam = "KsFxArtMistSteam";
+    public static readonly EntProtoId ArtMistDust = "KsFxArtMistDust";
+    public static readonly EntProtoId ArtMistShadow = "KsFxArtMistShadow";
+    public static readonly EntProtoId QiCloud = "KsFxQiCloud";
 
     /// <summary>
     ///     The layered SS13 cues (temple bells, guqin phrases, chimes), mixed down by Tools/_KS14/cultivation_sounds.py.
@@ -101,11 +140,11 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         AddAura<StillWaterWardComponent>(WaterBubbleEffect);
         AddAura<RootedStanceComponent>("Sigil", FxColour.Earth);
         AddAura<DharmaIdolComponent>(DharmaIdolEffect);
-        AddAura<TurtleBreathingComponent>("Aura", FxColour.Water);
+        AddAura<TurtleBreathingComponent>(WaterBubbleEffect);
         AddAura<MirrorLakeComponent>(MirrorBubbleEffect);
         AddAura<MoltenStepComponent>("Aura", FxColour.Fire);
-        AddAura<SwordRidingComponent>("Aura", FxColour.Metal);
-        AddAura<SwordFormationComponent>("Sigil", FxColour.Metal);
+        AddAura<SwordRidingComponent>(SwordRideEffect);
+        AddAura<SwordFormationComponent>(SwordOrbitEffect);
         AddAura<CultivationHasteComponent>("Aura", FxColour.Qi);
         AddAura<SoulDepartedComponent>("Aura", FxColour.Void);
         AddAura<NascentProjectionComponent>("Aura", FxColour.Gold);
@@ -198,6 +237,37 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         _transformSystem.SetLocalRotation(craterUid, Angle.FromDegrees(90 * _robustRandom.Next(4)));
         Spawn(RubbleEffect, coordinates);
         return craterUid;
+    }
+
+    /// <summary>
+    ///     A technique's own animation (the KsFxArt prototypes), played once where it lands.
+    /// </summary>
+    public void Art(EntProtoId effect, MapCoordinates coordinates)
+    {
+        Spawn(effect, coordinates);
+    }
+
+    public void Art(EntProtoId effect, EntityCoordinates coordinates)
+    {
+        Spawn(effect, _transformSystem.ToMapCoordinates(coordinates));
+    }
+
+    /// <summary>
+    ///     A technique's own animation, played once where someone stands, staying put as they move.
+    /// </summary>
+    public void Art(EntProtoId effect, EntityUid uid)
+    {
+        if (!TerminatingOrDeleted(uid))
+            Spawn(effect, _transformSystem.GetMapCoordinates(uid));
+    }
+
+    /// <summary>
+    ///     A technique's own animation, played once on someone and moving with them.
+    /// </summary>
+    public void ArtOn(EntProtoId effect, EntityUid uid)
+    {
+        if (!TerminatingOrDeleted(uid))
+            SpawnAttachedTo(effect, new EntityCoordinates(uid, Vector2.Zero));
     }
 
     /// <summary>

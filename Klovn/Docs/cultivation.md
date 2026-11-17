@@ -217,6 +217,14 @@ despawns as its one run ends.
 - **Lasting states** wear their SS13 sprites: Golden Bell (and Vajra Body) the golden bell, the water wards a bubble,
   Dharma Idol the idol, tribulations a storm cloud overhead, heart demons and spirit beasts their auras.
 
+- **Every other art has its own animation** (`wuxia_arts.rsi`, prototypes `KsFxArt*` in the generated
+  `wuxia_arts.yml`, named on `CultivationVisualsSystem` and played with `Art`/`ArtOn`): qi palm prints (Empty Palm,
+  Burning Palm, Exploding Heart Palm, Sky-Splitting Palm), swords raining on targets, a wheel of orbiting blades for Sword
+  Formation, the SS13 flying sword under a sword rider and a golden cloud where a qinggong leap starts, a talisman burning
+  away, embers, petals, gold and void motes, fist bursts and a hundred-fist barrage, rings of flame, a devouring blood
+  vortex, rings of a roar or of realm pressure, the ground splitting open, a meteor for Falling Mountain, an iron or golden
+  sheen over the body, healing glows, and mists of blood, steam, dust and shadow. Formation arrays are the SS13 sigils.
+
 `Tools/_KS14/cultivation_sounds.py` mixes SS13's layered sounds into single files in `Audio/_KS14/Cultivation`: the
 great bell and temple bell, guqin phrases, wind chimes, the qinggong whoosh, a mountain falling, and the ascension.
 

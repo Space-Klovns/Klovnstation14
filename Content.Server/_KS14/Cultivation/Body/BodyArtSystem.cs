@@ -434,6 +434,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         {
             _audioSystem.PlayPvs(ImpactSound, entity);
             Impact(centre, MathF.Max(landingComponent.Radius, 1f), strength: landingComponent.HurtSelf ? 0.5f : 1.5f);
+            _visualsSystem.Art(CultivationVisualsSystem.ArtFistEarth, centre);
         }
     }
 
@@ -448,6 +449,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMendWood, entity);
         var breathingComponent = EnsureComp<BodyBreathingComponent>(entity);
         breathingComponent.BreathsLeft = 2;
         breathingComponent.ExhaustionPerBreath = args.Exhaustion;
@@ -501,6 +503,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtSheenIron, entity);
         var duration = TimeSpan.FromSeconds(10 + entity.Comp.Stage);
         if (_bodySystem.GetStance(entity) == BodyStance.Mountain)
             duration *= 1.5;
@@ -542,6 +545,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(entity.Comp.Stage >= 6 ? CultivationVisualsSystem.ArtFissuresBig : CultivationVisualsSystem.ArtFissures, entity);
         var stage = entity.Comp.Stage;
         var centre = _transformSystem.GetMapCoordinates(entity);
         var radius = 2f + (float)stage / 3f;
@@ -572,6 +576,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFistGold, args.Target);
         var stage = entity.Comp.Stage;
         var arms = SharedBodyCultivationSystem.GetLevel(entity.Comp, BodyGroup.Arms);
         var origin = _transformSystem.GetMapCoordinates(entity).Position;
@@ -612,6 +617,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtBarrage, args.Target);
         var stage = entity.Comp.Stage;
         var blows = 3 + stage;
         var perBlow = 3f + stage / 2f + entity.Comp.PunchDamage / 2f;
@@ -638,6 +644,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMendBone, entity);
         // Wrench dislocations and fractures back into place: it heals blunt trauma above all.
         var heal = 10f + 3f * (float)entity.Comp.Stage;
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", -heal), ignoreResistances: true, interruptsDoAfters: false);
@@ -717,6 +724,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMendWood, entity);
         // The Body Molding Art itself: flesh is clay to be shaped again.
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-(30f + 5f * (float)entity.Comp.Stage)));
         _noticeSystem.Announce(entity, Loc.GetString("body-art-remold", ("user", entity.Owner)), type: PopupType.Medium);
@@ -729,6 +737,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistDust, entity);
         var stage = entity.Comp.Stage;
         var origin = _transformSystem.GetMapCoordinates(entity);
         var direction = Towards(entity, args.Target, out _);
@@ -771,6 +780,8 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistBlood, entity);
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtEmbers, entity);
         _bodySystem.ApplyBloodBoil(entity, TimeSpan.FromSeconds(15), args.CrashExhaustion);
         Shout(entity, "body-art-blood-boil");
         _noticeSystem.Announce(entity, Loc.GetString("body-art-blood-boil-on", ("user", entity.Owner)), type: PopupType.Medium);
@@ -789,6 +800,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFallingStar, args.Target);
         var stage = entity.Comp.Stage;
         var direction = Towards(entity, args.Target, out var distance);
         distance = MathF.Min(distance, 9f);
@@ -822,6 +834,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFistEarth, args.Target);
         var stage = entity.Comp.Stage;
         if (TryComp<PullableComponent>(victimUid, out var pullableComponent))
             _pullingSystem.TryStopPull(victimUid, pullableComponent, entity);
@@ -849,6 +862,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtPalmGold, args.Target);
         var stage = entity.Comp.Stage;
         var direction = Towards(entity, args.Target, out _);
 
@@ -867,6 +881,8 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtSheenGold, entity);
+        _visualsSystem.Play(CultivationVisualsSystem.TempleBellSound, entity);
         var duration = TimeSpan.FromSeconds(8);
         if (_bodySystem.GetStance(entity) == BodyStance.Mountain)
             duration *= 1.5;
@@ -906,6 +922,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         Smash(centre, quakeComponent.Radius, 400f, stage >= 9 ? 2 : 1, userUid);
         _visualsSystem.Distort(centre, FxDistortion.Pulse);
         Impact(centre, quakeComponent.Radius, strength: 2.5f);
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFissuresBig, centre);
         _audioSystem.PlayPvs(RumbleSound, userUid);
     }
 
@@ -916,6 +933,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtRoarBlood, entity);
         var centre = _transformSystem.GetMapCoordinates(entity);
 
         Shout(entity, "body-art-primordial-roar");

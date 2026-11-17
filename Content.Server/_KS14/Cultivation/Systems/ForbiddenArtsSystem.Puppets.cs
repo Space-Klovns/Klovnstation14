@@ -51,6 +51,8 @@ public sealed partial class ForbiddenArtsSystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistShadow, args.Target);
+        _visualsSystem.Art(CultivationVisualsSystem.ArtVoidMotes, args.Target);
         _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
 
         // One puppet at a time: the old one collapses.

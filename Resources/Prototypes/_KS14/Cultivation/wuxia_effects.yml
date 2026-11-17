@@ -396,3 +396,58 @@
     netsync: false
   - type: TimedDespawn
     lifetime: 0.59
+
+# Sword Riding: the glowing flying sword under the rider's feet.
+- type: entity
+  id: KsFxSwordRide
+  categories: [ HideSpawnMenu ]
+  name: flying sword
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_riding.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: sword_ride
+      shader: unshaded
+      offset: 0, -0.35
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 2
+    energy: 1.5
+    netsync: false
+
+# Qinggong: a puff of golden cloud left where the leap began.
+- type: entity
+  id: KsFxQiCloud
+  categories: [ HideSpawnMenu ]
+  name: qi cloud
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_riding.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: qi_cloud
+      offset: 0, -0.3
+  - type: TimedDespawn
+    lifetime: 1.19
+
+# Sword Formation: three blades wheeling round their master for as long as it lasts.
+- type: entity
+  id: KsFxSwordOrbit
+  categories: [ HideSpawnMenu ]
+  name: sword formation
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sword_orbit
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false

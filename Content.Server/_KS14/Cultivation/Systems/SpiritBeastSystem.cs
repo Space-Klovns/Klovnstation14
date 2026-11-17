@@ -53,6 +53,7 @@ public sealed partial class SpiritBeastSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtGoldMotes, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
 
         // One contract at a time: the old beast goes free.

@@ -64,6 +64,7 @@ public sealed partial class ForbiddenArtsSystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtPalmBlood, args.Target);
         _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         AddTaint(entity, 6f);
 

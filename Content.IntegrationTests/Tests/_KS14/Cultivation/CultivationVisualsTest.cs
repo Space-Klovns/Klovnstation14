@@ -61,6 +61,13 @@ public sealed class CultivationVisualsTest : GameTest
             {
                 Assert.That(prototypeManager.HasIndex<Robust.Shared.Prototypes.EntityPrototype>(id), Is.True, $"No {id}.");
             }
+
+            // And every technique's own animation the visuals system names.
+            foreach (var field in typeof(CultivationVisualsSystem).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            {
+                if (field.GetValue(null) is Robust.Shared.Prototypes.EntProtoId effect)
+                    Assert.That(prototypeManager.HasIndex(effect), Is.True, $"No {effect} for {field.Name}.");
+            }
         });
     }
 

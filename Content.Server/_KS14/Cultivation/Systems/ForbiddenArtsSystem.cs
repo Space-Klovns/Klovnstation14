@@ -338,6 +338,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtBloodVortex, entity);
         var transmissionUid = Spawn(TransmissionPrototype, Transform(entity).Coordinates);
         _handsSystem.PickupOrDrop(entity, transmissionUid, checkActionBlocker: false);
         _sharedCultivationSystem.AddInsight(entity.AsNullable(), 10f);
@@ -381,6 +382,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtBloodVortex, args.Target);
         _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-devour-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
     }
@@ -475,6 +477,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistBlood, args.Target);
         _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         var now = _gameTiming.CurTime;
         var wormComponent = EnsureComp<GuWormComponent>(hostUid);
@@ -513,6 +516,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistBlood, entity);
         foreach (var hostEntity in hostEntities)
             StirWorm(hostEntity);
 
@@ -594,6 +598,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtVoidMotes, args.Target);
         _visualsSystem.Strike(entity, args.Target, FxColour.Blood);
         _jitteringSystem.DoJitter(victimUid, args.Duration, refresh: true);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-soul-search-start", ("user", entity.Owner), ("target", victimUid)), type: PopupType.MediumCaution);
@@ -692,6 +697,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistBlood, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-blood-escape", ("user", entity.Owner)), type: PopupType.LargeCaution);
 
         // A quarter of the way to critical condition, spat out as blood.

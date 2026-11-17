@@ -36,8 +36,8 @@
   - type: Transform
     anchored: true
   - type: Sprite
-    sprite: _KS14/Cultivation/items.rsi
-    state: array_gathering
+    sprite: _KS14/Cultivation/wuxia_96.rsi
+    state: sigil_gathering
     drawdepth: FloorObjects
   - type: CultivationQiSource
     range: 2
@@ -54,8 +54,8 @@
   - type: Transform
     anchored: true
   - type: Sprite
-    sprite: _KS14/Cultivation/items.rsi
-    state: array_alarm
+    sprite: _KS14/Cultivation/wuxia_96.rsi
+    state: sigil_alarm
     drawdepth: FloorObjects
   - type: TimedDespawn
     lifetime: 300

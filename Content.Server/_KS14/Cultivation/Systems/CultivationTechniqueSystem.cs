@@ -139,6 +139,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtSwordRain, args.Target);
         _visualsSystem.Wave(entity, FxColour.Metal, big: true);
         var direction = DirectionTo(entity, args.Target);
 
@@ -163,6 +164,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtPalmFire, args.Target);
         _visualsSystem.Flames(args.Target, 0.3f, 3);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var stacks = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Fire) ? args.FireStacks * 2f : args.FireStacks;
@@ -181,6 +183,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtFireRingBig, entity);
         _visualsSystem.Flames(entity, 3f, 18);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         foreach (var victimUid in MobsAround(entity, args.Range))
@@ -204,6 +207,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         var releaseWave = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Water);
         _cultivationStanceSystem.ApplyWard(entity, args.Duration, args.DamageMultiplier, releaseWave);
 
@@ -264,6 +268,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMendWood, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _damageableSystem.HealEvenly(args.Target, FixedPoint2.New(-args.Heal), origin: entity);
 
@@ -285,6 +290,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtPetalsBig, entity);
+        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         _visualsSystem.Wave(entity, FxColour.Wood, big: true);
         _visualsSystem.Motes(entity, FxColour.Wood, TimeSpan.FromSeconds(3));
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-args.Heal), origin: entity);
@@ -309,6 +316,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFissures, entity);
         var damageMultiplier = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Earth)
             ? args.RootDamageMultiplier
             : args.DamageMultiplier;

@@ -181,6 +181,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
                 return;
 
             args.Handled = true;
+            _visualsSystem.ArtOn(CultivationVisualsSystem.ArtGoldMotes, entity);
             bearerComponent.Artifact = heldUid;
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-bound", ("item", heldUid.Value)), type: PopupType.Medium);
             return;
@@ -225,6 +226,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFistQi, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
         _damageableSystem.TryChangeDamage(args.Target, CultivationSystem.Damage("Slash", args.BonusDamage), origin: entity);
@@ -239,6 +241,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Play(CultivationVisualsSystem.QinggongSound, entity);
         var ridingComponent = EnsureComp<SwordRidingComponent>(entity);
         ridingComponent.EndTime = _gameTiming.CurTime + args.Duration;
 
@@ -291,6 +294,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMendWater, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _stunSystem.TryUnstun(args.Target);
         _stunSystem.TryStanding(args.Target);
@@ -350,6 +354,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtEmbers, args.Target);
         _visualsSystem.Flames(args.Target, 0.3f, 2);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _flammableSystem.AdjustFireStacks(args.Target, 1f, ignite: true);
@@ -363,6 +368,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtFireRing, entity);
         _visualsSystem.Flames(entity, args.Range, 14);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 1.5f);
@@ -390,6 +396,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtEmbers, entity);
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistBlood, entity);
         _visualsSystem.Flames(entity, 0.4f, 4);
         _visualsSystem.Motes(entity, FxColour.Fire, args.Duration);
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", args.SelfDamage), ignoreResistances: true, interruptsDoAfters: false);
@@ -422,7 +430,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Handled = true;
         _stanceSystem.ApplyDharmaIdol(entity, args.Duration, 0.6f);
-        _audioSystem.PlayPvs(BellSound, entity);
+        _visualsSystem.Play(CultivationVisualsSystem.TempleBellSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-dharma-idol", ("user", entity.Owner)), type: PopupType.Large);
     }
 
@@ -504,6 +512,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtPetals, entity);
         _plants.Clear();
         _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, args.Range, _plants);
         foreach (var plantEntity in _plants)
@@ -544,6 +553,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistSteam, entity);
         var centre = Transform(entity).Coordinates;
         for (var x = -1; x <= 1; x++)
         {
@@ -614,6 +624,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistDust, args.Target);
         for (var x = -1; x <= 1; x++)
         {
             for (var y = -1; y <= 1; y++)

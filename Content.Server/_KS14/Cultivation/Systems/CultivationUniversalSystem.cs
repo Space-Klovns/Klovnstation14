@@ -130,6 +130,8 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtRoarSense, entity);
+        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         _visualsSystem.Wave(entity, FxColour.Sense, big: true);
         var found = 0;
         foreach (var otherUid in MobsAround(entity, args.Range))
@@ -176,6 +178,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtPalmQi, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var direction = _transformSystem.GetMapCoordinates(args.Target).Position - _transformSystem.GetMapCoordinates(entity).Position;
         if (direction.LengthSquared() < 0.0001f)
@@ -198,6 +201,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.QiCloud, entity);
         _visualsSystem.Motes(entity, FxColour.Qi, TimeSpan.FromSeconds(1));
         _visualsSystem.Play(CultivationVisualsSystem.QinggongSound, entity);
         var maxDistance = args.BaseDistance + 2f * (float)entity.Comp.Realm;
@@ -244,6 +248,8 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtRoarGold, entity);
+        _visualsSystem.Distort(_transformSystem.GetMapCoordinates(entity), FxDistortion.Pulse);
         var power = PathPower(entity);
         foreach (var otherUid in MobsAround(entity, args.Range))
         {
@@ -266,6 +272,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFistQi, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
 
         // Anything that answers the seal (an Exploding Heart Palm waiting to go off) gets first claim on it.
@@ -306,6 +313,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtTalismanFlare, entity);
         QueueDel(paperUid.Value);
         var talismanUid = Spawn(TalismanPrototype, Transform(entity).Coordinates);
         EnsureComp<QiTalismanComponent>(talismanUid).Element = law.Element;
@@ -383,6 +391,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtGoldMotes, entity);
         var slipUid = Spawn(JadeSlipPrototype, Transform(entity).Coordinates);
         var manualComponent = EnsureComp<CultivationManualComponent>(slipUid);
         manualComponent.Law = rootLaw;
@@ -405,6 +414,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Art(CultivationVisualsSystem.ArtMistShadow, entity);
         if (RemComp<CultivationConcealedComponent>(entity))
         {
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-concealment-off"));
@@ -428,6 +438,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtGoldMotes, entity);
         var forced = !entity.Comp.ForcedCirculation;
         _sharedCultivationSystem.SetForcedCirculation(entity.AsNullable(), forced);
         _actionsSystem.SetToggled(args.Action.AsNullable(), forced);
