@@ -52,7 +52,7 @@ the first knockdown and cleared by any paralysis, and `no_side_kick`, a 3.6 s im
 - the paralysis can't be renewed or extended
 - the next shove disarms them, once (`Disarmed` on the marker), but only against a wall. What counts is data:
   `ComplexShoveComponent.DisarmAgainstWalls` for walls, `KsShoveObstacleComponent.DisarmsAgainst` for an obstacle (off
-  for tables and people), and `KsShoveDisarmCheckEvent` for anything else that should count
+  for tables and people), and `KsCanShoveDisarmEvent` for anything else that should count
 - every shove after that only pushes
 
 Ours is stricter than tgstation's: a target who stays on the floor after the paralysis has no more kicks coming
@@ -162,7 +162,9 @@ player who toggled it, at tgstation's 25% scaled by the interface volume setting
   `KsGrabber.stages`.
 - **Something new to be shoved into.** Give it `KsShoveObstacle` with its own popups, knockdown and priority.
 - **Special shove or grab behaviour.** Handle the events rather than adding systems:
+  - `KsShoveAttemptEvent`: take a shove over entirely, as the grab's pin does
   - `KsShoveCollideEvent`: glass tables, lockers, disposals
+  - `KsCanShoveDisarmEvent`: something else that a downed target can be disarmed against
   - `KsShovedEvent`: react to any shove outcome
   - `KsGrabStageChangedEvent`: martial arts, pummelling
   - `KsGrabResistAttemptEvent`: grab-resistant species, staggered victims
@@ -185,7 +187,7 @@ throw-mode click).
 | Shove | `Content.Shared/_KS14/ComplexShove/` | `ComplexShove` on the shover, `KsShoveObstacle` on tables (`TableBase`) and people (`BaseSpeciesMob`) |
 | Grab levels | `Content.Shared/_KS14/Grab/` | `Resources/Prototypes/_KS14/Grab/stages.yml`, alerts in `_KS14/Alerts/grab.yml` |
 | Fireman carry | `Content.Shared/_KS14/Carrying/`, `Content.Client/_KS14/Carrying/` | `KsFiremanCarrier` on `BaseSpeciesMob` |
-| Throw mode | `Content.Shared/_KS14/ThrowMode/`, `Content.Client/_KS14/ThrowMode/` | `KsThrowMode` on `BaseSpeciesMob`, key `KsToggleThrowMode` (unbound by default) |
+| Throw mode | `Content.Shared/_KS14/ThrowMode/`, `Content.Client/_KS14/ThrowMode/` | `KsThrowMode` on `BaseSpeciesMob`, key function `KsToggleThrowMode` (`KsKeyFunctions.ToggleThrowMode`, unbound by default) |
 | Resist | `Content.Shared/_KS14/Resist/`, NPCs: `Content.Server/_KS14/Grab/KsNpcGrabResistSystem.cs` | — |
 | HUD buttons | `Content.Client/_KS14/Hud/KsCombatHudButtons.cs`, placed in `HotbarGui.xaml` after `MainHotbar` | `_KS14/Interface/Hud/combat_buttons.rsi` (tg's) |
 | Combat mode sounds | `KS14` edit in `SharedCombatModeSystem.OnActionPerform`, `Content.Client/_KS14/CombatMode/KsCombatModeSoundSystem.cs` | `KsEnableSound`/`KsDisableSound` on `CombatModeComponent` |
@@ -201,14 +203,15 @@ shover has `ComplexShoveComponent`. There is no same-tile rule: standing over so
 Resolution order in `ResolveShove`:
 
 0. **Out of the fight**: a target incapacitated (crit, dead) or in stamina crit is only pushed. Nothing below runs.
-1. **`KsBeforeShoveEvent`** on the target: a handler can take the whole shove (a grab pinning its victim).
+1. **`KsShoveAttemptEvent`** on the target: a handler can take the whole shove (a grab pinning its victim).
 2. **Target already down** (`KickWhileDown`), always resolved here, never knocked into anything again:
    - With no `KsShoveParalyzedComponent`: paralyze for `ChainParalyzeTime` and add the marker, unless they're
      already stunned by something else.
    - With the marker but not `Disarmed`, and only if `CanDisarmAgainst` says so: drop everything in their hands
      (virtual items excepted) and set `Disarmed`. `CanDisarmAgainst` probes behind the target like a standing
      shove: an obstacle gives its `DisarmsAgainst`, a wall `ComplexShoveComponent.DisarmAgainstWalls`, and
-     `KsShoveDisarmCheckEvent` on the target can overrule either. Nothing behind them means no disarm.
+     `KsCanShoveDisarmEvent` on the target can overrule either. Nothing behind them means no disarm. The probe
+     only runs at this step, when a disarm is still possible.
    - Otherwise: a push, with no stagger.
 
    The marker is removed on `StoodEvent`. That is the no-chain, no-extend rule: one kick and one disarm per time on
@@ -222,15 +225,22 @@ Resolution order in `ResolveShove`:
 5. **Free**: the old impulse push plus `KsStatusEffectStaggered` through
    `MovementModStatusSystem.TryUpdateMovementSpeedModDuration` (refreshes, never stacks).
 
-`KnockIntoObstacle` and `KnockIntoWall` are public and take a popup prefix, so anything that sends someone flying
-(a thrown grab victim, below) knocks them over the same way.
+`KnockIntoObstacle` and `KnockIntoWall` are public and take the popups to show, so anything that sends someone
+flying (a thrown grab victim, below) knocks them over the same way.
 
 `KsShovedEvent` reports the outcome afterwards. Shoves do **no stamina damage**: the stamina handler for
 `DisarmedEvent` in `SharedStaminaSystem` is commented out with a `KS14` marker.
 
-Popups: when the shove system shows its own (obstacle, wall, kick), it sets `DisarmedEvent.KsPopupHandled`, and
-`DoDisarm` skips the generic "shoves" popups. A plain push keeps `PopupPrefix = "disarm-action-shove-"`.
-Three-audience popups go through `KsPopupSystem.PopupUserTargetOthers`.
+Popups: `OnDisarmed` decides from the outcome, in one place. A plain push (`KsShoveOutcome.Pushed`) keeps the stock
+`PopupPrefix = "disarm-action-shove-"`. Every other outcome has shown its own, so it sets
+`DisarmedEvent.KsPopupHandled` and `DoDisarm` skips the generic "shoves" popups.
+
+A set of three-audience popups is a `KsAudiencePopups` (`Content.Shared/_KS14/KsPopup/`): a `user`, a `target` and
+an `others` locale id, any of which can be left out. `KsPopupSystem.PopupUserTargetOthers` shows one, and shoves,
+grabs and carries all go through it. As a `[DataField]` the YAML linter checks every id, so the sets that vary are
+data: `Popups` on `KsShoveObstacle`, `BlockedPopups`/`BlockedResistedPopups`/`ParalyzePopups`/`DisarmPopups` on
+`ComplexShove`, `StartPopups`/`EnterPopups`/`ThrowPopups` on a grab stage, and the thrown-victim sets on `KsGrabber`.
+YAML replaces a whole set: an audience left out of the mapping gets no message, not the default one.
 
 **Add an obstacle** by giving its prototype `KsShoveObstacle` (edit the original YAML with `# KS14` markers).
 **Add special behaviour** by handling `KsShoveCollideEvent`.
@@ -279,7 +289,7 @@ What a stage does to the victim is enforced live, from the stage, so changing th
 
 #### Pinning
 
-`ComplexShoveSystem` raises `KsBeforeShoveEvent` on the target before resolving any shove. `KsGrabSystem` handles it
+`ComplexShoveSystem` raises `KsShoveAttemptEvent` on the target before resolving any shove. `KsGrabSystem` handles it
 when the shover holds the target at a stage that `BlocksVictimMovement`, the target is standing, and `Pinned` isn't
 set yet: it knocks them down and sets `KsGrabberComponent.Pinned`. While it is set the victim can't stand, and
 `PullStoppedMessage` clears it, so the pin lasts until they break free or are let go. Later shoves fall through to
@@ -291,8 +301,8 @@ the usual downed rules.
 - the stage alert (`KsResistGrabAlertEvent`)
 - the pulled alert: the victim's own `TryStopPull` is cancelled in `AttemptStopPullingEvent` and turned into a resist
 - a move key (`MoveInputEvent`, which fires only when the held keys change). So that a held direction keeps
-  struggling, `KsGrabSystem.Update` (server) also calls `TryResist` for anyone held in place with a direction held
-  (`InputMoverComponent.HasDirectionalMovement`) once their cooldown is up. `KsFiremanCarrySystem.Update` does the
+  struggling, `KsGrabSystem.Update` (server) also calls `TryResist` for the victim of each grip that holds them in
+  place, if they hold a direction (`InputMoverComponent.HasDirectionalMovement`) and their cooldown is up. `KsFiremanCarrySystem.Update` does the
   same for the carried, restarting the escape do-after when none is running.
 - the HUD resist button: the client raises `KsResistRequestEvent`, `KsResistSystem` raises `KsResistAttemptEvent` on
   the player, and the first restraint holding them (grab, then carry) handles it
@@ -313,12 +323,15 @@ how often an attempt lands.
 #### Strangling
 
 `KsGrabSystem.Update` deals the stage's `Damage` every `DamageInterval`, **server only**: predicting damage would only
-flicker the health bar, as with respiration.
+flicker the health bar, as with respiration. The victim is told with `DamagePopup` on a `DamagePopupChance` roll.
+
+`Update` is one pass over the grabbers who pull someone: reel, then (server) the held-direction struggle, then the
+damage. It never walks every mob.
 
 #### Closeness
 
 A stage's `HoldDistance` reels the victim in: `KsGrabSystem.Update` (both sides, predicted, like the grappling gun's
-reel) shortens the pull's `DistanceJoint` `MaxLength` at `ReelRate` until it reaches the hold distance. It then wakes
+reel) shortens the pull's `DistanceJoint` `MaxLength` at `KsGrabber.ReelRate` until it reaches the hold distance. It then wakes
 both bodies, because a shorter joint doesn't wake a sleeping body. `RequiredDistance` gates entering the stage (popup
 `ks-grab-too-far`) and dealing its damage.
 
@@ -331,22 +344,27 @@ victim, scales `ThrowSpeed`, and calls `MarkThrown` (adds `KsGrabThrownComponent
 the pull, so the victim flies free.
 
 The first `ThrowDoHitEvent` on a `KsGrabThrown` victim calls `ComplexShoveSystem.KnockIntoObstacle` for an obstacle
-(a person, a table) or `KnockIntoWall` for any static body, with the `ks-grab-thrown-into-`/`ks-grab-thrown-wall-`
-popups. The marker goes on that hit, on `LandEvent` or on `StopThrowEvent`. Mobs don't collide with each other
+(a person, a table) or `KnockIntoWall` for any static body. The marker goes on that hit, on `LandEvent` or on
+`StopThrowEvent`. Mobs don't collide with each other
 (`MobMask` lacks `MobLayer`), but a thrown entity gets the non-hard throwing fixture, which hits people's hard
 fixtures, so this works for people too.
 
-Impact damage is data on the thrower's `KsGrabber`: `ThrowImpactDamage` to the thrown (walls and people) and
-`ThrowCollateralDamage` to a person hit (an obstacle with `CollateralKnockdownTime`, so not a table). Both default to
-10 Blunt and are dealt by the server only (`DealImpactDamage`).
+What the slam does is data on the thrower's `KsGrabber`, so a thrower without one (deleted mid-flight, or a carrier
+that can't grab) leaves the victim to land as any thrown thing does:
+- `ThrowImpactDamage` to the thrown (walls and people) and `ThrowCollateralDamage` to a person hit (an obstacle with
+  `CollateralKnockdownTime`, so not a table). Both default to 10 Blunt and are dealt by the server only
+  (`DealImpactDamage`).
+- `ThrowWallKnockdownTime`, `ThrowWallSound`, `ThrowWallPopups` and `ThrowWallResistedPopups` for a wall.
+- `ThrowObstaclePopups`, shown instead of the obstacle's own.
 
 #### Adding a grab level
 
 Add a `ksGrabStage` to `stages.yml` (or a species-specific file) and list it in a `KsGrabber.stages`. Every effect is a
 field: `upgradeTime`, `takesHand`, `blocksVictimMovement`, `floorsVictim`, `escapeChance`,
 `resistFailStaminaDamageMin/Max`, `grabberSpeedModifier`, `proneDragSpeedModifier`, `damage`/`damageInterval`/
-`damagePopup`, `allowsThrow`/`throwSpeedModifier`, `victimAlert`, `sound`, and start/enter popups (each
-gets `grabber` and `victim`). Anything a field can't express goes in a handler for `KsGrabStageChangedEvent` or
+`damagePopup`/`damagePopupChance`, `allowsThrow`/`throwSpeedModifier`/`throwPopups`, `victimAlert`, `sound`,
+`holdDistance`, `requiredDistance`, and `startPopups`/`enterPopups` (each gets `grabber` and `victim`). What isn't
+per stage is on `KsGrabber`: `floorKnockdownTime`, `reelRate`, `upgradeCooldown` and the thrown-victim fields above. Anything a field can't express goes in a handler for `KsGrabStageChangedEvent` or
 `KsGrabResistAttemptEvent`, not a new system.
 
 ### Fireman carry
@@ -361,7 +379,7 @@ A carry is possible (`CanCarry`) when the following hold. No grip is needed: tgs
 server doesn't. Any pull on the victim is stopped when the carry starts.
 - the victim is down and the carrier isn't
 - neither is in a container or carried
-- the carrier has `HandsNeeded` (2) hands that are empty or hold the grab, which the carry frees
+- the carrier has `KsFiremanCarrier.HandsNeeded` (2) hands that are empty or hold the grab, which the carry frees
 
 After `CarryTime` the system:
 - stops the pull
@@ -388,6 +406,7 @@ removes it or deletes either side cleans up the same way. Triggers:
   without `CanWriggle` that let crit people wriggle free.
 
 The client raises draw depth while carried (`KsFiremanCarryVisualsSystem`) and restores it on `KsCarryEndedEvent`.
+The depth to restore is kept on the carried entity, in the client-only `KsCarriedVisualsComponent`.
 
 ### Throw mode
 
@@ -432,7 +451,7 @@ NPC toggles go through `SetInCombatMode` and make no sound.
   networked work (transform, collision, alerts, other components) on the client.
 - **A do-after finishes a few ticks after its delay.** In tests, wait the delay plus a margin.
 - **A do-after with `BreakOnMove` breaks when the user-to-target distance changes**, not only when the user moves.
-  While a grip is reeling the victim in, a carry or the next upgrade started on them is cancelled. Keep `ReelRate`
+  While a grip is reeling the victim in, a carry or the next upgrade started on them is cancelled. Keep `reelRate`
   fast, and in tests let the reel settle before starting one.
 - **Overriding `PoolSettings` resets `Connected`.** A test using `RaisePredictiveEvent` needs `Connected = true`, or
   the client has no local session.
