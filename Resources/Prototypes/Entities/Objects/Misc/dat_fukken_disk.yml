@@ -32,6 +32,7 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/disk_drop.ogg
+  - type: KsLavaProof # KS14: tgstation's LAVA_PROOF, lava neither burns nor sinks it
 
 - type: entity
   name: nuclear authentication disk
