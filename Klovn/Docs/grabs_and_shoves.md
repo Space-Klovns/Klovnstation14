@@ -46,15 +46,17 @@ never deals stamina damage. The outcome, checked in this order:
 | Target buckled to something | Nothing | — | — |
 | An open closet behind them, or under them | Put inside, and it shuts on them | — | the same |
 | A shut closet behind them | Knocked down against it | 3 s | 2 s |
-| A wall or anything else solid | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
+| A wall or anything else solid, first shove | Pushed and staggered, as with nothing behind them | 3 s | knocked down at once |
+| A wall or anything else solid, while staggered | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
+| Target already down, a table behind them | Put onto the table; a glass one shatters | — | the same |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
 "Behind" means past the target, along the line from the shover through the target: within three quarters of a tile
 for a table, a person or a closet, and within about a tile for a wall. Tables and
 people are found with an entity lookup for `KsShoveObstacleComponent`, skipping any with `IgnoredWhileDown` (people)
 that are lying down; anything else solid with a static raycast.
-The raycast catches walls, airlocks, windows and machines. Someone already down is never knocked into anything
-again, and never staggered.
+The raycast catches walls, airlocks, windows and machines. Someone already down is never knocked down
+again, though a table or an open closet behind them still takes them, and never staggered.
 
 **The chain rule.** tgstation stops a target being kicked over and over with two status effects: `dazed`, applied by
 the first knockdown and cleared by any paralysis, and `no_side_kick`, a 3.6 s immunity. We use one marker,
@@ -227,7 +229,12 @@ Resolution order in `ResolveShove`:
    them, whichever way they were shoved and whatever state they are in. Unhandled, the shove goes on below.
 0. **Out of the fight**: a target incapacitated (crit, dead) or in stamina crit is only pushed. Nothing below runs.
 1. **`KsShoveAttemptEvent`** on the target: a handler can take the whole shove (a grab pinning its victim).
-2. **Target already down** (`KickWhileDown`), always resolved here, never knocked into anything again:
+2. **Target already down**, always resolved here and never knocked down again. First, an obstacle behind them can
+   still take them (`TrySendDownedInto`): one with `PlaceOnto` has them put onto it, so someone lying where a shove
+   put them goes onto the next table, and a second glass table shatters under them as the first did; one whose
+   `KsShoveCollideEvent` handler takes the shove does so, as an open closet. An obstacle they already lie on
+   (`OnObstacleDistance`) doesn't count. Climbing onto the next thing while already on one needed a `KS14` edit in
+   `ClimbSystem.ReplaceFixtures`. Otherwise (`KickWhileDown`):
    - With no `KsShoveParalyzedComponent`: paralyze for `ChainParalyzeTime` and add the marker, unless they're
      already stunned by something else.
    - With the marker but not `Disarmed`, and only if `CanDisarmAgainst` says so: drop everything in their hands
@@ -244,8 +251,10 @@ Resolution order in `ResolveShove`:
    wins. `KnockIntoObstacle` raises `KsShoveCollideEvent` on the obstacle first; handle it to replace the default
    (glass table, locker, disposals). The default knocks the target down for `KnockdownTime`, the obstacle for
    `CollateralKnockdownTime` if set, and climbs the target onto it with `ClimbSystem.Climb` if `PlaceOnto`.
-4. **Wall**: a static raycast (`CollisionMask`) the same length. `KnockIntoWall` knocks down for
-   `BlockedKnockdownTime`.
+4. **Wall**: a static raycast (`CollisionMask`) of `ProbeDistance`. The target is pushed whatever it finds. With a
+   wall there, `KnockIntoWall` knocks down for `BlockedKnockdownTime`, but only someone already staggered by an
+   earlier shove (`BlockedKnockdownNeedsStagger`, on by default). So the first shove against a wall falls through to
+   the stagger below, and it takes a second, while the stagger lasts, to put them down.
 5. **Free**: the old impulse push plus `KsStatusEffectStaggered` through
    `MovementModStatusSystem.TryUpdateMovementSpeedModDuration` (refreshes, never stacks).
 

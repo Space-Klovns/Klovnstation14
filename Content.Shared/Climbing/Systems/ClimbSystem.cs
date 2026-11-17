@@ -363,6 +363,11 @@ public sealed partial class ClimbSystem : VirtualController
             _physics.SetCollisionMask(uid, name, fixture, fixture.CollisionMask & ~ClimbingCollisionGroup, fixturesComp);
         }
 
+        // KS14 start: already on something, and climbing onto the next thing, as when shoved from table to table
+        if (fixturesComp.Fixtures.ContainsKey(ClimbingFixtureName))
+            return true;
+        // KS14 end
+
         if (!_fixtureSystem.TryCreateFixture(
                 uid,
                 new PhysShapeCircle(0.35f),

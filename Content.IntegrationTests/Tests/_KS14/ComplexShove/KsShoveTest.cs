@@ -49,6 +49,7 @@ public sealed class KsShoveTest : GameTest
     private static readonly EntProtoId Shield = "RiotShield";
     private static readonly EntProtoId EnergyShield = "EnergyShield";
     private static readonly EntProtoId Table = "Table";
+    private static readonly EntProtoId GlassTable = "TableGlass";
     private static readonly EntProtoId Chair = "Chair";
     private static readonly EntProtoId Item = "Wrench";
     private static readonly EntProtoId Stagger = "KsStatusEffectStaggered";
@@ -232,7 +233,8 @@ public sealed class KsShoveTest : GameTest
     }
 
     /// <summary>
-    ///     A shove into a wall knocks the target down for the shover's blocked knockdown, with bare hands or a shield.
+    ///     A wall takes two shoves: the first only pushes and staggers the target, and the second, while they are
+    ///         staggered, knocks them down for the shover's blocked knockdown. With bare hands or a shield.
     /// </summary>
     [TestCase(false)]
     [TestCase(true)]
@@ -242,6 +244,22 @@ public sealed class KsShoveTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
+            Shove(shoverUid, targetUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(IsKnockedDown(targetUid), Is.False, "The first shove into a wall must not knock down.");
+                Assert.That(IsStaggered(targetUid), "The first shove into a wall must stagger.");
+                Assert.That(SEntMan.GetComponent<PhysicsComponent>(targetUid).LinearVelocity.Length(), Is.GreaterThan(0f),
+                    "A shove into a wall must still push.");
+            });
+        });
+
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(IsStaggered(targetUid), "The stagger must outlast the wait between two shoves.");
             Shove(shoverUid, targetUid);
 
             var shove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
@@ -256,12 +274,12 @@ public sealed class KsShoveTest : GameTest
     }
 
     /// <summary>
-    ///     Someone buckled to a seat is held there: a shove that would knock them down against a wall does nothing.
+    ///     Someone buckled to a seat is held there: a shove that would send them stumbling off does nothing.
     /// </summary>
     [Test]
     public async Task BuckledTargetIsUnmoved()
     {
-        var (shoverUid, targetUid, _) = await SetUp(_human, behind: _wall);
+        var (shoverUid, targetUid, _) = await SetUp(_human);
         var startPosition = Vector2.Zero;
 
         await Server.WaitAssertion(() =>
@@ -278,7 +296,7 @@ public sealed class KsShoveTest : GameTest
         {
             startPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(targetUid);
             Shove(shoverUid, targetUid);
-            Assert.That(IsKnockedDown(targetUid), Is.False, "A shove must not knock down someone buckled.");
+            Assert.That(IsStaggered(targetUid), Is.False, "A shove must not stagger someone buckled.");
         });
 
         await Pair.RunTicksSync(15);
@@ -315,6 +333,62 @@ public sealed class KsShoveTest : GameTest
                 Assert.That(SEntMan.GetComponent<ClimbingComponent>(targetUid).IsClimbing,
                     "A shove into a table must put the target onto it.");
                 Assert.That(IsStaggered(targetUid), Is.False, "Knocking someone over must replace the stagger.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Someone lying where a shove put them can be shoved on, onto the next table: a second glass table shatters
+    ///         under them as the first did, and an ordinary one takes them from the one they lie on.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task DownedTargetIsShovedOntoTheNextTable(bool glass)
+    {
+        var tablePrototype = glass ? GlassTable : Table;
+        var (shoverUid, targetUid, firstTableUid) = await SetUp(_human, behind: tablePrototype);
+        EntityUid secondTableUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var firstCoordinates = SEntMan.GetComponent<TransformComponent>(firstTableUid!.Value).Coordinates;
+            secondTableUid = SEntMan.SpawnEntity(tablePrototype, firstCoordinates.Offset(new Vector2(1f, 0f)));
+        });
+
+        await Pair.RunTicksSync(5);
+        await Server.WaitPost(() => Shove(shoverUid, targetUid));
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(IsKnockedDown(targetUid), "The first shove must put the target down on the first table.");
+            Assert.That(SEntMan.Deleted(firstTableUid!.Value), Is.EqualTo(glass),
+                glass ? "A glass table must shatter under them." : "An ordinary table must hold them.");
+            Assert.That(SEntMan.Deleted(secondTableUid), Is.False, "The second table must not be touched by the first shove.");
+
+            // Step up behind them, as the shover would.
+            var targetCoordinates = SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates;
+            SEntMan.System<SharedTransformSystem>().SetCoordinates(shoverUid, targetCoordinates.Offset(new Vector2(-1f, 0f)));
+        });
+
+        await Pair.RunTicksSync(3);
+        await Server.WaitPost(() => Shove(shoverUid, targetUid));
+        await Pair.RunTicksSync(30);
+
+        await Server.WaitAssertion(() =>
+        {
+            if (glass)
+            {
+                Assert.That(SEntMan.Deleted(secondTableUid), "The second glass table must shatter under them too.");
+                return;
+            }
+
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
+            var toSecondTable = (transformSystem.GetWorldPosition(targetUid) - transformSystem.GetWorldPosition(secondTableUid)).Length();
+            Assert.Multiple(() =>
+            {
+                Assert.That(toSecondTable, Is.LessThan(0.3f), "The second shove must put them onto the second table.");
+                Assert.That(SEntMan.GetComponent<ClimbingComponent>(targetUid).IsClimbing, "They must be on the table, not under it.");
             });
         });
     }

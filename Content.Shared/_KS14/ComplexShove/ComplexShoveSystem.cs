@@ -16,6 +16,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Standing;
+using Content.Shared.StatusEffectNew;
 using Content.Shared.Stunnable;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -35,7 +36,8 @@ namespace Content.Shared._KS14.ComplexShove;
 ///         <item><see cref="KsShoveAttemptEvent"/> lets something else take the shove, as a grab does to pin its victim.</item>
 ///         <item>Someone already down is kicked onto their side and paralyzed, once until they stand up.</item>
 ///         <item>Someone shoved into a <see cref="KsShoveObstacleComponent"/> (a table, another person) is knocked over by it.</item>
-///         <item>Someone shoved against a wall or anything else solid is knocked down.</item>
+///         <item>Someone shoved against a wall or anything else solid is knocked down, if an earlier shove staggered
+///             them; if not, they are pushed and staggered.</item>
 ///         <item>Otherwise they are pushed away and staggered.</item>
 ///     </list>
 ///     Shoves do no stamina damage.
@@ -56,6 +58,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
+    [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
 
     /// <summary>
     ///     The stock disarm's popups (<c>prefix + popup-message-...</c>), kept for a shove that only pushes.
@@ -127,6 +130,14 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         // pushed, with no stagger either: that waits until they've stood up.
         if (_standingStateSystem.IsDown(target.AsNullable()))
         {
+            // Knocked down again they can't be, but they can still be sent onto a table, or into a closet, behind them.
+            if (TryGetObstacle(shover, target, targetPosition, direction, out var behind) &&
+                TrySendDownedInto(shover, target, targetPosition, behind.Value))
+            {
+                obstacle = behind.Value.Owner;
+                return KsShoveOutcome.Obstacle;
+            }
+
             var downOutcome = KickWhileDown(shover, target, targetPosition, direction);
             if (downOutcome == KsShoveOutcome.Pushed)
                 Push(shover, target, direction, targetDown: true);
@@ -141,14 +152,19 @@ public sealed partial class ComplexShoveSystem : EntitySystem
             return KsShoveOutcome.Obstacle;
         }
 
-        if (IsBlocked(shover, targetPosition, direction))
+        // Every shove pushes, wall or no wall.
+        Push(shover, target, direction, targetDown: false);
+
+        // A wall puts down someone already staggered by a shove. The first shove against one only staggers them.
+        if (IsBlocked(shover, targetPosition, direction) &&
+            (!shover.Comp.BlockedKnockdownNeedsStagger ||
+             _statusEffectsSystem.HasStatusEffect(target, shover.Comp.StaggerEffect)))
         {
             KnockIntoWall(shover, target, shover.Comp.BlockedKnockdownTime, shover.Comp.BlockedSound,
                 shover.Comp.BlockedPopups, shover.Comp.BlockedResistedPopups);
             return KsShoveOutcome.Blocked;
         }
 
-        Push(shover, target, direction, targetDown: false);
         _movementModStatusSystem.TryUpdateMovementSpeedModDuration(target,
             shover.Comp.StaggerEffect,
             shover.Comp.StaggerTime,
@@ -314,17 +330,54 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         if (RaiseCollide(source, target, obstacle))
             return;
 
-        if (obstacle.Comp.PlaceOnto && HasComp<ClimbableComponent>(obstacle))
+        if (CanPlaceOnto(obstacle))
             _climbSystem.Climb(target, source, obstacle, silent: true);
 
         _stunSystem.TryKnockdown(target, obstacle.Comp.KnockdownTime, drop: false);
         if (obstacle.Comp.CollateralKnockdownTime is { } collateralTime)
             _stunSystem.TryKnockdown(obstacle.Owner, collateralTime, drop: false);
 
+        AnnounceObstacle(source, target, obstacle, popups ?? obstacle.Comp.Popups);
+    }
+
+    /// <summary>
+    ///     A shove on someone lying down, with an obstacle behind them. They aren't knocked down again, so only an
+    ///         obstacle that takes them does anything: one they are put onto, as a table, or one whose
+    ///         <see cref="KsShoveCollideEvent"/> handler takes the shove, as an open closet.
+    /// </summary>
+    private bool TrySendDownedInto(Entity<ComplexShoveComponent> shover, EntityUid target, MapCoordinates targetPosition,
+        Entity<KsShoveObstacleComponent> obstacle)
+    {
+        // Lying on it already: this is a shove along it, not onto it.
+        var obstaclePosition = _transformSystem.GetMapCoordinates(obstacle);
+        if ((obstaclePosition.Position - targetPosition.Position).Length() < shover.Comp.OnObstacleDistance)
+            return false;
+
+        if (RaiseCollide(shover, target, obstacle))
+            return true;
+
+        if (!CanPlaceOnto(obstacle))
+            return false;
+
+        _climbSystem.Climb(target, shover, obstacle, silent: true);
+        AnnounceObstacle(shover, target, obstacle, obstacle.Comp.Popups);
+        return true;
+    }
+
+    private bool CanPlaceOnto(Entity<KsShoveObstacleComponent> obstacle)
+    {
+        return obstacle.Comp.PlaceOnto && HasComp<ClimbableComponent>(obstacle);
+    }
+
+    /// <summary>
+    ///     The sound, popups and log of someone being sent into an obstacle.
+    /// </summary>
+    private void AnnounceObstacle(EntityUid source, EntityUid target, Entity<KsShoveObstacleComponent> obstacle,
+        KsAudiencePopups popups)
+    {
         _audioSystem.PlayPredicted(obstacle.Comp.Sound, obstacle, source, AudioParams.Default.WithVariation(0.05f));
 
-        _ksPopupSystem.PopupUserTargetOthers(target, source, target, popups ?? obstacle.Comp.Popups,
-            PopupType.MediumCaution,
+        _ksPopupSystem.PopupUserTargetOthers(target, source, target, popups, PopupType.MediumCaution,
             ("shover", Identity.Entity(source, EntityManager)),
             ("target", Identity.Entity(target, EntityManager)),
             ("obstacle", Identity.Entity(obstacle, EntityManager)));

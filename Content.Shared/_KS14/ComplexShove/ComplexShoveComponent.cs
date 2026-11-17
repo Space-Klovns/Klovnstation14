@@ -29,6 +29,12 @@ public sealed partial class ComplexShoveComponent : Component
     public float ObstacleProbeDistance = 0.75f;
 
     /// <summary>
+    ///     Someone lying within this distance of an obstacle's centre is already on it, and isn't sent onto it again.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float OnObstacleDistance = 0.5f;
+
+    /// <summary>
     ///     Radius of the area at the end of the obstacle probe searched for a <see cref="KsShoveObstacleComponent"/>.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
@@ -45,6 +51,14 @@ public sealed partial class ComplexShoveComponent : Component
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan BlockedKnockdownTime = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    ///     Whether a wall only knocks down someone already staggered by an earlier shove (<see cref="StaggerEffect"/>).
+    ///     The first shove against a wall then only pushes and staggers them, and it takes a second, while the stagger
+    ///         lasts, to put them down.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public bool BlockedKnockdownNeedsStagger = true;
 
     /// <summary>
     ///     Sound played when the shoved entity hits a wall.
