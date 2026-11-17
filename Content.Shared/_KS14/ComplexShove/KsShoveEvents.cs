@@ -69,4 +69,9 @@ public enum KsShoveOutcome : byte
     ///     Something else took the shove, through <see cref="KsShoveAttemptEvent"/>.
     /// </summary>
     Handled,
+
+    /// <summary>
+    ///     Buckled to something: the shove did nothing to them.
+    /// </summary>
+    Unmoved,
 }

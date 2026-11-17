@@ -15,13 +15,21 @@ namespace Content.Shared._KS14.ComplexShove;
 public sealed partial class ComplexShoveComponent : Component
 {
     /// <summary>
-    ///     How far past the shoved entity to look for what they are shoved into, about one tile.
+    ///     How far past the shoved entity to look for a wall, or anything else solid, that they are shoved against:
+    ///         about one tile.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float ProbeDistance = 1f;
 
     /// <summary>
-    ///     Radius of the area at the end of the probe searched for a <see cref="KsShoveObstacleComponent"/>.
+    ///     How far past the shoved entity to look for a <see cref="KsShoveObstacleComponent"/> they are shoved into.
+    ///     Shorter than <see cref="ProbeDistance"/>: a table or a person has to be right behind them.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float ObstacleProbeDistance = 0.75f;
+
+    /// <summary>
+    ///     Radius of the area at the end of the obstacle probe searched for a <see cref="KsShoveObstacleComponent"/>.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float ProbeRadius = 0.35f;

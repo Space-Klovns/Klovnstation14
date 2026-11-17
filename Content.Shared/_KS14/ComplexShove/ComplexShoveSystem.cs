@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Shared._KS14.KsPopup;
 using Content.Shared.Administration.Logs;
+using Content.Shared.Buckle;
 using Content.Shared.Climbing.Components;
 using Content.Shared.Climbing.Systems;
 using Content.Shared.CombatMode;
@@ -28,6 +29,8 @@ namespace Content.Shared._KS14.ComplexShove;
 /// <summary>
 ///     tgstation's shove. Resolved in this order:
 ///     <list type="number">
+///         <item>Someone buckled to something is unaffected.</item>
+///         <item>Someone standing in something that takes them, an open closet, goes into it.</item>
 ///         <item>Someone in crit or stamina crit is only pushed.</item>
 ///         <item><see cref="KsShoveAttemptEvent"/> lets something else take the shove, as a grab does to pin its victim.</item>
 ///         <item>Someone already down is kicked onto their side and paralyzed, once until they stand up.</item>
@@ -47,6 +50,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [Dependency] private MovementModStatusSystem _movementModStatusSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedBuckleSystem _buckleSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -83,8 +87,9 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         Entity<ComplexShoveComponent> shover = (args.Source, shoveComponent);
         var outcome = ResolveShove(shover, target, direction.Value, targetPosition.Value, out var obstacle);
 
-        // A plain push keeps the stock popups. Every other outcome has already told everyone what happened.
-        if (outcome == KsShoveOutcome.Pushed)
+        // A plain push, or a shove that came to nothing, keeps the stock popups. Every other outcome has already told
+        // everyone what happened.
+        if (outcome is KsShoveOutcome.Pushed or KsShoveOutcome.Unmoved)
             args.PopupPrefix = PushPopupPrefix;
         else
             args.KsPopupHandled = true;
@@ -97,6 +102,10 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         Vector2 direction, MapCoordinates targetPosition, out EntityUid? obstacle)
     {
         obstacle = null;
+
+        // Someone strapped in stays put: a seat, a bed or a rollerbed holds them against any shove.
+        if (_buckleSystem.IsBuckled(target))
+            return KsShoveOutcome.Unmoved;
 
         // Someone standing in something that takes them, an open closet, goes into it whatever else is true of them.
         if (TryShoveIntoStoodIn(shover, target, targetPosition, out obstacle))
@@ -275,7 +284,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     {
         obstacle = null;
         _obstacles.Clear();
-        var probe = targetPosition.Offset(direction * shover.Comp.ProbeDistance);
+        var probe = targetPosition.Offset(direction * shover.Comp.ObstacleProbeDistance);
         _entityLookupSystem.GetEntitiesInRange(probe, shover.Comp.ProbeRadius, _obstacles);
 
         foreach (var candidate in _obstacles)

@@ -43,12 +43,14 @@ never deals stamina damage. The outcome, checked in this order:
 | A table behind them | Put onto the table and knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_TABLE`) |
 | A person behind them | Both knocked down | 3 s, person behind 1.1 s | 2 s, person behind 0.1 s |
 | A person lying behind them (a corpse, someone knocked down) | As if nothing were behind them | — | — |
+| Target buckled to something | Nothing | — | — |
 | An open closet behind them, or under them | Put inside, and it shuts on them | — | the same |
 | A shut closet behind them | Knocked down against it | 3 s | 2 s |
 | A wall or anything else solid | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
-"Behind" means within about a tile past the target, along the line from the shover through the target. Tables and
+"Behind" means past the target, along the line from the shover through the target: within three quarters of a tile
+for a table, a person or a closet, and within about a tile for a wall. Tables and
 people are found with an entity lookup for `KsShoveObstacleComponent`, skipping any with `IgnoredWhileDown` (people)
 that are lying down; anything else solid with a static raycast.
 The raycast catches walls, airlocks, windows and machines. Someone already down is never knocked into anything
@@ -218,6 +220,8 @@ shover has `ComplexShoveComponent`. There is no same-tile rule: standing over so
 
 Resolution order in `ResolveShove`:
 
+0. **Buckled**: someone strapped to a seat, a bed or anything else is unaffected (`KsShoveOutcome.Unmoved`). Only
+   the stock "shoves" popup shows.
 0. **Standing in something that takes them**: an obstacle with `TakesWhoStandsInIt` under the target is offered the
    shove first (`TryShoveIntoStoodIn`), through its `KsShoveCollideEvent`. An open closet handles it and swallows
    them, whichever way they were shoved and whatever state they are in. Unhandled, the shove goes on below.
@@ -235,7 +239,8 @@ Resolution order in `ResolveShove`:
 
    The marker is removed on `StoodEvent`. That is the no-chain, no-extend rule: one kick and one disarm per time on
    the floor.
-3. **Obstacle**: entity lookup at `target + direction * ProbeDistance`, radius `ProbeRadius`, highest `Priority`
+3. **Obstacle**: entity lookup at `target + direction * ObstacleProbeDistance` (0.75, so it has to be right behind
+   them; the wall ray below keeps the full `ProbeDistance` of a tile), radius `ProbeRadius`, highest `Priority`
    wins. `KnockIntoObstacle` raises `KsShoveCollideEvent` on the obstacle first; handle it to replace the default
    (glass table, locker, disposals). The default knocks the target down for `KnockdownTime`, the obstacle for
    `CollateralKnockdownTime` if set, and climbs the target onto it with `ClimbSystem.Climb` if `PlaceOnto`.

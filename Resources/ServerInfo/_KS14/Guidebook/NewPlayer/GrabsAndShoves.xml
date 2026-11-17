@@ -18,6 +18,7 @@
   - [bold]A wall, or anything else solid.[/bold] They're knocked down for a few seconds.
   - [bold]They're already on the floor.[/bold] The first shove kicks them onto their side, and they can't move for a few seconds. The next one, if there's a wall behind them, knocks everything out of their hands. Otherwise, and after that, shoving them only pushes them along until they've stood back up. Nobody on the floor gets slowed by a shove.
   - [bold]They're in critical condition or exhausted.[/bold] A shove only pushes them along: no knockdowns, kicks or pins.
+  - [bold]They're buckled to something.[/bold] A seat or a bed holds them: the shove does nothing.
   - [bold]You're holding them tight.[/bold] The shove pins them to the floor instead, and they stay there until they break free or you let go.
 
   ## Grabbing

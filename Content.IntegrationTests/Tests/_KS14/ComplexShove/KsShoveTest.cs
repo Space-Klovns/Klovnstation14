@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.ComplexShove;
 using Content.Shared._KS14.ShoveWeapon;
+using Content.Shared.Buckle;
 using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
 using Content.Server.Gravity;
@@ -48,6 +49,7 @@ public sealed class KsShoveTest : GameTest
     private static readonly EntProtoId Shield = "RiotShield";
     private static readonly EntProtoId EnergyShield = "EnergyShield";
     private static readonly EntProtoId Table = "Table";
+    private static readonly EntProtoId Chair = "Chair";
     private static readonly EntProtoId Item = "Wrench";
     private static readonly EntProtoId Stagger = "KsStatusEffectStaggered";
 
@@ -249,6 +251,46 @@ public sealed class KsShoveTest : GameTest
                 Assert.That(IsKnockedDown(targetUid), "A shove into a wall must knock down.");
                 Assert.That(KnockdownLeft(targetUid), Is.EqualTo(shove.BlockedKnockdownTime.TotalSeconds).Within(0.1),
                     "The knockdown must last the blocked knockdown time.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Someone buckled to a seat is held there: a shove that would knock them down against a wall does nothing.
+    /// </summary>
+    [Test]
+    public async Task BuckledTargetIsUnmoved()
+    {
+        var (shoverUid, targetUid, _) = await SetUp(_human, behind: _wall);
+        var startPosition = Vector2.Zero;
+
+        await Server.WaitAssertion(() =>
+        {
+            var coordinates = SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates;
+            var chairUid = SEntMan.SpawnEntity(Chair, coordinates);
+            Assert.That(SEntMan.System<SharedBuckleSystem>().TryBuckle(targetUid, null, chairUid, popup: false),
+                "The target must be buckled for this to show anything.");
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            startPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(IsKnockedDown(targetUid), Is.False, "A shove must not knock down someone buckled.");
+        });
+
+        await Pair.RunTicksSync(15);
+
+        await Server.WaitAssertion(() =>
+        {
+            var moved = (SEntMan.System<SharedTransformSystem>().GetWorldPosition(targetUid) - startPosition).Length();
+            Assert.Multiple(() =>
+            {
+                Assert.That(moved, Is.LessThan(0.01f), "A shove must not move someone buckled.");
+                Assert.That(SEntMan.System<SharedBuckleSystem>().IsBuckled(targetUid), "A shove must leave them buckled.");
+                Assert.That(IsKnockedDown(targetUid), Is.False, "A shove must not knock down someone buckled.");
             });
         });
     }
