@@ -40,10 +40,11 @@ public sealed class KsNpcPeekTest : GameTest
 
     /// <summary>
     ///     The operative at -3.5,-3.5, behind a wall that ends at y=-1, with a hostile at 6.5,0.5 it lost a moment ago (a
-    ///         belief, staged). From the corner, at about -2.5,-0.5, it can see it; from where it stands it cannot.
+    ///         belief, staged). From past the wall's end it can see there; from where it stands it cannot.
     ///         <paramref name="hostileThere"/>: whether the hostile really is there, or walled in elsewhere.
     /// </summary>
-    private async Task<EntityUid> SetUp(bool hostileThere)
+    /// <returns>The operative, and the map it is on.</returns>
+    private async Task<(EntityUid OperativeUid, MapId MapId)> SetUp(bool hostileThere)
     {
         if (!Server.ProtoMan.HasIndex(_operativeRoot))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
@@ -100,13 +101,50 @@ public sealed class KsNpcPeekTest : GameTest
             var now = timing.CurTime;
             entManager.System<NpcPerceptionSystem>().SetContact(operativeUid, hostileUid, new NpcContact(NpcContactState.Lost,
                 now - System.TimeSpan.FromSeconds(3), now - System.TimeSpan.FromSeconds(2), now - System.TimeSpan.FromSeconds(2),
-                new EntityCoordinates(gridUid, new Vector2(6.5f, 0.5f)), default, null, Reacted: true));
+                new EntityCoordinates(gridUid, LostAt), default, null, Reacted: true));
 
             entManager.GetComponent<HTNComponent>(operativeUid).Blackboard
                 .SetValue(EnsureVirtualMarkerOperator.MarkerSet, new HashSet<string> { "OpInCombat" });
         });
 
-        return operativeUid;
+        return (operativeUid, map.MapId);
+    }
+
+    /// <summary>
+    ///     Where the hostile was lost, on the grid and, as the grid sits at the map's origin, on the map.
+    /// </summary>
+    private static readonly Vector2 LostAt = new(6.5f, 0.5f);
+
+    /// <summary>
+    ///     How near where it stood counts as there, and how far from it as having left.
+    /// </summary>
+    private const float HomeRange = 1.5f;
+
+    /// <summary>
+    ///     Whether the operative has stepped out: it has left where it stood for somewhere it can see where the hostile was
+    ///         lost. That is what a peek is for, wherever the spot it picks is: asked by the sight check the peek's own
+    ///         search uses, where a line drawn across the map by the test was missed by a spot 0.1 of a tile short of it.
+    /// </summary>
+    private bool HasSteppedOut(MapId mapId, Vector2 position, Vector2 home)
+    {
+        return (position - home).Length() >= HomeRange &&
+            Server.EntMan.System<NpcLineOfSightSystem>().InLineOfSight(new MapCoordinates(position, mapId), new MapCoordinates(LostAt, mapId), (LostAt - position).Length() + 1f);
+    }
+
+    /// <summary>
+    ///     The test's own arithmetic: it cannot see where the hostile was lost from where it stands, so it has to step out.
+    /// </summary>
+    private async Task<Vector2> GetHome(EntityUid operativeUid, MapId mapId)
+    {
+        var home = Vector2.Zero;
+        await Server.WaitAssertion(() =>
+        {
+            home = Server.EntMan.System<SharedTransformSystem>().GetWorldPosition(operativeUid);
+            Assert.That(Server.EntMan.System<NpcLineOfSightSystem>().InLineOfSight(new MapCoordinates(home, mapId), new MapCoordinates(LostAt, mapId), (LostAt - home).Length() + 1f),
+                Is.False, "the test needs the operative to start out of sight of where the hostile was lost");
+        });
+
+        return home;
     }
 
     /// <summary>
@@ -115,12 +153,13 @@ public sealed class KsNpcPeekTest : GameTest
     [Test]
     public async Task TestStepsOutAndFiresAtALostHostile()
     {
-        var operativeUid = await SetUp(hostileThere: true);
+        var (operativeUid, mapId) = await SetUp(hostileThere: true);
         var entManager = Server.EntMan;
         var transformSystem = entManager.System<SharedTransformSystem>();
         var steppedOut = false;
         var fired = false;
         var log = new System.Text.StringBuilder();
+        var home = await GetHome(operativeUid, mapId);
 
         for (var tick = 0; tick < MaxTicks && !fired; tick += 5)
         {
@@ -131,8 +170,7 @@ public sealed class KsNpcPeekTest : GameTest
                 var plan = entManager.GetComponent<HTNComponent>(operativeUid).Plan;
                 log.AppendLine($"+{tick}: {position:0.0} [{(plan == null ? "" : string.Join(",", plan.BranchTraversalRecord))}] {plan?.CurrentOperator.GetType().Name}");
 
-                // Past the wall's end: beyond what it could see of the hostile from behind it.
-                steppedOut |= position.Y > -1.5f;
+                steppedOut |= HasSteppedOut(mapId, position, home);
                 fired = entManager.TryGetComponent<NpcRecentShooterComponent>(operativeUid, out var shooterComponent) && shooterComponent.LastShotAt > System.TimeSpan.Zero;
             });
         }
@@ -140,7 +178,7 @@ public sealed class KsNpcPeekTest : GameTest
         if (!steppedOut || !fired)
             TestContext.Out.WriteLine(log.ToString());
 
-        Assert.That(steppedOut, "it should have stepped out past the end of the wall");
+        Assert.That(steppedOut, "it should have stepped out to where it could see where the hostile went");
         Assert.That(fired, "and fired on the hostile it saw there");
     }
 
@@ -150,15 +188,13 @@ public sealed class KsNpcPeekTest : GameTest
     [Test]
     public async Task TestStepsBackWhenNothingShows()
     {
-        var operativeUid = await SetUp(hostileThere: false);
+        var (operativeUid, mapId) = await SetUp(hostileThere: false);
         var entManager = Server.EntMan;
         var transformSystem = entManager.System<SharedTransformSystem>();
-        var home = Vector2.Zero;
         var steppedOut = false;
         var backHome = false;
         var log = new System.Text.StringBuilder();
-
-        await Server.WaitPost(() => home = transformSystem.GetWorldPosition(operativeUid));
+        var home = await GetHome(operativeUid, mapId);
 
         for (var tick = 0; tick < MaxTicks && !backHome; tick += 5)
         {
@@ -169,15 +205,15 @@ public sealed class KsNpcPeekTest : GameTest
                 var plan = entManager.GetComponent<HTNComponent>(operativeUid).Plan;
                 log.AppendLine($"+{tick}: {position:0.0} [{(plan == null ? "" : string.Join(",", plan.BranchTraversalRecord))}] {plan?.CurrentOperator.GetType().Name}");
 
-                steppedOut |= position.Y > -1.5f;
-                backHome |= steppedOut && (position - home).Length() < 1.5f;
+                steppedOut |= HasSteppedOut(mapId, position, home);
+                backHome |= steppedOut && (position - home).Length() < HomeRange;
             });
         }
 
         if (!steppedOut || !backHome)
             TestContext.Out.WriteLine(log.ToString());
 
-        Assert.That(steppedOut, "it should have stepped out past the end of the wall");
+        Assert.That(steppedOut, "it should have stepped out to where it could see where the hostile went");
         Assert.That(backHome, "and, with nothing there, back to where it stood");
     }
 }
