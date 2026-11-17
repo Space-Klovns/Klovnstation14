@@ -656,6 +656,24 @@ def write_art_prototypes(delays_by_state):
         prototype_file.write("\n".join(lines))
 
 
+# (rsi, our state, SS13 item state): the SS13 originals that replace generated icons.
+SS13_ITEMS = [
+    ("manuals", "manual_metal", "manual_metal"),
+    ("manuals", "manual_water", "manual_water"),
+    ("manuals", "manual_fire", "manual_fire"),
+    ("manuals", "manual_earth", "manual_earth"),
+    ("manuals", "manual_wood", "manual_wood"),
+    ("manuals", "manual_demonic", "manual_demonic"),
+    ("manuals", "body_primer", "manual_body_primer"),
+    ("manuals", "body_molding_art", "manual_body"),
+    ("items", "needles", "needles"),
+    ("items", "flying_dagger", "flying_dagger"),
+    ("items", "smoke_pellet", "smoke_pellet"),
+    ("items", "talisman", "talisman"),
+    ("items", "sect_plaque", "sect_plaque"),
+]
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
@@ -726,6 +744,11 @@ def main():
     ]
     write_rsi("wuxia_arts", ARTS, arts)
     write_art_prototypes({name: delays for name, _, delays in arts})
+    # Where SS13 drew an item better than cultivation_icons.py does, its sprite replaces ours (run this after that script).
+    for rsi, ours, theirs in SS13_ITEMS:
+        frames, _ = items[theirs]
+        frames[0].save(os.path.join(TEXTURES, f"{rsi}.rsi", f"{ours}.png"))
+
     write_rsi("wuxia_riding", (64, 64), [plain(riding, "sword_ride"), plain(riding, "qi_cloud")])
     write_rsi("wuxia_96", (96, 96), [
         plain(effects96, "storm_cloud"),

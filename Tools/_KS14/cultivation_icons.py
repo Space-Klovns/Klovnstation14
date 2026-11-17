@@ -228,54 +228,103 @@ def glyph_layer(glyph, font_path, size, box, threshold=110):
 
 
 def medallion(glyph, colours, font_path):
+    """
+    An action button: a cast medallion with a dark outline, a studded rim and a bevelled inner edge, faint auspicious
+    clouds swirling on its face, and the art's character raised on it with a drop shadow and a gloss over the top.
+    """
     face, rim = colours
     size = 32
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     pixels = image.load()
     centre = (size - 1) / 2
-    outer, inner = 14.5, 12.0
+    outline, outer, inner = 15.4, 14.4, 11.6
+    dark_rim = lerp(rim, (0, 0, 0), 0.55)
     for y in range(size):
         for x in range(size):
             dx, dy = x - centre, y - centre
             distance = math.hypot(dx, dy)
-            if distance > outer:
+            if distance > outline:
                 continue
-            # Light from the top left.
             light = max(0.0, min(1.0, 0.5 - (dx + dy) / (2 * outer)))
-            if distance > inner:
-                colour = lerp(rim, lerp(rim, face, 0.55), light)
+            if distance > outer:
+                colour = lerp(dark_rim, (0, 0, 0), 0.3)
+            elif distance > inner + 0.9:
+                colour = lerp(rim, lerp(rim, face, 0.6), light)
+            elif distance > inner:
+                # The bevel: lit on the bottom right inside the rim, shaded on the top left.
+                colour = lerp(lerp(face, (255, 255, 255), 0.35), dark_rim, light)
             else:
-                colour = lerp(lerp(face, rim, 0.35), face, light)
+                # A soft radial gradient, brightest a little up and left of the middle.
+                glow = max(0.0, 1 - math.hypot(dx + 3, dy + 3) / (inner + 4))
+                colour = lerp(lerp(face, rim, 0.45), lerp(face, (255, 255, 255), 0.18), glow * 0.7 + light * 0.3)
+                # Faint auspicious clouds: curls of slightly darker face.
+                swirl = math.sin(distance * 1.25 + math.atan2(dy, dx) * 2)
+                if swirl > 0.82:
+                    colour = lerp(colour, rim, 0.22)
             pixels[x, y] = colour + (255,)
 
-    mask = glyph_layer(glyph, font_path, 19, size)
-    outline = mask.filter(ImageFilter.MaxFilter(3))
-    dark = lerp(rim, (0, 0, 0), 0.5) + (255,)
-    image.paste(Image.new("RGBA", (size, size), dark), (0, 0), outline)
+    # Eight studs round the rim.
+    draw = ImageDraw.Draw(image)
+    for index in range(8):
+        angle = index / 8 * math.tau + math.pi / 8
+        sx, sy = centre + math.cos(angle) * 13.0, centre + math.sin(angle) * 13.0
+        draw.point((round(sx), round(sy)), fill=lerp(face, (255, 255, 255), 0.55) + (255,))
+        draw.point((round(sx) + 1, round(sy) + 1), fill=dark_rim + (255,))
+
+    mask = glyph_layer(glyph, font_path, 18, size)
+    shadow = Image.new("L", (size, size), 0)
+    shadow.paste(mask.filter(ImageFilter.MaxFilter(3)), (1, 1))
+    image.paste(Image.new("RGBA", (size, size), lerp(dark_rim, (0, 0, 0), 0.4) + (200,)), (0, 0), shadow)
+    outline_mask = mask.filter(ImageFilter.MaxFilter(3))
+    image.paste(Image.new("RGBA", (size, size), lerp(rim, (0, 0, 0), 0.5) + (255,)), (0, 0), outline_mask)
     image.paste(Image.new("RGBA", (size, size), (252, 248, 232, 255)), (0, 0), mask)
+
+    # A gloss over the top left of the face.
+    gloss = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(gloss).arc((6, 6, 25, 25), start=190, end=260, fill=(255, 255, 255, 140), width=2)
+    image.alpha_composite(gloss)
     return image
 
 
 def manual(glyph, colours, font_path):
-    """A bound manual: a coloured cover with a pale title strip carrying the element's glyph."""
+    """
+    A bound manual in the SS13 manuals' style: an outlined cover in the art's colour, page edges showing on the right,
+    a dark spine with gold bands, gold caps on the corners, and a recessed parchment panel with the art's character.
+    """
     face, rim = colours
     size = 32
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    draw.rectangle((7, 4, 25, 28), fill=rim + (255,))
-    draw.rectangle((8, 5, 24, 27), fill=face + (255,))
-    # Stitched spine.
-    draw.rectangle((7, 4, 9, 28), fill=lerp(rim, (0, 0, 0), 0.3) + (255,))
-    for y in range(6, 28, 4):
-        draw.point((8, y), fill=(236, 226, 196, 255))
-    # Title strip.
-    draw.rectangle((13, 7, 22, 25), fill=(236, 226, 196, 255))
-    mask = glyph_layer(glyph, font_path, 10, size, threshold=60)
+    outline = lerp(rim, (0, 0, 0), 0.6) + (255,)
+    gold, gold_dark = (232, 192, 88, 255), (150, 104, 30, 255)
+    # Page block peeking out on the right and bottom.
+    draw.rectangle((9, 4, 27, 29), fill=outline)
+    draw.rectangle((10, 5, 26, 28), fill=(236, 226, 196, 255))
+    for y in range(7, 28, 2):
+        draw.line((24, y, 26, y), fill=(196, 182, 150, 255))
+    # The cover.
+    draw.rectangle((5, 3, 25, 28), fill=outline)
+    for y in range(4, 28):
+        light = 1 - (y - 4) / 24
+        draw.line((6, y, 24, y), fill=lerp(lerp(face, rim, 0.35), face, light * 0.8) + (255,))
+    # Spine with gold bands.
+    draw.rectangle((6, 4, 8, 27), fill=lerp(rim, (0, 0, 0), 0.25) + (255,))
+    for y in (7, 15, 24):
+        draw.line((6, y, 8, y), fill=gold)
+    # Gold corner caps.
+    for x, y in ((22, 4), (22, 25)):
+        draw.rectangle((x, y, x + 2, y + 2), fill=gold)
+        draw.point((x, y + 2 if y < 10 else y), fill=gold_dark)
+    # A recessed panel: dark on top and left, lit on the bottom and right, parchment inside.
+    draw.rectangle((11, 7, 21, 24), fill=lerp(rim, (0, 0, 0), 0.35) + (255,))
+    draw.line((12, 24, 21, 24), fill=lerp(face, (255, 255, 255), 0.4) + (255,))
+    draw.line((21, 8, 21, 24), fill=lerp(face, (255, 255, 255), 0.4) + (255,))
+    draw.rectangle((12, 8, 20, 23), fill=(240, 230, 200, 255))
+    mask = glyph_layer(glyph, font_path, 9, size, threshold=60)
     shifted = Image.new("L", (size, size), 0)
-    shifted.paste(mask, (2, 0))
-    image.paste(Image.new("RGBA", (size, size), (40, 24, 16, 255)), (0, 0), shifted)
+    shifted.paste(mask, (0, 0))
+    image.paste(Image.new("RGBA", (size, size), (36, 20, 14, 255)), (0, 0), shifted)
     return image
-
 
 def qi_alert():
     """The qi meter's base: a dark plate with a small taiji, leaving room for the digits."""
@@ -449,45 +498,12 @@ def floor_crack(seed):
     return image
 
 
-def array_circle(glyph, colour, font_path):
-    """A floor circle of trigrams around a glyph."""
-    face, rim = PALETTE[colour]
-    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((1, 1, 30, 30), outline=face + (210,), width=1)
-    draw.ellipse((5, 5, 26, 26), outline=rim + (180,), width=1)
-    for angle in range(0, 360, 45):
-        import math as _math
-        x = 15.5 + 12.5 * _math.cos(_math.radians(angle))
-        y = 15.5 + 12.5 * _math.sin(_math.radians(angle))
-        draw.line((x - 1, y, x + 1, y), fill=face + (230,))
-    mask = glyph_layer(glyph, font_path, 13, 32, threshold=70)
-    image.paste(Image.new("RGBA", (32, 32), face + (200,)), (0, 0), mask)
-    return image
-
-
 def qi_wall():
     image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, 31, 31), fill=(250, 214, 112, 90), outline=(250, 214, 112, 200))
     for y in range(3, 32, 6):
         draw.line((2, y, 29, y), fill=(255, 246, 206, 120))
-    return image
-
-
-def mud():
-    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((1, 3, 30, 29), fill=(92, 64, 36, 220))
-    for x, y in ((9, 10), (19, 16), (12, 21), (22, 9)):
-        draw.ellipse((x, y, x + 3, y + 2), fill=(134, 98, 58, 255))
-    return image
-
-
-def palm_shadow():
-    image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((0, 0, 31, 31), fill=(20, 16, 10, 110), outline=(250, 214, 112, 160))
     return image
 
 
@@ -550,12 +566,7 @@ def main():
         "incense_lit": incense(lit=True),
         **{kind: wuxia_weapon(kind) for kind in ("meteor_hammer", "rope_dart", "butterfly_sword", "iron_fan", "bamboo_staff",
                                                  "sect_jian", "needles", "flying_dagger", "smoke_pellet")},
-        "array_gathering": array_circle("聚", "jade", args.font),
-        "array_barrier": array_circle("阵", "gold", args.font),
-        "array_alarm": array_circle("警", "orange", args.font),
         "qi_wall": qi_wall(),
-        "mud": mud(),
-        "palm_shadow": palm_shadow(),
     })
     for name, glyph, colour in (("body_exhaustion.rsi", "疲", "orange"), ("body_tempering.rsi", "锻", "gold"),
                                 ("exploding_heart.rsi", "心", "crimson")):

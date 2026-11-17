@@ -8,15 +8,6 @@
   },
   "states": [
     {
-      "name": "array_alarm"
-    },
-    {
-      "name": "array_barrier"
-    },
-    {
-      "name": "array_gathering"
-    },
-    {
       "name": "bamboo_staff"
     },
     {
@@ -44,13 +35,7 @@
       "name": "meteor_hammer"
     },
     {
-      "name": "mud"
-    },
-    {
       "name": "needles"
-    },
-    {
-      "name": "palm_shadow"
     },
     {
       "name": "qi_wall"

@@ -225,6 +225,10 @@ despawns as its one run ends.
   vortex, rings of a roar or of realm pressure, the ground splitting open, a meteor for Falling Mountain, an iron or golden
   sheen over the body, healing glows, and mists of blood, steam, dust and shadow. Formation arrays are the SS13 sigils.
 
+Icons come from `Tools/_KS14/cultivation_icons.py` (studded, bevelled medallions for actions, bound manuals for
+martial arts). Run `Tools/_KS14/cultivation_ss13_sprites.py` after it: where SS13 drew an item better (the element and
+body manuals, needles, flying dagger, smoke pellet, talisman, sect plaque) its sprite replaces ours.
+
 `Tools/_KS14/cultivation_sounds.py` mixes SS13's layered sounds into single files in `Audio/_KS14/Cultivation`: the
 great bell and temple bell, guqin phrases, wind chimes, the qinggong whoosh, a mountain falling, and the ascension.
 
