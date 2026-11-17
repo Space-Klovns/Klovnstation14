@@ -59,14 +59,6 @@
   - type: TimedDespawn
     lifetime: 1.2
 
-- type: decal
-  id: KsCrater
-  tags: [ "cracks" ]
-  defaultCleanable: true
-  sprite:
-    sprite: _KS14/Cultivation/crater.rsi
-    state: crater
-
 # Fire for show: it lights the room and flickers out. What actually burns is up to the technique.
 - type: entity
   id: KsFxFlame

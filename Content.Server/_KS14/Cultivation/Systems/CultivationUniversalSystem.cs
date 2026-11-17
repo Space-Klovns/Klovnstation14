@@ -199,6 +199,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
 
         args.Handled = true;
         _visualsSystem.Motes(entity, FxColour.Qi, TimeSpan.FromSeconds(1));
+        _visualsSystem.Play(CultivationVisualsSystem.QinggongSound, entity);
         var maxDistance = args.BaseDistance + 2f * (float)entity.Comp.Realm;
         if (offset.Length() > maxDistance)
             offset = Vector2.Normalize(offset) * maxDistance;
@@ -224,9 +225,11 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
 
         args.Handled = true;
         _audioSystem.PlayPvs(StepSound, entity);
+        _visualsSystem.Rift(_transformSystem.GetMapCoordinates(entity));
         _visualsSystem.Wave(entity, FxColour.Void);
         _transformSystem.SetCoordinates(entity, args.Target);
-        _visualsSystem.Wave(entity, FxColour.Void);
+        _visualsSystem.Rift(_transformSystem.GetMapCoordinates(entity));
+        _visualsSystem.Motes(entity, FxColour.Void, TimeSpan.FromSeconds(1));
         _audioSystem.PlayPvs(StepSound, entity);
     }
 

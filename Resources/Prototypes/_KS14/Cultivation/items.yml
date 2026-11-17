@@ -69,11 +69,16 @@
   name: sword qi
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
+    sprite: _KS14/Cultivation/wuxia_32.rsi
     layers:
-    - state: magicm_cyan
+    - state: sword_qi
       shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 1.5
+    energy: 1.5
   - type: Projectile
+    impactEffect: KsFxSwordQiImpact
     damage:
       types:
         Slash: 15

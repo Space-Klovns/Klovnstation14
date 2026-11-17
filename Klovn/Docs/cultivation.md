@@ -192,9 +192,33 @@ Each step goes through the same code as play, so techniques, arts and powers are
   floor sigil, and `Update` attaches and removes them. Add a line there for any new lasting state.
 - **Fire** techniques spawn real flame sprites that light the room (`Flames`); they are for show, the technique does
   the burning.
-- **Body arts** also call `BodyArtSystem.Impact`: a crater decal at the centre, crack decals around it (cleanable),
-  dust, and a camera kick for everyone nearby, all scaled by stage.
-- A successful breakthrough or Tribulation of Flesh plays `Breakthrough`: pillar, great golden wave, shockwave, motes.
+- **Body arts** also call `BodyArtSystem.Impact`: a crater that lingers for half a minute (`KsFxCrater`, bigger with
+  strength), crack decals around it (cleanable), flying rubble and dust, and a camera kick for everyone nearby.
+- **Breaking things** goes through `BodyArtSystem.Smash` and `CultivationRubbleSystem`, as SS13's `dismantle_wall` did.
+  Nothing vanishes: a blow that would overkill a structure stops just short of its last threshold, so windows leave
+  shards, tables their parts, girders a sheet. The first wall tier knocks a plain wall down to its girder with half its
+  plating strewn about; the second devastates any wall into half of everything that went into it.
+- A successful breakthrough or Tribulation of Flesh plays `Breakthrough`: pillar, great golden wave, shockwave, motes,
+  and the ascension swell of strings and temple bell.
+
+### Effects ported from SS13
+
+`Tools/_KS14/cultivation_ss13_sprites.py` converts the SurfShack13 cultivation DMIs to RSIs (`wuxia_32`, `wuxia_64`,
+`wuxia_96`, `wuxia_128`, `buddha_palm`; prototypes in `wuxia_effects.yml`). SS13 moved these with `animate()` at
+runtime; SS14 has no server-side tweening, so the motion is baked into frames. An animated state loops, so each effect
+despawns as its one run ends.
+
+- **Buddha's Palm**: the shadow grows on the floor while a golden palm fades in high above and drops onto it (1.2 s),
+  squashes and springs back. Then a great bell, a crushed inner ring, a shockwave hurling back the outer ring,
+  smashed structures and a crater. Under a Dharma Idol the palm is twice the size.
+- **Void Step** opens a rift at both ends. Sword qi and thorn swords fly as their SS13 sprites and splash on impact.
+  Binding Vines shoot up around the target. Molten Step leaves glowing footprints that cool to black. Mud Prison is
+  the SS13 mud. Mountain Collapse drops a boulder on each foe, and Tidal Surge rears up a ring of water.
+- **Lasting states** wear their SS13 sprites: Golden Bell (and Vajra Body) the golden bell, the water wards a bubble,
+  Dharma Idol the idol, tribulations a storm cloud overhead, heart demons and spirit beasts their auras.
+
+`Tools/_KS14/cultivation_sounds.py` mixes SS13's layered sounds into single files in `Audio/_KS14/Cultivation`: the
+great bell and temple bell, guqin phrases, wind chimes, the qinggong whoosh, a mountain falling, and the ascension.
 
 ## Messages
 

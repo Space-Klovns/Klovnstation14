@@ -111,7 +111,7 @@
   - type: Transform
     anchored: true
   - type: Sprite
-    sprite: _KS14/Cultivation/items.rsi
+    sprite: _KS14/Cultivation/wuxia_32.rsi
     state: mud
     drawdepth: FloorObjects
   - type: Physics
@@ -137,11 +137,7 @@
   name: palm shadow
   description: A vast shadow, growing darker by the moment.
   components:
-  - type: Sprite
-    sprite: _KS14/Cultivation/items.rsi
-    state: palm_shadow
-    scale: 3, 3
-    drawdepth: FloorObjects
+  # What you see is KsFxPalmShadow and KsFxBuddhaPalm; this only marks where and when the palm lands.
   - type: TimedDespawn
     lifetime: 2
 
@@ -152,11 +148,15 @@
   name: thorn sword
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
+    sprite: _KS14/Cultivation/wuxia_32.rsi
     layers:
-    - state: magicm_green
-      shader: unshaded
+    - state: thorn_sword
+  - type: PointLight
+    color: "#6fd06f"
+    radius: 1.2
+    energy: 1
   - type: Projectile
+    impactEffect: KsFxThornSplinters
     damage:
       types:
         Piercing: 10

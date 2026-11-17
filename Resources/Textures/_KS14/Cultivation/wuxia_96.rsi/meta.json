@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from the SurfShack13 cultivation port; animations baked by Tools/_KS14/cultivation_ss13_sprites.py",
+  "size": {
+    "x": 96,
+    "y": 96
+  },
+  "states": [
+    {
+      "name": "storm_cloud",
+      "delays": [
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      ]
+    },
+    {
+      "name": "sigil_barrier"
+    },
+    {
+      "name": "sigil_gathering"
+    },
+    {
+      "name": "sigil_alarm"
+    }
+  ]
+}

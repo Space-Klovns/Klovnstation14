@@ -46,7 +46,6 @@ public sealed partial class BodyArtSystem : EntitySystem
     private static readonly ProtoId<TagPrototype> WallTag = "Wall";
     private static readonly EntProtoId ShockwaveEffect = "KsBodyShockwave";
     private static readonly EntProtoId DustEffect = "KsBodyDust";
-    private const string CraterDecal = "KsCrater";
     private static readonly string[] CrackDecals = { "KsCrack1", "KsCrack2", "KsCrack3", "KsCrack4" };
 
     /// <summary>
@@ -57,6 +56,8 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private DecalSystem _decalSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private CultivationRubbleSystem _rubbleSystem = default!;
     [Dependency] private SharedCameraRecoilSystem _cameraRecoilSystem = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private BodyCultivationSystem _bodyCultivationSystem = default!;
@@ -213,7 +214,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     ///         everyone close by jolted.
     /// </summary>
     /// <param name="strength">Roughly 1 for a stomp, up to 3 for the arts that shake the whole area.</param>
-    public void Impact(MapCoordinates centre, float radius, float strength, bool shockwave = true)
+    public void Impact(MapCoordinates centre, float radius, float strength, bool shockwave = true, int crater = -1)
     {
         if (shockwave)
         {
@@ -226,7 +227,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         }
 
         _visualsSystem.WaveAt(centre, FxColour.Earth, big: strength >= 1.5f);
-        Crater(centre);
+        Crater(centre, crater >= 0 ? crater : strength < 1.5f ? 0 : strength < 2.5f ? 1 : 2);
         Crack(centre, radius, chance: 0.35f + 0.15f * strength);
 
         var puffs = (int)MathF.Ceiling(2f * strength);
@@ -248,16 +249,22 @@ public sealed partial class BodyArtSystem : EntitySystem
     /// <summary>
     ///     A crater punched into the floor right where the blow landed.
     /// </summary>
-    public void Crater(MapCoordinates centre)
+    public void Crater(MapCoordinates centre, int size)
     {
-        var coordinates = _transformSystem.ToCoordinates(centre);
-        if (!HasComp<Robust.Shared.Map.Components.MapGridComponent>(coordinates.EntityId))
-            return;
+        // As in SS13 it lingers for half a minute, centred on the tile that took the blow, at a random turn.
+        if (TileCentre(centre) is { } tileCentre)
+            _visualsSystem.Crater(_transformSystem.ToMapCoordinates(tileCentre), size);
+    }
 
-        // The crater sprite is two tiles wide; decals sit by their bottom-left corner, so centre it on the tile.
-        var snapped = new EntityCoordinates(coordinates.EntityId,
-            new Vector2(MathF.Floor(coordinates.Position.X) - 0.5f, MathF.Floor(coordinates.Position.Y) - 0.5f));
-        _decalSystem.TryAddDecal(CraterDecal, snapped, out _, cleanable: true);
+    /// <summary>
+    ///     The centre of the floor tile under a point, or null out in space.
+    /// </summary>
+    private EntityCoordinates? TileCentre(MapCoordinates point)
+    {
+        if (!_mapSystem.TryFindGridAt(point, out var gridUid, out var gridComponent))
+            return null;
+
+        return _mapSystem.GridTileToLocal(gridUid, gridComponent, _mapSystem.TileIndicesFor(gridUid, gridComponent, point));
     }
 
     /// <summary>
@@ -275,14 +282,12 @@ public sealed partial class BodyArtSystem : EntitySystem
                 if (x * x + y * y > radius * radius + 0.5f || !_robustRandom.Prob(chance))
                     continue;
 
-                var tileCentre = new MapCoordinates(centre.Position + new Vector2((float)x, (float)y), centre.MapId);
-                var coordinates = _transformSystem.ToCoordinates(tileCentre);
-                if (!HasComp<Robust.Shared.Map.Components.MapGridComponent>(coordinates.EntityId))
+                var point = new MapCoordinates(centre.Position + new Vector2((float)x, (float)y), centre.MapId);
+                if (TileCentre(point) is not { } tileCentre)
                     continue;
 
-                // Decals are placed by their bottom-left corner: snap to the tile.
-                var snapped = new EntityCoordinates(coordinates.EntityId,
-                    new Vector2(MathF.Floor(coordinates.Position.X), MathF.Floor(coordinates.Position.Y)));
+                // Decals are placed by their bottom-left corner.
+                var snapped = tileCentre.Offset(new Vector2(-0.5f, -0.5f));
                 _decalSystem.TryAddDecal(_robustRandom.Pick(CrackDecals), snapped, out _,
                     rotation: Angle.FromDegrees(90 * _robustRandom.Next(4)), cleanable: true);
             }
@@ -317,25 +322,33 @@ public sealed partial class BodyArtSystem : EntitySystem
             var damage = wallTier >= 2 ? MathF.Max(power, 2500f) : (wallTier == 1 ? MathF.Max(power, 700f) : power);
             if (_tagSystem.HasTag(breakableEntity.Owner, WallTag))
             {
-                // Plain walls give way to the first tier; reinforced ones are built to take several times as much.
-                if (wallTier <= 0)
+                // As in SS13, walls come down into rubble rather than vanishing: the first tier knocks a plain wall
+                //     to its girder with half its plating strewn about, the second devastates any wall to scrap.
+                //     Below that, or against a reinforced wall at the first tier, it only chips at it.
+                var sturdy = _rubbleSystem.IsReinforced(breakableEntity.Owner);
+                if (wallTier >= 2 || wallTier == 1 && !sturdy)
                 {
-                    if (wallChip <= 0f)
-                        continue;
+                    _rubbleSystem.BreakWall(breakableEntity.Owner, devastate: wallTier >= 2, userUid);
+                    continue;
+                }
 
-                    damage = wallChip;
-                }
-                else
-                {
-                    damage = wallTier >= 2 ? 2500f : 500f;
-                }
+                damage = wallTier == 1 ? MathF.Max(wallChip, 300f) : wallChip;
+                if (damage <= 0f)
+                    continue;
             }
             else if (_tagSystem.HasTag(breakableEntity.Owner, WindowTag))
             {
                 damage = MathF.Max(damage, 300f);
             }
 
-            _damageableSystem.TryChangeDamage(breakableEntity.Owner, CultivationSystem.Damage("Structural", damage), origin: userUid);
+            // Never so hard that it vanishes: it breaks into its shards, sheets and parts.
+            damage = _rubbleSystem.Capped(breakableEntity.Owner, damage);
+            if (damage <= 0f)
+                continue;
+
+            if (_damageableSystem.TryChangeDamage(breakableEntity.Owner, CultivationSystem.Damage("Structural", damage), origin: userUid)
+                && _robustRandom.Prob(0.5f))
+                _rubbleSystem.Rubble(_transformSystem.GetMapCoordinates(breakableEntity.Owner));
         }
     }
 
@@ -518,6 +531,7 @@ public sealed partial class BodyArtSystem : EntitySystem
             landingComponent.Smash = stage >= 7 ? (float)(60 + 10 * stage) : 0f;
         }
 
+        _visualsSystem.Play(CultivationVisualsSystem.QinggongSound, entity);
         Launch(entity, direction * distance, 8f + stage, entity, landingComponent);
     }
 

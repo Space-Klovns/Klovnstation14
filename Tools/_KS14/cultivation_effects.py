@@ -327,40 +327,113 @@ def sigil(frames=12):
     return result
 
 
-def crater(seed=5):
-    """A two-tile crater: a dark pit, a broken rim, and long cracks running out of it."""
-    rng = random.Random(seed)
-    size = 64
-    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    c = size / 2
-    dark = (12, 10, 10)
-    for branch in range(11):
-        angle = branch * 2 * math.pi / 11 + rng.uniform(-0.25, 0.25)
-        x, y = c + math.cos(angle) * 9, c + math.sin(angle) * 9
-        length = rng.randint(12, 20)
-        for step in range(length):
-            angle += rng.uniform(-0.4, 0.4)
-            nx, ny = x + math.cos(angle) * 1.4, y + math.sin(angle) * 1.4
-            draw.line((x, y, nx, ny), fill=dark + (230 - step * 7,), width=3 if step < 4 else (2 if step < 10 else 1))
-            if rng.random() < 0.2 and step > 3:
-                fork = angle + rng.choice((-1, 1)) * rng.uniform(0.5, 1.0)
-                draw.line((nx, ny, nx + math.cos(fork) * 6, ny + math.sin(fork) * 6), fill=dark + (150,))
-            x, y = nx, ny
-    # The rim: an uneven ring of broken floor, lit on one side.
-    rim = [(c + math.cos(a) * (13 + rng.uniform(-2, 2)), c + math.sin(a) * (12 + rng.uniform(-2, 2)))
-           for a in [i * 2 * math.pi / 22 for i in range(22)]]
-    draw.polygon(rim, fill=(58, 54, 50, 235))
-    pit = [(c + math.cos(a) * (10 + rng.uniform(-1.5, 1.5)), c + 1 + math.sin(a) * (9 + rng.uniform(-1.5, 1.5)))
-           for a in [i * 2 * math.pi / 18 for i in range(18)]]
-    draw.polygon(pit, fill=(20, 18, 17, 245))
-    draw.ellipse((c - 6, c - 4, c + 6, c + 7), fill=(6, 5, 5, 250))
-    draw.arc((c - 13, c - 12, c + 13, c + 12), 200, 320, fill=(104, 98, 90, 230), width=1)
-    for _ in range(16):
-        angle, reach = rng.uniform(0, 2 * math.pi), rng.uniform(15, 27)
-        rx, ry = c + math.cos(angle) * reach, c + math.sin(angle) * reach
-        draw.rectangle((rx, ry, rx + rng.randint(1, 2), ry + rng.randint(0, 1)), fill=(74, 70, 64, 235))
+def big_sheet(frames):
+    image = Image.new("RGBA", (BIG * len(frames), BIG), (0, 0, 0, 0))
+    for index, frame in enumerate(frames):
+        image.paste(frame, (BIG * index, 0))
     return image
+
+
+def _palm(scale, alpha):
+    """An open golden hand seen from below, fingers up, a dharma wheel in the palm."""
+    image = Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    gold, deep, light = (255, 208, 84, alpha), (176, 112, 22, alpha), (255, 240, 170, alpha)
+    c = BIG / 2
+
+    def box(x0, y0, x1, y1, radius, fill, outline):
+        draw.rounded_rectangle((c + x0 * scale, c + y0 * scale, c + x1 * scale, c + y1 * scale), radius=max(1, radius * scale), fill=fill, outline=outline, width=max(1, int(2 * scale)))
+
+    # Fingers, then thumb, then the palm over their roots.
+    for x, top in ((-24, -30), (-11, -40), (2, -42), (15, -34)):
+        box(x, top, x + 11, 4, 5, gold, deep)
+        for knuckle in (0.38, 0.68):
+            y = top + (4 - top) * knuckle
+            draw.line((c + (x + 2) * scale, c + y * scale, c + (x + 9) * scale, c + y * scale), fill=deep, width=1)
+    draw.polygon([(c + 24 * scale, c + 2 * scale), (c + 40 * scale, c - 14 * scale), (c + 44 * scale, c - 6 * scale), (c + 30 * scale, c + 22 * scale)], fill=gold, outline=deep)
+    box(-27, -4, 29, 40, 12, gold, deep)
+    draw.arc((c - 20 * scale, c + 2 * scale, c + 22 * scale, c + 34 * scale), 200, 340, fill=light, width=max(1, int(2 * scale)))
+    # The wheel.
+    radius = 11 * scale
+    draw.ellipse((c - radius, c + 16 * scale - radius, c + radius, c + 16 * scale + radius), outline=deep, width=max(1, int(2 * scale)))
+    for spoke in range(8):
+        angle = spoke * math.pi / 4
+        draw.line((c, c + 16 * scale, c + math.cos(angle) * radius, c + 16 * scale + math.sin(angle) * radius), fill=deep, width=1)
+    draw.ellipse((c - 3 * scale, c + 13 * scale, c + 3 * scale, c + 19 * scale), fill=light)
+    return image
+
+
+# Signature animations are drawn on a three-tile canvas.
+BIG = 96
+
+
+def falling_rock(frames=9, seed=41):
+    """A boulder dropping out of the air and breaking apart where it lands."""
+    rng = random.Random(seed)
+    shape = [(math.cos(a) * (15 + rng.uniform(-3, 3)), math.sin(a) * (13 + rng.uniform(-3, 3))) for a in [i * 2 * math.pi / 9 for i in range(9)]]
+    shards = [(rng.uniform(0, 2 * math.pi), rng.uniform(10, 34), rng.uniform(2, 5)) for _ in range(12)]
+    result = []
+    for index in range(frames):
+        t = (index + 1) / frames
+        frame = Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(frame)
+        c = BIG / 2
+        if t <= 0.6:
+            fall = t / 0.6
+            y = c - 44 * (1 - fall) ** 1.5
+            shadow = 6 + 12 * fall
+            draw.ellipse((c - shadow, c + 12 - shadow * 0.35, c + shadow, c + 12 + shadow * 0.35), fill=(0, 0, 0, int(120 * fall)))
+            points = [(c + x, y + py) for x, py in shape]
+            draw.polygon(points, fill=(122, 104, 84, 255), outline=(60, 48, 38, 255))
+            draw.polygon([(c + x * 0.55 - 3, y + py * 0.55 - 3) for x, py in shape], fill=(160, 140, 114, 255))
+        else:
+            burst = (t - 0.6) / 0.4
+            for angle, reach, size in shards:
+                x, y = c + math.cos(angle) * reach * burst, c + 6 + math.sin(angle) * reach * burst * 0.7
+                draw.rectangle((x - size, y - size, x + size, y + size), fill=(122, 104, 84, int(255 * (1 - burst))), outline=(60, 48, 38, int(255 * (1 - burst))))
+            dust = 14 + 26 * burst
+            draw.ellipse((c - dust, c + 8 - dust * 0.5, c + dust, c + 8 + dust * 0.5), outline=(190, 174, 150, int(200 * (1 - burst))), width=3)
+        result.append(frame)
+    return result
+
+
+def tide(frames=10):
+    """A wall of water rolling outward from the caster: a foaming crest with the dark swell behind it."""
+    result = []
+    for index in range(frames):
+        t = (index + 1) / frames
+        frame = Image.new("RGBA", (BIG, BIG), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(frame)
+        c = BIG / 2
+        radius = 6 + 40 * t
+        fade = 1 - t ** 2
+        draw.ellipse((c - radius, c - radius, c + radius, c + radius), outline=(40, 120, 220, int(210 * fade)), width=max(2, int(9 * (1 - t * 0.5))))
+        draw.ellipse((c - radius - 2, c - radius - 2, c + radius + 2, c + radius + 2), outline=(235, 248, 255, int(255 * fade)), width=2)
+        for tooth in range(28):
+            angle = tooth * 2 * math.pi / 28 + t
+            reach = radius + 3 + 2 * math.sin(tooth * 1.7 + t * 9)
+            x, y = c + math.cos(angle) * reach, c + math.sin(angle) * reach
+            draw.ellipse((x - 1.5, y - 1.5, x + 1.5, y + 1.5), fill=(235, 248, 255, int(240 * fade)))
+        result.append(Image.alpha_composite(frame.filter(ImageFilter.GaussianBlur(1.5)), frame))
+    return result
+
+
+def write_signature():
+    path = "Resources/Textures/_KS14/Cultivation/signature.rsi"
+    os.makedirs(path, exist_ok=True)
+    states = {
+        "falling_rock": (falling_rock(), 0.07),
+        "tide": (tide(), 0.06),
+    }
+    meta_states = []
+    for name, (frames, delay) in states.items():
+        big_sheet(frames).save(os.path.join(path, name + ".png"))
+        meta_states.append({"name": name, "delays": [[delay] * len(frames)]})
+    with open(os.path.join(path, "meta.json"), "w", encoding="utf-8") as file:
+        json.dump({"version": 1, "license": "CC-BY-SA-3.0",
+                   "copyright": "Generated for Klovnstation 14 by Tools/_KS14/cultivation_effects.py",
+                   "size": {"x": BIG, "y": BIG}, "states": meta_states}, file, indent=2)
+        file.write("\n")
 
 
 PROTOTYPES = "Resources/Prototypes/_KS14/Cultivation/visual_effects.yml"
@@ -460,15 +533,7 @@ def main():
         json.dump(meta, file, indent=2)
         file.write("\n")
 
-    crater_path = "Resources/Textures/_KS14/Cultivation/crater.rsi"
-    os.makedirs(crater_path, exist_ok=True)
-    crater().save(os.path.join(crater_path, "crater.png"))
-    with open(os.path.join(crater_path, "meta.json"), "w", encoding="utf-8") as file:
-        json.dump({"version": 1, "license": "CC-BY-SA-3.0",
-                   "copyright": "Generated for Klovnstation 14 by Tools/_KS14/cultivation_effects.py",
-                   "size": {"x": 64, "y": 64}, "states": [{"name": "crater"}]}, file, indent=2)
-        file.write("\n")
-
+    write_signature()
     write_prototypes()
 
 

@@ -30,6 +30,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
     private static readonly SoundSpecifier WaterSound = new SoundPathSpecifier("/Audio/Effects/Fluids/splash.ogg");
     private static readonly SoundSpecifier HealSound = new SoundPathSpecifier("/Audio/Magic/staff_healing.ogg");
     private static readonly SoundSpecifier EarthSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
+    private static readonly EntProtoId TideEffect = "KsFxTide";
+    private static readonly EntProtoId FallingRockEffect = "KsFxFallingRock";
 
     /// <summary>
     ///     How far a Water Root's released wave reaches.
@@ -237,6 +239,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         args.Handled = true;
         _visualsSystem.Wave(entity, FxColour.Water, big: true);
+        SpawnAttachedTo(TideEffect, new EntityCoordinates(entity, Vector2.Zero));
         foreach (var victimUid in MobsAround(entity, args.Range))
         {
             if (_sharedCultivationSystem.IsAlly(entity, victimUid))
@@ -325,12 +328,17 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         args.Handled = true;
         _visualsSystem.Wave(entity, FxColour.Earth, big: true);
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 2f);
+        _visualsSystem.Play(CultivationVisualsSystem.MountainFallSound, entity);
         var damage = CultivationSystem.Damage("Blunt", args.BluntDamage);
         foreach (var victimUid in MobsAround(entity, args.Range))
         {
             if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;
 
+            // A boulder comes down on each of them out of nowhere.
+            var landing = _transformSystem.GetMapCoordinates(victimUid);
+            Spawn(FallingRockEffect, landing);
+            _visualsSystem.Rubble(landing);
             _damageableSystem.TryChangeDamage(victimUid, damage, origin: entity);
             _stunSystem.TryKnockdown(victimUid, args.Knockdown);
         }

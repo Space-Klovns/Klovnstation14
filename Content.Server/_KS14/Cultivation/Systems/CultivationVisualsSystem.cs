@@ -27,6 +27,31 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId ShockwaveEffect = "KsBodyShockwave";
     private static readonly EntProtoId PillarEffect = "KsFxPillar";
     private static readonly EntProtoId FlameEffect = "KsFxFlame";
+    private static readonly EntProtoId RiftEffect = "KsFxVoidRift";
+    private static readonly EntProtoId RubbleEffect = "KsFxRubble";
+    private static readonly EntProtoId DustEffect = "KsBodyDust";
+    private static readonly EntProtoId[] CraterEffects = { "KsFxCrater", "KsFxCraterBig", "KsFxCraterHuge" };
+
+    // The SS13 sprites for lasting states.
+    private static readonly EntProtoId GoldenBellEffect = "KsFxGoldenBell";
+    private static readonly EntProtoId WaterBubbleEffect = "KsFxWaterBubble";
+    private static readonly EntProtoId MirrorBubbleEffect = "KsFxMirrorBubble";
+    private static readonly EntProtoId DharmaIdolEffect = "KsFxDharmaIdol";
+    private static readonly EntProtoId StormCloudEffect = "KsFxStormCloud";
+    private static readonly EntProtoId HeartDemonEffect = "KsFxHeartDemonAura";
+    private static readonly EntProtoId BeastEffect = "KsFxBeastAura";
+
+    /// <summary>
+    ///     The layered SS13 cues (temple bells, guqin phrases, chimes), mixed down by Tools/_KS14/cultivation_sounds.py.
+    /// </summary>
+    public static readonly SoundSpecifier GreatBellSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/great_bell.ogg");
+    public static readonly SoundSpecifier TempleBellSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/temple_bell.ogg");
+    public static readonly SoundSpecifier GuqinRiseSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/guqin_rise.ogg");
+    public static readonly SoundSpecifier GuqinFallSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/guqin_fall.ogg");
+    public static readonly SoundSpecifier WindChimesSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/wind_chimes.ogg");
+    public static readonly SoundSpecifier QinggongSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/qinggong.ogg");
+    public static readonly SoundSpecifier MountainFallSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/mountain_fall.ogg");
+    public static readonly SoundSpecifier AscendSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/ascend.ogg");
 
     /// <summary>
     ///     What each colour of qi sounds like as it's let loose.
@@ -65,29 +90,29 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private readonly List<(EntityUid Owner, int Rule)> _aurasGone = new();
     private TimeSpan _nextAuraCheck;
 
-    private readonly record struct AuraRule(Type Component, string Kind, FxColour Colour, Func<IComponent, bool>? Active = null);
+    private readonly record struct AuraRule(Type Component, EntProtoId Effect, Func<IComponent, bool>? Active = null);
 
     public override void Initialize()
     {
         base.Initialize();
 
         // Qi.
-        AddAura<GoldenBellQiComponent>("Dome", FxColour.Gold);
-        AddAura<StillWaterWardComponent>("Aura", FxColour.Water);
+        AddAura<GoldenBellQiComponent>(GoldenBellEffect);
+        AddAura<StillWaterWardComponent>(WaterBubbleEffect);
         AddAura<RootedStanceComponent>("Sigil", FxColour.Earth);
-        AddAura<DharmaIdolComponent>("Aura", FxColour.Gold);
+        AddAura<DharmaIdolComponent>(DharmaIdolEffect);
         AddAura<TurtleBreathingComponent>("Aura", FxColour.Water);
-        AddAura<MirrorLakeComponent>("Dome", FxColour.Water);
+        AddAura<MirrorLakeComponent>(MirrorBubbleEffect);
         AddAura<MoltenStepComponent>("Aura", FxColour.Fire);
         AddAura<SwordRidingComponent>("Aura", FxColour.Metal);
         AddAura<SwordFormationComponent>("Sigil", FxColour.Metal);
         AddAura<CultivationHasteComponent>("Aura", FxColour.Qi);
         AddAura<SoulDepartedComponent>("Aura", FxColour.Void);
         AddAura<NascentProjectionComponent>("Aura", FxColour.Gold);
-        AddAura<CultivatorComponent>("Aura", FxColour.Gold, component => ((CultivatorComponent)component).BreakthroughCyclesLeft > 0);
+        AddAura<CultivatorComponent>(StormCloudEffect, component => ((CultivatorComponent)component).BreakthroughCyclesLeft > 0);
 
         // Martial arts and the jianghu.
-        AddAura<GoldenBellComponent>("Dome", FxColour.Gold);
+        AddAura<GoldenBellComponent>(GoldenBellEffect);
         AddAura<GracefulStepsComponent>("Aura", FxColour.Qi);
         AddAura<DuguCounterComponent>("Aura", FxColour.Metal);
         AddAura<GreatShiftComponent>("Aura", FxColour.Void);
@@ -101,17 +126,24 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
 
         // The body.
         AddAura<BodyHardeningComponent>("Aura", FxColour.Earth, component => ((BodyHardeningComponent)component).IronShirtEnd > _gameTiming.CurTime);
-        AddAura<BodyHardeningComponent>("Dome", FxColour.Gold, component => ((BodyHardeningComponent)component).VajraEnd > _gameTiming.CurTime);
+        AddAura<BodyHardeningComponent>(GoldenBellEffect, component => ((BodyHardeningComponent)component).VajraEnd > _gameTiming.CurTime);
         AddAura<BodyHardeningComponent>("Aura", FxColour.Blood, component => ((BodyHardeningComponent)component).BloodBoilEnd > _gameTiming.CurTime);
         AddAura<BodyStanceComponent>("Aura", FxColour.Earth, component => ((BodyStanceComponent)component).Stance == BodyStance.Mountain);
         AddAura<BodyStanceComponent>("Aura", FxColour.Metal, component => ((BodyStanceComponent)component).Stance == BodyStance.Thunderclap);
         AddAura<BodyBreathingComponent>("Aura", FxColour.Wood);
-        AddAura<BodyCultivatorComponent>("Aura", FxColour.Earth, component => ((BodyCultivatorComponent)component).TribulationCyclesLeft > 0);
+        AddAura<BodyCultivatorComponent>(StormCloudEffect, component => ((BodyCultivatorComponent)component).TribulationCyclesLeft > 0);
+        AddAura<HeartDemonComponent>(HeartDemonEffect);
+        AddAura<SpiritBeastComponent>(BeastEffect);
     }
 
     private void AddAura<T>(string kind, FxColour colour, Func<IComponent, bool>? active = null) where T : IComponent
     {
-        _auraRules.Add(new AuraRule(typeof(T), kind, colour, active));
+        AddAura<T>(EffectId(kind, colour), active);
+    }
+
+    private void AddAura<T>(EntProtoId effect, Func<IComponent, bool>? active = null) where T : IComponent
+    {
+        _auraRules.Add(new AuraRule(typeof(T), effect, active));
     }
 
     public override void Update(float frameTime)
@@ -137,7 +169,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
                 if (_auras.TryGetValue(key, out var auraUid) && !TerminatingOrDeleted(auraUid))
                     continue;
 
-                _auras[key] = SpawnAttachedTo(EffectId(rule.Kind, rule.Colour), new EntityCoordinates(ownerUid, Vector2.Zero));
+                _auras[key] = SpawnAttachedTo(rule.Effect, new EntityCoordinates(ownerUid, Vector2.Zero));
             }
         }
 
@@ -156,6 +188,47 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     }
 
     #region Bursts
+
+    /// <summary>
+    ///     A cracked crater punched into the floor, lingering for half a minute: size 0, 1 or 2.
+    /// </summary>
+    public EntityUid Crater(MapCoordinates coordinates, int size)
+    {
+        var craterUid = Spawn(CraterEffects[Math.Clamp(size, 0, CraterEffects.Length - 1)], coordinates);
+        _transformSystem.SetLocalRotation(craterUid, Angle.FromDegrees(90 * _robustRandom.Next(4)));
+        Spawn(RubbleEffect, coordinates);
+        return craterUid;
+    }
+
+    /// <summary>
+    ///     Rock chips and a puff of dust, where something gave way.
+    /// </summary>
+    public void Rubble(MapCoordinates coordinates)
+    {
+        Spawn(RubbleEffect, coordinates);
+        Spawn(DustEffect, coordinates);
+    }
+
+    /// <summary>
+    ///     A rift in space snapping open and pinching shut, as someone steps through the void.
+    /// </summary>
+    public void Rift(MapCoordinates coordinates)
+    {
+        Spawn(RiftEffect, coordinates);
+    }
+
+    /// <summary>
+    ///     One of the mixed-down SS13 cues.
+    /// </summary>
+    public void Play(SoundSpecifier sound, EntityUid source, float volume = 0f)
+    {
+        _audioSystem.PlayPvs(sound, source, AudioParams.Default.WithVolume(volume));
+    }
+
+    public void Play(SoundSpecifier sound, MapCoordinates coordinates, float volume = 0f)
+    {
+        _audioSystem.PlayPvs(sound, _transformSystem.ToCoordinates(coordinates), AudioParams.Default.WithVolume(volume));
+    }
 
     public static string EffectId(string kind, FxColour colour)
     {
@@ -315,6 +388,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         WaveAt(centre, FxColour.Gold, big: true);
         Shockwave(centre, strength: 2.5f);
         Motes(uid, FxColour.Gold, TimeSpan.FromSeconds(3));
+        Play(AscendSound, uid);
     }
 
     /// <summary>
