@@ -103,8 +103,8 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         AddAura<BodyHardeningComponent>("Aura", FxColour.Earth, component => ((BodyHardeningComponent)component).IronShirtEnd > _gameTiming.CurTime);
         AddAura<BodyHardeningComponent>("Dome", FxColour.Gold, component => ((BodyHardeningComponent)component).VajraEnd > _gameTiming.CurTime);
         AddAura<BodyHardeningComponent>("Aura", FxColour.Blood, component => ((BodyHardeningComponent)component).BloodBoilEnd > _gameTiming.CurTime);
-        AddAura<BodyStanceComponent>("Sigil", FxColour.Earth, component => ((BodyStanceComponent)component).Stance == BodyStance.Mountain);
-        AddAura<BodyStanceComponent>("Aura", FxColour.Qi, component => ((BodyStanceComponent)component).Stance == BodyStance.Thunderclap);
+        AddAura<BodyStanceComponent>("Aura", FxColour.Earth, component => ((BodyStanceComponent)component).Stance == BodyStance.Mountain);
+        AddAura<BodyStanceComponent>("Aura", FxColour.Metal, component => ((BodyStanceComponent)component).Stance == BodyStance.Thunderclap);
         AddAura<BodyBreathingComponent>("Aura", FxColour.Wood);
         AddAura<BodyCultivatorComponent>("Aura", FxColour.Earth, component => ((BodyCultivatorComponent)component).TribulationCyclesLeft > 0);
     }
@@ -185,7 +185,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
 
         var power = Power(uid);
         var centre = _transformSystem.GetMapCoordinates(uid);
-        WaveAt(centre, colour, big: power >= 2);
+        Spawn($"KsFxCast{(power >= 2 ? "Big" : string.Empty)}{colour}", centre);
         if (Cues.TryGetValue(colour, out var sound))
             _audioSystem.PlayPvs(sound, uid, AudioParams.Default.WithVolume(-9f + 3f * (float)power).WithVariation(0.15f));
 
@@ -295,6 +295,14 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Space itself bends around the point for a moment, the way it does round a singularity.
+    /// </summary>
+    public void Distort(MapCoordinates centre, FxDistortion kind)
+    {
+        Spawn($"KsFxDistortion{kind}", centre);
+    }
+
+    /// <summary>
     ///     A successful breakthrough: a pillar of light, a great golden wave, the air shaking, gold rising.
     /// </summary>
     public void Breakthrough(EntityUid uid)
@@ -336,6 +344,27 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     }
 
     #endregion
+}
+
+/// <summary>
+///     The colours cultivation glows in; each names a set of effect prototypes (KsFxWaveGold and so on).
+/// </summary>
+public enum FxDistortion : byte
+{
+    /// <summary>
+    ///     A short outward shove of the picture, for a blow that splits the air.
+    /// </summary>
+    Push,
+
+    /// <summary>
+    ///     A quick inward tug, for the ground heaving.
+    /// </summary>
+    Pulse,
+
+    /// <summary>
+    ///     The whole screen thrown outward for over a second.
+    /// </summary>
+    Roar,
 }
 
 /// <summary>

@@ -69,8 +69,8 @@ public sealed class CultivationVisualsTest : GameTest
             Assert.That(cultivationSystem.TryUseTechnique(uid, 5f), Is.True);
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(CountEffects("KsFxWaveQi"), Is.EqualTo(1), "A cast showed no ring of qi.");
-                Assert.That(CountEffects("KsFxWaveBigQi") + CountEffects("KsBodyShockwave"), Is.Zero, "A beginner's cast shook the room.");
+                Assert.That(CountEffects("KsFxCastQi"), Is.EqualTo(1), "A cast showed no ring of qi.");
+                Assert.That(CountEffects("KsFxCastBigQi") + CountEffects("KsBodyShockwave"), Is.Zero, "A beginner's cast shook the room.");
             }
 
             var cultivator = SEntity<CultivatorComponent>(uid);
@@ -82,7 +82,7 @@ public sealed class CultivationVisualsTest : GameTest
             cultivationSystem.TryUseTechnique(uid, 5f);
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(CountEffects("KsFxWaveBigQi"), Is.GreaterThanOrEqualTo(1), "A Nascent Soul's cast was no greater than a beginner's.");
+                Assert.That(CountEffects("KsFxCastBigQi"), Is.GreaterThanOrEqualTo(1), "A Nascent Soul's cast was no greater than a beginner's.");
                 Assert.That(CountEffects("KsBodyShockwave"), Is.GreaterThan(shockwavesBefore), "The air did not ripple at the peak.");
             }
         });

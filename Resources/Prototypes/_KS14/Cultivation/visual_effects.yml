@@ -1443,6 +1443,466 @@
     netsync: false
 
 - type: entity
+  id: KsFxCastQi
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#9fe3ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: wave
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastBigQi
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#9fe3ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: wave
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastGold
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#ffd55a"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_rays
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastBigGold
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#ffd55a"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_rays
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastMetal
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d4dbea"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_slash
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+
+- type: entity
+  id: KsFxCastBigMetal
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d4dbea"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_slash
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+
+- type: entity
+  id: KsFxCastWater
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#4fb3ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+
+- type: entity
+  id: KsFxCastBigWater
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#4fb3ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+
+- type: entity
+  id: KsFxCastFire
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#ff6a1f"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_flare
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+
+- type: entity
+  id: KsFxCastBigFire
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#ff6a1f"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_flare
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+
+- type: entity
+  id: KsFxCastEarth
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#c99560"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_rune
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastBigEarth
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#c99560"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_rune
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastWood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#5fd35f"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_petals
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.54
+  - type: TimedDespawn
+    lifetime: 0.54
+
+- type: entity
+  id: KsFxCastBigWood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#5fd35f"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_petals
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.54
+  - type: TimedDespawn
+    lifetime: 0.54
+
+- type: entity
+  id: KsFxCastBlood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d0251c"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_spikes
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+
+- type: entity
+  id: KsFxCastBigBlood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d0251c"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_spikes
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+
+- type: entity
+  id: KsFxCastVoid
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#9b5cff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_implode
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastBigVoid
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#9b5cff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_implode
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+
+- type: entity
+  id: KsFxCastSense
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d8f4ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+
+- type: entity
+  id: KsFxCastBigSense
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    color: "#d8f4ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+
+- type: entity
   id: KsFxPillar
   categories: [ HideSpawnMenu ]
   name: pillar of light

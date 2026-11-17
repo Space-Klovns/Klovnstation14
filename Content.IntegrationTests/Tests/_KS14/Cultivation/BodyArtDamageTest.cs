@@ -87,6 +87,83 @@ public sealed class BodyArtDamageTest : GameTest
     }
 
     [Test]
+    public async Task TestBullChargeGoesThroughEverything()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid userUid = default;
+        EntityUid tableUid = default;
+        EntityUid wallUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var bodySystem = SEntMan.System<SharedBodyCultivationSystem>();
+            userUid = SEntMan.SpawnEntity("KsTestBodyArtist", map.GridCoords);
+            tableUid = SEntMan.SpawnEntity("Table", map.GridCoords.Offset(new Vector2(1f, 0f)));
+            wallUid = SEntMan.SpawnEntity("WallSolid", map.GridCoords.Offset(new Vector2(3f, 0f)));
+
+            // Stage 4, the first stage that knows the charge.
+            for (var stage = 0; stage < 4; stage++)
+                bodySystem.AdvanceStage(userUid);
+
+            var ev = new BodyBullChargeActionEvent { Performer = userUid, Target = map.GridCoords.Offset(new Vector2(6f, 0f)) };
+            SEntMan.EventBus.RaiseLocalEvent(userUid, ev);
+            Assert.That(ev.Handled, Is.True, "The charge didn't go off.");
+        });
+
+        await RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var travelled = SEntMan.System<SharedTransformSystem>().GetWorldPosition(userUid).X
+                - SEntMan.System<SharedTransformSystem>().ToMapCoordinates(map.GridCoords).Position.X;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(SEntMan.Deleted(tableUid), Is.True, "A table survived the charge.");
+                Assert.That(SEntMan.Deleted(wallUid), Is.True, "A wall survived the charge.");
+                Assert.That(travelled, Is.GreaterThan(6f), "The charge was stopped short by what stood in its way.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestSkySplittingPalmBreaksWhatItPasses()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid wallUid = default;
+        EntityUid windowUid = default;
+        EntityUid airlockUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var bodySystem = SEntMan.System<SharedBodyCultivationSystem>();
+            var userUid = SEntMan.SpawnEntity("KsTestBodyArtist", map.GridCoords);
+            windowUid = SEntMan.SpawnEntity("Window", map.GridCoords.Offset(new Vector2(2f, 0f)));
+            airlockUid = SEntMan.SpawnEntity("Airlock", map.GridCoords.Offset(new Vector2(4f, 0f)));
+            wallUid = SEntMan.SpawnEntity("WallSolid", map.GridCoords.Offset(new Vector2(6f, 0f)));
+
+            // Stage 7, Vajra Viscera.
+            for (var stage = 0; stage < 7; stage++)
+                bodySystem.AdvanceStage(userUid);
+
+            var ev = new BodySkySplittingPalmActionEvent { Performer = userUid, Target = map.GridCoords.Offset(new Vector2(8f, 0f)) };
+            SEntMan.EventBus.RaiseLocalEvent(userUid, ev);
+            Assert.That(ev.Handled, Is.True, "The palm didn't go off.");
+        });
+
+        await RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(SEntMan.Deleted(windowUid), Is.True, "A window survived the Sky-Splitting Palm.");
+                Assert.That(SEntMan.Deleted(airlockUid), Is.True, "An airlock survived the Sky-Splitting Palm.");
+                Assert.That(SEntMan.Deleted(wallUid), Is.True, "A wall survived the Sky-Splitting Palm.");
+            }
+        });
+    }
+
+    [Test]
     public async Task TestShatteringFistBreaksWall()
     {
         var map = await Pair.CreateTestMap();

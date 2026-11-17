@@ -183,7 +183,7 @@
   parent: BaseActionBodyArt
   id: ActionBodyBullCharge
   name: Raging Bull Charge
-  description: Charge in a straight line, four tiles plus your stage, bowling people aside and bursting through windows and tables; from Vajra Viscera, walls too. 30 exhaustion.
+  description: Charge in a straight line, four tiles plus your stage, and nothing stops you. People are bowled aside, and tables, machines, windows and walls in the way are smashed through. 30 exhaustion.
   components:
   - type: Action
     useDelay: 30

@@ -88,3 +88,37 @@
     duration: 2
   - type: TimedDespawn
     lifetime: 2
+
+# Bend the picture around a point for a moment, like the air round a singularity.
+- type: entity
+  id: KsFxDistortionPush
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -60
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.6
+
+- type: entity
+  id: KsFxDistortionPulse
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: 40
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.4
+
+- type: entity
+  id: KsFxDistortionRoar
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -400
+    falloffPower: 1.8
+  - type: TimedDespawn
+    lifetime: 1.2
