@@ -1,3 +1,7 @@
+using Content.Shared._KS14.Cultivation.Body;
+using Content.Shared.Weapons.Melee.Events;
+using Content.Shared.FixedPoint;
+using Content.Shared.Mobs.Systems;
 using System.Numerics;
 using Content.Server._KS14.Cultivation.Components;
 using Content.Server.NPC.Components;
@@ -31,6 +35,7 @@ public sealed partial class HeartDemonSystem : EntitySystem
     /// </summary>
     private const float VictoryRange = 2.5f;
 
+    [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private JianghuSystem _jianghuSystem = default!;
@@ -69,19 +74,38 @@ public sealed partial class HeartDemonSystem : EntitySystem
                 return existingUid;
         }
 
-        var spawnCoordinates = Transform(hostUid).Coordinates.Offset(new Vector2(1f, 0f));
+        // Right where its host stands: an offset spot can be inside a wall or out in space, where it could never reach them.
+        var spawnCoordinates = Transform(hostUid).Coordinates;
         var demonUid = Spawn(HeartDemonPrototype, spawnCoordinates);
         var demonComponent = EnsureComp<HeartDemonComponent>(demonUid);
         demonComponent.Host = hostUid;
         demonComponent.Expires = _gameTiming.CurTime + (lifetime ?? DefaultLifetime);
 
         _metaDataSystem.SetEntityName(demonUid, Loc.GetString("heart-demon-name", ("host", hostUid)));
+
+        // The further along the path, the stronger the doubts: harder blows and a body that takes more killing.
+        var tier = 0;
+        if (_cultivatorQuery.TryComp(hostUid, out var hostCultivator))
+            tier = (int)hostCultivator.Realm;
+        else if (TryComp<BodyCultivatorComponent>(hostUid, out var hostBody))
+            tier = hostBody.Stage / 3;
+
+        demonComponent.BonusDamage = 6f + 8f * tier;
+        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(100 + 60 * tier), MobState.Critical);
+        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(200 + 60 * tier), MobState.Dead);
         if (TryComp<NPCRetaliationComponent>(demonUid, out var retaliationComponent))
             _npcRetaliationSystem.TryRetaliate((demonUid, retaliationComponent), hostUid);
 
         _audioSystem.PlayPvs(SummonSound, hostUid);
         _noticeSystem.Announce(hostUid, Loc.GetString("heart-demon-summoned", ("host", hostUid)), type: PopupType.LargeCaution);
         return demonUid;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDemonMeleeHit(Entity<HeartDemonComponent> entity, ref MeleeHitEvent args)
+    {
+        if (args.IsHit && args.HitEntities.Count > 0 && entity.Comp.BonusDamage > 0f)
+            args.BonusDamage += CultivationSystem.Damage("Blunt", entity.Comp.BonusDamage);
     }
 
     [SubscribeLocalEvent]
@@ -144,4 +168,10 @@ public sealed partial class HeartDemonComponent : Component
 
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan Expires;
+
+    /// <summary>
+    ///     Extra blunt damage on each of its blows: a greater cultivator's doubts hit harder.
+    /// </summary>
+    [DataField]
+    public float BonusDamage;
 }

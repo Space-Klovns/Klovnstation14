@@ -659,17 +659,22 @@ public sealed partial class CultivationSystem : EntitySystem
         _visualsSystem.Wave(entity, FxColour.Blood, big: true);
         _cultivationSystem.ScaleInsight(entity.AsNullable(), 0.5f);
 
+        // The higher the realm, the harder a deviation bites: more backlash, deeper injuries, likelier heart demons.
+        var realm = (int)entity.Comp.Realm;
+
         // The backlash is a heavy blow in its own right; only add the stack ourselves if it didn't already.
         var injuryBefore = entity.Comp.InternalInjury;
-        _damageableSystem.TryChangeDamage(entity.Owner, Damage("Blunt", 20), ignoreResistances: true, interruptsDoAfters: false);
+        _damageableSystem.TryChangeDamage(entity.Owner, Damage("Blunt", 20 + 15 * realm), ignoreResistances: true, interruptsDoAfters: false);
         if (entity.Comp.InternalInjury == injuryBefore)
             _cultivationSystem.AddInternalInjury(entity.AsNullable());
+        if (realm >= 2)
+            _cultivationSystem.AddInternalInjury(entity.AsNullable(), stacks: realm - 1);
 
         _audioSystem.PlayPvs(DeviationSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-deviation", ("user", entity.Owner)), type: PopupType.LargeCaution);
 
         // Doubt tears free and takes your face.
-        if (_robustRandom.Prob(HeartDemonChance))
+        if (_robustRandom.Prob(MathF.Min(0.9f, HeartDemonChance + 0.15f * realm)))
             _heartDemonSystem.Summon(entity.Owner);
     }
 

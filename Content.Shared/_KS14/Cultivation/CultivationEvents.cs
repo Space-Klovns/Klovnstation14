@@ -45,3 +45,10 @@ public record struct CultivationBreakthroughReadinessEvent(int Readiness);
 /// </summary>
 [ByRefEvent]
 public record struct CultivationInsightMultiplierEvent(float Multiplier);
+
+/// <summary>
+///     Raised on a body cultivator when training earns them tempering; company (sect members and sworn siblings
+///         nearby, a place in the Martial World Ranking, the Mandate's favour) can add to the multiplier.
+/// </summary>
+[ByRefEvent]
+public record struct BodyTemperingMultiplierEvent(float Multiplier);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Cultivation.Body;
 using Content.Server._KS14.Cultivation.Components;
 using Content.Server.Administration;
 using Content.Server.Chat.Managers;
@@ -41,6 +42,7 @@ public sealed partial class JianghuSystem
     private const float FellowshipRange = 5f;
     private const float FellowshipBonusPerMember = 0.1f;
     private const float MaxFellowshipBonus = 0.3f;
+    private const float SwornTogetherBonus = 0.15f;
     private const float PlaqueMeditationRange = 5f;
 
     private static readonly string[] SectWords = { "sect", "school", "palace", "pavilion", "hall", "gate", "manor" };
@@ -554,7 +556,24 @@ public sealed partial class JianghuSystem
     [SubscribeLocalEvent]
     private void OnInsightMultiplier(Entity<CultivatorComponent> entity, ref CultivationInsightMultiplierEvent args)
     {
-        args.Multiplier += FellowshipBonus(entity) + RankingInsightBonusFor(entity);
+        args.Multiplier += CompanyBonus(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnTemperingMultiplier(Entity<BodyCultivatorComponent> entity, ref BodyTemperingMultiplierEvent args)
+    {
+        args.Multiplier += CompanyBonus(entity);
+    }
+
+    /// <summary>
+    ///     How much faster someone cultivates for the company they keep: sect members close by, a sworn sibling at
+    ///         their side and a place near the top of the Martial World Ranking. Counts for qi insight and body
+    ///         tempering alike.
+    /// </summary>
+    public float CompanyBonus(EntityUid bodyUid)
+    {
+        return FellowshipBonus(bodyUid) + RankingInsightBonusFor(bodyUid)
+               + (HasComp<SwornTogetherComponent>(bodyUid) ? SwornTogetherBonus : 0f);
     }
 
     private float FellowshipBonus(EntityUid bodyUid)

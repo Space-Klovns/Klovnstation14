@@ -166,6 +166,11 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
                 return 0f;
 
             entity.Comp.TrainingCooldowns[trainingSource] = currentTime + (cooldown ?? TimeSpan.FromSeconds(30));
+
+            // Training goes faster in good company.
+            var multiplierEvent = new BodyTemperingMultiplierEvent(1f);
+            RaiseLocalEvent(entity, ref multiplierEvent);
+            amount *= multiplierEvent.Multiplier;
         }
 
         var gained = Math.Clamp(amount, 0f, entity.Comp.TemperingCap - entity.Comp.Tempering);
