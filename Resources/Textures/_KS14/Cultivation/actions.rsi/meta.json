@@ -182,6 +182,9 @@
       "name": "ladder_cloud"
     },
     {
+      "name": "lend_qi"
+    },
+    {
       "name": "meditate"
     },
     {
@@ -213,6 +216,9 @@
     },
     {
       "name": "return_to_body"
+    },
+    {
+      "name": "ring_speak"
     },
     {
       "name": "rooted_stance"

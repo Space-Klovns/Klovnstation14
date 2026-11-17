@@ -50,6 +50,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     /// </summary>
     private const float AlarmRange = 3f;
 
+    [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private CultivationStanceSystem _stanceSystem = default!;
@@ -165,6 +166,11 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
 
         if (found == 0 && _manuals.Count == 0)
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-sense-nothing"));
+
+        // A full reading of the place: its feng shui, and any wild qi nearby.
+        var lines = _siteSystem.Evaluate(entity).Lines;
+        lines.AddRange(_siteSystem.StationQiLines(entity));
+        _noticeSystem.Notify(entity, string.Join("\n", lines), alsoToChat: true);
     }
 
     #endregion

@@ -78,6 +78,8 @@ public sealed partial class CultivationSystem : EntitySystem
 
     private static readonly SoundSpecifier LearnSound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
 
+    [Dependency] private CultivationSiteSystem _siteSystem = default!;
+    [Dependency] private AncestralRingSystem _ringSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -388,7 +390,10 @@ public sealed partial class CultivationSystem : EntitySystem
         args.Handled = true;
 
         var multiplier = QiSourceMultiplier(entity);
-        var insightMultiplier = multiplier;
+
+        // Where they sit matters: a mat, the five elements around it, being alone, and the station's wild qi.
+        var insightMultiplier = multiplier * _siteSystem.Evaluate(entity).Multiplier * _ringSystem.InsightMultiplier(entity)
+            + _siteSystem.StationQiCycle(entity);
         if (entity.Comp.ForcedCirculation)
         {
             // Twice the insight, driven past the safe limit.
@@ -438,6 +443,7 @@ public sealed partial class CultivationSystem : EntitySystem
             readiness += 10;
         if (entity.Comp.DaoHeartTempered)
             readiness += 15;
+        readiness += _siteSystem.Evaluate(entity).ReadinessBonus;
 
         var ev = new CultivationBreakthroughReadinessEvent(readiness);
         RaiseLocalEvent(entity, ref ev);

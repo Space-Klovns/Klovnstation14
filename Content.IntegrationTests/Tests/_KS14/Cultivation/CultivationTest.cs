@@ -218,7 +218,8 @@ public sealed class CultivationTest : GameTest
             var cultivatorComponent = SEntMan.GetComponent<CultivatorComponent>(cultivatorUid);
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(cultivatorComponent.Insight, Is.EqualTo(cultivatorComponent.MeditateInsight * 2).Within(0.01f),
+                // Alone in the room, each cycle carries the seclusion bonus a site gives.
+                Assert.That(cultivatorComponent.Insight, Is.EqualTo(cultivatorComponent.MeditateInsight * 2 * 1.25f).Within(0.01f),
                     "Two meditation cycles did not gather two cycles of insight.");
                 Assert.That(cultivatorComponent.InternalInjury, Is.Zero, "Two meditation cycles did not heal an internal injury.");
             }

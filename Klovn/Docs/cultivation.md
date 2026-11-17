@@ -39,6 +39,31 @@ can add what it notices; meditation raises `CultivationMeditatedEvent` after eac
 The antagonist is `KsCultivator` (rule `KsCultivators`): one to three cultivators, each starting with a random
 law manual in hand.
 
+## Where and how to cultivate
+
+- **Cultivation mat** (`KsCultivationMat`, crafted from 3 cloth). Meditating on one lets the surroundings matter
+  (`CultivationSiteSystem`). Things within a couple of tiles count towards the five elements: what counts is data, the
+  `fengShuiElement` prototypes in `sites.yml` (prototypes, name prefixes, components, stack materials, or anything
+  burning). Each element caps at 4, and identical things count twice at most. For each of the cultivator's laws, its own
+  element nourishes, the element that generates it helps, and the one that overcomes it suppresses. Being alone (no other
+  player within 5 tiles) helps anywhere. The result multiplies meditation insight and adds to breakthrough readiness.
+  Examining a mat shows the element readout; Spiritual Sense gives the full reading in chat.
+- **Station qi**: meditating within 6 tiles of a singularity or a ball of lightning, or 2 of a fire, is far faster and
+  hurts (radiation, shocks, burns).
+- **Guqin** (`KsGuqin`, crafted from 8 planks and 7 cable). Every 20 seconds of playing, the player and every
+  cultivator listening within 6 tiles gain insight, more the higher the player's realm; the player's torn meridians
+  settle every third wave. Everyone else just feels at peace.
+- **Heavenly treasures** (`HeavenlyTreasureSystem`). Every 15 to 20 minutes (the first after 12 to 18), if any
+  cultivator is alive, a spirit herb blooms beside a maintenance hatch and every cultivator is told roughly where. Digging
+  it up takes 4 seconds; eaten, it heals, fills a qi cultivator's dantian and gives insight, or tempers a body
+  cultivator. Unclaimed, it fades after 6 minutes.
+- **Round-start loot** (`CultivationLootSystem`): three qi manuals, two martial manuals, the Body Molding Art, a primer
+  and an ancestral ring beside maintenance hatches, sometimes a demonic scripture, and a qi manual and a primer beside the
+  library shelves.
+- **Ancestral ring** (`KsAncestralRing`). A cultivator using it in hand offers a ghost role: an ancient master living in
+  the stone. The master speaks only into the bearer's head (an action, not local chat), can lend them 30 qi every three
+  minutes, and while awake the bearer meditates 25% faster. A bible pressed to the ring banishes the master.
+
 ## The Demonic Path
 
 `ForbiddenArtsSystem`. The Heaven-Devouring Demonic Scripture (`KsDemonicScripture`, 18 TC in the uplink) can only be

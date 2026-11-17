@@ -597,6 +597,31 @@ def mist():
     return frames, delays
 
 
+def spirit_herb(size=32, glow_phase=0.0, planted=False):
+    """Pale jade leaves round a single glowing white blossom."""
+    image = Image.new("RGBA", (size, size))
+    draw = ImageDraw.Draw(image)
+    cx = size // 2
+    base = size - 6 if planted else size - 8
+    if planted:
+        draw.ellipse((cx - 9, base - 2, cx + 9, base + 4), fill=(70, 48, 30, 255))
+    draw.line((cx, base, cx, base - 14), fill=(60, 120, 70, 255), width=2)
+    for side, height in ((-1, 3), (1, 6), (-1, 9)):
+        leaf = [(cx, base - height), (cx + side * 8, base - height - 4), (cx + side * 3, base - height - 1)]
+        draw.polygon(leaf, fill=(132, 214, 168, 255), outline=(60, 130, 90, 255))
+    bloom_y = base - 16
+    pulse = 0.75 + 0.25 * math.sin(glow_phase)
+    halo = Image.new("RGBA", (size, size))
+    ImageDraw.Draw(halo).ellipse((cx - 7, bloom_y - 7, cx + 7, bloom_y + 7), fill=(200, 255, 220, int(150 * pulse)))
+    image = Image.alpha_composite(halo.filter(ImageFilter.GaussianBlur(3)), image)
+    draw = ImageDraw.Draw(image)
+    for angle in range(0, 360, 72):
+        x, y = cx + math.cos(math.radians(angle)) * 3, bloom_y + math.sin(math.radians(angle)) * 3
+        draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=(250, 255, 245, 255))
+    draw.point((cx, bloom_y), fill=(255, 236, 140, 255))
+    return image
+
+
 # Every art effect: (prototype id, state, tint or None, scale, light colour or None, draw depth).
 ART_PROTOTYPES = [
     ("KsFxArtPalmQi", "palm_qi", None, 1.0, "#78c8ff", "Effects"),
@@ -748,6 +773,11 @@ def main():
     for rsi, ours, theirs in SS13_ITEMS:
         frames, _ = items[theirs]
         frames[0].save(os.path.join(TEXTURES, f"{rsi}.rsi", f"{ours}.png"))
+
+    treasures = [(name, items[name][0], None) for name in ("guqin", "mat", "ring")]
+    treasures.append(("spirit_herb", [spirit_herb()], None))
+    treasures.append(("spirit_herb_plant", [spirit_herb(planted=True, glow_phase=phase / 6 * math.tau) for phase in range(6)], [0.2] * 6))
+    write_rsi("treasures", (32, 32), treasures)
 
     write_rsi("wuxia_riding", (64, 64), [plain(riding, "sword_ride"), plain(riding, "qi_cloud")])
     write_rsi("wuxia_96", (96, 96), [

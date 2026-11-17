@@ -43,6 +43,8 @@ PALETTE = {
 
 ACTIONS = {
     "meditate": ("禅", "jade"),
+    "ring_speak": ("语", "tan"),
+    "lend_qi": ("借", "gold"),
     "breakthrough": ("破", "gold"),
     "flying_sword": ("剑", "silver"),
     "sword_rain": ("雨", "silver"),
