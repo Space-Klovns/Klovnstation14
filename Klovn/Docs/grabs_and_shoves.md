@@ -14,7 +14,11 @@ pulling has no levels: ctrl-click pulls, ctrl-click again lets go, and a pull al
 
 tgstation does neither. A shove never tires anyone out; what it does depends on what is behind the target. A pull is
 the bottom rung of a grab ladder that ends in strangling. This port follows tgstation's structure, with numbers
-chosen by the server's design brief where it gave them, and tgstation's otherwise. Sources, in `tgstation-master`:
+chosen by the server's design brief where it gave them, and tgstation's otherwise.
+
+Everything said of tgstation here, and every path below, is as of
+[tgstation/tgstation](https://github.com/tgstation/tgstation/) at commit
+[`58ab9a26cfae872ca48ef6ec4635b576b869b358`](https://github.com/tgstation/tgstation/tree/58ab9a26cfae872ca48ef6ec4635b576b869b358). Sources:
 
 | Mechanic | tgstation source |
 |---|---|
@@ -315,10 +319,12 @@ Nobody incapacitated or stunned resists. A stage that doesn't block movement jus
 - a failure deals `ResistFailStaminaDamageMin..Max` stamina damage
 - a success calls `TryStopPull` with **no user**, because a user equal to the victim would be blocked again
 
-**NPCs** (`HTNComponent`) struggle by themselves: `KsNpcGrabResistSystem` (server) calls `KsResistSystem.TryResist`
-every half second for each NPC carried, or held at a stage that `BlocksVictimMovement`. Not a plain pull: with the
-one-second delay before a pull can tighten, an NPC fighting pulls could never be gripped at all. The cooldowns decide
-how often an attempt lands.
+**NPCs** (`HTNComponent`) struggle by themselves. `KsNpcGrabResistSystem` (server) never scans for them: it marks
+an NPC with `KsNpcResistingComponent` when `KsGrabStageChangedEvent` puts it in a stage that `BlocksVictimMovement`,
+or `KsCarryStartedEvent` lifts it, and only marked NPCs are updated. Each calls `KsResistSystem.TryResist` every
+`Interval` (half a second), and loses the marker once nothing holds it. A plain pull isn't fought: with the one-second
+delay before a pull can tighten, an NPC fighting pulls could never be gripped at all. The cooldowns decide how often an
+attempt lands.
 
 #### Strangling
 
@@ -356,6 +362,21 @@ that can't grab) leaves the victim to land as any thrown thing does:
   (`DealImpactDamage`).
 - `ThrowWallKnockdownTime`, `ThrowWallSound`, `ThrowWallPopups` and `ThrowWallResistedPopups` for a wall.
 - `ThrowObstaclePopups`, shown instead of the obstacle's own.
+
+#### Thrown into an open closet
+
+Not part of the grab: `KsEntityStorageCatchThrownComponent` (`Content.Shared/_KS14/Storage/`) goes on any
+`EntityStorage` entity, and `ClosetBase` has it. Anything thrown that passes its `whitelist` (mobs, by default) and
+hits the storage while it stands open ends up inside, with the door shut: a thrown grab victim, someone thrown off a
+carrier's back, or a mob thrown by anything else. `KsEntityStorageCatchThrownSystem` (server, like upstream's
+`ThrowInsertContainerSystem`) handles `ThrowHitByEvent` on the storage:
+- An open closet's fixture keeps `BulletImpassable`, which the non-hard throwing fixture's `ThrownItem` mask hits,
+  though nobody walking is stopped by it. That is why the event fires at all.
+- It closes the storage first, then inserts. An open `EntityStorage` reports that anything can be inserted and
+  `Insert` only drops things beside it, so size, capacity and the storage's own whitelist can only be asked once it is
+  shut. Something that doesn't fit is left outside the shut door.
+- `ThrowHitByEvent` is raised on the target before `ThrowDoHitEvent` on the thrown, so `KsGrabSystem.OnThrownHit`
+  sees a victim already in a container and drops the `KsGrabThrown` marker without a slam.
 
 #### Adding a grab level
 
@@ -466,6 +487,8 @@ NPC toggles go through `SetInCombatMode` and make no sound.
   (escape chance 0 and 1), release, throw.
 - `Tests/_KS14/Grab/KsFiremanCarryTest.cs`: lift, requirements, put down, wriggle free, carrier deleted.
 - `Tests/_KS14/Grab/KsThrowModeTest.cs`: a real client sends the throw request, in and out of throw mode.
+- `Tests/_KS14/Storage/KsEntityStorageCatchThrownTest.cs`: an open closet catches a thrown person and shuts; a closed
+  one doesn't, and an open one lets a thrown item be.
 
 The floor ctrl-click release and the move-key resist go through input handlers no test drives yet. Check them in
 game.

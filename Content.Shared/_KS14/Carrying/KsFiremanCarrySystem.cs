@@ -238,6 +238,9 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         _alertsSystem.ShowAlert(victim, carrier.Comp.CarriedAlert);
 
         PopupCarry(carrier, victim, user: carrier, DonePopups);
+
+        var started = new KsCarryStartedEvent(carrier);
+        RaiseLocalEvent(victim, ref started);
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(carrier):user} started carrying {ToPrettyString(victim):target}");
     }
 

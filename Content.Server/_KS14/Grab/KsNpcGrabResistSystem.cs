@@ -7,8 +7,9 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.Grab;
 
 /// <summary>
-///     NPCs held in a grip that holds them in place, or carried, struggle on their own, as a player would by pressing resist. How often an attempt
-///         lands is up to the grab's own resist cooldown and the carry's escape do-after.
+///     NPCs held in a grip that holds them in place, or carried, struggle on their own, as a player would by pressing
+///         resist. The grab and the carry say when a hold starts, which marks the NPC with
+///         <see cref="KsNpcResistingComponent"/>; only marked NPCs are updated.
 /// </summary>
 public sealed partial class KsNpcGrabResistSystem : EntitySystem
 {
@@ -16,28 +17,45 @@ public sealed partial class KsNpcGrabResistSystem : EntitySystem
     [Dependency] private KsGrabSystem _grabSystem = default!;
     [Dependency] private KsResistSystem _resistSystem = default!;
 
-    /// <summary>
-    ///     How often each held NPC is checked. Resist cooldowns are longer, so this only bounds the reaction time.
-    /// </summary>
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(0.5);
+    [SubscribeLocalEvent]
+    private void OnGrabStageChanged(Entity<HTNComponent> npc, ref KsGrabStageChangedEvent args)
+    {
+        // Raised on the grabber as well. A plain pull isn't fought: otherwise nobody could ever get a grip on an NPC.
+        if (args.Victim == npc.Owner && args.NewStage.BlocksVictimMovement)
+            EnsureComp<KsNpcResistingComponent>(npc);
+    }
 
-    private TimeSpan _nextCheck;
+    [SubscribeLocalEvent]
+    private void OnCarryStarted(Entity<HTNComponent> npc, ref KsCarryStartedEvent args)
+    {
+        EnsureComp<KsNpcResistingComponent>(npc);
+    }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (_gameTiming.CurTime < _nextCheck)
-            return;
-
-        _nextCheck = _gameTiming.CurTime + CheckInterval;
-
-        var query = EntityQueryEnumerator<HTNComponent>();
-        while (query.MoveNext(out var uid, out _))
+        var curTime = _gameTiming.CurTime;
+        var query = EntityQueryEnumerator<KsNpcResistingComponent>();
+        while (query.MoveNext(out var uid, out var resisting))
         {
-            // A plain pull isn't fought: otherwise nobody could ever get a grip on an NPC.
-            if (HasComp<KsBeingCarriedComponent>(uid) || _grabSystem.GetHeldStage(uid) is { BlocksVictimMovement: true })
-                _resistSystem.TryResist(uid);
+            if (curTime < resisting.NextAttempt)
+                continue;
+
+            // Free again, or no longer an NPC: nothing more to do until the next hold marks them.
+            if (!HasComp<HTNComponent>(uid) || !IsHeld(uid))
+            {
+                RemCompDeferred<KsNpcResistingComponent>(uid);
+                continue;
+            }
+
+            resisting.NextAttempt = curTime + resisting.Interval;
+            _resistSystem.TryResist(uid);
         }
+    }
+
+    private bool IsHeld(EntityUid uid)
+    {
+        return HasComp<KsBeingCarriedComponent>(uid) || _grabSystem.GetHeldStage(uid) is { BlocksVictimMovement: true };
     }
 }

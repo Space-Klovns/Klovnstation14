@@ -5,6 +5,12 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Carrying;
 
 /// <summary>
+///     Raised on someone lifted onto <see cref="Carrier"/>'s back, once the carry is set up.
+/// </summary>
+[ByRefEvent]
+public readonly record struct KsCarryStartedEvent(EntityUid Carrier);
+
+/// <summary>
 ///     Raised on someone carried as they stop being carried, on every side, including when the server's state says so.
 /// </summary>
 [ByRefEvent]

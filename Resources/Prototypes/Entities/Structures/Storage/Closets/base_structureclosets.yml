@@ -58,6 +58,7 @@
         variation: 0.08
         volume: -1
   # KS14 end
+  - type: KsEntityStorageCatchThrown # KS14: someone thrown into an open closet lands inside, and it shuts on them
   - type: ContainerContainer
     containers:
       entity_storage: !type:Container

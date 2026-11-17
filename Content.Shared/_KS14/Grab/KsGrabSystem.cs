@@ -29,6 +29,7 @@ using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Containers;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -69,6 +70,7 @@ public sealed partial class KsGrabSystem : EntitySystem
     [Dependency] private ComplexShoveSystem _complexShoveSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedCombatModeSystem _combatModeSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
@@ -612,6 +614,13 @@ public sealed partial class KsGrabSystem : EntitySystem
         var thrower = thrown.Comp.Thrower;
         if (args.Target == thrower || !TryComp<KsGrabberComponent>(thrower, out var grabber))
             return;
+
+        // Caught by what they hit, as by a closet shutting on them: they're inside it, not slammed against it.
+        if (_containerSystem.IsEntityInContainer(thrown))
+        {
+            RemCompDeferred<KsGrabThrownComponent>(thrown);
+            return;
+        }
 
         if (TryComp<KsShoveObstacleComponent>(args.Target, out var obstacle))
         {
