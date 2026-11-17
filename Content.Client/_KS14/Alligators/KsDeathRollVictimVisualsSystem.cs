@@ -1,5 +1,6 @@
 using Content.Client.Rotation;
 using Content.Shared._KS14.Alligators;
+using Content.Shared.Buckle.Components;
 using Content.Shared.Rotation;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -9,7 +10,7 @@ namespace Content.Client._KS14.Alligators;
 
 /// <summary>
 ///     Draws a death roll's victim feet-first in the alligator's jaws and rolls them over and over,
-///     ignoring the facing and lying angle they would otherwise have.
+///     ignoring the facing and lying angle they would otherwise have, and keeps them drawn under the alligator.
 /// </summary>
 public sealed partial class KsDeathRollVictimVisualsSystem : EntitySystem
 {
@@ -53,6 +54,15 @@ public sealed partial class KsDeathRollVictimVisualsSystem : EntitySystem
                 : 0;
             spriteComponent.DirectionOverride = RollFacings[(int)(((step % RollFacings.Length) + RollFacings.Length) % RollFacings.Length)];
             spriteComponent.EnableDirectionOverride = true;
+
+            // Both are mobs, so the victim would be drawn over the alligator whenever they are lower on screen.
+            // Buckling only puts them under it for a north-facing strap, and undoes that on every other turn.
+            if (TryComp<SpriteComponent>(alligatorUid, out var alligatorSprite))
+            {
+                // Buckling may have lowered the depth already: keep the depth it saved, not the lowered one.
+                component.OriginalDrawDepth ??= CompOrNull<BuckleComponent>(uid)?.OriginalDrawDepth ?? spriteComponent.DrawDepth;
+                _spriteSystem.SetDrawDepth((uid, spriteComponent), alligatorSprite.DrawDepth - 1);
+            }
         }
     }
 
@@ -63,6 +73,12 @@ public sealed partial class KsDeathRollVictimVisualsSystem : EntitySystem
             return;
 
         spriteComponent.EnableDirectionOverride = false;
+
+        if (victim.Comp.OriginalDrawDepth is { } originalDrawDepth)
+        {
+            _spriteSystem.SetDrawDepth((victim.Owner, spriteComponent), originalDrawDepth);
+            victim.Comp.OriginalDrawDepth = null;
+        }
 
         // Hand the rotation back: turn to whatever angle standing or lying calls for now.
         if (!TryComp<RotationVisualsComponent>(victim.Owner, out var rotationVisualsComponent))
