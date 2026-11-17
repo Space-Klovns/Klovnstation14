@@ -103,28 +103,48 @@ def pillar(frames=8):
     return result
 
 
-def aura(frames=10, seed=23):
-    """Qi clinging to a body: a soft glow hugging the figure with wisps licking up off it; loops."""
+def aura(frames=12, seed=23):
+    """Qi blazing off a body like a white flame: tongues of light licking up the figure's outline, a brighter rim
+    hugging it, a ring of light pooled round the feet and sparks rising off the top; loops seamlessly."""
     rng = random.Random(seed)
-    wisps = [(rng.uniform(22, 42), rng.uniform(0, 1), rng.uniform(2.5, 4.5)) for _ in range(9)]
+    # Flame tongues spread round the outline: (angle round the body, phase, height, width).
+    tongues = [(rng.uniform(-1.9, 1.9), rng.uniform(0, 1), rng.uniform(10, 20), rng.uniform(2.5, 4.5)) for _ in range(22)]
+    sparks = [(rng.uniform(22, 42), rng.uniform(0, 1), rng.uniform(0.8, 1.5)) for _ in range(8)]
     result = []
     for index in range(frames):
         t = index / frames
-        frame = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(frame)
-        breath = 0.9 + 0.1 * math.sin(t * 2 * math.pi)
-        # The glow itself, filled and soft, strongest low on the body.
-        for layer in range(6, 0, -1):
-            width, height = (7 + layer * 1.6) * breath, (12 + layer * 1.8) * breath
-            draw.ellipse((32 - width, 36 - height, 32 + width, 36 + height), fill=(255, 255, 255, 16 + (6 - layer) * 9))
-        # Wisps rising off the shoulders and head.
-        for x, phase, size in wisps:
+        breath = 0.94 + 0.06 * math.sin(t * 2 * math.pi)
+        soft = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(soft)
+        # The glow hugging the figure (a capsule the size of a person, feet at y=52).
+        for layer in range(5, 0, -1):
+            width, height = (9 + layer * 1.5) * breath, (15 + layer * 1.6) * breath
+            draw.ellipse((32 - width, 36 - height, 32 + width, 36 + height), fill=(255, 255, 255, 10 + (5 - layer) * 8))
+        # The ring of qi pooled round the feet.
+        for layer in range(3, 0, -1):
+            draw.ellipse((32 - 12 - layer * 2, 50 - 3 - layer, 32 + 12 + layer * 2, 50 + 3 + layer), outline=(255, 255, 255, 30 + 22 * (3 - layer)), width=1)
+        # Flame tongues rising off the outline and curling in toward the head as they climb.
+        for angle, phase, height, width in tongues:
             p = (phase + t) % 1.0
-            y = 44 - p * 34
-            px = x + math.sin((p + phase) * 6.28) * 3
-            alpha = int(150 * math.sin(p * math.pi))
-            draw.ellipse((px - size * (1 - p * 0.6), y - size * 1.6, px + size * (1 - p * 0.6), y + size * 1.6), fill=(255, 255, 255, alpha))
-        result.append(frame.filter(ImageFilter.GaussianBlur(2.2)))
+            base_x = 32 + math.sin(angle) * 12
+            base_y = 40 - math.cos(angle) * 8
+            rise = p * height
+            x = base_x + math.sin((p + phase) * 6.28) * 1.5 - math.sin(angle) * rise * 0.35
+            y = base_y - rise
+            w = width * (1 - p * 0.7)
+            alpha = int(235 * math.sin(p * math.pi) ** 0.7)
+            draw.ellipse((x - w, y - w * 2.6, x + w, y + w * 1.2), fill=(255, 255, 255, alpha // 2))
+            draw.ellipse((x - w * 0.45, y - w * 2.0, x + w * 0.45, y + w * 0.6), fill=(255, 255, 255, alpha))
+        soft = Image.alpha_composite(soft.filter(ImageFilter.GaussianBlur(2.4)), soft.filter(ImageFilter.GaussianBlur(0.9)))
+        # A crisp, brighter rim and sparks on top, so it reads as light and not fog.
+        crisp = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+        crisp_draw = ImageDraw.Draw(crisp)
+        for x, phase, size in sparks:
+            p = (phase + t) % 1.0
+            y = 30 - p * 24
+            sx = x + math.sin((p + phase) * 9) * 2
+            crisp_draw.ellipse((sx - size, y - size, sx + size, y + size), fill=(255, 255, 255, int(230 * math.sin(p * math.pi))))
+        result.append(Image.alpha_composite(soft, crisp.filter(ImageFilter.GaussianBlur(0.5))))
     return result
 
 
@@ -456,7 +476,7 @@ KINDS = [
     ("WaveBig", "wave", 4.0, 0.48, 6.0, 3.5, "Effects", "dd"),
     ("Spark", "spark", 1.0, 0.3, 2.0, 2.5, "Effects", "ff"),
     ("Motes", "motes", 1.0, 2.0, 1.5, 1.2, "Effects", "ee"),
-    ("Aura", "aura", 1.0, None, 2.0, 1.2, "Effects", "bb"),
+    ("Aura", "aura", 1.0, None, 2.0, 1.4, "SmallMobs", "ee"),
     ("Dome", "dome", 1.0, None, 2.5, 1.5, "Effects", "aa"),
     ("Sigil", "sigil", 1.0, None, 2.0, 1.0, "FloorObjects", "cc"),
 ]
@@ -470,7 +490,7 @@ def write_prototypes():
     for name, state, scale, lifetime, radius, energy, depth, alpha in KINDS:
         for colour, hexcode in COLOURS.items():
             out += ["- type: entity", f"  id: KsFx{name}{colour}", "  categories: [ HideSpawnMenu ]", f"  name: {name.lower()}",
-                    "  components:", "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", f"    drawdepth: {depth}",
+                    "  components:", "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", f"    drawdepth: {depth}", "    noRot: true",
                     f'    color: "{hexcode}{alpha}"', "    layers:", f"    - state: {state}", "      shader: unshaded"]
             if scale != 1.0:
                 out.append(f"    scale: {scale}, {scale}")
@@ -484,13 +504,13 @@ def write_prototypes():
         lifetime = round(frames_count * delay, 2)
         for suffix, scale, radius, energy in (("", 1.6, 3.0, 2.5), ("Big", 4.0, 6.0, 3.5)):
             out += ["- type: entity", f"  id: KsFxCast{suffix}{colour}", "  categories: [ HideSpawnMenu ]", "  name: qi",
-                    "  components:", "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", "    drawdepth: Effects",
+                    "  components:", "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", "    drawdepth: Effects", "    noRot: true",
                     f'    color: "{hexcode}"', f"    scale: {scale}, {scale}", "    layers:", f"    - state: {state}", "      shader: unshaded",
                     "  - type: PointLight", f'    color: "{hexcode}"', f"    radius: {radius}", f"    energy: {energy}", "    netsync: false",
                     "  - type: LightFade", f"    duration: {lifetime}", "  - type: TimedDespawn", f"    lifetime: {lifetime}", ""]
 
     out += ["- type: entity", "  id: KsFxPillar", "  categories: [ HideSpawnMenu ]", "  name: pillar of light", "  components:",
-            "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", "    drawdepth: Effects", '    color: "#fff3b0"',
+            "  - type: Sprite", "    sprite: _KS14/Cultivation/qi_effects.rsi", "    drawdepth: Effects", "    noRot: true", '    color: "#fff3b0"',
             "    scale: 1.5, 3", "    offset: 0, 1.5", "    layers:", "    - state: pillar", "      shader: unshaded", "  - type: PointLight",
             '    color: "#fff3b0"', "    radius: 7", "    energy: 5", "    netsync: false", "  - type: LightFade",
             "    duration: 0.8", "  - type: TimedDespawn", "    lifetime: 0.8"]
@@ -505,7 +525,7 @@ def main():
         "spark": (spark(), 0.06),
         "motes": (motes(), 0.12),
         "pillar": (pillar(), 0.1),
-        "aura": (aura(), 0.12),
+        "aura": (aura(), 0.09),
         "dome": (dome(), 0.12),
         "sigil": (sigil(), 0.1),
         "cast_slash": (cast_slash(), 0.06),

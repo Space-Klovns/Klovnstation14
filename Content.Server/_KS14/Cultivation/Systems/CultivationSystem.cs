@@ -1,6 +1,7 @@
 using Content.Server._KS14.Cultivation.Components;
 using Content.Server.Lightning;
 using Content.Server.Lightning.Components;
+using Content.Shared.Projectiles;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
@@ -328,6 +329,44 @@ public sealed partial class CultivationSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    ///     How much stronger a qi cultivator's techniques hit at their realm: one and a half again at Foundation
+    ///         Establishment, two and a half times at Golden Core and four times at Nascent Soul.
+    /// </summary>
+    public static float PowerFor(CultivationRealm realm) => realm switch
+    {
+        CultivationRealm.FoundationEstablishment => 1.5f,
+        CultivationRealm.GoldenCore => 2.5f,
+        CultivationRealm.NascentSoul => 4f,
+        _ => 1f,
+    };
+
+    /// <summary>
+    ///     The realm power of a caster; 1 for anyone who isn't a qi cultivator.
+    /// </summary>
+    public float Power(EntityUid? casterUid)
+    {
+        return casterUid is { } uid && _cultivatorQuery.TryComp(uid, out var cultivatorComponent) ? PowerFor(cultivatorComponent.Realm) : 1f;
+    }
+
+    /// <summary>
+    ///     Technique damage, scaled by the caster's realm power.
+    /// </summary>
+    public DamageSpecifier Empowered(EntityUid? casterUid, DamageSpecifier damage)
+    {
+        var power = Power(casterUid);
+        return power == 1f ? damage : damage * power;
+    }
+
+    /// <summary>
+    ///     A technique projectile hits as hard as its caster's realm.
+    /// </summary>
+    public void EmpowerProjectile(EntityUid projectileUid, EntityUid casterUid)
+    {
+        if (TryComp<ProjectileComponent>(projectileUid, out var projectileComponent))
+            projectileComponent.Damage = Empowered(casterUid, projectileComponent.Damage);
+    }
+
     public static DamageSpecifier Damage(string type, float amount)
     {
         var damage = new DamageSpecifier();
@@ -577,11 +616,13 @@ public sealed partial class CultivationSystem : EntitySystem
                 continue;
 
             _lightningSystem.ShootLightning(cloudUid, rod.Owner, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
+            _visualsSystem.HeavenBolt(rod.Owner);
             _noticeSystem.Announce(rod.Owner, Loc.GetString("cultivation-lightning-grounded", ("rod", rod.Owner)), type: PopupType.Small);
             return;
         }
 
         _lightningSystem.ShootLightning(cloudUid, entity, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
+        _visualsSystem.HeavenBolt(entity);
         var damage = 5f + 5f * (float)entity.Comp.Realm;
         _damageableSystem.TryChangeDamage(entity.Owner, Damage("Shock", damage), ignoreResistances: true, interruptsDoAfters: false);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-lightning-strikes", ("user", entity.Owner)), type: PopupType.MediumCaution);

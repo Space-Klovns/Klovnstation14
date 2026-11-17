@@ -16,6 +16,7 @@ using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Content.Shared.Tag;
 using Content.Shared.Throwing;
+using Content.Shared.Weapons.Melee;
 using Robust.Server.Audio;
 using Robust.Shared.Audio;
 using Robust.Shared.Map;
@@ -78,6 +79,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private TagSystem _tagSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private SharedMeleeWeaponSystem _meleeWeaponSystem = default!;
     [Dependency] private EntityQuery<BodyCultivatorComponent> _bodyCultivatorQuery = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
@@ -100,6 +102,16 @@ public sealed partial class BodyArtSystem : EntitySystem
             QuakePulse(uid, quakeComponent);
             if (--quakeComponent.PulsesLeft <= 0)
                 RemCompDeferred(uid, quakeComponent);
+        }
+
+        var flurryEnumerator = EntityQueryEnumerator<BodyFlurryComponent>();
+        while (flurryEnumerator.MoveNext(out var uid, out var flurryComponent))
+        {
+            if (currentTime < flurryComponent.NextBlow)
+                continue;
+
+            flurryComponent.NextBlow = currentTime + FlurryInterval;
+            FlurryBlow((uid, flurryComponent));
         }
     }
 
@@ -172,13 +184,13 @@ public sealed partial class BodyArtSystem : EntitySystem
         return true;
     }
 
-    private void HurlFrom(EntityUid victimUid, Vector2 origin, float distance, EntityUid userUid)
+    private void HurlFrom(EntityUid victimUid, Vector2 origin, float distance, EntityUid userUid, float speed = 10f)
     {
         var direction = _transformSystem.GetMapCoordinates(victimUid).Position - origin;
         if (direction.LengthSquared() < 0.0001f)
             direction = new Vector2(0f, 1f);
 
-        _throwingSystem.TryThrow(victimUid, Vector2.Normalize(direction) * distance, baseThrowSpeed: 10f, user: userUid, recoil: false);
+        _throwingSystem.TryThrow(victimUid, Vector2.Normalize(direction) * distance, baseThrowSpeed: speed, user: userUid, recoil: false);
     }
 
     /// <summary>
@@ -624,22 +636,81 @@ public sealed partial class BodyArtSystem : EntitySystem
         args.Handled = true;
         _visualsSystem.Art(CultivationVisualsSystem.ArtBarrage, args.Target);
         var stage = entity.Comp.Stage;
-        var blows = 3 + stage;
-        var perBlow = 3f + stage / 2f + entity.Comp.PunchDamage / 2f;
+        var blows = 4 + stage;
+        var perBlow = 3f + stage / 2f + entity.Comp.PunchDamage / 8f;
         if (_bodySystem.GetStance(entity) == BodyStance.Thunderclap)
             perBlow += 1f;
 
         Shout(entity, "body-art-hundred-fists");
-        for (var blow = 0; blow < blows - 1; blow++)
-            Hit(entity, args.Target, perBlow, TimeSpan.Zero);
 
-        // The last one sends them flying.
-        if (Hit(entity, args.Target, perBlow * 2f, TimeSpan.FromSeconds(2)))
-            HurlFrom(args.Target, _transformSystem.GetMapCoordinates(entity).Position, 3f, entity);
-
-        _audioSystem.PlayPvs(PunchSound, args.Target);
-        Impact(_transformSystem.GetMapCoordinates(args.Target), 0.6f, strength: 0.6f, shockwave: false);
+        // The blows rain down one after another, a few every second, rather than all at once.
+        var flurryComponent = EnsureComp<BodyFlurryComponent>(entity);
+        flurryComponent.Target = args.Target;
+        flurryComponent.BlowsLeft = blows;
+        flurryComponent.PerBlow = perBlow;
+        flurryComponent.NextBlow = _gameTiming.CurTime;
         _noticeSystem.Announce(args.Target, Loc.GetString("body-art-hundred-fists-hit", ("user", entity.Owner), ("target", args.Target), ("blows", blows)), type: PopupType.MediumCaution);
+    }
+
+    private static readonly TimeSpan FlurryInterval = TimeSpan.FromSeconds(0.09);
+
+    /// <summary>
+    ///     One blow of Hundred Fists: a lunge, a hit, a crack. The last sends the target flying. The flurry ends early if
+    ///         they get out of reach or the user goes down.
+    /// </summary>
+    private void FlurryBlow(Entity<BodyFlurryComponent> entity)
+    {
+        var userUid = entity.Owner;
+        var targetUid = entity.Comp.Target;
+        var userPosition = _transformSystem.GetMapCoordinates(userUid);
+        if (TerminatingOrDeleted(targetUid) || !_mobStateSystem.IsAlive(userUid))
+        {
+            RemCompDeferred<BodyFlurryComponent>(userUid);
+            return;
+        }
+
+        var targetPosition = _transformSystem.GetMapCoordinates(targetUid);
+        if (targetPosition.MapId != userPosition.MapId
+            || (targetPosition.Position - userPosition.Position).Length() > 2.5f)
+        {
+            RemCompDeferred<BodyFlurryComponent>(userUid);
+            return;
+        }
+
+        var last = --entity.Comp.BlowsLeft <= 0;
+        Lunge(userUid, targetPosition);
+        _audioSystem.PlayPvs(PunchSound, targetUid, AudioParams.Default.WithVariation(0.2f).WithVolume(last ? 2f : -3f));
+        if (!last)
+        {
+            Hit(userUid, targetUid, entity.Comp.PerBlow, TimeSpan.Zero);
+            _staminaSystem.TakeStaminaDamage(targetUid, 4f, source: userUid);
+            return;
+        }
+
+        RemCompDeferred<BodyFlurryComponent>(userUid);
+        if (Hit(userUid, targetUid, entity.Comp.PerBlow * 3f, TimeSpan.FromSeconds(2)))
+            HurlFrom(targetUid, userPosition.Position, 4f, userUid, speed: 22f);
+
+        Impact(targetPosition, 0.6f, strength: 1f, shockwave: true);
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFistEarth, targetUid);
+    }
+
+    /// <summary>
+    ///     The swing animation of a punch toward a point, as a normal melee attack shows it.
+    /// </summary>
+    private void Lunge(EntityUid userUid, MapCoordinates target)
+    {
+        var userTransform = Transform(userUid);
+        var localPosition = Vector2.Transform(target.Position, _transformSystem.GetInvWorldMatrix(userTransform));
+        if (localPosition.LengthSquared() <= 0f)
+            return;
+
+        localPosition = userTransform.LocalRotation.RotateVec(localPosition);
+        if (localPosition.Length() > 0.8f)
+            localPosition = localPosition.Normalized() * 0.8f;
+
+        var angle = (target.Position - _transformSystem.GetWorldPosition(userTransform)).ToWorldAngle();
+        _meleeWeaponSystem.DoLunge(userUid, userUid, angle, localPosition, "WeaponArcFist", predicted: false);
     }
 
     [SubscribeLocalEvent]
@@ -849,7 +920,8 @@ public sealed partial class BodyArtSystem : EntitySystem
         distance = MathF.Min(distance, (float)(4 + stage));
 
         Shout(entity, "body-art-mountain-hurl");
-        Launch(victimUid, direction * distance, 12f, entity, new BodyLandingComponent
+        // Hurled like a stone from a catapult: they cross the room in a blink and hit the floor hard.
+        Launch(victimUid, direction * distance, 30f, entity, new BodyLandingComponent
         {
             HurtSelf = true,
             Damage = (float)(10 + 2 * stage),

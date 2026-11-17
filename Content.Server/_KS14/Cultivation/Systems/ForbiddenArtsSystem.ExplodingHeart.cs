@@ -165,7 +165,7 @@ public sealed partial class ForbiddenArtsSystem
         var burstDamage = CultivationSystem.Damage("Blunt", 35f);
         burstDamage.DamageDict.Add("Piercing", FixedPoint2.New(35));
         burstDamage.DamageDict.Add("Bloodloss", FixedPoint2.New(20));
-        _damageableSystem.TryChangeDamage(victimUid, burstDamage, ignoreResistances: true, origin: casterUid);
+        _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(casterUid, burstDamage), ignoreResistances: true, origin: casterUid);
         _bloodstreamSystem.TryModifyBleedAmount(victimUid, 6f);
         _stunSystem.TryKnockdown(victimUid, TimeSpan.FromSeconds(3), refresh: true);
         _sharedCultivationSystem.AddInternalInjury(victimUid, stacks: 2);

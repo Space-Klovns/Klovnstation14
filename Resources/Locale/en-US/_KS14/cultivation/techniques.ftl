@@ -66,6 +66,7 @@ cultivation-furnace-burst = A ring of fire bursts out from {THE($user)}!
 cultivation-burning-blood = {CAPITALIZE(THE($user))} burns {POSS-ADJ($user)} own blood essence for power!
 cultivation-golden-bell-qi = A bell of golden qi closes around {THE($user)}!
 cultivation-dharma-idol = A towering golden Buddha rises behind {THE($user)}!
+cultivation-idol-palm = A colossal golden palm slams into {THE($target)}!
 cultivation-buddha-palm-shadow = A vast shadow falls from above!
 cultivation-verdant-growth = Green qi spreads from {THE($user)} into the plants around {OBJECT($user)}.
 cultivation-binding-vines = Vines burst from the floor and wrap around {THE($target)}!

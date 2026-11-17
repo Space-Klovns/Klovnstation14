@@ -10,6 +10,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ffff"
     layers:
     - state: wave
@@ -33,6 +34,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55aff"
     layers:
     - state: wave
@@ -56,6 +58,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbeaff"
     layers:
     - state: wave
@@ -79,6 +82,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ffff"
     layers:
     - state: wave
@@ -102,6 +106,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1fff"
     layers:
     - state: wave
@@ -125,6 +130,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560ff"
     layers:
     - state: wave
@@ -148,6 +154,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35fff"
     layers:
     - state: wave
@@ -171,6 +178,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251cff"
     layers:
     - state: wave
@@ -194,6 +202,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cffff"
     layers:
     - state: wave
@@ -217,6 +226,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ffff"
     layers:
     - state: wave
@@ -240,6 +250,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ffdd"
     layers:
     - state: wave
@@ -263,6 +274,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55add"
     layers:
     - state: wave
@@ -286,6 +298,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbeadd"
     layers:
     - state: wave
@@ -309,6 +322,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ffdd"
     layers:
     - state: wave
@@ -332,6 +346,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1fdd"
     layers:
     - state: wave
@@ -355,6 +370,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560dd"
     layers:
     - state: wave
@@ -378,6 +394,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35fdd"
     layers:
     - state: wave
@@ -401,6 +418,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251cdd"
     layers:
     - state: wave
@@ -424,6 +442,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cffdd"
     layers:
     - state: wave
@@ -447,6 +466,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ffdd"
     layers:
     - state: wave
@@ -470,6 +490,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ffff"
     layers:
     - state: spark
@@ -492,6 +513,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55aff"
     layers:
     - state: spark
@@ -514,6 +536,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbeaff"
     layers:
     - state: spark
@@ -536,6 +559,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ffff"
     layers:
     - state: spark
@@ -558,6 +582,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1fff"
     layers:
     - state: spark
@@ -580,6 +605,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560ff"
     layers:
     - state: spark
@@ -602,6 +628,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35fff"
     layers:
     - state: spark
@@ -624,6 +651,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251cff"
     layers:
     - state: spark
@@ -646,6 +674,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cffff"
     layers:
     - state: spark
@@ -668,6 +697,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ffff"
     layers:
     - state: spark
@@ -690,6 +720,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ffee"
     layers:
     - state: motes
@@ -712,6 +743,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55aee"
     layers:
     - state: motes
@@ -734,6 +766,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbeaee"
     layers:
     - state: motes
@@ -756,6 +789,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ffee"
     layers:
     - state: motes
@@ -778,6 +812,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1fee"
     layers:
     - state: motes
@@ -800,6 +835,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560ee"
     layers:
     - state: motes
@@ -822,6 +858,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35fee"
     layers:
     - state: motes
@@ -844,6 +881,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251cee"
     layers:
     - state: motes
@@ -866,6 +904,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cffee"
     layers:
     - state: motes
@@ -888,6 +927,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ffee"
     layers:
     - state: motes
@@ -909,15 +949,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#9fe3ffbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#9fe3ffee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#9fe3ff"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -927,15 +968,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#ffd55abb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#ffd55aee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#ffd55a"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -945,15 +987,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#d4dbeabb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#d4dbeaee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#d4dbea"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -963,15 +1006,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#4fb3ffbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#4fb3ffee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#4fb3ff"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -981,15 +1025,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#ff6a1fbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#ff6a1fee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#ff6a1f"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -999,15 +1044,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#c99560bb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#c99560ee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#c99560"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -1017,15 +1063,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#5fd35fbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#5fd35fee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#5fd35f"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -1035,15 +1082,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#d0251cbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#d0251cee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#d0251c"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -1053,15 +1101,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#9b5cffbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#9b5cffee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#9b5cff"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -1071,15 +1120,16 @@
   components:
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
-    drawdepth: Effects
-    color: "#d8f4ffbb"
+    drawdepth: SmallMobs
+    noRot: true
+    color: "#d8f4ffee"
     layers:
     - state: aura
       shader: unshaded
   - type: PointLight
     color: "#d8f4ff"
     radius: 2.0
-    energy: 1.2
+    energy: 1.4
     netsync: false
 
 - type: entity
@@ -1090,6 +1140,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ffaa"
     layers:
     - state: dome
@@ -1108,6 +1159,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55aaa"
     layers:
     - state: dome
@@ -1126,6 +1178,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbeaaa"
     layers:
     - state: dome
@@ -1144,6 +1197,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ffaa"
     layers:
     - state: dome
@@ -1162,6 +1216,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1faa"
     layers:
     - state: dome
@@ -1180,6 +1235,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560aa"
     layers:
     - state: dome
@@ -1198,6 +1254,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35faa"
     layers:
     - state: dome
@@ -1216,6 +1273,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251caa"
     layers:
     - state: dome
@@ -1234,6 +1292,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cffaa"
     layers:
     - state: dome
@@ -1252,6 +1311,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ffaa"
     layers:
     - state: dome
@@ -1270,6 +1330,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#9fe3ffcc"
     layers:
     - state: sigil
@@ -1288,6 +1349,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#ffd55acc"
     layers:
     - state: sigil
@@ -1306,6 +1368,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#d4dbeacc"
     layers:
     - state: sigil
@@ -1324,6 +1387,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#4fb3ffcc"
     layers:
     - state: sigil
@@ -1342,6 +1406,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#ff6a1fcc"
     layers:
     - state: sigil
@@ -1360,6 +1425,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#c99560cc"
     layers:
     - state: sigil
@@ -1378,6 +1444,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#5fd35fcc"
     layers:
     - state: sigil
@@ -1396,6 +1463,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#d0251ccc"
     layers:
     - state: sigil
@@ -1414,6 +1482,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#9b5cffcc"
     layers:
     - state: sigil
@@ -1432,6 +1501,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: FloorObjects
+    noRot: true
     color: "#d8f4ffcc"
     layers:
     - state: sigil
@@ -1450,6 +1520,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ff"
     scale: 1.6, 1.6
     layers:
@@ -1473,6 +1544,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9fe3ff"
     scale: 4.0, 4.0
     layers:
@@ -1496,6 +1568,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55a"
     scale: 1.6, 1.6
     layers:
@@ -1519,6 +1592,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ffd55a"
     scale: 4.0, 4.0
     layers:
@@ -1542,6 +1616,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbea"
     scale: 1.6, 1.6
     layers:
@@ -1565,6 +1640,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d4dbea"
     scale: 4.0, 4.0
     layers:
@@ -1588,6 +1664,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ff"
     scale: 1.6, 1.6
     layers:
@@ -1611,6 +1688,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#4fb3ff"
     scale: 4.0, 4.0
     layers:
@@ -1634,6 +1712,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1f"
     scale: 1.6, 1.6
     layers:
@@ -1657,6 +1736,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#ff6a1f"
     scale: 4.0, 4.0
     layers:
@@ -1680,6 +1760,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560"
     scale: 1.6, 1.6
     layers:
@@ -1703,6 +1784,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#c99560"
     scale: 4.0, 4.0
     layers:
@@ -1726,6 +1808,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35f"
     scale: 1.6, 1.6
     layers:
@@ -1749,6 +1832,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#5fd35f"
     scale: 4.0, 4.0
     layers:
@@ -1772,6 +1856,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251c"
     scale: 1.6, 1.6
     layers:
@@ -1795,6 +1880,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d0251c"
     scale: 4.0, 4.0
     layers:
@@ -1818,6 +1904,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cff"
     scale: 1.6, 1.6
     layers:
@@ -1841,6 +1928,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#9b5cff"
     scale: 4.0, 4.0
     layers:
@@ -1864,6 +1952,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ff"
     scale: 1.6, 1.6
     layers:
@@ -1887,6 +1976,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#d8f4ff"
     scale: 4.0, 4.0
     layers:
@@ -1910,6 +2000,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: Effects
+    noRot: true
     color: "#fff3b0"
     scale: 1.5, 3
     offset: 0, 1.5

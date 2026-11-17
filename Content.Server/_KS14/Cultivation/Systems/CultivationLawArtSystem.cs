@@ -15,6 +15,7 @@ using Content.Shared.Projectiles;
 using Content.Shared.StepTrigger.Components;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
+using Content.Shared.Weapons.Melee.Events;
 using Robust.Server.Audio;
 using Robust.Shared.Audio;
 using Robust.Shared.Map;
@@ -39,12 +40,18 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     private static readonly SoundSpecifier FireSound = new SoundPathSpecifier("/Audio/Magic/fireball.ogg");
     private static readonly SoundSpecifier BellSound = new SoundPathSpecifier("/Audio/Effects/church_bell3.ogg");
     private static readonly SoundSpecifier PalmSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
+    private static readonly SoundSpecifier IdolPalmSound = new SoundCollectionSpecifier("Explosion");
     private static readonly SoundSpecifier GrowthSound = new SoundPathSpecifier("/Audio/Magic/staff_healing.ogg");
     private static readonly EntProtoId BuddhaPalmShadowPrototype = "KsBuddhaPalmShadow";
     private static readonly EntProtoId VinesEffect = "KsFxVines";
     private static readonly EntProtoId MoltenStepEffect = "KsFxMoltenStep";
     private static readonly EntProtoId[] PalmEffects = { "KsFxBuddhaPalm", "KsFxBuddhaPalmBig", "KsFxBuddhaPalmHuge" };
     private static readonly EntProtoId[] PalmShadowEffects = { "KsFxPalmShadow", "KsFxPalmShadowBig", "KsFxPalmShadowHuge" };
+
+    /// <summary>
+    ///     Half the width of each palm as drawn, in tiles: anyone under it is crushed.
+    /// </summary>
+    private static readonly float[] PalmRadius = { 1.6f, 2.4f, 3.2f };
 
     /// <summary>
     ///     How long the palm takes to fall: the baked animation fades in for 0.4 seconds and drops for 0.8.
@@ -110,7 +117,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
             formationComponent.NextSlash = currentTime + TimeSpan.FromSeconds(1);
             foreach (var victimUid in Hostiles(uid, 2f))
-                _damageableSystem.TryChangeDamage(victimUid, CultivationSystem.Damage("Slash", 8f), origin: uid);
+                _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(uid, CultivationSystem.Damage("Slash", 8f)), origin: uid);
         }
 
         var mirrorEnumerator = EntityQueryEnumerator<MirrorLakeComponent>();
@@ -229,7 +236,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _visualsSystem.Art(CultivationVisualsSystem.ArtFistQi, args.Target);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
-        _damageableSystem.TryChangeDamage(args.Target, CultivationSystem.Damage("Slash", args.BonusDamage), origin: entity);
+        _damageableSystem.TryChangeDamage(args.Target, _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Slash", args.BonusDamage)), origin: entity);
         _audioSystem.PlayPvs(SwordSound, entity);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-artifact-strike", ("user", entity.Owner), ("item", artifactUid), ("target", args.Target)), type: PopupType.MediumCaution);
     }
@@ -373,7 +380,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 1.5f);
         foreach (var victimUid in Hostiles(entity, args.Range))
-            _flammableSystem.AdjustFireStacks(victimUid, 2f, ignite: true);
+            _flammableSystem.AdjustFireStacks(victimUid, 2f * _cultivationSystem.Power(entity), ignite: true);
 
         // It's hot for you too.
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Heat", 5f), ignoreResistances: true, interruptsDoAfters: false);
@@ -434,6 +441,46 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-dharma-idol", ("user", entity.Owner)), type: PopupType.Large);
     }
 
+    /// <summary>
+    ///     As in SS13: under a Dharma Idol, bare-handed blows become the idol's giant golden palms. People are slammed
+    ///         away and floored; walls, doors and machines are smashed to pieces (reinforced walls too, at Nascent Soul).
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnIdolMeleeHit(Entity<DharmaIdolComponent> entity, ref MeleeHitEvent args)
+    {
+        if (args.Weapon != entity.Owner || !args.IsHit || args.HitEntities.Count == 0)
+            return;
+
+        var power = _cultivationSystem.Power(entity);
+        var origin = _transformSystem.GetMapCoordinates(entity).Position;
+        foreach (var hitUid in args.HitEntities)
+        {
+            if (hitUid == entity.Owner)
+                continue;
+
+            var hitCoordinates = _transformSystem.GetMapCoordinates(hitUid);
+            _visualsSystem.Art(CultivationVisualsSystem.ArtPalmQi, hitUid);
+            _visualsSystem.WaveAt(hitCoordinates, FxColour.Gold);
+            _visualsSystem.Shockwave(hitCoordinates, strength: 1f);
+            _visualsSystem.Play(IdolPalmSound, hitUid, volume: -2f);
+
+            if (HasComp<MobStateComponent>(hitUid))
+            {
+                _damageableSystem.TryChangeDamage(hitUid, CultivationSystem.Damage("Blunt", 25f * power), origin: entity);
+                _staminaSystem.TakeStaminaDamage(hitUid, 25f * power, source: entity);
+                _stunSystem.TryKnockdown(hitUid, TimeSpan.FromSeconds(1));
+                var away = hitCoordinates.Position - origin;
+                away = away.LengthSquared() > 0.0001f ? Vector2.Normalize(away) : new Vector2(0f, 1f);
+                _throwingSystem.TryThrow(hitUid, away * 4f, baseThrowSpeed: 14f, user: entity, recoil: false);
+                _noticeSystem.Announce(hitUid, Loc.GetString("cultivation-idol-palm", ("target", hitUid)), type: PopupType.MediumCaution);
+                continue;
+            }
+
+            var wallTier = power >= CultivationSystem.PowerFor(CultivationRealm.NascentSoul) ? 2 : 1;
+            _bodyArtSystem.Smash(hitCoordinates, 0.4f, 80f * power, wallTier, entity, wallChip: 80f * power);
+        }
+    }
+
     [SubscribeLocalEvent]
     private void OnBuddhaPalm(Entity<CultivatorComponent> entity, ref BuddhaPalmActionEvent args)
     {
@@ -449,7 +496,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         // As in SS13: the shadow spreads on the floor while the palm falls out of the sky onto it.
         Spawn(PalmShadowEffects[size], target);
         Spawn(PalmEffects[size], target);
-        _visualsSystem.Play(CultivationVisualsSystem.TempleBellSound, entity);
+        _audioSystem.PlayPvs(PalmSound, entity);
 
         var markerUid = Spawn(BuddhaPalmShadowPrototype, target);
         var palmComponent = EnsureComp<BuddhaPalmShadowComponent>(markerUid);
@@ -468,8 +515,10 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     {
         var casterUid = entity.Comp.Caster;
         var centre = _transformSystem.GetMapCoordinates(entity);
-        var inner = 1.5f + entity.Comp.Size - 1;
-        var outer = inner + 1.5f;
+        var size = Math.Clamp(entity.Comp.Size, 0, PalmRadius.Length - 1);
+        var inner = PalmRadius[size];
+        var outer = inner + 2f;
+        var damage = _cultivationSystem.Power(casterUid) * entity.Comp.Damage * (size >= 2 ? 1.5f : 1f);
 
         _mobs.Clear();
         _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, outer, _mobs);
@@ -481,23 +530,28 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             var offset = _transformSystem.GetMapCoordinates(mobEntity.Owner).Position - centre.Position;
             if (offset.Length() <= inner)
             {
-                _damageableSystem.TryChangeDamage(mobEntity.Owner, CultivationSystem.Damage("Blunt", entity.Comp.Damage), origin: casterUid);
-                _stunSystem.TryKnockdown(mobEntity.Owner, TimeSpan.FromSeconds(3));
+                // Under the palm itself: crushed into the floor.
+                _damageableSystem.TryChangeDamage(mobEntity.Owner, CultivationSystem.Damage("Blunt", damage), origin: casterUid);
+                _staminaSystem.TakeStaminaDamage(mobEntity.Owner, 60f, source: casterUid);
+                _stunSystem.TryKnockdown(mobEntity.Owner, TimeSpan.FromSeconds(4));
+                _visualsSystem.Rubble(_transformSystem.GetMapCoordinates(mobEntity.Owner));
                 continue;
             }
 
-            _damageableSystem.TryChangeDamage(mobEntity.Owner, CultivationSystem.Damage("Blunt", entity.Comp.Damage * 0.45f), origin: casterUid);
-            _stunSystem.TryKnockdown(mobEntity.Owner, TimeSpan.FromSeconds(1));
+            _damageableSystem.TryChangeDamage(mobEntity.Owner, CultivationSystem.Damage("Blunt", damage * 0.35f), origin: casterUid);
+            _stunSystem.TryKnockdown(mobEntity.Owner, TimeSpan.FromSeconds(1.5));
             var away = offset.LengthSquared() > 0.0001f ? Vector2.Normalize(offset) : new Vector2(0f, 1f);
             _throwingSystem.TryThrow(mobEntity.Owner, away * 3f, baseThrowSpeed: 10f, user: casterUid, recoil: false);
         }
 
         if (casterUid is { } smasherUid)
-            _bodyArtSystem.Smash(centre, inner, 120f * entity.Comp.Size, wallTier: entity.Comp.Size - 1, smasherUid);
+            _bodyArtSystem.Smash(centre, inner, 150f * size, wallTier: size, smasherUid);
 
         _bodyArtSystem.Impact(centre, outer, strength: 1.5f + entity.Comp.Size, crater: entity.Comp.Size);
         _visualsSystem.WaveAt(centre, FxColour.Gold, big: true);
-        _visualsSystem.Play(CultivationVisualsSystem.GreatBellSound, centre);
+        // The bell of a whole temple, heard far across the station.
+        _visualsSystem.Boom(CultivationVisualsSystem.GreatBellSound, centre, volume: 10f, range: 40f);
+        _visualsSystem.Boom(CultivationVisualsSystem.MountainFallSound, centre, volume: 4f, range: 20f);
         _audioSystem.PlayPvs(PalmSound, Transform(entity).Coordinates);
     }
 
@@ -581,6 +635,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         {
             var offset = args.Count == 1 ? 0f : -args.Spread / 2f + args.Spread * (float)i / (float)(args.Count - 1);
             var thornUid = Spawn(args.Projectile, fromMap);
+            _cultivationSystem.EmpowerProjectile(thornUid, entity);
             var thornDirection = new Angle(MathHelper.DegreesToRadians(offset)).RotateVec(direction);
             _gunSystem.ShootProjectile(thornUid, thornDirection, _physicsSystem.GetMapLinearVelocity(entity), entity, user: entity, speed: 20f);
         }

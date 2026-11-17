@@ -191,8 +191,8 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         if (direction.LengthSquared() < 0.0001f)
             direction = new Vector2(0f, 1f);
 
-        _throwingSystem.TryThrow(args.Target, Vector2.Normalize(direction) * args.Distance, baseThrowSpeed: 10f, user: entity, recoil: false);
-        _staminaSystem.TakeStaminaDamage(args.Target, args.StaminaDamage, source: entity);
+        _throwingSystem.TryThrow(args.Target, Vector2.Normalize(direction) * args.Distance * MathF.Sqrt(_cultivationSystem.Power(entity)), baseThrowSpeed: 10f, user: entity, recoil: false);
+        _staminaSystem.TakeStaminaDamage(args.Target, args.StaminaDamage * _cultivationSystem.Power(entity), source: entity);
         _audioSystem.PlayPvs(PalmSound, args.Target);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-empty-palm", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
     }
@@ -264,7 +264,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
                 continue;
 
             _stanceSystem.ApplySnare(otherUid, args.Duration, 0.6f);
-            _staminaSystem.TakeStaminaDamage(otherUid, args.StaminaDamage, source: entity);
+            _staminaSystem.TakeStaminaDamage(otherUid, args.StaminaDamage * _cultivationSystem.Power(entity), source: entity);
             _noticeSystem.Notify(otherUid, Loc.GetString("cultivation-realm-pressure-crushed"), type: PopupType.MediumCaution);
         }
 
@@ -345,7 +345,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
             case CultivationElement.Metal:
                 foreach (var otherUid in MobsAround(userUid, 3f))
                 {
-                    _damageableSystem.TryChangeDamage(otherUid, CultivationSystem.Damage("Slash", 20f), origin: userUid);
+                    _damageableSystem.TryChangeDamage(otherUid, _cultivationSystem.Empowered(userUid, CultivationSystem.Damage("Slash", 20f)), origin: userUid);
                     break;
                 }
                 break;

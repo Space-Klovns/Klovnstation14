@@ -76,3 +76,22 @@ public sealed partial class BodyBreathingComponent : Component
     [DataField]
     public float ExhaustionPerBreath;
 }
+
+/// <summary>
+///     Hundred Fists in progress: blows land one after another in quick succession, the last one hurling the target.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(BodyArtSystem))]
+public sealed partial class BodyFlurryComponent : Component
+{
+    [DataField]
+    public EntityUid Target;
+
+    [DataField]
+    public int BlowsLeft;
+
+    [DataField]
+    public float PerBlow;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan NextBlow;
+}

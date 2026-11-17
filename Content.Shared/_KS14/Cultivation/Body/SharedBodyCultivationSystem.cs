@@ -338,8 +338,11 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.HungerMultiplier = 1f;
         bodyCultivator.RegenPerSecond = 0f;
         bodyCultivator.HealthBonus = StageHealthBonus(bodyCultivator.Stage);
-        bodyCultivator.PunchDamage = (float)GetLevel(bodyCultivator, BodyGroup.Arms);
-        bodyCultivator.PunchStaminaDamage = 0f;
+        // Fists grow deadly fast: the arms' tempering, plus the square of the stage. A Bronze Skin punches a little
+        //     harder than a mortal; a Primordial Chaos Body hits like a falling girder.
+        var stage = (float)bodyCultivator.Stage;
+        bodyCultivator.PunchDamage = 1.5f * (float)GetLevel(bodyCultivator, BodyGroup.Arms) + 0.6f * stage * stage;
+        bodyCultivator.PunchStaminaDamage = 2f * stage;
         bodyCultivator.PunchKnockdownChance = 0f;
         bodyCultivator.PunchThrowChance = 0f;
         bodyCultivator.PunchStructuralDamage = 0f;

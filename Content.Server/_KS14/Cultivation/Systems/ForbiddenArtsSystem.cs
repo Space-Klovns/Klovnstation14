@@ -402,7 +402,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         {
             var drainDamage = CultivationSystem.Damage("Blunt", 15f);
             drainDamage.DamageDict.Add("Asphyxiation", FixedPoint2.New(15));
-            _damageableSystem.TryChangeDamage(victimUid, drainDamage, ignoreResistances: true, origin: entity);
+            _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(entity, drainDamage), ignoreResistances: true, origin: entity);
             if (victimCultivator != null)
             {
                 var stolen = Math.Min(victimCultivator.Qi, 20f);

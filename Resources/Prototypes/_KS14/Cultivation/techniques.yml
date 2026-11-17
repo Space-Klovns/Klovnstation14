@@ -358,7 +358,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationDharmaIdol
   name: Dharma Idol
-  description: Project a towering golden Buddha behind you for fifteen seconds. You loom larger and blows land far softer. 60 qi.
+  description: Project a towering golden Buddha behind you for fifteen seconds. You loom larger, blows land far softer, and your bare-handed strikes become its giant golden palms, hurling people away and smashing walls. 60 qi.
   components:
   - type: Action
     useDelay: 60

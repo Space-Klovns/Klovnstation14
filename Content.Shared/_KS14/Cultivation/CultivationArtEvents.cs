@@ -268,8 +268,11 @@ public sealed partial class BuddhaPalmActionEvent : WorldTargetActionEvent
     [DataField]
     public float QiCost = 60f;
 
+    /// <summary>
+    ///     Blunt damage to everyone under the palm, before realm power. Anyone up to two tiles beyond its edge takes a third.
+    /// </summary>
     [DataField]
-    public float Damage = 45f;
+    public float Damage = 60f;
 }
 
 #endregion

@@ -25,7 +25,12 @@ namespace Content.Server._KS14.Cultivation.Systems;
 public sealed partial class CultivationVisualsSystem : EntitySystem
 {
     private static readonly EntProtoId ShockwaveEffect = "KsBodyShockwave";
-    private static readonly EntProtoId PillarEffect = "KsFxPillar";
+    private static readonly EntProtoId PillarEffect = "KsFxAscendPillar";
+    private static readonly EntProtoId StrikeFlashEffect = "KsFxStrikeFlash";
+    private static readonly EntProtoId CrackleEffect = "KsFxCrackle";
+    private static readonly EntProtoId CrackleAuraEffect = "KsFxCrackleAura";
+    private static readonly EntProtoId[] HeavenBoltEffects = { "KsFxHeavenBolt0", "KsFxHeavenBolt1", "KsFxHeavenBolt2" };
+    public static readonly SoundSpecifier ThunderclapSound = new SoundPathSpecifier("/Audio/Effects/Lightning/lightningbolt.ogg");
     private static readonly EntProtoId FlameEffect = "KsFxFlame";
     private static readonly EntProtoId RiftEffect = "KsFxVoidRift";
     private static readonly EntProtoId RubbleEffect = "KsFxRubble";
@@ -168,7 +173,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         AddAura<BodyHardeningComponent>(GoldenBellEffect, component => ((BodyHardeningComponent)component).VajraEnd > _gameTiming.CurTime);
         AddAura<BodyHardeningComponent>("Aura", FxColour.Blood, component => ((BodyHardeningComponent)component).BloodBoilEnd > _gameTiming.CurTime);
         AddAura<BodyStanceComponent>("Aura", FxColour.Earth, component => ((BodyStanceComponent)component).Stance == BodyStance.Mountain);
-        AddAura<BodyStanceComponent>("Aura", FxColour.Metal, component => ((BodyStanceComponent)component).Stance == BodyStance.Thunderclap);
+        AddAura<BodyStanceComponent>(CrackleAuraEffect, component => ((BodyStanceComponent)component).Stance == BodyStance.Thunderclap);
         AddAura<BodyBreathingComponent>("Aura", FxColour.Wood);
         AddAura<BodyCultivatorComponent>(StormCloudEffect, component => ((BodyCultivatorComponent)component).TribulationCyclesLeft > 0);
         AddAura<HeartDemonComponent>(HeartDemonEffect);
@@ -298,6 +303,15 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     public void Play(SoundSpecifier sound, MapCoordinates coordinates, float volume = 0f)
     {
         _audioSystem.PlayPvs(sound, _transformSystem.ToCoordinates(coordinates), AudioParams.Default.WithVolume(volume));
+    }
+
+    /// <summary>
+    ///     A sound meant to be heard well beyond the room: louder, and carried much further than normal.
+    /// </summary>
+    public void Boom(SoundSpecifier sound, MapCoordinates coordinates, float volume = 8f, float range = 32f)
+    {
+        _audioSystem.PlayPvs(sound, _transformSystem.ToCoordinates(coordinates),
+            AudioParams.Default.WithVolume(volume).WithMaxDistance(range).WithRolloffFactor(0.5f));
     }
 
     public static string EffectId(string kind, FxColour colour)
@@ -446,7 +460,29 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     }
 
     /// <summary>
-    ///     A successful breakthrough: a pillar of light, a great golden wave, the air shaking, gold rising.
+    ///     A bolt of heaven's lightning falls on someone: the bolt, the floor flashing white, a thunderclap heard across
+    ///         the station and lightning left crawling over them.
+    /// </summary>
+    /// <param name="variant">Which bolt; the later ones strike a moment after the first.</param>
+    public void HeavenBolt(EntityUid uid, int variant = 0)
+    {
+        if (TerminatingOrDeleted(uid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(uid);
+        Spawn(HeavenBoltEffects[Math.Clamp(variant, 0, HeavenBoltEffects.Length - 1)], centre);
+        if (variant == 0)
+        {
+            Spawn(StrikeFlashEffect, centre);
+            SpawnAttachedTo(CrackleEffect, new EntityCoordinates(uid, Vector2.Zero));
+            Shockwave(centre, strength: 1f);
+            Boom(ThunderclapSound, centre, volume: 6f, range: 40f);
+        }
+    }
+
+    /// <summary>
+    ///     A successful breakthrough: heaven's lightning strikes (once more for every realm climbed), the floor flashes
+    ///         white, a column of gold rises into the sky, a great golden wave rolls out and the air shakes.
     /// </summary>
     public void Breakthrough(EntityUid uid)
     {
@@ -454,11 +490,21 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
             return;
 
         var centre = _transformSystem.GetMapCoordinates(uid);
+        var bolts = 1;
+        if (_cultivatorQuery.TryComp(uid, out var cultivatorComponent))
+            bolts = Math.Clamp((int)cultivatorComponent.Realm, 1, HeavenBoltEffects.Length);
+        else if (_bodyCultivatorQuery.TryComp(uid, out var bodyComponent))
+            bolts = Math.Clamp(bodyComponent.Stage / 3, 1, HeavenBoltEffects.Length);
+
+        for (var bolt = 0; bolt < bolts; bolt++)
+            HeavenBolt(uid, bolt);
+
         Spawn(PillarEffect, centre);
         WaveAt(centre, FxColour.Gold, big: true);
         Shockwave(centre, strength: 2.5f);
+        Distort(centre, FxDistortion.Roar);
         Motes(uid, FxColour.Gold, TimeSpan.FromSeconds(3));
-        Play(AscendSound, uid);
+        Boom(AscendSound, centre, volume: 4f, range: 30f);
     }
 
     /// <summary>
