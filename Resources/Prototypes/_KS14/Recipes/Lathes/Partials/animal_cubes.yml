@@ -1,0 +1,5 @@
+# The cubes an emagged biocube fabricator or biogenerator prints.
+- type: !PartialOnly latheRecipePack
+  id: HostileCubesStatic
+  recipes:
+  - KsSpaceAlligatorCube

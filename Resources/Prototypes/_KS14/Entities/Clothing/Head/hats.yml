@@ -19,3 +19,19 @@
     sprite: _KS14/Clothing/Head/Hats/dunce.rsi
   - type: Clothing
     sprite: _KS14/Clothing/Head/Hats/dunce.rsi
+
+- type: entity
+  parent: ClothingHeadBase
+  id: KsClothingHeadHatGatorCloak
+  name: gator cloak
+  description: A reptile-sourced green cloak. The eyes stare at you...
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Hats/gator_cloak.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Hats/gator_cloak.rsi
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD
+      HeadTop: HEAD
+      HeadSide: HEAD

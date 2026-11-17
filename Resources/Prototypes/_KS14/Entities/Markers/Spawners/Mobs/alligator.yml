@@ -1,0 +1,13 @@
+- type: entity
+  parent: MarkerBase
+  id: KsSpawnMobSpaceAlligator
+  name: Space Alligator Spawner
+  components:
+  - type: Sprite
+    layers:
+    - state: green
+    - state: croc
+      sprite: _KS14/Mobs/Animals/maint_croc.rsi
+  - type: ConditionalSpawner
+    prototypes:
+    - KsMobSpaceAlligator

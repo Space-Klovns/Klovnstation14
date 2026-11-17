@@ -1,0 +1,19 @@
+- type: entity
+  parent: BaseGameRule
+  id: KsAlligatorMigration
+  name: Alligator Migration
+  description: Hostile space alligators enter maintenance.
+  components:
+  - type: StationEvent
+    earliestStart: 20
+    minimumPlayers: 15
+    maxOccurrences: 1
+    weight: 3
+    occursDuringRoundEnd: false
+  - type: KsAlligatorMigrationRule
+    maintenanceTiles:
+    - FloorTechMaint
+    - FloorTechMaintDark
+    - FloorTechMaint2
+    - FloorTechMaint3
+    - FloorXenoMaint
