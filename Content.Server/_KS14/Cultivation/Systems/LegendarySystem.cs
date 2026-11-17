@@ -8,6 +8,7 @@ using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
+using Content.Shared.Hands;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
@@ -45,7 +46,6 @@ public sealed partial class LegendarySystem : EntitySystem
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
-    [Dependency] private NavMapSystem _navMapSystem = default!;
     [Dependency] private SharedBodyCultivationSystem _bodyCultivationSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
@@ -213,10 +213,25 @@ public sealed partial class LegendarySystem : EntitySystem
 
     #region Examining and omens
 
+    /// <summary>
+    ///     The first time someone picks a legendary up, it tells them how it's used.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnArtifactPickedUp(Entity<LegendaryArtifactComponent> entity, ref GotEquippedHandEvent args)
+    {
+        if (entity.Comp.Controls is not { } controls || !entity.Comp.Told.Add(args.User))
+            return;
+
+        var text = Robust.Shared.Utility.FormattedMessage.RemoveMarkupPermissive(Loc.GetString(controls));
+        _noticeSystem.Notify(args.User, Loc.GetString("legendary-how-to", ("item", Name(entity)), ("controls", text)), PopupType.Medium, alsoToChat: true);
+    }
+
     [SubscribeLocalEvent]
     private void OnArtifactExamined(Entity<LegendaryArtifactComponent> entity, ref ExaminedEvent args)
     {
         args.PushMarkup(Loc.GetString(entity.Comp.Power));
+        if (entity.Comp.Controls is { } controls)
+            args.PushMarkup(Loc.GetString(controls));
         args.PushMarkup(Loc.GetString("legendary-true-damage"));
         if (entity.Comp.Traits.HasFlag(LegendaryTrait.BreaksDefence))
             args.PushMarkup(Loc.GetString("legendary-trait-breaks-defence"));
@@ -241,7 +256,7 @@ public sealed partial class LegendarySystem : EntitySystem
         while (query.MoveNext(out var uid, out _, out var transformComponent))
         {
             if (HasComp<MapGridComponent>(transformComponent.ParentUid))
-                places.Add(_navMapSystem.GetNearestBeaconString(uid));
+                places.Add(_noticeSystem.Where(uid));
         }
 
         if (places.Count == 0)

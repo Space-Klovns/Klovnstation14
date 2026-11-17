@@ -42,7 +42,6 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     [Dependency] private LegendarySystem _legendarySystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
-    [Dependency] private NavMapSystem _navMapSystem = default!;
     [Dependency] private SharedBodyCultivationSystem _bodyCultivationSystem = default!;
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
@@ -171,7 +170,7 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
 
     private void Announce(EntityUid herbUid, List<EntityUid> sensers)
     {
-        var where = _navMapSystem.GetNearestBeaconString(herbUid);
+        var where = _noticeSystem.Where(herbUid);
         foreach (var senserUid in sensers)
         {
             _noticeSystem.Notify(senserUid, Loc.GetString("treasure-bloom", ("where", where)), PopupType.Large, alsoToChat: true);

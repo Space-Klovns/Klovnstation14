@@ -154,7 +154,7 @@ public sealed partial class LegendarySystem
         _visualsSystem.Wave(userUid, FxColour.Metal);
         _noticeSystem.Notify(userUid, Loc.GetString("legendary-twin-tug", ("item", entity.Owner), ("partner", partnerUid),
             ("distance", (int)MathF.Round(offset.Length())), ("direction", offset.ToWorldAngle().GetDir().ToString().ToLowerInvariant()),
-            ("where", _navMapSystem.GetNearestBeaconString(partnerUid))), PopupType.Medium);
+            ("where", _noticeSystem.Where(partnerUid))), PopupType.Medium);
     }
 
     [SubscribeLocalEvent]

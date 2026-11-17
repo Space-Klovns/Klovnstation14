@@ -33,6 +33,7 @@
     hitDamage: 5
     legend: legendary-twin-legend
     power: legendary-twin-power
+    controls: legendary-twin-controls
   - type: TwinSword
     partner: KsMoye
 
@@ -73,6 +74,7 @@
     hitDamage: 12
     legend: legendary-reliant-legend
     power: legendary-reliant-power
+    controls: legendary-reliant-controls
   - type: HeavenReliant
   - type: ActionGrant
     actions:
@@ -107,6 +109,7 @@
     hitThrow: 4
     legend: legendary-saber-legend
     power: legendary-saber-power
+    controls: legendary-saber-controls
   - type: DragonSaber
 
 # ---------------------------------------------------------------- Ruyi Jingu Bang
@@ -142,6 +145,7 @@
     hitThrow: 5
     legend: legendary-ruyi-legend
     power: legendary-ruyi-power
+    controls: legendary-ruyi-controls
   - type: RuyiStaff
   - type: ActionGrant
     actions:
@@ -190,6 +194,7 @@
   - type: LegendaryArtifact
     legend: legendary-gourd-legend
     power: legendary-gourd-power
+    controls: legendary-gourd-controls
   - type: PurpleGoldGourd
   - type: ActionGrant
     actions:
@@ -233,6 +238,7 @@
   - type: LegendaryArtifact
     legend: legendary-fan-legend
     power: legendary-fan-power
+    controls: legendary-fan-controls
   - type: PlantainFan
   - type: ActionGrant
     actions:
@@ -259,6 +265,7 @@
   - type: LegendaryArtifact
     legend: legendary-mirror-legend
     power: legendary-mirror-power
+    controls: legendary-mirror-controls
   - type: BaguaMirror
   - type: Reflect
     reflectProb: 0.5
@@ -287,6 +294,7 @@
   - type: LegendaryArtifact
     legend: legendary-pouch-legend
     power: legendary-pouch-power
+    controls: legendary-pouch-controls
   - type: QiankunPouch
   - type: ActionGrant
     actions:
@@ -496,6 +504,7 @@
     traits: BreaksDefence
     legend: legendary-xuanyuan-legend
     power: legendary-xuanyuan-power
+    controls: legendary-xuanyuan-controls
   - type: LegendaryTreasureHit
   - type: XuanyuanSword
 
@@ -527,6 +536,7 @@
     traits: WearsDown
     legend: legendary-dragon-blade-legend
     power: legendary-dragon-blade-power
+    controls: legendary-dragon-blade-controls
   - type: LegendaryTreasureHit
   - type: GreenDragonBlade
 
@@ -554,6 +564,7 @@
   - type: LegendaryArtifact
     legend: legendary-seven-star-legend
     power: legendary-seven-star-power
+    controls: legendary-seven-star-controls
   - type: LegendaryTreasureHit
   - type: SevenStarSword
   - type: ActionGrant
@@ -577,6 +588,7 @@
   - type: LegendaryArtifact
     legend: legendary-pagoda-legend
     power: legendary-pagoda-power
+    controls: legendary-pagoda-controls
   - type: LinglongPagoda
   - type: ContainerContainer
     containers:
@@ -596,6 +608,7 @@
   - type: LegendaryArtifact
     legend: legendary-universe-ring-legend
     power: legendary-universe-ring-power
+    controls: legendary-universe-ring-controls
   - type: UniverseRing
 
 - type: entity
@@ -620,6 +633,7 @@
   - type: LegendaryArtifact
     legend: legendary-wheels-legend
     power: legendary-wheels-power
+    controls: legendary-wheels-controls
   - type: WindFireWheels
 
 - type: entity

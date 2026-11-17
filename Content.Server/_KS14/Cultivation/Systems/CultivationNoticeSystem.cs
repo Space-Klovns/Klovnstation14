@@ -20,6 +20,7 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
 
     private static readonly Color NoticeColor = Color.FromHex("#9fd4b8");
 
+    [Dependency] private Content.Server.Pinpointer.NavMapSystem _navMapSystem = default!;
     [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
@@ -126,5 +127,14 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
             foreach (var uid in _finished)
                 _nextNotice.Remove(uid);
         }
+    }
+
+    /// <summary>
+    ///     Roughly where something is, by the nearest station beacon, as plain text a popup can show (the beacon text
+    ///         comes coloured with markup, which popups would print as it is).
+    /// </summary>
+    public string Where(EntityUid uid)
+    {
+        return Robust.Shared.Utility.FormattedMessage.RemoveMarkupPermissive(_navMapSystem.GetNearestBeaconString(uid));
     }
 }

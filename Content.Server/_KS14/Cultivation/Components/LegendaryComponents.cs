@@ -43,6 +43,18 @@ public sealed partial class LegendaryArtifactComponent : Component
     public LocId Power;
 
     /// <summary>
+    ///     How to use it: which powers are used in hand, which are action buttons, and so on.
+    /// </summary>
+    [DataField]
+    public LocId? Controls;
+
+    /// <summary>
+    ///     Who has already been told how to use it.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid> Told = new();
+
+    /// <summary>
     ///     True damage each melee blow adds, on top of the weapon's own.
     /// </summary>
     [DataField]

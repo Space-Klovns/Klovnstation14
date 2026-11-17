@@ -152,3 +152,20 @@ legendary-universe-ring-legend = Nezha's Qiankun Quan, the Heaven and Earth Ring
 legendary-universe-ring-power = Throw it: after the first hit it ricochets to up to two more people nearby, then flies back to you. Keep a hand free to catch it.
 legendary-wheels-legend = Nezha's wheels of wind and fire, which carried the boy god across heaven and earth.
 legendary-wheels-power = Worn, you move far faster and leave burning footprints behind you, and you sometimes skid a step further than you meant to.
+
+# How to use each legendary, shown on examine and the first time someone picks it up.
+legendary-how-to = {$item}: {$controls}
+legendary-twin-controls = [bold]Use in hand (Z):[/bold] with both swords together, the Twin Dragon Sword Storm; apart, sense where the other sword is.
+legendary-reliant-controls = [bold]Action button while held:[/bold] Heaven-Cleaving Stroke, then click the direction to cut.
+legendary-saber-controls = [bold]Use in hand (Z):[/bold] wake the dragon; your next hit within ten seconds is the Dragon Slaying Strike. [bold]Right-click the saber[/bold] while holding the Heaven Reliant Sword in your other hand to clash them.
+legendary-ruyi-controls = [bold]Use in hand (Z):[/bold] grow or shrink it. [bold]Action buttons while held:[/bold] Thirteen Thousand Jin (click where to bring it down) and Pluck Hairs. Drop it while grown to plant it.
+legendary-gourd-controls = [bold]Action button while held:[/bold] Call Their Name, then click someone. [bold]Use in hand (Z):[/bold] let out whoever is inside.
+legendary-fan-controls = [bold]Use in hand (Z):[/bold] Typhoon all around you. [bold]Action buttons while held:[/bold] Hurricane and Firestorm, then click a direction.
+legendary-mirror-controls = [bold]Use in hand (Z):[/bold] the Eight Trigrams Seal. Just holding it turns shots aside.
+legendary-pouch-controls = [bold]Use in hand (Z):[/bold] Swallow Heaven and Earth. [bold]Action button while held:[/bold] Release Heaven and Earth, then click a spot. [bold]Alt-click its holder[/bold] to hide inside.
+legendary-xuanyuan-controls = Only the Son of Heaven can wield it: hit with it as with any sword.
+legendary-dragon-blade-controls = [bold]Use in hand (Z):[/bold] wield it in both hands for its full reach and weight.
+legendary-seven-star-controls = Hit people to light its stars. [bold]Action button while held,[/bold] once all seven are lit: the Seven Stars, then click a direction.
+legendary-pagoda-controls = [bold]Throw it[/bold] (throw mode, then click) at someone.
+legendary-universe-ring-controls = [bold]Throw it[/bold] (throw mode, then click) at someone; it comes back on its own.
+legendary-wheels-controls = [bold]Wear them[/bold] on your feet.
