@@ -89,7 +89,7 @@ public sealed class KsZLevelGapPvsTest : GameTest
             var elevatorComponent = entManager.EnsureComponent<ZLevelElevatorComponent>(elevator.Owner);
 
             // Slow, so the crossing is still going on by the time the assertions run.
-            elevatorComponent.SecondsPerDepth = 60f;
+            elevatorComponent.TimePerDepth = TimeSpan.FromSeconds(60);
             elevatorComponent.DwellTime = TimeSpan.Zero;
 
             elevatorUid = elevator.Owner;
@@ -351,7 +351,7 @@ public sealed class KsZLevelGapPvsTest : GameTest
             var elevatorComponent = entManager.EnsureComponent<ZLevelElevatorComponent>(elevator.Owner);
 
             // Slow, so the rider is still mid-crossing by the time the assertions run.
-            elevatorComponent.SecondsPerDepth = 60f;
+            elevatorComponent.TimePerDepth = TimeSpan.FromSeconds(60);
             elevatorComponent.DwellTime = TimeSpan.Zero;
 
             elevatorUid = elevator.Owner;

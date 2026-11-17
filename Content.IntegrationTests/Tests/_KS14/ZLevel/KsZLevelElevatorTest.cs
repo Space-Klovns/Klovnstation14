@@ -53,7 +53,7 @@ public sealed class KsZLevelElevatorTest : GameTest
     ///     Short, so a leg takes a handful of ticks rather than a handful of seconds, and the fixture is
     ///         still asserting the real clock-driven path rather than a special case.
     /// </summary>
-    private const float TestSecondsPerDepth = 0.2f;
+    private static readonly TimeSpan TestTimePerDepth = TimeSpan.FromSeconds(0.2);
 
     /// <summary>
     ///     Each landing is floored at these two tiles, and deliberately not at <see cref="ShaftTile"/> -
@@ -149,7 +149,7 @@ public sealed class KsZLevelElevatorTest : GameTest
             transformSystem.SetWorldPosition(elevator.Owner, ShaftPosition);
 
             var elevatorComponent = entManager.EnsureComponent<ZLevelElevatorComponent>(elevator.Owner);
-            elevatorComponent.SecondsPerDepth = TestSecondsPerDepth;
+            elevatorComponent.TimePerDepth = TestTimePerDepth;
             elevatorComponent.DwellTime = TimeSpan.Zero;
 
             elevatorUid = elevator.Owner;
@@ -271,8 +271,8 @@ public sealed class KsZLevelElevatorTest : GameTest
             var activeComponent = entManager.GetComponent<ActiveZLevelElevatorComponent>(elevatorUid);
             var duration = (activeComponent.EndTime - activeComponent.StartTime).TotalSeconds;
 
-            Assert.That(duration, Is.EqualTo(2f * TestSecondsPerDepth).Within(0.001d),
-                "a leg has to take the crossed z-level's Depth times SecondsPerDepth");
+            Assert.That(duration, Is.EqualTo(2d * TestTimePerDepth.TotalSeconds).Within(0.001d),
+                "a leg has to take the crossed z-level's Depth times TimePerDepth");
         });
     }
 

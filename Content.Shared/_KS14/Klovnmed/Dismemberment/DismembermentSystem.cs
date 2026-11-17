@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Chat;
@@ -8,7 +9,10 @@ using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Throwing;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -29,9 +33,19 @@ public sealed partial class DismembermentSystem : EntitySystem
     //[Dependency] private KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
+    [Dependency] private BloodSpraySystem _bloodSpraySystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
     private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
+
+    /// <summary>
+    ///     TGMC's bone break, as a limb comes off.
+    /// </summary>
+    private static readonly ProtoId<SoundCollectionPrototype> DismemberSoundCollection = "KsBoneBreak";
+
+    private static readonly SoundSpecifier DismemberSound = new SoundCollectionSpecifier(DismemberSoundCollection, AudioParams.Default.WithVariation(0.05f));
 
     /// <returns>True if, with the given damage, something can be dismembered from the given entity.</returns>
     public bool CanDismemberByDamage(Entity<BodyComponent?> bodyEntity, FixedPoint2 damageFp2, [NotNullWhen(true)] out float? totalDamage)
@@ -92,6 +106,17 @@ public sealed partial class DismembermentSystem : EntitySystem
 
             _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
+
+        // The gore follows the limb; one that falls where it was still bursts, every way at once.
+        if (direction is { } sprayDirection && throwSpeed != 0f)
+            _bloodSpraySystem.SpawnDismemberParticles(bodyEntity.Owner, sprayDirection, throwSpeed);
+        else
+            _bloodSpraySystem.SpawnGibParticles(bodyEntity.Owner);
+
+        // From the server to everyone, as the gib sound is: not every dismemberment is predicted by the cause's client
+        //      (an explosion's is not), and PlayPredicted would leave that player without it.
+        if (_netManager.IsServer)
+            _audioSystem.PlayPvs(DismemberSound, bodyEntity.Owner);
     }
 
     public void DoFixedEmote(EntityUid victimUid)

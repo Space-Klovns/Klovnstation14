@@ -81,6 +81,16 @@ public sealed partial class ProjectileComponent : Component
     [DataField]
     public bool ProjectileSpent;
 
+    // KS14 start
+    /// <summary>
+    ///     KS14: whether something that cannot be damaged is no hit at all for this projectile, and it goes on through. For
+    ///         one that is meant to cross things, as particle accelerator particles cross the containment field to the
+    ///         singularity inside it. Otherwise a hard thing with no <c>DamageableComponent</c> stops it like anything else.
+    /// </summary>
+    [DataField]
+    public bool KsPassesUndamageable;
+    // KS14 end
+
     /// <summary>
     ///     When a projectile has this threshold set, it will continue to penetrate entities until the damage dealt reaches this threshold.
     /// </summary>

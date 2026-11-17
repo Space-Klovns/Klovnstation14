@@ -69,7 +69,7 @@ public sealed partial class NpcStopDropRollSystem : EntitySystem
     {
         return stopDropRollComponent?.BusyKey is { } busyKey &&
             _htnQuery.TryComp(uid, out var htnComponent) &&
-            htnComponent.Blackboard.ContainsKey(busyKey);
+            htnComponent.Blackboard.ContainsKey(busyKey, EntityManager);
     }
 
     /// <summary>

@@ -61,6 +61,7 @@ public class NpcNavigationBenchmark
 
     private (MapCoordinates Origin, MapCoordinates Other)[] _rays = default!;
     private (EntityCoordinates Start, EntityCoordinates End)[] _paths = default!;
+    private (EntityCoordinates Start, EntityCoordinates End)[] _longPaths = default!;
     private EntityCoordinates[] _floods = default!;
 
     private const int SweepCount = 16;
@@ -177,6 +178,28 @@ public class NpcNavigationBenchmark
         {
             var from = floorTiles[random.Next(floorTiles.Count)];
             _paths[i] = (TileCenter(from, jitter: false), TileCenter(PickWithin(from, 6, 25), jitter: false));
+        }
+
+        // Across the station or the open field: as far apart as the map allows, up to 150 tiles, from a generator of their
+        //      own so the samples above stay the same.
+        var longRandom = new System.Random(99);
+        var longRange = 40;
+        _longPaths = new (EntityCoordinates, EntityCoordinates)[PathCount];
+        for (var i = 0; i < PathCount; i++)
+        {
+            var from = floorTiles[longRandom.Next(floorTiles.Count)];
+            Vector2i to;
+            var attempts = 0;
+            do
+            {
+                to = floorTiles[longRandom.Next(floorTiles.Count)];
+                // A small map has nothing as far as that: settle for what it has.
+                if (++attempts % 5000 == 0)
+                    longRange = Math.Max(10, longRange - 5);
+            }
+            while ((to - from).Length < longRange || (to - from).Length > 150);
+
+            _longPaths[i] = (TileCenter(from, jitter: false), TileCenter(to, jitter: false));
         }
 
         _floods = new EntityCoordinates[FloodCount];
@@ -351,6 +374,35 @@ public class NpcNavigationBenchmark
     {
         var found = 0;
         foreach (var (start, end) in _paths)
+        {
+            var request = new AStarPathRequest(start, end, PathFlags.Interact, distance: 0f, _collisionLayer, _collisionMask, CancellationToken.None);
+            _rentAStarSearchState?.Invoke(request);
+
+            PathResult result;
+            do
+            {
+                result = _updateAStarPath(request);
+            }
+            while (result == PathResult.Continuing);
+
+            if (result == PathResult.Path)
+                found++;
+
+            _returnAStarSearchState?.Invoke(request);
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    ///     <see cref="AStarPath"/> for paths of 40 tiles and more, warm: the coarse maps are built by the first run. The
+    ///         expansions a search takes should stay about the polys of its path.
+    /// </summary>
+    [Benchmark(OperationsPerInvoke = PathCount)]
+    public int AStarLongPath()
+    {
+        var found = 0;
+        foreach (var (start, end) in _longPaths)
         {
             var request = new AStarPathRequest(start, end, PathFlags.Interact, distance: 0f, _collisionLayer, _collisionMask, CancellationToken.None);
             _rentAStarSearchState?.Invoke(request);

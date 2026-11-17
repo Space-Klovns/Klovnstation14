@@ -241,7 +241,7 @@ public partial class ChatBox
         {
             SafelySelectChannel(channel);
             KsRefreshSayChannel();
-            _ksSay.FocusInput();
+            _ksSay.FocusInput(ignoreOpeningKey: false); // a click types nothing to drop
         };
 
         menu.OpenBeside(_ksSay.ChannelButton, SelectedChannel);

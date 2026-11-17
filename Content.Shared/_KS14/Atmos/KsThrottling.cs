@@ -25,6 +25,40 @@ public static class KsThrottling
     }
 
     /// <summary>
+    ///     kPa at the critical point: <c>a / (27 b²)</c>.
+    /// </summary>
+    public static float CriticalPressure(float a, float b)
+    {
+        return a / (27f * b * b);
+    }
+
+    /// <summary>
+    ///     Largest <c>|B ρ|</c> <see cref="ReducedDensity"/> corrects by, past which the virial series means nothing.
+    /// </summary>
+    public const float MaxVirialCorrection = 2f;
+
+    /// <summary>
+    ///     A gas's density as a fraction of its critical density <c>1 / (3b)</c>, for how well it dissolves things when
+    ///         supercritical: <c>3 b ρ exp(-B(T) ρ)</c>, with <c>ρ</c> its ideal-gas density and <c>B = b - a / (R T)</c>.
+    /// </summary>
+    /// <remarks>
+    ///     Pressure stays ideal: this only estimates how much denser a real gas is than an ideal one at that pressure,
+    ///         which is far more just past its critical temperature, where the attraction <c>a</c> pulls it together,
+    ///         than well above it. Carbon dioxide at 313 K and 20 MPa comes out about twice its critical density, as the
+    ///         real one is; nitrogen at 293 K and 20 MPa about its critical density, against a real 0.7.
+    /// </remarks>
+    /// <param name="molarDensity">mol/L.</param>
+    public static float ReducedDensity(float a, float b, float molarDensity, float temperature)
+    {
+        if (b <= 0f || molarDensity <= 0f || temperature <= 0f)
+            return 0f;
+
+        var virial = b - a / (Atmospherics.R * temperature);
+        var correction = Math.Clamp(-virial * molarDensity, -MaxVirialCorrection, MaxVirialCorrection);
+        return 3f * b * molarDensity * MathF.Exp(correction);
+    }
+
+    /// <summary>
     ///     Kelvin above which throttling warms rather than cools: <c>2a / (R b)</c>.
     /// </summary>
     public static float InversionTemperature(float a, float b)

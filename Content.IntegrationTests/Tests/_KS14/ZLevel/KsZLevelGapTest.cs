@@ -48,7 +48,7 @@ public sealed class KsZLevelGapTest : GameTest
   - type: Fixtures
 ";
 
-    private const float TestSecondsPerDepth = 0.4f;
+    private static readonly TimeSpan TestTimePerDepth = TimeSpan.FromSeconds(0.4);
 
     private static readonly Vector2 ShaftPosition = new(2f, 0f);
 
@@ -84,7 +84,7 @@ public sealed class KsZLevelGapTest : GameTest
         return new TestShaft(zLevels);
     }
 
-    private async Task<EntityUid> CreateElevator(TestShaft shaft, int floor, float secondsPerDepth = TestSecondsPerDepth)
+    private async Task<EntityUid> CreateElevator(TestShaft shaft, int floor, TimeSpan? timePerDepth = null)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -103,7 +103,7 @@ public sealed class KsZLevelGapTest : GameTest
             transformSystem.SetWorldPosition(elevator.Owner, ShaftPosition);
 
             var elevatorComponent = entManager.EnsureComponent<ZLevelElevatorComponent>(elevator.Owner);
-            elevatorComponent.SecondsPerDepth = secondsPerDepth;
+            elevatorComponent.TimePerDepth = timePerDepth ?? TestTimePerDepth;
             elevatorComponent.DwellTime = TimeSpan.Zero;
 
             elevatorUid = elevator.Owner;
@@ -462,7 +462,7 @@ public sealed class KsZLevelGapTest : GameTest
 
         // Slow, so the lift is unambiguously still crossing when the faller gets down to it. A fall that
         //      arrived after it had landed would pass this test for the wrong reason.
-        var elevatorUid = await CreateElevator(shaft, floor: 1, secondsPerDepth: 20f);
+        var elevatorUid = await CreateElevator(shaft, floor: 1, timePerDepth: TimeSpan.FromSeconds(20));
 
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -513,7 +513,7 @@ public sealed class KsZLevelGapTest : GameTest
 
         // Slow, so the lift is unambiguously still crossing when the faller gets down to it. A fall that
         //      arrived after it had landed would pass this test for the wrong reason.
-        var elevatorUid = await CreateElevator(shaft, floor: 1, secondsPerDepth: 20f);
+        var elevatorUid = await CreateElevator(shaft, floor: 1, timePerDepth: TimeSpan.FromSeconds(20));
 
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -673,7 +673,7 @@ public sealed class KsZLevelGapTest : GameTest
         });
 
         // Slow, so the crossing is still going on while the dropped item falls off it.
-        var elevatorUid = await CreateElevator(shaft, floor: 0, secondsPerDepth: 20f);
+        var elevatorUid = await CreateElevator(shaft, floor: 0, timePerDepth: TimeSpan.FromSeconds(20));
 
         var gapEntity = await StartAscentIntoGap(elevatorUid);
 

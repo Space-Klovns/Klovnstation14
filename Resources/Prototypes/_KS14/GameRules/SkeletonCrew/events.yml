@@ -1,0 +1,307 @@
+# Skeleton Crew's events. Each one is an upstream event under a KsSkeletonCrew id, with its start time cut to about
+#   75% of upstream's (rounded), and its player minimum lowered so that it can run on a crew of 3 to 25. Everything
+#   else is inherited, so a change to the upstream event reaches these too.
+#   Left out on purpose: meteor swarms and the immovable rod (station damage; space dust has its own scheduler),
+#   the power grid check, the nuke calibration, and antagonists too strong for a small crew.
+
+- type: entityTable
+  id: KsSkeletonCrewEventsTable
+  table: !type:AllSelector # a list, so that StationEvent's own limits still apply
+    children:
+    - id: BluespaceLocker
+    - id: KsSkeletonCrewAnomalySpawn
+    - id: KsSkeletonCrewBluespaceArtifact
+    - id: KsSkeletonCrewGasLeak
+    - id: KsSkeletonCrewIonStorm
+    - id: KsSkeletonCrewSolarFlare
+    - id: KsSkeletonCrewRandomSentience
+    - id: KsSkeletonCrewCockroachMigration
+    - id: KsSkeletonCrewSnailMigrationLowPop
+    - id: KsSkeletonCrewMouseMigration
+    - id: KsSkeletonCrewKingRatMigration
+    - id: KsSkeletonCrewBreakerFlip
+    - id: KsSkeletonCrewClericalError
+    - id: KsSkeletonCrewBureaucraticError
+    - id: KsSkeletonCrewClosetSkeleton
+    - id: KsSkeletonCrewGreytideVirus
+    - id: KsSkeletonCrewMimicVendorRule
+    - id: KsSkeletonCrewVentClog
+    - id: KsSkeletonCrewKudzuGrowth
+    - id: KsSkeletonCrewSlimesSpawnHorde
+    - id: KsSkeletonCrewSnakeSpawnHorde
+    - id: KsSkeletonCrewSpiderSpawnHorde
+    - id: KsSkeletonCrewSpiderClownSpawnHorde
+
+- type: entityTable
+  id: KsSkeletonCrewFluffEventsTable
+  table: !type:AllSelector
+    children:
+    - id: KsSkeletonCrewRandomCritterHorde
+    - id: KsSkeletonCrewMassHallucinations
+    - id: KsSkeletonCrewGiftsPizzaPartySmall
+    - id: KsSkeletonCrewGiftsEngineering
+    - id: KsSkeletonCrewGiftsJanitor
+    - id: KsSkeletonCrewGiftsMedical
+    - id: KsSkeletonCrewGiftsSpacingSupplies
+    - id: KsSkeletonCrewGiftsFireProtection
+    - id: KsSkeletonCrewGiftsVendingRestock
+
+- type: entity
+  parent: AnomalySpawn
+  id: KsSkeletonCrewAnomalySpawn
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: BluespaceArtifact
+  id: KsSkeletonCrewBluespaceArtifact
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: GasLeak
+  id: KsSkeletonCrewGasLeak
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: IonStorm
+  id: KsSkeletonCrewIonStorm
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: SolarFlare
+  id: KsSkeletonCrewSolarFlare
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: RandomSentience
+  id: KsSkeletonCrewRandomSentience
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: CockroachMigration
+  id: KsSkeletonCrewCockroachMigration
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: SnailMigrationLowPop
+  id: KsSkeletonCrewSnailMigrationLowPop
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: MouseMigration
+  id: KsSkeletonCrewMouseMigration
+  components:
+  - type: StationEvent
+    earliestStart: 11
+
+- type: entity
+  parent: KingRatMigration
+  id: KsSkeletonCrewKingRatMigration
+  components:
+  - type: StationEvent
+    earliestStart: 11
+    minimumPlayers: 12
+
+- type: entity
+  parent: BreakerFlip
+  id: KsSkeletonCrewBreakerFlip
+  components:
+  - type: StationEvent
+    earliestStart: 4
+    minimumPlayers: 3
+
+- type: entity
+  parent: ClericalError
+  id: KsSkeletonCrewClericalError
+  components:
+  - type: StationEvent
+    earliestStart: 4
+    minimumPlayers: 5
+
+- type: entity
+  parent: BureaucraticError
+  id: KsSkeletonCrewBureaucraticError
+  components:
+  - type: StationEvent
+    earliestStart: 4
+    minimumPlayers: 8
+
+- type: entity
+  parent: ClosetSkeleton
+  id: KsSkeletonCrewClosetSkeleton
+  components:
+  - type: StationEvent
+    earliestStart: 4
+    minimumPlayers: 3
+
+- type: entity
+  parent: GreytideVirus
+  id: KsSkeletonCrewGreytideVirus
+  components:
+  - type: StationEvent
+    earliestStart: 4
+    minimumPlayers: 3
+
+- type: entity
+  parent: MimicVendorRule
+  id: KsSkeletonCrewMimicVendorRule
+  components:
+  - type: StationEvent
+    earliestStart: 0
+    minimumPlayers: 5
+
+- type: entity
+  parent: VentClog
+  id: KsSkeletonCrewVentClog
+  components:
+  - type: StationEvent
+    earliestStart: 11
+    minimumPlayers: 3
+
+- type: entity
+  parent: KudzuGrowth
+  id: KsSkeletonCrewKudzuGrowth
+  components:
+  - type: StationEvent
+    earliestStart: 11
+    minimumPlayers: 5
+
+- type: entity
+  parent: GiftsPizzaPartySmall
+  id: KsSkeletonCrewGiftsPizzaPartySmall
+  components:
+  - type: StationEvent
+    earliestStart: 15
+
+- type: entity
+  parent: GiftsEngineering
+  id: KsSkeletonCrewGiftsEngineering
+  components:
+  - type: StationEvent
+    earliestStart: 22
+    minimumPlayers: 3
+
+- type: entity
+  parent: GiftsJanitor
+  id: KsSkeletonCrewGiftsJanitor
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 3
+
+- type: entity
+  parent: GiftsMedical
+  id: KsSkeletonCrewGiftsMedical
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 3
+
+- type: entity
+  parent: GiftsSpacingSupplies
+  id: KsSkeletonCrewGiftsSpacingSupplies
+  components:
+  - type: StationEvent
+    earliestStart: 8
+    minimumPlayers: 5
+
+- type: entity
+  parent: GiftsFireProtection
+  id: KsSkeletonCrewGiftsFireProtection
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 5
+
+- type: entity
+  parent: GiftsVendingRestock
+  id: KsSkeletonCrewGiftsVendingRestock
+  components:
+  - type: StationEvent
+    earliestStart: 22
+    minimumPlayers: 5
+
+- type: entity
+  parent: RandomCritterHorde
+  id: KsSkeletonCrewRandomCritterHorde
+  components:
+  - type: StationEvent
+    earliestStart: 11
+
+- type: entity
+  parent: MassHallucinations
+  id: KsSkeletonCrewMassHallucinations
+  components:
+  - type: StationEvent
+    earliestStart: 4
+
+- type: entity
+  parent: SlimesSpawnHorde
+  id: KsSkeletonCrewSlimesSpawnHorde
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 6
+  - type: VentHordeRule
+    table: !type:GroupSelector
+      rolls: 1, 3 # fewer than upstream's, for a smaller crew
+      children:
+      - id: MobAdultSlimesBlueAngry
+      - id: MobAdultSlimesGreenAngry
+      - id: MobAdultSlimesYellowAngry
+
+- type: entity
+  parent: SnakeSpawnHorde
+  id: KsSkeletonCrewSnakeSpawnHorde
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 6
+  - type: VentHordeRule
+    table: !type:GroupSelector
+      rolls: 1, 3 # fewer than upstream's, for a smaller crew
+      children:
+      - id: MobPurpleSnake
+      - id: MobSmallPurpleSnake
+      - id: MobCobraSpace
+
+- type: entity
+  parent: SpiderSpawnHorde
+  id: KsSkeletonCrewSpiderSpawnHorde
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 6
+  - type: VentHordeRule
+    table: !type:GroupSelector
+      rolls: 1, 2 # fewer than upstream's, for a smaller crew
+      children:
+      - id: MobGiantSpiderAngry
+
+- type: entity
+  parent: SpiderClownSpawnHorde
+  id: KsSkeletonCrewSpiderClownSpawnHorde
+  components:
+  - type: StationEvent
+    earliestStart: 15
+    minimumPlayers: 10
+  - type: VentHordeRule
+    table: !type:GroupSelector
+      rolls: 1, 2 # fewer than upstream's, for a smaller crew
+      children:
+      - id: MobClownSpider

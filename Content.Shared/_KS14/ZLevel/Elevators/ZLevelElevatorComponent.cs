@@ -44,7 +44,7 @@ public sealed partial class ZLevelElevatorComponent : Component
     public string? ShaftId;
 
     /// <summary>
-    ///     How long, in seconds, the elevator takes to cross one unit of a z-level's
+    ///     How long the elevator takes to cross one unit of a z-level's
     ///     <see cref="KsZLevelComponent.Depth"/>.
     /// </summary>
     /// <remarks>
@@ -57,13 +57,13 @@ public sealed partial class ZLevelElevatorComponent : Component
     ///     <see cref="ActiveZLevelElevatorComponent"/>, not from the speed that produced them.
     /// </remarks>
     [DataField]
-    public float SecondsPerDepth = 4f;
+    public TimeSpan TimePerDepth = TimeSpan.FromSeconds(4);
 
     /// <summary>
     ///     How long the elevator waits at a floor it has stopped at before deciding where to go next.
     /// </summary>
     /// <remarks>
-    ///     Not networked, for the same reason as <see cref="SecondsPerDepth"/>.
+    ///     Not networked, for the same reason as <see cref="TimePerDepth"/>.
     /// </remarks>
     [DataField]
     public TimeSpan DwellTime = TimeSpan.FromSeconds(4);

@@ -4,22 +4,22 @@ using Robust.Shared.Timing;
 namespace Content.Client._KS14.Tgui.Controls;
 
 /// <summary>
-///     tgui-core's Blink: hides its content for <see cref="Time"/> milliseconds out of every <see cref="Interval"/> plus
+///     tgui-core's Blink: hides its content for <see cref="Time"/> out of every <see cref="Interval"/> plus
 ///         <see cref="Time"/>, with hard cuts and its room kept, as <c>visibility: hidden</c> does. tgui's timer fires first
 ///         after one whole period, so the content starts visible for <c>Interval + Time</c>: with the defaults, 2 seconds on,
 ///         then 1 off, 1 on, 1 off.
 /// </summary>
 public sealed class KsTguiBlink : Control
 {
-    private float _elapsedSeconds;
-    private int _interval = 1000;
-    private int _time = 1000;
+    private TimeSpan _elapsed;
+    private TimeSpan _interval = TimeSpan.FromSeconds(1);
+    private TimeSpan _time = TimeSpan.FromSeconds(1);
     private bool _hidden;
 
     /// <summary>
-    ///     tgui's <c>interval</c>, in milliseconds: how long it stays visible between blinks.
+    ///     tgui's <c>interval</c>: how long it stays visible between blinks.
     /// </summary>
-    public int Interval
+    public TimeSpan Interval
     {
         get => _interval;
         set
@@ -30,9 +30,9 @@ public sealed class KsTguiBlink : Control
     }
 
     /// <summary>
-    ///     tgui's <c>time</c>, in milliseconds: how long it is hidden.
+    ///     tgui's <c>time</c>: how long it is hidden.
     /// </summary>
-    public int Time
+    public TimeSpan Time
     {
         get => _time;
         set
@@ -45,30 +45,30 @@ public sealed class KsTguiBlink : Control
     public bool Hidden => _hidden;
 
     /// <summary>
-    ///     Whether the content is hidden this many seconds after the timer started.
+    ///     Whether the content is hidden <paramref name="elapsed"/> after the timer started.
     /// </summary>
-    public static bool IsHidden(float elapsedSeconds, int intervalMilliseconds, int timeMilliseconds)
+    public static bool IsHidden(TimeSpan elapsed, TimeSpan interval, TimeSpan time)
     {
-        var period = (float)(intervalMilliseconds + timeMilliseconds) / 1000f;
-        if (period <= 0f || elapsedSeconds < period)
+        var period = interval + time;
+        if (period <= TimeSpan.Zero || elapsed < period)
             return false;
 
-        return elapsedSeconds % period < (float)timeMilliseconds / 1000f;
+        return TimeSpan.FromTicks(elapsed.Ticks % period.Ticks) < time;
     }
 
     /// <summary>
-    ///     Moves the timer on by this many seconds.
+    ///     Moves the timer on.
     /// </summary>
-    public void Advance(float seconds)
+    public void Advance(TimeSpan time)
     {
-        _elapsedSeconds += seconds;
-        SetHidden(IsHidden(_elapsedSeconds, _interval, _time));
+        _elapsed += time;
+        SetHidden(IsHidden(_elapsed, _interval, _time));
     }
 
     private void Restart()
     {
         // tgui clears its timer and starts a new one when either prop changes.
-        _elapsedSeconds = 0f;
+        _elapsed = TimeSpan.Zero;
         SetHidden(false);
     }
 
@@ -85,6 +85,6 @@ public sealed class KsTguiBlink : Control
     {
         base.FrameUpdate(args);
 
-        Advance(args.DeltaSeconds);
+        Advance(TimeSpan.FromSeconds(args.DeltaSeconds));
     }
 }

@@ -3,6 +3,7 @@ using Content.Server.Administration;
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Managers;
 using Content.Server.Discord.WebhookMessages;
+using Content.Shared._KS14.Voting; // KS14
 using Content.Server.Voting.Managers;
 using Content.Shared.Administration;
 using Content.Shared.CCVar;
@@ -213,7 +214,7 @@ namespace Content.Server.Voting
         {
             foreach (var vote in _voteManager.ActiveVotes)
             {
-                shell.WriteLine($"[{vote.Id}] {vote.InitiatorText}: {vote.Title}");
+                shell.WriteLine($"[{vote.Id}] {KsVoteText.Resolve(vote.InitiatorText)}: {KsVoteText.Resolve(vote.Title)}"); // KS14: resolve text deferred to the clients, here in the server's language
             }
         }
     }
@@ -241,9 +242,9 @@ namespace Content.Server.Voting
             }
 
             if (shell.Player != null)
-                _adminLogger.Add(LogType.Vote, LogImpact.Medium, $"{shell.Player} canceled vote: {vote.Title}");
+                _adminLogger.Add(LogType.Vote, LogImpact.Medium, $"{shell.Player} canceled vote: {KsVoteText.Resolve(vote.Title) /* KS14: resolve deferred text */}");
             else
-                _adminLogger.Add(LogType.Vote, LogImpact.Medium, $"Canceled vote: {vote.Title}");
+                _adminLogger.Add(LogType.Vote, LogImpact.Medium, $"Canceled vote: {KsVoteText.Resolve(vote.Title) /* KS14: resolve deferred text */}");
             vote.Cancel();
         }
 
@@ -253,7 +254,7 @@ namespace Content.Server.Voting
             {
                 var options = _voteManager.ActiveVotes
                     .OrderBy(v => v.Id)
-                    .Select(v => new CompletionOption(v.Id.ToString(), v.Title));
+                    .Select(v => new CompletionOption(v.Id.ToString(), KsVoteText.Resolve(v.Title) /* KS14: resolve deferred text */));
 
                 return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-cancelvote-arg-id"));
             }

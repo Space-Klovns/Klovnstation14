@@ -1,0 +1,74 @@
+using System.Numerics;
+using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
+
+namespace Content.Shared._KS14.Particles;
+
+/// <summary>
+///     Makes its entity emit a <see cref="KsParticlesPrototype"/>. Only these few fields are networked; the particles
+///         themselves exist on each client alone, so the component works the same on a client-only entity, a
+///         predicted spawn and a server-spawned one. Change it through <see cref="KsSharedParticlesSystem"/>.
+/// </summary>
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
+[Access(typeof(KsSharedParticlesSystem))]
+public sealed partial class KsParticlesComponent : Component
+{
+    /// <summary>
+    ///     The effect to emit. Null emits nothing.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public ProtoId<KsParticlesPrototype>? Prototype;
+
+    /// <summary>
+    ///     Whether new particles spawn. Off, the ones alive live out their lifespans.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Emitting = true;
+
+    /// <summary>
+    ///     Multiplied into every particle's colour.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Color Color = Color.White;
+
+    /// <summary>
+    ///     Where the emitter sits on its entity, in metres.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 Offset;
+
+    /// <summary>
+    ///     Added to <see cref="Offset"/>, and always turned with the entity, while the emitter itself stays in its
+    ///         usual frame: smoke from the front of a vehicle, wherever it faces, that still rises straight up. Zero
+    ///         rotation faces south, so the front is <c>0, -distance</c>.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 RotatingOffset;
+
+    /// <summary>
+    ///     Turns the whole emitter, counter-clockwise, on top of the frame it would otherwise be in (see
+    ///         <see cref="KsParticlesPrototype.FollowRotation"/>): a spray aimed one way. Unlike turning the entity, this
+    ///         works on the bare emitter entity, which doesn't rotate.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Angle Rotation;
+
+    /// <summary>
+    ///     Multiplies how many particles spawn: the burst, the rate and the most alive at once. A heavier hit, a
+    ///         bigger spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Amount = 1f;
+
+    /// <summary>
+    ///     Multiplies every particle's starting velocity, and nothing else: a harder throw, a faster spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Speed = 1f;
+
+    /// <summary>
+    ///     Scales the whole effect: positions, velocities and sizes alike.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Scale = 1f;
+}

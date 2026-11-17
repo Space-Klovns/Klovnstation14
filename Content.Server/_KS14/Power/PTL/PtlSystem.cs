@@ -79,7 +79,7 @@ public sealed partial class PtlSystem : EntitySystem
 
     private void OnSetDelayMessage(Entity<PtlComponent> entity, ref PtlSetDelayMessage args)
     {
-        entity.Comp.ShootDelay = Math.Clamp(args.Delay, entity.Comp.ShootDelayThreshold.X, entity.Comp.ShootDelayThreshold.Y);
+        entity.Comp.ShootDelay = MathHelper.Max(entity.Comp.MinShootDelay, MathHelper.Min(args.Delay, entity.Comp.MaxShootDelay));
 
         _audioSystem.PlayPvs(_soundSparks, entity.Owner);
         UpdateUiState(entity);
@@ -114,8 +114,8 @@ public sealed partial class PtlSystem : EntitySystem
             entity.Comp.Active,
             entity.Comp.SpesosHeld,
             entity.Comp.ShootDelay,
-            entity.Comp.ShootDelayThreshold.X,
-            entity.Comp.ShootDelayThreshold.Y,
+            entity.Comp.MinShootDelay,
+            entity.Comp.MaxShootDelay,
             currentCharge,
             maxCharge));
     }
@@ -146,7 +146,7 @@ public sealed partial class PtlSystem : EntitySystem
             if (_gameTiming.CurTime < ptlComponent.NextShotAt)
                 continue;
 
-            ptlComponent.NextShotAt = _gameTiming.CurTime + TimeSpan.FromSeconds(ptlComponent.ShootDelay);
+            ptlComponent.NextShotAt = _gameTiming.CurTime + ptlComponent.ShootDelay;
 
             if (_batterySystem.GetCharge((uid, batteryComponent)) < ptlComponent.MinShootPower)
                 continue;

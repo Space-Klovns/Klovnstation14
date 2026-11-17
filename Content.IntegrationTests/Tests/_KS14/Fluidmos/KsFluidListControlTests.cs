@@ -13,7 +13,7 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 
 /// <summary>
-///     The reagent table in gas analyzers and canisters: blank where a reagent has none of a phase, no vapor for one that
+///     The reagent table in gas analyzers: blank where a reagent has none of a phase, no vapor for one that
 ///         evaporates into its own gas, and no vapor column when every reagent listed does.
 /// </summary>
 [TestOf(typeof(KsFluidListControl))]
@@ -27,7 +27,7 @@ public sealed class KsFluidListControlTests : GameTest
     /// <summary>
     ///     Lays the control out in a window and returns the text of each table row, by row.
     /// </summary>
-    private async Task<string[][]> Rows(KsFluidEntry[] entries)
+    private async Task<string[][]> Rows(KsFluidEntry[] entries, bool showPhasePoints = false)
     {
         var client = Pair.Client;
         DefaultWindow window = null!;
@@ -36,7 +36,7 @@ public sealed class KsFluidListControlTests : GameTest
         await client.WaitPost(() =>
         {
             window = new DefaultWindow();
-            list = new KsFluidListControl();
+            list = new KsFluidListControl { ShowPhasePoints = showPhasePoints };
             list.SetEntries(entries);
             window.Contents.AddChild(list);
             window.OpenCentered();
@@ -129,5 +129,33 @@ public sealed class KsFluidListControlTests : GameTest
         var rows = await Rows([new KsFluidEntry(WaterReagent, Solid: 3f, Liquid: 100f, Vapor: 0f, Linked: true)]);
 
         Assert.That(rows[0], Has.Length.EqualTo(3), "Every reagent listed becomes a gas, but there is still a vapor column.");
+    }
+
+    /// <summary>
+    ///     The gas analyzer's boils-at and melts-at columns: there only when asked for, blank for a reagent that never
+    ///         boils, and "supercritical" for a gas past its critical temperature.
+    /// </summary>
+    [Test]
+    public async Task PhasePointColumnsOnlyWhenAskedFor()
+    {
+        KsFluidEntry[] entries =
+        [
+            new(WaterReagent, Solid: 0f, Liquid: 100f, Vapor: 0f, Linked: true, BoilingPoint: 360.4f, MeltingPoint: 273.15f),
+            new(EthanolReagent, Solid: 0f, Liquid: 5f, Vapor: 2f, Linked: false, BoilingPoint: float.NaN, MeltingPoint: float.NaN),
+            new(BicaridineReagent, Solid: 0f, Liquid: 5f, Vapor: 0f, Linked: true, Supercritical: true),
+        ];
+
+        var plain = await Rows(entries);
+        var withPoints = await Rows(entries, showPhasePoints: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(plain[0], Has.Length.EqualTo(4), "The table grew phase-point columns it didn't ask for.");
+            Assert.That(withPoints[0], Has.Length.EqualTo(6), "The analyzer's table has no boils-at and melts-at columns.");
+            Assert.That(withPoints[2][4], Does.Contain("360"), "Water's boiling point at the pipe's pressure isn't shown.");
+            Assert.That(withPoints[2][5], Does.Contain("273"), "Water's melting point isn't shown.");
+            Assert.That(withPoints[3][4], Is.Empty, "A reagent that never boils shows a boiling point.");
+            Assert.That(withPoints[4][4], Is.EqualTo("supercritical"), "A gas past its critical temperature isn't marked supercritical.");
+        }
     }
 }

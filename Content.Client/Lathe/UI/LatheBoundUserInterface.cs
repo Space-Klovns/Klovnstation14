@@ -22,7 +22,7 @@ namespace Content.Client.Lathe.UI
             base.Open();
 
             // KS14 start: the tgui theme opens its own window
-            _menu = KsTguiTheme.ReadEnabled()
+            _menu = KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
                 ? this.CreateWindowCenteredRight<KsTguiLatheWindow>()
                 : this.CreateWindowCenteredRight<LatheMenu>();
             // KS14 end
@@ -37,11 +37,23 @@ namespace Content.Client.Lathe.UI
             {
                 SendMessage(new LatheQueueRecipeMessage(recipe, amount));
             };
+            _menu.KsRecipeRequestAction += recipe => SendMessage(new Content.Shared._KS14.SalvageTablet.KsLatheRequestMaterialsMessage(recipe)); // KS14
             _menu.QueueDeleteAction += index => SendMessage(new LatheDeleteRequestMessage(index));
             _menu.QueueMoveUpAction += index => SendMessage(new LatheMoveRequestMessage(index, -1));
             _menu.QueueMoveDownAction += index => SendMessage(new LatheMoveRequestMessage(index, 1));
             _menu.DeleteFabricatingAction += () => SendMessage(new LatheAbortFabricationMessage());
+            Update(); // KS14
         }
+
+        // KS14 start: a smelter shows the mining points it holds in place of the queue
+        public override void Update()
+        {
+            base.Update();
+
+            if (_menu != null && EntMan.TryGetComponent<Content.Shared._KS14.SalvageTablet.KsMiningPointsSmelterComponent>(Owner, out var smelterComponent))
+                _menu.KsSetSmelterPoints((int)smelterComponent.Unclaimed);
+        }
+        // KS14 end
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {

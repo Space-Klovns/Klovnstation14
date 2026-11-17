@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.Preferences
 {
@@ -17,7 +18,10 @@ namespace Content.Shared.Preferences
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
+            KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
             var length = buffer.ReadVariableInt32();
+            buffer.AssertAtLeastSize(length);
+            KsNetMessageLimits.AssertAtMost(length, KsNetMessageLimits.MaxPreferencesBytes); // KS14: hard cap, stricter than upstream
 
             using (var stream = new MemoryStream())
             {
@@ -26,6 +30,8 @@ namespace Content.Shared.Preferences
             }
 
             length = buffer.ReadVariableInt32();
+            buffer.AssertAtLeastSize(length);
+            KsNetMessageLimits.AssertAtMost(length, KsNetMessageLimits.MaxPreferencesBytes); // KS14: hard cap, stricter than upstream
             using (var stream = new MemoryStream())
             {
                 buffer.ReadAlignedMemory(stream, length);

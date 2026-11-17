@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Content.Shared._KS14.Voting; // KS14
 using Content.Shared.Voting;
 using Robust.Client;
 using Robust.Client.Audio;
@@ -154,7 +155,7 @@ namespace Content.Client.Voting
                 var vote = new ActiveVote(voteId)
                 {
                     Entries = message.Options
-                        .Select(c => new VoteEntry(c.name))
+                        .Select(c => new VoteEntry(KsVoteText.Resolve(c.name) /* KS14: in this client's language */))
                         .ToArray()
                 };
 
@@ -180,8 +181,8 @@ namespace Content.Client.Voting
                 existingVote.OurVote = message.YourVote;
             // On the server, most of these params can't change.
             // It can't hurt to just re-set this stuff since I'm lazy and the server is sending it anyways, so...
-            existingVote.Initiator = message.VoteInitiator;
-            existingVote.Title = message.VoteTitle;
+            existingVote.Initiator = KsVoteText.Resolve(/* KS14: in this client's language */ message.VoteInitiator);
+            existingVote.Title = KsVoteText.Resolve(/* KS14: in this client's language */ message.VoteTitle);
             existingVote.StartTime = _gameTiming.RealServerToLocal(message.StartTime);
             existingVote.EndTime = _gameTiming.RealServerToLocal(message.EndTime);
             existingVote.DisplayVotes = message.DisplayVotes;

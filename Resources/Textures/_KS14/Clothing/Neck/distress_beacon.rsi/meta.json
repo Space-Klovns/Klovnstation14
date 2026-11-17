@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Sprited by erhardsteinhauer; taken from Monolith at https://github.com/Monolith-Station/Monolith/blob/3ee2dbf2cf6a0d34c4b3fb185cdd48d8cc9721f9/Resources/Textures/_NF/Clothing/Neck/Misc/mercenary_iff.rsi. The 'on' states are the original's white light overlay, tinted red and baked onto the base sprite.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "on-icon",
+      "delays": [
+        [ 0.1, 0.1, 0.1, 0.7 ]
+      ]
+    },
+    {
+      "name": "equipped-NECK",
+      "directions": 4
+    },
+    {
+      "name": "on-equipped-NECK",
+      "directions": 4,
+      "delays": [
+        [ 0.1, 0.1, 0.1, 0.7 ],
+        [ 0.1, 0.1, 0.1, 0.7 ],
+        [ 0.1, 0.1, 0.1, 0.7 ],
+        [ 0.1, 0.1, 0.1, 0.7 ]
+      ]
+    }
+  ]
+}

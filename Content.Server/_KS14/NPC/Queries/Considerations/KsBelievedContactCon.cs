@@ -24,11 +24,11 @@ public abstract partial class KsBelievedContactCon : UtilityConsideration
         if (!NpcPerceptionSystem.TryGetBelievedCoordinates(ownerUid, targetUid, out var believedCoordinates, out _, out _))
             return UnknownScore;
 
-        return GetBelievedScore(ownerUid, believedCoordinates);
+        return GetBelievedScore(ownerUid, targetUid, believedCoordinates);
     }
 
     /// <summary>
     ///     The score for a hostile believed to be at <paramref name="believedCoordinates"/>.
     /// </summary>
-    protected abstract float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates);
+    protected abstract float GetBelievedScore(EntityUid ownerUid, EntityUid targetUid, EntityCoordinates believedCoordinates);
 }

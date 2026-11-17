@@ -11,7 +11,7 @@ namespace Content.Client._KS14.Fluidmos;
 
 /// <summary>
 ///     A table of the reagents a gas mixture carries, by phase, laid out as the gas analyzer's gas table is, with a bar of
-///         their shares under it: the fluid half of the gas analyzer's and canister's readouts. Hidden while there is
+///         their shares under it: the fluid half of the gas analyzer's readout. Hidden while there is
 ///         nothing to list.
 /// </summary>
 /// <remarks>
@@ -56,6 +56,12 @@ public sealed partial class KsFluidListControl : BoxContainer
         AddChild(_bar);
     }
 
+    /// <summary>
+    ///     Whether to add columns for where each reagent boils, at the mixture's pressure, and melts. Set before
+    ///         <see cref="SetEntries"/>. Off by default, to keep the table narrow where a window has no room for them.
+    /// </summary>
+    public bool ShowPhasePoints { get; set; }
+
     public void SetEntries(KsFluidEntry[]? entries)
     {
         _table.RemoveAllChildren();
@@ -65,13 +71,18 @@ public sealed partial class KsFluidListControl : BoxContainer
             return;
 
         var showVapor = Array.Exists(entries, entry => !entry.Linked);
-        _table.Columns = showVapor ? 4 : 3;
+        _table.Columns = 3 + (showVapor ? 1 : 0) + (ShowPhasePoints ? 2 : 0);
 
         AddHeading("ks-fluid-list-column-reagent");
         AddHeading("ks-fluid-list-column-liquid");
         AddHeading("ks-fluid-list-column-solid");
         if (showVapor)
             AddHeading("ks-fluid-list-column-vapor");
+        if (ShowPhasePoints)
+        {
+            AddHeading("ks-fluid-list-column-boils");
+            AddHeading("ks-fluid-list-column-melts");
+        }
 
         // A rule under the headings rather than the gas table's stripe: a grid sizes its rows in whole pixels, which at
         //     a fractional UI scale can leave a stripe less room than its own padding.
@@ -110,6 +121,26 @@ public sealed partial class KsFluidListControl : BoxContainer
             if (showVapor)
                 AddAmount(entry.Linked ? 0f : entry.Vapor);
 
+            if (ShowPhasePoints)
+            {
+                if (entry.Supercritical)
+                {
+                    _table.AddChild(new Label
+                    {
+                        Text = Loc.GetString("ks-fluid-list-supercritical"),
+                        ToolTip = Loc.GetString("ks-fluid-list-supercritical-tooltip"),
+                        MouseFilter = MouseFilterMode.Pass,
+                        Align = Label.AlignMode.Right,
+                    });
+                }
+                else
+                {
+                    AddTemperature(entry.BoilingPoint);
+                }
+
+                AddTemperature(entry.MeltingPoint);
+            }
+
             if (total > 0f && entry.Total > 0f)
             {
                 _bar.AddEntry(entry.Total, reagentPrototype?.SubstanceColor ?? Color.White, tooltip: Loc.GetString("ks-fluid-list-bar-tooltip",
@@ -123,6 +154,15 @@ public sealed partial class KsFluidListControl : BoxContainer
     private void AddHeading(string key)
     {
         _table.AddChild(new Label { Text = Loc.GetString(key), Align = Label.AlignMode.Center });
+    }
+
+    private void AddTemperature(float kelvin)
+    {
+        _table.AddChild(new Label
+        {
+            Text = float.IsFinite(kelvin) ? Loc.GetString("ks-fluid-list-kelvin", ("kelvin", $"{kelvin:0}")) : string.Empty,
+            Align = Label.AlignMode.Right,
+        });
     }
 
     private void AddAmount(float units)

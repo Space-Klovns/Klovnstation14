@@ -13,8 +13,12 @@
   parent: WeatherBase
   id: WeatherRain
   components:
+  # KS14 start: what it leaves on a player's visor
+  - type: KsVisorPrecipitation
+    dropsPerSecond: 6
+    mist: 0.5
+  # KS14 end
   - type: WeatherStatusEffect
-    ksRainDropletMax: 16 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: rain
@@ -126,6 +130,10 @@
   parent: WeatherBase
   id: WeatherSnowfallLight
   components:
+  # KS14 start: what it leaves on a player's visor
+  - type: KsVisorPrecipitation
+    flakesPerSecond: 0.3
+  # KS14 end
   - type: WeatherStatusEffect
     sprite:
       sprite: /Textures/Effects/weather.rsi
@@ -140,6 +148,11 @@
   parent: WeatherBase
   id: WeatherSnowfallMedium
   components:
+  # KS14 start: what it leaves on a player's visor
+  - type: KsVisorPrecipitation
+    flakesPerSecond: 0.8
+    mist: 0.1
+  # KS14 end
   - type: WeatherStatusEffect
     sprite:
       sprite: /Textures/Effects/weather.rsi
@@ -154,6 +167,11 @@
   parent: WeatherBase
   id: WeatherSnowfallHeavy
   components:
+  # KS14 start: what it leaves on a player's visor
+  - type: KsVisorPrecipitation
+    flakesPerSecond: 2
+    mist: 0.2
+  # KS14 end
   - type: WeatherStatusEffect
     sprite:
       sprite: /Textures/_KS14/Effects/weather.rsi # KS14: `/Textures/Effects/weather.rsi` => `/Textures/_KS14/Effects/weather.rsi`
@@ -168,8 +186,13 @@
   parent: WeatherBase
   id: WeatherStorm
   components:
+  # KS14 start: what it leaves on a player's visor
+  - type: KsVisorPrecipitation
+    dropsPerSecond: 16
+    mist: 0.9
+    dropScale: 1.3
+  # KS14 end
   - type: WeatherStatusEffect
-    ksRainDropletMax: 40 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: storm

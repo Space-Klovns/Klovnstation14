@@ -32,6 +32,7 @@ The window size is on `<Window width={} height={}>`: use it for `SetSize`. Base 
 | --- | --- |
 | `width={5}`, `height`, `fontSize` (plain units) | number × 12: 60px |
 | `mt={1}`, `mb`, `m`, `p` (half units) | number × 6: 6px |
+| A time: `value` in deciseconds (`TimeDisplay`, tg's `SECONDS`), `interval`/`time` in ms (`Blink`) | A `TimeSpan`, converted once where the tg number is read. No KsTgui API takes a time as a bare number |
 | `<Stack>` / `<Stack vertical>` | `BoxContainer` with `SeparationOverride="6"` (gap is 0.5em) |
 | `<Stack.Item grow>`, `<Stack fill>` | `HorizontalExpand` / `VerticalExpand` |
 | `<Stack.Divider>`, `<Divider>` | `HSeparator`, or the `LowDivider` class |
@@ -83,8 +84,8 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `LabeledControls`, `.Item` | `KsTguiLabeledControls`, `KsTguiLabeledControlsItem` | `AddItem(label, content)`; `Wrap`. Items spread edge to edge (space-between), 3px in from the sides, every one as tall as the row; the label at the bottom, the content halfway between the top and it |
 | `Dialog`, `Dialog.Button` | `KsTguiDialog`, `KsTguiDialogButton` | Covers its parent (put it in a stacking host like a `KsTguiDimmer`). `Title`, `Body`, `AddButton(text, onPressed)`, `DialogWidth` (370), `DialogHeight`, `OnClose`. Title and buttons are 14px mono (`KsTguiFonts.GetMonoFont(14)`); the body's font is the caller's to set |
 | `RestrictedInput` | `KsTguiRestrictedInput` | `: LineEdit`. Green border, lighter focused, red once `IsInvalid` (out of `MinValue`..`MaxValue`, or off whole steps without `AllowFloats`); nothing is clamped. `-` negates, text right-aligned by a left margin. `OnValueChanged`/`OnEnter`/`OnEscape`/`OnBlurred`/`OnValidationChanged`, `SetValue` (ignored while focused) |
-| `TimeDisplay` | `KsTguiTimeDisplay` | `: Label`. `Value` in deciseconds, `Auto` up/down (1 s ticks, floors at 0, restarts only on a changed `Value`), `ShortFormat`, `Format` |
-| `Blink` | `KsTguiBlink` | One child. `Interval`/`Time` in ms (1000 each); keeps its room while hidden. Starts visible for a whole period, as tg's timer does |
+| `TimeDisplay` | `KsTguiTimeDisplay` | `: Label`. `Value` a `TimeSpan`, `Auto` up/down (1 s ticks, floors at 0, restarts only on a changed `Value`), `ShortFormat`, `Format` (`Func<TimeSpan, string>`). `FormatTime(TimeSpan)` writes plain text the same way |
+| `Blink` | `KsTguiBlink` | One child. `Interval`/`Time` are `TimeSpan`s (1 s each); keeps its room while hidden. Starts visible for a whole period, as tg's timer does |
 | `FitText` | `KsTguiFitText` | `Text`, `TextMaxWidth`, `MaxFontSize`, `AcceptableDifference`; tg's 10-round binary search (`KsTguiFitText.Fit`), `FitFontSize` |
 | `MenuBar`, `.Dropdown`, `.MenuItem`, `.MenuItemToggle`, `.Submenu`, `.Separator` | `KsTguiMenuBar`, `KsTguiMenuBarDropdown` (`AddItem`/`AddToggle`/`AddSubmenu`/`AddSeparator`), `KsTguiMenuBarItem`, `KsTguiMenuBarSubmenu`, `KsTguiMenuBarSeparator` | Menus open in engine popups. The bar holds tg's open-menu and open-on-hover state (click toggles both). Submenus open/close after a 0.25 s hover. Clicking an item leaves the menu open, as tg |
 | `Stack.Divider` | `KsTguiStackDivider` | 2px line, no margin: use in a box with `SeparationOverride = KsTguiSection.Gap` (14px in all, same as `KsTguiDivider`, which brings its own 6px). `Hidden`, `Vertical` |
@@ -119,7 +120,12 @@ dark overlays on near-base content only. A light colour over varied content, or 
 
 ## Porting a tgui interface 1:1
 
-The stock window stays, because it's what Baron shows. The pattern, as in `Content.Client/_KS14/Tgui/Windows/Fax/`:
+**Both themes open the port**: the BUI's choice reads `KsTguiTheme.UsePortedWindows()` (always true), and Baron skins
+the control library through `KsBaronUiSheetlet.Tgui.cs` (tinted button_3 per colour, green selected, flat notice colours, a
+section title line, Baron colours for the self-drawing controls). A port must therefore work under Baron too: no class that only
+the tgui sheet styles may carry meaning on its own, and `KsBaronPortedWindowUIController` adds Baron's taller header to a stated
+height when the window opens (a window that restates its height later adds `KsBaronPortedWindowUIController.ExtraHeight(this)`).
+The stock window stays in the tree, unopened, to keep upstream merges small. The pattern, as in `Content.Client/_KS14/Tgui/Windows/Fax/`:
 
 1. New window in `Content.Client/_KS14/Tgui/Windows/<Feature>/KsTgui<Feature>Window.cs`, `: FancyWindow`, so it gets the
    title bar and drag. Title, size, then contents built from the library.
@@ -128,7 +134,7 @@ The stock window stays, because it's what Baron shows. The pattern, as in `Conte
 3. The stock BUI picks, in a marked block:
    ```csharp
    // KS14 start: the tgui theme gets its own layout
-   _window = KsTguiTheme.ReadEnabled()
+   _window = KsTguiTheme.UsePortedWindows()
        ? this.CreateWindow<KsTguiFaxWindow>()
        : (IKsFaxWindow)this.CreateWindow<FaxWindow>();
    // KS14 end
@@ -143,7 +149,44 @@ Rules for a port:
   server already supports it or it's a small addition.
 - **Don't change networking** unless it's essential.
 - **Strings** go in `Resources/Locale/<culture>/_KS14/tgui/<feature>.ftl`, in en-US and ru-RU. Reuse existing keys first.
-- **Test:** the BUI opens your window with the theme on and the stock one with it off, and each action reaches the server.
+- **Test:** the BUI opens your window under both themes, and each action reaches the server.
+
+### Making a port read as Baron
+
+**tgui comes first.** A port is drawn for tgui, 1:1 with tg. Baron has to map onto it, but never at tgui's cost:
+don't change a tgui colour, size, sheetlet rule or palette token to suit Baron. Under tgui a screenshot must not move by
+a pixel. Baron's look is added on top, by rules that only the Baron sheet has.
+
+**How a port ends up in tgui's colours under Baron.** Anything a style rule sets follows the theme on its own: the
+classes `KsBaronUiSheetlet.Tgui.cs` restyles, and the style properties the self-drawing controls read. A colour set in
+code never goes through a stylesheet, so Baron gets tgui's look there. That covers:
+- `PanelOverride`, `StyleBoxOverride` or `new StyleBoxFlat { BackgroundColor = ... }` filling a surface;
+- a control that draws itself (`Draw`, `KsTguiStyleBox`) from `KsTguiPalettes` constants;
+- `FontColorOverride` with a tgui-only shade, such as `KsTguiPalettes.Label` or `PrimaryBase`.
+
+Seen so far:
+- the late join cards were filled with tg's solid department colours;
+- the lathe's category tabs had tg's blue selection bar.
+
+Text in status colours (`Good`/`Average`/`Bad`), reagent swatches and other colours that carry meaning are fine under
+both themes. Leave them alone.
+
+**How to handle it, in order of preference:**
+1. **Use the library.** `KsTguiButton`, `KsTguiSection`, `KsTguiNoticeBox` and `KsTguiList` rows already have Baron rules.
+   So do the self-drawing controls: progress bar, slider, tabs, knob, gauge, number input and text area.
+2. **A surface a control draws itself:** read the colour from a style property, with tg's value as the fallback in the
+   control. Set the property only in `KsBaronUiSheetlet.Tgui.cs`, so tgui keeps the fallback. Reuse an existing
+   `KsTguiSheetlet.StylePropertyTab*`/`Input*`/`Progress*` before adding one to `KsTguiSheetlet.Themes.cs`. Read it in
+   `StylePropertiesChanged`, as `KsTguiTabItem` and `KsTguiFabricatorTab` do.
+3. **A whole layout tg colours by data** (the late join's department cards): read `KsTguiTheme.ReadEnabled()` once when the
+   window is built, and give Baron its own colours in a separate branch. Keep tg's branch exactly as it was. Under Baron,
+   use the data colour as an accent only (a border, an underline, a bar) on Baron's dark translucent panel
+   (`KsTguiSection.BaronBody`-like), never as a fill.
+
+For new tgui UI, every colour you set in code is a question to ask: what does Baron show here? Then:
+- Add a test that reads the resolved colour under both themes, as `KsBaronTguiControlsTest.FabricatorTabFollowsTheTheme`
+  and `KsTguiLateJoinTest.TheCardsFollowTheTheme` do. It must equal tg's under tgui and differ under Baron.
+- Take a Baron screenshot (game-screenshots skill).
 
 ## Designing an original window
 

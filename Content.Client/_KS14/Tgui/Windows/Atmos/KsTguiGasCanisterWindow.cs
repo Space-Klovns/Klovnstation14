@@ -1,9 +1,7 @@
 using System.Globalization;
 using System.Numerics;
-using Content.Client._KS14.Fluidmos;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.UserInterface.Controls;
-using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -37,7 +35,6 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     private readonly KsTguiLabeledList _shieldList;
     private readonly KsTguiLabeledList _tankList;
     private readonly Label _noTankLabel;
-    private readonly KsFluidListControl _fluidList;
 
     private bool _valveOpen;
     private bool _hasTank;
@@ -92,9 +89,6 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         _shieldLoadItem = _shieldList.AddItem(Loc.GetString("gas-canister-shielding-ui-header"));
         canisterBody.AddChild(_shieldList);
 
-        _fluidList = new KsFluidListControl();
-        canisterBody.AddChild(_fluidList);
-
         canisterSection.AddChild(canisterBody);
         root.AddChild(canisterSection);
 
@@ -132,8 +126,6 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         SetShieldVisual();
         SetTankLabel(null);
     }
-
-    public KsFluidListControl FluidList => _fluidList;
 
     public KsTguiRoundGauge CanisterGauge => _canisterGauge;
 
@@ -260,11 +252,6 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         _shieldLoadItem.Text = Loc.GetString("gas-canister-shielding-ui-wattage", ("wattage", dischargeRate));
         _shieldBar.Value = maxCharge > 0f ? lastCharge / maxCharge : 0f;
         SetShieldVisual();
-    }
-
-    public void SetKsFluid(KsFluidEntry[]? entries)
-    {
-        _fluidList.SetEntries(entries);
     }
 
     private void SetValveVisual()

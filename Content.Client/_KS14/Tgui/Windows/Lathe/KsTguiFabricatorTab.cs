@@ -10,6 +10,9 @@ namespace Content.Client._KS14.Tgui.Windows.Lathe;
 ///         rather than tgui's vertical Tabs: the name and its count in brackets pushed apart, a hover wash, and on the
 ///         selected one the wash, light text and a primary-coloured bar down the right.
 /// </summary>
+/// <remarks>
+///     Its colours are tg's unless a style rule gives others: only Baron's sheetlet does, so tgui keeps tg's look.
+/// </remarks>
 public sealed class KsTguiFabricatorTab : ContainerButton
 {
     /// <summary>
@@ -41,6 +44,10 @@ public sealed class KsTguiFabricatorTab : ContainerButton
     // Made with the fields rather than in the constructor: the base constructor already calls DrawModeChanged.
     private readonly Label _nameLabel = new() { HorizontalExpand = true, ClipText = true };
     private readonly Label _countLabel = new();
+
+    private Color _washColor = Wash;
+    private Color _barColor = KsTguiPalettes.PrimaryBase;
+    private Color _selectedTextColor = SelectedTextColor;
 
     private bool _selected;
     private float _wash;
@@ -88,6 +95,16 @@ public sealed class KsTguiFabricatorTab : ContainerButton
         }
     }
 
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        _washColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyTabHoverWash, out var wash) ? wash : Wash;
+        _barColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyTabIndicator, out var bar) ? bar : KsTguiPalettes.PrimaryBase;
+        _selectedTextColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyTabSelectedText, out var text) ? text : SelectedTextColor;
+        Refresh(instant: true);
+    }
+
     protected override void DrawModeChanged()
     {
         base.DrawModeChanged();
@@ -100,7 +117,7 @@ public sealed class KsTguiFabricatorTab : ContainerButton
 
     private void Refresh(bool instant)
     {
-        var textColor = _selected ? SelectedTextColor : TextColor;
+        var textColor = _selected ? _selectedTextColor : TextColor;
         _nameLabel.FontColorOverride = textColor;
         _countLabel.FontColorOverride = textColor;
 
@@ -129,8 +146,8 @@ public sealed class KsTguiFabricatorTab : ContainerButton
     private void ApplyColors()
     {
         // ease-out, on the way in and out alike.
-        _box.BackgroundColor = Wash.WithAlpha(Wash.A * EaseOut(_wash));
-        _box.BorderColor = KsTguiPalettes.PrimaryBase.WithAlpha(EaseOut(_bar));
+        _box.BackgroundColor = _washColor.WithAlpha(_washColor.A * EaseOut(_wash));
+        _box.BorderColor = _barColor.WithAlpha(_barColor.A * EaseOut(_bar));
     }
 
     private static float MoveTowards(float current, float target, float step)

@@ -112,7 +112,7 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
         var duration = (activeComponent.EndTime - activeComponent.StartTime).TotalSeconds;
 
         // A leg of no length is one that is already over. Guarded rather than assumed, because Depth is only
-        //      clamped to MinimumDepth and a SecondsPerDepth of zero is a legal thing for yaml to say.
+        //      clamped to MinimumDepth and a TimePerDepth of zero is a legal thing for yaml to say.
         if (duration <= 0d)
             return 1f;
 

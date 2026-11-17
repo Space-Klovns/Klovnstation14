@@ -52,6 +52,13 @@ public record struct HitscanRaycastFiredData
     /// </summary>
     public EntityUid? HitEntity;
 
+    // KS14 start: where the ray met it, for impact effects (KsImpactSurfaceSystem)
+    /// <summary>
+    /// Where the ray met <see cref="HitEntity"/>, on its near side; null if it hit nothing.
+    /// </summary>
+    public MapCoordinates? HitCoordinates;
+    // KS14 end
+
     /// <summary>
     /// Gun that fired the raycast.
     /// </summary>
@@ -107,4 +114,11 @@ public record struct HitscanDamageDealtEvent
     /// The amount of damage that the target was dealt.
     /// </summary>
     public DamageSpecifier DamageDealt;
+
+    // KS14 start: what the hit would have dealt before anything resisted it, to tell an armour-soaked hit
+    /// <summary>
+    /// The damage the hitscan carried, before the target's resistances and armour.
+    /// </summary>
+    public DamageSpecifier? RawDamage;
+    // KS14 end
 }

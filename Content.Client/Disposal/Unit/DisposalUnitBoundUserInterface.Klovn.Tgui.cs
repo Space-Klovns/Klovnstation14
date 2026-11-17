@@ -11,11 +11,11 @@ public sealed partial class DisposalUnitBoundUserInterface
     [ViewVariables] private KsTguiDisposalWindow? _tguiWindow;
 
     /// <summary>
-    ///     Opens tgui's layout when the theme is on. False leaves the stock window to the caller.
+    ///     Opens tgui's layout. False leaves the stock window to the caller.
     /// </summary>
     private bool OpenTgui()
     {
-        if (!KsTguiTheme.ReadEnabled())
+        if (!KsTguiTheme.UsePortedWindows())
             return false;
 
         _tguiWindow = this.CreateWindow<KsTguiDisposalWindow>();

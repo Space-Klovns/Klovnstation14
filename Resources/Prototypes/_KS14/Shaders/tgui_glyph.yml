@@ -25,3 +25,6 @@
   path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
   params:
     shape: 3.0
+    # Set, not left to its default: an open dropdown turns its chevron with a unique instance of this shader, and a uniform
+    #     this one never sets would keep whatever angle that left behind, so every closed chevron drew askew.
+    angle: 0.0

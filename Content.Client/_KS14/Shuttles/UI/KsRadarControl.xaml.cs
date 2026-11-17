@@ -197,7 +197,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             return;
         }
 
-        var a = InverseScalePosition(args.RelativePosition);
+        // InverseScalePosition works in pixels (MidPoint and MinimapScale are), so the click is taken in pixels too.
+        var a = InverseScalePosition(args.RelativePixelPosition);
         var relativeWorldPos = new Vector2(a.X, -a.Y);
         relativeWorldPos = _rotation.Value.RotateVec(relativeWorldPos);
         var coords = _coordinates.Value.Offset(relativeWorldPos);
@@ -212,7 +213,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             return EntityCoordinates.Invalid;
         }
 
-        var pos = screen.Position / UIScale - GlobalPosition;
+        // In pixels, as InverseScalePosition takes them.
+        var pos = screen.Position - (Vector2) GlobalPixelPosition;
 
         var a = InverseScalePosition(pos);
         var relativeWorldPos = new Vector2(a.X, -a.Y);
@@ -728,10 +730,10 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         }
 
         var dimmed = KsHud.Dim(baseColor);
-        if (_ksTransitions.BecameGhost(contact.Grid) is not { } ghostAt || reduced || KsHud.GhostFadeSeconds <= 0f)
+        if (_ksTransitions.BecameGhost(contact.Grid) is not { } ghostAt || reduced || KsHud.GhostFade <= TimeSpan.Zero)
             return dimmed;
 
-        var fade = (float) Math.Clamp((curTime - ghostAt).TotalSeconds / KsHud.GhostFadeSeconds, 0d, 1d);
+        var fade = (float) Math.Clamp((curTime - ghostAt) / KsHud.GhostFade, 0d, 1d);
         return Color.InterpolateBetween(baseColor, dimmed, fade);
     }
 
@@ -741,10 +743,10 @@ public sealed partial class KsRadarControl : BaseShuttleControl
     /// </summary>
     private void KsDrawContactPing(DrawingHandleScreen handle, Vector2 pos, NetEntity grid, Color colour, TimeSpan curTime, bool reduced)
     {
-        if (reduced || KsHud.PingSeconds <= 0f || _ksTransitions.BecameLive(grid) is not { } start)
+        if (reduced || KsHud.PingDuration <= TimeSpan.Zero || _ksTransitions.BecameLive(grid) is not { } start)
             return;
 
-        var progress = (float) ((curTime - start).TotalSeconds / KsHud.PingSeconds);
+        var progress = (float) ((curTime - start) / KsHud.PingDuration);
         KsInstrumentDraw.DrawPing(handle, pos, progress, colour, UIScale, KsHud.PingAlpha);
     }
 
@@ -875,8 +877,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         var wedgeAlpha = 1f;
         if (!contact.Live)
         {
-            wedgeAlpha = _ksTransitions.BecameGhost(contact.Grid) is { } ghostAt && !reduced && KsHud.GhostFadeSeconds > 0f
-                ? 1f - (float) Math.Clamp((curTime - ghostAt).TotalSeconds / KsHud.GhostFadeSeconds, 0d, 1d)
+            wedgeAlpha = _ksTransitions.BecameGhost(contact.Grid) is { } ghostAt && !reduced && KsHud.GhostFade > TimeSpan.Zero
+                ? 1f - (float) Math.Clamp((curTime - ghostAt) / KsHud.GhostFade, 0d, 1d)
                 : 0f;
         }
 

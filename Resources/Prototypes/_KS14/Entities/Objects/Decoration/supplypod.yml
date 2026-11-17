@@ -1,0 +1,134 @@
+# Supplypod-related setpieces
+
+- type: entity
+  id: DecorationSupplyPodFake
+  name: cargo pod
+  suffix: Fake, Decorative Setpiece
+  description: Sent from orbit, down to you. It seems to have failed its self-destruct procedure. It's been derelict for too long to be of any use.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    offset: 0,0.5
+    layers:
+    - state: rubble_bg
+      visible: true
+      map: ["rubble_bg"]
+    - state: pod
+      map: ["pod"]
+    - state: pod_door
+      map: ["door"]
+      visible: false
+    - map: ["paint_displacement"]
+      sprite: _KS14/Objects/SupplyPod/displacement.rsi
+      state: open
+      copyToShaderParameters:
+        layerKey: paint
+        parameterTexture: displacementMap
+        parameterUV: displacementUV
+    - state: default
+      shader: DisplacedDraw
+      map: ["paint"]
+    - state: rubble_fg
+      visible: true
+      map: ["rubble_fg"]
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.5
+        density: 1200
+        mask:
+        - MobMask
+        layer:
+        - MachineLayer
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+  - type: EntityStorage
+    openOnMove: false
+  - type: PlaceableSurface
+    isPlaceable: true
+  - type: ContainerContainer
+    containers:
+      entity_storage: !type:Container
+
+- type: entity
+  parent: DecorationSupplyPodFake
+  id: DecorationSupplyPodFakeAdvanced
+  name: advanced cargo pod
+  description: A pod. From somewhere. There probably was something !COOL! inside! It seems to have failed its self-destruct procedure. It's been derelict for too long to be of any use.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    offset: 0,0.5
+    layers:
+    - state: rubble_bg
+      visible: true
+      map: ["rubble_bg"]
+    - state: advpod
+      map: ["pod"]
+    - state: advpod_door
+      map: ["door"]
+      visible: false
+    - map: ["paint_displacement"]
+      sprite: _KS14/Objects/SupplyPod/displacement.rsi
+      state: open
+      copyToShaderParameters:
+        layerKey: paint
+        parameterTexture: displacementMap
+        parameterUV: displacementUV
+    - state: bluespace
+      shader: DisplacedDraw
+      map: ["paint"]
+    - state: rubble_fg
+      visible: true
+      map: ["rubble_fg"]
+
+- type: entity
+  parent: DecorationSupplyPodFake
+  id: DecorationSupplyPodFakeSyndicate
+  name: syndicate cargo pod
+  description: A pod. From somewhere. There's probably something inside! It has the markings of the Syndicate.. It seems to have failed its self-destruct procedure. It's been derelict for too long to be of any use.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    offset: 0,0.5
+    layers:
+    - state: rubble_bg
+      visible: true
+      map: ["rubble_bg"]
+    - state: darkpod
+      map: ["pod"]
+    - state: darkpod_door
+      map: ["door"]
+      visible: false
+    - map: ["paint_displacement"]
+      sprite: _KS14/Objects/SupplyPod/displacement.rsi
+      state: open
+      copyToShaderParameters:
+        layerKey: paint
+        parameterTexture: displacementMap
+        parameterUV: displacementUV
+    - state: syndicate
+      shader: DisplacedDraw
+      map: ["paint"]
+    - state: rubble_fg
+      visible: true
+      map: ["rubble_fg"]

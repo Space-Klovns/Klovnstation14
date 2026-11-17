@@ -1,0 +1,32 @@
+light_mode unshaded;
+
+// A one-colour outline round a whole sprite, whose opacity the caller drives every frame (a distress beacon's pulse).
+// A post-shader: the sprite arrives finished, all layers together, in a target a quarter bigger than itself, so the
+//      outline has room outside it.
+//
+// Its own shader, with `outlineColor` and `outlineWidth` set on every instance: GL uniforms belong to the program,
+//      so an instance that left them alone would draw with the last value written (see sinking_cut.swsl).
+uniform highp vec4 outlineColor;   // rgb the colour, a the opacity
+uniform highp float outlineWidth;  // in screen pixels
+
+void fragment()
+{
+    highp vec4 tex = zTexture(UV);
+    highp vec2 pixelStep = TEXTURE_PIXEL_SIZE * outlineWidth;
+
+    // The most opaque neighbour in a ring round the pixel.
+    highp float neighbour = texture2D(TEXTURE, UV + vec2(pixelStep.x, 0.0)).a;
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(-pixelStep.x, 0.0)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(0.0, pixelStep.y)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(0.0, -pixelStep.y)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(pixelStep.x, pixelStep.y)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(-pixelStep.x, pixelStep.y)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(pixelStep.x, -pixelStep.y)).a);
+    neighbour = max(neighbour, texture2D(TEXTURE, UV + vec2(-pixelStep.x, -pixelStep.y)).a);
+
+    // Only outside the sprite: where it is itself opaque, the sprite shows.
+    highp float a = outlineColor.a * max(neighbour - tex.a, 0.0);
+
+    // Pre-multiplied, like the sprite it is drawn under.
+    COLOR = tex + vec4(outlineColor.rgb * a, a) * (1.0 - tex.a);
+}

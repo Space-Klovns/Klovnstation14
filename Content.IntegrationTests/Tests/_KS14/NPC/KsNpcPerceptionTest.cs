@@ -215,6 +215,44 @@ public sealed class KsNpcPerceptionTest : GameTest
     }
 
     /// <summary>
+    ///     What it made of a hostile is worked out as it loses sight of it, from that last look, and kept: a hostile that picks
+    ///         up a gun once it is gone is still remembered unarmed.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestLosingSightRemembersWhatItSaw(bool armed)
+    {
+        var scene = await SetUpScene(targetTile: (5, 0));
+        var (entManager, perceptionSystem) = (scene.EntManager, scene.PerceptionSystem);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            if (armed)
+                entManager.EnsureComponent<Content.Shared.Weapons.Ranged.Components.GunComponent>(scene.TargetUid);
+
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            perceptionSystem.TryGetContact(scene.ObserverUid, scene.TargetUid, out var contact);
+            Assert.That(contact.Traits, Is.EqualTo(NpcContactTraits.None), "nothing is worked out while it is in sight");
+
+            MoveOutOfSight(entManager, scene);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            perceptionSystem.TryGetContact(scene.ObserverUid, scene.TargetUid, out contact);
+
+            Assert.That(contact.State, Is.EqualTo(NpcContactState.Lost));
+            Assert.That(contact.Traits.HasFlag(NpcContactTraits.Seen), "losing sight should record what it saw");
+            Assert.That(contact.Traits.HasFlag(NpcContactTraits.Armed), Is.EqualTo(armed));
+
+            if (!armed)
+            {
+                entManager.EnsureComponent<Content.Shared.Weapons.Ranged.Components.GunComponent>(scene.TargetUid);
+                perceptionSystem.UpdateNow(scene.ObserverUid);
+                perceptionSystem.TryGetContact(scene.ObserverUid, scene.TargetUid, out contact);
+                Assert.That(contact.Traits.HasFlag(NpcContactTraits.Armed), Is.False, "a gun picked up out of sight is not seen");
+            }
+        });
+    }
+
+    /// <summary>
     ///     A hostile that got into a locker after it was already out of sight is just lost: nobody saw where it went.
     /// </summary>
     [Test]

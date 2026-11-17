@@ -1,0 +1,5 @@
+# A flash of static over a unit going down (progress, seed, flashColor). Per entity: take InstanceUnique().
+- type: shader
+  id: KsDownFlash
+  kind: source
+  path: "/Textures/_KS14/Shaders/down_flash.swsl"

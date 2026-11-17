@@ -227,7 +227,7 @@ public sealed partial class GunSystem : SharedGunSystem
             Target = target,
             Coordinates = GetNetCoordinates(coordinates),
             Gun = GetNetEntity(gun),
-            Continuous = _cfg.GetCVar(CCVars.ControlHoldToAttackRanged)
+            Continuous = false /* KS14: _cfg.GetCVar(CCVars.ControlHoldToAttackRanged) -> false, free autoclicker */
         });
     }
 

@@ -979,8 +979,8 @@ A binary device, under `Server/_KS14/Fluidmos/Devices/` and `Shared/_KS14/Fluidm
   reactions inside pipe networks are done: see [fluidmos.md](fluidmos.md).
 - **Separate project**: finite-volume pipes (a cell per pipe node, with friction-driven flow). Judge it against a
   profile of a real station's pipe count.
-- Supercritical fluids. Linked gases stop condensing above their van der Waals `Tc`; unlinked reagents keep the
-  `Psat` exponent clamp.
+- Supercritical fluids. Done as solvents (#431, see "Supercritical solvents" in [fluidmos.md](fluidmos.md)); pressure
+  stays ideal, so there is still no dense-phase storage.
 - Chemical reactions between solids and liquids at an interface.
 - A `KsFluidMixture` inside a tile's `GasMixture`. By design that never exists: **a tile's fluid is its single puddle**
   (section 4a), which exchanges with the tile's gas through `BoilTileEffect` and the condensation reaction, plus smoke

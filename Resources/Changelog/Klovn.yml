@@ -2642,3 +2642,429 @@ Entries:
         crawl and whisper, but can't stand up or use your hands.
   id: 251
   time: '2026-11-10T17:33:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Collapsed sections, such as a reagent's Sources and Effects in the
+        guidebook, show their chevron again.
+    - type: Fix
+      message: Dropdown arrows in the tgui theme no longer sit crooked.
+  id: 252
+  time: '2026-11-11T06:35:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added fun!
+    - type: Remove
+      message: Removed obsessed power grid check event from normal gameplay.
+    - type: Add
+      message: 'Added the new Skeleton Crew gamemode: High Octane LRP'
+  id: 253
+  time: '2026-11-11T06:59:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Supercritical fluids: hot carbon dioxide compressed past its critical
+        point dissolves reagents in pipes, and drops them back out as liquid
+        when the pressure falls. Use it to extract reagents, or pull oil out of
+        water.
+    - type: Add
+      message: >-
+        The gas analyzer shows where each reagent in a pipe boils at that pipe's
+        pressure and where it melts, and how strong a supercritical solvent the
+        gas is.
+    - type: Add
+      message: >-
+        The Liquids in Pipes guidebook page has a calculator for boiling points
+        and vapor pressures at any pressure, and a section on supercritical
+        fluids.
+    - type: Tweak
+      message: >-
+        Gas canister windows no longer list the fluids inside, since they don't
+        list the gases either.
+  id: 254
+  time: '2026-11-11T07:03:32.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Scenario vendors put your jumpsuit and bag on again, instead of leaving
+        them in your hands.
+    - type: Tweak
+      message: >-
+        Scenario vendors dress now pack loose items into your belt or bag before
+        your hands.
+  id: 255
+  time: '2026-11-11T10:21:46.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: Removed the hold-to-attack control options.
+  id: 256
+  time: '2026-11-11T15:16:48.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Field Commander's weather now changes over the round: snow, blizzards
+        and the odd sleet storm.
+    - type: Tweak
+      message: >-
+        Rain and wet snow now leave water on your screen as if on a visor: drops
+        that smudge the view and run down, leaving wet smears.
+    - type: Tweak
+      message: >-
+        Field Commander's Syndicate attackers are much less tanky and fire
+        slower, but come in much larger and more frequent waves.
+    - type: Add
+      message: The field engineer RCD can put up floodlights, already anchored and lit.
+    - type: Tweak
+      message: >-
+        The field engineer RCD can't build in Field Commander's spawn areas; its
+        placement preview shows red there.
+    - type: Fix
+      message: NPCs no longer get stuck walking into trees.
+    - type: Add
+      message: >-
+        Field Commander has a fog of war around the outpost. Wander out and it
+        will kill you; the Syndicate comes in through it.
+    - type: Add
+      message: >-
+        The requisitions terminal sells a heavy machine-gun turret, reinforced
+        turrets, and flares that call down a resupply pod or a squad of
+        Nanotrasen paramilitaries.
+    - type: Tweak
+      message: >-
+        The Syndicate field commander now only taunts. Nanotrasen Field
+        Operations tells you what's actually coming.
+    - type: Tweak
+      message: >-
+        The Field Commander AT-4 fires anti-personnel rockets that leave walls
+        standing. The field engineer RCD recharges much faster.
+    - type: Remove
+      message: The airstrike flare is no longer sold at the requisitions terminal.
+    - type: Add
+      message: >-
+        Field Commander defenders earn requisition points for kills (and lose
+        them for teamkills), kept across deaths, and spend them at a
+        requisitions terminal on fire-support flares, turrets, explosives and a
+        modified XL8.
+    - type: Add
+      message: Field Commander opens with a briefing from Nanotrasen Field Operations.
+    - type: Tweak
+      message: Field Commander defenders' bullets pass through each other.
+    - type: Add
+      message: >-
+        Field Commander is now its own game mode, run by an AI Syndicate
+        commander. It escalates through five phases over about 40 minutes,
+        scales its waves to how many of you are alive, and ends by landing an
+        uplink you must hack or destroy before it calls down an orbital
+        bombardment.
+    - type: Add
+      message: >-
+        Nanotrasen sends reinforcement pods to Field Commander defenders as the
+        assault escalates.
+    - type: Add
+      message: >-
+        Field engineer RCD: builds instantly with self-refilling matter, can
+        raise reinforced walls and barricades, and instantly takes apart what
+        you built with it.
+    - type: Fix
+      message: >-
+        Syndicate operatives no longer see out of, and shoot from inside, supply
+        pods that are still falling.
+    - type: Fix
+      message: >-
+        Losing a single objective in Field Commander no longer ends the round in
+        Nanotrasen's favour.
+    - type: Tweak
+      message: You can no longer start capturing your own faction's scenario objective.
+  id: 257
+  time: '2026-11-12T16:30:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Particle effects now fall and drift relative to the station grid rather
+        than the map.
+  id: 258
+  time: '2026-11-13T07:49:39.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Pipes, pumps, vents and scrubbers now work on maps with a fixed outdoor
+        atmosphere, such as Field Commander's.
+  id: 259
+  time: '2026-11-13T12:18:30.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Field Commander attackers now lose damage with range: full damage up to
+        8 tiles, half at 20 tiles.
+  id: 260
+  time: '2026-11-13T21:26:19.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Add
+      message: Shields can be used to hit and, with right click, to shove and stagger.
+    - type: Add
+      message: Hitting a shield with a melee weapon bangs on it.
+  id: 261
+  time: '2026-11-13T21:40:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Field Commander attackers see less far until they're in a fight, and
+        turn on whoever shoots them.
+    - type: Add
+      message: >-
+        Field Commander kills are split between everyone who did damage, as
+        kills and assists. Turrets earn points for whoever set them up, and
+        explosives for whoever pressed the signaller.
+    - type: Tweak
+      message: >-
+        Field Commander waves come further apart but hit harder, and a counter
+        shows the wave and the time until the next one. Requisition gains are
+        50% higher.
+    - type: Tweak
+      message: >-
+        The field engineer RCD builds windows, barricades, floors, lights and
+        cables for free, but walls and airlocks cost more, and it recharges
+        slower. It no longer builds reinforced walls.
+    - type: Add
+      message: >-
+        Field Commander's base has field techfabs that print FPV drones,
+        signallers and explosives, brute packs, ointment and gauze, sandbags and
+        barbed wire. Its material silo is indestructible and full of plastic.
+    - type: Add
+      message: Sandbag walls you can shoot over, and barbed wire that slows and cuts.
+    - type: Tweak
+      message: The AT-4 fits in suit storage.
+    - type: Add
+      message: >-
+        Defenders wear a distress beacon that strobes and beeps when they're
+        down.
+    - type: Tweak
+      message: >-
+        In Field Commander, casings, dropped guns and magazines, and enemy
+        bodies dissolve away after a while.
+    - type: Tweak
+      message: >-
+        Field Commander kills go to whoever did the most damage; everyone else
+        who helped gets an assist, turrets included. Teamkill penalties are
+        shared the same way.
+    - type: Add
+      message: >-
+        After the uplink falls, players vote on holding the line in an endless
+        mode that gets harder with every wave. The round end summary says which
+        wave the defence reached.
+    - type: Tweak
+      message: >-
+        Distress beacons beep faster, glow red when critical and amber when
+        dead, and outline their wearer. Defenders flash red when they go down
+        and black when they die.
+    - type: Tweak
+      message: >-
+        Field Commander's vendor gives engineers the field RCD, stocks
+        Tricordrazine hyposprays and a brute autoinjector, and hands out base
+        gear with your loadout.
+    - type: Tweak
+      message: >-
+        The HMG turret sticks to its target until it loses sight of it and fires
+        past friends in the way.
+    - type: Fix
+      message: >-
+        NPCs find their way across long, open, cluttered ground much more
+        reliably.
+  id: 262
+  time: '2026-11-14T16:23:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Bloody hits now spray a puff of blood mist and a splatter out of the
+        wound.
+    - type: Add
+      message: >-
+        Gibbing and losing a limb now burst out blood and gore; a lost limb's
+        gore flies after it.
+  id: 263
+  time: '2026-11-14T19:56:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Bullets and lasers kick up smoke and debris based on what they hit, and
+        sometimes ricochet, ported from TGMC.
+    - type: Add
+      message: >-
+        Guns puff smoke when fired, and heavy machine-gun turrets smoke after
+        long bursts.
+    - type: Add
+      message: >-
+        New bullet hit, ricochet, armor, miss, gib and bone-break sounds from
+        TGMC.
+    - type: Tweak
+      message: >-
+        Gibs stick to walls; sparks, debris, blood mist and smoke bounce off
+        them instead of passing through.
+    - type: Fix
+      message: Bookshelves now stop bullets and lasers.
+  id: 264
+  time: '2026-11-15T17:08:27.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Add
+      message: >-
+        Added the S.P.A.M., a salvager's tablet that gives out mining and
+        hunting tasks, tracks rank and mining points, and orders gear by drop
+        pod. Clip it onto an ore bag to count ore.
+    - type: Add
+      message: Smelting ore in the ore processor now pays mining points.
+    - type: Add
+      message: Lathes can ask salvagers for missing materials, right-click a recipe.
+    - type: Add
+      message: >-
+        Added the survival emergency medipen and the luxury medipen. They work
+        fully only in low pressure.
+    - type: Add
+      message: >-
+        Added penthrite, which keeps you up past critical. Don't mix it with
+        epinephrine.
+    - type: Add
+      message: Salvage specialists now spawn with a survival emergency medipen.
+    - type: Tweak
+      message: >-
+        Bodies can now process up to 6 chemicals in the bloodstream at once, up
+        from 2.
+    - type: Remove
+      message: Removed the salvage job board. The S.P.A.M. replaces it.
+    - type: Remove
+      message: Coal is removed.
+  id: 265
+  time: '2026-11-15T22:12:17.0000000+00:00'
+- author: JoeHammad
+  changes:
+    - type: Tweak
+      message: Tourniquets are now tiny size and slightly heal brute damage
+    - type: Tweak
+      message: Tourniquets fully stop bleeding again
+  id: 266
+  time: '2026-11-16T10:02:38.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        When a S.P.A.M. task is finished, the notice goes to whoever is carrying
+        the ID card.
+  id: 267
+  time: '2026-11-16T11:10:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        NPCs without gravity no longer go round and round a spot on their way
+        somewhere after being bumped.
+  id: 268
+  time: '2026-11-16T12:38:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Bullet impacts no longer occasionally crash the client.
+    - type: Fix
+      message: >-
+        A hit that armour mostly stopped no longer swallows its own blood spray,
+        and one armour stopped entirely no longer bleeds.
+    - type: Fix
+      message: Lasers now puff smoke on things they can't damage, the same as bullets.
+  id: 269
+  time: '2026-11-16T12:44:57.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        The tgui chat no longer drops the first letter you type, and your typing
+        bubble goes away when you stop.
+    - type: Tweak
+      message: In the separated layout, the say box opens under your mouse pointer.
+    - type: Fix
+      message: Text in the lobby chat can be selected.
+    - type: Fix
+      message: >-
+        You can type a temperature into a thermomachine without it being wiped
+        every second.
+    - type: Fix
+      message: tgui dropdowns stay attached to their button when you scroll.
+    - type: Tweak
+      message: Syndicate and wizard communications consoles use their own tgui themes.
+    - type: Tweak
+      message: Baron UI windows now have every feature the tgui ones have.
+    - type: Fix
+      message: The temperature gate is in the RPD's pumps and valves section.
+    - type: Fix
+      message: The "access denied" popup on lockers shows once, in your language.
+    - type: Tweak
+      message: >-
+        The guidebook's boiling point calculator shows each input's result under
+        it.
+    - type: Tweak
+      message: The lobby background is no longer blurred.
+    - type: Fix
+      message: >-
+        Long lists, like the admin player list, can be scrolled to their last
+        entry.
+    - type: Fix
+      message: Several tgui controls behave correctly at UI scales other than 100%.
+  id: 270
+  time: '2026-11-16T14:01:29.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        When a S.P.A.M. task is finished, the notice now goes to whoever is
+        holding a logged-in S.P.A.M., rather than whoever carries the ID card.
+    - type: Fix
+      message: Deleting an ID card now logs out the S.P.A.M. tablets logged in with it.
+  id: 271
+  time: '2026-11-16T18:00:24.0000000+00:00'
+- author: cocothegogo
+  changes:
+    - type: Add
+      message: >-
+        Added the rideable lawnmower, purchaseable at cargo. Can be emagged to
+        turn into Blood Red Lawnmover
+  id: 272
+  time: '2026-11-17T10:16:17.0000000+00:00'
+- author: cocothegogo
+  changes:
+    - type: Add
+      message: >-
+        Added space alligators that can knock you down, latch onto a leg, and
+        rip it off with a death roll.
+  id: 273
+  time: '2026-11-17T10:16:40.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Gators should always be above target when eating a limb
+    - type: Tweak
+      message: Gator hp increase 80 -> 130
+  id: 274
+  time: '2026-11-17T11:15:21.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: >-
+        Added the giantslayer spear, crafted from plasteel and kitchen knives
+        and forged in lava. It deals heavy extra damage to mining fauna.
+    - type: Add
+      message: >-
+        Loose items now burn to ash in lava and liquid plasma. Water and fire
+        extinguishers put them out.
+  id: 275
+  time: '2026-11-17T20:04:05.0000000+00:00'

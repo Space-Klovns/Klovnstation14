@@ -311,6 +311,19 @@ public class ListContainer : Control
             }
 
             _vScrollBar.SetPositionLast();
+
+            // KS14 start: the probe row PopulateList measures may have had no style yet (a list filled while its window is
+            //     closed): rows styled as they really are, at the real UI scale, correct it, or the scroll range is short and
+            //     the last rows can't be reached (#454).
+            foreach (var button in _buttons.Values)
+            {
+                if (button.DesiredSize.Y > 0 && MathF.Abs(button.DesiredSize.Y - _itemHeight) > 0.01f)
+                {
+                    InvalidateMeasure();
+                    break;
+                }
+            }
+            // KS14 end
         }
         #endregion
 
@@ -356,7 +369,7 @@ public class ListContainer : Control
             childSize = Vector2.Max(childSize, child.DesiredSize);
         }
 
-        if (_itemHeight == 0 && childSize.Y != 0)
+        if (/* KS14: the rows built, not only a first guess: _itemHeight == 0 && */ childSize.Y != 0)
             _itemHeight = childSize.Y;
 
         _totalHeight = _itemHeight * _data.Count + ActualSeparation * (_data.Count - 1);

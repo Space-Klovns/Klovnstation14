@@ -135,7 +135,7 @@ public sealed partial class KsElintSystem : KsEmissionListenerSystem
         if (comp.FocusTarget is not { } focus)
             return;
 
-        var step = (float) (_sensors.UpdateInterval.TotalSeconds / Math.Max(1f, comp.AnalysisTime));
+        var step = (float) (_sensors.UpdateInterval.TotalSeconds / Math.Max(1d, comp.AnalysisTime.TotalSeconds));
         var advanced = Math.Min(1f, comp.FocusProgress + step);
 
         // Progress lives on this component, not in any contact pool, so the

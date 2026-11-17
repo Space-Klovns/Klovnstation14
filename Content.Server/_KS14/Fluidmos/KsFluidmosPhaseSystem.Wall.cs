@@ -73,6 +73,11 @@ public sealed partial class KsFluidmosPhaseSystem
         var vaporTotal = packet.TotalMoles + fluid.VaporMoles;
         var heatOut = 0f;
 
+        // How dense a supercritical solvent is at line pressure.
+        var solventDensity = vaporTotal > 0f
+            ? _gasThermoSystem.ReducedSolventDensity(packet, temperature, linePressure / (vaporTotal * Atmospherics.R * temperature))
+            : 0f;
+
         for (var i = 0; i < _entries.Count; i++)
         {
             var (key, properties) = _entries[i];
@@ -85,8 +90,11 @@ public sealed partial class KsFluidmosPhaseSystem
             if (amount.Liquid <= 0f && vaporMoles <= 0f)
                 continue;
 
-            var moleFraction = amount.Liquid > 0f ? activities[i] : 1f;
-            var saturationPressure = moleFraction * KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature);
+            var activity = amount.Liquid > 0f ? activities[i] : 1f;
+            // Raised by a supercritical solvent, which holds what it dissolved past a cold wall too.
+            if (solventDensity > 1f)
+                activity *= MathF.Exp(SupercriticalLogEnhancement(properties, solventDensity, temperature));
+            var saturationPressure = activity * KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature);
 
             // At constant pressure: the vapor whose share of the packet's vapor gives the saturation pressure. Past the
             //      line pressure, it all boils.
@@ -100,7 +108,7 @@ public sealed partial class KsFluidmosPhaseSystem
 
             // The wall sits at the plateau the phase change holds it at: the dew point of the packet's vapor.
             var partialPressure = vaporTotal > 0f ? linePressure * vaporMoles / vaporTotal : 0f;
-            var plateau = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, partialPressure / moleFraction);
+            var plateau = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, partialPressure / activity);
             var power = wall.Power(plateau);
 
             // Condensing needs the wall to shed heat, and boiling needs it to take some in.

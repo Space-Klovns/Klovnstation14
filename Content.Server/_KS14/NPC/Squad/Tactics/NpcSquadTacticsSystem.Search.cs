@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server._KS14.NPC.Perception;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Disposal.Components;
 using Content.Shared.Doors.Components;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Map;
@@ -33,7 +34,8 @@ public sealed partial class NpcSquadTacticsSystem
     private const float SweepSpacing = 4f;
 
     private readonly HashSet<Entity<EntityStorageComponent>> _nearbyStorages = new();
-    private readonly List<(EntityUid StorageUid, float DistanceSquared)> _lockers = new();
+    private readonly HashSet<Entity<DisposalUnitComponent>> _nearbyDisposals = new();
+    private readonly List<(EntityUid StorageUid, NpcSearchPointKind Kind, float DistanceSquared)> _lockers = new();
     private readonly List<Vector2i> _newlySeenTiles = new();
 
     /// <summary>
@@ -68,7 +70,7 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         // Or it is they who are walled in, and every spot to search is somewhere they would only walk into a wall trying to get to.
-        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates, besideCounts: IsBelievedInAnyLocker(hunt)))
         {
             SealIn(hunt, walkerUid);
             ExhaustShutOut(leaderUid, hunt, settings, now);
@@ -256,13 +258,30 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             var storageMapPosition = _transformSystem.GetMapCoordinates(storage.Owner).Position;
-            _lockers.Add((storage.Owner, (storageMapPosition - lastKnownMapCoordinates.Position).LengthSquared()));
+            _lockers.Add((storage.Owner, NpcSearchPointKind.Locker, (storageMapPosition - lastKnownMapCoordinates.Position).LengthSquared()));
+        }
+
+        // Disposal units anyone could tell something might be in: lit up full, or with no power to light up at all.
+        if (settings.SearchOccupiedDisposals || settings.SearchUnpoweredDisposals)
+        {
+            _nearbyDisposals.Clear();
+            _entityLookupSystem.GetEntitiesInRange(searchCenter, searchRadius, _nearbyDisposals, LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained);
+
+            foreach (var disposal in _nearbyDisposals)
+            {
+                if (!IsDisposalWorthSearching(disposal, settings) ||
+                    grid is { } roomGrid && hunt.RoomTiles.Count > 0 && !IsByRoom(hunt, roomGrid, disposal.Owner))
+                    continue;
+
+                var disposalMapPosition = _transformSystem.GetMapCoordinates(disposal.Owner).Position;
+                _lockers.Add((disposal.Owner, NpcSearchPointKind.Disposal, (disposalMapPosition - lastKnownMapCoordinates.Position).LengthSquared()));
+            }
         }
 
         _lockers.Sort((a, b) => a.DistanceSquared.CompareTo(b.DistanceSquared));
-        foreach (var (storageUid, _) in _lockers)
+        foreach (var (storageUid, kind, _) in _lockers)
         {
-            AddLockerPoint(hunt, storageUid);
+            AddLockerPoint(hunt, storageUid, kind);
         }
 
         AddSpotPoint(hunt, NpcSearchPointKind.Predicted, hunt.PredictedCoordinates);
@@ -272,7 +291,35 @@ public sealed partial class NpcSquadTacticsSystem
             hunt.SearchPoints.RemoveRange(settings.MaxSearchPoints, hunt.SearchPoints.Count - settings.MaxSearchPoints);
     }
 
-    private void AddLockerPoint(NpcHunt hunt, EntityUid storageUid)
+    /// <summary>
+    ///     Whether a disposal unit is one to empty, by what anyone could see of it: with power, its light shows whether
+    ///         something is in it; with none, it shows nothing.
+    /// </summary>
+    private bool IsDisposalWorthSearching(Entity<DisposalUnitComponent> disposal, NpcSquadTacticsSettings settings)
+    {
+        if (!_powerReceiverSystem.IsPowered(disposal.Owner))
+            return settings.SearchUnpoweredDisposals;
+
+        return settings.SearchOccupiedDisposals && disposal.Comp.Container.ContainedEntities.Count > 0;
+    }
+
+    /// <summary>
+    ///     <paramref name="memberUid"/> has emptied the disposal unit <paramref name="disposalUid"/>: searched, for its
+    ///         squad's hunt.
+    /// </summary>
+    public void NoteEmptied(EntityUid memberUid, EntityUid disposalUid)
+    {
+        if (GetHunt(_npcSquadSystem.GetSquadOrSelf(memberUid)) is not { } hunt)
+            return;
+
+        foreach (var point in hunt.SearchPoints)
+        {
+            if (point.StorageUid == disposalUid)
+                point.Emptied = true;
+        }
+    }
+
+    private void AddLockerPoint(NpcHunt hunt, EntityUid storageUid, NpcSearchPointKind kind = NpcSearchPointKind.Locker)
     {
         foreach (var point in hunt.SearchPoints)
         {
@@ -282,7 +329,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         hunt.SearchPoints.Add(new NpcHuntSearchPoint
         {
-            Kind = NpcSearchPointKind.Locker,
+            Kind = kind,
             Coordinates = new EntityCoordinates(storageUid, Vector2.Zero),
             StorageUid = storageUid,
         });
@@ -408,6 +455,14 @@ public sealed partial class NpcSquadTacticsSystem
         foreach (var memberUid in _members)
         {
             OrderSearcher(memberUid, issuerUid, hunt, settings, now);
+
+            // A charge going on a locker (NpcSquadTacticsSystem.Lockers.cs): the search is on hold, and the blast gives everyone
+            //      their orders from now, those already told to search included.
+            if (hunt.Phase == NpcHuntPhase.Blast)
+            {
+                UpdateBlast(issuerUid, leaderUid, hunt, settings, now);
+                return false;
+            }
         }
 
         return false;
@@ -457,6 +512,10 @@ public sealed partial class NpcSquadTacticsSystem
     {
         if (TryGetAssignedPoint(hunt, memberUid, out var point))
         {
+            // A locker it is believed to be in that nobody can open is shot open instead: see NpcSquadTacticsSystem.Lockers.cs.
+            if (TryOrderLockerBreak(memberUid, issuerUid, hunt, point, settings, now))
+                return;
+
             SetOrder(memberUid,
                 issuerUid,
                 NpcOrderKind.Search,
@@ -523,6 +582,10 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool IsSearched(NpcHuntSearchPoint point, NpcSquadTacticsSettings settings)
     {
+        // No seeing into one: searched once a member has emptied it, or it is gone.
+        if (point.Kind == NpcSearchPointKind.Disposal)
+            return point.Emptied || point.StorageUid is not { } disposalUid || TerminatingOrDeleted(disposalUid);
+
         if (point.StorageUid is { } storageUid)
         {
             if (TerminatingOrDeleted(storageUid) || !_entityStorageQuery.TryComp(storageUid, out var storageComponent))

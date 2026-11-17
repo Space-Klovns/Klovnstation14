@@ -46,6 +46,11 @@ public sealed partial class NpcSquadTacticsSystem
     private const int MaxWallCandidates = 6;
 
     /// <summary>
+    ///     How many tiles either side of what stands between them and a hostile they can see to look for a wall to blow.
+    /// </summary>
+    private const int BarrierWallReach = 2;
+
+    /// <summary>
     ///     How far from anything open to space a charge may go off. What is next to it goes as well.
     /// </summary>
     private const int HullClearance = 2;
@@ -95,6 +100,12 @@ public sealed partial class NpcSquadTacticsSystem
     private readonly List<(int Steps, Vector2i Room, Vector2i Wall, Vector2i Outside)> _wallCandidates = new();
 
     /// <summary>
+    ///     Within one <see cref="FindWallCharge"/>: for a candidate of <see cref="_wallCandidates"/> that is not a wall, what
+    ///         would go, by its tile.
+    /// </summary>
+    private readonly Dictionary<Vector2i, EntityUid> _barrierTargets = new();
+
+    /// <summary>
     ///     A hunt that cannot get in makes a way in, if it is one to (<see cref="NpcSquadTacticsSettings.HuntCharges"/>) and has
     ///         what it takes. A door before a wall. It tries this the once.
     /// </summary>
@@ -142,6 +153,16 @@ public sealed partial class NpcSquadTacticsSystem
         using (GivePlanOrders())
         {
             blown = RunCharge(issuerUid, plan, hunt.BlastAction, settings, now);
+        }
+
+        // On a locker: whether or not it went, on with the search, the same update (see NpcSquadTacticsSystem.Lockers.cs).
+        if (hunt.BlastLockerUid != null)
+        {
+            if (!blown && plan.Charge != null)
+                return false;
+
+            EndLockerBlast(hunt, now);
+            return true;
         }
 
         if (!blown)
@@ -234,7 +255,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (!foundRoom && TryPrepareSealedRoom(hunt, plan.TargetUid, Transform(plan.TargetUid).Coordinates))
             return;
 
-        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates, besideCounts: IsBelievedInAnyLocker(hunt)))
             SealIn(hunt, walkerUid);
     }
 
@@ -276,9 +297,12 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     Whether the squad is cut off from <paramref name="coordinates"/>, the other way round from
     ///         <see cref="TryPrepareSealedRoom"/>: walking out from <paramref name="walkerUid"/>, through every door, the floor runs
-    ///         out before it gets there, and every member is on that floor. Otherwise one of them could still go.
+    ///         out before it gets there, or the floor beside it, and every member is on that floor. Otherwise one of them
+    ///         could still go.
     /// </summary>
-    private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates)
+    /// <param name="besideCounts">Whether getting beside it will do: for a hostile believed in a locker, whose tile is the
+    ///     locker's, which nobody walks onto. Not otherwise: a tile beside it may be the far side of a thin window.</param>
+    private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates, bool besideCounts = false)
     {
         var walkerTransform = Transform(walkerUid);
 
@@ -290,8 +314,19 @@ public sealed partial class NpcSquadTacticsSystem
         _floodSteps.Clear();
         _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
-        if (_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, coordinates)))
+        // There, or right beside it: a hostile in a locker is on a tile nobody walks onto, the locker's.
+        var targetTile = _mapSystem.TileIndicesFor(grid, coordinates);
+        if (_floodSteps.ContainsKey(targetTile))
             return false;
+
+        if (besideCounts)
+        {
+            foreach (var offset in ChargeSiteOffsets)
+            {
+                if (_floodSteps.ContainsKey(targetTile + offset))
+                    return false;
+            }
+        }
 
         foreach (var steps in _floodSteps.Values)
         {
@@ -438,15 +473,12 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     A wall of the hostile's room with floor the other side that somebody with a charge can walk to, the nearest there is.
-    ///         Shut in, a wall of their own, with floor the other side leading to it.
+    ///         Shut in, a wall of their own, with floor the other side leading to it. With no room to go by, or none of its
+    ///         walls any good, what stands between them and a hostile they can see (<see cref="FindBarrierCandidates"/>).
     /// </summary>
     private NpcChargePick? FindWallCharge(NpcSquadPlan plan, NpcSquadTacticsSettings settings, int maxWalk)
     {
         var hunt = plan.Hunt!;
-
-        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
-            return null;
-
         var carrierUid = EntityUid.Invalid;
 
         foreach (var memberUid in _members)
@@ -458,13 +490,51 @@ public sealed partial class NpcSquadTacticsSystem
             break;
         }
 
-        if (!carrierUid.IsValid() || Transform(carrierUid).GridUid != grid.Owner)
+        // A hostile somewhere too big to be a room leaves the hunt with no grid of its own: the one they are all on does.
+        if (!carrierUid.IsValid() ||
+            !_npcGridSystem.TryGetGrid(hunt.GridUid ?? Transform(carrierUid).GridUid, out var grid) ||
+            Transform(carrierUid).GridUid != grid.Owner)
             return null;
 
         var carrierTile = _mapSystem.TileIndicesFor(grid, Transform(carrierUid).Coordinates);
 
-        FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
+        _barrierTargets.Clear();
 
+        if (hunt.GridUid != null)
+        {
+            FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
+
+            if (TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var roomPick))
+                return roomPick;
+        }
+
+        if (!settings.PlanChargeBarrier || hunt.SealedIn)
+            return null;
+
+        FindBarrierCandidates(plan, carrierUid, grid, carrierTile, maxWalk);
+
+        if (!TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var barrierPick))
+            return null;
+
+        // Through the barrier is the way in from now on, and the hunt goes by this grid.
+        hunt.GridUid ??= grid.Owner;
+        return barrierPick;
+    }
+
+    /// <summary>
+    ///     The nearest of <see cref="_wallCandidates"/> that is safe to blow, that the carrier can walk to, and that somebody
+    ///         has a charge for. What goes is the wall on the tile, or for one in <see cref="_barrierTargets"/>, what is there.
+    /// </summary>
+    private bool TryPickWallCandidate(NpcSquadPlan plan,
+        Entity<MapGridComponent> grid,
+        EntityUid carrierUid,
+        Vector2i carrierTile,
+        int maxWalk,
+        out NpcChargePick pick)
+    {
+        pick = default;
+
+        var hunt = plan.Hunt!;
         var avoidTiles = GetAvoidTiles(hunt);
 
         var waypoints = new List<Vector2i>();
@@ -472,7 +542,9 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var (_, roomTile, wallTile, outsideTile) in _wallCandidates)
         {
-            if (GetWallOn(grid, wallTile) is not { } wallUid || IsUnsafeToBlow(hunt, grid, wallTile, outsideTile, roomTile))
+            var targetUid = _barrierTargets.TryGetValue(wallTile, out var barrierUid) ? barrierUid : GetWallOn(grid, wallTile);
+
+            if (targetUid is not { } wallUid || IsUnsafeToBlow(hunt, grid, wallTile, outsideTile, roomTile))
                 continue;
 
             if (++tried > MaxWallCandidates)
@@ -491,11 +563,100 @@ public sealed partial class NpcSquadTacticsSystem
                 facing,
                 IsDoor: false);
 
-            if (TryPickPlanter(plan, grid, site, length, out var pick))
-                return pick;
+            if (TryPickPlanter(plan, grid, site, length, out pick))
+                return true;
         }
 
-        return null;
+        return false;
+    }
+
+    /// <summary>
+    ///     What stands between a member and the hostile it can see, for a charge: what the first shot at it would hit, should a
+    ///         charge go on that, and the walls either side of it along the barrier, which is where a breaching charge goes
+    ///         that will not go on glass. Each with floor this side the carrier can walk to, and floor the other side that
+    ///         leads to the hostile. Fills <see cref="_wallCandidates"/> as <see cref="FindWallCandidates"/> does, the far side
+    ///         standing for the room, nearest the carrier first.
+    /// </summary>
+    /// <remarks>
+    ///     For a hostile behind glass somewhere too big or too open to be taken for a room: the room's walls are all there is
+    ///         otherwise, and with no room there are none.
+    /// </remarks>
+    private void FindBarrierCandidates(NpcSquadPlan plan, EntityUid carrierUid, Entity<MapGridComponent> grid, Vector2i carrierTile, int maxWalk)
+    {
+        _wallCandidates.Clear();
+
+        if (TerminatingOrDeleted(plan.TargetUid) || Transform(plan.TargetUid).GridUid != grid.Owner)
+            return;
+
+        var targetMapCoordinates = _transformSystem.GetMapCoordinates(plan.TargetUid);
+        var targetTile = _mapSystem.TileIndicesFor(grid, Transform(plan.TargetUid).Coordinates);
+
+        _floodSteps.Clear();
+        _npcSquadCoverSystem.FloodTiles(carrierUid, grid, carrierTile, maxWalk, _floodSteps, stopAtDoors: false);
+
+        _farFloodSteps.Clear();
+        _npcSquadCoverSystem.FloodTiles(carrierUid, grid, targetTile, maxWalk, _farFloodSteps, stopAtDoors: false);
+
+        foreach (var memberUid in _members)
+        {
+            if (!_npcPerceptionSystem.TryGetContact(memberUid, plan.TargetUid, out var contact) ||
+                contact.State != NpcContactState.Visible ||
+                Transform(memberUid).GridUid != grid.Owner)
+                continue;
+
+            if (!_npcLineOfFireSystem.TryGetFirstHit(_transformSystem.GetMapCoordinates(memberUid), targetMapCoordinates, _npcLineOfFireSystem.GetShotMask(memberUid), out var hit) ||
+                hit.HitEntity == plan.TargetUid)
+                continue;
+
+            var hitTransform = Transform(hit.HitEntity);
+            if (!hitTransform.Anchored || hitTransform.GridUid != grid.Owner)
+                continue;
+
+            var barrierTile = _mapSystem.TileIndicesFor(grid, hitTransform.Coordinates);
+
+            // Across the barrier, the way the hostile is from the member, and along it either side.
+            var delta = targetTile - _mapSystem.TileIndicesFor(grid, Transform(memberUid).Coordinates);
+            var across = Math.Abs(delta.X) >= Math.Abs(delta.Y) ? new Vector2i(Math.Sign(delta.X), 0) : new Vector2i(0, Math.Sign(delta.Y));
+            var along = new Vector2i(Math.Abs(across.Y), Math.Abs(across.X));
+
+            if (across == Vector2i.Zero)
+                continue;
+
+            // The barrier itself, then a tile either side, then two.
+            for (var i = 0; i <= BarrierWallReach * 2; i++)
+            {
+                var offset = (i + 1) / 2 * (i % 2 == 0 ? -1 : 1);
+                var wallTile = barrierTile + along * offset;
+                var nearTile = wallTile - across;
+                var farTile = wallTile + across;
+
+                if (_floodSteps.ContainsKey(wallTile) ||
+                    _floodSteps.ContainsKey(farTile) ||
+                    !_floodSteps.TryGetValue(nearTile, out var steps) ||
+                    !_farFloodSteps.ContainsKey(farTile) ||
+                    IsWallCandidate(wallTile))
+                    continue;
+
+                // On the barrier itself, what the shot hit, should a charge go on it. Anywhere else, a wall or nothing.
+                if (offset == 0 && !_doorQuery.HasComp(hit.HitEntity) && TryGetBreakThreshold(hit.HitEntity, out _))
+                    _barrierTargets[wallTile] = hit.HitEntity;
+
+                _wallCandidates.Add((steps, farTile, wallTile, nearTile));
+            }
+        }
+
+        _wallCandidates.Sort((a, b) => a.Steps.CompareTo(b.Steps));
+    }
+
+    private bool IsWallCandidate(Vector2i wallTile)
+    {
+        foreach (var candidate in _wallCandidates)
+        {
+            if (candidate.Wall == wallTile)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -656,7 +817,9 @@ public sealed partial class NpcSquadTacticsSystem
     ///     Finds who should put a charge on <paramref name="site"/>. Wired over timed, whoever carries it. A wired charge needs
     ///         somewhere to stand off from within reach of its wire, or it is no good here.
     /// </summary>
-    private bool TryPickPlanter(NpcSquadPlan plan, Entity<MapGridComponent> grid, NpcChargeSite site, int routeLength, out NpcChargePick pick)
+    /// <param name="outsideRoom">Whether to set a wired one off from outside the hostile's room, as for a way into it. Not for
+    ///     a locker in the room.</param>
+    private bool TryPickPlanter(NpcSquadPlan plan, Entity<MapGridComponent> grid, NpcChargeSite site, int routeLength, out NpcChargePick pick, bool outsideRoom = true)
     {
         pick = default;
         var found = false;
@@ -676,7 +839,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, _npcChargeSystem.GetWireReach(charge.ActivatorUid), out var standOffCoordinates))
+            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, _npcChargeSystem.GetWireReach(charge.ActivatorUid), out var standOffCoordinates, outsideRoom: outsideRoom))
                 continue;
 
             pick = new NpcChargePick(site, memberUid, charge, standOffCoordinates, routeLength);
@@ -693,7 +856,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// <param name="wireReach">How far the wire reaches. The walk there has to fit on it, not just the straight line: a wire
     ///     round a corner runs round it, and a planter sent further is held back by its own wire, short of the spot and in the
     ///     blast, and never sets it off.</param>
-    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, float wireReach, out EntityCoordinates coordinates)
+    /// <param name="outsideRoom">Whether it has to be outside the room, as for a way into it.</param>
+    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, float wireReach, out EntityCoordinates coordinates, bool outsideRoom = true)
     {
         coordinates = default;
 
@@ -707,7 +871,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var (tile, steps) in _floodSteps)
         {
-            if (hunt.RoomTiles.Contains(tile) || hunt.ThresholdTiles.Contains(tile))
+            if (outsideRoom && (hunt.RoomTiles.Contains(tile) || hunt.ThresholdTiles.Contains(tile)))
                 continue;
 
             var distance = ((Vector2) (tile - site.Tile)).Length();
@@ -873,7 +1037,8 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
+            // Not for a locker, which is in the room with them: nobody goes back out to stand at the door.
+            if (hunt.BlastLockerUid == null && TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
                 continue;
 
             if (memberUid == plan.WatcherUid)

@@ -61,4 +61,32 @@ public sealed partial class NPCRangedCombatComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? SoundTargetInLOS;
+
+    // KS14 start
+    /// <summary>
+    ///     Tells seeing the target from being able to hit it, for turrets. <see cref="TargetInLOS"/> is then sight: what
+    ///         blocks light (the Opaque layer) and no mob, unless <see cref="KsStandingMobsBlockSight"/>. In sight, it aims and
+    ///         tracks, and holds fire (<see cref="CombatStatus.KsShotBlocked"/>, and the task carries on) while a round would
+    ///         not get to the target (<see cref="KsTargetInLineOfFire"/>) or would hit a friend. Set from
+    ///         <c>GunOperator.KsHoldFireWhenBlocked</c>.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool KsHoldFireWhenBlocked;
+
+    /// <summary>
+    ///     With <see cref="KsHoldFireWhenBlocked"/>, whether a mob standing between hides the target. One lying down never
+    ///         does. From the blackboard key <c>KsStandingMobsBlockSight</c>.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool KsStandingMobsBlockSight;
+
+    /// <summary>
+    ///     With <see cref="KsHoldFireWhenBlocked"/>: whether, at the last check, a round from the gun would get to the target
+    ///         by what it collides with, glass stopping a bullet and not a laser. Mobs do not count; friends are for the fire
+    ///         lanes. <c>NpcLineOfFireSystem.CanRoundReach</c>, which a turret also picks its target by
+    ///         (<c>KsTargetInLineOfFireCon</c>).
+    /// </summary>
+    [ViewVariables]
+    public bool KsTargetInLineOfFire;
+    // KS14 end
 }

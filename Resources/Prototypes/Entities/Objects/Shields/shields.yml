@@ -68,6 +68,19 @@
     - type: EmitSoundOnDrop # KS14: pickup/drop sounds
       sound:
         path: /Audio/_KS14/Handling/shield/plastic_shield_drop.ogg
+    # KS14 start
+    - type: MeleeWeapon
+      attackRate: 1
+      damage:
+        types:
+          Blunt: 10
+      soundHit:
+        collection: MetalThud
+      animation: WeaponArcThrust
+    - type: UseDelay # the bash cooldown
+    - type: KsShieldBash
+    - type: KsShoveWeapon
+    # KS14 end
 
 - type: entity
   name: base repairable shield
@@ -444,6 +457,13 @@
                 SheetGlass:
                   min: 5
                   max: 5
+    # KS14 start: tgstation's cult (mirror) shield knocks like glass
+    - type: KsShieldBash
+      bashSound:
+        path: /Audio/Effects/glass_knock.ogg
+        params:
+          variation: 0.1
+    # KS14 end
 
 - type: entity
   name: energy shield
@@ -529,6 +549,23 @@
     - type: ExaminableBattery # KS14: display current charge on examine
     - type: StaticPrice
       price: 350
+    # KS14 start: not a BaseShield; like tgstation's, it only bashes and shoves while on
+    - type: MeleeWeapon
+      attackRate: 1
+      damage:
+        types:
+          Blunt: 10
+      soundHit:
+        collection: MetalThud
+      animation: WeaponArcThrust
+    - type: KsShieldBash
+      bashSound:
+        path: /Audio/_KS14/Effects/Shields/energyshieldbash.ogg
+        params:
+          variation: 0.1
+    - type: KsShoveWeapon
+      inactivePopup: ks-shove-weapon-inactive-energy
+    # KS14 end
 
 # KS14: nothing spawns this any more - the energy shield is battery-backed now, so the
 # Destructible thresholds that used to drop it and the repair graph that consumed it are both gone.
@@ -581,6 +618,8 @@
       heldPrefix: teleriot
     - type: UseDelay
       delay: 0.5
+    - type: KsShoveWeapon # KS14: has to be extended to shove
+      inactivePopup: ks-shove-weapon-inactive-telescopic
     - type: ToggleableVisuals
       spriteLayer: shield
       inhandVisuals:

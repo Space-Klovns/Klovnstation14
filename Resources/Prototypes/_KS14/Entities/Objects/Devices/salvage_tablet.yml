@@ -1,0 +1,36 @@
+- type: entity
+  parent: BaseItem
+  id: KsSalvageTablet
+  name: S.P.A.M.
+  description: The Salvager Personal Miner Assistant. Log in with your ID for tasks, your rank and your mining points. Use it on a dead creature to scan it for a task.
+  components:
+  - type: Sprite
+    sprite: Objects/Devices/tablets.rsi
+    layers:
+    - state: tablet
+    - state: generic
+      shader: unshaded
+  - type: Item
+    size: Small
+  - type: KsSalvageTablet
+    shownMaterials:
+    - Steel
+    - Glass
+    - Plasma
+    - Silver
+    - Gold
+    - Uranium
+    - Diamond
+  - type: ActivatableUI
+    inHandsOnly: true
+    key: enum.KsSalvageTabletUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.KsSalvageTabletUiKey.Key:
+        type: KsSalvageTabletBoundUserInterface
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg

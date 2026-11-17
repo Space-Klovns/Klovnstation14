@@ -1034,6 +1034,102 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     }
 
     /// <summary>
+    ///     A disposal unit in the room is searched when anyone could tell something might be in it: with power, by its
+    ///         light showing it full; with none, always, as it shows nothing. A powered empty one is left alone. There is
+    ///         no seeing into one, so it is only searched once a member has emptied it.
+    /// </summary>
+    [Test]
+    public async Task TestSearchEmptiesDisposalsThatCouldHideSomeone([Values("unpowered", "powered and full", "powered and empty")] string state)
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob);
+        var searched = state != "powered and empty";
+        EntityUid disposalUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            disposalUid = SpawnAt(scene.EntManager, "DisposalUnit", scene.GridUid, 5, 2);
+            if (state != "unpowered")
+                scene.EntManager.System<Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem>().SetNeedsPower(disposalUid, false);
+
+            if (state == "powered and full")
+            {
+                var disposalComponent = scene.EntManager.GetComponent<Content.Shared.Disposal.Components.DisposalUnitComponent>(disposalUid);
+                var itemUid = scene.EntManager.SpawnAtPosition("Crowbar", scene.EntManager.GetComponent<TransformComponent>(disposalUid).Coordinates);
+                Assert.That(scene.EntManager.System<Robust.Shared.Containers.SharedContainerSystem>().Insert(itemUid, disposalComponent.Container));
+            }
+        });
+
+        // Whether it has power is only worked out on the power system's own update.
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(scene.EntManager.System<Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem>().IsPowered(disposalUid), Is.EqualTo(state != "unpowered"),
+                "the unit should have power or not, as staged");
+
+            scene.TransformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 1.5f)));
+            scene.TransformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null);
+
+            var point = hunt!.SearchPoints.FirstOrDefault(point => point.StorageUid == disposalUid);
+            if (!searched)
+            {
+                // The room is all in view: with the unit left alone, there is nothing left to search at all.
+                Assert.That(point, Is.Null, "a powered unit showing nothing in it is not one to search");
+                Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted), "and with the room in view, nothing is left to search");
+                return;
+            }
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "a squad already inside should start searching");
+
+            Assert.That(point?.Kind, Is.EqualTo(NpcSearchPointKind.Disposal), $"a unit {state} should be searched");
+            Assert.That(point!.Cleared, Is.False, "and not by looking at it");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.Search && order.TargetUid == disposalUid,
+                $"the member nearest it should be sent to empty it, but has {order.Kind}");
+
+            scene.TacticsSystem.NoteEmptied(scene.MemberUid, disposalUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted), "emptied, it is searched, and with everything searched the squad gives up");
+        });
+    }
+
+    /// <summary>
+    ///     With both disposal settings off, no disposal unit is searched, however it looks.
+    /// </summary>
+    [Test]
+    public async Task TestDisposalSearchCanBeTurnedOff()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                var settings = scene.EntManager.GetComponent<NpcSquadMemberComponent>(memberUid).Tactics;
+                settings.SearchOccupiedDisposals = false;
+                settings.SearchUnpoweredDisposals = false;
+            }
+
+            var disposalUid = SpawnAt(scene.EntManager, "DisposalUnit", scene.GridUid, 5, 2);
+            scene.TransformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 1.5f)));
+            scene.TransformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt?.SearchPoints.Any(point => point.StorageUid == disposalUid), Is.False, "turned off, it is not searched");
+        });
+    }
+
+    /// <summary>
     ///     A spot is only searched once someone has actually seen it: a member just the other side of the wall has not,
     ///         however close it is. And an NPC on its own never stacks up - it goes straight to searching.
     /// </summary>

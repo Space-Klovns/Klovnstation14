@@ -4,6 +4,8 @@ using Content.Server._KS14.GameTicking.Rules;
 using Content.Server.GameTicking;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Destructible;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Trigger.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
@@ -102,13 +104,11 @@ public sealed class KsScenarioWinnerTest : GameTest
         var capturer = new ProtoId<ScenarioFactionPrototype>(capturerName);
 
         var map = await Pair.CreateTestMap();
-        Entity<ScenarioRuleComponent>? rule = null;
+        ScenarioRuleComponent rule = default!;
 
         await server.WaitPost(() =>
         {
-            var ticker = server.EntMan.System<GameTicker>();
-            Assert.That(ticker.StartGameRule(ScenarioRule, out var ruleUid), Is.True);
-            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+            rule = StartScenario();
 
             var objectiveUid = server.EntMan.SpawnEntity(ObjectiveFor(owner), map.GridCoords);
             var userUid = server.EntMan.SpawnEntity(MemberFor(capturer), map.GridCoords);
@@ -120,13 +120,12 @@ public sealed class KsScenarioWinnerTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(capturer),
+            Assert.That(rule.WinningFactionId, Is.EqualTo(capturer),
                 $"{capturerName} captured {ownerName}'s objective, so {capturerName} should have won");
-            Assert.That(rule.Value.Comp.WinType, Is.EqualTo(ScenarioWinType.Objective));
+            Assert.That(rule.WinType, Is.EqualTo(ScenarioWinType.Objective));
 
             var loc = server.ResolveDependency<ILocalizationManager>();
-            var textEvent = new RoundEndTextAppendEvent();
-            server.EntMan.EventBus.RaiseEvent(Robust.Shared.GameObjects.EventSource.Local, textEvent);
+            var textEvent = GetRoundEndText();
 
             var capturerPrototype = server.ProtoMan.Index(capturer);
             Assert.That(textEvent.Text, Does.Contain(loc.GetString(capturerPrototype.VictoryLocId)));
@@ -142,12 +141,11 @@ public sealed class KsScenarioWinnerTest : GameTest
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
-        Entity<ScenarioRuleComponent>? rule = null;
+        ScenarioRuleComponent rule = default!;
 
         await server.WaitPost(() =>
         {
-            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
-            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+            rule = StartScenario();
 
             var objectiveUid = server.EntMan.SpawnEntity(SyndicateObjective, map.GridCoords);
             server.EntMan.SpawnEntity(_nanotrasenMember, map.GridCoords);
@@ -159,8 +157,42 @@ public sealed class KsScenarioWinnerTest : GameTest
         await Pair.RunTicksSync(2);
 
         await server.WaitAssertion(() =>
-            Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen),
+            Assert.That(rule.WinningFactionId, Is.EqualTo(Nanotrasen),
                 "the owner of a destroyed objective must not be named the winner"));
+    }
+
+    /// <summary>
+    ///     A scenario with no faction that never dies ends by deaths only once a single member is left alive, as it
+    ///         always has, even when that member's side is already the only one standing. Field Commander's
+    ///         faction-based check must not leak into the other scenarios.
+    /// </summary>
+    [Test]
+    public async Task DeathsEndTheRoundOnlyWithOneMemberLeft()
+    {
+        var server = Pair.Server;
+        var map = await Pair.CreateTestMap();
+        ScenarioRuleComponent rule = default!;
+        EntityUid firstNanotrasen = default;
+
+        await server.WaitPost(() =>
+        {
+            rule = StartScenario();
+
+            firstNanotrasen = server.EntMan.SpawnEntity(_nanotrasenMember, map.GridCoords);
+            server.EntMan.SpawnEntity(_nanotrasenMember, map.GridCoords);
+            var syndicateUid = server.EntMan.SpawnEntity(_syndicateMember, map.GridCoords);
+
+            server.System<MobStateSystem>().ChangeMobState(syndicateUid, MobState.Dead);
+        });
+
+        await server.WaitAssertion(() =>
+            Assert.That(rule.WinningFactionId, Is.Null,
+                "two members are still alive, so the round goes on, though both are Nanotrasen"));
+
+        await server.WaitPost(() => server.System<MobStateSystem>().ChangeMobState(firstNanotrasen, MobState.Dead));
+
+        await server.WaitAssertion(() =>
+            Assert.That(rule.WinningFactionId, Is.EqualTo(Nanotrasen), "the last one standing wins it"));
     }
 
     /// <summary>
@@ -171,12 +203,11 @@ public sealed class KsScenarioWinnerTest : GameTest
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
-        Entity<ScenarioRuleComponent>? rule = null;
+        ScenarioRuleComponent rule = default!;
 
         await server.WaitPost(() =>
         {
-            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
-            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+            rule = StartScenario();
 
             var objectiveUid = server.EntMan.SpawnEntity(NanotrasenObjective, map.GridCoords);
 
@@ -187,7 +218,7 @@ public sealed class KsScenarioWinnerTest : GameTest
         await Pair.RunTicksSync(2);
 
         await server.WaitAssertion(() =>
-            Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen)));
+            Assert.That(rule.WinningFactionId, Is.EqualTo(Nanotrasen)));
     }
 
     /// <summary>
@@ -199,13 +230,12 @@ public sealed class KsScenarioWinnerTest : GameTest
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
-        Entity<ScenarioRuleComponent>? rule = null;
+        ScenarioRuleComponent rule = default!;
         EntityUid syndicateObjectiveUid = default;
 
         await server.WaitPost(() =>
         {
-            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
-            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+            rule = StartScenario();
 
             var nanotrasenObjectiveUid = server.EntMan.SpawnEntity(NanotrasenObjective, map.GridCoords);
             syndicateObjectiveUid = server.EntMan.SpawnEntity(SyndicateObjective, map.GridCoords);
@@ -217,12 +247,12 @@ public sealed class KsScenarioWinnerTest : GameTest
             server.EntMan.EventBus.RaiseLocalEvent(nanotrasenObjectiveUid, ref timeout, broadcast: false);
         });
 
-        await server.WaitAssertion(() => Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen)));
+        await server.WaitAssertion(() => Assert.That(rule.WinningFactionId, Is.EqualTo(Nanotrasen)));
 
         await server.WaitPost(() =>
             server.EntMan.EventBus.RaiseLocalEvent(syndicateObjectiveUid, new DestructionEventArgs(), broadcast: false));
 
-        await server.WaitAssertion(() => Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen),
+        await server.WaitAssertion(() => Assert.That(rule.WinningFactionId, Is.EqualTo(Nanotrasen),
             "an unresolved capturer must not clear the decided winner"));
     }
 
@@ -234,12 +264,11 @@ public sealed class KsScenarioWinnerTest : GameTest
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
-        Entity<ScenarioRuleComponent>? rule = null;
+        ScenarioRuleComponent rule = default!;
 
         await server.WaitPost(() =>
         {
-            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
-            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+            rule = StartScenario();
 
             var objectiveUid = server.EntMan.SpawnEntity(SyndicateObjective, map.GridCoords);
             server.EntMan.DeleteEntity(objectiveUid);
@@ -247,8 +276,8 @@ public sealed class KsScenarioWinnerTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(rule!.Value.Comp.WinType, Is.EqualTo(ScenarioWinType.Decimation));
-            Assert.That(rule.Value.Comp.WinningFactionId, Is.Null);
+            Assert.That(rule.WinType, Is.EqualTo(ScenarioWinType.Decimation));
+            Assert.That(rule.WinningFactionId, Is.Null);
         });
     }
 
@@ -263,7 +292,7 @@ public sealed class KsScenarioWinnerTest : GameTest
 
         await server.WaitPost(() =>
         {
-            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out _), Is.True);
+            StartScenario();
             server.EntMan.SpawnEntity(NanotrasenObjective, map.GridCoords);
             server.EntMan.SpawnEntity(SyndicateObjective, map.GridCoords);
             server.EntMan.SpawnEntity(_scavengerMember, map.GridCoords);
@@ -272,12 +301,30 @@ public sealed class KsScenarioWinnerTest : GameTest
         await server.WaitAssertion(() =>
         {
             var loc = server.ResolveDependency<ILocalizationManager>();
-            var textEvent = new RoundEndTextAppendEvent();
-            server.EntMan.EventBus.RaiseEvent(Robust.Shared.GameObjects.EventSource.Local, textEvent);
+            var textEvent = GetRoundEndText();
 
             foreach (var faction in new[] { Nanotrasen, Syndicate, Scavengers })
                 Assert.That(textEvent.Text, Does.Contain(loc.GetString(server.ProtoMan.Index(faction).NameLocId)));
         });
+    }
+
+    /// <summary>
+    ///     Starts the scenario rule. On the server's game thread.
+    /// </summary>
+    private ScenarioRuleComponent StartScenario()
+    {
+        Assert.That(Pair.Server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
+        return Pair.Server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid);
+    }
+
+    /// <summary>
+    ///     The round end text as it stands. On the server's game thread.
+    /// </summary>
+    private RoundEndTextAppendEvent GetRoundEndText()
+    {
+        var textEvent = new RoundEndTextAppendEvent();
+        Pair.Server.EntMan.EventBus.RaiseEvent(EventSource.Local, textEvent);
+        return textEvent;
     }
 
     private EntProtoId ObjectiveFor(ProtoId<ScenarioFactionPrototype> faction)

@@ -5,3 +5,10 @@ ks-fluid-list-column-vapor = Vapor
 ks-fluid-list-units = { $units }u
 ks-fluid-list-linked-tooltip = Evaporates into its gas, so its vapor is listed with the gases.
 ks-fluid-list-bar-tooltip = { $reagent }: { $units }u ({ $percentage }%)
+ks-fluid-list-column-boils = Boils at
+ks-fluid-list-column-melts = Melts at
+ks-fluid-list-kelvin = { $kelvin } K
+ks-fluid-list-supercritical = supercritical
+ks-fluid-list-supercritical-tooltip = Past its critical temperature, so it can't be liquid at any pressure.
+ks-gas-analyzer-supercritical-solvent = Supercritical solvent: dissolves reagents [color=#a4885c]×{ $factor }[/color]
+ks-gas-analyzer-supercritical-solvent-tooltip = A gas compressed past its critical point dissolves reagents as if their vapor pressure were this many times higher. Water and other polar reagents dissolve far less. Drop the pressure and they fall back out as liquid.

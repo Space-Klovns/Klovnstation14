@@ -15,7 +15,7 @@ public sealed class KsSectionTitle : PanelContainer
     public KsSectionTitle()
     {
         AddStyleClass(StyleClassSectionTitle);
-        ApplyPanel(tgui: false);
+        PanelOverride = Empty;
     }
 
     private static readonly StyleBox Empty = new StyleBoxEmpty();
@@ -31,8 +31,17 @@ public sealed class KsSectionTitle : PanelContainer
         ApplyPanel(IsTgui());
     }
 
+    /// <summary>
+    ///     Baron draws the title row of a <see cref="KsTguiSection"/> itself; a heading a stock window wraps stays bare.
+    /// </summary>
+    private bool IsBaronStyled()
+    {
+        return TryGetStyleProperty<bool>(Content.Client._KS14.BaronUI.KsBaronUiSheetlet.StylePropertySectionTitle, out var enabled)
+               && enabled;
+    }
+
     private void ApplyPanel(bool tgui)
     {
-        PanelOverride = tgui ? null : Empty;
+        PanelOverride = tgui || IsBaronStyled() ? null : Empty;
     }
 }

@@ -104,5 +104,10 @@ public sealed class KsFluidReagentProperties
     /// </summary>
     public bool InNamedPair { get; init; }
 
+    /// <summary>
+    ///     How readily it dissolves in a supercritical gas: scales <see cref="KsPhaseMath.SupercriticalLogEnhancement"/>.
+    /// </summary>
+    public float SupercriticalAffinity { get; init; } = 1f;
+
     public bool Linked => GasIndex >= 0;
 }

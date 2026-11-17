@@ -1,3 +1,4 @@
+using Content.Shared._KS14.NPC;
 using Content.Server._KS14.NPC.Meters;
 using Robust.Shared.Prototypes;
 
@@ -13,13 +14,15 @@ public sealed partial class NpcSquadTacticsSettings
     #region Hunting
 
     /// <summary>
-    ///     A hostile lost longer ago than this does not start a hunt.
+    ///     A hostile lost longer ago than this does not start a hunt. Long enough for a squad kept busy after the loss -
+    ///         suppressing, pushing, a grenade - to still go after it when that is over.
     /// </summary>
     [DataField]
-    public TimeSpan HuntStartAge = TimeSpan.FromSeconds(6);
+    public TimeSpan HuntStartAge = TimeSpan.FromSeconds(15);
 
     /// <summary>
-    ///     How long members wait for a hostile they have just lost to show itself again, before going in after it.
+    ///     How long members wait for a hostile they have just lost to show itself again, before going in after it. From when
+    ///         it was lost (<see cref="NpcHunt.LostAt"/>), not when the hunt began.
     /// </summary>
     [DataField]
     public TimeSpan WatchTime = TimeSpan.FromSeconds(4);
@@ -118,6 +121,57 @@ public sealed partial class NpcSquadTacticsSettings
     /// </summary>
     [DataField]
     public int MaxSearchPoints = 10;
+
+    /// <summary>
+    ///     Whether a search empties each disposal unit by the room whose light shows something is in it. A unit's light
+    ///         only shows with power.
+    /// </summary>
+    [DataField]
+    public bool SearchOccupiedDisposals = true;
+
+    /// <summary>
+    ///     Whether a search empties each disposal unit by the room with no power, which shows nothing of what is in it.
+    /// </summary>
+    [DataField]
+    public bool SearchUnpoweredDisposals = true;
+
+    /// <summary>
+    ///     Whether a search shoots open a locker somebody saw the hostile get into, or believes it is in, when no member can
+    ///         open it: locked, or welded shut. Only those with a gun and a round in it, from where they have a clear shot at
+    ///         it. Off, a member is sent to open it all the same, and gives up on it.
+    /// </summary>
+    [DataField]
+    public bool SearchBreakLockers;
+
+    /// <summary>
+    ///     How near a locker, in tiles, a member gets to shoot it open (<see cref="SearchBreakLockers"/>).
+    /// </summary>
+    [DataField]
+    public float SearchBreakLockerRange = 3f;
+
+    /// <summary>
+    ///     How many rounds NPCs may put into a locker to break it (<see cref="SearchBreakLockers"/>), all of them together,
+    ///         before it is given up on: about twice what a security locker takes. Something that has had that many and still
+    ///         stands is not worth a magazine more.
+    /// </summary>
+    [DataField]
+    public int SearchBreakLockerRounds = 60;
+
+    /// <summary>
+    ///     The most damage a locker may take to break for it to be worth shooting open, as
+    ///         <see cref="PlanBreakDamage"/> is for glass. A security locker breaks at 150, which is some 30 rifle rounds at
+    ///         point blank through its armour; an ordinary one at 100.
+    /// </summary>
+    [DataField]
+    public float SearchBreakLockerDamage = 200f;
+
+    /// <summary>
+    ///     Whether a member that carries a breaching charge that sticks to a locker puts it on one it is believed in, rather than
+    ///         shooting it open, when nobody can open it. Tried the once per locker, and shot open if it does not work. Not in a
+    ///         squad plan's own hunt, which has charge steps of its own. Off, lockers are only shot open.
+    /// </summary>
+    [DataField]
+    public bool SearchChargeLockers;
 
     /// <summary>
     ///     How thorough the search is: the share of the room's floor, from 0 to 1, that has to have been seen before
@@ -280,6 +334,13 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan PlanSmokeInternalsTime = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    ///     The chance a plan puts smoke in before a grenade, where it could do either, from 0 to 1. Rolled once a plan, and
+    ///         holds for it. Flashbangs still come first.
+    /// </summary>
+    [DataField]
+    public float PlanSmokeOverFragChance = 0.5f;
+
+    /// <summary>
     ///     How long members have to get out of sight when they have to, before the plan ends.
     /// </summary>
     [DataField]
@@ -357,10 +418,26 @@ public sealed partial class NpcSquadTacticsSettings
     public bool HuntCharges;
 
     /// <summary>
+    ///     Whether a squad that plans (<see cref="Planning"/>), stacked up on a room it believes a lost hostile is in, puts a
+    ///         flashbang, a grenade or smoke in ahead of going in, as a plan would: chosen by what the squad last saw of it, and
+    ///         only if that was a hostile with a gun. Off, it goes straight in.
+    /// </summary>
+    [DataField]
+    public bool HuntSoftening = true;
+
+    /// <summary>
     ///     The least pressure either side of a charge can have, in kPa: nobody blows a hole through to a room with nothing in it.
     /// </summary>
     [DataField]
     public float PlanChargeMinPressure = 50f;
+
+    /// <summary>
+    ///     Whether a plan with no room to go by, or none of whose walls will do, blows what stands between the squad and the
+    ///         hostile it can see: the glass itself, if a charge goes on it, or a wall beside it. A hostile behind a window
+    ///         somewhere too big or too open to be taken for a room used to be left alone, whoever had a charge.
+    /// </summary>
+    [DataField]
+    public bool PlanChargeBarrier = true;
 
     /// <summary>
     ///     How long a planter may go without getting any nearer its site, by the way it has to walk, before it is given up on.
@@ -381,6 +458,116 @@ public sealed partial class NpcSquadTacticsSettings
     /// </summary>
     [DataField]
     public float Crossfire;
+
+    /// <summary>
+    ///     Whether the squad goes forward together on a hostile it is fighting, when it has a moment: the hostile has stopped
+    ///         shooting after shooting (reloading, or out), or one of the squad's grenades has just gone off on it. All but one,
+    ///         who keeps firing, go in close, each from its own side; everyone, on a grenade. See <see cref="NpcOrderKind.Push"/>.
+    /// </summary>
+    [DataField]
+    public bool Pushing;
+
+    /// <summary>
+    ///     How long a hostile that was shooting has to have gone quiet, while in sight, for that to be a moment to push.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushSilence = TimeSpan.FromSeconds(1.2);
+
+    /// <summary>
+    ///     How recently it has to have been shooting for going quiet to mean anything: one that never fired is not reloading.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushShotMemory = TimeSpan.FromSeconds(6);
+
+    /// <summary>
+    ///     How long after one of the squad's grenades goes off by a hostile it is a moment to push, and how near it, in tiles.
+    ///         Long enough for a hostile that ducked from the blast to show again.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushBlastWindow = TimeSpan.FromSeconds(2.5);
+
+    [DataField]
+    public float PushBlastRange = 3f;
+
+    /// <summary>
+    ///     The furthest a hostile may be from the nearest member fighting it, in tiles, to push on. Further, going forward is
+    ///         a long walk in the open.
+    /// </summary>
+    [DataField]
+    public float PushMaxRange = 12f;
+
+    /// <summary>
+    ///     How near the hostile a pusher goes, in tiles.
+    /// </summary>
+    [DataField]
+    public float PushStandoff = 2.5f;
+
+    /// <summary>
+    ///     How long a push lasts at most. It ends sooner once everyone is there, or the moment the hostile shoots again.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushTime = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    ///     The least time between one push ending and the next.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushCooldown = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     Whether a squad all fighting a hostile from one side sends one member, two with five or more, round its side while
+    ///         the rest keep it pinned. See <see cref="NpcOrderKind.Flank"/>.
+    /// </summary>
+    [DataField]
+    public bool Flanking;
+
+    /// <summary>
+    ///     How many members have to be fighting the hostile to spare one to flank it.
+    /// </summary>
+    [DataField]
+    public int FlankMinFighters = 3;
+
+    /// <summary>
+    ///     The chance, from 0 to 1, that a squad that could flank does. Rolled once each time it could, and a roll that fails
+    ///         stands until <see cref="FlankCooldown"/> is up.
+    /// </summary>
+    [DataField]
+    public float FlankChance = 1f;
+
+    /// <summary>
+    ///     How narrow, seen from the hostile, the squad has to be for it to be on one side: every member fighting it within this
+    ///         arc. In degrees in YAML.
+    /// </summary>
+    [DataField]
+    public Angle FlankArc = Angle.FromDegrees(70);
+
+    /// <summary>
+    ///     How far from the hostile, in tiles, a flanker goes.
+    /// </summary>
+    [DataField]
+    public float FlankRange = 5f;
+
+    /// <summary>
+    ///     The longest way round a flanker may take, in tiles: further, the fight is over by the time it gets there.
+    /// </summary>
+    [DataField]
+    public float FlankMaxWalk = 32f;
+
+    /// <summary>
+    ///     How long a flanker gets to get there. One that has got no nearer after <see cref="FlankProgressTime"/> is given up
+    ///         on sooner: it cannot get round that way.
+    /// </summary>
+    [DataField]
+    public TimeSpan FlankTimeout = TimeSpan.FromSeconds(12);
+
+    [DataField]
+    public TimeSpan FlankProgressTime = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     The least time between one flank ending and the next.
+    /// </summary>
+    [DataField]
+    public TimeSpan FlankCooldown = TimeSpan.FromSeconds(15);
 
     #endregion
 }

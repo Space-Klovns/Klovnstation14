@@ -21,3 +21,37 @@
   - Anchorless
   - BasicStationEventScheduler
   - BasicRoundstartVariation
+
+- type: gamePreset
+  id: KsSkeletonCrew
+  alias:
+  - skeletoncrew
+  - lowpop
+  name: skeleton-crew-title
+  description: skeleton-crew-description
+  minPlayers: 3
+  maxPlayers: 25
+  showInVote: true
+  rules:
+  - KsSkeletonCrewDynamicRule
+  - KsSkeletonCrewEventScheduler
+  - KsSkeletonCrewFluffScheduler
+  - KsSkeletonCrewDustScheduler
+  - SpaceTrafficControlEventScheduler
+  - BasicRoundstartVariation
+
+- type: gamePreset
+  id: KsFieldCommander
+  alias:
+  - fieldcommander
+  name: ks-fieldcommander-title
+  description: ks-fieldcommander-description
+  minPlayers: 7
+  maxPlayers: 40
+  showInVote: true
+  supportedMaps: KsFieldCommanderMapPool
+  rules:
+  - KsScenarioFieldCommander
+  - KsFieldCommanderRule
+  - KsFieldCommanderWeather
+  - KsFieldCommanderLitterDespawn

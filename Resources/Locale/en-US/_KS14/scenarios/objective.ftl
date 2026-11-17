@@ -4,3 +4,4 @@ ks-scenario-objective-announcement-capturewin = The objective has been captured!
 
 ks-scenario-objective-popup-cooldown = You need to wait {$time} seconds before trying to capture this again!
 ks-scenario-objective-popup-oneuser = Someone is already capturing this!
+ks-scenario-objective-popup-own = This is yours to defend, not capture!

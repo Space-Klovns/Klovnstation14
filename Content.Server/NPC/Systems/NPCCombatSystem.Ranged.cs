@@ -130,7 +130,7 @@ public sealed partial class NPCCombatSystem
             comp.LOSAccumulator -= frameTime;
 
             var worldPos = _transform.GetWorldPosition(xform);
-            var targetPos = _transform.GetWorldPosition(targetXform);
+            var targetPos = KsGetTargetPosition(comp.Target, _transform.GetWorldPosition(targetXform)); // KS14: a light is hit at its fixture, not its tile's middle
 
             // We'll work out the projected spot of the target and shoot there instead of where they are.
             var distance = (targetPos - worldPos).Length();
@@ -142,10 +142,23 @@ public sealed partial class NPCCombatSystem
             {
                 comp.LOSAccumulator += UnoccludedCooldown;
 
-                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem
-                comp.TargetInLOS = comp.UseOpaqueForLOSChecks
-                    ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque)
-                    : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem. Every mob is on the
+                //      Opaque layer, and a body on the floor hides nothing and lets rounds and beams pass: IsLyingMob
+                if (comp.KsHoldFireWhenBlocked)
+                {
+                    // Sight, then shot: what hides the target, then whether a round would get to it
+                    comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque,
+                        predicate: comp.KsStandingMobsBlockSight ? _npcLineOfFireSystem.IsLyingMob : _npcLineOfFireSystem.IsMob);
+                    comp.KsTargetInLineOfFire = comp.TargetInLOS &&
+                        _npcLineOfFireSystem.CanRoundReach(uid, comp.Target); // the same check that picks its target: KsTargetInLineOfFireCon
+                }
+                else
+                {
+                    comp.TargetInLOS = comp.UseOpaqueForLOSChecks
+                        ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque,
+                            predicate: _npcLineOfFireSystem.IsLyingMob)
+                        : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                }
                 // KS14 end
             }
 
@@ -200,6 +213,13 @@ public sealed partial class NPCCombatSystem
 
             if (!ksAimed)
                 continue;
+
+            // Seen but a round would not get there, through glass, say: keep aiming and tracking, hold fire, carry on
+            if (comp.KsHoldFireWhenBlocked && !comp.KsTargetInLineOfFire)
+            {
+                comp.Status = CombatStatus.KsShotBlocked;
+                continue;
+            }
             // KS14 end
 
             // TODO: LOS
@@ -216,6 +236,10 @@ public sealed partial class NPCCombatSystem
             if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
+            // KS14: barely seen in the dark, the aim goes astray. Before the clear-shot check below, so it judges the shot
+            //      as it will really go (NPCCombatSystem.Klovn.DarkAim.cs)
+            KsApplyDarkAim(uid, comp.Target, worldPos, ref targetSpot);
+
             // KS14 start: never where a round could hit a friend, nor from on top of one: at whatever side of the target's body
             //      is clear, if any, or not at all. Held long enough, the gun gives way for a new spot. Only once the gun can
             //      fire, so the lookup is once a shot.
@@ -224,11 +248,15 @@ public sealed partial class NPCCombatSystem
                 if (!_npcSquadFireLaneSystem.TryGetClearShot(uid,
                         new MapCoordinates(worldPos, xform.MapID),
                         new MapCoordinates(targetSpot, xform.MapID),
-                        _npcSquadFireLaneSystem.GetBodyRadius(comp.Target),
+                        KsGetTargetRadius(comp.Target), // KS14: a light is the same shot as any other, with little to spare
                         out var clearShot))
                 {
                     if (_npcSquadFireLaneSystem.NoteHeldFire(uid))
                         comp.Status = CombatStatus.KsFriendInTheWay;
+
+                    // A turret cannot go elsewhere to shoot from: it keeps aiming until the friend is out of the way
+                    if (comp.KsHoldFireWhenBlocked)
+                        comp.Status = CombatStatus.KsShotBlocked;
 
                     continue;
                 }

@@ -118,7 +118,7 @@
   - type: GenericVisualizer
     visuals:
       enum.SupplyPodVisuals.Landed:
-        rubble_bfg:
+        rubble_bg:
           False: { visible: false }
           True: { visible: true }
         rubble_fg:
@@ -245,6 +245,13 @@
         missile:
           True: { rotation: 180 }
           False: { rotation: 0 }
+      enum.SupplyPodVisuals.Landed:
+        rubble_bg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
 
 # syndie
 - type: entity
@@ -384,9 +391,9 @@
         - !type:DoActsBehavior
           acts: [ "Destruction" ]
 
-# What a supply pod leaves behind when it despawns: a bluespace flash, and sparks.
+# What a supply pod leaves behind when it despawns: sparks.
 - type: entity
-  parent: AdminInstantEffectBluespace
+  parent: AdminInstantEffectBase
   id: KsEffectSupplyPodDespawn
   categories: [ HideSpawnMenu ]
   components:

@@ -178,6 +178,77 @@ public sealed class KsPuddleSpreadTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     A puddle a little above neighbours that are level with each other has nothing to give them: what it would bring
+    ///         them up to, the average of them all, rounds down to where they already are. It is left alone too, rather
+    ///         than having its overflow split off and added straight back every second.
+    /// </summary>
+    /// <remarks>
+    ///     Where a spill in a closed room ends up depends on the order its puddles spread in, which is random: about one in
+    ///         forty of <see cref="LevelPuddlesInAClosedRoomAreLeftAlone"/>'s ended like this. So this one is staged.
+    /// </remarks>
+    [Test]
+    public async Task PuddleWithNothingToGiveItsNeighboursIsLeftAlone()
+    {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Spreading, not cooling, is what this watches.
+        var testMap = await Pair.CreateTestMap();
+        await LayFloor(testMap, radius: 1);
+
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var level = FixedPoint2.New(1);
+        var raised = level + PuddleSystem.KsLevelTolerance + FixedPoint2.Epsilon; // past the tolerance, by the least there is
+        var raisedTile = new Vector2i(0, 1); // three neighbours, all level
+        var solutionUids = new Dictionary<Vector2i, EntityUid>();
+
+        // All in one go, so that the room is full before anything spreads.
+        await server.WaitAssertion(() =>
+        {
+            var puddleSystem = entityManager.System<PuddleSystem>();
+            for (var x = -1; x <= 1; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                {
+                    var tile = new Vector2i(x, y);
+                    Assert.That(puddleSystem.TrySpillAt(new EntityCoordinates(testMap.Grid.Owner, x + 0.5f, y + 0.5f),
+                        new Solution(_thinReagent.Id, tile == raisedTile ? raised : level), out var puddleUid, sound: false), "Puddle failed to spill.");
+
+                    var puddleComponent = entityManager.GetComponent<PuddleComponent>(puddleUid);
+                    Assert.That(puddleComponent.Solution, Is.Not.Null);
+                    solutionUids[tile] = puddleComponent.Solution.Value.Owner;
+                }
+            }
+
+            // The test's own arithmetic: the raised puddle is over the tolerance, and still has nothing to give.
+            Assert.That((level * 3 + raised) / 4, Is.EqualTo(level), "The raised puddle's neighbours would be brought up to something higher.");
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 3);
+
+        var modifiedTicks = new Dictionary<EntityUid, GameTick>();
+        await server.WaitPost(() =>
+        {
+            foreach (var solutionUid in solutionUids.Values)
+                modifiedTicks[solutionUid] = entityManager.GetComponent<MetaDataComponent>(solutionUid).EntityLastModifiedTick;
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 3);
+
+        await server.WaitAssertion(() =>
+        {
+            foreach (var (tile, solutionUid) in solutionUids)
+            {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(entityManager.GetComponent<SolutionComponent>(solutionUid).Solution.Volume, Is.EqualTo(tile == raisedTile ? raised : level),
+                        $"The puddle at {tile} did not keep what it had, so this is not the case the test is for.");
+                    Assert.That(entityManager.GetComponent<MetaDataComponent>(solutionUid).EntityLastModifiedTick, Is.EqualTo(modifiedTicks[solutionUid]),
+                        $"The puddle at {tile} had its solution changed, with nothing to flow anywhere.");
+                }
+            }
+        });
+    }
+
     [Test]
     public async Task KlovnideTrioxideSpreadsThin()
     {

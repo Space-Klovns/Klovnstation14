@@ -1,3 +1,4 @@
+using Content.Shared.Atmos;
 using Content.Shared.Chemistry.Reagent;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -11,8 +12,23 @@ namespace Content.Shared._KS14.Fluidmos;
 ///     Whether it evaporates into its own atmos gas rather than into vapor, so that its vapor shows with the gases and it
 ///         has none of its own.
 /// </param>
+/// <param name="BoilingPoint">
+///     Kelvin it boils at, pure, at the mixture's pressure, or NaN if it never boils.
+/// </param>
+/// <param name="MeltingPoint">Kelvin it melts at, or NaN if it never freezes.</param>
+/// <param name="Supercritical">
+///     Whether it is linked and past its gas's critical temperature, so it can't be liquid at any pressure.
+/// </param>
 [Serializable, NetSerializable]
-public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, float Solid, float Liquid, float Vapor, bool Linked)
+public readonly record struct KsFluidEntry(
+    ProtoId<ReagentPrototype> Reagent,
+    float Solid,
+    float Liquid,
+    float Vapor,
+    bool Linked,
+    float BoilingPoint = float.NaN,
+    float MeltingPoint = float.NaN,
+    bool Supercritical = false)
 {
     /// <summary>
     ///     Everything of it the mixture carries, in units, whatever its phase.
@@ -27,7 +43,13 @@ public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, fl
     /// <summary>
     ///     A mixture's fluid as UI entries, or null if it carries none worth showing.
     /// </summary>
-    public static KsFluidEntry[]? FromMixture(KsFluidMixture? fluid, KsFluidmosPropertiesSystem propertiesSystem)
+    /// <param name="pressure">kPa, which sets where each reagent boils.</param>
+    /// <param name="temperature">Kelvin, for whether a linked reagent is past its critical temperature.</param>
+    public static KsFluidEntry[]? FromMixture(
+        KsFluidMixture? fluid,
+        KsFluidmosPropertiesSystem propertiesSystem,
+        float pressure = KsPhaseMath.ReferencePressure,
+        float temperature = Atmospherics.T20C)
     {
         if (fluid == null || fluid.IsEmpty)
             return null;
@@ -43,7 +65,15 @@ public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, fl
             var index = entries.FindIndex(entry => entry.Reagent == key.Prototype);
             if (index < 0)
             {
-                entries.Add(new KsFluidEntry(key.Prototype, amount.Solid, amount.Liquid, vaporUnits, properties is { Linked: true }));
+                entries.Add(new KsFluidEntry(
+                    key.Prototype,
+                    amount.Solid,
+                    amount.Liquid,
+                    vaporUnits,
+                    properties is { Linked: true },
+                    BoilingPointAt(properties, pressure),
+                    properties is { Freezable: true } ? properties.MeltingPoint : float.NaN,
+                    properties is { Linked: true } && temperature >= properties.CriticalTemperature));
                 continue;
             }
 
@@ -58,5 +88,16 @@ public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, fl
 
         entries.RemoveAll(entry => entry.Solid < MinUnits && entry.Liquid < MinUnits && entry.Vapor < MinUnits);
         return entries.Count > 0 ? entries.ToArray() : null;
+    }
+
+    /// <summary>
+    ///     Kelvin a reagent boils at, pure, at <paramref name="pressure"/> kPa, or NaN if it never boils.
+    /// </summary>
+    public static float BoilingPointAt(KsFluidReagentProperties? properties, float pressure)
+    {
+        if (properties is not { Volatile: true })
+            return float.NaN;
+
+        return KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure);
     }
 }

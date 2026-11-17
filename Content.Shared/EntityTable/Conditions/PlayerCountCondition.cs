@@ -30,6 +30,11 @@ public sealed partial class PlayerCountCondition : EntityTableCondition
 
         var playerCount = _playerManager.PlayerCount;
 
+        // KS14 start: a simulated round supplies its own player count
+        if (ctx.TryGetData<int>(Content.Shared._KS14.EntityTable.KsSimulationContextKeys.PlayerCount, out var simulatedPlayerCount))
+            playerCount = simulatedPlayerCount;
+        // KS14 end
+
         return playerCount >= Min && playerCount <= Max;
     }
 }

@@ -19,9 +19,9 @@
     jumpsuit: ClothingUniformJumpsuitSalvageSpecialist
     id: SalvagePDA
     ears: ClothingHeadsetCargo
-  #storage:
-    #back:
-    #- Stuff
+  storage: # KS14: Survival medipen on spawn
+    back:
+    - KsSurvivalMedipen
 
 - type: chameleonOutfit
   id: SalvageSpecialistChameleonOutfit

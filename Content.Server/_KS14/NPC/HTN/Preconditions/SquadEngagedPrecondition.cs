@@ -36,7 +36,7 @@ public sealed partial class SquadEngagedPrecondition : KsInvertiblePrecondition
     {
         var ownerUid = blackboard.GetOwner();
 
-        return blackboard.ContainsKey(ThreatKey) ||
+        return blackboard.ContainsKey(ThreatKey, _entityManager) ||
             _npcSquadSystem.IsEngaged(ownerUid, Window) ||
             _npcSquadCoverSystem.HasThreatObjective(ownerUid) ||
             blackboard.TryGetValue<TimeSpan>(CombatTimeKey, out var combatTime, _entityManager) &&

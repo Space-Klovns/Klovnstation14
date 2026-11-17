@@ -27,6 +27,7 @@ public sealed partial class LatheMenu : FancyWindow
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction; // KS14
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -150,6 +151,8 @@ public sealed partial class LatheMenu : FancyWindow
                         amount = 1;
                     RecipeQueueAction?.Invoke(s, amount);
                 };
+                control.KsOnRequestPressed += s => KsRecipeRequestAction?.Invoke(s); // KS14
+                control.KsLatheUid = Entity; // KS14
                 RecipeList.AddChild(control);
             }
             else
@@ -323,6 +326,18 @@ public sealed partial class LatheMenu : FancyWindow
             QueueList.RemoveChild(childIdx);
         }
     }
+
+    // KS14 start
+    public void KsSetSmelterPoints(int points)
+    {
+        KsQueueTitleLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-title");
+        KsQueueScroll.Visible = false;
+        KsSmelterContainer.Visible = true;
+        KsSmelterPointsLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"),
+            defaultColor: Content.Client._KS14.Tgui.KsTguiPalettes.Label /* KS14: #A0A0A0 -> tgui label colour; a RichTextLabel takes no colour from the sheet */);
+    }
+    // KS14 end
 
     public void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto)
     {

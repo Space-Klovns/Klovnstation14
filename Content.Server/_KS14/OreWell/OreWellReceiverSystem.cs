@@ -1,10 +1,12 @@
 using Content.Server.Stack;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.GenericSpriteFlick;
 using Content.Shared._KS14.OreWell;
 using Content.Shared.Interaction;
 using Content.Shared.Power;
 using Robust.Server.Audio;
 using Robust.Server.GameObjects;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -19,11 +21,31 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
     [Dependency] private KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
 
     private readonly HashSet<Entity<OreWellReceiverComponent>> _activeEntities = [];
 
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30d);
+    /// <seealso cref="KsCCVars.OreWellReceiverInterval"/>
+    private TimeSpan _interval = TimeSpan.FromSeconds(30d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.OreWellReceiverInterval, SetInterval, invokeImmediately: true);
+    }
+
+    private void SetInterval(float seconds)
+    {
+        // A tick at the least: zero or less would deliver every tick, as fast as the server runs.
+        _interval = TimeSpan.FromSeconds(Math.Max(seconds, (float)_gameTiming.TickPeriod.TotalSeconds));
+
+        // A shorter interval takes effect now, not after the longer one already scheduled.
+        var latestNextUpdate = _gameTiming.CurTime + _interval;
+        if (_nextUpdate > latestNextUpdate)
+            _nextUpdate = latestNextUpdate;
+    }
 
     public override void Update(float frameTime)
     {
@@ -32,9 +54,9 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
         if (_gameTiming.CurTime < _nextUpdate)
             return;
 
-        _nextUpdate = _gameTiming.CurTime - TimeSpan.FromSeconds(frameTime) + Interval;
+        _nextUpdate = _gameTiming.CurTime - TimeSpan.FromSeconds(frameTime) + _interval;
 
-        var individualGenerated = _oreWellSystem.GenerateResourcesAndTake((float)Interval.TotalSeconds / _activeEntities.Count);
+        var individualGenerated = _oreWellSystem.GenerateResourcesAndTake((float)_interval.TotalSeconds / _activeEntities.Count);
 
         foreach (var entity in _activeEntities)
         {

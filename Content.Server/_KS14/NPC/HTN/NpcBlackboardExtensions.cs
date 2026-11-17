@@ -27,7 +27,8 @@ public static class NpcBlackboardExtensions
     }
 
     /// <summary>
-    ///     The entity at <paramref name="key"/>, if the blackboard has one there.
+    ///     The entity at <paramref name="key"/>, if the blackboard has one there that is not deleted or being deleted
+    ///         (<see cref="NPCBlackboard.TryGetValue{T}"/> treats one that is as missing).
     /// </summary>
     public static bool TryGetEntity(this NPCBlackboard blackboard, string key, IEntityManager entityManager, out EntityUid entityUid)
     {

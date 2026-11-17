@@ -15,7 +15,7 @@ public sealed partial class DoWorldActionOperator : KsBaseActionOperator
     [DataField(required: true)] public string TargetCoordinatesKey;
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken _)
-        => (blackboard.ContainsKey(TargetCoordinatesKey), null);
+        => (blackboard.ContainsKey(TargetCoordinatesKey, EntityManager), null); // entity-aware, as Update's read is
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {

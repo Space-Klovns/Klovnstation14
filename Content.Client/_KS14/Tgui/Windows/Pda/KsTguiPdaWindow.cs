@@ -5,6 +5,7 @@ using Content.Client.Message;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.CartridgeLoader;
 using Content.Shared.PDA;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Timing;
@@ -82,10 +83,29 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     public BaseButton LockUplinkButton => _lockUplinkButton;
     public Control ProgramView => _programView;
 
-    // The PDA's colours belong to the stock frame.
-    public string? BorderColor { set { } }
-    public string? AccentHColor { set { } }
-    public string? AccentVColor { set { } }
+    // The PDA's colours (PdaBorderColorComponent), which the stock frame is painted in. tg's window has no frame to paint, so
+    //     under Baron, which had that frame, they are a strip over the header: the body colour with the accents at its right,
+    //     as the stock frame's accent stripes. tgui stays as tg's window is.
+    private readonly BoxContainer _colorStrip;
+    private readonly PanelContainer _bodyColor;
+    private readonly PanelContainer _accentHColor;
+    private readonly PanelContainer _accentVColor;
+
+    public string? BorderColor { set => SetStripColor(_bodyColor, value); }
+    public string? AccentHColor { set => SetStripColor(_accentHColor, value); }
+    public string? AccentVColor { set => SetStripColor(_accentVColor, value); }
+
+    /// <summary>
+    ///     The strip of the PDA's own colours, for tests.
+    /// </summary>
+    public Control ColorStrip => _colorStrip;
+
+    private void SetStripColor(PanelContainer part, string? hex)
+    {
+        part.Visible = hex != null;
+        part.PanelOverride = new StyleBoxFlat(Color.FromHex(hex, Color.White));
+        _colorStrip.Visible = !KsTguiTheme.ReadEnabled() && (_bodyColor.Visible || _accentHColor.Visible || _accentVColor.Visible);
+    }
 
     public event Action<EntityUid>? OnProgramItemPressed;
     public event Action<EntityUid>? OnUninstallButtonPressed;
@@ -133,6 +153,15 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
         headerRow.AddChild(_closeProgramButton);
         headerRow.AddChild(_powerButton);
         header.AddChild(headerRow);
+        _bodyColor = new PanelContainer { HorizontalExpand = true, Visible = false, PanelOverride = new StyleBoxEmpty() };
+        _accentHColor = new PanelContainer { MinWidth = 48f, Visible = false, PanelOverride = new StyleBoxEmpty() };
+        _accentVColor = new PanelContainer { MinWidth = 24f, Visible = false, PanelOverride = new StyleBoxEmpty() };
+        _colorStrip = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, MinHeight = 4f, Visible = false };
+        _colorStrip.AddChild(_bodyColor);
+        _colorStrip.AddChild(_accentHColor);
+        _colorStrip.AddChild(_accentVColor);
+        root.AddChild(_colorStrip);
+
         root.AddChild(header);
 
         // Home: what NtosMain shows.

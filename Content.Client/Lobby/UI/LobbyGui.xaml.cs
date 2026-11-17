@@ -63,8 +63,6 @@ namespace Content.Client.Lobby.UI
             DefaultState.Visible = false;
             CharacterSetupState.Visible = false;
 
-            KsSetBlurActive(state == LobbyGuiState.CharacterSetup); // KS14: blur the backdrop behind character setup
-
             switch (state)
             {
                 case LobbyGuiState.Default:

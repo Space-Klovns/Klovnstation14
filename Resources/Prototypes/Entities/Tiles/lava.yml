@@ -53,6 +53,15 @@
           - ItemMask
         density: 1000
         hard: false
+      # KS14 start: items never touch fix1 (no layer, ItemMask mask), so they touch this one; see KsLavaSystem
+      ksItemFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+          - HighImpassable
+        hard: false
+      # KS14 end
   - type: Tag
     tags:
       - HideContextMenu

@@ -17,7 +17,7 @@ public sealed partial class AirAlarmBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
-        _window = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled() /* KS14: tgui window */
+        _window = Content.Client._KS14.Tgui.KsTguiTheme.UsePortedWindows() /* KS14: tgui window */
             ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.AirAlarm.KsTguiAirAlarmWindow>()
             : this.CreateWindow<AirAlarmWindow>();
         _window.SetEntity(Owner);

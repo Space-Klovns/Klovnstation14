@@ -22,7 +22,7 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The vending machine's BUI opens the tgui window under the tgui theme and the stock one otherwise, and the tgui
+///     The vending machine's BUI opens the tgui window under both themes, and the tgui
 ///         window's products and categories send what the stock list does.
 /// </summary>
 [TestOf(typeof(KsTguiVendingWindow))]
@@ -55,8 +55,8 @@ public sealed class KsTguiVendingWindowTest : GameTest
         await Client.WaitAssertion(() =>
         {
             var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.ToList();
-            Assert.That(windows.OfType<KsTguiVendingWindow>().Any(), Is.EqualTo(tgui));
-            Assert.That(windows.OfType<VendingMachineMenu>().Any(), Is.EqualTo(!tgui));
+            Assert.That(windows.OfType<KsTguiVendingWindow>().Any(), Is.True);
+            Assert.That(windows.OfType<VendingMachineMenu>().Any(), Is.False);
         });
     }
 

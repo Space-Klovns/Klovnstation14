@@ -304,7 +304,8 @@ public sealed partial class KsShuttleDockControl : BaseShuttleControl
                     // Because it's being layed out top-down we have to arrange for first frame.
                     container.Arrange(PixelRect);
                     var dockPositionInView = Vector2.Transform(dock.Coordinates.Position, curGridToView);
-                    var containerPos = dockPositionInView / UIScale - container.DesiredSize / 2 - new Vector2(0f, 0.75f) * MinimapScale;
+                    // The view and MinimapScale are in pixels, the position in UI units: both pixel terms are divided by the scale.
+                    var containerPos = (dockPositionInView - new Vector2(0f, 0.75f) * MinimapScale) / UIScale - container.DesiredSize / 2;
                     SetPosition(container, containerPos);
                 }
 

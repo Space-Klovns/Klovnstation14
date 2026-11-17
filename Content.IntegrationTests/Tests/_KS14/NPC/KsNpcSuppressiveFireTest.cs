@@ -204,7 +204,8 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
     private static EntityUid ReportHostile(IEntityManager entManager, EntityUid npcUid, EntityCoordinates spot)
     {
         var hostileUid = entManager.SpawnEntity(NanoTrasenMob, spot.Offset(new Vector2(0f, -4f)));
-        var ev = new Content.Server._KS14.NPC.Perception.NpcContactCalloutEvent(npcUid, hostileUid, spot);
+        var now = Robust.Shared.IoC.IoCManager.Resolve<Robust.Shared.Timing.IGameTiming>().CurTime; // seen just now, by whoever called it out
+        var ev = new Content.Server._KS14.NPC.Perception.NpcContactCalloutEvent(npcUid, hostileUid, spot, now);
         entManager.EventBus.RaiseLocalEvent(npcUid, ref ev);
         return hostileUid;
     }

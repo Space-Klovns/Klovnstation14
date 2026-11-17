@@ -41,7 +41,7 @@
   - type: RandomSpawner
     prototypes:
     - AnomalyRockIron
-    - AnomalyRockCoal
+    # - AnomalyRockCoal # KS14: coal is no longer mined
     - AnomalyRockSilver
     - AnomalyRockGold
     - AnomalyRockQuartz

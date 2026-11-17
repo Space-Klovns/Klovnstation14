@@ -19,7 +19,6 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems;
 public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 {
     [Dependency] private AtmosphereSystem _atmos = default!;
-    [Dependency] private Content.Shared._KS14.Fluidmos.KsFluidmosPropertiesSystem _ksFluidmosPropertiesSystem = default!; // KS14
     [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private Shared._KS14.Atmos.Piping.Unary.GasCanisterOverlayDataSystem _ksGasCanisterOverlayDataSystem = default!; // KS14
@@ -76,10 +75,7 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 
         UI.SetUiState(uid,
             GasCanisterUiKey.Key,
-            new GasCanisterBoundUserInterfaceState(canister.Air.Pressure, portStatus, tankPressure)
-            {
-                KsFluid = Content.Shared._KS14.Fluidmos.KsFluidEntry.FromMixture(canister.Air.Fluid, _ksFluidmosPropertiesSystem), // KS14
-            });
+            new GasCanisterBoundUserInterfaceState(canister.Air.Pressure, portStatus, tankPressure));
     }
 
     protected override void SafetyMeasures(Entity<GasCanisterComponent> entity)

@@ -103,7 +103,7 @@ public sealed partial class AdminSystem : EntitySystem
                 continue;
 
             if (!_playerManager.TryGetPlayerData(id, out var playerData))
-                return;
+                continue; // KS14: return -> continue, one missing record stopped the list going out to admins at all
 
             _playerManager.TryGetSessionById(id, out var session);
             _playerList[id] = GetPlayerInfo(playerData, session);

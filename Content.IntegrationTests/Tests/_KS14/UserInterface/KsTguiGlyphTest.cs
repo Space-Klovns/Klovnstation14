@@ -1,12 +1,18 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client.UserInterface.Controls;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
@@ -138,5 +144,65 @@ public sealed class KsTguiGlyphTest : GameTest
 
             collapsible.Orphan();
         });
+    }
+
+    /// <summary>
+    ///     The closed chevron is drawn turned, on top of the transform that places the heading on screen. Replacing that
+    ///         transform drew it about the screen's corner, outside the heading's clip, so it was only ever seen open.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ClosedHeadingChevronIsDrawnWhereTheHeadingIs(bool open)
+    {
+        await Client.WaitAssertion(() =>
+        {
+            var placed = Matrix3x2.CreateTranslation(500f, 300f);
+            var handle = new RecordingHandle(placed);
+            var box = new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox { Open = open, ShaderSize = 16f };
+            var bounds = new UIBox2(0f, 0f, 100f, 20f);
+
+            box.Draw(handle, bounds, uiScale: 1f);
+
+            Assert.That(handle.Drawn, Has.Count.EqualTo(1), "The chevron wasn't drawn once.");
+            var (rect, transform) = handle.Drawn[0];
+            var centre = Vector2.Transform(rect.Center, transform);
+            var expected = Vector2.Transform(rect.Center, placed);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Vector2.Distance(centre, expected), Is.LessThan(0.01f), "The chevron was drawn away from its heading.");
+                Assert.That(handle.GetTransform(), Is.EqualTo(placed), "The heading's transform wasn't put back after the chevron.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Records where each rectangle is drawn, and under what transform.
+    /// </summary>
+    private sealed class RecordingHandle(Matrix3x2 transform) : DrawingHandleScreen(Texture.White)
+    {
+        private Matrix3x2 _transform = transform;
+        private ShaderInstance _shader;
+
+        public readonly List<(UIBox2 Rect, Matrix3x2 Transform)> Drawn = new();
+
+        public override void SetTransform(in Matrix3x2 matrix) => _transform = matrix;
+        public override Matrix3x2 GetTransform() => _transform;
+        public override void UseShader(ShaderInstance shader) => _shader = shader;
+        public override ShaderInstance GetShader() => _shader;
+        public override void DrawRect(UIBox2 rect, Color color, bool filled = true) => Drawn.Add((rect, _transform));
+        public override void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null) =>
+            Drawn.Add((rect, _transform));
+
+        public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<DrawVertexUV2DColor> vertices) { }
+        public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<ushort> indices, ReadOnlySpan<DrawVertexUV2DColor> vertices) { }
+        public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true) { }
+        public override void DrawLine(Vector2 from, Vector2 to, Color color) { }
+        public override void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor) { }
+        public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null) { }
+
+        public override void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Angle? worldRot, Angle eyeRotation = default,
+            Direction? overrideDirection = null, SpriteComponent sprite = null, TransformComponent xform = null,
+            SharedTransformSystem xformSystem = null, IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders = null) { }
     }
 }

@@ -41,11 +41,17 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private const int HistoryLimit = 5;
 
     /// <summary>
-    ///     How long after it takes focus the bar drops what it is typed, which is the key that opened it.
+    ///     How long after taking focus the bar drops a character typed, which is the key that opened it: at least the rest of
+    ///         the frame the key was pressed in and the next, for text input that started a frame late, and at least
+    ///         <see cref="OpeningKeyMinimum"/>, so a fast frame rate doesn't end it before the text arrives. A stock LineEdit's
+    ///         IgnoreNext lasts one frame. Much longer, and a fast typist's first letter goes instead (#427).
     /// </summary>
-    private static readonly TimeSpan OpeningKeyWindow = TimeSpan.FromMilliseconds(120);
+    private const int OpeningKeyFrames = 2;
+
+    public static readonly TimeSpan OpeningKeyMinimum = TimeSpan.FromMilliseconds(30);
 
     [Dependency] private IGameTiming _gameTiming = default!;
+
 
     private readonly KsTguiStyleBox _windowBox = new(Color.White);
     private readonly SayButton _button;
@@ -58,7 +64,8 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private Color _channelColor = Color.White;
     private string _lastText = string.Empty;
     private string _textAtFocus = string.Empty;
-    private TimeSpan _ignoreUntil;
+    private int _openingKeyFramesLeft;
+    private TimeSpan _focusedAt;
     private bool _hadFocus;
     private bool _setting;
 
@@ -229,19 +236,41 @@ public sealed partial class KsTguiSayBar : PanelContainer
     }
 
     /// <summary>
-    ///     Takes keyboard focus, dropping the character of the key that opened the bar.
+    ///     Takes keyboard focus. <paramref name="ignoreOpeningKey"/> drops the character of the key that opened the bar, for a
+    ///         keybind; a click types nothing, so there is nothing to drop.
     /// </summary>
-    public void FocusInput()
+    public void FocusInput(bool ignoreOpeningKey = true)
     {
         _textAtFocus = Text;
-        _ignoreUntil = _gameTiming.RealTime + OpeningKeyWindow;
-        _openingKeyPending = true;
+        _openingKeyPending = ignoreOpeningKey;
+        _openingKeyFramesLeft = OpeningKeyFrames;
+        _focusedAt = _gameTiming.RealTime;
         _edit.GrabKeyboardFocus();
     }
 
     public void ReleaseInput()
     {
         _edit.ReleaseKeyboardFocus();
+        ReportFocusLost();
+    }
+
+    /// <summary>
+    ///     Says focus is gone now, rather than at the next frame update: a hidden or removed bar gets none, and the typing
+    ///         indicator would stay up for good.
+    /// </summary>
+    private void ReportFocusLost()
+    {
+        if (!_hadFocus)
+            return;
+
+        _hadFocus = false;
+        OnFocusChanged?.Invoke(false);
+    }
+
+    protected override void ExitedTree()
+    {
+        base.ExitedTree();
+        ReportFocusLost();
     }
 
     /// <summary>
@@ -289,7 +318,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private void ChangeFromEdit(string text)
     {
         // The key that opened the bar arrives as text a moment after the focus: a stock LineEdit has IgnoreNext for it.
-        if (_openingKeyPending && _gameTiming.RealTime < _ignoreUntil && text.Length == _textAtFocus.Length + 1 && text.StartsWith(_textAtFocus))
+        if (_openingKeyPending && text.Length == _textAtFocus.Length + 1 && text.StartsWith(_textAtFocus))
         {
             _openingKeyPending = false;
             SetText(_textAtFocus);
@@ -426,6 +455,13 @@ public sealed partial class KsTguiSayBar : PanelContainer
         base.FrameUpdate(args);
 
         ApplyDeferredText();
+
+        if (_openingKeyPending
+            && --_openingKeyFramesLeft <= 0
+            && _gameTiming.RealTime - _focusedAt >= OpeningKeyMinimum)
+        {
+            _openingKeyPending = false;
+        }
 
         var hasFocus = _edit.HasKeyboardFocus();
         if (hasFocus != _hadFocus)

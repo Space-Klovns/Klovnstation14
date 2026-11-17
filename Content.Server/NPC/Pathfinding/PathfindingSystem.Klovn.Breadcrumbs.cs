@@ -66,7 +66,56 @@ public sealed partial class PathfindingSystem
         PathfindingBreadcrumbFlag Flags,
         bool BlockedBesidesDoors,
         float Damage,
-        bool Pushable);
+        bool Pushable,
+        bool MissesEveryPoint);
+
+    /// <summary>
+    /// Whether no hard fixture of an entity reaches any of its tile's points. The points are a quarter of a tile apart,
+    /// so anything narrower than that, centred on its tile, fits between them: a snowy tree or a conifer is a fifth of
+    /// a tile wide. The navmesh then took the tile for open floor, paths ran straight through the trunk, and NPCs walked
+    /// into it and stuck. Such an entity is tested against each point's cell, the quarter of a tile around it, rather
+    /// than the point itself, and so blocks the points around it; <see cref="BlockNarrowGaps"/> then blocks the rest of
+    /// the tile if what is left beside it is too narrow for a mob. Anything wider is tested by point as before.
+    /// </summary>
+    private static bool FitsBetweenPoints(FixturesComponent fixturesComponent, Vector2i tilePos)
+    {
+        foreach (var fixture in fixturesComponent.Fixtures.Values)
+        {
+            if (!fixture.Hard)
+                continue;
+
+            foreach (var proxy in fixture.Proxies)
+            {
+                if (HasPointWithin(proxy.AABB.Left, proxy.AABB.Right, tilePos.X) &&
+                    HasPointWithin(proxy.AABB.Bottom, proxy.AABB.Top, tilePos.Y))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Whether any of a tile's points along one axis, at <paramref name="tileOrigin"/> plus an odd number of eighths,
+    /// lies within <paramref name="min"/> to <paramref name="max"/>.
+    /// </summary>
+    private static bool HasPointWithin(float min, float max, int tileOrigin)
+    {
+        var first = tileOrigin + StepOffset;
+        var index = Math.Clamp((int)MathF.Ceiling((min - first) * SubStep), 0, SubStep - 1);
+        var point = first + (float)index / SubStep;
+        return point >= min && point <= max;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="bounds"/> overlaps the cell around a point, the square a <see cref="SharedPathfindingSystem.SubStep"/>th
+    /// of a tile across centred on it, by more than touching it.
+    /// </summary>
+    private static bool OverlapsPointCell(Box2 bounds, Vector2 point)
+    {
+        return bounds.Left < point.X + StepOffset && bounds.Right > point.X - StepOffset &&
+               bounds.Bottom < point.Y + StepOffset && bounds.Top > point.Y - StepOffset;
+    }
 
     /// <summary>
     /// How many points across, of a tile's <see cref="SharedPathfindingSystem.SubStep"/>, a mob needs to get through:
@@ -161,7 +210,7 @@ public sealed partial class PathfindingSystem
         return true;
     }
 
-    private TileEntity GetTileEntity(EntityUid uid, FixturesComponent fixturesComponent, TransformComponent transformComponent)
+    private TileEntity GetTileEntity(EntityUid uid, FixturesComponent fixturesComponent, TransformComponent transformComponent, Vector2i tilePos)
     {
         var flags = PathfindingBreadcrumbFlag.None;
 
@@ -206,6 +255,12 @@ public sealed partial class PathfindingSystem
         if (_climbableQuery.HasComponent(uid))
             flags |= PathfindingBreadcrumbFlag.Climb;
 
+        // Shatters under one of a person's weight that climbs onto it: a plain glass table, not a reinforced or plasma one,
+        //      which take more than that (GlassTableComponent.MassLimit). The mesh is shared, so it goes by a person, the
+        //      climber NPCs there are. See PathFlags.ClimbingBreakables.
+        if (_glassTableQuery.TryGetComponent(uid, out var glassTableComponent) && glassTableComponent.MassLimit < ClimberMass)
+            flags |= PathfindingBreadcrumbFlag.ClimbBreaks;
+
         var damage = _destructibleQuery.TryGetComponent(uid, out var destructibleComponent)
             ? _destructible.DestroyedAt(uid, destructibleComponent).Float()
             : 0f;
@@ -219,6 +274,7 @@ public sealed partial class PathfindingSystem
             flags,
             blockedBesidesDoors,
             damage,
-            pushable);
+            pushable,
+            FitsBetweenPoints(fixturesComponent, tilePos));
     }
 }

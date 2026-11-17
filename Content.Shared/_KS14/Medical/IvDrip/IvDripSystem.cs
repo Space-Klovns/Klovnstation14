@@ -46,7 +46,7 @@ public sealed partial class IvDripSystem : EntitySystem
     private void OnGotEquipped(Entity<IvDripComponent> entity, ref GotEquippedEvent args)
     {
         entity.Comp.WearerUid = args.EquipTarget;
-        entity.Comp.NextInjection = _gameTiming.CurTime + TimeSpan.FromSeconds(entity.Comp.InjectionInterval);
+        entity.Comp.NextInjection = _gameTiming.CurTime + entity.Comp.InjectionInterval;
 
         EnsureComp<IvDripWearerComponent>(args.EquipTarget).DripUids.Add(entity);
 
@@ -137,7 +137,7 @@ public sealed partial class IvDripSystem : EntitySystem
         // Restart the clock, so that flicking a drip on does not immediately inject off the back of
         // however long it spent switched off.
         if (enabled)
-            entity.Comp.NextInjection = _gameTiming.CurTime + TimeSpan.FromSeconds(entity.Comp.InjectionInterval);
+            entity.Comp.NextInjection = _gameTiming.CurTime + entity.Comp.InjectionInterval;
 
         _actionsSystem.SetToggled(entity.Comp.ToggleActionEntity, enabled);
         UpdateUserInterface(entity);
@@ -158,7 +158,7 @@ public sealed partial class IvDripSystem : EntitySystem
                 _gameTiming.CurTime < ivDripComponent.NextInjection)
                 continue;
 
-            ivDripComponent.NextInjection = _gameTiming.CurTime + TimeSpan.FromSeconds(ivDripComponent.InjectionInterval);
+            ivDripComponent.NextInjection = _gameTiming.CurTime + ivDripComponent.InjectionInterval;
             Inject((uid, ivDripComponent), wearerUid);
         }
     }

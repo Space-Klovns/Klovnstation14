@@ -1,5 +1,4 @@
 using System.Numerics;
-using Content.Server._KS14.NPC.Components;
 using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.Weapons.Ranged.Systems;
@@ -11,6 +10,7 @@ using Content.Shared.NPC;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Systems;
 using Content.Shared.Physics;
+using Content.Shared.Standing;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
@@ -57,11 +57,15 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<NpcFireLaneComponent> _fireLaneQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NpcHoldingFireComponent> _holdingFireQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<Content.Server.NPC.Components.NPCSteeringComponent> _steeringQuery = default!;
+    [Dependency] private EntityQuery<Content.Server.NPC.Components.NPCRangedCombatComponent> _rangedCombatQuery = default!;
+    [Dependency] private EntityQuery<StandingStateComponent> _standingStateQuery = default!;
 
     /// <summary>
     ///     Score multiplier for a spot that crosses a line of fire. Soft rather than zero: a crossed line beats
@@ -100,10 +104,24 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 
     /// <summary>
     ///     How fast a friend may go off the way it was going while a round is on its way, in tiles a second: it starts, stops
-    ///         and turns at the corners of its path, which its velocity as the round is fired does not tell. About half a walk;
-    ///         seen live, a friend 7 tiles off moved 0.8 tiles across a round's way that its velocity had it clear of.
+    ///         and turns at the corners of its path, which its velocity as the round is fired does not tell. Seen live: a friend
+    ///         7 tiles off moved 0.8 tiles across a round's way that its velocity had it clear of, and friends 6 tiles off
+    ///         closed 0.6 tiles in 0.15s, turning at the end of a juke: for one already on the move,
+    ///         <see cref="MovingFriendManeuverSpeed"/>.
     /// </summary>
     public const float FriendManeuverSpeed = 2.5f;
+
+    /// <summary>
+    ///     The same for a friend already on the move: turning about at the end of a juke goes from one way to the other, which
+    ///         can be twice one starting from standing.
+    /// </summary>
+    public const float MovingFriendManeuverSpeed = 4f;
+
+    /// <summary>
+    ///     How fast a friend has to be going, in tiles a second, to count as on the move: one that is may turn off its way
+    ///         before a round fired this tick gets to it.
+    /// </summary>
+    private const float MovingSpeed = 0.1f;
 
     /// <summary>
     ///     How far from its middle a mob is hit, in tiles, for one with no round fixture to read it from: a humanoid's.
@@ -316,7 +334,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     {
         shot = aim;
 
-        if (!Enabled || from.MapId != aim.MapId)
+        if (!Enabled || from.MapId != aim.MapId || GetFireLaneMode(shooterUid) == NpcFireLaneMode.FireThrough)
             return true;
 
         GatherFriends(shooterUid, from);
@@ -378,7 +396,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     /// </summary>
     public bool IsShotClear(EntityUid shooterUid, MapCoordinates from, MapCoordinates aim)
     {
-        if (!Enabled || from.MapId != aim.MapId)
+        if (!Enabled || from.MapId != aim.MapId || GetFireLaneMode(shooterUid) == NpcFireLaneMode.FireThrough)
             return true;
 
         GatherFriends(shooterUid, from);
@@ -388,6 +406,31 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 
         var direction = aim.Position - from.Position;
         return direction.LengthSquared() < 0.0001f || !IsBlocked(MathF.Atan2(direction.Y, direction.X));
+    }
+
+    /// <summary>
+    ///     Who <paramref name="shooterUid"/> holds fire for: its <see cref="NpcFireLaneComponent.Mode"/>, or, without one,
+    ///         <see cref="NpcFireLaneMode.HoldForFriendlies"/>.
+    /// </summary>
+    public NpcFireLaneMode GetFireLaneMode(EntityUid shooterUid)
+    {
+        return _fireLaneQuery.TryComp(shooterUid, out var fireLaneComponent) ? fireLaneComponent.Mode : NpcFireLaneMode.HoldForFriendlies;
+    }
+
+    /// <summary>
+    ///     Whether a round from <paramref name="shooterUid"/>, which holds fire for friends, is to be kept off
+    ///         <paramref name="mobUid"/>: a friend; or, if it holds fire for neutrals too, a standing mob neither hostile to it
+    ///         nor its target.
+    /// </summary>
+    private bool IsToBeSpared(EntityUid shooterUid, EntityUid mobUid, bool spareNeutrals, EntityUid? targetUid)
+    {
+        if (_npcFactionSystem.IsEntityFriendly(shooterUid, mobUid))
+            return true;
+
+        return spareNeutrals &&
+            mobUid != targetUid &&
+            !(_standingStateQuery.TryComp(mobUid, out var standingStateComponent) && !standingStateComponent.Standing) &&
+            !_npcFactionSystem.IsEntityHostile(shooterUid, mobUid);
     }
 
     /// <summary>
@@ -512,6 +555,12 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         // A projectile flies at its own speed plus the shooter's velocity: straight out from the shooter as the shooter sees
         //      it, with everything else moving by it the other way. A strafing shooter's rounds drift as far aside as it went.
         var shooterVelocity = _physicsQuery.TryComp(shooterUid, out var shooterPhysicsComponent) ? shooterPhysicsComponent.LinearVelocity : Vector2.Zero;
+        var shooterSpeed = shooterVelocity.Length();
+        var tickTime = (float) _gameTiming.TickPeriod.TotalSeconds;
+
+        // Bystanders as well as friends, if asked. One that fires through everyone never gets here.
+        var spareNeutrals = GetFireLaneMode(shooterUid) == NpcFireLaneMode.HoldForFriendliesAndNeutrals;
+        EntityUid? targetUid = _rangedCombatQuery.TryComp(shooterUid, out var rangedCombatComponent) ? rangedCombatComponent.Target : null;
 
         _scratchMobs.Clear();
         _entityLookupSystem.GetEntitiesInRange(from, MissReach, _scratchMobs);
@@ -520,7 +569,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         {
             if (mob.Owner == shooterUid ||
                 !_mobStateSystem.IsAlive(mob.Owner, mob.Comp) ||
-                !_npcFactionSystem.IsEntityFriendly(shooterUid, mob.Owner) ||
+                !IsToBeSpared(shooterUid, mob.Owner, spareNeutrals, targetUid) ||
                 PassesThrough(shooterUid, mob.Owner, hitscan))
                 continue;
 
@@ -528,34 +577,46 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             var offset = position - from.Position;
             var distance = offset.Length();
             var reach = GetBodyRadius(mob.Owner) + cone.HalfWidth + ShotClearance;
+            var friendVelocity = _physicsQuery.TryComp(mob.Owner, out var physicsComponent) ? physicsComponent.LinearVelocity : Vector2.Zero;
 
-            if (distance <= reach)
+            // A friend on the move may go off the way it was going this very tick: its steering may set it a new velocity after
+            //      this has read the old one, and a round gets to a friend under a tile away within that tick. So it gets a
+            //      tick's way about it from the start, where the round starts included. Seen live: friends 0.7 tiles off, just
+            //      clear by their velocity, beside and behind the shooter, stepped a few hundredths in and were hit. One
+            //      standing still is where it is: KsNpcFriendlyFireTest.TestMapWhereAShotStarts. Where the round starts is as
+            //      far off again as the shooter goes in a tick: seen live, a friend 0.7 tiles behind a shooter juking about,
+            //      outside where a still one's round starts, was hit.
+            // On the move, or about to be: one being steered somewhere sets off whenever its steering says, this tick
+            //      included. Seen live: a flanker standing among its squad set off the tick a squadmate fired past it.
+            var moving = friendVelocity.LengthSquared() > MovingSpeed * MovingSpeed || _steeringQuery.HasComp(mob.Owner);
+            var maneuverSpeed = moving ? MovingFriendManeuverSpeed : FriendManeuverSpeed;
+            var nearReach = (moving ? reach + maneuverSpeed * tickTime : reach) + shooterSpeed * tickTime;
+
+            if (distance <= nearReach)
             {
                 _friendAtMuzzle = true;
                 return;
             }
 
-            // How long a round takes to get to it, or the last of the burst does; and how far off its way it may go meanwhile,
-            //      past the first tick, which is too soon to go anywhere its velocity does not already say.
+            // How long a round takes to get to it, or the last of the burst does; and how far off its way it may go meanwhile:
+            //      past the first tick for one standing still, which is too soon for it to start.
             var flight = (hitscan ? 0f : distance / cone.Speed) + cone.BurstTime;
-            var tickTime = (float) _gameTiming.TickPeriod.TotalSeconds;
-            var wayReach = reach + FriendManeuverSpeed * MathF.Max(0f, flight - tickTime);
+            var wayReach = reach + maneuverSpeed * (moving ? MathF.Max(flight, tickTime) : MathF.Max(0f, flight - tickTime));
 
             var bearing = MathF.Atan2(offset.Y, offset.X);
             var halfWidth = MathF.Asin(MathF.Min(1f, wayReach / distance));
             var rearBearing = WrapAngle(bearing + MathF.PI);
-            var rearHalfWidth = GetRearHalfWidth(distance, reach);
+            var rearHalfWidth = GetRearHalfWidth(distance, nearReach);
 
             // Where it will be by the time a round gets to it, or the last of the burst does, as the shooter sees it; and,
             //      for one just behind, by the physics step after the round is spawned, which is when it is hit.
-            var velocity = (_physicsQuery.TryComp(mob.Owner, out var physicsComponent) ? physicsComponent.LinearVelocity : Vector2.Zero) -
-                shooterVelocity;
+            var velocity = friendVelocity - shooterVelocity;
             if (velocity.LengthSquared() > 0.0001f)
             {
                 var later = offset + velocity * MathF.Max(flight, tickTime);
                 var laterDistance = later.Length();
 
-                if (laterDistance <= reach)
+                if (laterDistance <= nearReach)
                 {
                     _friendAtMuzzle = true;
                     return;
@@ -567,13 +628,13 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
                 var stepped = offset + velocity * tickTime;
                 var steppedDistance = stepped.Length();
 
-                if (steppedDistance <= reach)
+                if (steppedDistance <= nearReach)
                 {
                     _friendAtMuzzle = true;
                     return;
                 }
 
-                var steppedRearHalfWidth = GetRearHalfWidth(steppedDistance, reach);
+                var steppedRearHalfWidth = GetRearHalfWidth(steppedDistance, nearReach);
                 if (steppedRearHalfWidth > 0f)
                 {
                     var steppedRearBearing = WrapAngle(MathF.Atan2(stepped.Y, stepped.X) + MathF.PI);

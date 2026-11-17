@@ -77,6 +77,7 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
             Gun = args.Gun,
             Shooter = args.Shooter,
             HitEntity = result?.HitEntity,
+            HitCoordinates = result is { } hit ? new MapCoordinates(hit.HitPos, mapCords.MapId) : null, // KS14
         };
 
         var attemptEvent = new AttemptHitscanRaycastFiredEvent { Data = data };

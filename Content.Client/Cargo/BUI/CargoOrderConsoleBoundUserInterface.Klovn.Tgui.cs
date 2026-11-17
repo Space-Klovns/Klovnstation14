@@ -16,11 +16,11 @@ public sealed partial class CargoOrderConsoleBoundUserInterface
     private KsTguiCargoConsoleWindow? _ksTguiMenu;
 
     /// <summary>
-    ///     Opens the tgui window instead of the stock one when that theme is on.
+    ///     Opens the tgui window instead of the stock one.
     /// </summary>
     private bool KsOpenTguiWindow()
     {
-        if (!KsTguiTheme.ReadEnabled())
+        if (!KsTguiTheme.UsePortedWindows())
             return false;
 
         var dependencies = IoCManager.Instance!;

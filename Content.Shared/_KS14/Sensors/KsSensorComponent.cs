@@ -288,15 +288,21 @@ public sealed partial class KsElintComponent : Component
     public float IgnoreFraction = 0f;
 
     /// <summary>
-    ///     Seconds of continuous listening for focus analysis to reach 100% on a
+    ///     Continuous listening for focus analysis to reach 100% on a
     ///         designated emitter. Progress only advances on ticks the emitter is
     ///         actually heard, never while this ELINT is self-blinded by its own
     ///         grid's emissions.
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan AnalysisTime = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    ///     <see cref="AnalysisTime"/> in seconds, for the guidebook: its data crosses the network as plain
+    ///         objects and its <c>format</c> is a number format.
+    /// </summary>
     [GuidebookData]
-    public float AnalysisTime = 30f;
+    public float AnalysisSeconds => (float)AnalysisTime.TotalSeconds;
 
     /// <summary>
     ///     Each stage's intel readouts are evaluated against the analysed grid once

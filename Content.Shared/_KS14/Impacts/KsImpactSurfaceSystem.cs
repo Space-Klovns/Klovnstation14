@@ -1,0 +1,405 @@
+using System.Numerics;
+using Content.Shared._KS14.Particles;
+using Content.Shared.Body.Components;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Physics;
+using Content.Shared.Storage;
+using Content.Shared.Storage.EntitySystems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Containers;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
+using Robust.Shared.Timing;
+
+namespace Content.Shared._KS14.Impacts;
+
+/// <summary>
+///     TGMC's bullet impacts (<c>/datum/element/debris</c>): a hit on a surface puffs smoke back out of it, a ballistic
+///         one throws off debris of the surface's <see cref="KsImpactMaterialPrototype"/> and maybe ricochets, and a
+///         ballistic hit on a mob that its armour mostly soaked plays an armour sound.
+///
+///     All of it is cosmetic and fired for every bullet, so it only ever plays on a client, for itself
+///         (<see cref="PlayImpact"/>): from the hit it predicted, or from the server's relayed hit when it predicted
+///         none. No entity is networked for it: a bullet's hit rides its existing relay, and a hitscan's is one small
+///         event (<see cref="PlayImpactPredicted"/>), as its beam sprites are.
+/// </summary>
+public sealed partial class KsImpactSurfaceSystem : EntitySystem
+{
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedStorageSystem _storageSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private BloodSpray.BloodSpraySystem _bloodSpraySystem = default!;
+
+    [Dependency] private EntityQuery<KsImpactSurfaceComponent> _surfaceQuery = default!;
+    [Dependency] private EntityQuery<KsImpactSurfaceStorageFillComponent> _storageFillQuery = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<BloodstreamComponent> _bloodstreamQuery = default!;
+    [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
+
+    /// <summary>
+    ///     A hit on anything else that is not a mob: smoke only, as TGMC gives every object.
+    /// </summary>
+    public static readonly ProtoId<KsImpactMaterialPrototype> FallbackMaterial = "Default";
+
+    /// <summary>
+    ///     A ballistic hit on a mob that its armour soaked (<see cref="IsSoaked"/>): sparks off the plate.
+    /// </summary>
+    public static readonly ProtoId<KsImpactMaterialPrototype> ArmorMaterial = "Armor";
+
+    /// <summary>
+    ///     TGMC tells ballistic ammo from energy and xeno ammo by a flag; here a hit is ballistic if it pierces or
+    ///         bludgeons.
+    /// </summary>
+    private static readonly ProtoId<DamageTypePrototype> PiercingDamage = "Piercing";
+    private static readonly ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
+
+    /// <summary>
+    ///     TGMC's <c>sound_armor</c>, played when armour soaks a ballistic hit.
+    /// </summary>
+    public static readonly ProtoId<SoundCollectionPrototype> ArmorSoundCollection = "KsBulletArmorImpact";
+
+    private static readonly SoundSpecifier ArmorSound = new SoundCollectionSpecifier(ArmorSoundCollection, AudioParams.Default.WithVariation(0.05f));
+
+    /// <summary>
+    ///     A ballistic hit on a mob that dealt less than this share of its damage counts as soaked by armour: armour
+    ///         that took a fifth of it or more. The plain armour vest lets 70% of a bullet through.
+    /// </summary>
+    public const float ArmorSoakFraction = 0.8f;
+
+    /// <summary>
+    ///     How far back along the shot <see cref="GetEntryPoint"/> starts looking for where it came in, in metres.
+    /// </summary>
+    private const float EntryCastBack = 1.5f;
+
+    /// <summary>
+    ///     How far off the surface an impact plays, so its emitter is not inside the wall.
+    /// </summary>
+    private const float EntrySurfaceOffset = 0.05f;
+
+    /// <summary>
+    ///     The target <see cref="GetEntryPoint"/> casts against, for <see cref="_isNotEntryTarget"/>: one delegate for
+    ///         every cast, not one a cast.
+    /// </summary>
+    private EntityUid _entryTargetUid;
+
+    private Func<EntityUid, bool> _isNotEntryTarget = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _isNotEntryTarget = uid => uid != _entryTargetUid;
+    }
+
+    // TGMC's playsound(source, sound_bounce, 50, TRUE, ...): half volume, varied.
+    private static readonly AudioParams RicochetParams = AudioParams.Default.WithVolume(-6f).WithVariation(0.1f);
+
+    /// <summary>
+    ///     Plays a projectile's hit on <paramref name="target"/>, on this client only; does nothing on the server.
+    /// </summary>
+    /// <param name="coordinates">Where the projectile was when it hit: on the near side of the surface.</param>
+    /// <param name="worldDirection">Which way the projectile was flying. The smoke and debris fly back against it.</param>
+    /// <param name="rawDamage">The projectile's damage before anything resisted it.</param>
+    /// <param name="dealtDamage">The damage the hit dealt, if any.</param>
+    /// <returns>
+    ///     Whether the hit rang off armour (<see cref="HitsArmor"/>), whose sound takes the place of the hit sound
+    ///         <c>SharedGunSystem.PlayImpactSound</c> would play: the caller plays that only when this is false.
+    /// </returns>
+    public bool PlayImpact(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
+    {
+        if (_netManager.IsServer || TerminatingOrDeleted(target))
+            return false;
+
+        var ballistic = IsBallistic(rawDamage);
+
+        // A mob gets sparks off its armour when that soaked the hit, else only what its own surface gives it (a
+        //      borg's sparks); flesh has the blood spray instead.
+        ProtoId<KsImpactMaterialPrototype> materialId;
+        var hitsArmor = false;
+        if (_mobStateQuery.HasComp(target))
+        {
+            if (HitsArmor(target, rawDamage, dealtDamage))
+            {
+                PlayHere(ArmorSound, coordinates, null);
+                // What little got through comes out the far side; none, if the armour stopped it all.
+                if (dealtDamage != null && dealtDamage.GetTotal() > 0)
+                    _bloodSpraySystem.SpawnExitWoundMist(target, worldDirection);
+                materialId = ArmorMaterial;
+                hitsArmor = true;
+            }
+            else if (_surfaceQuery.HasComp(target))
+            {
+                materialId = PickMaterial(target);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            materialId = PickMaterial(target);
+        }
+
+        if (!ProtoMan.TryIndex(materialId, out var material))
+            return hitsArmor;
+
+        coordinates = GetEntryPoint(target, coordinates, worldDirection);
+        var localRotation = GetLocalRotation(coordinates, -worldDirection);
+        // Mostly a light hit, now and then the full burst.
+        var dense = _random.Prob(material.DenseChance);
+        var amount = dense ? 1f : material.LightAmount;
+        var speed = dense ? 1f : material.LightSpeed;
+
+        SpawnImpactParticles(material.Smoke, coordinates, localRotation, amount, speed);
+        if (!ballistic)
+            return hitsArmor;
+
+        SpawnImpactParticles(material.Debris, coordinates, localRotation, amount, speed);
+        foreach (var extraDebris in material.ExtraDebris)
+            SpawnImpactParticles(extraDebris, coordinates, localRotation, amount, speed);
+
+        if (material.Sound != null && _random.Prob(material.SoundChance))
+            PlayHere(material.Sound, coordinates, RicochetParams);
+
+        return hitsArmor;
+    }
+
+    /// <summary>
+    ///     Plays a hit's impact from shared code both sides run, for a shot only its shooter's client predicts (a
+    ///         hitscan): that client plays it at once; the server sends it to everyone else who can see it, as the
+    ///         hitscan's beam sprites are.
+    /// </summary>
+    /// <param name="hitCoordinates">Where the shot met the target, on its near side.</param>
+    /// <param name="user">Whoever fired it, whose client predicted it; none for a gun firing by itself.</param>
+    public void PlayImpactPredicted(EntityUid target, MapCoordinates hitCoordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage, EntityUid? user)
+    {
+        var coordinates = _transformSystem.ToCoordinates(hitCoordinates);
+        if (_netManager.IsClient)
+        {
+            if (_gameTiming.IsFirstTimePredicted)
+                PlayImpact(target, coordinates, worldDirection, rawDamage, dealtDamage);
+
+            return;
+        }
+
+        var filter = Filter.Pvs(hitCoordinates);
+        if (user is { } userUid)
+            filter.RemovePlayerByAttachedEntity(userUid);
+
+        RaiseNetworkEvent(new KsImpactSurfaceHitEvent
+        {
+            Target = GetNetEntity(target),
+            Coordinates = GetNetCoordinates(coordinates),
+            Direction = worldDirection,
+            RawDamage = rawDamage,
+            Damage = dealtDamage,
+        }, filter);
+    }
+
+    // Only a client plays these; one a client sent the server is ignored there (PlayImpact does nothing on a server).
+    [SubscribeNetworkEvent]
+    private void OnImpactSurfaceHit(KsImpactSurfaceHitEvent args)
+    {
+        if (TryGetEntity(args.Target, out var targetUid))
+            PlayImpact(targetUid.Value, GetCoordinates(args.Coordinates), args.Direction, args.RawDamage, args.Damage);
+    }
+
+    /// <summary>
+    ///     The material a hit on <paramref name="target"/> uses: its storage fill's with a chance of how full it is,
+    ///         else its own, else <see cref="FallbackMaterial"/>.
+    /// </summary>
+    public ProtoId<KsImpactMaterialPrototype> PickMaterial(EntityUid target)
+    {
+        if (_storageFillQuery.TryComp(target, out var storageFillComponent) &&
+            storageFillComponent.FillFraction > 0f &&
+            _random.Prob(storageFillComponent.FillFraction))
+            return storageFillComponent.Material;
+
+        return _surfaceQuery.TryComp(target, out var surfaceComponent) ? surfaceComponent.Material : FallbackMaterial;
+    }
+
+    /// <summary>
+    ///     Whether a projectile's own impact sprite (upstream's <c>BulletImpactEffect</c>, which reads as sparks)
+    ///         suits a hit on <paramref name="target"/>: not on a mob that bleeds, which sprays blood instead.
+    /// </summary>
+    public bool ShowsProjectileImpactEffect(EntityUid target)
+    {
+        return !(_mobStateQuery.HasComp(target) && _bloodstreamQuery.HasComp(target));
+    }
+
+    public static bool IsBallistic(DamageSpecifier? damage)
+    {
+        if (damage == null)
+            return false;
+
+        return damage.DamageDict.TryGetValue(PiercingDamage, out var piercing) && piercing > 0 ||
+               damage.DamageDict.TryGetValue(BluntDamage, out var blunt) && blunt > 0;
+    }
+
+    /// <summary>
+    ///     Whether a hit on <paramref name="target"/> rang off its armour: a ballistic hit on a mob that its armour
+    ///         soaked (<see cref="IsSoaked"/>). <see cref="PlayImpact"/> plays the armour's sound for it, which takes the
+    ///         place of the flesh sound <c>SharedGunSystem.PlayImpactSound</c> would play, and says so; a caller that
+    ///         plays the hit sound apart from it (a hitscan's effects) asks this instead.
+    /// </summary>
+    public bool HitsArmor(EntityUid target, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage)
+    {
+        return rawDamage != null && _mobStateQuery.HasComp(target) && IsBallistic(rawDamage) && IsSoaked(target, rawDamage, dealtDamage);
+    }
+
+    /// <summary>
+    ///     Whether armour (or other protection) soaked a hit on <paramref name="target"/>: it dealt less than
+    ///         <see cref="ArmorSoakFraction"/> of what <paramref name="rawDamage"/> comes to after the target's own
+    ///         resistances (its <see cref="DamageableComponent.DamageModifierSetId"/>, which is networked) and the global
+    ///         damage modifiers. Those are taken out first, so a species that shrugs off bullets does not count as
+    ///         armoured; what is left between the two is what <c>DamageModifyEvent</c> took, which is where armour works.
+    /// </summary>
+    public bool IsSoaked(EntityUid target, DamageSpecifier rawDamage, DamageSpecifier? dealtDamage)
+    {
+        var expectedDamage = rawDamage;
+        if (_damageableQuery.TryComp(target, out var damageableComponent) &&
+            damageableComponent.DamageModifierSetId is { } modifierSetId &&
+            ProtoMan.Resolve(modifierSetId, out var modifierSet))
+            expectedDamage = DamageSpecifier.ApplyModifierSet(expectedDamage, modifierSet);
+
+        var expected = (float)_damageableSystem.ApplyUniversalAllModifiers(expectedDamage).GetTotal();
+        if (expected <= 0f)
+            return false;
+
+        var dealt = dealtDamage == null ? 0f : (float)dealtDamage.GetTotal();
+        return dealt < expected * ArmorSoakFraction;
+    }
+
+    /// <summary>
+    ///     Where the shot came into <paramref name="target"/>: the projectile is often found inside or past a wall by
+    ///         the time its contact is handled, and its impact would come out of the far side. Casts back along the
+    ///         shot from a little behind it, against the target's own shapes alone, and takes the nearest hit, stepped
+    ///         back off the surface. Leaves <paramref name="coordinates"/> as they are when nothing is found.
+    /// </summary>
+    /// <remarks>
+    ///     Not <c>IntersectRayWithPredicate</c>: that tests only bounding boxes, by slabs, and a ray along an axis
+    ///         starting on a box's lower edge gets 0 * infinity there, a NaN distance, so the impact was spawned at NaN
+    ///         and threw (a round fired due east from a whole or half tile).
+    /// </remarks>
+    private EntityCoordinates GetEntryPoint(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection)
+    {
+        if (worldDirection.LengthSquared() <= float.Epsilon)
+            return coordinates;
+
+        var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
+        var direction = Vector2.Normalize(worldDirection);
+        var start = mapCoordinates.Position - direction * EntryCastBack;
+
+        _entryTargetUid = target;
+        var result = _rayCastSystem.CastRayClosest(mapCoordinates.MapId,
+            start,
+            direction * EntryCastBack,
+            new QueryFilter
+            {
+                LayerBits = (long)CollisionGroup.AllMask,
+                MaskBits = (long)CollisionGroup.AllMask,
+                IsIgnored = _isNotEntryTarget,
+            });
+        _entryTargetUid = EntityUid.Invalid;
+
+        // Nothing between the cast's start and the projectile: it stopped short of the surface, where it is.
+        if (!result.Hit)
+            return coordinates;
+
+        var distance = result.Results[0].Fraction * EntryCastBack;
+        var entry = start + direction * Math.Max(0f, distance - EntrySurfaceOffset);
+        return _transformSystem.ToCoordinates(coordinates.EntityId, new MapCoordinates(entry, mapCoordinates.MapId));
+    }
+
+    /// <summary>
+    ///     Plays a sound for this client alone at <paramref name="coordinates"/>. Not <c>PlayLocal</c>, which is
+    ///         <c>PlayPredicted</c> on the client and so silent on the re-predicted tick a kept projectile's hit can land
+    ///         on; the callers make sure each hit plays once.
+    /// </summary>
+    private void PlayHere(SoundSpecifier sound, EntityCoordinates coordinates, AudioParams? audioParams)
+    {
+        _audioSystem.PlayStatic(sound, Filter.Local(), coordinates, recordReplay: false, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
+    ///     The rotation in the coordinates' parent's frame that points a prototype's -y along
+    ///         <paramref name="worldDirection"/>. The emitter is square to that parent (followRotation off).
+    /// </summary>
+    private Angle GetLocalRotation(EntityCoordinates coordinates, Vector2 worldDirection)
+    {
+        if (worldDirection.LengthSquared() <= float.Epsilon)
+            return Angle.Zero;
+
+        var parentRotation = coordinates.EntityId.IsValid() ? _transformSystem.GetWorldRotation(coordinates.EntityId) : Angle.Zero;
+        return Angle.FromWorldVec(Vector2.Normalize(worldDirection)) - parentRotation;
+    }
+
+    private void SpawnImpactParticles(ProtoId<KsParticlesPrototype>? prototype, EntityCoordinates coordinates, Angle localRotation, float amount, float speed)
+    {
+        if (prototype is not { } prototypeId ||
+            _particlesSystem.SpawnLocal(prototypeId, coordinates, once: true) is not { } emitterUid)
+            return;
+
+        _particlesSystem.SetRotation(emitterUid, localRotation);
+        _particlesSystem.SetAmount(emitterUid, amount);
+        _particlesSystem.SetSpeed(emitterUid, speed);
+    }
+
+    #region Storage fill
+
+    [SubscribeLocalEvent]
+    private void OnStorageFillStartup(Entity<KsImpactSurfaceStorageFillComponent> entity, ref ComponentStartup args)
+    {
+        UpdateFillFraction(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStorageFillInserted(Entity<KsImpactSurfaceStorageFillComponent> entity, ref EntInsertedIntoContainerMessage args)
+    {
+        if (args.Container.ID == StorageComponent.ContainerId)
+            UpdateFillFraction(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnStorageFillRemoved(Entity<KsImpactSurfaceStorageFillComponent> entity, ref EntRemovedFromContainerMessage args)
+    {
+        if (args.Container.ID == StorageComponent.ContainerId)
+            UpdateFillFraction(entity);
+    }
+
+    private void UpdateFillFraction(Entity<KsImpactSurfaceStorageFillComponent> entity)
+    {
+        // The container does not exist before the storage starts up; empty until then.
+        if (!TryComp<StorageComponent>(entity, out var storageComponent) ||
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            storageComponent.Container == null)
+        {
+            entity.Comp.FillFraction = 0f;
+            return;
+        }
+
+        var capacity = storageComponent.Grid.GetArea();
+        entity.Comp.FillFraction = capacity <= 0
+            ? 0f
+            : Math.Clamp((float)_storageSystem.GetCumulativeItemAreas((entity.Owner, storageComponent)) / capacity, 0f, 1f);
+    }
+
+    #endregion
+}

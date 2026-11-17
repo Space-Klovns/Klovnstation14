@@ -19,7 +19,8 @@ public sealed partial class DoActionOperator : KsBaseActionOperator
         if (TargetKey == null)
             return (true, null);
 
-        return (blackboard.ContainsKey(TargetKey), null);
+        // Entity-aware, as Update's read is: a target deleted since it was picked is no target to plan on.
+        return (blackboard.ContainsKey(TargetKey, EntityManager), null);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)

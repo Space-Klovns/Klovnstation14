@@ -7,18 +7,18 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Chemistry.UI;
 
-// The tgui-styled window, picked in place of the stock one when the theme is on.
+// The tgui-styled window, picked in place of the stock one.
 public sealed partial class ReagentDispenserBoundUserInterface
 {
     [ViewVariables]
     private KsTguiReagentDispenserWindow? _ksTguiWindow;
 
     /// <summary>
-    ///     Opens the tgui window and wires its buttons to the same messages as the stock one. False when the theme is off.
+    ///     Opens the tgui window and wires its buttons to the same messages as the stock one. False leaves the stock window to the caller.
     /// </summary>
     private bool TryOpenKsTgui()
     {
-        if (!KsTguiTheme.ReadEnabled())
+        if (!KsTguiTheme.UsePortedWindows())
             return false;
 
         var window = this.CreateWindow<KsTguiReagentDispenserWindow>();

@@ -27,6 +27,29 @@
         - ArtifactFragment
         - Ore
   - type: Dumpable
+  # KS14 start: a S.P.A.M. tablet clips on, and counts the ore that goes in for its tasks
+  - type: KsSalvageTabletOreBag
+  - type: ItemSlots
+    slots:
+      ks_salvage_tablet:
+        name: ks-salvage-tablet-ore-bag-slot
+        whitelist:
+          components:
+          - KsSalvageTablet
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+        ents: []
+      ks_salvage_tablet: !type:ContainerSlot
+  - type: ItemMapper # the attached tablet shows on the bag, under the magnet
+    sprite: _KS14/Objects/Specific/Mining/ore_bag_tablet.rsi
+    containerWhitelist: [ ks_salvage_tablet ]
+    mapLayers:
+      tablet:
+        whitelist:
+          components:
+          - KsSalvageTablet
+  # KS14 end
   # WHITE DREAM EDIT START - KS14 port
   - type: ItemToggle
     soundActivate:

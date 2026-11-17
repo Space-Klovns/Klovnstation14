@@ -344,6 +344,11 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 user.ExtraPoints[vendor.Comp.PointsType] = userPoints - (entry.Points ?? 0);
 
             Dirty(actor, user);
+
+            // KS14 start: let whatever keeps these points elsewhere follow the purchase
+            var ksPointsSpentEvent = new Content.Shared._KS14.Vendors.KsVendorPointsSpentEvent(actor, vendor.Comp.PointsType, userPoints - (entry.Points ?? 0));
+            RaiseLocalEvent(ref ksPointsSpentEvent);
+            // KS14 end
         }
 
         if (entry.Amount != null)
@@ -374,6 +379,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 AmountUpdated(vendor, entry);
             }
         }
+        KsVendAlongside(vendor, actor, section); // KS14: vend the section's also-vend entry (base gear) before the pick
         var min = comp.MinOffset;
         var max = comp.MaxOffset;
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
@@ -384,17 +390,12 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         for (var i = 0; i < entry.Spawn; i++)
         {
             var offset = predictedRandom.NextVector2Box(min.X, min.Y, max.X, max.Y);
+            // KS14 start: a whole bundle is placed together, so that how it is listed doesn't decide what gets worn
             if (entity.TryGetComponent(out CMVendorBundleComponent? bundle, _compFactory))
-            {
-                foreach (var bundled in bundle.Bundle)
-                {
-                    Vend(vendor, actor, bundled, offset, entry.ReplaceSlot);
-                }
-            }
+                KsVendAll(vendor, actor, bundle.Bundle, offset, entry.ReplaceSlot);
             else
-            {
-                Vend(vendor, actor, entry.Id, offset, entry.ReplaceSlot);
-            }
+                KsVendAll(vendor, actor, [entry.Id], offset, entry.ReplaceSlot);
+            // KS14 end
         }
 
         if (entity.TryGetComponent(out CMChangeUserOnVendComponent? change, _compFactory) &&
@@ -404,6 +405,10 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         }
     }
 
+    // KS14: replaced by KsVendAll (SharedCMAutomatedVendorSystem.Klovn.Equip.cs). Grab equipped into every slot an
+    //      item fitted and then picked the item up regardless, so the first two items of a kit (jumpsuit, backpack)
+    //      were pulled back off into the hands, and what got worn depended on the order the kit listed it in.
+    /*
     private void Vend(EntityUid vendor, EntityUid player, EntProtoId toVend, Vector2 offset, SlotFlags? replaceSlot = null)
     {
 
@@ -474,6 +479,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
         return _hands.TryPickupAnyHand(playerUid, itemUid);
     }
+    */
 
     public void SetPoints(Entity<CMVendorUserComponent> user, int points)
     {

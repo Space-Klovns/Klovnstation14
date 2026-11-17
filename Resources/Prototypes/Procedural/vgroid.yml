@@ -35,12 +35,14 @@
       count: 50
       minGroupSize: 10
       maxGroupSize: 15
-    - !type:OreDunGen
-      replacement: IronRock
-      entity: IronRockCoal
-      count: 50
-      minGroupSize: 8
-      maxGroupSize: 12
+    # KS14 start: coal is no longer mined
+    #- !type:OreDunGen
+    #  replacement: IronRock
+    #  entity: IronRockCoal
+    #  count: 50
+    #  minGroupSize: 8
+    #  maxGroupSize: 12
+    # KS14 end
     - !type:OreDunGen
       replacement: IronRock
       entity: IronRockQuartz

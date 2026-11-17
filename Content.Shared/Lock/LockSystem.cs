@@ -352,8 +352,8 @@ public sealed partial class LockSystem : EntitySystem
 
         if (!quiet)
         {
-            var denyReason = accessEv.DenyReason ?? Loc.GetString(_defaultDenyReason);
-            _sharedPopupSystem.PopupClient(denyReason, ent, user);
+            var denyReason = accessEv.DenyReason ?? KsPopupMessage.Create(_defaultDenyReason); // KS14: Loc.GetString -> deferred, the server's English showed beside the client's own
+            _sharedPopupSystem.PopupEntity /* KS14: PopupClient -> PopupEntity, same audience */(denyReason, ent, user);
         }
 
         return false;
@@ -542,7 +542,7 @@ public record struct FindAvailableLocksEvent(EntityUid User, LockTypes FoundRead
 /// <param name="FoundReaders">What readers we are attempting to verify access for.</param>
 /// <param name="HasAccess">Which readers the user has access to. This should not be set when raising the event.</param>
 [ByRefEvent]
-public record struct CheckUserHasLockAccessEvent(EntityUid User, LockTypes FoundReaders = LockTypes.None, LockTypes HasAccess = LockTypes.None, string? DenyReason = null);
+public record struct CheckUserHasLockAccessEvent(EntityUid User, LockTypes FoundReaders = LockTypes.None, LockTypes HasAccess = LockTypes.None, KsPopupMessage? /* KS14: string? -> KsPopupMessage?, localized by the recipient */ DenyReason = null);
 
 /// <summary>
 /// Enum of all readers a lock can be "locked" by.

@@ -131,6 +131,15 @@ public sealed partial class NPCUtilitySystem : EntitySystem
             return UtilityResult.Empty;
         }
 
+        // KS14 start: a locking shooter stays on the target it has while that target is still valid and in sight
+        if (bestOnly && KsTryKeepCurrentTarget(blackboard, weh, ents, out var keptTarget))
+        {
+            blackboard.Remove<EntityUid>(NPCBlackboard.UtilityTarget);
+            _entPool.Return(ents);
+            return keptTarget;
+        }
+        // KS14 end
+
         var results = new Dictionary<EntityUid, float>();
         var highestScore = 0f;
 

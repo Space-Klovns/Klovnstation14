@@ -237,7 +237,7 @@ public sealed partial class CMAutomatedVendorBui : BoundUserInterface
             }
         }
 
-        _window.PointsLabel.Text = anyEntryWithPoints ? $"Points Remaining: {userPoints}" : string.Empty;
+        _window.PointsLabel.Text = anyEntryWithPoints ? Loc.GetString("ks-cm-vendor-points-remaining", ("points", userPoints)) /* KS14: localised, was $"Points Remaining: {userPoints}" */ : string.Empty;
     }
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)
@@ -289,6 +289,14 @@ public sealed partial class CMAutomatedVendorBui : BoundUserInterface
                     name.AddText($" (CHOOSE {left})");
             }
         }
+
+        // KS14 start: a pick from this section also brings the base gear, until the player has had it
+        if (EntMan.TryGetComponent(Owner, out CMAutomatedVendorComponent? alsoVendVendor) &&
+            EntMan.System<SharedCMAutomatedVendorSystem>().KsAlsoVendPending(alsoVendVendor, section, user))
+        {
+            name.AddText(Loc.GetString("ks-cm-vendor-also-vend"));
+        }
+        // KS14 end
 
         name.Pop();
         return name;
