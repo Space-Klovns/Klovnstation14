@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Input;
 using Content.Shared.Interaction;
@@ -138,7 +139,7 @@ public sealed partial class RotatableSystem : EntitySystem
         if (!rotatableComp.RotateWhileAnchored && TryComp<PhysicsComponent>(entity, out var physics) &&
             physics.BodyType == BodyType.Static)
         {
-            _popup.PopupClient(Loc.GetString("rotatable-component-try-rotate-stuck"), entity, player);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rotatable-component-try-rotate-stuck"), entity, player);
             return false;
         }
 
@@ -163,7 +164,7 @@ public sealed partial class RotatableSystem : EntitySystem
         if (!rotatableComp.RotateWhileAnchored && TryComp<PhysicsComponent>(entity, out var physics) &&
             physics.BodyType == BodyType.Static)
         {
-            _popup.PopupClient(Loc.GetString("rotatable-component-try-rotate-stuck"), entity, player);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rotatable-component-try-rotate-stuck"), entity, player);
             return false;
         }
 
@@ -187,7 +188,7 @@ public sealed partial class RotatableSystem : EntitySystem
         // Check if the object is anchored.
         if (TryComp<PhysicsComponent>(entity, out var physics) && physics.BodyType == BodyType.Static)
         {
-            _popup.PopupClient(Loc.GetString("flippable-component-try-flip-is-stuck"), entity, player);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flippable-component-try-flip-is-stuck"), entity, player);
             return false;
         }
 

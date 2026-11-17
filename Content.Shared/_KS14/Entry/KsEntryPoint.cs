@@ -1,6 +1,8 @@
 using System.IO;
 using System.Linq;
 using Content.Shared._KS14.IoC;
+using Content.Shared._KS14.RadioLocalization;
+using Content.Shared.Localizations;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Prototypes;
@@ -12,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Entry;
 
+// TODO KS14 PARTIALS: per-file name prefixes or something to denote them being partial (maybe .partial.yml file extension)
 public sealed partial class KsEntryPoint : GameShared
 {
     [Dependency] private IResourceManager _resourceManager = default!;
@@ -20,6 +23,37 @@ public sealed partial class KsEntryPoint : GameShared
 
     private readonly ResPath[] _replacementDirectories = [
         new("/_KsModule_ReplacedPrototypes/")
+    ];
+
+    /// <summary>
+    ///     Files or directories outside a <see cref="PartialsFolderName"/> folder whose prototypes combine with existing
+    ///         ones of the same id instead of throwing a duplicate-id error (see
+    ///         <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose: anywhere listed here, an
+    ///         accidental duplicate id silently merges rather than failing the load.
+    /// </summary>
+    public static readonly ResPath[] PartialPrototypePaths = [
+        new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
+    ];
+
+    /// <summary>
+    ///     Every file under a folder of this name, at any depth below <c>/Prototypes/</c>, is partial without being
+    ///         listed.
+    /// </summary>
+    public const string PartialsFolderName = "Partials";
+
+    /// <summary>
+    ///     Whether a resource path lies inside a <see cref="PartialsFolderName"/> folder. Shared with packaging, which
+    ///         must treat the same files as partial.
+    /// </summary>
+    public static bool IsInPartialsFolder(string path)
+    {
+        return path.Contains(ResPath.Separator + PartialsFolderName + ResPath.Separator, StringComparison.Ordinal);
+    }
+
+    private readonly ResPath[] _partialOwnerPaths = [
+        new("/Prototypes/"),
+        new("/Audio/_KsModule/"),
+        new("/Maps/_KsModule/"),
     ];
 
     private ISawmill _sawmill = null!;
@@ -37,6 +71,27 @@ public sealed partial class KsEntryPoint : GameShared
         Dependencies.InjectDependencies(this);
 
         _sawmill = Logger.GetSawmill("ks.shared.entrypoint");
+
+        // Every file in a Partials folder under each of _partialOwnerPaths is partial: no listing needed.
+        foreach (var partialOwnerPath in _partialOwnerPaths)
+        {
+            foreach (var subPath in _resourceManager.ContentFindFiles(partialOwnerPath))
+            {
+                if (!IsInPartialsFolder(subPath.CanonPath))
+                    continue;
+
+                _prototypeManager.PartialFile(subPath, 0);
+            }
+        }
+
+        // Before prototypes load, which is the only time the prototype manager reads these.
+        foreach (var partialPath in PartialPrototypePaths)
+        {
+            if (string.IsNullOrEmpty(partialPath.Extension))
+                _prototypeManager.PartialDirectory(partialPath, 0);
+            else
+                _prototypeManager.PartialFile(partialPath, 0);
+        }
     }
 
     public override void PostInit()
@@ -47,6 +102,10 @@ public sealed partial class KsEntryPoint : GameShared
 
         foreach (var replacementDirectory in _replacementDirectories)
             DoPrototypeReplacements(replacementDirectory);
+
+        Dependencies.Resolve<ContentLocalizationManager>().InitializePrototypeNameCaches();
+        Dependencies.Resolve<ContentLocalizationManager>().InitializeCultures();
+        Dependencies.Resolve<KsRadioLocalization>().Initialize();
     }
 
     public override void Shutdown()

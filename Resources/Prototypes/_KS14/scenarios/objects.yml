@@ -73,6 +73,7 @@
       path: /Audio/_KS14/Effects/nvg_off.ogg
       params: *nvg_sound_params
   - type: WearablePhosphorNightVision
+  - type: NpcDarkVision # NPCs wearing these always see in the dark
 
 - type: entity
   parent: ScenarioNightVisionGogglesBasic

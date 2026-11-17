@@ -151,6 +151,14 @@ namespace Content.Client.Viewport
 
             DebugTools.AssertNotNull(_viewport);
 
+            // KS14 start: a tgui popup's backdrop pass redraws the UI, and must not render the world again
+            if (KsBackdropPassActive)
+            {
+                KsDrawBackdropPass(handle);
+                return;
+            }
+            // KS14 end
+
             // KS14: Moved render call here to later
 
             if (_queuedScreenshots.Count != 0)
@@ -173,15 +181,32 @@ namespace Content.Client.Viewport
 
             // KS14 start: on a z-level stack, every level is drawn as its own pass instead of the single
             //      render below, and that pass loop does its own overlays and blit
-            if (TryDrawZLevels(handle, drawBox, drawBoxGlobal))
-                return;
+            // View portals are rendered first and composited by an overlay during the passes below.
+            DrawPortalPrePass(handle);
+            try
+            {
+                if (TryDrawZLevels(handle, drawBox, drawBoxGlobal))
+                    return;
 
-            _viewport.Eye = _eye;
-            _viewport.Render();
+                _viewport.Eye = _eye;
+                _viewport.Render();
+            }
+            finally
+            {
+                EndPortalPass();
+            }
             // KS14 end
 
             _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
+            // KS14 start: optional shader over the viewport texture
+            if (KsDrawShader != null)
+                handle.DrawingHandleScreen.UseShader(KsDrawShader);
+            // KS14 end
             handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
+            // KS14 start
+            if (KsDrawShader != null)
+                handle.DrawingHandleScreen.UseShader(null);
+            // KS14 end
             _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
         }
 
@@ -286,6 +311,7 @@ namespace Content.Client.Viewport
             _viewport = null;
 
             InvalidateZLevelState(); // KS14
+            ReleasePortalViewports(); // KS14: portal views are sized to match the viewport
         }
 
         public MapCoordinates ScreenToMap(Vector2 coords)

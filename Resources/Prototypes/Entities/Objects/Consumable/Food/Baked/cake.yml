@@ -1010,6 +1010,9 @@
   parent: [SolutionLarge, FoodBase]
   description: It's a cake. It's a cat. It's a cak.
   components:
+  - type: Damageable # KS14: a round stopped on it hurts it, as it does any other mob
+  - type: Injurable # KS14
+    damageContainer: Biological
   - type: FlavorProfile
     flavors:
     - sweet

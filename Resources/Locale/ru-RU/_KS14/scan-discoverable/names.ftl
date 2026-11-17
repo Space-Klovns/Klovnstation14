@@ -1,0 +1,16 @@
+ks-scan-discovered-thing = обнаруженный объект
+ks-scan-discovered-discovered-geyser = обнаруженный гейзер
+ks-scan-discovered-plasma-geyser = плазменный гейзер
+ks-scan-discovered-liquid-carbon-dioxide-geyser = гейзер жидкого углекислого газа
+ks-scan-discovered-liquid-nitrogen-geyser = гейзер жидкого азота
+ks-scan-discovered-fresium-geyser = гейзер фрезиума
+ks-scan-discovered-klovnide-geyser = гейзер клоунида
+ks-scan-discovered-zipium-geyser = гейзер зипиума
+ks-scan-discovered-artifexium-geyser = гейзер артифексиума
+ks-scan-discovered-wittel-geyser = гейзер виттеля
+ks-scan-discovered-crude-oil-geyser = гейзер сырой нефти
+ks-scan-discovered-sour-crude-geyser = гейзер сернистой нефти
+ks-scan-discovered-gas-condensate-geyser = гейзер газового конденсата
+ks-scan-discovered-discovered-ore-vent = обнаруженное рудное жерло
+ks-scan-discovered-common-ore-vent = обычное рудное жерло
+ks-scan-discovered-rare-ore-vent = редкое рудное жерло

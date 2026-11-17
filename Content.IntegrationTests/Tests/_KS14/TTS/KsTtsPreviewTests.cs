@@ -64,9 +64,14 @@ public sealed class KsTtsPreviewTests : GameTest
     ///     Runs both sides until <paramref name="condition"/> holds. The endpoint answers in real time, off the game
     ///         thread, so this waits as well as ticking.
     /// </summary>
-    private async Task RunUntil(Func<bool> condition, string description, int maxRounds = 500)
+    /// <remarks>
+    ///     Bounded by real time, not rounds: baking every voice is an HTTP request and an Opus transcode each, off the
+    ///         game thread, and a loaded CI runner took longer than a fixed number of short rounds allowed.
+    /// </remarks>
+    private async Task RunUntil(Func<bool> condition, string description)
     {
-        for (var round = 0; round < maxRounds; round++)
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        while (deadline.Elapsed < RunUntilTimeout)
         {
             var met = false;
             await Client.WaitPost(() => met = condition());
@@ -77,8 +82,10 @@ public sealed class KsTtsPreviewTests : GameTest
             await Task.Delay(10);
         }
 
-        Assert.Fail($"timed out waiting until {description}");
+        Assert.Fail($"timed out waiting until {description} ({RunUntilTimeout.TotalSeconds} s)");
     }
+
+    private static readonly TimeSpan RunUntilTimeout = TimeSpan.FromSeconds(60);
 
     private Task RunUntilServerStatus(KsTtsPreviewStatus status)
         => RunUntil(() => ServerPreviews.Status == status && ClientPreviews.Status == status, $"previews are {status}");

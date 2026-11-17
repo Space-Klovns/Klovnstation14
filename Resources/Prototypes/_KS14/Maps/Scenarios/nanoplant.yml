@@ -4,6 +4,7 @@
   mapPath: /Maps/_KS14/Scenarios/Nanoplant/nanoplant.yml
   minPlayers: 7
   maxPlayers: 40
+  forcedLobbyBackground: NanoplantCenter
   stations:
     Nanoplant:
       stationProto: KsStationBasicScenario

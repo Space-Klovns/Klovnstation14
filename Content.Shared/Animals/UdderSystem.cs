@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.DoAfter;
@@ -115,7 +116,7 @@ public sealed partial class UdderSystem : EntitySystem
         var quantity = solution.Volume;
         if (quantity == 0)
         {
-            _popupSystem.PopupClient(Loc.GetString("udder-system-dry"), entity.Owner, args.Args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("udder-system-dry"), entity.Owner, args.Args.User);
             return;
         }
 
@@ -125,7 +126,7 @@ public sealed partial class UdderSystem : EntitySystem
         var split = _solutionContainerSystem.SplitSolution(entity.Comp.Solution.Value, quantity);
         _solutionContainerSystem.TryAddSolution(targetSoln.Value, split);
 
-        _popupSystem.PopupClient(Loc.GetString("udder-system-success", ("amount", quantity), ("target", Identity.Entity(args.Args.Used.Value, EntityManager))), entity.Owner,
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("udder-system-success", ("amount", quantity), ("target", Identity.Entity(args.Args.Used.Value, EntityManager))), entity.Owner,
             args.Args.User, PopupType.Medium);
     }
 

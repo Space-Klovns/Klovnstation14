@@ -1,0 +1,14 @@
+# The tgui theme of a store's window (StoreComponent.ksUiTheme). The component's default is Syndicate, so only the
+#     stores that differ are named here.
+- type: !PartialOnly entity
+  id: StorePresetSpellbook
+  components:
+  - type: Store
+    ksUiTheme: Wizard
+
+# A pAI's software store is not an antagonist one.
+- type: !PartialOnly entity
+  id: PersonalAI
+  components:
+  - type: Store
+    ksUiTheme: Nanotrasen

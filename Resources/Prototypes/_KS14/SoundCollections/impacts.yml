@@ -1,0 +1,51 @@
+# Bullet and gore sounds ported from TerraGov-Marine-Corps. See Resources/Audio/_KS14/*/attributions.yml.
+
+# TGMC's SFX_BALLISTIC_BOUNCE, merged with upstream's ricochets: the chance of a bounce off a surface that is not
+# metal (metal walls already ricochet on every hit, through MetalBulletImpact).
+- type: soundCollection
+  id: KsBulletRicochet
+  files:
+  - /Audio/Weapons/Guns/Hits/ric1.ogg
+  - /Audio/Weapons/Guns/Hits/ric2.ogg
+  - /Audio/Weapons/Guns/Hits/ric3.ogg
+  - /Audio/Weapons/Guns/Hits/ric4.ogg
+  - /Audio/Weapons/Guns/Hits/ric5.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet1.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet2.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet3.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet4.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet5.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet6.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet7.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_ricochet8.ogg
+
+# TGMC's SFX_BALLISTIC_HITMARKER: a dull hit on something that is neither flesh nor metal.
+- type: soundCollection
+  id: KsBulletHitGeneric
+  files:
+  - /Audio/Weapons/Guns/Hits/bullet_hit.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_hit1.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_hit2.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_hit3.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_hit4.ogg
+
+# TGMC's SFX_BALLISTIC_ARMOR: a bullet that armour soaked most of.
+- type: soundCollection
+  id: KsBulletArmorImpact
+  files:
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_armor1.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_armor2.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_armor3.ogg
+  - /Audio/_KS14/Weapons/Guns/Hits/tgmc_bullet_armor4.ogg
+
+# TGMC's limb fracture sound. Played on dismemberment, and meant for fractures once they exist.
+- type: soundCollection
+  id: KsBoneBreak
+  files:
+  - /Audio/_KS14/Effects/Gore/bone_break1.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break2.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break3.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break4.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break5.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break6.ogg
+  - /Audio/_KS14/Effects/Gore/bone_break7.ogg

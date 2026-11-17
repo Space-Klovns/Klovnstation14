@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -189,7 +190,22 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         // But the changes to the bloodstream have also been dirtied,
         // so we prevent applying them twice.
         if (_timing.ApplyingState)
+        {
+            // KS14 start: a predicted hit can land during the client's state reset too (a kept projectile's collision
+            //      raised by it). A state's own DamageChangedEvent has no origin; a hit's still sprays its blood.
+            if (args.Origin is { } stateOriginUid &&
+                args.DamageDelta is { } stateDamageDelta &&
+                args.DamageIncreased &&
+                ProtoMan.Resolve(ent.Comp.DamageBleedModifiers, out var stateModifiers))
+            {
+                var stateBloodloss = DamageSpecifier.ApplyModifierSet(DamageSpecifier.GetPositive(stateDamageDelta), stateModifiers);
+                if (!stateBloodloss.Empty)
+                    _bloodSpraySystem.HandleBleedEffects(ent!, (float)stateBloodloss.GetTotal() * 2f, stateOriginUid, damage: (float)DamageSpecifier.GetPositive(stateDamageDelta).GetTotal());
+            }
+            // KS14 end
+
             return;
+        }
 
         if (args.DamageDelta is null || !args.DamageIncreased)
         {
@@ -216,7 +232,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
 
         // KS14 Addition: effects
         if (args.Origin is { } originUid)
-            _bloodSpraySystem.HandleBleedEffects(ent!, totalFloat * 2f, originUid);
+            _bloodSpraySystem.HandleBleedEffects(ent!, totalFloat * 2f, originUid, damage: (float)damage.GetTotal()/* KS14: added, sizes the spray */);
 
         // Critical hit. Causes target to lose blood, using the bleed rate modifier of the weapon, currently divided by 5
         // The crit chance is currently the bleed rate modifier divided by 25.
@@ -240,9 +256,9 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
             // Only the burned entity can see the popup.
             // TODO: Make the PopupSystem API more sane so that this is handled by a single method.
             if (args.Origin == ent.Owner) // predict the popup on the client if they caused damage to themselves
-                _popup.PopupClient(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             else
-                _popup.PopupEntity(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             _audio.PlayPredicted(ent.Comp.BloodHealedSound, ent, args.Origin);
         }
     }

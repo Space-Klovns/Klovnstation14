@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Popups;
 using Content.Server.Power.Components;
@@ -57,7 +58,7 @@ public sealed partial class SpaceHeaterSystem : EntitySystem
             return;
 
         if (!args.Silent)
-            _popup.PopupEntity(Loc.GetString("comp-space-heater-unanchored", ("device", Loc.GetString("comp-space-heater-device-name"))), uid, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-space-heater-unanchored", ("device", KsPopupMessage.Create("comp-space-heater-device-name"))), uid, args.User);
 
         args.Cancel();
     }

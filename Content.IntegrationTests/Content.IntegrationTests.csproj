@@ -20,6 +20,13 @@
   </ItemGroup>
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
   <Import Project="..\RobustToolbox\MSBuild\Robust.CompNetworkGenerator.targets" />
+  <!-- KS14 start: so test systems can subscribe with [SubscribeLocalEvent]; without the generator the attribute compiles but nothing is subscribed.
+       The code it generates uses [MustCallBase] unqualified, so it needs Robust.Shared.Analyzers imported globally, as the content projects' GlobalUsings.cs do. -->
+  <Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
+  <ItemGroup>
+    <Using Include="Robust.Shared.Analyzers" />
+  </ItemGroup>
+  <!-- KS14 end -->
 
   <Import Project="..\RobustToolbox\Imports\Client.props" />
   <Import Project="..\RobustToolbox\Imports\Server.props" />

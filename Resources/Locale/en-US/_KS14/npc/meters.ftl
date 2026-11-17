@@ -1,0 +1,10 @@
+cmd-ks_setmeter-desc = Sets a meter (caution, say) on an NPC, and on everyone in its squad if it is in one.
+cmd-ks_setmeter-help = ks_setmeter <NPC> <meter> <value>
+cmd-ks_setmeter-invalid-entity = No entity found matching '{$entity}'.
+cmd-ks_setmeter-invalid-meter = No meter called '{$meter}'.
+cmd-ks_setmeter-invalid-value = '{$value}' is not a number.
+cmd-ks_setmeter-entity-hint = NPC (its whole squad is set, if it is in one)
+cmd-ks_setmeter-meter-hint = meter
+cmd-ks_setmeter-value-hint = value (clamped to the meter's range)
+cmd-ks_setmeter-set-single = Set { $meter } to { $value } on { $entity }.
+cmd-ks_setmeter-set-squad = Set { $meter } to { $value } on { $entity }'s squad ({ $count } members).

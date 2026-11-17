@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server.Popups;
 using Content.Server.UserInterface;
@@ -78,7 +79,7 @@ public sealed partial class PlumbingFilterSystem : EntitySystem
     {
         if (!ProtoMan.HasIndex<ReagentPrototype>(args.ReagentId))
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
             return;
         }
 

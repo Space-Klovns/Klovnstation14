@@ -19,32 +19,33 @@ namespace Content.Client.Info
         {
             var buttons = new BoxContainer
             {
-                Orientation = LayoutOrientation.Horizontal
+                Orientation = LayoutOrientation.Horizontal, /* KS14: added comma */
+                StyleClasses = { Content.Client._KS14.Lobby.KsLobbyStyleClasses.KsLobbyMenuButtonSmall } // KS14: flat lobby button style for the children
             };
             AddChild(buttons);
 
             var uriOpener = IoCManager.Resolve<IUriOpener>();
             _cfg = IoCManager.Resolve<IConfigurationManager>();
 
-            var rulesButton = new Button() {Text = Loc.GetString("server-info-rules-button")};
+            var rulesButton = new Button() {Text = Loc.GetString("ks-lobby-chip-rules" /* KS14: server-info-rules-button -> ks-lobby-chip-rules */)};
             rulesButton.OnPressed += args => new RulesAndInfoWindow().Open();
             buttons.AddChild(rulesButton);
 
-            AddInfoButton("server-info-discord-button", CCVars.InfoLinksDiscord);
-            AddInfoButton("server-info-website-button", CCVars.InfoLinksWebsite);
-            AddInfoButton("server-info-wiki-button", CCVars.InfoLinksWiki);
-            AddInfoButton("server-info-forum-button", CCVars.InfoLinksForum);
-            AddInfoButton("server-info-telegram-button", CCVars.InfoLinksTelegram);
+            AddInfoButton("ks-lobby-chip-discord" /* KS14: server-info-discord-button -> ks-lobby-chip-discord */, CCVars.InfoLinksDiscord);
+            AddInfoButton("ks-lobby-chip-website" /* KS14: server-info-website-button -> ks-lobby-chip-website */, CCVars.InfoLinksWebsite);
+            AddInfoButton("ks-lobby-chip-wiki" /* KS14: server-info-wiki-button -> ks-lobby-chip-wiki */, CCVars.InfoLinksWiki);
+            AddInfoButton("ks-lobby-chip-forum" /* KS14: server-info-forum-button -> ks-lobby-chip-forum */, CCVars.InfoLinksForum);
+            AddInfoButton("ks-lobby-chip-telegram" /* KS14: server-info-telegram-button -> ks-lobby-chip-telegram */, CCVars.InfoLinksTelegram);
 
             var guidebookController = UserInterfaceManager.GetUIController<GuidebookUIController>();
-            var guidebookButton = new Button() { Text = Loc.GetString("server-info-guidebook-button") };
+            var guidebookButton = new Button() { Text = Loc.GetString("ks-lobby-chip-guidebook" /* KS14: server-info-guidebook-button -> ks-lobby-chip-guidebook */) };
             guidebookButton.OnPressed += _ =>
             {
                 guidebookController.ToggleGuidebook();
             };
             buttons.AddChild(guidebookButton);
 
-            var changelogButton = new ChangelogButton();
+            var changelogButton = new ChangelogButton() { KsUpperCase = true /* KS14: added */ };
             changelogButton.OnPressed += args => UserInterfaceManager.GetUIController<ChangelogUIController>().ToggleWindow();
             buttons.AddChild(changelogButton);
 

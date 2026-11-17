@@ -16,6 +16,7 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 public sealed partial class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsTransferThermoSystem _transferThermoSystem = default!;
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private EmagSystem _emagSystem = default!;
 
@@ -76,6 +77,7 @@ public sealed partial class GasGrenadeCompressorSystem : SharedGasGrenadeCompres
         }
 
         GasMixture removed;
+        var inletPressure = inlet.Air.Pressure;
 
         // Whitelist check
         if (!_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
@@ -91,8 +93,13 @@ public sealed partial class GasGrenadeCompressorSystem : SharedGasGrenadeCompres
             }
         }
         else
+        {
             removed = inlet.Air.Remove(molesToTransfer);
+            // Grenades hold gas only.
+            removed.ReturnFluidTo(inlet.Air);
+        }
 
+        _transferThermoSystem.Apply(removed, inletPressure, grenadeAir.Pressure, doesWork: true, deviceUid: entity.Owner);
         _atmosphereSystem.Merge(grenadeAir, removed);
         UpdateUserInterface(entity);
     }

@@ -23,7 +23,7 @@ namespace Content.Client.Research.UI
 
             _menu.OnServerButtonPressed += () =>
             {
-                SendMessage(new ConsoleServerSelectionMessage());
+                SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
             };
             _menu.OnPrintButtonPressed += () =>
             {

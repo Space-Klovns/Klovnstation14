@@ -1,6 +1,7 @@
 - type: npcFaction
   id: Dragon
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
@@ -15,6 +16,7 @@
 - type: npcFaction
   id: NanoTrasen
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - SimpleHostile
   - Syndicate
   - Xeno
@@ -51,6 +53,7 @@
 - type: npcFaction
   id: SimpleHostile
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
@@ -70,6 +73,7 @@
 - type: npcFaction
   id: Syndicate
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - SimpleHostile
@@ -84,6 +88,7 @@
 - type: npcFaction
   id: Xeno
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
@@ -99,6 +104,7 @@
 - type: npcFaction
   id: Zombie
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - SimpleNeutral
@@ -115,6 +121,7 @@
 - type: npcFaction
   id: Revolutionary
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Zombie
@@ -127,6 +134,7 @@
 - type: npcFaction
   id: AllHostile
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Dragon
@@ -145,6 +153,7 @@
 - type: npcFaction
   id: Wizard
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Dragon
@@ -163,6 +172,7 @@
 - type: npcFaction
   id: Xenoborg
   hostile:
+  - KsRedacted # KS14: the Redacted, hostile to everyone that can fight back
   # they have brains
   - NanoTrasen
   - KsNanoTrasenOperative # KS14: nanotrasen specops

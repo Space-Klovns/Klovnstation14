@@ -1,0 +1,200 @@
+# Refinery reactions. Amounts are units per unit of reaction and balance by mass, except where a comment says otherwise.
+#     Rates are a fraction per second at referenceTemperature; a bed that fills its net runs at exactly that.
+
+# Thermal: run in any pipe, which is the problem. This is why residue can't simply be boiled at one atmosphere.
+
+- type: ksFluidReaction
+  id: KsThermalCrackingGasOil
+  reactants:
+    KsGasOil: { amount: 1 }
+  products:
+    KsDiesel: { amount: 0.5 }
+    KsNaphtha: { amount: 0.2 }
+    KsRefineryGas: { amount: 0.15 }
+    KsPetroleumCoke: { amount: 0.15, phase: Solid }
+  minTemp: 650
+  rate: 0.01
+  referenceTemperature: 700
+  activationTemperature: 15000
+  enthalpy: 150
+
+- type: ksFluidReaction
+  id: KsThermalCrackingBitumen
+  reactants:
+    KsBitumen: { amount: 1 }
+  products:
+    KsGasOil: { amount: 0.4 }
+    KsRefineryGas: { amount: 0.1 }
+    KsPetroleumCoke: { amount: 0.5, phase: Solid }
+  minTemp: 650
+  rate: 0.01
+  referenceTemperature: 700
+  activationTemperature: 15000
+  enthalpy: 150
+
+# Burns the coke out of a clogged pipe. One unit of coke is 1/12 mol, and a unit of carbon dioxide is 4 mol (its scaling
+#     in carbon_dioxide.yml), so its amount balances by moles of carbon, not by mass.
+- type: ksFluidReaction
+  id: KsDecoking
+  reactants:
+    KsPetroleumCoke: { amount: 1, phase: Solid }
+    Oxygen: { amount: 2.67, phase: Vapor }
+  products:
+    CarbonDioxide: { amount: 0.0208, phase: Vapor }
+  minTemp: 750
+  rate: 0.2
+  referenceTemperature: 800
+  activationTemperature: 8000
+  enthalpy: -300
+
+# Removes the sulfur distillation can't. Needs hydrogen under pressure, which reforming makes.
+- type: ksFluidReaction
+  id: KsHydrotreating
+  catalyst: KsCobaltMolybdenum
+  reactants:
+    KsOrganosulfur: { amount: 1 }
+    Hydrogen: { amount: 0.027, phase: Vapor }
+  products:
+    KsDiesel: { amount: 0.8 }
+    KsHydrogenSulfide: { amount: 0.227, phase: Vapor }
+  minTemp: 570
+  maxTemp: 700
+  rate: 0.1
+  referenceTemperature: 640
+  activationTemperature: 8000
+  enthalpy: -60
+  minPartialPressure:
+    Hydrogen: 300
+
+# The Claus process: hydrogen sulfide and oxygen into sulfur and steam.
+- type: ksFluidReaction
+  id: KsClausProcess
+  catalyst: KsAlumina
+  reactants:
+    KsHydrogenSulfide: { amount: 1 }
+    Oxygen: { amount: 0.47, phase: Vapor }
+  products:
+    Sulfur: { amount: 0.94 }
+    Water: { amount: 0.53, phase: Vapor }
+  minTemp: 500
+  maxTemp: 650
+  rate: 0.2
+  referenceTemperature: 580
+  activationTemperature: 5000
+  enthalpy: -150
+
+# Strongly endothermic, so it stalls itself: real reformers reheat between reactors in series.
+- type: ksFluidReaction
+  id: KsCatalyticReforming
+  catalyst: KsPlatinum
+  reactants:
+    KsNaphtha: { amount: 1 }
+  products:
+    KsGasoline: { amount: 0.97 }
+    Hydrogen: { amount: 0.03, phase: Vapor }
+  minTemp: 720
+  maxTemp: 820
+  rate: 0.1
+  referenceTemperature: 770
+  activationTemperature: 10000
+  enthalpy: 200
+
+# Outruns thermal cracking at these temperatures while its bed is fresh and fills most of its net. A worn bed, or one in
+#     a long net, loses that race, and the feed turns to coke.
+- type: ksFluidReaction
+  id: KsFluidCatalyticCracking
+  catalyst: KsZeolite
+  reactants:
+    KsGasOil: { amount: 1 }
+  products:
+    KsGasoline: { amount: 0.5 }
+    KsRefineryGas: { amount: 0.2 }
+    KsDiesel: { amount: 0.2 }
+    KsPetroleumCoke: { amount: 0.1, phase: Solid }
+  minTemp: 750
+  maxTemp: 820
+  rate: 0.5
+  referenceTemperature: 790
+  activationTemperature: 6000
+  enthalpy: 120
+
+# Steam cracking is thermal, and needs steam present but does not consume it.
+
+- type: ksFluidReaction
+  id: KsSteamCrackingNaphtha
+  reactants:
+    KsNaphtha: { amount: 1 }
+  products:
+    KsEthylene: { amount: 0.3 }
+    KsEthane: { amount: 0.1 }
+    KsRefineryGas: { amount: 0.25 }
+    KsGasoline: { amount: 0.3 }
+    Hydrogen: { amount: 0.05, phase: Vapor }
+  minTemp: 1050
+  rate: 0.2
+  referenceTemperature: 1100
+  activationTemperature: 15000
+  enthalpy: 300
+  catalystReagent: Water
+  catalystReagentUnits: 20
+
+- type: ksFluidReaction
+  id: KsSteamCrackingEthane
+  reactants:
+    KsEthane: { amount: 1 }
+  products:
+    KsEthylene: { amount: 0.93 }
+    Hydrogen: { amount: 0.07, phase: Vapor }
+  minTemp: 1050
+  rate: 0.2
+  referenceTemperature: 1100
+  activationTemperature: 15000
+  enthalpy: 300
+  catalystReagent: Water
+  catalystReagentUnits: 20
+
+# A tenth the speed of cracking: ethylene has to be taken away and quenched, or it cokes up the cracker.
+- type: ksFluidReaction
+  id: KsEthyleneDecomposition
+  reactants:
+    KsEthylene: { amount: 1 }
+  products:
+    KsPetroleumCoke: { amount: 0.85, phase: Solid }
+    Hydrogen: { amount: 0.15, phase: Vapor }
+  minTemp: 1000
+  rate: 0.02
+  referenceTemperature: 1100
+  activationTemperature: 15000
+  enthalpy: -50
+
+# Hot enough for the polymer to stay molten and drain, and so exothermic it needs cooling to stay there.
+- type: ksFluidReaction
+  id: KsEthylenePolymerisation
+  catalyst: KsZieglerNatta
+  reactants:
+    KsEthylene: { amount: 1 }
+  products:
+    KsPolyethylene: { amount: 1, phase: Liquid }
+  minTemp: 330
+  maxTemp: 500
+  rate: 0.1
+  referenceTemperature: 400
+  activationTemperature: 3000
+  enthalpy: -300
+  minPartialPressure:
+    KsEthylene: 150
+
+# Well past where it forms, which takes a heater: the reaction's own heat stalls it at its maximum long before this.
+- type: ksFluidReaction
+  id: KsPolyethyleneDepolymerisation
+  reactants:
+    KsPolyethylene: { amount: 1 }
+  products:
+    KsEthylene: { amount: 0.6 }
+    KsRefineryGas: { amount: 0.3 }
+    KsNaphtha: { amount: 0.1 }
+  minTemp: 700
+  rate: 0.1
+  referenceTemperature: 750
+  activationTemperature: 10000
+  enthalpy: 100

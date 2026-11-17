@@ -205,6 +205,8 @@ public sealed class KsVoiceUplinkConnection
             if (_socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
                 await CloseAsync(WebSocketCloseStatus.NormalClosure, CloseReason ?? "closed");
 
+            await AwaitCloseReplyAsync();
+
             _socket.Dispose();
         }
     }
@@ -478,6 +480,35 @@ public sealed class KsVoiceUplinkConnection
             catch (ObjectDisposedException)
             {
             }
+        }
+    }
+
+    /// <summary>
+    ///     After we sent the close, waits a moment for the page's own close frame, discarding anything else it sends.
+    /// </summary>
+    /// <remarks>
+    ///     Disposing straight away drops the connection with whatever the page sent still unread, and a TCP socket
+    ///         closed with unread data sends a reset. A reset can reach the page ahead of our close frame, so it sees
+    ///         a dropped connection instead of the reason it was closed.
+    /// </remarks>
+    private async Task AwaitCloseReplyAsync()
+    {
+        if (_socket.State != WebSocketState.CloseSent)
+            return;
+
+        var buffer = new byte[1024];
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (_socket.State == WebSocketState.CloseSent)
+            {
+                var result = await _socket.ReceiveAsync(buffer, timeout.Token);
+                if (result.MessageType == WebSocketMessageType.Close)
+                    return;
+            }
+        }
+        catch (Exception e) when (e is OperationCanceledException or WebSocketException or ObjectDisposedException or InvalidOperationException)
+        {
         }
     }
 

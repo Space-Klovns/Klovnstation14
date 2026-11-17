@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/blob/86c499ebc3e754717672f8de0999283859242c2e/heads/master/icons/obj/wallmounts.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "closed"
+    },
+    {
+      "name": "open"
+    },
+    {
+      "name": "extinguisher"
+    },
+    {
+      "name": "extinguisher_default"
+    },
+    {
+      "name": "extinguisher_advanced"
+    },
+    {
+      "name": "extinguisher_mini"
+    },
+    {
+      "name": "extinguisher_crafted"
+    }
+  ]
+}

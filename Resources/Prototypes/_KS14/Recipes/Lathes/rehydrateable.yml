@@ -1,0 +1,8 @@
+# Upstream's rule: a cube costs 1.5x to 2x the biomass its mob gives back, and hostile ones cost plasma too.
+- type: latheRecipe
+  parent: BaseCubeRecipe
+  id: KsSpaceAlligatorCube
+  result: KsSpaceAlligatorCube
+  materials:
+    Biomass: 36
+    Plasma: 600

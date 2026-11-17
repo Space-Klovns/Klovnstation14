@@ -45,6 +45,7 @@ namespace Content.Server.Examine
 
         private void ExamineInfoRequest(ExamineSystemMessages.RequestExamineInfoMessage request, EntitySessionEventArgs eventArgs)
         {
+            using var localeScope = BeginExamineLocale(request.ClientLocale); // KS14: format this response for its recipient
             var player = eventArgs.SenderSession;
             var session = eventArgs.SenderSession;
             var channel = player.Channel;
@@ -54,14 +55,14 @@ namespace Content.Server.Examine
                 || !Exists(entity))
             {
                 RaiseNetworkEvent(new ExamineSystemMessages.ExamineInfoResponseMessage(
-                    request.NetEntity, request.Id, _entityNotFoundMessage), channel);
+                    request.NetEntity, request.Id, LocalizedExamineError("examine-system-entity-does-not-exist") /* KS14: localize per recipient */), channel);
                 return;
             }
 
             if (!CanExamine(playerEnt, entity))
             {
                 RaiseNetworkEvent(new ExamineSystemMessages.ExamineInfoResponseMessage(
-                    request.NetEntity, request.Id, _entityOutOfRangeMessage, knowTarget: false), channel);
+                    request.NetEntity, request.Id, LocalizedExamineError("examine-system-cant-see-entity") /* KS14: localize per recipient */, knowTarget: false), channel);
                 return;
             }
 
@@ -69,7 +70,7 @@ namespace Content.Server.Examine
             if (request.GetVerbs)
                 verbs = _verbSystem.GetLocalVerbs(entity, playerEnt, typeof(ExamineVerb));
 
-            var text = GetExamineText(entity, player.AttachedEntity);
+            var text = GetExamineText(entity, player.AttachedEntity, descriptionOverride: GetLocalizedExamineDescription(entity) /* KS14: bypass culture-independent prototype cache */);
             RaiseNetworkEvent(new ExamineSystemMessages.ExamineInfoResponseMessage(
                 request.NetEntity, request.Id, text, verbs?.ToList()), channel);
         }

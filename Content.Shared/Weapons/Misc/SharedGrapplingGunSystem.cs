@@ -322,6 +322,17 @@ public abstract partial class SharedGrapplingGunSystem : VirtualController
 
         _joints.SetRelay(uid, args.Embedded, jointCompHook);
         _joints.RefreshRelay(args.Weapon.Value, jointCompGrapple);
+
+        // KS14 start: the rope is measured between what its two ends are relayed to (UpdateBeforeSolve), the thing the
+        //      hook is in and whoever holds the gun, and breaks at once if that is over its length. Its length was
+        //      taken between the hook and the gun: a hook stopped at the face of a wall (KsRayCollisionSystem) rather
+        //      than somewhere inside it is up to half a tile short of the wall's middle, more than the margin, so
+        //      a shot square at a wall snapped as it landed.
+        var relayedHookUid = jointCompHook.Relay ?? uid;
+        var relayedGrappleUid = jointCompGrapple.Relay ?? args.Weapon.Value;
+        var relayedLength = (_transform.GetWorldPosition(relayedHookUid) - _transform.GetWorldPosition(relayedGrappleUid)).Length();
+        joint.MaxLength = MathF.Max(joint.MaxLength, relayedLength + grapple.RopeMargin);
+        // KS14 end
     }
 
     [Serializable, NetSerializable]

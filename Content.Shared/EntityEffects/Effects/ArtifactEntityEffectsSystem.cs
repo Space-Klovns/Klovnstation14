@@ -1,4 +1,5 @@
-﻿using Content.Shared.Popups;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared.Popups;
 using Content.Shared.Xenoarchaeology.Artifact;
 using Content.Shared.Xenoarchaeology.Artifact.Components;
 using Robust.Shared.Prototypes;
@@ -40,7 +41,7 @@ public sealed partial class ArtifactUnlockEntityEffectSystem : EntityEffectSyste
             if (unlocking.ArtifexiumApplied)
                 return;
 
-            _popup.PopupEntity(Loc.GetString("artifact-activation-artifexium"), entity, PopupType.Medium);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("artifact-activation-artifexium"), entity, PopupType.Medium);
         }
         else
         {

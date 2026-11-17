@@ -1,11 +1,12 @@
-﻿using Robust.Shared.Serialization;
+using Robust.Shared.GameStates; // KS14
+using Robust.Shared.Serialization;
 
 namespace Content.Shared.Research.Components
 {
     /// <summary>
     /// This is an entity that is able to connect to a <see cref="ResearchServerComponent"/>
     /// </summary>
-    [RegisterComponent]
+    [RegisterComponent, NetworkedComponent /* KS14: added */, AutoGenerateComponentState(raiseAfterAutoHandleState: true) /* KS14: added */]
     public sealed partial class ResearchClientComponent : Component
     {
         public bool ConnectedToServer => Server != null;
@@ -15,6 +16,14 @@ namespace Content.Shared.Research.Components
         /// </summary>
         [ViewVariables(VVAccess.ReadOnly)]
         public EntityUid? Server { get; set; }
+
+        // KS14 start: the server entity may be outside the client's PVS, so its id is networked instead
+        /// <summary>
+        /// The id of <see cref="Server"/>, or -1. Networked so a client can show which server is selected.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+        public int ConnectedServerId = -1;
+        // KS14 end
     }
 
     /// <summary>
@@ -46,34 +55,12 @@ namespace Content.Shared.Research.Components
         }
     }
 
-    /// <summary>
-    ///     Request that the server updates the client.
-    /// </summary>
-    [Serializable, NetSerializable]
-    public sealed class ResearchClientSyncMessage : BoundUserInterfaceMessage
-    {
-    }
+    // KS14: removed ResearchClientSyncMessage, the server list is networked component state
 
     [NetSerializable, Serializable]
     public enum ResearchClientUiKey
     {
         Key,
     }
-
-    [Serializable, NetSerializable]
-    public sealed partial class ResearchClientBoundInterfaceState : BoundUserInterfaceState
-    {
-        public int ServerCount;
-        public string[] ServerNames;
-        public int[] ServerIds;
-        public int SelectedServerId;
-
-        public ResearchClientBoundInterfaceState(int serverCount, string[] serverNames, int[] serverIds, int selectedServerId = -1)
-        {
-            ServerCount = serverCount;
-            ServerNames = serverNames;
-            ServerIds = serverIds;
-            SelectedServerId = selectedServerId;
-        }
-    }
+    // KS14: removed ResearchClientBoundInterfaceState, the server list is networked component state
 }

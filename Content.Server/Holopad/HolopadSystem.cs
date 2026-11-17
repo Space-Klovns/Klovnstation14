@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
@@ -130,7 +131,7 @@ public sealed partial class HolopadSystem : SharedHolopadSystem
                     TryComp<TelephoneComponent>(source, out var sourceTelephone) &&
                     !_telephoneSystem.IsSourceInRangeOfReceiver((stationAiCore.Owner, stationAiTelephone), (source.Value.Owner, sourceTelephone)))
                 {
-                    _popupSystem.PopupEntity(Loc.GetString("holopad-ai-is-unable-to-reach-holopad"), receiver, args.Actor);
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("holopad-ai-is-unable-to-reach-holopad"), receiver, args.Actor);
                     return;
                 }
 
@@ -702,7 +703,7 @@ public sealed partial class HolopadSystem : SharedHolopadSystem
         // Check if the AI is unable to activate the projector (unlikely this will ever pass; its just a safeguard)
         if (!_telephoneSystem.IsSourceInRangeOfReceiver(source, receiver))
         {
-            _popupSystem.PopupEntity(Loc.GetString("holopad-ai-is-unable-to-activate-projector"), receiver, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("holopad-ai-is-unable-to-activate-projector"), receiver, user);
             return;
         }
 

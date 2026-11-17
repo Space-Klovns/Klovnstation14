@@ -29,6 +29,11 @@ public sealed partial class RoundDurationCondition : EntityTableCondition
         var gameTicker = entMan.System<SharedGameTicker>();
         var duration = gameTicker.RoundDuration();
 
+        // KS14 start: a simulated round supplies its own duration
+        if (ctx.TryGetData<TimeSpan>(Content.Shared._KS14.EntityTable.KsSimulationContextKeys.RoundDuration, out var simulatedDuration))
+            duration = simulatedDuration;
+        // KS14 end
+
         return duration >= Min && duration <= Max;
     }
 }

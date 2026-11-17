@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC.HTN;
@@ -28,7 +29,8 @@ public sealed class KsNpcSquadFormationTest : GameTest
     public override PoolSettings PoolSettings => PsDisconnected;
 
     /// <summary>
-    ///     A squad update is once a second; this is comfortably more than two.
+    ///     A squad update is once a second (30 ticks) on a free-running timer: one to form squads and more to merge
+    ///         undersized ones, so this allows three after the navmesh exists.
     /// </summary>
     private const int SquadUpdateTicks = 90;
 
@@ -57,23 +59,33 @@ public sealed class KsNpcSquadFormationTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             var squads = GetSquads(entManager, gridUid);
+            var diagnostics = DescribeSquads(entManager, squads, mobUids);
 
-            Assert.That(squads, Has.Count.EqualTo(2));
-            Assert.That(squads.Select(squad => squad.Comp.Members.Count).OrderBy(count => count),
-                Is.EqualTo(new[] { 2, 4 }));
-
-            foreach (var squad in squads)
+            Assert.Multiple(() =>
             {
-                Assert.That(squad.Comp.Leader, Is.Not.Null);
-                Assert.That(squad.Comp.Members, Does.Contain(squad.Comp.Leader!.Value), "the leader counts as a member");
-            }
+                Assert.That(squads, Has.Count.EqualTo(2), $"six mobs should make two squads\n{diagnostics}");
+                Assert.That(squads.Select(squad => squad.Comp.Members.Count).OrderBy(count => count),
+                    Is.EqualTo(new[] { 2, 4 }),
+                    $"squads should be sized 2 and 4\n{diagnostics}");
 
-            foreach (var mobUid in mobUids)
-            {
-                var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
-                Assert.That(squadUid, Is.Not.Null, "every NPC should have self-assigned");
-                Assert.That(entManager.GetComponent<NpcSquadComponent>(squadUid!.Value).Members, Does.Contain(mobUid));
-            }
+                foreach (var squad in squads)
+                {
+                    Assert.That(squad.Comp.Leader, Is.Not.Null, $"{entManager.ToPrettyString(squad.Owner)} needs a leader\n{diagnostics}");
+                    Assert.That(squad.Comp.Members, Does.Contain(squad.Comp.Leader!.Value),
+                        $"the leader of {entManager.ToPrettyString(squad.Owner)} counts as a member\n{diagnostics}");
+                }
+
+                foreach (var mobUid in mobUids)
+                {
+                    var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
+                    Assert.That(squadUid, Is.Not.Null,
+                        $"{entManager.ToPrettyString(mobUid)} should have self-assigned\n{diagnostics}");
+
+                    if (squadUid is { } assignedSquadUid)
+                        Assert.That(entManager.GetComponent<NpcSquadComponent>(assignedSquadUid).Members, Does.Contain(mobUid),
+                            $"{entManager.ToPrettyString(mobUid)} is not listed in its own squad {entManager.ToPrettyString(assignedSquadUid)}\n{diagnostics}");
+                }
+            });
         });
     }
 
@@ -138,7 +150,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
     [Test]
     public async Task TestUndersizedSquadAssimilates()
     {
-        var squads = await RunAssimilation(wallBetween: false);
+        var squads = await RunAssimilation(barrier: null);
         Assert.That(squads, Is.EqualTo(new[] { 4 }));
     }
 
@@ -149,7 +161,18 @@ public sealed class KsNpcSquadFormationTest : GameTest
     [Test]
     public async Task TestAssimilationNeedsLineOfSight()
     {
-        var squads = await RunAssimilation(wallBetween: true);
+        var squads = await RunAssimilation(barrier: "WallSolid");
+        Assert.That(squads, Is.EqualTo(new[] { 1, 3 }));
+    }
+
+    /// <summary>
+    ///     The same squads with a window between them, which they see through but cannot cross, stay apart too: a squad
+    ///         is one its members can get to, not just see.
+    /// </summary>
+    [Test]
+    public async Task TestAssimilationNeedsAWayThere()
+    {
+        var squads = await RunAssimilation(barrier: "Window");
         Assert.That(squads, Is.EqualTo(new[] { 1, 3 }));
     }
 
@@ -464,9 +487,10 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
     /// <summary>
     ///     Forms a squad of three and a lone NPC far apart, then brings the lone one close, optionally with a
-    ///         wall in the way, and returns the resulting squad sizes in ascending order.
+    ///         <paramref name="barrier"/> - a wall, a window - all the way across between them, and returns the
+    ///         resulting squad sizes in ascending order.
     /// </summary>
-    private async Task<int[]> RunAssimilation(bool wallBetween)
+    private async Task<int[]> RunAssimilation(string? barrier)
     {
         var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(40, 5));
         var transformSystem = entManager.System<SharedTransformSystem>();
@@ -481,12 +505,12 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
             loneUid = SpawnAt(entManager, SyndicateMob, gridUid, 35, 0);
 
-            if (!wallBetween)
+            if (barrier == null)
                 return;
 
             for (var y = -5; y <= 5; y++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, 4, y);
+                SpawnAt(entManager, barrier, gridUid, 4, y);
             }
         });
 
@@ -509,6 +533,31 @@ public sealed class KsNpcSquadFormationTest : GameTest
         return sizes;
     }
 
+    /// <summary>
+    ///     One line per squad (leader and members) and per mob (its squad, or null), plus the current tick, for
+    ///         assertion messages.
+    /// </summary>
+    private string DescribeSquads(IEntityManager entManager, List<Entity<NpcSquadComponent>> squads, List<EntityUid> mobUids)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"tick {Pair.Server.Timing.CurTick}, {squads.Count} squad(s):");
+
+        foreach (var squad in squads)
+        {
+            var leader = squad.Comp.Leader is { } leaderUid ? entManager.ToPrettyString(leaderUid).ToString() : "null";
+            var members = string.Join(", ", squad.Comp.Members.Select(uid => entManager.ToPrettyString(uid).ToString()));
+            builder.AppendLine($"  {entManager.ToPrettyString(squad.Owner)} leader {leader}, {squad.Comp.Members.Count} member(s): {members}");
+        }
+
+        foreach (var mobUid in mobUids)
+        {
+            var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
+            builder.AppendLine($"  {entManager.ToPrettyString(mobUid)} -> {(squadUid is { } uid ? entManager.ToPrettyString(uid).ToString() : "null")}");
+        }
+
+        return builder.ToString();
+    }
+
     private async Task<(IEntityManager EntManager, EntityUid GridUid)> SetUpGrid(Vector2i min, Vector2i max)
     {
         var server = Pair.Server;
@@ -521,6 +570,11 @@ public sealed class KsNpcSquadFormationTest : GameTest
         {
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, min, max).Owner;
         });
+
+        // Joining a squad needs a walk to it, which needs the navmesh. A squad update before it exists has every NPC
+        //      found its own squad, and those only merge pairwise over later updates, so how many squads a test ends up
+        //      with would depend on where the free-running squad timer happened to fall.
+        await WaitForNavmesh(Pair, gridUid, min, max);
 
         return (entManager, gridUid);
     }

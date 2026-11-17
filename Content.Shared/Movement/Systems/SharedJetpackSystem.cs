@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 // KS14: This file was reverted to https://github.com/LaCumbiaDelCoronavirus/ss14/blob/a21e8dd444ad5643e9e315dc5c4a06e30322276e/
 //      which is, `allow jetpacks to stay enabled when on grids and lightly rework jetpack system #37775` on wizden Github
 
@@ -97,7 +98,7 @@ public abstract partial class SharedJetpackSystem : EntitySystem
             SetEnabled((jetpackUid, jetpackComponent), jetpackComponent.Enabled, flyIfEnabled: canFly, user: userEntity.Owner);
 
             if (!canFly)
-                _popup.PopupClient(Loc.GetString("jetpack-to-grid"), userEntity.Owner, userEntity.Owner);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("jetpack-to-grid"), userEntity.Owner, userEntity.Owner);
         }
         // }
     }
@@ -125,7 +126,7 @@ public abstract partial class SharedJetpackSystem : EntitySystem
         var jetpackEnabled = jetpackComponent.Enabled;
 
         if (!canFly && jetpackEnabled)
-            _popup.PopupClient(Loc.GetString("jetpack-to-grid"), jetpackUser, jetpackUser);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("jetpack-to-grid"), jetpackUser, jetpackUser);
 
         SetEnabled((jetpackUid, jetpackComponent), jetpackEnabled, flyIfEnabled: canFly, user: jetpackUser);
     }
@@ -190,7 +191,7 @@ public abstract partial class SharedJetpackSystem : EntitySystem
         // However, if they're trying to turn this one off, then let them.
         if (toggled && _jetpackUserQuery.TryComp(user, out var userComponent) && userComponent.Jetpack != jetpack.Owner)
         {
-            _popup.PopupClient(Loc.GetString("jetpack-already-using"), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("jetpack-already-using"), user, user);
             return;
         }
 

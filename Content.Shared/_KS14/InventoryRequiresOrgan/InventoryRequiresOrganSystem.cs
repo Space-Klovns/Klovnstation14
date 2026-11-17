@@ -6,8 +6,6 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.InventoryRequiresOrgan;
 
-// TODO LCDC: optimise somehow
-
 public sealed partial class InventoryRequiresOrganSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -55,13 +53,16 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
         if (_gameTiming.ApplyingState)
             return;
 
-        if (TerminatingOrDeleted(entity) ||
+        if (args.OrganComponent.Category is not { } removedCategory ||
+            TerminatingOrDeleted(entity) ||
             !Transform(entity.Owner).ParentUid.IsValid())
             return;
 
         foreach (var (slotId, requiredCategories) in entity.Comp.Categories)
         {
-            if (!ShouldDisableSlot(requiredCategories, args.BodyComponent.PresentOrganCategories))
+            // Losing an organ no slot asks for can't disable one
+            if (!requiredCategories.Contains(removedCategory) ||
+                !ShouldDisableSlot(requiredCategories, args.BodyComponent.PresentOrganCategories))
                 continue;
 
             _inventorySystem.TryUnequip(entity.Owner, slotId, silent: true, force: true, predicted: true);

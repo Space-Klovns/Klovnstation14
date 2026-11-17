@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Administration.UI;
@@ -141,7 +142,7 @@ namespace Content.Server.Administration.Systems
                         {
                             if (!_transformSystem.TryGetMapOrGridCoordinates(args.Target, out var coords))
                             {
-                                _popup.PopupEntity(Loc.GetString("admin-player-spawn-failed"), args.User, args.User);
+                                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-player-spawn-failed"), args.User, args.User);
                                 return;
                             }
 
@@ -167,7 +168,7 @@ namespace Content.Server.Administration.Systems
                         {
                             if (!_transformSystem.TryGetMapOrGridCoordinates(args.User, out var coords))
                             {
-                                _popup.PopupEntity(Loc.GetString("admin-player-spawn-failed"), args.User, args.User);
+                                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-player-spawn-failed"), args.User, args.User);
                                 return;
                             }
 

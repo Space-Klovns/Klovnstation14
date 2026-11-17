@@ -20,29 +20,7 @@ public sealed partial class FlavorProfileSystem : EntitySystem
 
     public string GetLocalizedFlavorsMessage(Entity<FlavorProfileComponent?> entity, EntityUid user, Solution? solution)
     {
-        HashSet<string> flavors = new();
-        HashSet<string>? ignore = null;
-
-        if (Resolve(entity, ref entity.Comp, false))
-        {
-            flavors = entity.Comp.Flavors;
-            ignore = entity.Comp.IgnoreReagents;
-        }
-
-
-        if (solution != null)
-            flavors.UnionWith(GetFlavorsFromReagents(solution, FlavorLimit - flavors.Count, ignore));
-
-        var ev = new FlavorProfileModificationEvent(user, flavors);
-
-        RaiseLocalEvent(ev);
-        RaiseLocalEvent(entity, ev);
-        RaiseLocalEvent(user, ev);
-
-        if (flavors.Count == 0)
-            return Loc.GetString(BackupFlavorMessage);
-
-        return FlavorsToFlavorMessage(flavors);
+        return GetFlavorsPopupMessage(entity, user, solution).Format(EntityManager); // KS14: retain string API for immediate formatting
     }
 
     public string GetLocalizedFlavorsMessage(EntityUid user, Solution solution)
@@ -51,37 +29,7 @@ public sealed partial class FlavorProfileSystem : EntitySystem
         var ev = new FlavorProfileModificationEvent(user, flavors);
         RaiseLocalEvent(user, ev, true);
 
-        return FlavorsToFlavorMessage(flavors);
-    }
-
-    private string FlavorsToFlavorMessage(HashSet<string> flavorSet)
-    {
-        var flavors = new List<FlavorPrototype>();
-        foreach (var flavor in flavorSet)
-        {
-            if (string.IsNullOrEmpty(flavor) || !ProtoMan.TryIndex<FlavorPrototype>(flavor, out var flavorPrototype))
-            {
-                continue;
-            }
-
-            flavors.Add(flavorPrototype);
-        }
-
-        flavors.Sort((a, b) => a.FlavorType.CompareTo(b.FlavorType));
-
-        if (flavors.Count == 1 && !string.IsNullOrEmpty(flavors[0].FlavorDescription))
-        {
-            return Loc.GetString("flavor-profile", ("flavor", Loc.GetString(flavors[0].FlavorDescription)));
-        }
-
-        if (flavors.Count > 1)
-        {
-            var lastFlavor = Loc.GetString(flavors[^1].FlavorDescription);
-            var allFlavors = string.Join(", ", flavors.GetRange(0, flavors.Count - 1).Select(i => Loc.GetString(i.FlavorDescription)));
-            return Loc.GetString("flavor-profile-multiple", ("flavors", allFlavors), ("lastFlavor", lastFlavor));
-        }
-
-        return Loc.GetString(BackupFlavorMessage);
+        return FlavorsToPopupMessage(flavors).Format(EntityManager); // KS14: reuse deferred flavour formatting
     }
 
     private HashSet<string> GetFlavorsFromReagents(Solution solution, int desiredAmount, HashSet<string>? toIgnore = null)

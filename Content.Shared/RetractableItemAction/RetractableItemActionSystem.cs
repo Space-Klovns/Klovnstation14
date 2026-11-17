@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Cuffs;
 using Content.Shared.Hands;
@@ -58,7 +59,7 @@ public sealed partial class RetractableItemActionSystem : EntitySystem
             && !_hands.IsHolding(args.Performer, ent.Comp.ActionItemUid)
             && !_hands.CanDropHeld(args.Performer, activeHand, false))
         {
-            _popups.PopupClient(Loc.GetString("retractable-item-hand-cannot-drop"), args.Performer, args.Performer);
+            _popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("retractable-item-hand-cannot-drop"), args.Performer, args.Performer);
             return;
         }
 

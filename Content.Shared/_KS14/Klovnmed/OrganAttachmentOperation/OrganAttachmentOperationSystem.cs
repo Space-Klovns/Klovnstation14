@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Body;
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
@@ -62,7 +63,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
             !_containerSystem.TryGetContainer(entity.Owner, BodyHierarchySystem.ConstContainerId, out var bodyContainer) ||
             !_containerSystem.CanInsert(args.Used, bodyContainer))
         {
-            _popupSystem.PopupClient(Loc.GetString("ks-organ-attachment-operation-wontfit"), entity.Owner, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create("ks-organ-attachment-operation-wontfit"), entity.Owner, args.User);
             return;
         }
 
@@ -72,7 +73,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
             if (!_bodyHierarchySystem.TryGetOrgan(entity.Owner, routeCategory, out var routeOrganEntity) ||
                 RaiseCanAttachOrganCancelled(routeOrganEntity.Value.Owner, category))
             {
-                _popupSystem.PopupClient(Loc.GetString("ks-organ-attachment-operation-wontfit"), entity.Owner, args.User);
+                _popupSystem.PopupClient(KsPopupMessage.Create("ks-organ-attachment-operation-wontfit"), entity.Owner, args.User);
                 return;
             }
 
@@ -121,7 +122,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
         _containerSystem.Insert(args.Used!.Value, container);
 
         _popupSystem.PopupClient(
-            Loc.GetString("ks-organ-attachment-operation-inserted",
+            KsPopupMessage.Create("ks-organ-attachment-operation-inserted",
                 ("organ", Identity.Name(args.Used.Value, EntityManager, viewer: args.User)),
                 ("target", Identity.Name(entity.Owner, EntityManager, viewer: containerUid))
             ), entity.Owner, args.User);

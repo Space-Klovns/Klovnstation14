@@ -65,5 +65,6 @@ public sealed partial class CargoSystem : SharedCargoSystem
         UpdateConsole();
         UpdateTelepad(frameTime);
         UpdateBounty();
+        KsUpdateCheckout(); // KS14: let go of checkout goods that left their pallet or telepad
     }
 }

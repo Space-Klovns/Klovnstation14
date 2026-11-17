@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -6,6 +5,7 @@ using Content.Client._KS14.ZLevel;
 using Content.Client._KS14.ZLevel.Light;
 using Content.Client._KS14.ZLevel.Transit;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Portal;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Physics;
 using Content.Shared._KS14.ZLevel.Transit;
@@ -237,7 +237,9 @@ namespace Content.Client.Viewport
                 //      through the scaled copy while they're above it mid-transit.
                 _viewport.Eye = isViewerMap && depth <= 0f ? eye : _zLevelEye;
 
+                Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel = !isViewerMap;
                 _viewport.Render();
+                Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel = false;
                 _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
                 // Never blur the map the viewer is actually on
@@ -359,6 +361,7 @@ namespace Content.Client.Viewport
         protected override void Dispose(bool disposing)
         {
             InvalidateZLevelState();
+            ReleasePortalViewports();
 
             if (_gapLevelsCVarHandler != null)
             {
@@ -474,9 +477,7 @@ namespace Content.Client.Viewport
                 _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
                 CaptureZLevel(handle, aboveEntity.Value, viewerDepth);
 
-            // Top-down. Every z-level but the deepest lights the one under it; the deepest is captured
-            //      only when something is crossing the gap above it, because a gap is the one pass that is
-            //      lit from below rather than from above.
+            // Top-down. Every z-level but the deepest lights the one under it; nothing lights from below.
             var depth = viewerDepth;
             for (var index = _mapsToIterate.Count - 1; index >= 0; index--)
             {
@@ -492,7 +493,7 @@ namespace Content.Client.Viewport
                     //      depth of the z-level it is about to light rather than its own.
                     consumerDepth += _mapsToIterate[index - 1].Comp.Depth;
                 }
-                else if (!WantsGapPass(_mapsToIterate[index].Owner, depth))
+                else
                 {
                     break;
                 }
@@ -536,7 +537,9 @@ namespace Content.Client.Viewport
             // Cleared, unlike the drawing passes: the colour image is about to be used as a mask, and it can
             //      only say where this z-level is solid if nothing else is left in it.
             _viewport.ClearColor = Color.Transparent;
+            KsZLevelRenderPass.Capture = true;
             _viewport.Render();
+            KsZLevelRenderPass.Capture = false;
 
             var capture = EnsureCapture(mapComponent.MapId);
             capture.WorldBounds = GetEyeWorldBounds(_zLevelEye);
@@ -578,13 +581,15 @@ namespace Content.Client.Viewport
         ///     The world area an eye covers in this viewport, which is what places a capture correctly in a
         ///         pass drawn at a different depth scale.
         /// </summary>
-        private Box2Rotated GetEyeWorldBounds(Robust.Shared.Graphics.Eye eye)
+        private Box2Rotated GetEyeWorldBounds(IEye eye)
         {
-            var eyePosition = eye.Position.Position + eye.Offset;
             var worldSize = (Vector2)_viewport!.Size
                 / (EyeManager.PixelsPerMeter * _viewport.RenderScale * eye.Scale);
 
-            return new Box2Rotated(Box2.CenteredAround(eyePosition, worldSize), eye.Rotation, eyePosition);
+            // Turned by minus the eye's rotation, as the engine's own bounds are. Plus here was wrong for
+            //      any rotated eye, which includes every portal pass whose portals are turned relative to
+            //      each other.
+            return KsPortalTransform.GetEyeWorldBounds(eye.Position.Position + eye.Offset, eye.Rotation, worldSize);
         }
 
         private KsZLevelLightCapture EnsureCapture(MapId mapId)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Examine;
 using Content.Shared.Popups;
 using Content.Shared.Power;
@@ -69,7 +70,7 @@ public abstract partial class SharedEntityHeaterSystem : EntitySystem
         // Still allow changing the setting without power
         ent.Comp.Setting = setting;
         _audio.PlayPredicted(ent.Comp.SettingSound, ent, user);
-        _popup.PopupClient(Loc.GetString("entity-heater-switched-setting", ("setting", setting)), ent, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("entity-heater-switched-setting", ("setting", setting)), ent, user);
         Dirty(ent);
 
         // Only show the glowing heating element layer if there's power

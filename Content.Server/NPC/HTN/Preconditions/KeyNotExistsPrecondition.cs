@@ -9,8 +9,11 @@ public sealed partial class KeyNotExistsPrecondition : HTNPrecondition
     [DataField(required: true), ViewVariables]
     public string Key = string.Empty;
 
+    [Dependency] private IEntityManager _entityManager = default!; // KS14
+
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return !blackboard.ContainsKey(Key);
+        // KS14: ContainsKey(Key) -> the entity-aware one: a key naming a deleted entity is not there, as for KeyExistsPrecondition
+        return !blackboard.ContainsKey(Key, _entityManager);
     }
 }

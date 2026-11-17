@@ -1,6 +1,8 @@
 // KS14: added in this fork
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Dangers;
 using Content.Server._KS14.NPC.Pathfinding;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Map;
@@ -11,28 +13,13 @@ namespace Content.Server.NPC.Pathfinding;
 
 public sealed partial class PathfindingSystem
 {
-    /// <summary>
-    /// How many of each piece of tactical search state the pools keep. Enough for the requests usually in flight at
-    /// once; past that, requests allocate their own and the extras are simply dropped when they finish.
-    /// </summary>
-    private const int TacticalPoolSize = 32;
-
-    // Every tactical request grows these to several hundred entries, and an NPC holding a position makes one on
-    //      every replan. Pooled, they are allocated once and reused; they are thread-safe, and requests run in parallel.
-    private readonly ObjectPool<Dictionary<PathPoly, float>> _tacticalCostPool =
-        new DefaultObjectPool<Dictionary<PathPoly, float>>(new DictPolicy<PathPoly, float>(), TacticalPoolSize);
-
-    private readonly ObjectPool<Dictionary<PathPoly, float>> _tacticalDistancePool =
-        new DefaultObjectPool<Dictionary<PathPoly, float>>(new DictPolicy<PathPoly, float>(), TacticalPoolSize);
-
-    private readonly ObjectPool<TacticalFrontier> _tacticalFrontierPool =
-        new DefaultObjectPool<TacticalFrontier>(new TacticalFrontierPolicy(), TacticalPoolSize);
-
+    // Picking candidates out of a finished flood. The flood's own state comes from the shared search pools, see
+    //      PathfindingSystem.Klovn.Pools.cs.
     private readonly ObjectPool<List<PathPoly>> _tacticalTilePolyPool =
-        new DefaultObjectPool<List<PathPoly>>(new ListPolicy<PathPoly>(), TacticalPoolSize);
+        new DefaultObjectPool<List<PathPoly>>(new ListPolicy<PathPoly>(), SearchPoolSize);
 
     private readonly ObjectPool<HashSet<(EntityUid, Vector2i, byte)>> _tacticalSeenTilePool =
-        new DefaultObjectPool<HashSet<(EntityUid, Vector2i, byte)>>(new SetPolicy<(EntityUid, Vector2i, byte)>(), TacticalPoolSize);
+        new DefaultObjectPool<HashSet<(EntityUid, Vector2i, byte)>>(new SetPolicy<(EntityUid, Vector2i, byte)>(), SearchPoolSize);
 
     /// <summary>
     /// Flood-fills the poly graph from <paramref name="reference"/> out to <paramref name="maxRange"/>,
@@ -56,7 +43,7 @@ public sealed partial class PathfindingSystem
             (layer, mask) = _physics.GetHardCollision(entity, fixtures);
         }
 
-        var request = new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken);
+        var request = WithAvoidedDangers(new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken), entity);
         RentTacticalSearchState(request);
         _pathRequests.Add(request);
 
@@ -73,9 +60,9 @@ public sealed partial class PathfindingSystem
     /// </summary>
     internal void RentTacticalSearchState(TacticalPathRequest request)
     {
-        request.CostSoFar = _tacticalCostPool.Get();
-        request.DistanceSoFar = _tacticalDistancePool.Get();
-        request.TacticalFrontier = _tacticalFrontierPool.Get();
+        request.CostSoFar = _polyCostPool.Get();
+        request.DistanceSoFar = _polyCostPool.Get();
+        request.TacticalFrontier = _polyFrontierPool.Get();
     }
 
     /// <summary>
@@ -85,9 +72,9 @@ public sealed partial class PathfindingSystem
     /// </summary>
     private void ReturnTacticalSearchState(TacticalPathRequest request)
     {
-        _tacticalCostPool.Return(request.CostSoFar);
-        _tacticalDistancePool.Return(request.DistanceSoFar);
-        _tacticalFrontierPool.Return(request.TacticalFrontier);
+        _polyCostPool.Return(request.CostSoFar);
+        _polyCostPool.Return(request.DistanceSoFar);
+        _polyFrontierPool.Return(request.TacticalFrontier);
 
         request.CostSoFar = default!;
         request.DistanceSoFar = default!;
@@ -157,6 +144,9 @@ public sealed partial class PathfindingSystem
 
             currentNode = request.TacticalFrontier.Take();
 
+            var currentCost = request.CostSoFar[currentNode];
+            var currentDistance = request.DistanceSoFar[currentNode];
+
             foreach (var neighbor in currentNode.Neighbors)
             {
                 var tileCost = GetTileCost(request, currentNode, neighbor);
@@ -171,21 +161,23 @@ public sealed partial class PathfindingSystem
                 // by the priority queue, but that same weighting must not be mistaken for physical distance, or
                 // any candidate past a door (even one the NPC can freely open) would get cut off as if it were
                 // far away.
-                var distance = request.DistanceSoFar[currentNode] + OctileDistance(currentNode, neighbor);
+                var distance = currentDistance + OctileDistance(currentNode, neighbor);
 
                 if (distance > request.ExpansionRange)
                 {
                     continue;
                 }
 
-                var gScore = request.CostSoFar[currentNode] + tileCost;
+                var gScore = currentCost + tileCost;
 
-                if (request.CostSoFar.TryGetValue(neighbor, out var nextValue) && gScore >= nextValue)
+                // One lookup, not a read and then a write.
+                ref var neighborCost = ref CollectionsMarshal.GetValueRefOrAddDefault(request.CostSoFar, neighbor, out var reached);
+                if (reached && gScore >= neighborCost)
                 {
                     continue;
                 }
 
-                request.CostSoFar[neighbor] = gScore;
+                neighborCost = gScore;
                 request.DistanceSoFar[neighbor] = distance;
                 request.TacticalFrontier.Add(gScore, neighbor);
             }
@@ -202,13 +194,27 @@ public sealed partial class PathfindingSystem
         //      CostSoFar only ever has entries added or updated, never removed, so it enumerates in the order the
         //      flood reached each poly - nearest first.
         var tilePolys = _tacticalTilePolyPool.Get();
+        var nearDangerPolys = _tacticalTilePolyPool.Get();
         var seenTiles = _tacticalSeenTilePool.Get();
+        var avoids = request.AvoidedDangers != NpcTileDangerKind.None;
 
         foreach (var (poly, _) in request.CostSoFar)
         {
-            if (poly.IsValid() && seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
+            // Nowhere to stand, for one that avoids it, however much it may have to cross one getting somewhere.
+            if (!poly.IsValid() ||
+                (avoids && IsDangerous(poly, request.AvoidedDangers)) ||
+                !seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
+                continue;
+
+            if (avoids && IsNearDanger(poly, request.AvoidedDangers))
+                nearDangerPolys.Add(poly);
+            else
                 tilePolys.Add(poly);
         }
+
+        // Right beside one only if there is nothing else: fires spread, and it may have to lie down to put itself out.
+        if (tilePolys.Count == 0)
+            (tilePolys, nearDangerPolys) = (nearDangerPolys, tilePolys);
 
         // Half the cap goes to the nearest tiles, every one of them, and the other half is spread evenly over the
         //      rest of the flood. Taking only the nearest would never offer anything past a few tiles, so no retreat
@@ -235,22 +241,9 @@ public sealed partial class PathfindingSystem
         }
 
         _tacticalTilePolyPool.Return(tilePolys);
+        _tacticalTilePolyPool.Return(nearDangerPolys);
         _tacticalSeenTilePool.Return(seenTiles);
 
         return PathResult.Path;
-    }
-
-    private sealed class TacticalFrontierPolicy : PooledObjectPolicy<TacticalFrontier>
-    {
-        public override TacticalFrontier Create()
-        {
-            return new TacticalFrontier();
-        }
-
-        public override bool Return(TacticalFrontier frontier)
-        {
-            frontier.Clear();
-            return true;
-        }
     }
 }

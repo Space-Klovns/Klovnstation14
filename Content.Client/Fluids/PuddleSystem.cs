@@ -11,6 +11,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 {
     [Dependency] private IconSmoothSystem _smooth = default!;
     [Dependency] private SpriteSystem _sprite = default!;
+    [Dependency] private Content.Client._KS14.Fluids.KsPredictedSpillSystem _ksPredictedSpillSystem = default!; // KS14
 
     public override void Initialize()
     {
@@ -30,6 +31,8 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         {
             volume = (float)volumeObj;
         }
+
+        volume = _ksPredictedSpillSystem.GetDrawnVolume(uid, volume); // KS14: plus what this client's own vapor spilled here ahead of the server
 
         // Update smoothing and sprite based on volume.
         if (TryComp<IconSmoothComponent>(uid, out var smooth))

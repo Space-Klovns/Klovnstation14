@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.Xenoarchaeology.Artifact.Components;
 using Content.Shared.Xenoarchaeology.Artifact.XAE.Components;
@@ -25,7 +26,7 @@ public sealed partial class XAERandomTeleportInvokerSystem : BaseXAESystem<XAERa
         var component = ent.Comp;
 
         var xform = Transform(args.Artifact);
-        _popup.PopupPredictedCoordinates(Loc.GetString("blink-artifact-popup"), xform.Coordinates, args.User, PopupType.Medium);
+        _popup.PopupPredictedCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("blink-artifact-popup"), xform.Coordinates, args.User, PopupType.Medium);
 
         var offsetTo = _random.NextVector2(component.MinRange, component.MaxRange);
 

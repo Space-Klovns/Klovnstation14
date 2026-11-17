@@ -27,6 +27,7 @@ public sealed partial class LatheMenu : FancyWindow
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction; // KS14
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -150,6 +151,8 @@ public sealed partial class LatheMenu : FancyWindow
                         amount = 1;
                     RecipeQueueAction?.Invoke(s, amount);
                 };
+                control.KsOnRequestPressed += s => KsRecipeRequestAction?.Invoke(s); // KS14
+                control.KsLatheUid = Entity; // KS14
                 RecipeList.AddChild(control);
             }
             else
@@ -162,10 +165,15 @@ public sealed partial class LatheMenu : FancyWindow
                     continue;
                 }
 
+                var ksSameRecipe = child.KsShows(prototype); // KS14
                 child.SetRecipe(prototype);
                 child.SetTooltipSupplier(tooltipFunction);
                 child.SetCanProduce(canProduce);
-                child.SetDisplayControl(GetRecipeDisplayControl(prototype));
+                // KS14 start: only when the row's recipe changes. This runs on every state, so on every change of materials, and
+                //      a new display control is a new entity, which left every row's icon rebuilding each time.
+                if (!ksSameRecipe)
+                    child.SetDisplayControl(GetRecipeDisplayControl(prototype));
+                // KS14 end
             }
             idx++;
         }
@@ -287,6 +295,7 @@ public sealed partial class LatheMenu : FancyWindow
             if (idx >= oldChildCount)
             {
                 var queuedRecipeBox = new QueuedRecipeControl(displayText, idx, GetRecipeDisplayControl(recipe));
+                queuedRecipeBox.KsTakeRecipe(batch.Recipe); // KS14
                 queuedRecipeBox.OnDeletePressed += s => QueueDeleteAction?.Invoke(s);
                 queuedRecipeBox.OnMoveUpPressed += s => QueueMoveUpAction?.Invoke(s);
                 queuedRecipeBox.OnMoveDownPressed += s => QueueMoveDownAction?.Invoke(s);
@@ -304,7 +313,9 @@ public sealed partial class LatheMenu : FancyWindow
 
                 child.SetDisplayText(displayText);
                 child.SetIndex(idx);
-                child.SetDisplayControl(GetRecipeDisplayControl(recipe));
+                // KS14: only when the row's recipe changes, as in PopulateRecipes
+                if (child.KsTakeRecipe(batch.Recipe))
+                    child.SetDisplayControl(GetRecipeDisplayControl(recipe));
             }
             idx++;
         }
@@ -316,6 +327,18 @@ public sealed partial class LatheMenu : FancyWindow
         }
     }
 
+    // KS14 start
+    public void KsSetSmelterPoints(int points)
+    {
+        KsQueueTitleLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-title");
+        KsQueueScroll.Visible = false;
+        KsSmelterContainer.Visible = true;
+        KsSmelterPointsLabel.Text = Loc.GetString("ks-salvage-tablet-smelter-ui-points", ("points", points));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-salvage-tablet-smelter-ui-hint"),
+            defaultColor: Content.Client._KS14.Tgui.KsTguiPalettes.Label /* KS14: #A0A0A0 -> tgui label colour; a RichTextLabel takes no colour from the sheet */);
+    }
+    // KS14 end
+
     public void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto)
     {
         FabricatingContainer.Visible = recipeProto != null;
@@ -324,8 +347,14 @@ public sealed partial class LatheMenu : FancyWindow
 
         var recipe = _prototypeManager.Index(recipeProto.Value);
 
-        FabricatingDisplayContainer.Children.Clear();
-        FabricatingDisplayContainer.AddChild(GetRecipeDisplayControl(recipe));
+        // KS14 start: only when the recipe changes, as in PopulateRecipes
+        if (_ksFabricatingRecipe != recipeProto)
+        {
+            _ksFabricatingRecipe = recipeProto;
+            FabricatingDisplayContainer.Children.Clear();
+            FabricatingDisplayContainer.AddChild(GetRecipeDisplayControl(recipe));
+        }
+        // KS14 end
 
         NameLabel.Text = _lathe.GetRecipeName(recipe);
     }

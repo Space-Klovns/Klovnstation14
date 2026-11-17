@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Power.Components;
@@ -436,7 +437,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         _stuttering.DoStutter(uid, time * StutteringTimeMultiplier, refresh);
         _jittering.DoJitter(uid, time * JitterTimeMultiplier, refresh, JitterAmplitude, JitterFrequency, true, statusEffects);
 
-        _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-popup-player"), uid, uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-popup-player"), uid, uid);
 
         var filter = Filter.PvsExcept(uid, entityManager: EntityManager);
 
@@ -444,13 +445,13 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         // TODO: Allow being able to pass EntityUid to Loc...
         if (sourceUid != null)
         {
-            _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-by-source-popup-others",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-by-source-popup-others",
                 ("mob", identifiedUid), ("source", (sourceUid.Value))), uid, filter, true);
             PlayElectrocutionSound(uid, sourceUid.Value);
         }
         else
         {
-            _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-popup-others",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-popup-others",
                 ("mob", identifiedUid)), uid, filter, true);
         }
 

@@ -1,4 +1,5 @@
 using Content.Client.Administration.Managers;
+using Content.Client._KS14.Localization; // KS14
 using Content.Client.Changelog;
 using Content.Client.Chat.Managers;
 using Content.Client.DebugMon;
@@ -97,6 +98,7 @@ namespace Content.Client.Entry
             Dependencies.InjectDependencies(this);
 
             _contentLoc.Initialize();
+            Dependencies.Resolve<KsClientLocalizationManager>().Initialize(); // KS14: apply the saved client locale before UI creation
             _componentFactory.DoAutoRegistrations();
             _componentFactory.IgnoreMissingComponents();
 
@@ -113,6 +115,10 @@ namespace Content.Client.Entry
             _prototypeManager.RegisterIgnore("holiday");
             _prototypeManager.RegisterIgnore("htnCompound");
             _prototypeManager.RegisterIgnore("htnPrimitive");
+            _prototypeManager.RegisterIgnore("npcMeter"); // KS14: server-only NPC meters
+            _prototypeManager.RegisterIgnore("npcVoiceSet"); // KS14: server-only NPC voice sets
+            _prototypeManager.RegisterIgnore("npcVoiceRecording"); // KS14: server-only NPC voice recordings
+            _prototypeManager.RegisterIgnore("npcCallsignSet"); // KS14: server-only NPC callsigns
             _prototypeManager.RegisterIgnore("gameMap");
             _prototypeManager.RegisterIgnore("gameMapPool");
             _prototypeManager.RegisterIgnore("gamePreset");

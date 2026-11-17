@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.CartridgeLoader.Cartridges;
 using Content.Server.CartridgeLoader;
@@ -141,7 +142,7 @@ public sealed partial class NewsSystem : SharedNewsSystem
         }
         else
         {
-            _popup.PopupEntity(Loc.GetString("news-write-no-access-popup"), ent, PopupType.SmallCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("news-write-no-access-popup"), ent, PopupType.SmallCaution);
             _audio.PlayPvs(ent.Comp.NoAccessSound, ent);
         }
 

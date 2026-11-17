@@ -74,7 +74,8 @@ public sealed class KsVoiceLinkWindowTests : GameTest
         var controlBox = UIBox2.FromDimensions(control.GlobalPosition, shownSize);
 
         control.Measure(new Vector2(needFullWidth ? float.PositiveInfinity : shownSize.X, float.PositiveInfinity));
-        var neededSize = control.DesiredSize;
+        // DesiredSize includes the margin and Size doesn't: the tgui theme gives buttons one.
+        var neededSize = control.DesiredSize - new Vector2(control.Margin.SumHorizontal, control.Margin.SumVertical);
 
         Assert.That(windowBox.Encloses(controlBox), Is.True,
             $"{name} ({controlBox}) must stay inside the window ({windowBox}) after resizing to {dragged}");

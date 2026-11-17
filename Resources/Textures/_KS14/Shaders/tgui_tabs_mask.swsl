@@ -1,0 +1,34 @@
+light_mode unshaded;
+
+// tgui's scrollable Tabs mask-image, applied to the tabs drawn into an offscreen target: the target holds premultiplied
+//      colour, and the result is scaled by the mask whole, so it is still premultiplied (the prototype blends it so). It must
+//      match KsTguiTabsMask.Alpha. Alpha is 0 up to maskOpaqueFraction * the fade, ramps to 1 at the fade, and the same
+//      mirrored at the right. A fade of 0 is not masked. MODULATE's alpha is applied to the colour here too, since the
+//      engine's own multiplication only scales alpha of a premultiplied colour.
+
+uniform highp float stripWidth;
+uniform highp float leftFade;
+uniform highp float rightFade;
+uniform highp float opaqueFraction;
+
+void fragment()
+{
+    highp float x = UV2.x * stripWidth;
+    highp float alpha = 1.0;
+
+    if (leftFade > 0.0)
+    {
+        highp float start = leftFade * opaqueFraction;
+        alpha *= clamp((x - start) / (leftFade - start), 0.0, 1.0);
+    }
+
+    if (rightFade > 0.0)
+    {
+        highp float start = stripWidth - rightFade;
+        highp float end = stripWidth - rightFade * opaqueFraction;
+        alpha *= 1.0 - clamp((x - start) / (end - start), 0.0, 1.0);
+    }
+
+    highp vec4 texel = zTexture(UV);
+    COLOR = vec4(texel.rgb * (alpha * MODULATE.a), texel.a * alpha);
+}

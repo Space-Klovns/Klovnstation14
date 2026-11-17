@@ -7,7 +7,7 @@
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
-            proto: NearbyGunTargets
+            proto: KsTurretGunTargets # KS14: NearbyGunTargets -> KsTurretGunTargets, prefers a hostile its rounds can get to
         
         - !type:HTNPrimitiveTask
           preconditions:
@@ -20,13 +20,15 @@
             - !type:TargetInLOSPrecondition
               targetKey: Target
               rangeKey: RangedRange
+              ksStandingMobsBlock: false # KS14: seen past mobs; holds fire for friends instead
           operator: !type:GunOperator
             targetKey: Target
             requireLOS: true
+            ksHoldFireWhenBlocked: true # KS14: aims and tracks, and holds fire until a round would get there
           services:
             - !type:UtilityService
               id: RangedService
-              proto: NearbyGunTargets
+              proto: KsTurretGunTargets # KS14: NearbyGunTargets -> KsTurretGunTargets
               key: Target
 
     - tasks:
@@ -39,7 +41,7 @@
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
-            proto: NearbyGunTargets
+            proto: KsTurretGunTargets # KS14: NearbyGunTargets -> KsTurretGunTargets, prefers a hostile its rounds can get to
         
         - !type:HTNPrimitiveTask
           preconditions:
@@ -53,13 +55,15 @@
               targetKey: Target
               rangeKey: RangedRange
               opaqueKey: true
+              ksStandingMobsBlock: false # KS14: seen past mobs; holds fire for friends instead
           operator: !type:GunOperator
             targetKey: Target
             opaqueKey: true
+            ksHoldFireWhenBlocked: true # KS14: aims and tracks, and holds fire until a round would get there
           services:
             - !type:UtilityService
               id: RangedService
-              proto: NearbyGunTargets
+              proto: KsTurretGunTargets # KS14: NearbyGunTargets -> KsTurretGunTargets
               key: Target
 
     - tasks:

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.ParticleAccelerator.Components;
 using Content.Shared.Popups;
 using Content.Shared.Singularity.Components;
@@ -137,7 +138,7 @@ public sealed partial class SingularityGeneratorSystem : SharedSingularityGenera
         if (!contained && !generatorComp.FailsafeDisabled)
         {
             generatorComp.NextFailsafe = _timing.CurTime + generatorComp.FailsafeCooldown;
-            PopupSystem.PopupEntity(Loc.GetString("comp-generator-failsafe", ("target", args.OtherEntity)), args.OtherEntity, PopupType.LargeCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-generator-failsafe", ("target", args.OtherEntity)), args.OtherEntity, PopupType.LargeCaution);
         }
         else
         {

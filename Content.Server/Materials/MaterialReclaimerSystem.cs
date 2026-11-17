@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Ghost;
@@ -100,11 +101,11 @@ public sealed partial class MaterialReclaimerSystem : SharedMaterialReclaimerSys
             _ghostSystem.OnGhostAttempt(mindId, false, mind: mind);
             if (mind.OwnedEntity is { Valid: true } suicider)
             {
-                _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message"), suicider);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("recycler-component-suicide-message"), suicider);
             }
         }
 
-        _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message-others",
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("recycler-component-suicide-message-others",
                 ("victim", Identity.Entity(victim, EntityManager))),
             victim,
             Filter.PvsExcept(victim, entityManager: EntityManager),

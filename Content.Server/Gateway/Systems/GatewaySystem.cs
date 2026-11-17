@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Gateway.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.UserInterface;
@@ -276,7 +277,7 @@ public sealed partial class GatewaySystem : EntitySystem
         if (_accessReader.IsAllowed(user, uid))
             return false;
 
-        _popup.PopupEntity(Loc.GetString("gateway-access-denied"), user);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gateway-access-denied"), user);
         _audio.PlayPvs(comp.AccessDeniedSound, uid);
         return true;
     }

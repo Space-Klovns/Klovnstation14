@@ -7,6 +7,7 @@ using Content.Shared.Hands.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Inventory.VirtualItem;
 using JetBrains.Annotations;
+using Robust.Shared.Map; // KS14
 using Robust.Shared.Utility;
 
 namespace Content.Server.NPC;
@@ -74,6 +75,21 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         return _blackboard.ContainsKey(key);
     }
 
+    // KS14 start
+    /// <summary>
+    ///     Whether there is a value at <paramref name="key"/> that <see cref="TryGetValue{T}"/> would hand out: not an
+    ///         entity, or coordinates on one, that is deleted or being deleted (<see cref="KsIsGone"/>). What a plan asks
+    ///         with, so that it agrees with the read that follows: asked with <see cref="ContainsKey(string)"/>, a branch
+    ///         gated on a key naming a deleted entity planned, its operator failed on the read, the failure replanned at
+    ///         once onto the same branch, and every branch below it never got a turn.
+    /// </summary>
+    [Pure]
+    public bool ContainsKey(string key, IEntityManager entManager)
+    {
+        return _blackboard.TryGetValue(key, out var value) && !KsIsGone(value, entManager);
+    }
+    // KS14 end
+
     /// <summary>
     /// Get the blackboard data for a particular key.
     /// </summary>
@@ -89,7 +105,7 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     [Pure]
     public T? GetValueOrDefault<T>(string key, IEntityManager entManager)
     {
-        if (_blackboard.TryGetValue(key, out var value))
+        if (_blackboard.TryGetValue(key, out var value) && !KsIsGone(value, entManager)) // KS14: not a deleted entity
         {
             return (T)value;
         }
@@ -107,12 +123,38 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         return default;
     }
 
+    // KS14 start
+    /// <summary>
+    ///     Whether <paramref name="data"/> is an entity, or coordinates on one, that is deleted or being deleted. The
+    ///         blackboard keeps whatever was written to it, and an entity written by one plan can be gibbed, deleted or
+    ///         gone with its grid before the next reads it: handing it out makes every reader that calls into a system
+    ///         with it (EnsureComp, transforms) throw, and a throw in an operator aborts the NPC update for every NPC
+    ///         after it, every tick, until the key is gone. Read as missing instead: a type test and a lookup.
+    /// </summary>
+    private static bool KsIsGone(object data, IEntityManager entManager)
+    {
+        var uid = data switch
+        {
+            EntityUid entityUid => entityUid,
+            EntityCoordinates coordinates => coordinates.EntityId,
+            _ => EntityUid.Invalid,
+        };
+
+        // Not an entity, or one written as invalid on purpose: as it ever was.
+        if (!uid.IsValid())
+            return false;
+
+        return !entManager.TryGetComponent(uid, out MetaDataComponent? metaDataComponent) ||
+            metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating;
+    }
+    // KS14 end
+
     /// <summary>
     /// Tries to get the blackboard data for a particular key.
     /// </summary>
     public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value, IEntityManager entManager)
     {
-        if (_blackboard.TryGetValue(key, out var data))
+        if (_blackboard.TryGetValue(key, out var data) && !KsIsGone(data, entManager)) // KS14: not a deleted entity
         {
             value = (T)data;
             return true;
@@ -149,6 +191,18 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     {
         DebugTools.Assert(false, $"Tried to write to an NPC blackboard that is readonly!");
     }
+
+    // KS14 start
+    /// <summary>
+    ///     Whether <paramref name="key"/> is worked out from the entity each time it is read, in <see cref="TryGetEntityDefault"/>.
+    ///         A value stored under one of these hides that for good: right for the planner, which is working out what
+    ///         will be true, and wrong for the blackboard the NPC runs on, which has to say what is true.
+    /// </summary>
+    public static bool IsComputedKey(string key)
+    {
+        return key is Access or ActiveHand or ActiveHandFree or CanMove or FreeHands or Inventory or OwnerCoordinates;
+    }
+    // KS14 end
 
     private bool TryGetEntityDefault(string key, [NotNullWhen(true)] out object? value, IEntityManager entManager)
     {
@@ -326,6 +380,19 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     /// Can the NPC climb obstacles for steering.
     /// </summary>
     public const string NavClimb = "NavClimb";
+
+    // KS14 start
+    /// <summary>
+    ///     Can the NPC push loose obstacles out of its way for steering.
+    /// </summary>
+    public const string NavPush = "NavPush";
+
+    /// <summary>
+    ///     With <see cref="NavClimb"/>, can the NPC also climb things that break when climbed onto, such as glass tables.
+    ///         Off unless set: it walks round them. See <c>PathFlags.ClimbingBreakables</c>.
+    /// </summary>
+    public const string NavClimbBreakables = "NavClimbBreakables";
+    // KS14 end
 
     /// <summary>
     /// Default key storage for a movement pathfind.

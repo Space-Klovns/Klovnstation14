@@ -3,6 +3,7 @@
                xmlns:health="clr-namespace:Content.Client.HealthAnalyzer.UI"
                xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                xmlns:cryogenics="clr-namespace:Content.Client.Medical.Cryogenics"
+               xmlns:tgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
                MinSize="250 300"
                Resizable="False">
 
@@ -56,7 +57,7 @@
                 <BoxContainer Orientation="Vertical">
                     <Label Text="{Loc 'gas-analyzer-window-temperature-text'}"
                            StyleClasses="LabelSubText"/>
-                    <Label Name="Temperature"/>
+                    <tgui:KsTguiAnimatedNumber Name="Temperature"/> <!-- KS14: Label -> eases under tgui, as tg's cryo cell -->
                 </BoxContainer>
             </BoxContainer>
 

@@ -1,0 +1,36 @@
+.Input {
+  font-size: 1em;
+  background-color: var(--input-background);
+  border-radius: var(--input-border-radius);
+  border: var(--border-thickness-tiny) solid var(--input-border-color);
+  color: var(--input-color);
+  font-family: var(--input-font-family);
+  padding: var(--space-xxs) var(--space-sm);
+  width: var(--input-width);
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-within {
+    border-color: var(--input-border-color-focus);
+  }
+
+  &::placeholder {
+    font-style: italic;
+    color: var(--input-color-placeholder);
+  }
+}
+
+.Input--disabled {
+  border-color: var(--input-border-disabled);
+  color: var(--input-color-placeholder);
+}
+
+.Input--fluid {
+  width: 100%;
+}
+
+.Input--monospace {
+  font-family: var(--input-font-family-mono);
+}

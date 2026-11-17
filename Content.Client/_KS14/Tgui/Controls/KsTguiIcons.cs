@@ -1,0 +1,103 @@
+namespace Content.Client._KS14.Tgui.Controls;
+
+/// <summary>
+///     Font Awesome 6 Solid glyphs, by the name tgui gives the icon (<c>icon="cart-shopping"</c>). Add what you need.
+/// </summary>
+public static class KsTguiIcons
+{
+    public const string Cart = "";
+    public const string Check = "";
+    public const string Times = "";
+    public const string Plus = "+";
+    public const string Minus = "";
+    public const string Cog = "";
+    public const string Edit = "";
+    public const string Trash = "";
+    public const string Search = "";
+    public const string Power = "";
+    public const string Lock = "";
+    public const string Unlock = "";
+    public const string Eject = "";
+    public const string Info = "";
+    public const string Warning = "";
+    public const string ArrowLeft = "";
+    public const string ArrowRight = "";
+    public const string ArrowUp = "";
+    public const string ArrowDown = "";
+    public const string AngleLeft = "";
+    public const string AngleRight = "";
+    public const string AngleUp = "";
+    public const string AngleDown = "";
+    public const string Home = "";
+    public const string User = "";
+    public const string Heart = "";
+    public const string Bolt = "";
+    public const string Wind = "";
+    public const string Fire = "";
+    public const string Play = "";
+    public const string Pause = "";
+    public const string Stop = "";
+    public const string Sync = "";
+    public const string Save = "";
+    public const string Question = "?";
+    public const string Circle = "";
+    public const string Square = "";
+    public const string CheckSquare = "";
+    public const string Chevron = "";
+    public const string IdCard = "";
+    public const string ThList = "";
+    public const string Th = "";
+    public const string List = "";
+    public const string Skull = "";
+    public const string Star = "";
+    public const string Filter = "\uf0b0";
+    public const string Expand = "\uf065";
+    public const string Compress = "\uf066";
+    public const string ChartBar = "\uf080";
+    public const string Copy = "\uf0c5";
+    public const string SignIn = "\uf090";
+    public const string SignOut = "\uf08b";
+    public const string Exclamation = "\uf12a";
+    public const string Eye = "\uf06e";
+    public const string EyeSlash = "\uf070";
+    /// <summary>
+    ///     tgui's <c>tools</c>, which Font Awesome 6 calls screwdriver-wrench.
+    /// </summary>
+    public const string Tools = "\uf7d9";
+    public const string Envelope = "";
+    public const string Coins = "";
+    public const string Tint = "";
+    public const string Flask = "";
+    public const string Exchange = "";
+    public const string EllipsisH = "";
+    public const string Calendar = "\uf133";
+    public const string Lightbulb = "\uf0eb";
+    public const string Pencil = "\uf303";
+    public const string Robot = "\uf544";
+    public const string Music = "\uf001";
+    public const string Bell = "\uf0f3";
+    public const string WindowMinimize = "\uf2d1";
+    public const string Clock = "\uf017";
+    public const string Key = "\uf084";
+    public const string FastForward = "\uf050";
+    public const string FastBackward = "\uf049";
+    public const string Undo = "\uf2ea";
+    public const string ToggleOn = "";
+    public const string ToggleOff = "";
+    public const string Backward = "";
+    public const string Forward = "";
+    public const string SyncAlt = "";
+
+    public const string ChevronDown = "";
+    public const string ChevronRight = "";
+
+    /// <summary>
+    ///     tgui's <c>square-o</c>: Font Awesome Regular, so show it with <see cref="KsTguiIcon.Regular"/>.
+    /// </summary>
+    public const string SquareO = "";
+
+    /// <summary>
+    ///     tgui's <c>check-square-o</c>, Regular as <see cref="SquareO"/>.
+    /// </summary>
+    public const string CheckSquareO = "";
+}

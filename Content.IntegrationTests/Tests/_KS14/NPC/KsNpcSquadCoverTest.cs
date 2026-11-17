@@ -200,6 +200,41 @@ public sealed class KsNpcSquadCoverTest : GameTest
     }
 
     /// <summary>
+    ///     A squad that avoids kill zones does not take up cover where one of its own has just gone down: in two
+    ///         identical rooms, the spot picked in the first is a kill zone in the second, and is passed over there.
+    /// </summary>
+    [Test]
+    public async Task TestCoverAvoidsKillZone()
+    {
+        var first = await GetSoloAssignment(windowTile: null, pillar: false, ZoneShyMob);
+        var second = await GetSoloAssignment(windowTile: null, pillar: false, ZoneShyMob, (entManager, gridUid) =>
+        {
+            entManager.System<Content.Server._KS14.NPC.KillZones.NpcKillZoneSystem>().AddZone(
+                gridUid,
+                new EntityCoordinates(gridUid, first.Coordinates.Position),
+                reach: 2,
+                System.TimeSpan.FromMinutes(1),
+                new HashSet<Robust.Shared.Prototypes.ProtoId<Content.Shared.NPC.Prototypes.NpcFactionPrototype>> { "Syndicate" });
+        });
+
+        Assert.That(Vector2.Distance(first.Coordinates.Position, second.Coordinates.Position), Is.GreaterThan(1f),
+            $"cover at {second.Coordinates.Position} is in the kill zone around {first.Coordinates.Position}");
+    }
+
+    private const string ZoneShyMob = "KsSquadCoverTestMobZoneShy";
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsSquadCoverTestMobZoneShy
+  components:
+  - type: NpcSquadMember
+    cover:
+      killZoneAvoidance: 1
+";
+
+    /// <summary>
     ///     How many of the eight tiles around a cover position are outside the 7x6 test room.
     /// </summary>
     private static int CountRoomWalls(NpcSquadCoverAssignment assignment)
@@ -227,7 +262,11 @@ public sealed class KsNpcSquadCoverTest : GameTest
     ///     A lone NPC in the 7x6 room with only the west airlock, an optional window in the wall, and an optional
     ///         pillar at x 3, y 1..3.
     /// </summary>
-    private async Task<NpcSquadCoverAssignment> GetSoloAssignment(Vector2i? windowTile, bool pillar, string mobPrototype = SyndicateMob)
+    /// <param name="beforePlan">Run once the room has settled, just before the cover plan is worked out.</param>
+    private async Task<NpcSquadCoverAssignment> GetSoloAssignment(Vector2i? windowTile,
+        bool pillar,
+        string mobPrototype = SyndicateMob,
+        System.Action<IEntityManager, EntityUid>? beforePlan = null)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -235,10 +274,11 @@ public sealed class KsNpcSquadCoverTest : GameTest
         var coverSystem = entManager.System<NpcSquadCoverSystem>();
         var map = await Pair.CreateTestMap();
         EntityUid memberUid = default;
+        EntityUid gridUid = default;
 
         await server.WaitPost(() =>
         {
-            var gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-10, -10), new Vector2i(10, 10)).Owner;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-10, -10), new Vector2i(10, 10)).Owner;
 
             for (var x = -1; x <= 7; x++)
             {
@@ -267,6 +307,7 @@ public sealed class KsNpcSquadCoverTest : GameTest
         NpcSquadCoverAssignment assignment = default;
         await server.WaitAssertion(() =>
         {
+            beforePlan?.Invoke(entManager, gridUid);
             Assert.That(coverSystem.TryGetAssignment(memberUid, out assignment), "the lone NPC should get the door");
         });
 

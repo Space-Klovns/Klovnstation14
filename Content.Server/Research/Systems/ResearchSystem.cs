@@ -30,6 +30,7 @@ namespace Content.Server.Research.Systems
             InitializeConsole();
             InitializeSource();
             InitializeServer();
+            InitializeServerList(); // KS14
 
             SubscribeLocalEvent((EntityEventRefHandler<TechnologyDatabaseComponent, ResearchRegistrationChangedEvent>)OnDatabaseRegistrationChanged);
         }

@@ -13,6 +13,7 @@
         settings: short
   - type: GhostRoleMobSpawner
     prototype: MobHumanLoneERT
+  - type: KsGhostRoleNotable
 
 # Lone ERT Operative mob
 - type: entity

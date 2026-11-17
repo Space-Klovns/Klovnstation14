@@ -1,4 +1,3 @@
-// KS14: added in this fork
 namespace Content.Shared.Maps;
 
 // ContentTileDefinition is already partial upstream, so nothing had to be done to it to hang this here.

@@ -31,7 +31,7 @@ namespace Content.Shared.Construction
             if (info.ExamineName is not null)
                 return Loc.GetString(info.ExamineName.Value);
 
-            return ProtoMan.Index(info.DefaultPrototype).Name;
+            return _contentLocalizationManager.GetLocalizedPrototypeName(ProtoMan.Index(info.DefaultPrototype)); // KS14: active response culture
         }
     }
 }

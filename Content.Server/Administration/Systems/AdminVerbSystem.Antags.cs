@@ -181,7 +181,7 @@ public sealed partial class AdminVerbSystem
         {
             Text = anchorlessName,
             Category = VerbCategory.Antag,
-            Icon = new SpriteSpecifier.Rsi(new ResPath("/Textures/Interface/Misc/job_icons.rsi"), "Unknown"), // TODO SOOT OR LCDC - fix this icon
+            Icon = new SpriteSpecifier.Rsi(new ResPath("/Textures/Interface/Actions/changeling2.rsi"), "flesh_clothing_alt"), // the anchorless horror form's action icon
             Act = () =>
             {
                 _antag.ForceMakeAntag<AnchorlessRuleComponent>(targetPlayer, DefaultAnchorlessRule);

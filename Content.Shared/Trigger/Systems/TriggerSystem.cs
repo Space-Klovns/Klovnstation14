@@ -1,4 +1,5 @@
-﻿using Content.Shared.Administration.Logs;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.DeviceLinking;
 using Content.Shared.EntityTable;
@@ -115,7 +116,7 @@ public sealed partial class TriggerSystem : EntitySystem
         }
 
         if (ent.Comp.Popup != null)
-            _popup.PopupPredicted(Loc.GetString(ent.Comp.Popup.Value, ("device", ent.Owner)), ent.Owner, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.Popup.Value, ("device", ent.Owner)), ent.Owner, user);
 
         AddComp<ActiveTimerTriggerComponent>(ent);
         var curTime = _timing.CurTime;

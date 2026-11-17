@@ -311,6 +311,19 @@ public class ListContainer : Control
             }
 
             _vScrollBar.SetPositionLast();
+
+            // KS14 start: the probe row PopulateList measures may have had no style yet (a list filled while its window is
+            //     closed): rows styled as they really are, at the real UI scale, correct it, or the scroll range is short and
+            //     the last rows can't be reached (#454).
+            foreach (var button in _buttons.Values)
+            {
+                if (button.DesiredSize.Y > 0 && MathF.Abs(button.DesiredSize.Y - _itemHeight) > 0.01f)
+                {
+                    InvalidateMeasure();
+                    break;
+                }
+            }
+            // KS14 end
         }
         #endregion
 
@@ -356,7 +369,7 @@ public class ListContainer : Control
             childSize = Vector2.Max(childSize, child.DesiredSize);
         }
 
-        if (_itemHeight == 0 && childSize.Y != 0)
+        if (/* KS14: the rows built, not only a first guess: _itemHeight == 0 && */ childSize.Y != 0)
             _itemHeight = childSize.Y;
 
         _totalHeight = _itemHeight * _data.Count + ActualSeparation * (_data.Count - 1);
@@ -384,7 +397,7 @@ public class ListContainer : Control
     }
 }
 
-public sealed class ListContainerButton : ContainerButton, IEntityControl
+public sealed partial /* KS14: made partial, see .Klovn.Tgui.cs */ class ListContainerButton : ContainerButton, IEntityControl
 {
     public readonly ListData Data;
 
@@ -398,7 +411,7 @@ public sealed class ListContainerButton : ContainerButton, IEntityControl
         Index = index;
         // KS14: list entries without a stylesheet class must not flash to the stock white backing when selected.
         // Upstream UI retained for mergeability: StyleBoxOverride = new StyleBoxFlat(Color.White);
-        StyleBoxOverride = new StyleBoxFlat(Color.FromHex("#7A3038"));
+        StyleBoxOverride = _ksBacking; // KS14: new StyleBoxFlat(Color.FromHex("#7A3038")) -> a field, so the theme can recolour it
         // AddChild(Background = new PanelContainer
         // {
         //     HorizontalExpand = true,

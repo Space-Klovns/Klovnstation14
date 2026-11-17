@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Actions;
 using Content.Shared.Alert;
@@ -56,7 +57,7 @@ public sealed partial class PacificationSystem : EntitySystem
             return;
 
         var targetName = Identity.Entity(target, EntityManager);
-        _popup.PopupClient(Loc.GetString(reason, ("entity", targetName)), user, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(reason, ("entity", targetName)), user, user);
         user.Comp.NextPopupTime = _timing.CurTime + user.Comp.PopupCooldown;
         user.Comp.LastAttackedEntity = target;
     }
@@ -148,7 +149,7 @@ public sealed partial class PacificationSystem : EntitySystem
 
         // Tell the player why they can’t throw stuff:
         var cannotThrowMessage = ev.CancelReasonMessageId ?? "pacified-cannot-throw";
-        _popup.PopupClient(Loc.GetString(cannotThrowMessage, ("projectile", itemName)), ent, ent); // Trauma - PopupClient not PopupEntity
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(cannotThrowMessage, ("projectile", itemName)), ent, ent); // Trauma - PopupClient not PopupEntity
     }
 
     private void OnPacifiedDangerousAttack(Entity<PacifismDangerousAttackComponent> ent, ref AttemptPacifiedAttackEvent args)

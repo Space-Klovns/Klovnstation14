@@ -57,7 +57,7 @@ public abstract partial class SharedAtmosphereSystem
     /// Mask used to determine both fuel and oxidizer properties of a gas at the same time.
     /// Primarily used to quickly report the specific moles in a mixture that caused a flammable reaction to occur.
     /// </summary>
-    protected readonly float[] GasOxidiserFuelMask = new float[Atmospherics.TotalNumberOfGases];
+    protected readonly float[] GasOxidiserFuelMask = new float[Atmospherics.AdjustedNumberOfGases /* KS14: TotalNumberOfGases -> AdjustedNumberOfGases, the length of a mixture's moles */];
 
     public string?[] GasReagents = new string[Atmospherics.TotalNumberOfGases];
     protected readonly GasPrototype[] GasPrototypes = new GasPrototype[Atmospherics.TotalNumberOfGases];
@@ -160,7 +160,7 @@ public abstract partial class SharedAtmosphereSystem
     [PublicAPI]
     public float GetHeatCapacity(GasMixture mixture, bool applyScaling)
     {
-        var scale = GetHeatCapacityCalculation(mixture.Moles, mixture.Immutable);
+        var scale = GetHeatCapacityCalculation(mixture.Moles, mixture.Immutable) + KsGetFluidHeatCapacity(mixture) /* KS14: fluid */;
 
         // By default GetHeatCapacityCalculation() has the heat-scale divisor pre-applied.
         // So if we want the un-scaled heat capacity, we have to multiply by the scale.
@@ -216,6 +216,7 @@ public abstract partial class SharedAtmosphereSystem
         }
 
         NumericsHelpers.Add(receiver.Moles, giver.Moles);
+        KsMergeFluid(receiver, giver); // KS14
     }
 
     /// <summary>
@@ -238,7 +239,7 @@ public abstract partial class SharedAtmosphereSystem
     /// in order to allow Atmospherics to cool down space.</remarks>
     protected float GetHeatCapacity(GasMixture mixture)
     {
-        return GetHeatCapacityCalculation(mixture.Moles, mixture.Immutable);
+        return GetHeatCapacityCalculation(mixture.Moles, mixture.Immutable) + KsGetFluidHeatCapacity(mixture) /* KS14: fluid */;
     }
 
     /// <summary>
@@ -596,7 +597,7 @@ public abstract partial class SharedAtmosphereSystem
 
         // Establish the dimensionless ratios.
         var volumeRatio = gasMixture2.Volume / gasMixture1.Volume;
-        var molesRatio = gasMixture2.TotalMoles / gasMixture1.TotalMoles;
+        var molesRatio = gasMixture2.TransferMoles / gasMixture1.TransferMoles /* KS14: TotalMoles -> TransferMoles, which counts the vapor that Pressure does */;
         var temperatureRatio = gasMixture2.Temperature / gasMixture1.Temperature;
         var heatCapacityRatio = GetHeatCapacity(gasMixture2) / GetHeatCapacity(gasMixture1);
 
@@ -605,7 +606,11 @@ public abstract partial class SharedAtmosphereSystem
         var quadraticB = molesRatio - volumeRatio + heatCapacityRatio * (temperatureRatio + volumeRatio);
         var quadraticC = heatCapacityRatio * (molesRatio * temperatureRatio - volumeRatio);
 
-        return (-quadraticB + MathF.Sqrt(quadraticB * quadraticB - 4 * quadraticA * quadraticC)) / (2 * quadraticA);
+        // KS14 start: pressure also counts liquid's hydraulic head, which this doesn't. So the higher pressure can hold
+        //     nothing that moves, or the two mixtures can already be level as far as this sees, and either gives no root.
+        var ksFraction = (-quadraticB + MathF.Sqrt(MathF.Max(0f, quadraticB * quadraticB - 4 * quadraticA * quadraticC))) / (2 * quadraticA);
+        return float.IsFinite(ksFraction) ? ksFraction : 0f;
+        // KS14 end
     }
 
     /// <summary>

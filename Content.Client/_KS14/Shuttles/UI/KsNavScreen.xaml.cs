@@ -234,6 +234,22 @@ public sealed partial class KsNavScreen : BoxContainer
     ///         than disagreeing), plus the live/total contact count and the
     ///         designated-emitter count.
     /// </summary>
+    public bool KsOpenPicture => NavRadar.KsOpenPicture;
+
+    /// <inheritdoc cref="KsInstrumentWindow.KsSetOpenPicture"/>
+    public void KsSetOpenPicture()
+    {
+        NavRadar.KsOpenPicture = true;
+
+        StatusPanel.Visible = false;
+        EmissionsPanel.Visible = false;
+        SensorCoverageVisualToggle.Visible = false;
+        SensorCoverageIrstToggle.Visible = false;
+        SensorCoverageRadarToggle.Visible = false;
+        SensorCoverageJammerToggle.Visible = false;
+        SensorInfoToggle.Visible = false;
+    }
+
     private void RefreshStatus(KsSensorNavState? nav)
     {
         var palette = Palette;

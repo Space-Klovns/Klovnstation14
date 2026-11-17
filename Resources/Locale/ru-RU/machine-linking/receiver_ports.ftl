@@ -1,0 +1,125 @@
+signal-port-description-artifact-analyzer-receiver = Приёмник сигнала анализатора артефактов
+
+signal-port-description-artifact-analyzer-sender = Передатчик сигнала аналитической консоли
+
+signal-port-description-autoclose = Переключает, должно ли устройство автоматически закрываться.
+
+signal-port-description-close = Закрывает устройство.
+
+signal-port-description-depressurize = Заставляет устройство откачивать воздух, пока не будет достигнуто заданное давление.
+
+signal-port-description-doorbolt = Меняет статус болтирования, если поступил высокий уровень сигнала.
+
+signal-port-description-forward = Заставляет устройство (например, конвейер) работать в нормальном направлении.
+
+signal-port-description-hold-open = Выключает автоматическое закрытие.
+
+signal-port-description-logic-enable = Входной сигнал загружается в ячейку памяти только, если он высок.
+
+signal-port-description-logic-input = Входной порт, который принимает только уровни сигнала, высокий или низкий.
+
+signal-port-description-logic-input-a = Первый порт логического элемента.
+
+signal-port-description-logic-input-b = Второй порт логического элемента.
+
+signal-port-description-logic-memory-input = Сигнал для загрузки в ячейку памяти, если она включена.
+
+signal-port-description-logic-random-input = Получает любой сигнал для события случайного вывода.
+
+signal-port-description-med-scanner-receiver = Приёмник сигнала медицинского сканера
+
+signal-port-description-med-scanner-sender = Передатчик сигнала медицинского сканера
+
+signal-port-description-off-receiver = Выключает устройство.
+
+signal-port-description-on-receiver = Включает устройство.
+
+signal-port-description-open = Открывает устройство.
+
+signal-port-description-order-receiver = Получает заказ на консоль заказа грузов
+
+signal-port-description-order-sender = Отправляет заказ на консоль заказа грузов
+
+signal-port-description-pod-receiver = Приёмник сигнала капсулы клонирования
+
+signal-port-description-pod-sender = Передатчик сигнала капсулы клонирования
+
+signal-port-description-pressurize = Заставляет устройство закачивать воздух, пока не будет достигнуто заданное давление.
+
+signal-port-description-reverse = Заставляет устройство (например, конвейер) работать в обратном направлении.
+
+signal-port-description-set-particle-delta = Устанавливает тип частиц, излучаемых этим устройством, на дельта.
+
+signal-port-description-set-particle-epsilon = Устанавливает тип частиц, излучаемых этим устройством, на эпсилон.
+
+signal-port-description-set-particle-sigma = Устанавливает тип частиц, излучаемых этим устройством, на сигма.
+
+signal-port-description-set-particle-zeta = Устанавливает тип частиц, излучаемых этим устройством, на зета.
+
+signal-port-description-timer = Запускает обратный отчет устройства.
+
+signal-port-description-toggle = Переключает состояние устройства.
+
+signal-port-description-trigger-receiver = Запускает определённый механизм на устройстве.
+
+signal-port-name-artifact-analyzer-receiver = Платформа
+
+signal-port-name-artifact-analyzer-sender = Консоль
+
+signal-port-name-autoclose = Автозакрытие
+
+signal-port-name-close = Закрыть
+
+signal-port-name-depressurize = Сбрасыватель давления
+
+signal-port-name-doorbolt = Болты шлюза
+
+signal-port-name-forward = Вперёд
+
+signal-port-name-hold-open = Удерживать
+
+signal-port-name-logic-enable = Включить
+
+signal-port-name-logic-input = Вход
+
+signal-port-name-logic-input-a = Порт А
+
+signal-port-name-logic-input-b = Порт В
+
+signal-port-name-logic-random-input = Входной сигнал
+
+signal-port-name-med-scanner-receiver = Медицинский сканер
+
+signal-port-name-med-scanner-sender = Медицинский сканер
+
+signal-port-name-off-receiver = Выкл
+
+signal-port-name-on-receiver = Вкл
+
+signal-port-name-open = Открыть
+
+signal-port-name-order-receiver = Получатель заказа
+
+signal-port-name-order-sender = Отправитель заказа
+
+signal-port-name-pod-receiver = Капсула клонирования
+
+signal-port-name-pod-sender = Капсула клонирования
+
+signal-port-name-pressurize = Нагнетатель давления
+
+signal-port-name-reverse = Обратно
+
+signal-port-name-set-particle-delta = Выбрать тип частиц: дельта
+
+signal-port-name-set-particle-epsilon = Выбрать тип частиц: эпсилон
+
+signal-port-name-set-particle-sigma = Выбрать тип частиц: сигма
+
+signal-port-name-set-particle-zeta = Выбрать тип частиц: зета
+
+signal-port-name-timer = Таймер
+
+signal-port-name-toggle = Переключить
+
+signal-port-name-trigger-receiver = Триггер

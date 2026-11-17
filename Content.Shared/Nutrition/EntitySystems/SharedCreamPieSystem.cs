@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Fluids;
@@ -131,7 +132,7 @@ public abstract partial class SharedCreamPieSystem : EntitySystem
 
         // Shown only to the player that was hit.
         _popup.PopupEntity(
-            Loc.GetString(
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */(
                 "cream-pied-component-on-hit-by-message",
                 ("thrown", args.Thrown)),
             creamPied.Owner, creamPied.Owner);
@@ -140,7 +141,7 @@ public abstract partial class SharedCreamPieSystem : EntitySystem
 
         // Show to everyone else.
         _popup.PopupEntity(
-            Loc.GetString(
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */(
                 "cream-pied-component-on-hit-by-message-others",
                 ("owner", Identity.Entity(creamPied.Owner, EntityManager)),
                 ("thrown", args.Thrown)),

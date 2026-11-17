@@ -50,6 +50,14 @@ public sealed partial class ChainLinkComponent : Component
     [DataField, AutoNetworkedField]
     [Access(typeof(ChainSystem), Other = AccessPermissions.Read)]
     public string? NextLinkJointId = null;
+
+    /// <summary>
+    ///     Joint from this link to the other end of its segment, keeping the segment from stretching past its length.
+    ///         Only on the two ends of a segment of three or more links, and only while neither end is in a container.
+    /// </summary>
+    [ViewVariables]
+    [Access(typeof(ChainSystem), Other = AccessPermissions.Read)]
+    public string? StretchJointId = null;
 }
 
 /// <summary>
@@ -83,12 +91,4 @@ public sealed partial class ChainEdgeComponent : Component
     [DataField]
     [Access(typeof(ChainSystem))]
     public EntityUid OtherEdgeUid = EntityUid.Invalid;
-
-    /// <summary>
-    ///     Joint to the other edge of the chain. Will be null if that link was
-    ///         destroyed or never existed.
-    /// </summary>
-    [DataField]
-    [Access(typeof(ChainSystem), Other = AccessPermissions.Read)]
-    public string? StretchJointId = null;
 }

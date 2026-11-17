@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.NPC.Prototypes;
 using Content.Server.Actions;
 using Content.Server.Body.Systems;
@@ -132,7 +133,7 @@ namespace Content.Server.Zombies
                     continue;
 
                 if (_random.Prob(comp.InfectionWarningChance))
-                    _popup.PopupEntity(Loc.GetString(_random.Pick(comp.InfectionWarnings)), uid, uid);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(_random.Pick(comp.InfectionWarnings)), uid, uid);
 
                 var multiplier = _mobState.IsCritical(uid, mobState)
                     ? comp.CritDamageMultiplier

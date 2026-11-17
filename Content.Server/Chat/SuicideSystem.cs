@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Ghost;
 using Content.Server.Hands.Systems;
 using Content.Shared.Administration.Logs;
@@ -156,10 +157,10 @@ public sealed partial class SuicideSystem : EntitySystem
         if (args.Handled)
             return;
 
-        var othersMessage = Loc.GetString("suicide-command-default-text-others", ("name", Identity.Entity(victim, EntityManager)));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("suicide-command-default-text-others", ("name", Identity.Entity(victim, EntityManager)));
         _popup.PopupEntity(othersMessage, victim, Filter.PvsExcept(victim), true);
 
-        var selfMessage = Loc.GetString("suicide-command-default-text-self");
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("suicide-command-default-text-self");
         _popup.PopupEntity(selfMessage, victim, victim);
 
         if (args.DamageSpecifier != null)

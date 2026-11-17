@@ -4,6 +4,7 @@ using Content.Client.Examine;
 using Content.Client.Gameplay;
 using Content.Client.Popups;
 using Content.Shared.CCVar;
+using Content.Shared._KS14.CCVar; // KS14
 using Content.Shared.Examine;
 using Content.Shared.Tag;
 using Content.Shared.Verbs;
@@ -176,7 +177,10 @@ namespace Content.Client.Verbs
         public SortedSet<Verb> GetVerbs(NetEntity target, EntityUid user, List<Type> verbTypes, out List<VerbCategory> extraCategories, bool force = false)
         {
             if (!target.IsClientSide())
-                RaiseNetworkEvent(new RequestServerVerbsEvent(target, verbTypes, adminRequest: force));
+                RaiseNetworkEvent(new RequestServerVerbsEvent(target, verbTypes, adminRequest: force)
+                {
+                    ClientLocale = _cfg.GetCVar(KsCCVars.ClientLocale), // KS14: localize the server's matching actions
+                });
 
             // Some admin menu interactions will try get verbs for entities that have not yet been sent to the player.
             if (!TryGetEntity(target, out var local))
@@ -225,7 +229,10 @@ namespace Content.Client.Verbs
                 // is this a client exclusive (gui) verb?
                 ExecuteVerb(verb, user, GetEntity(target));
             else
-                RaisePredictiveEvent(new ExecuteVerbEvent(target, verb));
+                RaisePredictiveEvent(new ExecuteVerbEvent(target, verb)
+                {
+                    ClientLocale = _cfg.GetCVar(KsCCVars.ClientLocale), // KS14: validate localized action text on the server
+                });
         }
 
         private void HandleVerbResponse(VerbsResponseEvent msg)

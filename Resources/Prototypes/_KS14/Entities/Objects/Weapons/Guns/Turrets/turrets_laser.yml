@@ -42,3 +42,25 @@
       - !type:PlaySoundBehavior
         sound:
           collection: MetalGlassBreak
+
+- type: entity
+  parent: WeaponTurretSyndicateLaser
+  id: KsWeaponTurretSyndicateLaserTracking
+  suffix: Syndicate, Laser, Tracking
+  components:
+  - type: KsLaserSight
+    enabled: false
+    onlyWhileTargeting: true
+    glowWidth: 0
+    width: 0.01
+    intensity: 5
+    fadeStart: 0.5
+  - type: KsTargetLockOn
+    lockOnTime: 1.6
+    lockingSound:
+      path: /Audio/Machines/quickbeep.ogg
+    lockedSound:
+      path: /Audio/Machines/twobeep.ogg
+  - type: KsNpcAimTracking
+    accuracyThreshold: 5
+    angularVelocityCompensation: 1

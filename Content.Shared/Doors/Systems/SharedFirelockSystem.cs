@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Systems;
 using Content.Shared.Doors.Components;
 using Content.Shared.Examine;
@@ -88,14 +89,14 @@ public abstract partial class SharedFirelockSystem : EntitySystem
     {
         if (ent.Comp.Temperature)
         {
-            _popupSystem.PopupClient(Loc.GetString("firelock-component-is-holding-fire-message"),
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("firelock-component-is-holding-fire-message"),
                 ent.Owner,
                 user,
                 PopupType.MediumCaution);
         }
         else if (ent.Comp.Pressure)
         {
-            _popupSystem.PopupClient(Loc.GetString("firelock-component-is-holding-pressure-message"),
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("firelock-component-is-holding-pressure-message"),
                 ent.Owner,
                 user,
                 PopupType.MediumCaution);

@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Prototypes;
+﻿using Robust.Shared.Audio; // KS14
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -44,6 +45,14 @@ public sealed partial class TimedSpawnerComponent : Component, ISerializationHoo
     // KS14
     [DataField]
     public bool SpawnImmediately = false;
+
+    // KS14 start: sound for a spawn going off
+    /// <summary>
+    ///     Played at the spawner whenever an interval elapses and spawns, once however many entities that is.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? Sound;
+    // KS14 end
 
     /// <summary>
     /// Length of the interval between spawn attempts.

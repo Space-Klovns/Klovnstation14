@@ -1,0 +1,11 @@
+instrument-component-band-refresh = Обновить
+instrument-component-channel-name = MIDI-канал { $number }
+instruments-component-band-menu = Выберите лидера группы
+instruments-component-channels-multi = { $channel } { $name } ({ $other })
+instruments-component-channels-single = { $channel } { $name }
+instruments-component-channels-track-names-toggle = Показать названия треков
+instruments-component-menu-band-button = Присоединяйтесь к группе
+instruments-component-menu-channels-button = Каналы
+instruments-component-menu-input-button = MIDI-вход
+instruments-component-menu-play-button = Воспроизвести MIDI
+instruments-component-menu-stop-button = Остановиться

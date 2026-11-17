@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
 using Content.Shared.Ninja.Systems;
@@ -39,7 +40,7 @@ public abstract partial class SharedResearchStealerSystem : EntitySystem
         // fail fast if theres no techs to steal right now
         if (database.UnlockedTechnologies.Count == 0)
         {
-            _popup.PopupClient(Loc.GetString("ninja-download-fail"), uid, uid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-download-fail"), uid, uid);
             return;
         }
 

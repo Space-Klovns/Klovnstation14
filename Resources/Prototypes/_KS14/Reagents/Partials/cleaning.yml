@@ -1,0 +1,16 @@
+# Cleaners wash stains off. See KsStainCleaning.
+- type: !PartialOnly reagent
+  id: SpaceCleaner
+  reactiveEffects:
+    KsStainCleaning:
+      methods: [ Touch ]
+      effects:
+      - !type:StainClean
+
+- type: !PartialOnly reagent
+  id: Bleach
+  reactiveEffects:
+    KsStainCleaning:
+      methods: [ Touch ]
+      effects:
+      - !type:StainClean

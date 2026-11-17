@@ -1,0 +1,31 @@
+# Dodgenn's phase one patterns, picked by DodgennPhaseOneCompound (NPCs/Bosses/Dodgenn/phase_one.yml). Slow and
+#   sparse next to phase two's, so there is room to walk between the shots.
+
+# Overture: six eight-way rings, a second apart.
+- type: entity
+  parent: RangedAllDirections
+  id: DodgennPhaseOneRingAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkPhaseOneTaunt
+    burstCount: 6
+    shotDelay: 1
+    speed: 4
+    cooldown: 4.0
+
+# Postponement: five aimed shots in a row, each a little off.
+- type: entity
+  parent: BaseNPCRanged
+  id: DodgennPhaseOneVolleyAttack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: RapidFire
+    projectile: DodgennDeathBolt
+    burstCount: 5
+    shots: 1
+    shotDelay: 0.35
+    spread: 10
+    speed: 4
+    cooldown: 3.0

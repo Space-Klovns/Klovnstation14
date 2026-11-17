@@ -13,14 +13,11 @@ public sealed partial class ResearchSystem
     {
         SubscribeLocalEvent<ResearchClientComponent, MapInitEvent>(OnClientMapInit);
         SubscribeLocalEvent<ResearchClientComponent, ComponentShutdown>(OnClientShutdown);
-        SubscribeLocalEvent<ResearchClientComponent, BoundUIOpenedEvent>(OnClientUIOpen);
-        SubscribeLocalEvent<ResearchClientComponent, ConsoleServerSelectionMessage>(OnConsoleSelect);
+        // KS14: removed BoundUIOpenedEvent and ConsoleServerSelectionMessage subscriptions, the list is component state and the console message is handled in shared code
         SubscribeLocalEvent<ResearchClientComponent, AnchorStateChangedEvent>(OnClientAnchorStateChanged);
 
-        SubscribeLocalEvent<ResearchClientComponent, ResearchClientSyncMessage>(OnClientSyncMessage);
         SubscribeLocalEvent<ResearchClientComponent, ResearchClientServerSelectedMessage>(OnClientSelected);
         SubscribeLocalEvent<ResearchClientComponent, ResearchClientServerDeselectedMessage>(OnClientDeselected);
-        SubscribeLocalEvent<ResearchClientComponent, ResearchRegistrationChangedEvent>(OnClientRegistrationChanged);
     }
 
     #region UI
@@ -42,25 +39,7 @@ public sealed partial class ResearchSystem
     {
         UnregisterClient(uid, clientComponent: component);
     }
-
-    private void OnClientSyncMessage(EntityUid uid, ResearchClientComponent component, ResearchClientSyncMessage args)
-    {
-        UpdateClientInterface(uid, component);
-    }
-
-    private void OnConsoleSelect(EntityUid uid, ResearchClientComponent component, ConsoleServerSelectionMessage args)
-    {
-        if (!this.IsPowered(uid, EntityManager))
-            return;
-
-        _uiSystem.TryToggleUi(uid, ResearchClientUiKey.Key, args.Actor);
-    }
     #endregion
-
-    private void OnClientRegistrationChanged(EntityUid uid, ResearchClientComponent component, ref ResearchRegistrationChangedEvent args)
-    {
-        UpdateClientInterface(uid, component);
-    }
 
     private void OnClientMapInit(EntityUid uid, ResearchClientComponent component, MapInitEvent args)
     {
@@ -71,11 +50,6 @@ public sealed partial class ResearchSystem
     private void OnClientShutdown(EntityUid uid, ResearchClientComponent component, ComponentShutdown args)
     {
         UnregisterClient(uid, component);
-    }
-
-    private void OnClientUIOpen(EntityUid uid, ResearchClientComponent component, BoundUIOpenedEvent args)
-    {
-        UpdateClientInterface(uid, component);
     }
 
     private void OnClientAnchorStateChanged(Entity<ResearchClientComponent> ent, ref AnchorStateChangedEvent args)
@@ -92,23 +66,6 @@ public sealed partial class ResearchSystem
         {
             UnregisterClient(ent, ent.Comp);
         }
-    }
-
-    private void UpdateClientInterface(EntityUid uid, ResearchClientComponent? component = null)
-    {
-        if (!Resolve(uid, ref component, false))
-            return;
-
-        TryGetClientServer(uid, out _, out var serverComponent, component);
-
-        var names = GetServerNames(uid);
-        var state = new ResearchClientBoundInterfaceState(
-            names.Length,
-            names,
-            GetServerIds(uid),
-            serverComponent?.Id ?? -1);
-
-        _uiSystem.SetUiState(uid, ResearchClientUiKey.Key, state);
     }
 
     /// <summary>

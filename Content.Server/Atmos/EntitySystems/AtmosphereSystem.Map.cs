@@ -31,7 +31,9 @@ public partial class AtmosphereSystem
 
     private void OnMapGetState(EntityUid uid, MapAtmosphereComponent component, ref ComponentGetState args)
     {
-        args.State = new MapAtmosphereComponentState(component.Overlay);
+        var state = new MapAtmosphereComponentState(component.Overlay);
+        KsWriteMapAir(component, state); // KS14
+        args.State = state;
     }
 
     public void SetMapAtmosphere(EntityUid uid, bool space, GasMixture mixture)
@@ -70,6 +72,7 @@ public partial class AtmosphereSystem
             return;
 
         component.Space = space;
+        Dirty(uid, component); // KS14: the client is told what is outside, see KsWriteMapAir
 
         if (updateTiles)
             RefreshAllGridMapAtmospheres(uid);

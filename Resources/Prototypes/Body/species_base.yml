@@ -160,6 +160,7 @@
     - FootstepSound
     - DoorBumpOpener
     - AnomalyHost
+  - type: KsSoftCrit # KS14
 
 - type: entity
   abstract: true
@@ -228,6 +229,11 @@
     damage:
       types:
         Asphyxiation: 4 # KS14: 1 -> 4
+    # KS14 start: crit asphyxiation separate from suffocation, at upstream's rate
+    critDamage:
+      types:
+        Asphyxiation: 1
+    # KS14 end
     damageRecovery:
       types:
         Asphyxiation: -2.75 # KS14: -1 -> -2.75

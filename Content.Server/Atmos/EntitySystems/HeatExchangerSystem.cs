@@ -56,7 +56,7 @@ public sealed partial class HeatExchangerSystem : EntitySystem
         // To solve this we need to write dn in terms of P. Since PV=nRT, dP/dn=RT/V.
         // This assumes that the temperature change from transferring dn moles is negligible.
         // Since we have P=Pi-Po, then dP/dn = dPi/dn-dPo/dn = R(Ti/Vi - To/Vo):
-        float dPdn = Atmospherics.R * (outlet.Air.Temperature / outlet.Air.Volume + inlet.Air.Temperature / inlet.Air.Volume);
+        float dPdn = Atmospherics.R * (outlet.Air.Temperature / outlet.Air.FreeVolume /* KS14: Volume -> FreeVolume, liquid takes up room */ + inlet.Air.Temperature / inlet.Air.FreeVolume /* KS14: Volume -> FreeVolume */);
 
         // Multiplying both sides of the differential equation by dP/dn:
         // dn/dt * dP/dn = dP/dt = G*P * (dP/dn)
@@ -70,9 +70,9 @@ public sealed partial class HeatExchangerSystem : EntitySystem
 
         GasMixture xfer;
         if (n > 0)
-            xfer = inlet.Air.Remove(n);
+            xfer = KsRemoveGasShare(inlet.Air, n); // KS14: inlet.Air.Remove(n) -> by the gas, sweeping liquid along
         else
-            xfer = outlet.Air.Remove(-n);
+            xfer = KsRemoveGasShare(outlet.Air, -n); // KS14: outlet.Air.Remove(-n) -> by the gas, sweeping liquid along
 
         float CXfer = _atmosphereSystem.GetHeatCapacity(xfer, true);
         if (CXfer < Atmospherics.MinimumHeatCapacity)
@@ -122,6 +122,8 @@ public sealed partial class HeatExchangerSystem : EntitySystem
             _atmosphereSystem.AddHeat(xfer, -dE);
             _atmosphereSystem.AddHeat(environment, dE);
         }
+
+        KsExchangePhases(comp, xfer, n > 0 ? inlet.Air.Pressure : outlet.Air.Pressure, hasEnv ? environment : null, radTemp, a0, dt); // KS14: condensing and boiling inside the radiator
 
         if (n > 0)
             _atmosphereSystem.Merge(outlet.Air, xfer);

@@ -1,6 +1,11 @@
 ok so due to how the stupid notosansfontfamily structure works these have to be named this way, but arent actually all the same font
 
-bold - /04B_11/04B_11.ttf
-bolditalic - /04B_09/04B_09.ttf
-italic - /04B_03/04B_03.ttf //nothing fits here honestly.
-regular - /04B_03/04B_03.ttf
+Greybeard v1.0.0, 16px outlines.
+Source: https://github.com/flowchartsman/greybeard/releases/tag/v1.0.0
+Archive: Greybeard-v1.0.0-ttf.zip
+License: MIT; see LICENSE.txt.
+
+FontStack-Regular.TTF: Greybeard-16px.ttf
+FontStack-Italic.TTF: Greybeard-16px-Italic.ttf
+FontStack-Bold.ttf: Greybeard-16px-Bold.ttf
+FontStack-BoldItalic.TTF: Greybeard-16px-BoldItalic.ttf

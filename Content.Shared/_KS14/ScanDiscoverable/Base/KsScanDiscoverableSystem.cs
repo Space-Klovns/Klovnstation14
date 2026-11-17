@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -32,11 +33,16 @@ public sealed partial class KsScanDiscoverableSystem : EntitySystem
             !IsScanner(args.Used))
             return;
 
-        _metaDataSystem.SetEntityName(entity.Owner, entity.Comp.TrueName);
+        _metaDataSystem.SetEntityName(entity.Owner, Loc.GetString(entity.Comp.TrueName));
+
+        var discoveredNameComponent = EnsureComp<KsDiscoveredNameComponent>(entity);
+        discoveredNameComponent.Name = entity.Comp.TrueName;
+        Dirty(entity.Owner, discoveredNameComponent);
+
         if (entity.Comp.DiscoveryPopupLoc is { } popupLoc)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(popupLoc, ("name", entity.Comp.TrueName)),
+                KsPopupMessage.Create(popupLoc, ("name", KsPopupMessage.Create(entity.Comp.TrueName))),
                 entity,
                 args.User,
                 Filter.PvsExcept(args.User),

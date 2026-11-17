@@ -27,6 +27,7 @@ namespace Content.Client._KS14.Atmos.UI
             base.Open();
 
             _window = this.CreateWindow<MolarMixerWindow>();
+            _window.HeatFootnote.Device = Owner;
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
             _window.MixerOutputMolarFlowChanged += OnMixerOutputMolarFlowPressed;

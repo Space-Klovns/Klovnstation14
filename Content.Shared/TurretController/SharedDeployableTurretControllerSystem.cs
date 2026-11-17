@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
 using Content.Shared.Popups;
@@ -88,7 +89,7 @@ public abstract partial class SharedDeployableTurretControllerSystem : EntitySys
         if (_accessreader.IsAllowed(user, ent))
             return true;
 
-        _popup.PopupClient(Loc.GetString("turret-controls-access-denied"), ent, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("turret-controls-access-denied"), ent, user);
         _audio.PlayPredicted(ent.Comp.AccessDeniedSound, ent, user);
 
         return false;

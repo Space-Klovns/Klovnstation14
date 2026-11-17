@@ -1,0 +1,32 @@
+<Document>
+# Медицинский отдел
+В этот отдел обращаются люди, когда получают травмы, и именно сотрудники этого отдела должны их вылечить.
+
+## Персонал
+[color=#5b97bc]Медицинский отдел[/color]Персонал станции состоит из медицинских интернов, врачей, фельдшеров и химиков. [color=#5b97bc]Медицинский отдел[/color] находится под управлением главного врача.
+
+  <Box>
+    <GuideEntityEmbed Entity="ToyFigurineMedicalDoctor" Caption="Доктор"/>
+    <GuideEntityEmbed Entity="ToyFigurineParamedic" Caption="Медик"/>
+    <GuideEntityEmbed Entity="ToyFigurineChemist" Caption="Химик"/>
+    <GuideEntityEmbed Entity="ToyFigurineChiefMedicalOfficer" Caption="CMO"/>
+  </Box>
+  
+В настоящее время медицинский отсек разделен на два различных направления оказания помощи:
+
+## Медицинское лечение
+  <Box>
+    <GuideEntityEmbed Entity="Brutepack"/>
+    <GuideEntityEmbed Entity="Bloodpack"/>
+    <GuideEntityEmbed Entity="Ointment"/>
+    <GuideEntityEmbed Entity="Gauze"/>
+    <GuideEntityEmbed Entity="HandheldHealthAnalyzer"/>
+  </Box>
+## Производство химикатов
+  <Box>
+    <GuideEntityEmbed Entity="ChemDispenser"/>
+    <GuideEntityEmbed Entity="LargeBeaker"/>
+    <GuideEntityEmbed Entity="PillCanister"/>
+    <GuideEntityEmbed Entity="ChemMaster"/>
+  </Box>
+</Document>

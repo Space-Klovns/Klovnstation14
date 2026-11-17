@@ -43,9 +43,15 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private SharedGunSystem _gun = default!;
     [Dependency] private SharedProjectileSystem _projectile = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private _KS14.RayCollision.KsRayCollisionSystem _ksRayCollisionSystem = default!; // KS14
     [Dependency] private IConfigurationManager _config = default!; // KS14
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
+    [Dependency] private SharedTransformSystem _transformSystem = default!; // KS14
+    [Dependency] private SharedMapSystem _mapSystem = default!; // KS14
+    [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
+    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
+    [Dependency] private _KS14.Impacts.KsImpactSurfaceSystem _ksImpactSurfaceSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -70,12 +76,50 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
 
         SubscribeLocalEvent<ProjectileComponent, StartCollideEvent>(OnStartCollide);
+        // KS14 start: a round moves more than a tile a tick, and steps over what is thinner than that, or onto it and what is
+        //      behind it at once: what it is about to go through is looked for before each step (KsRayCollisionSystem)
+        SubscribeLocalEvent<ProjectileComponent, ComponentStartup>(KsOnProjectileStartup);
+        SubscribeLocalEvent<ProjectileComponent, MapInitEvent>(KsOnProjectileMapInit);
+        SubscribeLocalEvent<ProjectileComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
+        // KS14 end
     }
+
+    // KS14 start
+    /// <summary>
+    ///     Looked ahead of from startup, on a map that is initialised; on one that is not, from its map init
+    ///         (<see cref="KsOnProjectileMapInit"/>).
+    /// </summary>
+    private void KsOnProjectileStartup(Entity<ProjectileComponent> entity, ref ComponentStartup args)
+    {
+        // Not on a map yet to be initialised, where nothing moves and a save of it would write the component into the
+        //      map (UninitializedSaveTest): there it starts with the map. Startup rather than map init alone, as a
+        //      client is not told of the map init of what the server sends it.
+        if (_mapSystem.IsInitialized(Transform(entity).MapUid))
+            _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
+    }
+
+    private void KsOnProjectileMapInit(Entity<ProjectileComponent> entity, ref MapInitEvent args)
+    {
+        _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
+    }
+
+    /// <summary>
+    ///     About to go through something this step: hit it now, from where it was moved up to.
+    /// </summary>
+    private void KsOnRayCollision(Entity<ProjectileComponent> entity, ref _KS14.RayCollision.KsRayCollisionEvent args)
+    {
+        DoHit(entity, args.OtherUid);
+    }
+    // KS14 end
 
     private void OnStartCollide(EntityUid uid, ProjectileComponent component, ref StartCollideEvent args)
     {
         // This is so entities that shouldn't get a collision are ignored.
         if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture || !args.OtherFixture.Hard)
+            return;
+
+        // KS14: already hit, by looking ahead before this step (KsRayCollisionSystem)
+        if (_ksRayCollisionSystem.WasSwept(uid, args.OtherEntity))
             return;
 
         DoHit((uid, component, args.OurBody), args.OtherEntity, args.OtherFixture);
@@ -120,6 +164,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         if (comp.ProjectileSpent || comp is { Weapon: null, OnlyCollideWhenShot: true })
             return;
 
+        // KS14: one meant to cross what cannot be damaged (PA particles, the containment field) does not count it as a hit
+        if (comp.KsPassesUndamageable && !HasComp<DamageableComponent>(target))
+            return;
+
         // it's here so this check is only done once before possible hit
         var attemptEv = new ProjectileReflectAttemptEvent(uid, comp, false);
         RaiseLocalEvent(target, ref attemptEv);
@@ -130,7 +178,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         }
 
         var shooter = comp.Shooter;
-        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier, target, shooter);
+        // KS14 start: damage falloff by distance flown
+        var falloffMultiplier = _ksProjectileFalloffSystem.GetMultiplier(uid, _transformSystem.GetMapCoordinates(uid));
+        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier * falloffMultiplier, target, shooter);
+        // KS14 end
         RaiseLocalEvent(uid, ref ev);
 
         var otherName = ToPrettyString(target);
@@ -140,8 +191,9 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         bool isAMob = HasComp<MobCollisionComponent>(target);
         if (comp.PenetrationThreshold > 0 && !isAMob) damageRequired /= _gunPenetrationMinShots;
 
-        if (!TryComp<DamageableComponent>(target, out var damageable))
-            return;
+        // Nothing to damage is still something hit: the round is spent on it below, as on anything it fails to damage. This
+        //      returned here, and a round went on through any hard thing with no DamageableComponent.
+        TryComp<DamageableComponent>(target, out var damageable);
         //KS14 pen end
 
         // KS14 Impact start
@@ -201,18 +253,33 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
             comp.ProjectileSpent = true;
         }
 
+        // KS14 start: the server's copy's hit is sent to its user; a kept client copy's plays at once, unless that hit already did
+        var playImpact = _ksPredictedSpawnSystem.ClaimImpact(uid, target);
+        var worldDirection = _physicsSystem.GetMapLinearVelocity(uid, ourBody);
+        _ksPredictedSpawnSystem.OnProjectileHit((uid, comp), target, damage, ev.Damage, worldDirection);
+        // KS14 end
+
         if (!deleted)
         {
-            _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound);
+            // KS14 start: once for a kept client copy, whose hit can land on a re-predicted tick. TGMC's per-surface impact
+            //      particles and ricochets, client only; armour that soaked the hit plays its own sound instead of the hit's
+            if (playImpact && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid))
+            {
+                var hitsArmor = TryComp(uid, out TransformComponent? impactTransform) &&
+                                _ksImpactSurfaceSystem.PlayImpact(target, impactTransform.Coordinates, worldDirection, ev.Damage, damage);
+                if (!hitsArmor)
+                    _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound, once: true);
+            }
+            // KS14 end
 
-            if (!ourBody.LinearVelocity.IsLengthZero() && _timing.IsFirstTimePredicted)
+            if (!ourBody.LinearVelocity.IsLengthZero() && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> once for a kept client copy, whose hit can land on a re-predicted tick */)
                 _recoil.KickCamera(target, ourBody.LinearVelocity.Normalized());
         }
 
         if (comp.DeleteOnCollide && comp.ProjectileSpent)
-            PredictedQueueDel(uid);
+            _ksPredictedSpawnSystem.PredictedQueueDelDeferrable/* KS14: PredictedQueueDel -> deferred for a kept client copy hit during a state reset */(uid);
 
-        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _timing.IsFirstTimePredicted)
+        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */ && _ksImpactSurfaceSystem.ShowsProjectileImpactEffect(target) /* KS14: added, no sparks on flesh */)
         {
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }

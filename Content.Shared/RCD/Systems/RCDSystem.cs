@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Systems;
 using Content.Shared.Construction;
@@ -161,18 +162,17 @@ public sealed partial class RCDSystem : EntitySystem
         var prototype = component.CachedPrototype;
         // Starlight edit End
 
-        var msg = Loc.GetString("rcd-component-examine-mode-details", ("mode", Loc.GetString(prototype.SetName)));
-
+        // KS14 start: resolve nested construction names in the response's culture
+        string msg;
         if (prototype.Mode == RcdMode.ConstructTile || prototype.Mode == RcdMode.ConstructObject)
         {
-            var name = Loc.GetString(prototype.SetName);
-
-            if (prototype.Prototype != null &&
-                ProtoMan.TryIndex(prototype.Prototype, out var proto)) // don't use Resolve because this can be a tile
-                name = proto.Name;
-
-            msg = Loc.GetString("rcd-component-examine-build-details", ("name", name));
+            msg = Loc.GetString("rcd-component-examine-build-details", ("name", GetLocalizedConstructionName(prototype)));
         }
+        else
+        {
+            msg = Loc.GetString("rcd-component-examine-mode-details", ("mode", Loc.GetString(prototype.SetName)));
+        }
+        // KS14 end
 
         args.PushMarkup(msg);
 
@@ -269,7 +269,7 @@ public sealed partial class RCDSystem : EntitySystem
 
         if (!TryComp<MapGridComponent>(gridUid, out var mapGrid))
         {
-            _popup.PopupClient(Loc.GetString("rcd-component-no-valid-grid"), uid, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-no-valid-grid"), uid, user);
             return;
         }
         var tile = _mapSystem.GetTileRef(gridUid.Value, mapGrid, location);
@@ -377,6 +377,8 @@ public sealed partial class RCDSystem : EntitySystem
         }
 
         #endregion
+
+        KsApplyInstant(component, prototype, args.Target, user, ref delay, ref effectPrototype); // KS14: instant RCDs
 
         // Try to start the do after
         var effect = Spawn(effectPrototype, _mapSystem.ToCenterCoordinates(tile, mapGrid));
@@ -557,14 +559,17 @@ public sealed partial class RCDSystem : EntitySystem
     {
         var prototype = ProtoMan.Index(component.ProtoId);
 
+        if (KsIsInNoBuildZone(uid, gridUid, mapGrid, position, user, popMsgs)) // KS14: no-build zones, such as spawn areas
+            return false;
+
         // Check that the RCD has enough ammo to get the job done
         var charges = _sharedCharges.GetCurrentCharges(uid);
 
         // Both of these were messages were suppose to be predicted, but HasInsufficientCharges wasn't being checked on the client for some reason?
-        if (charges == 0)
+        if (charges == 0 && prototype.Cost > 0 /* KS14: free builds work with an empty RCD */)
         {
             if (popMsgs)
-                _popup.PopupClient(Loc.GetString("rcd-component-no-ammo-message"), uid, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-no-ammo-message"), uid, user);
 
             return false;
         }
@@ -572,7 +577,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (prototype.Cost > charges)
         {
             if (popMsgs)
-                _popup.PopupClient(Loc.GetString("rcd-component-insufficient-ammo-message"), uid, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-insufficient-ammo-message"), uid, user);
 
             return false;
         }
@@ -608,7 +613,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (prototype.ConstructionRules.Contains(RcdConstructionRule.MustBuildOnEmptyTile) && !tile.Tile.IsEmpty)
         {
             if (popMsgs)
-                _popup.PopupClient(Loc.GetString("rcd-component-must-build-on-empty-tile-message"), uid, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-must-build-on-empty-tile-message"), uid, user);
 
             return false;
         }
@@ -617,7 +622,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (!prototype.ConstructionRules.Contains(RcdConstructionRule.CanBuildOnEmptyTile) && tile.Tile.IsEmpty)
         {
             if (popMsgs)
-                _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-on-empty-tile-message"), uid, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-on-empty-tile-message"), uid, user);
 
             return false;
         }
@@ -626,7 +631,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (prototype.ConstructionRules.Contains(RcdConstructionRule.MustBuildOnSubfloor) && !_turf.GetContentTileDefinition(tile).IsSubFloor)
         {
             if (popMsgs)
-                _popup.PopupClient(Loc.GetString("rcd-component-must-build-on-subfloor-message"), uid, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-must-build-on-subfloor-message"), uid, user);
 
             return false;
         }
@@ -653,7 +658,7 @@ public sealed partial class RCDSystem : EntitySystem
                 if (replacementContentDef.BaseTurf != tileDef.ID && !replacementContentDef.BaseWhitelist.Contains(tileDef.ID))
                 {
                     if (popMsgs)
-                        _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-on-empty-tile-message"), uid, user);
+                        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-on-empty-tile-message"), uid, user);
 
                     return false;
                 }
@@ -663,7 +668,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (tileDef.ID == prototype.Prototype)
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-identical-tile"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-identical-tile"), uid, user);
 
                 return false;
             }
@@ -704,7 +709,7 @@ public sealed partial class RCDSystem : EntitySystem
                 if (isIdentical)
                 {
                     if (popMsgs)
-                        _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-identical-entity"), uid, user);
+                        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-identical-entity"), uid, user);
 
                     return false;
                 }
@@ -716,7 +721,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (isPlumbingMachinePlacement && Transform(ent).Anchored && HasComp<PlumbingConnectorAppearanceComponent>(ent))
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
 
                 return false;
             }
@@ -724,7 +729,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (isCatwalk && _tags.HasTag(ent, CatwalkTag))
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
 
                 return false;
             }
@@ -744,7 +749,7 @@ public sealed partial class RCDSystem : EntitySystem
 
                     // Collision was detected
                     if (popMsgs)
-                        _popup.PopupClient(Loc.GetString("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
+                        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-cannot-build-on-occupied-tile-message"), uid, user);
 
                     return false;
                 }
@@ -763,7 +768,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (component.IsRpd || component.IsRPLD)
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
 
                 return false;
             }
@@ -773,7 +778,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (tile.Tile.IsEmpty)
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-nothing-to-deconstruct-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-nothing-to-deconstruct-message"), uid, user);
 
                 return false;
             }
@@ -782,7 +787,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (_turf.IsTileBlocked(tile, CollisionGroup.MobMask))
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-tile-obstructed-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-tile-obstructed-message"), uid, user);
 
                 return false;
             }
@@ -793,7 +798,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (tileDef.Indestructible)
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-tile-indestructible-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-tile-indestructible-message"), uid, user);
 
                 return false;
             }
@@ -807,7 +812,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (!TryComp<RCDDeconstructableComponent>(target, out var deconstructible) || !deconstructible.RpdDeconstructable && component.IsRpd || !deconstructible.RpldDeconstructable && component.IsRPLD)
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
 
                 return false;
             }
@@ -817,7 +822,7 @@ public sealed partial class RCDSystem : EntitySystem
             if (!deconstructible.Deconstructable) // Starlight Edit: RPD - Removed ``TryComp<RCDDeconstructableComponent>(target, out var deconstructible) || !``
             {
                 if (popMsgs)
-                    _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
 
                 return false;
             }
@@ -914,6 +919,8 @@ public sealed partial class RCDSystem : EntitySystem
 
                 var ent = Spawn(proto, mapCoords, rotation: rotation);
                 // Starlight edit End: RPD
+
+                KsMarkBuilt(component, ent, user); // KS14: instant RCDs remember who built what
 
                 switch (prototype.Rotation)
                 {

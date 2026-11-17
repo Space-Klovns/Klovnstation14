@@ -66,10 +66,10 @@ public abstract partial class GasMaxPressureHolderComponent : Component, IGasMax
 
     // The values chosen for safety and overpressure are arbitrary, if reactions change feel free to change these to whatever is most fun!
     // Generally a lower overpressure value and lower safety pressure mean weaker bombs with shorter fuses.
-    [DataField]
+    [DataField, AutoNetworkedField /* KS14: the tgui canister window's gauges are drawn from these */]
     public float SafetyPressure { get; set; } = 15 * Atmospherics.OneAtmosphere;
 
-    [DataField]
+    [DataField, AutoNetworkedField /* KS14: as above */]
     public float Overpressure { get; set; } = 20 * Atmospherics.OneAtmosphere;
 
     [DataField]

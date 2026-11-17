@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration;
 using Content.Server.Administration.Logs;
@@ -372,12 +373,12 @@ public sealed partial class InstrumentSystem : SharedInstrumentSystem
             {
                 if (instrument.LaggedBatches == (int)(MaxMidiLaggedBatches * (1 / 3d) + 1))
                 {
-                    _popup.PopupEntity(Loc.GetString("instrument-component-finger-cramps-light-message"),
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("instrument-component-finger-cramps-light-message"),
                         uid, attached, PopupType.SmallCaution);
                 }
                 else if (instrument.LaggedBatches == (int)(MaxMidiLaggedBatches * (2 / 3d) + 1))
                 {
-                    _popup.PopupEntity(Loc.GetString("instrument-component-finger-cramps-serious-message"),
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("instrument-component-finger-cramps-serious-message"),
                         uid, attached, PopupType.MediumCaution);
                 }
             }
@@ -458,7 +459,7 @@ public sealed partial class InstrumentSystem : SharedInstrumentSystem
                 {
                     _stuns.TryUpdateParalyzeDuration(mob, TimeSpan.FromSeconds(1));
 
-                    _popup.PopupEntity(Loc.GetString("instrument-component-finger-cramps-max-message"),
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("instrument-component-finger-cramps-max-message"),
                         uid, mob, PopupType.LargeCaution);
                 }
 

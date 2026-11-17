@@ -7,8 +7,8 @@
   contrabandSeverity: Minor
   flavor: bitter
   color: "#FAFAFA"
-  boilingPoint: 212.0  # Dexosyephedrine vape when?
-  meltingPoint: 170.0
+  boilingPoint: 485.15 # KS14: 212.0 -> 485.15, Kelvin. Dexosyephedrine vape when?
+  meltingPoint: 443.15 # KS14: 170.0 -> 443.15, Kelvin
   metabolisms:
     Bloodstream:
       # Main effects
@@ -73,8 +73,8 @@
   physicalDesc: reagent-physical-desc-powdery
   flavor: bitter
   color: "#D2FFFA"
-  boilingPoint: 255.0
-  meltingPoint: 36.0
+  boilingPoint: 528.15 # KS14: 255.0 -> 528.15, Kelvin
+  meltingPoint: 309.15 # KS14: 36.0 -> 309.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -131,8 +131,8 @@
   contrabandSeverity: Syndicate
   flavor: sharp
   color: "#9A040E"
-  boilingPoint: 212.0
-  meltingPoint: 170.0
+  boilingPoint: 485.15 # KS14: 212.0 -> 485.15, Kelvin
+  meltingPoint: 443.15 # KS14: 170.0 -> 443.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -313,8 +313,8 @@
   physicalDesc: reagent-physical-desc-powdery
   contrabandSeverity: Syndicate
   color: "#128e80"
-  boilingPoint: 444.0
-  meltingPoint: 128.0
+  boilingPoint: 717.15 # KS14: 444.0 -> 717.15, Kelvin
+  meltingPoint: 401.15 # KS14: 128.0 -> 401.15, Kelvin
   metabolisms:
     Bloodstream:
       effects: # It would be nice to have speech slurred or mumbly, but accents are a bit iffy atm. Same for distortion effects.
@@ -338,8 +338,8 @@
   physicalDesc: reagent-physical-desc-syrupy
   contrabandSeverity: Syndicate
   color: "#000000"
-  boilingPoint: 255.0
-  meltingPoint: 36.0
+  boilingPoint: 528.15 # KS14: 255.0 -> 528.15, Kelvin
+  meltingPoint: 309.15 # KS14: 36.0 -> 309.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -358,8 +358,8 @@
   contrabandSeverity: Minor
   flavor: salty
   color: "#96a8b5"
-  boilingPoint: 255.0
-  meltingPoint: 36.0
+  boilingPoint: 528.15 # KS14: 255.0 -> 528.15, Kelvin
+  meltingPoint: 309.15 # KS14: 36.0 -> 309.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -406,8 +406,8 @@
   - Security
   flavor: salty
   color: "#ffffff4d"
-  boilingPoint: 255.0
-  meltingPoint: 36.0
+  boilingPoint: 528.15 # KS14: 255.0 -> 528.15, Kelvin
+  meltingPoint: 309.15 # KS14: 36.0 -> 309.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:

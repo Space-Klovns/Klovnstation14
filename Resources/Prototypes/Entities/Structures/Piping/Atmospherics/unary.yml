@@ -221,12 +221,13 @@
     mode: SnapgridCenter
   components:
     - type: Sprite
-      sprite: Structures/Piping/Atmospherics/thermomachine.rsi
+      sprite: _KS14/Structures/Piping/Atmospherics/thermomachine.rsi # KS14: use KS14 sprite
       snapCardinals: true
     # KS14: emissive start
     - type: EmissiveLayers
       glowRadius: 0
-      intensity: -1
+      layers:
+      - enum.PowerDeviceVisualLayers.Powered
     # KS14: emissive end
     - type: Appearance
     - type: PipeColorVisuals
@@ -284,8 +285,11 @@
     - type: Sprite
       granularLayersRendering: true
       layers:
-        - state: freezerOff
+        - state: freezerBase # KS14: freezerOff -> freezerBase, the body never changes
+        - state: freezerOn # KS14: the overlay, shown only while it's on
           map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+          visible: false
+          shader: unshaded
         - state: freezerPanelOpen
           map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
         - state: pipe
@@ -295,8 +299,8 @@
       visuals:
         enum.PowerDeviceVisuals.Powered:
           enum.PowerDeviceVisualLayers.Powered:
-            True: { state: freezerOn }
-            False: { state: freezerOff }
+            True: { visible: true } # KS14: state -> visible
+            False: { visible: false } # KS14: state -> visible
     - type: GasThermoMachine
       coefficientOfPerformance: -3.9
     - type: ApcPowerReceiver
@@ -329,8 +333,11 @@
     - type: Sprite
       granularLayersRendering : true
       layers:
-        - state: heaterOff
+        - state: heaterBase # KS14: heaterOff -> heaterBase, the body never changes
+        - state: heaterOn # KS14: the overlay, shown only while it's on
           map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+          visible: false
+          shader: unshaded
         - state: heaterPanelOpen
           map: ["enum.WiresVisualLayers.MaintenancePanel"]
         - state: pipe
@@ -340,8 +347,8 @@
       visuals:
         enum.PowerDeviceVisuals.Powered:
           enum.PowerDeviceVisualLayers.Powered:
-            True: { state: heaterOn }
-            False: { state: heaterOff }
+            True: { visible: true } # KS14: state -> visible
+            False: { visible: false } # KS14: state -> visible
     - type: GasThermoMachine
       coefficientOfPerformance: 0.95
     - type: ApcPowerReceiver
@@ -369,7 +376,7 @@
   description: An advanced machine that cools gas in connected pipes. Has the side effect of chilling the surrounding area. Cold as Hell!
   components:
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/hellfirethermomachine.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/hellfirethermomachine.rsi # KS14
   - type: GasThermoMachine
     minTemperature: 23.15
     heatCapacity: 40000
@@ -384,7 +391,7 @@
   description: An advanced machine that heats gas in connected pipes. Has the side effect of leaking heat into the surrounding area. Hot as Hell!
   components:
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/hellfirethermomachine.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/hellfirethermomachine.rsi # KS14
   - type: GasThermoMachine
     maxTemperature: 1193.15
     heatCapacity: 40000

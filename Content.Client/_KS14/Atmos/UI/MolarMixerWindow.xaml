@@ -1,7 +1,8 @@
 <DefaultWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-            MinSize="200 200" Title="Molar Mixer">
+            xmlns:atmos="clr-namespace:Content.Client._KS14.Atmos.UI"
+            MinSize="200 340" Title="Molar Mixer">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <controls:SwitchButton
             Name="ToggleStatusButton"
@@ -33,5 +34,6 @@
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
             <Button Name="SetMixerPercentageButton" Text="{Loc comp-gas-mixer-ui-mixer-set}" HorizontalAlignment="Right" Disabled="True"/>
         </BoxContainer>
+        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14: heat footnote, which also needs xmlns:atmos above -->
     </BoxContainer>
 </DefaultWindow>

@@ -1,0 +1,6 @@
+# Anger. Raised by damage taken (NpcMeterOnDamage on the mob), and never cools off by itself. Weights bosses' attacks
+#   towards the ones that scale with it (meterWeight in WeightedRangedOperator).
+- type: npcMeter
+  id: KsAnger
+  max: 20
+  decayPerSecond: 0

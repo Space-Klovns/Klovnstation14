@@ -1,4 +1,4 @@
-<controls:FancyWindow xmlns="https://spacestation14.io"
+<controls:FancyWindow xmlns="https://spacestation14.io" xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls;assembly=Content.Client"
@@ -33,10 +33,8 @@
                           HorizontalExpand="True"
                           SizeFlagsStretchRatio="3"
                           Margin="0 0 0 10">
-                <PanelContainer Name="ResearchesContainer" VerticalExpand="True" HorizontalExpand="True">
-                    <PanelContainer.PanelOverride>
-                        <gfx:StyleBoxFlat BackgroundColor="#000000FF" />
-                    </PanelContainer.PanelOverride>
+                <!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+                <ksTgui:KsSectionPanel Name="ResearchesContainer" VerticalExpand="True" HorizontalExpand="True" BaronColor="#000000FF">
                     <AnimatedTextureRect Name="StaticSprite"
                         HorizontalExpand="True"
                         VerticalExpand="True">
@@ -50,19 +48,17 @@
                         </ks14:ResearchesContainerPanel>
                     </AnimatedTextureRect>
                     <Button Name="RecenterButton" Text="{Loc 'research-console-menu-recenter-button'}" MinHeight="40" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5 -5"/>
-                </PanelContainer>
+                </ksTgui:KsSectionPanel>
             </BoxContainer>
-            <PanelContainer SizeFlagsStretchRatio="2">
-                <PanelContainer.PanelOverride>
-                    <gfx:StyleBoxFlat BackgroundColor="#1B1B1E" />
-                </PanelContainer.PanelOverride>
+            <!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+            <ksTgui:KsSectionPanel SizeFlagsStretchRatio="2" BaronColor="#1B1B1E">
                 <BoxContainer Name="InfoContainer"
                     Orientation="Vertical"
                     VerticalExpand="True"
                     HorizontalExpand="True"
                     SizeFlagsStretchRatio="1"
                     Margin="0"/>
-            </PanelContainer>
+            </ksTgui:KsSectionPanel>
         </BoxContainer>
     </BoxContainer>
 </controls:FancyWindow>

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Hands.EntitySystems;
@@ -186,15 +187,15 @@ public sealed partial class PressurizedSolutionSystem : EntitySystem
         {
             var victimName = Identity.Entity(target.Value, EntityManager);
 
-            var selfMessage = Loc.GetString(entity.Comp.SprayHolderMessageSelf, ("victim", victimName), ("drink", drinkName));
-            var othersMessage = Loc.GetString(entity.Comp.SprayHolderMessageOthers, ("victim", victimName), ("drink", drinkName));
+            var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(entity.Comp.SprayHolderMessageSelf, ("victim", victimName), ("drink", drinkName));
+            var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */(entity.Comp.SprayHolderMessageOthers, ("victim", victimName), ("drink", drinkName));
             _popup.PopupPredicted(selfMessage, othersMessage, target.Value, target.Value);
         }
         else
         {
             // Show a popup to everyone in PVS range
             if (_timing.IsFirstTimePredicted)
-                _popup.PopupEntity(Loc.GetString(entity.Comp.SprayGroundMessage, ("drink", drinkName)), entity);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(entity.Comp.SprayGroundMessage, ("drink", drinkName)), entity);
         }
 
         _audio.PlayPredicted(entity.Comp.SpraySound, entity, target);

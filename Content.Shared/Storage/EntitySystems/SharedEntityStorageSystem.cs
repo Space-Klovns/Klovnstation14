@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using Content.Shared.Destructible;
@@ -149,7 +150,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
 
         if (component.Contents.Contains(args.User))
         {
-            var msg = Loc.GetString("entity-storage-component-already-contains-user-message");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("entity-storage-component-already-contains-user-message");
             Popup.PopupEntity(msg, args.User, args.User);
             args.Cancel();
         }
@@ -224,7 +225,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         }
     }
 
-    public void OpenStorage(EntityUid uid, EntityStorageComponent? component = null)
+    public void OpenStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
     {
         if (!Resolve(uid, ref component))
             return;
@@ -238,14 +239,16 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         Dirty(uid, component);
         EmptyContents(uid, component);
         ModifyComponents(uid, component);
-        if (_net.IsClient && _timing.IsFirstTimePredicted)
-            _audio.PlayPvs(component.OpenSound, uid);
+        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        if (_net.IsServer || user != null)
+            _audio.PlayPredicted(component.OpenSound, uid, user);
+        // KS14 end
         ReleaseGas(uid, component);
         var afterev = new StorageAfterOpenEvent();
         RaiseLocalEvent(uid, ref afterev);
     }
 
-    public void CloseStorage(EntityUid uid, EntityStorageComponent? component = null)
+    public void CloseStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
     {
         if (!Resolve(uid, ref component))
             return;
@@ -289,8 +292,10 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
 
         TakeGas(uid, component);
         ModifyComponents(uid, component);
-        if (_net.IsClient && _timing.IsFirstTimePredicted)
-            _audio.PlayPvs(component.CloseSound, uid);
+        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        if (_net.IsServer || user != null)
+            _audio.PlayPredicted(component.CloseSound, uid, user);
+        // KS14 end
 
         var afterev = new StorageAfterCloseEvent();
         RaiseLocalEvent(uid, ref afterev);
@@ -386,7 +391,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         if (!CanOpen(user, target, silent))
             return false;
 
-        OpenStorage(target);
+        OpenStorage(target, user: user /* KS14: pass user */);
         return true;
     }
 
@@ -397,7 +402,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
             return false;
         }
 
-        CloseStorage(target);
+        CloseStorage(target, user: user /* KS14: pass user */);
         return true;
     }
 
@@ -420,7 +425,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         if (_weldable.IsWelded(target))
         {
             if (!silent && !component.Contents.Contains(user))
-                Popup.PopupClient(Loc.GetString("entity-storage-component-welded-shut-message"), target, user);
+                Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("entity-storage-component-welded-shut-message"), target, user);
 
             return false;
         }
@@ -432,7 +437,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
             if (!_interaction.InRangeUnobstructed(target, newCoords, 0, collisionMask: component.EnteringOffsetCollisionFlags))
             {
                 if (!silent && _net.IsServer)
-                    Popup.PopupEntity(Loc.GetString("entity-storage-component-cannot-open-no-space"), target);
+                    Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("entity-storage-component-cannot-open-no-space"), target);
                 return false;
             }
         }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Nuke;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Station.Components;
@@ -30,6 +31,7 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
             return;
 
         component.AffectedStation = affectedStation.Value;
+        component.FirstAnnouncementAt = Timing.CurTime + component.FirstAnnouncementDelay;
 
         var nukeQuery = AllEntityQuery<NukeComponent, TransformComponent>();
         while (nukeQuery.MoveNext(out var nuke, out var nukeComponent, out var nukeTransform))
@@ -46,16 +48,16 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
                 if (!_transform.AnchorEntity(nuke, nukeTransform))
                     continue;
 
-            _nukeSystem.SetRemainingTime(nuke, component.NukeTimer);
+            _nukeSystem.SetRemainingTime(nuke, (float)component.NukeTimer.TotalSeconds);
             _nukeSystem.ArmBomb(nuke, nukeComponent);
             component.AffectedNuke = nuke;
 
             if (!nukeComponent.DiskSlot.HasItem)
-                _popups.PopupEntity(Loc.GetString("station-event-nuke-calibration-arm-popup"), nuke, PopupType.LargeCaution);
+                _popups.PopupEntity(KsPopupMessage.Create("station-event-nuke-calibration-arm-popup"), nuke, PopupType.LargeCaution);
             else
             {
                 _transform.SetCoordinates(nukeComponent.DiskSlot.ContainerSlot!.ContainedEntity!.Value, nukeTransform.Coordinates);
-                _popups.PopupEntity(Loc.GetString("station-event-nuke-calibration-arm-and-disk-ejected-popup"), nuke, PopupType.LargeCaution);
+                _popups.PopupEntity(KsPopupMessage.Create("station-event-nuke-calibration-arm-and-disk-ejected-popup"), nuke, PopupType.LargeCaution);
             }
 
             break;
@@ -100,8 +102,7 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
         if (component.FirstAnnouncementMade == true)
             return;
 
-        component.TimeUntilFirstAnnouncement -= frameTime;
-        if (component.TimeUntilFirstAnnouncement > 0f)
+        if (component.FirstAnnouncementAt is not { } announceAt || Timing.CurTime < announceAt)
             return;
 
         component.FirstAnnouncementMade = true;

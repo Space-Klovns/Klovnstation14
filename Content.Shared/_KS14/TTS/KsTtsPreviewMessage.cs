@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Network;
 using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
@@ -73,18 +74,23 @@ public sealed class KsTtsPreviewMessage : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
+        KsNetMessageLimits.AssertNotReceivedByServer(this);
+
         Status = (KsTtsPreviewStatus)buffer.ReadByte();
         Replace = buffer.ReadBoolean();
 
         var count = buffer.ReadVariableInt32();
-        Previews = new List<KsTtsPreview>(Math.Clamp(count, 0, 1024));
+        // A voice id, a codec byte and a data length each, before any data.
+        buffer.AssertAtLeastSize(count * (NetMessageExt.MinSizeOfString + sizeof(byte) + NetMessageExt.MinSizeOfVariableInt));
+        KsNetMessageLimits.AssertAtMost(count, KsNetMessageLimits.MaxTtsPreviews);
+        Previews = new List<KsTtsPreview>(count);
         for (var i = 0; i < count; i++)
         {
             var voice = buffer.ReadString();
             var codec = (TtsCodec)buffer.ReadByte();
             var length = buffer.ReadVariableInt32();
-            if (length < 0 || length > MaxPreviewBytes)
-                throw new InvalidOperationException($"Voice preview of {length} bytes exceeds {MaxPreviewBytes}.");
+            KsNetMessageLimits.AssertAtMost(length, MaxPreviewBytes);
+            buffer.AssertAtLeastSize(length);
 
             var data = new byte[length];
             buffer.ReadBytes(data, 0, length);

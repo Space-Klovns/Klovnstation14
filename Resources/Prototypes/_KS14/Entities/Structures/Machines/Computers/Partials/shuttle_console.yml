@@ -1,0 +1,10 @@
+# The normal shuttle console opens the instrument window, without becoming a sensor console: there is no KsSensorConsole here, so
+#   its radar and map go on showing every grid, as upstream's do. Maps place this console and no sensors, so a real sensor
+#   console here would leave every shuttle in the game looking at an empty scope.
+- type: !PartialOnly entity
+  id: ComputerShuttle
+  components:
+  - type: UserInterface
+    interfaces:
+      enum.ShuttleConsoleUiKey.Key:
+        type: KsSensorConsoleBoundUserInterface

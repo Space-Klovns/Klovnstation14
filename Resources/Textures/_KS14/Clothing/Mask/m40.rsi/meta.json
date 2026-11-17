@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from Battlefield14 at https://github.com/PunishedJoe/Battlefield14/tree/main/Resources/Textures/_Battlefield14/Clothing/Mask/M40.rsi. Icon Taken from Civ13 at commit https://github.com/Civ13/Civ13/pull/2577/changes/4964edc54dfff29cda9e04d29ef773712713a642#diff-5718029c9fd67e60d65df62fdf3486a219ed8de9400b269c67498910882bcbb8, worn edited by JoeHammad1844 from Jackal298 based on the sprite from tgstation at commit https://github.com/tgstation/tgstation/commit/4f6190e2895e09116663ef282d3ce1d8b35c032e. inhand-left and inhand-right made for Klovnstation 14 from the icon.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "equipped-MASK",
+      "directions": 4
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
@@ -128,7 +129,7 @@ public sealed partial class SharedKitchenSpikeSystem : EntitySystem
         if (args.Handled || !victim.HasValue)
             return;
 
-        _popupSystem.PopupClient(Loc.GetString("butcherable-need-knife",
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("butcherable-need-knife",
             ("target", Identity.Entity(victim.Value, EntityManager))),
             ent,
             args.User,
@@ -148,7 +149,7 @@ public sealed partial class SharedKitchenSpikeSystem : EntitySystem
 
         if (!TryComp<SharpComponent>(args.Used, out var sharp))
         {
-            _popupSystem.PopupClient(Loc.GetString("butcherable-need-knife",
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("butcherable-need-knife",
                     ("target", Identity.Entity(victim.Value, EntityManager))),
                     ent,
                     args.User,
@@ -159,8 +160,8 @@ public sealed partial class SharedKitchenSpikeSystem : EntitySystem
 
         var victimIdentity = Identity.Entity(victim.Value, EntityManager);
 
-        _popupSystem.PopupPredicted(Loc.GetString("comp-kitchen-spike-begin-butcher-self", ("victim", victimIdentity)),
-            Loc.GetString("comp-kitchen-spike-begin-butcher", ("user", Identity.Entity(args.User, EntityManager)), ("victim", victimIdentity)),
+        _popupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-kitchen-spike-begin-butcher-self", ("victim", victimIdentity)),
+            KsPopupMessage.Create("comp-kitchen-spike-begin-butcher", ("user", Identity.Entity(args.User, EntityManager)), ("victim", victimIdentity)),
             ent,
             args.User,
             PopupType.MediumCaution);
@@ -283,8 +284,8 @@ public sealed partial class SharedKitchenSpikeSystem : EntitySystem
 
         var victimIdentity = Identity.Entity(args.Target.Value, EntityManager);
 
-        _popupSystem.PopupPredicted(Loc.GetString("comp-kitchen-spike-butcher-self", ("victim", victimIdentity)),
-            Loc.GetString("comp-kitchen-spike-butcher", ("user", Identity.Entity(args.User, EntityManager)), ("victim", victimIdentity)),
+        _popupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-kitchen-spike-butcher-self", ("victim", victimIdentity)),
+            KsPopupMessage.Create("comp-kitchen-spike-butcher", ("user", Identity.Entity(args.User, EntityManager)), ("victim", victimIdentity)),
             ent,
             args.User,
             PopupType.MediumCaution);
@@ -336,7 +337,7 @@ public sealed partial class SharedKitchenSpikeSystem : EntitySystem
 
         _audioSystem.PlayPredicted(ent.Comp.ButcherSound, ent, args.User);
 
-        _popupSystem.PopupClient(Loc.GetString("butcherable-knife-butchered-success",
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("butcherable-knife-butchered-success",
             ("target", Identity.Entity(args.Target.Value, EntityManager)),
             ("knife", args.Used.Value)),
             ent,

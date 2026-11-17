@@ -17,7 +17,7 @@ public sealed partial class HandleSensorsOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken _)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid) ||
             !_sensorsQuery.TryGetComponent(ownerUid, out var sensorsComponent))
             return (true, null);
 
@@ -27,7 +27,7 @@ public sealed partial class HandleSensorsOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid) ||
             !_sensorsQuery.TryGetComponent(ownerUid, out var sensorsComponent))
             return HTNOperatorStatus.Finished;
 

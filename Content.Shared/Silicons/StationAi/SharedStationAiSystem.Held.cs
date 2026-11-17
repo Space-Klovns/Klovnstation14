@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions.Events;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction.Events;
@@ -195,12 +196,12 @@ public abstract partial class SharedStationAiSystem
 
     private void ShowDeviceNotRespondingPopup(EntityUid toEntity)
     {
-        _popup.PopupClient(Loc.GetString("ai-device-not-responding"), toEntity, PopupType.MediumCaution);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ai-device-not-responding"), toEntity, PopupType.MediumCaution);
     }
 
     private void ShowDeviceNoAccessPopup(EntityUid toEntity)
     {
-        _popup.PopupClient(Loc.GetString("ai-device-no-access"), toEntity, PopupType.MediumCaution);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ai-device-no-access"), toEntity, PopupType.MediumCaution);
     }
 }
 

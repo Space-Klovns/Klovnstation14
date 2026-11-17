@@ -223,7 +223,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     Total number of gases. Increase this if you want to add more!
         /// </summary>
-        public const int TotalNumberOfGases = 12; // KS14 new gases: zipion, encalite, evaporin
+        public const int TotalNumberOfGases = 13; // KS14 new gases: zipion, encalite, evaporin, hydrogen
 
         /// <summary>
         ///     This is the actual length of the gases arrays in mixtures.
@@ -390,5 +390,6 @@ namespace Content.Shared.Atmos
         Zipion = 9, //KS14
         Encalite = 10, //KS14
         Evaporin = 11, //KS14
+        Hydrogen = 12, //KS14
     }
 }

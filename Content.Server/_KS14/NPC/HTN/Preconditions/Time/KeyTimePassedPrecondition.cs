@@ -10,21 +10,19 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions.Time;
 ///
 ///     Will also be met if the TimeSpan doesn't exist.
 /// </summary>
-public sealed partial class KeyTimePassedPrecondition : HTNPrecondition
+public sealed partial class KeyTimePassedPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private IEntityManager _entManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
 
-    [DataField] public bool Invert;
-
     [DataField(required: true)] public string Key = "TimeAt";
     [DataField] public TimeSpan Delay = TimeSpan.Zero;
 
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
         if (!blackboard.TryGetValue<TimeSpan>(Key, out var time, _entManager))
-            return !Invert;
+            return true;
 
-        return (_gameTiming.CurTime >= time + Delay) ^ Invert;
+        return _gameTiming.CurTime >= time + Delay;
     }
 }

@@ -133,8 +133,8 @@
   contrabandSeverity: Major
   flavor: acid
   color: "#a1000b"
-  boilingPoint: 78.2 # This isn't a real chemical...
-  meltingPoint: -19.4
+  boilingPoint: 351.35 # KS14: 78.2 -> 351.35, Kelvin. This isn't a real chemical...
+  meltingPoint: 253.75 # KS14: -19.4 -> 253.75, Kelvin
   plantMetabolism:
   - !type:PlantAdjustToxins
     amount: 20
@@ -200,8 +200,8 @@
   contrabandSeverity: Minor
   flavor: acid
   color: "#5050ff"
-  boilingPoint: 165
-  meltingPoint: -87
+  boilingPoint: 438.15 # KS14: 165 -> 438.15, Kelvin
+  meltingPoint: 186.15 # KS14: -87 -> 186.15, Kelvin
   reactiveEffects:
     Acidic:
       methods: [ Touch ]
@@ -242,8 +242,8 @@
   flavor: acid
   color: "#BF8C00"
   recognizable: true
-  boilingPoint: 337.0
-  meltingPoint: 10.31
+  boilingPoint: 610.15 # KS14: 337.0 -> 610.15, Kelvin
+  meltingPoint: 283.46 # KS14: 10.31 -> 283.46, Kelvin
   plantMetabolism:
   - !type:PlantAdjustToxins
     amount: 10
@@ -292,7 +292,7 @@
   flavor: bitter
   color: "#00ff5f"
   boilingPoint: 340282300 # Ethidium bromide, which doesn't boil.
-  meltingPoint: 261.0
+  meltingPoint: 534.15 # KS14: 261.0 -> 534.15, Kelvin
   plantMetabolism:
   - !type:PlantAdjustMutationLevel
     amount: 1
@@ -407,8 +407,8 @@
   desc: reagent-desc-theobromine
   physicalDesc: reagent-physical-desc-grainy
   color: "#f5f5f5"
-  meltingPoint: 351
-  boilingPoint: 554 # I'm not a chemist, but it boils at 295, lower than melting point, idk how it works so I gave it higher value
+  meltingPoint: 624.15 # KS14: 351 -> 624.15, Kelvin
+  boilingPoint: 827.15 # KS14: 554 -> 827.15, Kelvin. I'm not a chemist, but it boils at 295, lower than melting point, idk how it works so I gave it higher value
   metabolisms:
     Bloodstream:
       metabolismRate: 0.05

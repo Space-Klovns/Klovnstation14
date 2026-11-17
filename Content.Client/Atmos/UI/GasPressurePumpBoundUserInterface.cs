@@ -1,3 +1,4 @@
+using Content.Client._KS14.Tgui.Windows.Atmos; // KS14
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Piping.Binary.Components;
@@ -14,13 +15,14 @@ namespace Content.Client.Atmos.UI;
 public sealed partial class GasPressurePumpBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
     [ViewVariables]
-    private GasPressurePumpWindow? _window;
+    private IKsGasPressurePumpWindow? _window; // KS14: GasPressurePumpWindow -> the interface, which the tgui window shares
 
     protected override void Open()
     {
         base.Open();
 
-        _window = this.CreateWindow<GasPressurePumpWindow>();
+        _window = KsTguiAtmosWindows.Create<GasPressurePumpWindow, KsTguiGasPressurePumpWindow, IKsGasPressurePumpWindow>(this); // KS14
+        _window.HeatDevice = Owner; // KS14
 
         _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
         _window.PumpOutputPressureChanged += OnPumpOutputPressurePressed;

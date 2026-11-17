@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
@@ -25,6 +26,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
         [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
         [Dependency] private IAdminLogManager _adminLogger = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private KsTransferThermoSystem _transferThermoSystem = default!;
         [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
         [Dependency] private SharedAppearanceSystem _appearance = default!;
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
@@ -93,14 +95,18 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             if (transferMolesOne > 0f)
             {
                 transferred = true;
+                var inletPressure = inletOne.Air.Pressure;
                 var removed = inletOne.Air.Remove(transferMolesOne);
+                _transferThermoSystem.Apply(removed, inletPressure, outlet.Air.Pressure, doesWork: true, deviceUid: uid);
                 _atmosphereSystem.Merge(outlet.Air, removed);
             }
 
             if (transferMolesTwo > 0f)
             {
                 transferred = true;
+                var inletPressure = inletTwo.Air.Pressure;
                 var removed = inletTwo.Air.Remove(transferMolesTwo);
+                _transferThermoSystem.Apply(removed, inletPressure, outlet.Air.Pressure, doesWork: true, deviceUid: uid);
                 _atmosphereSystem.Merge(outlet.Air, removed);
             }
 
@@ -134,7 +140,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("comp-gas-mixer-ui-needs-anchor"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create("comp-gas-mixer-ui-needs-anchor"), args.User);
             }
 
             args.Handled = true;

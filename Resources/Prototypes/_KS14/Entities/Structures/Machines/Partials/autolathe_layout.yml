@@ -1,0 +1,6 @@
+# The tgui lathe window is laid out as tg's Autolathe for the autolathe and everything that inherits it, and as tg's
+#     Fabricator for every other lathe.
+- type: !PartialOnly entity
+  id: Autolathe
+  components:
+  - type: KsTguiAutolatheLayout

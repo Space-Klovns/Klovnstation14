@@ -21,7 +21,9 @@ public sealed partial class StandingStateSystem : EntitySystem
 
     private void KsOnWeightlessnessChanged(Entity<StandingStateComponent> entity, ref WeightlessnessChangedEvent args)
     {
-        if (HasComp<KnockedDownComponent>(entity))
+        // Only regaining gravity can put you back down. A deleted entity is detached from its grid on the way
+        //      out, which reads as going weightless, and nothing may be added to it then.
+        if (args.Weightless || TerminatingOrDeleted(entity) || HasComp<KnockedDownComponent>(entity))
             return;
 
         var ev = new StandUpAttemptEvent();

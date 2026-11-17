@@ -15,7 +15,7 @@ public sealed partial class ClearSquadThreatOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        _npcSquadSystem.ClearThreat(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcSquadSystem.ClearThreat(blackboard.GetOwner());
         return HTNOperatorStatus.Finished;
     }
 }

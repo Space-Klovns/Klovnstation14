@@ -14,6 +14,7 @@ public sealed partial class AtmosAlertsComputerBoundUserInterface : BoundUserInt
         base.Open();
 
         _menu = new AtmosAlertsComputerWindow(this, Owner);
+        this.WithGuide(_menu); // KS14: made with new, so the guidebook button has to be asked for
         _menu.OpenCentered();
         _menu.OnClose += Close;
     }

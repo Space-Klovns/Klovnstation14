@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
@@ -189,6 +190,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         UpdateGhostRoleCount();
         UpdateRaffles(frameTime);
+        UpdateNotices(); // KS14
     }
 
     /// <summary>
@@ -756,6 +758,8 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (ent.Comp.Probability < 1f && !_random.Prob(ent.Comp.Probability))
             RemCompDeferred<GhostRoleComponent>(ent);
+        else
+            QueueNotice(ent); // KS14: tell ghosts about notable roles
     }
 
     private void OnRoleStartup(Entity<GhostRoleComponent> ent, ref ComponentStartup args)
@@ -894,7 +898,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         if (userUid != null)
         {
-            var msg = Loc.GetString("ghostrole-spawner-select", ("mode", verbText));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghostrole-spawner-select", ("mode", KsPopupMessage.Create(prototype.Name) /* KS14: defer role label */));
             _popupSystem.PopupEntity(msg, uid, userUid.Value);
         }
     }

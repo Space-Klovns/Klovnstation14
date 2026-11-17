@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Coordinates;
 using Content.Shared.Hands;
@@ -148,13 +149,13 @@ public abstract partial class SharedChameleonProjectorSystem : EntitySystem
     {
         if (_container.IsEntityInContainer(target) || _container.IsEntityInContainer(user))
         {
-            _popup.PopupClient(Loc.GetString("chameleon-projector-inside-container"), target, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chameleon-projector-inside-container"), target, user);
             return false;
         }
 
         if (IsInvalid(ent.Comp, target))
         {
-            _popup.PopupClient(Loc.GetString("chameleon-projector-invalid"), target, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chameleon-projector-invalid"), target, user);
             return false;
         }
 
@@ -162,7 +163,7 @@ public abstract partial class SharedChameleonProjectorSystem : EntitySystem
         if (TryComp<ItemToggleComponent>(ent.Owner, out var itemToggle) && !_toggle.TryActivate((ent.Owner, itemToggle), user))
             return false;
 
-        _popup.PopupClient(Loc.GetString("chameleon-projector-success"), target, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chameleon-projector-success"), target, user);
         Disguise(ent, user, target);
         return true;
     }

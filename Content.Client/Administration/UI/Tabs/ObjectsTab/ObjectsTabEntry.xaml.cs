@@ -14,7 +14,7 @@ public sealed partial class ObjectsTabEntry : PanelContainer
     public Action<NetEntity>? OnTeleport;
     public Action<NetEntity>? OnDelete;
 
-    public ObjectsTabEntry(IClientAdminManager manager, string name, NetEntity nent, StyleBox styleBox)
+    public ObjectsTabEntry(IClientAdminManager manager, string name, NetEntity nent, StyleBox styleBox, bool striped /* KS14: added param */)
     {
         RobustXamlLoader.Load(this);
 
@@ -22,6 +22,7 @@ public sealed partial class ObjectsTabEntry : PanelContainer
         EIDLabel.Text = nent.ToString();
         NameLabel.Text = name;
         BackgroundColorPanel.PanelOverride = styleBox;
+        Content.Client._KS14.Tgui.Admin.KsTguiTableRowLook.Attach(this, BackgroundColorPanel, striped, header: false); // KS14: tgui table row
 
         TeleportButton.Disabled = !manager.CanCommand("tpto");
         DeleteButton.Disabled = !manager.CanCommand("delete");

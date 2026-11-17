@@ -50,9 +50,9 @@
   - type: ItemSlots
     slots:
       grenade_slot:
-        name: Grenade # broooo make loc for this TODO KS14: LOC
-        insertVerbText: Insert Grenade
-        ejectVerbText: Eject Grenade
+        name: gas-grenade-compressor-slot-name
+        insertVerbText: gas-grenade-compressor-slot-insert-verb
+        ejectVerbText: gas-grenade-compressor-slot-eject-verb
         whitelist:
           tags:
             - AirGrenade

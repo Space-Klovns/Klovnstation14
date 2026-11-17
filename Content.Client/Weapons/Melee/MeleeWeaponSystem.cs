@@ -77,7 +77,7 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         var useDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.Use);
         var altDown = _inputSystem.CmdStates.GetState(EngineKeyFunctions.UseSecondary);
 
-        if (weapon.AutoAttack || useDown != BoundKeyState.Down && altDown != BoundKeyState.Down || _cfg.GetCVar(CCVars.ControlHoldToAttackMelee))
+        if (weapon.AutoAttack || useDown != BoundKeyState.Down && altDown != BoundKeyState.Down /* KS14: removed hold-to-attack cvar, free autoclicker */)
         {
             if (weapon.Attacking)
             {
@@ -111,7 +111,8 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         }
 
         // If the gun has AltFireComponent, it can be used to attack.
-        if (TryComp<GunComponent>(weaponUid, out var gun) && gun.UseKey)
+        if (TryComp<GunComponent>(weaponUid, out var gun) && gun.UseKey
+            && !HasComp<Content.Shared._KS14.Weapons.Ranged.KsGunFiresOutOfCombatComponent>(weaponUid) /* KS14: fires out of combat mode, so it can melee in it */)
         {
             if (!TryComp<AltFireMeleeComponent>(weaponUid, out var altFireComponent) || altDown != BoundKeyState.Down)
                 return;
@@ -138,7 +139,7 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         if (altDown == BoundKeyState.Down)
         {
             // If it's an unarmed attack then do a disarm
-            if (weapon.AltDisarm && weaponUid == entity)
+            if (weapon.AltDisarm && (weaponUid == entity || HasComp<Content.Shared._KS14.ShoveWeapon.KsShoveWeaponComponent>(weaponUid) /* KS14: held items that shove */))
             {
                 ClientDisarm(entity, mousePos, coordinates);
                 return;

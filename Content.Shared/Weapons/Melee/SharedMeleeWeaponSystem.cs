@@ -1,7 +1,9 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Content.Shared._KS14.Random.Helpers; // KS14
+using Content.Shared._KS14.ShoveWeapon; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions.Events;
 using Content.Shared.Administration.Components;
@@ -879,7 +881,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         //     {
         //         // Notify disarmable
         //         if (HasComp<MobStateComponent>(target.Value))
-        //             PopupSystem.PopupClient(Loc.GetString("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
+        //             PopupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
 
         //         return false;
         //     }
@@ -921,6 +923,17 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
         var chance = CalculateDisarmChance(user, target.Value, inTargetHand, combatMode);
 
+        // KS14 start: a held weapon, such as a shield, can change the shove
+        var ksWeaponAttempt = new KsDisarmWithWeaponAttemptEvent(user, target.Value, chance, combatMode.DisarmSuccessSound);
+        if (meleeUid != user)
+            RaiseLocalEvent(meleeUid, ref ksWeaponAttempt);
+
+        if (ksWeaponAttempt.Cancelled)
+            return false;
+
+        chance = ksWeaponAttempt.Chance;
+        // KS14 end
+
         // KS14 Start
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
             KsSharedRandomExtensions.GetNetId(user, EntityManager),
@@ -951,13 +964,21 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var eventArgs = new DisarmedEvent(target.Value, user, 1 - chance);
         RaiseLocalEvent(target.Value, ref eventArgs);
 
+        // KS14 start: let the weapon follow up on its shove
+        if (meleeUid != user)
+        {
+            var ksShovedEvent = new KsShovedWithWeaponEvent(user, target.Value);
+            RaiseLocalEvent(meleeUid, ref ksShovedEvent);
+        }
+        // KS14 end
+
         // KS14 start: Moved interaction, admin logs, and sound here
         Interaction.DoContactInteraction(user, target);
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
-        _audio.PlayPredicted/* KS14: use predicted variant */(combatMode.DisarmSuccessSound, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        _audio.PlayPredicted/* KS14: use predicted variant */(ksWeaponAttempt.SuccessSound /* KS14: was combatMode.DisarmSuccessSound */, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
         // KS14 end
 
         // Nothing handled it so abort.
@@ -983,12 +1004,12 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var targetEnt = Identity.Entity(target.Value, EntityManager);
         var userEnt = Identity.Entity(user, EntityManager);
 
-        var msgOther = Loc.GetString(
+        var msgOther = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(
             eventArgs.PopupPrefix + "popup-message-other-clients",
             ("performerName", userEnt),
             ("targetName", targetEnt));
 
-        var msgUser = Loc.GetString(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
+        var msgUser = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
 
         var filterOther = Filter.PvsExcept(user, entityManager: EntityManager);
 
@@ -998,7 +1019,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         if (eventArgs.IsStunned)
         {
 
-            PopupSystem.PopupEntity(Loc.GetString("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
             PopupSystem.PopupPredictedCursor/* KS14: use predicted variant */(Loc.GetString("stunned-component-disarm-success", ("target", targetEnt)), user, PopupType.Large);
 
             AdminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium, $"{ToPrettyString(user):user} knocked down {ToPrettyString(target):target}");

@@ -33,5 +33,14 @@ namespace Content.Server.Atmos.Piping.Trinary.Components
 
         [DataField("maxTransferRate")]
         public float MaxTransferRate { get; set; } = Atmospherics.MaxTransferRate;
+
+        // KS14 start
+        /// <summary>
+        ///     KS14: units of liquid per second per square root kPa that cross this device by the orifice law, apart from its gas. Scaled by how
+        ///         far the valve is open.
+        /// </summary>
+        [DataField]
+        public float KsLiquidConductance = Content.Shared._KS14.Fluidmos.KsFluidmos.DefaultLiquidConductance;
+        // KS14 end
     }
 }

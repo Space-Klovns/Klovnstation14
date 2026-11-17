@@ -22,11 +22,18 @@ public sealed partial class EmissiveOverlaySystem : EntitySystem
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
 
         _overlayManager.AddOverlay(overlay);
+
+        var bloomOverlay = new KsEmissiveBloomOverlay();
+        dependencyCollection.InjectDependencies(bloomOverlay, oneOff: true);
+        bloomOverlay.SubscribeCVars();
+
+        _overlayManager.AddOverlay(bloomOverlay);
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _overlayManager.RemoveOverlay<EmissiveOverlay>();
+        _overlayManager.RemoveOverlay<KsEmissiveBloomOverlay>();
     }
 }

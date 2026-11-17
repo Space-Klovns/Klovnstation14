@@ -12,18 +12,18 @@ public enum PTLUiKey : byte
 public sealed class PtlBoundUserInterfaceState(
         bool isActive,
         double spesosHeld,
-        float shootDelay,
-        float minDelay,
-        float maxDelay,
+        TimeSpan shootDelay,
+        TimeSpan minDelay,
+        TimeSpan maxDelay,
         float currentCharge,
         float maxCharge
     ) : BoundUserInterfaceState
 {
     public bool IsActive = isActive;
     public double SpesosHeld = spesosHeld;
-    public float ShootDelay = shootDelay;
-    public float MinDelay = minDelay;
-    public float MaxDelay = maxDelay;
+    public TimeSpan ShootDelay = shootDelay;
+    public TimeSpan MinDelay = minDelay;
+    public TimeSpan MaxDelay = maxDelay;
     public float CurrentCharge = currentCharge;
     public float MaxCharge = maxCharge;
 }
@@ -32,9 +32,9 @@ public sealed class PtlBoundUserInterfaceState(
 public sealed class PtlToggleMessage : BoundUserInterfaceMessage { }
 
 [Serializable, NetSerializable]
-public sealed class PtlSetDelayMessage(float delay) : BoundUserInterfaceMessage
+public sealed class PtlSetDelayMessage(TimeSpan delay) : BoundUserInterfaceMessage
 {
-    public float Delay = delay;
+    public TimeSpan Delay = delay;
 }
 
 [Serializable, NetSerializable]

@@ -258,8 +258,9 @@ public abstract partial class SharedPoweredLightSystem : EntitySystem
                 coordinates,
                 SharedSparksSystem.DefaultSparkPrototype,
                 soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
-                maximumSparks: 3,
-                user: user
+                maximumSparks: 3
+                // No user: the bulb mostly breaks from damage, which is often server-only (explosions, a solar
+                //      flare) and never the breaker's own predicted input, so the breaker's client keeps no sparks.
             );
             _sparksSystem.ExposeSpark(coordinates, 1600f, 0.6f);
         }

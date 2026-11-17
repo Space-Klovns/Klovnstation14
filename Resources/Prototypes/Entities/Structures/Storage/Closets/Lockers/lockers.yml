@@ -4,6 +4,10 @@
   name: booze storage
   description: This is where the bartender keeps the booze.
   components:
+  # KS14 start: tgstation's cabinets don't swing their doors
+  - type: KsClosetDoorVisuals
+    duration: 0
+  # KS14 end
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: cabinet
@@ -29,7 +33,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: secure
-    stateDoorOpen: secure_open
+    # stateDoorOpen: secure_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: secure_door
 
 # Cargo
@@ -41,7 +45,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: qm
-    stateDoorOpen: qm_open
+    # stateDoorOpen: qm_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: qm_door
   - type: AccessReader
     access: [["Quartermaster"]]
@@ -55,7 +59,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: mining
-    stateDoorOpen: mining_open
+    # stateDoorOpen: mining_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: mining_door
   - type: AccessReader
     access: [["Salvage"]]
@@ -69,7 +73,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: cap
-    stateDoorOpen: cap_open
+    # stateDoorOpen: cap_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: cap_door
   - type: AccessReader
     access: [["Captain"]]
@@ -82,7 +86,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: hop
-    stateDoorOpen: hop_open
+    # stateDoorOpen: hop_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: hop_door
   - type: AccessReader
     access: [["HeadOfPersonnel"]]
@@ -96,7 +100,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: ce
-    stateDoorOpen: ce_open
+    # stateDoorOpen: ce_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: ce_door
   - type: AccessReader
     access: [ [ "ChiefEngineer" ] ]
@@ -110,7 +114,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng
-    stateDoorOpen: eng_open
+    # stateDoorOpen: eng_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_elec_door
   - type: AccessReader
     access: [ [ "Engineering" ] ]
@@ -124,7 +128,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng
-    stateDoorOpen: eng_open
+    # stateDoorOpen: eng_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_weld_door
   - type: AccessReader
     access: [ [ "Engineering" ] ]
@@ -138,7 +142,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: atmos
-    stateDoorOpen: atmos_open
+    # stateDoorOpen: atmos_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: atmos_door
   - type: AccessReader
     access: [ [ "Atmospherics" ] ]
@@ -152,7 +156,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng_secure
-    stateDoorOpen: eng_secure_open
+    # stateDoorOpen: eng_secure_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_secure_door
   - type: AccessReader
     access: [ [ "Engineering" ] ]
@@ -167,7 +171,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng
-    stateDoorOpen: eng_open
+    # stateDoorOpen: eng_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_evac_door
   - type: AccessReader
     access: [ [ "Engineering" ] ]
@@ -179,10 +183,16 @@
   name: freezer
   suffix: No Access
   components:
+  # KS14 start: tgstation's freezer door
+  - type: KsClosetDoorVisuals
+    squish: 0.22
+    maxAngle: 123
+    duration: 0.4
+  # KS14 end
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: freezer
-    stateDoorOpen: freezer_open
+    # stateDoorOpen: freezer_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: freezer_door
   - type: ExplosionResistance
     damageCoefficient: 0.50
@@ -213,7 +223,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: hydro
-    stateDoorOpen: hydro_open
+    # stateDoorOpen: hydro_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: hydro_door
   - type: AccessReader
     access: [ [ "Hydroponics" ] ]
@@ -228,7 +238,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: med
-    stateDoorOpen: med_open
+    # stateDoorOpen: med_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: med_door
   - type: AccessReader
     access: [ [ "Medical" ] ]
@@ -242,7 +252,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: med_secure
-    stateDoorOpen: med_secure_open
+    # stateDoorOpen: med_secure_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: med_secure_door
   - type: AccessReader
     access: [ [ "Medical" ] ]
@@ -255,9 +265,9 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: paramed
-    stateDoorOpen: paramed_open
-    stateDoorClosed: paramed_door
+    stateBaseClosed: paramed_secure # KS14: paramed -> paramed_secure, tgstation's paramedic locker
+    # stateDoorOpen: paramed_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
+    stateDoorClosed: paramed_secure_door # KS14: paramed_door -> paramed_secure_door, tgstation's paramedic locker
   - type: AccessReader
     access: [ [ "Medical" ] ]
 
@@ -271,7 +281,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: med
-    stateDoorOpen: med_open
+    # stateDoorOpen: med_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: chemical_door
   - type: AccessReader
     access: [ [ "Chemistry" ] ]
@@ -285,7 +295,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: cmo
-    stateDoorOpen: cmo_open
+    # stateDoorOpen: cmo_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: cmo_door
   - type: AccessReader
     access: [ [ "ChiefMedicalOfficer" ] ]
@@ -299,7 +309,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: rd
-    stateDoorOpen: rd_open
+    # stateDoorOpen: rd_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: rd_door
   - type: AccessReader
     access: [ [ "ResearchDirector" ] ]
@@ -312,7 +322,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: science
-    stateDoorOpen: science_open
+    # stateDoorOpen: science_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: science_door
   - type: AccessReader
     access: [ [ "Research" ] ]
@@ -326,7 +336,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: hos
-    stateDoorOpen: hos_open
+    # stateDoorOpen: hos_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: hos_door
   - type: AccessReader
     access: [["HeadOfSecurity"]]
@@ -340,7 +350,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: warden
-    stateDoorOpen: warden_open
+    # stateDoorOpen: warden_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: warden_door
   - type: AccessReader
     access: [["Armory"]]
@@ -353,8 +363,8 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: brigmedic
-    stateDoorOpen: armory_open
+    stateBaseClosed: sec # KS14: brigmedic -> sec, the brigmedic door is on the security locker
+    # stateDoorOpen: armory_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: brigmedic_door
   - type: AccessReader
     access: [["Medical"]]
@@ -368,7 +378,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: sec
-    stateDoorOpen: sec_open
+    # stateDoorOpen: sec_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: sec_door
   - type: AccessReader
     access: [["Security"]]
@@ -378,6 +388,10 @@
   parent: LockerBaseSecure
   name: gun safe
   components:
+  # KS14 start: tgstation's cabinets don't swing their doors
+  - type: KsClosetDoorVisuals
+    duration: 0
+  # KS14 end
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: shotguncase
@@ -433,6 +447,11 @@
   description: It's a secure locker for an inmate's personal belongings during their time in prison.
   suffix: 1
   components:
+  # KS14 start: the genpop doors are on tgstation's security locker, and swing open. Not on GenpopBase, which the wall lockers share
+  - type: EntityStorageVisuals
+    stateBaseClosed: sec
+    stateDoorOpen: null
+  # KS14 end
   - type: Fixtures
     fixtures:
       fix1:
@@ -542,7 +561,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: syndicate
-    stateDoorOpen: syndicate_open
+    # stateDoorOpen: syndicate_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: syndicate_door
   - type: AccessReader
     access: [["SyndicateAgent"]]
@@ -585,7 +604,7 @@
     access: [["Theatre"]]
   - type: EntityStorageVisuals
     stateBaseClosed: clown
-    stateDoorOpen: clown_open
+    # stateDoorOpen: clown_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: clown_door
 
 # Mime
@@ -598,8 +617,8 @@
   - type: AccessReader
     access: [["Theatre"]]
   - type: EntityStorageVisuals
-    stateBaseClosed: mime
-    stateDoorOpen: mime_open
+    stateBaseClosed: med # KS14: mime -> med, the mime door is on the medical locker
+    # stateDoorOpen: mime_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: mime_door
 
 # Representative
@@ -613,5 +632,5 @@
     access: [["Command"]]
   - type: EntityStorageVisuals
     stateBaseClosed: hop
-    stateDoorOpen: hop_open
+    # stateDoorOpen: hop_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: representative_door

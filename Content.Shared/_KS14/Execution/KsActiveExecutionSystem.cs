@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Popups;
 using Robust.Shared.Timing;
@@ -40,7 +41,7 @@ public sealed partial class KsActiveExecutionSystem : EntitySystem
         if (_gameTiming.CurTime < entity.Comp.NextPopupTime)
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString(popupId), userUid, userUid, type: PopupType.LargeCaution);
+        _popupSystem.PopupEntity(KsPopupMessage.Create(popupId), userUid, userUid, type: PopupType.LargeCaution);
         entity.Comp.NextPopupTime = _gameTiming.CurTime + PopupDelay;
         Dirty(entity);
     }

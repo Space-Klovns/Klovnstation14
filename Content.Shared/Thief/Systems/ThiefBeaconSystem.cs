@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Mind;
 using Content.Shared.Objectives.Components;
 using Content.Shared.Roles;
@@ -84,7 +85,7 @@ public sealed partial class ThiefBeaconSystem : EntitySystem
             return;
 
         _audio.PlayPredicted(beacon.Comp.LinkSound, beacon, user);
-        _popup.PopupClient(Loc.GetString("thief-fulton-set"), beacon, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("thief-fulton-set"), beacon, user);
         area.Owners.Clear(); // We only reconfigure the beacon for ourselves, we don't need multiple thieves to steal from the same beacon.
         area.Owners.Add(mind);
         area.OwnerCount = area.Owners.Count;
@@ -100,7 +101,7 @@ public sealed partial class ThiefBeaconSystem : EntitySystem
             return;
 
         _audio.PlayPredicted(beacon.Comp.UnlinkSound, beacon, user);
-        _popup.PopupClient(Loc.GetString("thief-fulton-clear"), beacon, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("thief-fulton-clear"), beacon, user);
         area.Owners.Clear();
         area.OwnerCount = area.Owners.Count;
         Dirty(beacon.Owner, area);

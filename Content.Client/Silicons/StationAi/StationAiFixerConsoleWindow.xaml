@@ -1,4 +1,4 @@
-<controls:FancyWindow xmlns="https://spacestation14.io"
+<controls:FancyWindow xmlns="https://spacestation14.io" xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
@@ -11,10 +11,8 @@
             <BoxContainer VerticalExpand="True" HorizontalExpand="True" Orientation="Vertical" MinWidth="225" Margin="20 15 20 20">
 
                 <!-- AI panel -->
-                <PanelContainer>
-                    <PanelContainer.PanelOverride>
-                        <gfx:StyleBoxFlat BackgroundColor="#1B1B1E" />
-                    </PanelContainer.PanelOverride>
+                <!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+                <ksTgui:KsSectionPanel BaronColor="#1B1B1E">
 
                     <BoxContainer Orientation="Vertical">
                         <!-- AI name -->
@@ -26,7 +24,7 @@
                         <!-- AI portrait -->
                         <AnimatedTextureRect Name="StationAiPortraitTexture" VerticalAlignment="Center" SetSize="128 128" />
                     </BoxContainer>
-                </PanelContainer>
+                </ksTgui:KsSectionPanel>
 
                 <!-- AI status panel-->
                 <PanelContainer Name="StationAiStatus">

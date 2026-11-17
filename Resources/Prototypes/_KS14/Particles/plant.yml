@@ -1,0 +1,47 @@
+# Ported from tgstation's code/game/objects/effects/particles/plant.dm. Units converted as in smoke.yml.
+
+- type: ksParticles
+  id: KsPollen
+  size: 3.125, 3.125
+  count: 1000
+  spawning: 40
+  lifespan: 0.7
+  fade: 1
+  grow: -0.1
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/pollen.rsi
+      state: pollen
+  position:
+    kind: circle
+    a: 0
+    b: 0.5
+    dist: normal
+  drift:
+    kind: vector
+    a: [ 0, -0.0625 ]
+    b: [ 0, 0.0625 ]
+  gravity: 0, 2.97
+  scale:
+    kind: vector
+    a: 0.3
+    b: 1
+    dist: normal
+  rotation: 30
+  spin:
+    kind: num
+    a: -200
+    b: 200
+
+- type: ksParticles
+  parent: KsPollen
+  id: KsPollenMinor
+  spawning: 10
+
+- type: ksParticles
+  parent: KsPollen
+  id: KsPollenMushroom
+  size: 2.34375, 2.34375
+  spawning: 60
+  fade: 0.7
+  color: "#b89d44"

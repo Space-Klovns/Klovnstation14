@@ -16,7 +16,7 @@ public sealed class KsAdminMusicEntry(ResPath soundPath, float volume, TimeSpan 
     /// </summary>
     public TimeSpan StartTime = startTime;
 
-    bool IEquatable<KsAdminMusicEntry>.Equals(KsAdminMusicEntry? other)
+    public bool Equals(KsAdminMusicEntry? other)
     {
         if (other is not { })
             return false;

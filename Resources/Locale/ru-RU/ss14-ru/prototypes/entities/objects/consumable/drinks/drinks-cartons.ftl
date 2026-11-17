@@ -1,0 +1,36 @@
+# KS14: ported locale; references to unavailable source content pruned.
+
+ent-DrinkCartonBaseFull = { ent-DrinkBase }
+    .desc = { ent-DrinkBaseMaterialCardboard.desc }
+    .suffix = Полный
+ent-DrinkCartonBaseLargeFull = { ent-DrinkCartonBaseFull }
+    .desc = { ent-DrinkCartonBaseFull.desc }
+ent-DrinkCoconutWaterCarton = кокосовая вода
+    .desc = Главное — это внутренняя часть кокоса.
+ent-DrinkCreamCarton = молочные сливки
+    .desc = Это сливки. Сделанные из молока. Что ещё вы ожидали здесь найти?
+ent-DrinkCreamCartonXL = молочные сливки XL
+    .desc = Это сливки. Сделанные из молока. Что ещё вы ожидали здесь найти?
+ent-DrinkJuiceLemonCarton = лимонный сок
+    .desc = На первый глоток он кислит, а затем всё равно кислит.
+ent-DrinkJuiceLimeCarton = лаймовый сок
+    .desc = Кисло-сладкое удовольствие.
+ent-DrinkJuiceLimeCartonXL = лаймовый сок XL
+    .desc = Кисло-сладкое удовольствие.
+ent-DrinkJuiceOrangeCarton = апельсиновый сок
+    .desc = Полное витаминов удовольствие!
+ent-DrinkJuiceOrangeCartonXL = апельсиновый сок XL
+    .desc = Сплошные витамины и наслаждение!
+ent-DrinkJuicePineappleCarton = ананасовый сок
+    .desc = На вкус как отпуск в тропиках далеко от космоса.
+ent-DrinkJuiceTomatoCarton = томатный сок
+    .desc = Ну, по крайней мере, это ВЫГЛЯДИТ как томатный сок. По этой красноте ничего не скажешь.
+ent-DrinkMilkCarton = молоко
+    .desc = Непрозрачная белая жидкость, вырабатываемая молочными железами млекопитающих.
+    .suffix = { ent-DrinkCartonBaseFull.suffix }
+ent-DrinkOatMilkCarton = овсяное молоко
+    .desc = Бежевое и питательное удовольствие!
+    .suffix = { ent-DrinkCartonBaseFull.suffix }
+ent-DrinkSoyMilkCarton = соевое молоко
+    .desc = Белое и питательное соевое удовольствие!
+    .suffix = { ent-DrinkCartonBaseFull.suffix }

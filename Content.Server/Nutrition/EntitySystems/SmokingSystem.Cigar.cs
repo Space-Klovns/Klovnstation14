@@ -43,7 +43,7 @@ namespace Content.Server.Nutrition.EntitySystems
                 return;
 
             var isHotEvent = new IsHotEvent();
-            RaiseLocalEvent(args.Used, isHotEvent, false);
+            RaiseLocalEvent(args.Used, ref /* KS14: by ref */ isHotEvent, false);
 
             if (!isHotEvent.IsHot)
                 return;
@@ -62,7 +62,7 @@ namespace Content.Server.Nutrition.EntitySystems
                 return;
 
             var isHotEvent = new IsHotEvent();
-            RaiseLocalEvent(targetEntity.Value, isHotEvent, true);
+            RaiseLocalEvent(targetEntity.Value, ref /* KS14: by ref */ isHotEvent, true);
 
             if (!isHotEvent.IsHot)
                 return;

@@ -11,8 +11,11 @@ public sealed partial class KeyExistsPrecondition : HTNPrecondition
 
     [DataField] public bool Inverted = false; // KS14: ANK: added inverted
 
+    [Dependency] private IEntityManager _entityManager = default!; // KS14
+
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return blackboard.ContainsKey(Key) ^ Inverted /* KS14: ANK: added inverted */;
+        // KS14: ContainsKey(Key) -> the entity-aware one: a key naming a deleted entity is not there, as for the read after it
+        return blackboard.ContainsKey(Key, _entityManager) ^ Inverted /* KS14: ANK: added inverted */;
     }
 }

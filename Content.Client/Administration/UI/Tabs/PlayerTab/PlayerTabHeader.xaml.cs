@@ -20,6 +20,7 @@ public sealed partial class PlayerTabHeader : Control
         JobLabel.OnKeyBindDown += JobClicked;
         RoleTypeLabel.OnKeyBindDown += RoleTypeClicked;
         PlaytimeLabel.OnKeyBindDown += PlaytimeClicked;
+        Content.Client._KS14.Tgui.Admin.KsTguiTableRowLook.Attach(this, BackgroundColorPanel, striped: false, header: true); // KS14: tgui table header
     }
 
     public Label GetHeader(Header header)

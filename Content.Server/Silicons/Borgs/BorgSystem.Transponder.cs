@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.DeviceNetwork;
 using Content.Shared.Damage.Components;
 using Content.Shared.FixedPoint;
@@ -76,7 +77,7 @@ public sealed partial class BorgSystem
         if (ent.Comp2.BrainEntity is not { } brain)
             return;
 
-        var message = Loc.GetString(ent.Comp1.DisabledPopup, ("name", Name(ent, ent.Comp3)));
+        var message = KsPopupMessage.Create /* KS14: format on recipient */(ent.Comp1.DisabledPopup, ("name", ent.Owner));
         _popup.PopupEntity(message, ent);
         _container.Remove(brain, ent.Comp2.BrainContainer);
     }
@@ -105,7 +106,7 @@ public sealed partial class BorgSystem
         if (CheckEmagged(ent, "disabled"))
             ent.Comp1.FakeDisabling = true;
         else
-            _popup.PopupEntity(Loc.GetString(ent.Comp1.DisablingPopup), ent);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp1.DisablingPopup), ent);
 
         ent.Comp1.NextDisable = _timing.CurTime + ent.Comp1.DisableDelay;
     }
@@ -127,7 +128,7 @@ public sealed partial class BorgSystem
             return;
         }
 
-        var message = Loc.GetString(ent.Comp.DestroyingPopup, ("name", Name(ent)));
+        var message = KsPopupMessage.Create /* KS14: format on recipient */(ent.Comp.DestroyingPopup, ("name", ent.Owner));
         _popup.PopupEntity(message, ent);
         _trigger.ActivateTimerTrigger(ent.Owner);
 
@@ -139,7 +140,7 @@ public sealed partial class BorgSystem
     {
         if (_emag.CheckFlag(uid, EmagType.Interaction))
         {
-            _popup.PopupEntity(Loc.GetString($"borg-transponder-emagged-{name}-popup"), uid, uid, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */($"borg-transponder-emagged-{name}-popup"), uid, uid, PopupType.LargeCaution);
             return true;
         }
 

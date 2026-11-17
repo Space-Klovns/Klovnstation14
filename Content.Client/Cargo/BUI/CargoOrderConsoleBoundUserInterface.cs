@@ -48,6 +48,9 @@ namespace Content.Client.Cargo.BUI
         {
             base.Open();
 
+            if (KsOpenTguiWindow()) // KS14: the tgui layout when that theme is on
+                return;
+
             var spriteSystem = EntMan.System<SpriteSystem>();
             var dependencies = IoCManager.Instance!;
             _menu = new CargoConsoleMenu(Owner, EntMan, dependencies.Resolve<IPrototypeManager>(), spriteSystem);
@@ -61,6 +64,7 @@ namespace Content.Client.Cargo.BUI
             _orderMenu = new CargoConsoleOrderMenu();
 
             _menu.OnClose += Close;
+            this.WithGuide(_menu); // KS14: made with new, so the guidebook button has to be asked for
 
             _menu.OnItemSelected += (row) =>
             {
@@ -130,6 +134,8 @@ namespace Content.Client.Cargo.BUI
 
             AccountName = cState.Name;
 
+            KsUpdateTguiWindow(cState, station); // KS14: tgui window
+
             if (_menu == null)
                 return;
 
@@ -153,6 +159,7 @@ namespace Content.Client.Cargo.BUI
 
             _menu?.Dispose();
             _orderMenu?.Dispose();
+            _ksTguiMenu?.Dispose(); // KS14: tgui window
         }
 
         private bool AddOrder()

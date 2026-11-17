@@ -7,33 +7,33 @@
     <Control>
         <PanelContainer Name="BackgroundPanel" />
         <BoxContainer Orientation="Vertical" SeparationOverride="0">
-            <BoxContainer Orientation="Horizontal" MinSize="0 40">
+            <BoxContainer Orientation="Horizontal" MinSize="0 40" SeparationOverride="6"> <!-- KS14: added SeparationOverride, spaces the header button chips -->
                 <Label Text="{Loc 'character-setup-gui-character-setup-label'}"
                        Margin="8 0 0 0" VAlign="Center"
-                       StyleClasses="LabelHeadingBigger" />
+                       StyleClasses="KsLobbyTitle" /> <!-- KS14: LabelHeadingBigger -> KsLobbyTitle -->
 
                 <Button Name="StatsButton" HorizontalExpand="True"
-                        Text="{Loc 'character-setup-gui-character-setup-stats-button'}"
-                        StyleClasses="ButtonBig"
-                        HorizontalAlignment="Right" />
+                        Text="{Loc 'ks-lobby-chip-setup-stats'}"
+                        StyleClasses="KsLobbyMenuButtonSmall"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" /> <!-- KS14: ButtonBig -> KsLobbyMenuButtonSmall, added VerticalAlignment, Text now an uppercase ks-lobby-chip-setup-* key -->
                 <cc:CommandButton Name="AdminRemarksButton"
                                   Command="adminremarks"
-                                  Text="{Loc 'character-setup-gui-character-setup-adminremarks-button'}"
-                                  StyleClasses="ButtonBig" />
+                                  Text="{Loc 'ks-lobby-chip-setup-adminremarks'}"
+                                  StyleClasses="KsLobbyMenuButtonSmall" VerticalAlignment="Center" /> <!-- KS14: ButtonBig -> KsLobbyMenuButtonSmall, added VerticalAlignment, Text now an uppercase ks-lobby-chip-setup-* key -->
                 <Button Name="RulesButton"
-                        Text="{Loc 'character-setup-gui-character-setup-rules-button'}"
-                        StyleClasses="ButtonBig"/>
+                        Text="{Loc 'ks-lobby-chip-setup-rules'}"
+                        StyleClasses="KsLobbyMenuButtonSmall" VerticalAlignment="Center"/> <!-- KS14: ButtonBig -> KsLobbyMenuButtonSmall, added VerticalAlignment, Text now an uppercase ks-lobby-chip-setup-* key -->
                 <Button Name="CloseButton"
                         Access="Public"
-                        Text="{Loc 'character-setup-gui-character-setup-close-button'}"
-                        StyleClasses="ButtonBig"/>
+                        Text="{Loc 'ks-lobby-chip-setup-close'}"
+                        StyleClasses="KsLobbyMenuButtonSmall" VerticalAlignment="Center"/> <!-- KS14: ButtonBig -> KsLobbyMenuButtonSmall, added VerticalAlignment, Text now an uppercase ks-lobby-chip-setup-* key -->
             </BoxContainer>
-            <PanelContainer StyleClasses="highlight" MinHeight="2" />
+            <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1" /> <!-- KS14: highlight -> KsLobbyHairline -->
             <BoxContainer Orientation="Horizontal" VerticalExpand="True" SeparationOverride="0">
                 <ScrollContainer MinSize="325 0" Margin="5 5 0 0">
                     <BoxContainer Name="Characters" Orientation="Vertical" />
                 </ScrollContainer>
-                <PanelContainer MinSize="2 0" StyleClasses="highlight">
+                <PanelContainer MinSize="1 0" StyleClasses="KsLobbyHairline"> <!-- KS14: highlight -> KsLobbyHairline -->
                 </PanelContainer>
                 <BoxContainer Name="CharEditor" HorizontalExpand="True" />
             </BoxContainer>

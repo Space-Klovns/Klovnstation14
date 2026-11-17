@@ -29,6 +29,11 @@ namespace Content.Client.Disposal.Unit
         {
             base.Open();
 
+            // KS14 start: the tgui theme gets its own layout
+            if (OpenTgui())
+                return;
+            // KS14 end
+
             _disposalUnitWindow = this.CreateWindow<DisposalUnitWindow>();
 
             _disposalUnitWindow.OpenCenteredRight();
@@ -45,6 +50,11 @@ namespace Content.Client.Disposal.Unit
 
         public void Refresh(Entity<DisposalUnitComponent> entity)
         {
+            // KS14 start: the tgui window, when that is the one open
+            if (RefreshTgui(entity))
+                return;
+            // KS14 end
+
             if (_disposalUnitWindow == null)
                 return;
 

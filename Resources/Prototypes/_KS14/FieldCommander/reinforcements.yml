@@ -1,0 +1,76 @@
+# Supply pods dropped by the field commander rule (sent to the defenders for lasting each phase of the assault) and by
+#     the requisitions flares (KsFlareSupplyPodRequisition*, in shop.yml).
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderReinforcementsSupport
+  name: field support cargo pod
+  description: A Nanotrasen drop pod with medical supplies and a pair of turrets.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: MedkitCombatFilled
+          amount: 3
+        - id: Gauze
+          amount: 4
+        - id: KsFlatpackBallisticTurretNanotrasenDisposable
+          amount: 2
+        - id: SheetPlasteel
+        - id: MagazineRifle
+          amount: 4
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderReinforcementsHeavy
+  name: heavy weapons cargo pod
+  description: A Nanotrasen drop pod with everything needed to crack a hardened relay.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: KsWeaponLauncherRocketAt4FieldCommander
+          amount: 2
+        - id: KsScenarioNanoplantSeismicChargeShort
+          amount: 3
+        - id: WeaponRifleLecterXL8
+        - id: MagazineRifle
+          amount: 6
+        - id: MedkitCombatFilled
+          amount: 2
+
+# What the requisitions flares call down.
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderRequisitionResupply
+  name: resupply cargo pod
+  description: A Nanotrasen drop pod with everything a dug-in squad runs short of.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: ExGrenade
+          amount: 3
+        - id: GrenadeStinger
+          amount: 3
+        - id: KsScenarioNanoplantSeismicChargeShort
+        - id: KsFlatpackBallisticTurretNanotrasenRequisition
+          amount: 2
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderRequisitionFieldSupport
+  name: field support pod
+  description: A Nanotrasen drop pod carrying a paramilitary squad, with a turret and a medkit for them.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: KsFlatpackBallisticTurretNanotrasenRequisition
+        - id: MedkitCombatFilled
+  # The squad itself comes from the private module (FieldCommand/Partials/field_support.yml).
+  - type: KsSupplyPodHumanoidPassengers

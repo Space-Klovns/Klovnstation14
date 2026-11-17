@@ -37,6 +37,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
         private void OnThermoMachineUpdated(EntityUid uid, GasThermoMachineComponent thermoMachine, ref AtmosDeviceUpdateEvent args)
         {
             thermoMachine.LastEnergyDelta = 0f;
+            KsUpdateStatus(uid, thermoMachine); // KS14
             if (!(_power.IsPowered(uid) && TryComp<ApcPowerReceiverComponent>(uid, out var receiver)))
                 return;
 

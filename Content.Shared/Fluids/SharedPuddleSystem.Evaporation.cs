@@ -74,9 +74,10 @@ public abstract partial class SharedPuddleSystem
             if (evaporinForced)
             {
                 // Evaporin is present: force evaporation of the ENTIRE puddle, regardless of contents.
-                reagentProportions = puddleSolution.Contents.ToDictionary(
-                    r => new ProtoId<ReagentPrototype>(r.Reagent.Prototype),
-                    r => r.Quantity / puddleSolution.Volume);
+                // By prototype, not from Contents: that holds a reagent once per data, like blood from two people.
+                reagentProportions = puddleSolution.GetReagentPrototypes(ProtoMan).ToDictionary(
+                    kv => new ProtoId<ReagentPrototype>(kv.Key.ID),
+                    kv => kv.Value / puddleSolution.Volume);
             }
             else
             {
@@ -145,7 +146,7 @@ public abstract partial class SharedPuddleSystem
         Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> evaporatingSpeeds = [];
         foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
-            if (solProto.EvaporationSpeed > FixedPoint2.Zero)
+            if (solProto.EvaporationSpeed > FixedPoint2.Zero && !KsEvaporatesThroughFluidmos(solProto) /* KS14: added */)
             {
                 evaporatingSpeeds.Add(solProto.ID, solProto.EvaporationSpeed);
             }

@@ -22,9 +22,6 @@ namespace Content.Shared.Throwing
     /// </summary>
     public sealed partial class ThrownItemSystem : EntitySystem
     {
-        // KS14 Start
-        [Dependency] private _KS14.RayCollision.KsRayCollisionSystem _ksRayCollision = default!;
-        // KS14 End
         [Dependency] private IGameTiming _gameTiming = default!;
         [Dependency] private INetManager _netMan = default!;
         [Dependency] private ISharedAdminLogManager _adminLogger = default!;
@@ -39,10 +36,6 @@ namespace Content.Shared.Throwing
         {
             base.Initialize();
 
-            // KS14 Start
-            SubscribeLocalEvent<ThrownItemComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
-            // KS14 End
-
             SubscribeLocalEvent<ThrownItemComponent, MapInitEvent>(OnMapInit);
             SubscribeLocalEvent<ThrownItemComponent, PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<ThrownItemComponent, StartCollideEvent>(HandleCollision);
@@ -50,16 +43,6 @@ namespace Content.Shared.Throwing
             SubscribeLocalEvent<ThrownItemComponent, ThrownEvent>(ThrowItem);
 
             SubscribeLocalEvent<PullStartedMessage>(HandlePullStarted);
-        }
-
-        private void KsOnRayCollision(Entity<ThrownItemComponent> entity, ref _KS14.RayCollision.KsRayCollisionEvent args)
-        {
-            // Basically prevent noclipping
-
-            ThrowCollideInteraction(entity, entity, args.OtherEntity);
-            _physics.SetLinearVelocity(entity.Owner, System.Numerics.Vector2.Zero);
-
-            StopThrow(entity, entity);
         }
 
         private void OnMapInit(EntityUid uid, ThrownItemComponent component, MapInitEvent args)
@@ -79,10 +62,6 @@ namespace Content.Shared.Throwing
             var fixture = fixturesComponent.Fixtures.Values.First();
             var shape = fixture.Shape;
             _fixtures.TryCreateFixture(uid, shape, ThrowingFixture, hard: false, collisionMask: (int)CollisionGroup.ThrownItem, manager: fixturesComponent, body: body);
-
-            // KS14 Start
-            _ksRayCollision.StartChecking(uid, exclusiveFixtureIds: [ThrowingFixture]);
-            // KS14 End
         }
 
         private void HandleCollision(EntityUid uid, ThrownItemComponent component, ref StartCollideEvent args)
@@ -143,10 +122,6 @@ namespace Content.Shared.Throwing
             if (_netMan.IsServer)
                 RemCompDeferred/*KS14: Deferred*/<PredictedThrownItemComponent>(uid);
             // </Trauma>
-
-            // KS14 Start
-            _ksRayCollision.StopChecking(uid); // if not you'll be stuck in eternal raycollision HELL
-            // KS14 End
         }
 
         public void LandComponent(EntityUid uid, ThrownItemComponent thrownItem, PhysicsComponent physics, bool playSound)
@@ -180,15 +155,28 @@ namespace Content.Shared.Throwing
             RaiseLocalEvent(thrown, ref doHitEv, true);
         }
 
+        private readonly List<(EntityUid, ThrownItemComponent, PhysicsComponent)> _dueThrownItems = new(); // KS14
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
 
-            // KS14: TODO LCDC: TODO ZLEVELS: Collection was modified error sometimes when falling thru zlevel
-
+            // KS14 start: collected first. Landing raises LandEvent, and what reacts to it (an item falling through a z-level
+            //      and being thrown on, say) can add a ThrownItemComponent while the query is walking them.
+            _dueThrownItems.Clear();
             var query = EntityQueryEnumerator<ThrownItemComponent, PhysicsComponent>();
-            while (query.MoveNext(out var uid, out var thrown, out var physics))
+            while (query.MoveNext(out var dueUid, out var dueThrown, out var duePhysics))
             {
+                if ((dueThrown.LandTime ?? dueThrown.ThrownTime) <= _gameTiming.CurTime) // the same time both checks below use
+                    _dueThrownItems.Add((dueUid, dueThrown, duePhysics));
+            }
+
+            foreach (var (uid, thrown, physics) in _dueThrownItems)
+            {
+                if (thrown.LifeStage > ComponentLifeStage.Running || TerminatingOrDeleted(uid))
+                    continue;
+            // KS14 end
+
                 // If you remove this check verify slipping for other entities is networked properly.
                 if (_netMan.IsClient && !physics.Predict)
                     continue;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -62,7 +63,7 @@ public sealed partial class PlungerSystem : EntitySystem
         if (!TryComp(target, out PlungerUseComponent? plunge))
             return;
 
-        _popup.PopupClient(Loc.GetString("plunger-unblock", ("target", target)), args.User, args.User, PopupType.Medium);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plunger-unblock", ("target", target)), args.User, args.User, PopupType.Medium);
         plunge.Plunged = true;
 
         var spawn = ProtoMan.Index<WeightedRandomEntityPrototype>(plunge.PlungerLoot).Pick(_random);

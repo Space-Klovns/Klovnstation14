@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.Reagent;
@@ -76,7 +77,7 @@ public sealed partial class IngestionSystem
     {
         if (!_transform.GetMapCoordinates(user).InRange(_transform.GetMapCoordinates(target), MaxFeedDistance))
         {
-            var message = Loc.GetString("interaction-system-user-interaction-cannot-reach");
+            var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("interaction-system-user-interaction-cannot-reach");
             _popup.PopupClient(message, user, user);
             return false;
         }
@@ -88,7 +89,7 @@ public sealed partial class IngestionSystem
             return true;
 
         if (attempt.Blocker != null)
-            _popup.PopupClient(Loc.GetString("ingestion-remove-mask", ("entity", attempt.Blocker.Value)), target, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-remove-mask", ("entity", attempt.Blocker.Value)), target, user);
 
         return false;
     }
@@ -315,7 +316,7 @@ public sealed partial class IngestionSystem
 
         if (solution == null)
         {
-            _popup.PopupClient(Loc.GetString("ingestion-try-use-is-empty", ("entity", ingested)), ingested, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-try-use-is-empty", ("entity", ingested)), ingested, user);
             return false;
         }
 

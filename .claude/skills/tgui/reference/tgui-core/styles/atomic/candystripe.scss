@@ -1,0 +1,9 @@
+/* Using :where for 0 specificity - https://developer.mozilla.org/en-US/docs/Web/CSS/:where */
+:where(.candystripe:nth-child(odd)) {
+  /* background-color is usually overridden. So we use linear "gradient" */
+  background: linear-gradient(var(--candystripe-odd));
+}
+
+:where(.candystripe:nth-child(even)) {
+  background: linear-gradient(var(--candystripe-even));
+}

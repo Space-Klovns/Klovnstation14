@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared._KS14.TTS;
 using Robust.Shared.Prototypes;
 

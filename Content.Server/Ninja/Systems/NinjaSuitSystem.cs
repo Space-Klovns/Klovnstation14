@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ninja.Events;
 using Content.Shared.Emp;
 using Content.Shared.Hands.EntitySystems;
@@ -74,7 +75,7 @@ public sealed partial class NinjaSuitSystem : SharedNinjaSuitSystem
         if (GetCellScore(args.EntityUid, inserting) <= GetCellScore(battery.Value, battery.Value))
         {
             args.Cancel();
-            Popup.PopupEntity(Loc.GetString("ninja-cell-downgrade"), user, user);
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-cell-downgrade"), user, user);
             return;
         }
 
@@ -120,7 +121,7 @@ public sealed partial class NinjaSuitSystem : SharedNinjaSuitSystem
         var chargeNeeded = distance * comp.RecallCharge;
         if (!_ninja.TryUseCharge(user, chargeNeeded))
         {
-            Popup.PopupEntity(Loc.GetString("ninja-no-power"), user, user);
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-no-power"), user, user);
             return;
         }
 
@@ -131,7 +132,7 @@ public sealed partial class NinjaSuitSystem : SharedNinjaSuitSystem
         var message = _hands.TryPickupAnyHand(user, katana)
             ? "ninja-katana-recalled"
             : "ninja-hands-full";
-        Popup.PopupEntity(Loc.GetString(message), user, user);
+        Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(message), user, user);
     }
 
     private void OnEmp(Entity<NinjaSuitComponent> ent, ref NinjaEmpEvent args)
@@ -142,7 +143,7 @@ public sealed partial class NinjaSuitSystem : SharedNinjaSuitSystem
         var user = args.Performer;
         if (!_ninja.TryUseCharge(user, comp.EmpCharge))
         {
-            Popup.PopupEntity(Loc.GetString("ninja-no-power"), user, user);
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-no-power"), user, user);
             return;
         }
 

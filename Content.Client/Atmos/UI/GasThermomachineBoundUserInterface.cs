@@ -1,4 +1,5 @@
-﻿using Content.Client.Power.EntitySystems;
+﻿using Content.Client._KS14.Tgui.Windows.Atmos; // KS14
+using Content.Client.Power.EntitySystems;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.Atmos.Piping.Unary.Systems;
@@ -16,7 +17,7 @@ namespace Content.Client.Atmos.UI
     public sealed partial class GasThermomachineBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private GasThermomachineWindow? _window;
+        private IKsGasThermomachineWindow? _window; // KS14: GasThermomachineWindow -> the interface, which the tgui window shares
 
         [ViewVariables]
         private float _minTemp = 0.0f;
@@ -27,6 +28,9 @@ namespace Content.Client.Atmos.UI
         [ViewVariables]
         private bool _isHeater = true;
 
+        [ViewVariables]
+        private float? _ksShownTarget; // KS14: the target temperature last put in the window
+
         public GasThermomachineBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
         }
@@ -35,10 +39,10 @@ namespace Content.Client.Atmos.UI
         {
             base.Open();
 
-            _window = this.CreateWindow<GasThermomachineWindow>();
+            _window = KsTguiAtmosWindows.Create<GasThermomachineWindow, KsTguiGasThermomachineWindow, IKsGasThermomachineWindow>(this); // KS14
 
-            _window.ToggleStatusButton.OnToggled += _ => OnToggleStatusButtonPressed();
-            _window.TemperatureSpinbox.OnValueChanged += _ => OnTemperatureChanged(_window.TemperatureSpinbox.Value);
+            _window.ToggleRequested += OnToggleStatusButtonPressed; // KS14: the window raises it, so the tgui window can too
+            _window.TemperatureRequested += OnTemperatureChanged; // KS14: as above
             _window.Entity = Owner;
             Update();
         }
@@ -63,6 +67,7 @@ namespace Content.Client.Atmos.UI
             }
 
             SendPredictedMessage(new GasThermomachineChangeTemperatureMessage(actual));
+            _ksShownTarget = null; // KS14: show whatever target comes back, even one the server kept as it was
         }
 
         public override void Update()
@@ -73,9 +78,17 @@ namespace Content.Client.Atmos.UI
             var system = EntMan.System<SharedGasThermoMachineSystem>();
             _minTemp = thermo.MinTemperature;
             _maxTemp = thermo.MaxTemperature;
+            _window.SetTemperatureRange(_minTemp, _maxTemp); // KS14
             _isHeater = system.IsHeater(thermo);
 
-            _window.SetTemperature(thermo.TargetTemperature);
+            // KS14 start: Update() also runs on every status state, sent each atmos tick, and rewriting the box then wiped
+            //     whatever the player was typing. Only show the target when it changed.
+            if (_ksShownTarget != thermo.TargetTemperature)
+            {
+                _ksShownTarget = thermo.TargetTemperature;
+                _window.SetTemperature(thermo.TargetTemperature);
+            }
+            // KS14 end
 
             var receiverSys = EntMan.System<PowerReceiverSystem>();
             SharedApcPowerReceiverComponent? receiver = null;

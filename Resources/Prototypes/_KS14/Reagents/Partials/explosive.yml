@@ -1,0 +1,31 @@
+# What explodes in a container, and how hard: see KsSolutionExplosionSystem. Power is per unit, against welding fuel's 1.
+#     Cook-off is the temperature the contents explode at on their own, as a tank left near a fire heats up.
+- type: !PartialOnly reagent
+  id: WeldingFuel
+  ksExplosivePower: 1
+  ksCookOffTemperature: 400 # where a puddle of it lights
+
+- type: !PartialOnly reagent
+  id: Napalm
+  ksExplosivePower: 1.5
+  ksCookOffTemperature: 400
+
+- type: !PartialOnly reagent
+  id: Phlogiston
+  ksExplosivePower: 2
+  ksCookOffTemperature: 350
+
+- type: !PartialOnly reagent
+  id: ChlorineTrifluoride
+  ksExplosivePower: 3
+  ksCookOffTemperature: 350
+
+- type: !PartialOnly reagent
+  id: Thermite
+  ksExplosivePower: 0.25 # it burns more than it blasts
+  ksCookOffTemperature: 900
+
+- type: !PartialOnly reagent
+  id: Plasma
+  ksExplosivePower: 1.5
+  ksCookOffTemperature: 400

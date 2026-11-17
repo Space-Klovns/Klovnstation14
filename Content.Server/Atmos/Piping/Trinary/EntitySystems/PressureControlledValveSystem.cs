@@ -14,6 +14,8 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems;
 public sealed partial class PressureControlledValveSystem : EntitySystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsLiquidFlowSystem _ksLiquidFlowSystem = default!; // KS14
     [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
@@ -76,8 +78,16 @@ public sealed partial class PressureControlledValveSystem : EntitySystem
         var clampedVolume = Math.Min(transferVolume, maxVol);
 
         _ambientSoundSystem.SetAmbience(uid, true);
-        var removed = inletNode.Air.RemoveVolume(clampedVolume);
+        // KS14 start: the gas throttles, and liquid crosses by the orifice law, as far as the valve is open
+        var ksInletPressure = inletNode.Air.Pressure;
+        var ksOutletPressure = outletNode.Air.Pressure;
+        var removed = inletNode.Air.RemoveVolume(clampedVolume, includeLiquid: false);
+        _ksTransferThermoSystem.Apply(removed, ksInletPressure, ksOutletPressure, doesWork: false);
         _atmosphereSystem.Merge(outletNode.Air, removed);
+        var ksMaxVolume = comp.MaxTransferRate * _atmosphereSystem.PumpSpeedup() * args.dt;
+        var ksOpening = ksMaxVolume > 0f ? Math.Clamp(transferVolume / ksMaxVolume, 0f, 1f) : 0f;
+        _ksLiquidFlowSystem.Transfer(inletNode.Air, outletNode.Air, comp.KsLiquidConductance * ksOpening, args.dt);
+        // KS14 end
     }
 
     private void OnFilterLeaveAtmosphere(EntityUid uid, PressureControlledValveComponent comp, ref AtmosDeviceDisabledEvent args)

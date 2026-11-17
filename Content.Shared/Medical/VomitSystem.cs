@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
@@ -131,7 +132,7 @@ public sealed partial class VomitSystem : EntitySystem
 
         // Force sound to play as spill doesn't work if solution is empty.
         _audio.PlayPvs(_vomitSound, uid);
-        _popup.PopupEntity(Loc.GetString("disease-vomit", ("person", Identity.Entity(uid, EntityManager))), uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disease-vomit", ("person", Identity.Entity(uid, EntityManager))), uid);
     }
 }
 

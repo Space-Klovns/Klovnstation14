@@ -106,6 +106,8 @@
     trailProto: KsSupplyPodTrail
   - type: SupplyPodGlow
     glowProto: KsSupplyPodGlowRed
+  - type: SupplyPodLandingZone
+    indicatorProto: KsSupplyPodLandingZone
   - type: Lock
     locked: true
     useAccess: false
@@ -116,7 +118,7 @@
   - type: GenericVisualizer
     visuals:
       enum.SupplyPodVisuals.Landed:
-        rubble_bfg:
+        rubble_bg:
           False: { visible: false }
           True: { visible: true }
         rubble_fg:
@@ -130,7 +132,9 @@
         door:
           True: { visible: false }
           False: { visible: true }
-        paint_displacement: # BROOOO # TODO LCDC: make this not overwrite the existing copytoshaderparameters or whatever
+        # Both states restate copyToShaderParameters: the engine resets it to null whenever a visualizer sets the layer's data
+        #   without it, and the map layer would then draw as a plain visible layer.
+        paint_displacement:
           True:
             sprite: _KS14/Objects/SupplyPod/displacement.rsi
             state: open
@@ -176,7 +180,7 @@
   - type: TimedDespawn
     lifetime: 30
   - type: SpawnOnDespawn
-    prototype: AdminInstantEffectBluespace # TODO LCDC: spawn sparks here
+    prototype: KsEffectSupplyPodDespawn
   - type: TimerTrigger
     examinable: false
     beepSound: null
@@ -230,6 +234,8 @@
       params:
         pitch: 0.75
     angularDeviation: 15
+  - type: SupplyPodLandingZone
+    indicatorProto: KsSupplyPodLandingZone
   - type: SupplyPodDrawDepth # its funny
     landedDrawDepth: OverMobs
   - type: Appearance
@@ -239,6 +245,13 @@
         missile:
           True: { rotation: 180 }
           False: { rotation: 0 }
+      enum.SupplyPodVisuals.Landed:
+        rubble_bg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
 
 # syndie
 - type: entity
@@ -377,3 +390,12 @@
       behaviors:
         - !type:DoActsBehavior
           acts: [ "Destruction" ]
+
+# What a supply pod leaves behind when it despawns: sparks.
+- type: entity
+  parent: AdminInstantEffectBase
+  id: KsEffectSupplyPodDespawn
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SparkOnTrigger
+    exposedTemperature: 1600 # like a broken light's sparks

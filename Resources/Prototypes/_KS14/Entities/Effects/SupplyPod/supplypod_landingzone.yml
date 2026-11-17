@@ -1,0 +1,20 @@
+- type: entity
+  id: KsSupplyPodLandingZone
+  name: landing zone indicator
+  description: A holographic projection designating the landing zone of something. It's probably best to stand back.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_32x32.rsi
+    drawdepth: HighFloorObjects
+    layers:
+    - state: LZ
+      map: [ enum.SupplyPodLandingZoneLayers.Zone ]
+    # Closes in from 1.5x as the pod gets nearer; the scale is driven by the client.
+    - state: LZ_Slider
+      map: [ enum.SupplyPodLandingZoneLayers.Slider ]
+      scale: 1.5, 1.5
+  - type: PointLight
+    radius: 2
+    netsync: false
+  - type: SupplyPodLandingZoneIndicator

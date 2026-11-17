@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration.Managers;
 using Content.Server.Atmos.Components;
@@ -263,7 +264,7 @@ public sealed partial class ZombieSystem
         _inventory.TryUnequip(target, "ears", true, true);
 
         //popup
-        _popup.PopupEntity(Loc.GetString("zombie-transform", ("target", target)), target, PopupType.LargeCaution);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("zombie-transform", ("target", target)), target, PopupType.LargeCaution);
 
         //Make it sentient if it's an animal or something
         _mind.MakeSentient(target);

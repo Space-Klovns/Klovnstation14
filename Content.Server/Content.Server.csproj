@@ -61,4 +61,5 @@
   <Import Project="..\RobustToolbox\Imports\Server.props" />
   <Import Project="..\RobustToolbox\Imports\Shared.props" />
   <Import Project="..\RobustToolbox\Imports\Packaging.props" />
+  <Import Project="../MSBuild/KsLocalizationCache.targets" /> <!-- KS14: generate shared name tables on build -->
 </Project>

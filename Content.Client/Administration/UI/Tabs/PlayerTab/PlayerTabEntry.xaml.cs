@@ -20,7 +20,8 @@ public sealed partial class PlayerTabEntry : PanelContainer
         StyleBoxFlat styleBoxFlat,
         AdminPlayerTabColorOption colorOption,
         AdminPlayerTabRoleTypeOption roleSetting,
-        AdminPlayerTabSymbolOption symbolSetting)
+        AdminPlayerTabSymbolOption symbolSetting,
+        bool striped /* KS14: added param */)
     {
         IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
@@ -99,6 +100,7 @@ public sealed partial class PlayerTabEntry : PanelContainer
         if (colorRoles)
             RoleTypeLabel.FontColorOverride = rolePrototype?.Color ?? RoleTypePrototype.FallbackColor;
         BackgroundColorPanel.PanelOverride = styleBoxFlat;
+        Content.Client._KS14.Tgui.Admin.KsTguiTableRowLook.Attach(this, BackgroundColorPanel, striped, header: false); // KS14: tgui table row
         OverallPlaytimeLabel.Text = player.PlaytimeString;
     }
 }

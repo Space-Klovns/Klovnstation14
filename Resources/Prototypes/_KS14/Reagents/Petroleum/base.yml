@@ -1,0 +1,25 @@
+# Refinery reagents are pseudo-components ("lumps"), the way refinery simulators treat crude: each stands for a boiling
+#     range rather than one molecule. None is linked to an atmos gas, so a gas filter cannot see them, and every
+#     hydrocarbon is in one inseparable group, so only physical separation in Fluidmos pipes splits a mixture of them.
+#     None has a cook-off value: refinery pipes run at 700-1100 K, and hydrocarbons with no oxygen do not explode. Their
+#     danger is the leak, which burns.
+
+- type: ksReagentSeparationGroup
+  id: KsPetroleum
+  name: reagent-separation-group-ks-petroleum
+
+- type: reagent
+  abstract: true
+  parent: BasePyrotechnic
+  id: KsBaseHydrocarbon
+  physicalDesc: reagent-physical-desc-oily
+  flavor: bitter
+  friction: 0.4
+  ksInseparableGroup: KsPetroleum
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 1

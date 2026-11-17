@@ -41,25 +41,28 @@ public sealed partial class CanisterOverlay : Overlay
     /// </summary>
     private const float WindowMaskSizeMultiplier = 0.8f;
 
+    /// <summary>
+    ///     Where the window sits in the mask texture, in tiles from the texture's bottom edge: rows 5 to 10 of its 32
+    ///         pixels. Liquid and ice fill the window from its bottom.
+    /// </summary>
+    private const float WindowBottom = 5f / 32f;
+    private const float WindowHeight = 5f / 32f;
+
+    private static readonly Color IceColor = Color.FromHex("#d6efffdd");
+
     // see: DoAfterOverlay.cs
     private const float Scale = 1f;
     private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(Scale, Scale));
 
     public static readonly Vector2 HalfNegativeVector2 = new(-0.5f, -0.5f);
 
-    /* TODO LCDC KILL THIS VVV */
-    private GasTileVisibleGasOverlay _gasTileOverlay = null!;
-    private GasTileFireOverlay _fireTileOverlay = null!;
-    private bool _initialisedOverlays = false;
-
-    public void InitialiseOverlays(GasTileVisibleGasOverlay otherOverlay, GasTileFireOverlay otherOtherOverlay)
-    {
-        _gasTileOverlay = otherOverlay;
-        _fireTileOverlay = otherOtherOverlay;
-
-        _initialisedOverlays = true;
-    }
-    /* TODO LCDC KILL THIS ^^^ */
+    /// <summary>
+    ///     The gas and fire tile overlays, whose animation frames are drawn inside the canister window
+    ///         so that the gas in a canister animates in step with the gas on the tiles around it.
+    ///         Looked up in <see cref="BeforeDraw"/>, since their systems add them independently of this one.
+    /// </summary>
+    private GasTileVisibleGasOverlay? _gasTileOverlay;
+    private GasTileFireOverlay? _fireTileOverlay;
 
     private readonly int _visibleGasCount;
     private readonly float[] _visibleGasMolesVisibleMin = new float[Atmospherics.TotalNumberOfGases];
@@ -118,9 +121,11 @@ public sealed partial class CanisterOverlay : Overlay
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
-        return
-            _initialisedOverlays &&
-            _entityManager.EntityQuery<GasCanisterOverlayComponent>(includePaused: false).Any(); // Don't draw anything if no entities with canistercomponent even exist.
+        if (!OverlayManager.TryGetOverlay(out _gasTileOverlay) ||
+            !OverlayManager.TryGetOverlay(out _fireTileOverlay))
+            return false;
+
+        return _entityManager.EntityQuery<GasCanisterOverlayComponent>(includePaused: false).Any(); // Don't draw anything if no entities with canistercomponent even exist.
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -141,7 +146,6 @@ public sealed partial class CanisterOverlay : Overlay
         var maskTexture = _spriteSystem.GetState(WindowMaskSpriteSpecifier).Frame0;
 
         // because canisters always have the same rotation as the camera, we use the camera's rotation
-        // TODO LCDC: maybe this shouldnt be negative maybe it should IDFK.
         var rotationMatrix = Matrix3Helpers.CreateRotation(-viewport.Eye?.Rotation ?? Angle.Zero);
 
         // Draw on the stencil target
@@ -155,7 +159,9 @@ public sealed partial class CanisterOverlay : Overlay
             while (canisterEnumerator.MoveNext(out var uid, out var canisterComponent, out var transformComponent))
             {
                 // save some performance if we can, because canisters with no moles don't matter
-                if (canisterComponent.NetworkedMoles <= float.Epsilon)
+                if (canisterComponent.NetworkedMoles <= float.Epsilon &&
+                    canisterComponent.LiquidFill == 0 &&
+                    canisterComponent.SolidFill == 0)
                     continue;
 
                 if (_appearanceSystem.TryGetData<bool>(uid, GasCanisterVisuals.TankInserted, out var tankInserted) &&
@@ -199,6 +205,7 @@ public sealed partial class CanisterOverlay : Overlay
         foreach (var (overlayComponent, canisterWorldMatrix) in _drawDataCache)
         {
             worldHandle.SetTransform(canisterWorldMatrix);
+            DrawFluid(worldHandle, overlayComponent);
             for (var i = 0; i < _visibleGasCount; i++)
             {
                 // 0 to 1
@@ -218,7 +225,7 @@ public sealed partial class CanisterOverlay : Overlay
                     1f :
                     (gasMoles - gasMolesVisibleMin) / (gasMolesVisibleMax - gasMolesVisibleMin);
 
-                var gasTexture = _gasTileOverlay._frames[i][_gasTileOverlay._frameCounter[i]];
+                var gasTexture = _gasTileOverlay!._frames[i][_gasTileOverlay._frameCounter[i]];
                 var textureBox = Box2.FromDimensions(HalfNegativeVector2, gasTexture.Size / (float)EyeManager.PixelsPerMeter * WindowMaskSizeMultiplier);
                 worldHandle.DrawTextureRect(
                     gasTexture,
@@ -232,7 +239,7 @@ public sealed partial class CanisterOverlay : Overlay
                     worldHandle.UseShader(unshadedShader);
 
                     var fireStateIndex = overlayComponent.FireState - 1;
-                    var texture = _fireTileOverlay._frames[fireStateIndex][_fireTileOverlay._frameCounter[fireStateIndex]];
+                    var texture = _fireTileOverlay!._frames[fireStateIndex][_fireTileOverlay._frameCounter[fireStateIndex]];
                     worldHandle.DrawTextureRect(texture, textureBox); // yes i am reusing the same box2 joyy
 
                     worldHandle.UseShader(equalDrawShader);
@@ -243,5 +250,25 @@ public sealed partial class CanisterOverlay : Overlay
 
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(null);
+    }
+
+    /// <summary>
+    ///     Ice at the bottom of the window, liquid over it, each as high as the canister's gauge reads. The stencil keeps
+    ///         them inside the window, so they span the tile's width.
+    /// </summary>
+    private static void DrawFluid(DrawingHandleWorld worldHandle, GasCanisterOverlayComponent overlayComponent)
+    {
+        var bottom = HalfNegativeVector2.Y + WindowBottom;
+        var solidHeight = overlayComponent.SolidFill / (float)byte.MaxValue * WindowHeight;
+        var liquidHeight = MathF.Min(overlayComponent.LiquidFill / (float)byte.MaxValue * WindowHeight, WindowHeight - solidHeight);
+
+        if (solidHeight > 0f)
+            worldHandle.DrawRect(new Box2(HalfNegativeVector2.X, bottom, -HalfNegativeVector2.X, bottom + solidHeight), IceColor);
+
+        if (liquidHeight > 0f)
+        {
+            worldHandle.DrawRect(new Box2(HalfNegativeVector2.X, bottom + solidHeight, -HalfNegativeVector2.X, bottom + solidHeight + liquidHeight),
+                overlayComponent.LiquidColor.WithAlpha(0.85f));
+        }
     }
 }

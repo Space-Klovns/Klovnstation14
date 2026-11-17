@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Chat.Systems;
 using Content.Server.Construction;
 using Content.Server.Destructible;
@@ -320,12 +321,12 @@ public sealed partial class StationAiSystem : SharedStationAiSystem
 
         if (TryComp<ApcPowerReceiverComponent>(ent, out var apcPower) && !apcPower.Powered)
         {
-            _popups.PopupEntity(Loc.GetString("station-ai-has-no-power-for-upload"), ent, args.Event.User);
+            _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-ai-has-no-power-for-upload"), ent, args.Event.User);
             args.Cancel();
         }
         else if (TryComp<DestructibleComponent>(ent, out var destructible) && destructible.IsBroken)
         {
-            _popups.PopupEntity(Loc.GetString("station-ai-is-too-damaged-for-upload"), ent, args.Event.User);
+            _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-ai-is-too-damaged-for-upload"), ent, args.Event.User);
             args.Cancel();
         }
     }

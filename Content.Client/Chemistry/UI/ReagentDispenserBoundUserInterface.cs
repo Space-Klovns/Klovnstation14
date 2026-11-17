@@ -30,6 +30,9 @@ namespace Content.Client.Chemistry.UI
         {
             base.Open();
 
+            if (TryOpenKsTgui()) // KS14
+                return;
+
             // Setup window layout/elements
             _window = this.CreateWindow<ReagentDispenserWindow>();
             _window.SetInfoFromEntity(EntMan, Owner);
@@ -58,6 +61,7 @@ namespace Content.Client.Chemistry.UI
 
             var castState = (ReagentDispenserBoundUserInterfaceState)state;
             _window?.UpdateState(castState); //Update window state
+            _ksTguiWindow?.UpdateState(castState); // KS14
         }
     }
 }

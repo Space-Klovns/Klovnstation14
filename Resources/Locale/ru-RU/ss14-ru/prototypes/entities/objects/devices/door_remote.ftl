@@ -1,0 +1,39 @@
+ent-DoorRemoteAll = супер-пульт от шлюзов
+    .desc = A gadget which can open and bolt doors remotely. This one works even on wooden doors!
+    .suffix = Адмемы
+
+ent-DoorRemoteArmory = пульт от шлюзов оружейной
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteCanEletrifyDoors = { ent-DoorRemoteDefault }
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteCargo = пульт от шлюзов отдела снабжения
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteCommand = пульт от шлюзов командования
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteCustom = настраиваемый пульт от шлюзов
+    .desc = Гаджет, позволяющий дистанционно открывать и закрывать шлюзы. В этой продвинутой версии отсутствует встроенный доступ, вместо этого используется доступ ID-карты пользователя.
+
+ent-DoorRemoteDefault = пульт от шлюзов
+    .desc = Гаджет, позволяющий дистанционно открывать и закрывать шлюзы.
+
+ent-DoorRemoteEngineering = пульт от шлюзов инженерного отдела
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteMedical = пульт от шлюзов медотсека
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteResearch = пульт от шлюзов научного отдела
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteSecurity = пульт от шлюзов брига
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteService = пульт от шлюзов отдела сервиса
+    .desc = { ent-DoorRemoteDefault.desc }
+
+ent-DoorRemoteXenoborg = пульт от шлюзов ксеноборгов
+    .desc = { ent-DoorRemoteCanEletrifyDoors.desc }

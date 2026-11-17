@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Construction.Components;
@@ -90,13 +91,17 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
 
         if (!_anchorable.TileFree((grid, gridComp), buildPos, layer, mask))
         {
-            _popup.PopupPredicted(Loc.GetString("flatpack-unpack-no-room"), uid, args.User);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flatpack-unpack-no-room"), uid, args.User);
             return;
         }
 
         // <Trauma> - predict this and remove local rotatio
         var spawn = PredictedSpawnAtPosition(comp.Entity, _map.GridTileToLocal(grid, gridComp, buildPos));
         _transform.SetLocalRotation(spawn, 0);
+        // KS14 start: tell who unpacked it, so a turret's kills can be credited
+        var unpackedEvent = new Content.Shared._KS14.Construction.KsFlatpackUnpackedEvent(spawn, args.User);
+        RaiseLocalEvent(uid, ref unpackedEvent);
+        // KS14 end
         _adminLogger.Add(LogType.Construction,
             LogImpact.Low,
             $"{ToPrettyString(args.User):player} unpacked {ToPrettyString(spawn):entity} at {xform.Coordinates} from {ToPrettyString(uid):entity}");

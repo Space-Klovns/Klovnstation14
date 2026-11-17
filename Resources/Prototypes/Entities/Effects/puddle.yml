@@ -167,6 +167,15 @@
         layer:
         - SlipLayer
         hard: false
+      # KS14 start: what lies in a puddle touches it through this (ItemMask has no SlipLayer bit); see KsPuddleTouchSystem
+      ksTouchFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.4,-0.4,0.4,0.4"
+        layer:
+        - HighImpassable
+        hard: false
+      # KS14 end
   - type: IconSmooth
     key: puddles
     additionalKeys:

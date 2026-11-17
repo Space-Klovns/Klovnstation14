@@ -1,4 +1,6 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Chat;
+using Content.Shared.Popups;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
@@ -13,6 +15,9 @@ public abstract partial class SharedOreVentDroneSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+
+    private static readonly LocId FunnyEndingLine = "ks-specific-orevent-drone-funny-ending-line";
 
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<OreVentDroneComponent> entity, ref ComponentShutdown args)
@@ -35,7 +40,8 @@ public abstract partial class SharedOreVentDroneSystem : EntitySystem
         _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Movement, OreVentDroneMovement.Arriving);
     }
 
-    public void Escape(Entity<OreVentDroneComponent?> entity)
+    /// <param name="success">Whether it leaves because the vent was tapped, rather than because tapping failed.</param>
+    public void Escape(Entity<OreVentDroneComponent?> entity, bool success)
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -50,10 +56,34 @@ public abstract partial class SharedOreVentDroneSystem : EntitySystem
         timedDespawnComponent.Lifetime = 4f;
         AddComp(entity, timedDespawnComponent);
 
+        _popupSystem.PopupEntity(
+            KsPopupMessage.Create(success ? "ks-specific-orevent-drone-escape-success" : "ks-specific-orevent-drone-escape-failure"),
+            entity.Owner,
+            type: success ? PopupType.Medium : PopupType.MediumCaution);
+
+        // As tgstation's node drone does, once in a while.
+        if (_robustRandom.Prob(entity.Comp.FunnyEndingChance))
+        {
+            entity.Comp.FunnyEnding = true;
+            _chatSystem.TrySendInGameICMessage(entity.Owner, Loc.GetString(FunnyEndingLine), InGameICChatType.Speak, hideChat: false, ignoreActionBlocker: true);
+        }
+
         if (_robustRandom.Prob(0.25f))
         {
             _chatSystem.TryEmoteWithChat(entity.Owner, "Flip", ignoreActionBlocker: true, networkedFilter: Filter.Pvs(entity.Owner, entityManager: EntityManager));
             _audioSystem.PlayPvs(new SoundPathSpecifier("/Audio/Machines/twobeep.ogg"), entity.Owner);
         }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDespawn(Entity<OreVentDroneComponent> entity, ref TimedDespawnEvent args)
+    {
+        if (!entity.Comp.FunnyEnding)
+            return;
+
+        // It never made it home. At the coordinates, since the drone is deleted straight after this.
+        var coordinates = Transform(entity).Coordinates;
+        _audioSystem.PlayPvs(entity.Comp.FunnyEndingSound, coordinates);
+        _popupSystem.PopupCoordinates(KsPopupMessage.Create("ks-specific-orevent-drone-funny-ending"), coordinates, type: PopupType.Medium);
     }
 }

@@ -1,0 +1,39 @@
+prayer-chat-notify-centcom = ЦЕНТРАЛЬНОЕ КОМАНДОВАНИЕ
+
+prayer-chat-notify-honkmother = ХОНКОМАТЕРЬ
+
+prayer-chat-notify-lamp = ЛАМПА
+
+prayer-chat-notify-monolith = МОНОЛИТ
+
+prayer-chat-notify-pray = МОЛИТВА
+
+prayer-chat-notify-syndicate = СИНДИКАТ
+
+prayer-popup-notify-centcom-sent = Вы оставили голосовое сообщение Центральному командованию...
+
+prayer-popup-notify-honkmother-sent = Вы оставили голосовое сообщение Хонкоматери...
+
+prayer-popup-notify-lamp-sent = Ваши мысли словно эхо...
+
+prayer-popup-notify-monolith-sent = Ничего не происходит. Громогласно...
+
+prayer-popup-notify-pray-locked = Вы не чувствуете себя достойным...
+
+prayer-popup-notify-pray-sent = Ваша молитва была направлена богам...
+
+prayer-popup-notify-pray-ui-message = Послание
+
+prayer-popup-notify-syndicate-sent = Вы оставили голосовое сообщение Верховному командованию Синдиката...
+
+prayer-popup-subtle-default = Вы слышите голос в своей голове...
+
+prayer-verbs-call = Позвонить
+
+prayer-verbs-pray = Помолиться
+
+prayer-verbs-rub = Потереть
+
+prayer-verbs-subtle-message = Скрытое послание
+
+prayer-verbs-worship = Поклониться

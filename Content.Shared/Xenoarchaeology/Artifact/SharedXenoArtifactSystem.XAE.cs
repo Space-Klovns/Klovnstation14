@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Interaction;
@@ -76,7 +77,7 @@ public abstract partial class SharedXenoArtifactSystem
 
         if (!success)
         {
-            _popup.PopupClient(Loc.GetString("artifact-activation-fail"), artifact, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("artifact-activation-fail"), artifact, user);
             return false;
         }
 

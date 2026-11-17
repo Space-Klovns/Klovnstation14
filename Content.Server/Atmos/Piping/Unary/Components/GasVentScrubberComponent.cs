@@ -53,6 +53,14 @@ namespace Content.Server.Atmos.Piping.Unary.Components
         [DataField]
         public bool WideNet { get; set; } = false;
 
+        // KS14 start: Fluidmos
+        /// <summary>
+        ///     Whether scrubbing also draws in the smoke on the scrubber's tile, as droplets.
+        /// </summary>
+        [DataField]
+        public bool KsScrubAerosols = true;
+        // KS14 end
+
         public GasVentScrubberData ToAirAlarmData()
         {
             return new GasVentScrubberData

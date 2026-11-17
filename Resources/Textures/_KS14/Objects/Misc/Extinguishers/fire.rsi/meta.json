@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "closed.png and open.png taken from tgstation at https://github.com/tgstation/tgstation/blob/a7376598997732f18ab472d3585a74b79d1e5d43/icons/obj/tools.dmi, inhand-left.png and inhand-right.png taken from tgstation at https://github.com/tgstation/tgstation/blob/12eed0aa70a932e1ff0474b58525e37372b32c3e/icons/mob/inhands/items_righthand.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "closed"
+    },
+    {
+      "name": "open"
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    }
+  ]
+}

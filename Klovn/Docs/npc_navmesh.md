@@ -52,7 +52,7 @@ Requests go through `PathfindingSystem`'s existing time-sliced queue (`_pathRequ
 | File | Role |
 |---|---|
 | `Content.Server/_KS14/NPC/Pathfinding/TacticalPathRequest.cs` | `PathRequest` subclass that collects flood-fill candidates instead of reconstructing one route. |
-| `Content.Server/NPC/Pathfinding/PathfindingSystem.Klovn.Tactical.cs` | Upstream-namespace partial file adding `GetTacticalCandidates(...)` and the BFS-style flood (`UpdateTacticalPath`). Marked `// KS14: added in this fork` since it extends an upstream class outside `_KS14/`. |
+| `Content.Server/NPC/Pathfinding/PathfindingSystem.Klovn.Tactical.cs` | Upstream-namespace partial file adding `GetTacticalCandidates(...)` and the BFS-style flood (`UpdateTacticalPath`). |
 | `Content.Server/_KS14/NPC/Systems/NpcTacticalPositionClaimSystem.cs` | The reservation/claim table preventing NPCs from converging on the same dynamically-picked spot. |
 | `Content.Server/_KS14/NPC/HTN/PrimitiveTasks/Operators/TacticalPositionOperator.cs` | The single YAML-tunable `HTNOperator`: tries the marker query first, falls back to the dynamic algorithm. |
 | `Content.Server/NPC/Pathfinding/PathfindingSystem.cs` | Marked upstream edit: dispatches `TacticalPathRequest` in `Update()`'s switch. |

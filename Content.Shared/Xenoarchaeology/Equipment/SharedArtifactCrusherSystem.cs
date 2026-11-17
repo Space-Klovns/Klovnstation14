@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Damage.Systems;
 using Content.Shared.Emag.Systems;
 using Content.Shared.Examine;
@@ -116,7 +117,7 @@ public abstract partial class SharedArtifactCrusherSystem : EntitySystem
             return;
 
         if (crusher.AutoLock)
-            _popup.PopupPredicted(Loc.GetString("artifact-crusher-autolocks-enable"), uid, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("artifact-crusher-autolocks-enable"), uid, user);
 
         crusher.Crushing = true;
         crusher.NextSecond = _timing.CurTime + TimeSpan.FromSeconds(1);

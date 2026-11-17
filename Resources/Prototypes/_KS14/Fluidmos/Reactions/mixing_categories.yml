@@ -1,0 +1,15 @@
+# How the guidebook shows reactions that run in pipes. Nothing mixes in these.
+
+- type: mixingCategory
+  id: KsFluidPipe
+  verbText: ks-mixing-verb-fluid-pipe
+  icon:
+    sprite: Structures/Piping/Atmospherics/pipe.rsi
+    state: pipeStraight
+
+- type: mixingCategory
+  id: KsFluidReactor
+  verbText: ks-mixing-verb-fluid-reactor
+  icon:
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    state: reactor

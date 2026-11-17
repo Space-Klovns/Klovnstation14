@@ -17,7 +17,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: blue_door
 
 # Pink wardrobe
@@ -30,7 +30,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: pink_door
 
 # Black wardrobe
@@ -43,7 +43,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: black_door
 
 # Green wardrobe
@@ -56,7 +56,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: green_door
 
 # Prison wardrobe
@@ -68,7 +68,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: orange_door
 
 # Yellow wardrobe
@@ -81,7 +81,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: yellow_door
 
 # White wardrobe
@@ -94,7 +94,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: white_door
 
 # Grey wardrobe
@@ -107,7 +107,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: grey_door
 
 # Mixed wardrobe
@@ -120,7 +120,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: mixed_door
 
 # Jobs
@@ -133,8 +133,8 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
-    stateDoorClosed: red_door
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
+    stateDoorClosed: sec_wardrobe_door # KS14: red_door -> sec_wardrobe_door, tgstation's security wardrobe
 
 - type: entity
   id: WardrobeAtmospherics
@@ -144,7 +144,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: atmos_wardrobe_door
 
 - type: entity
@@ -152,6 +152,11 @@
   parent: WardrobeMixed
   name: custodial closet
   description: It's a storage unit for janitorial clothes and gear.
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: jani_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeFormal
@@ -164,66 +169,131 @@
   parent: WardrobeBlack
   name: chef's closet
   description: It's a storage unit for foodservice garments and mouse traps.
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: chef_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeChapel
   parent: WardrobeBlack
   name: chaplain's wardrobe
   description: It's a storage unit for Nanotrasen-approved religious attire.
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: chap_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: ClosetLegal
   parent: WardrobeBlue
   name: legal closet
   description: It's a storage unit for courtroom apparel and items.
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: law_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeCargo
   parent: WardrobePrison
   name: cargo wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: cargo_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeSalvage
   parent: WardrobeMixed
   name: salvage wardrobe
   description: Notably not salvaged.
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: mining_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeEngineering
   parent: WardrobeYellow
   name: engineering wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: engi_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeMedicalDoctor
   parent: WardrobeWhite
   name: medical doctor's wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: med_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeRobotics
   parent: WardrobeBlack
   name: robotics wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: robo_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeChemistry
   parent: WardrobeWhite
   name: chemistry wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: chem_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeGenetics
   parent: WardrobeWhite
   name: genetics wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: gen_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeVirology
   parent: WardrobeWhite
   name: virology wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: viro_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeScience
   parent: WardrobeWhite
   name: science wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: sci_wardrobe_door
+  # KS14 end
 
 - type: entity
   id: WardrobeBotanist
   parent: WardrobeGreen
   name: botanist wardrobe
+  components:
+  # KS14 start: tgstation's job wardrobe door
+  - type: EntityStorageVisuals
+    stateDoorClosed: botany_wardrobe_door
+  # KS14 end

@@ -51,6 +51,11 @@ namespace Content.Client.Singularity
 
         protected override bool BeforeDraw(in OverlayDrawArgs args)
         {
+            // KS14 start: not drawn into portal views (viewer state or screen-texture effect)
+            if (Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive)
+                return false;
+            // KS14 end
+
             if (_reducedMotion)
                 return false;
             if (args.Viewport.Eye == null)

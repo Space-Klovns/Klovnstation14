@@ -1,5 +1,14 @@
 ﻿using Content.Packaging;
 using Robust.Packaging;
+using Content.Packaging._KS14.Localization; // KS14
+
+// KS14 start: build-time cache generation does not package, clear bin, or launch the game
+if (args is ["--prototype-name-cache", var resourceDirectory])
+{
+    KsPrototypeNameCacheGenerator.Generate(resourceDirectory);
+    return;
+}
+// KS14 end
 
 IPackageLogger logger = new PackageLoggerConsole();
 

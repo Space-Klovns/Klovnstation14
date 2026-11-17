@@ -3,6 +3,7 @@
 
 - type: scenarioFaction
   id: Nanotrasen
+  nameLocId: scenario-faction-nt
   victoryLocId: scenario-roundend-victory-nt
   winTypeLocIds:
     Decimation: scenario-roundend-victory-nt-decimation
@@ -10,6 +11,7 @@
 
 - type: scenarioFaction
   id: Syndicate
+  nameLocId: scenario-faction-syndie
   victoryLocId: scenario-roundend-victory-syndie
   winTypeLocIds:
     Decimation: scenario-roundend-victory-syndie-decimation
@@ -17,6 +19,7 @@
 
 - type: scenarioFaction
   id: Scavengers
+  nameLocId: scenario-faction-scav
   victoryLocId: scenario-roundend-victory-scav
   winTypeLocIds:
     Decimation: scenario-roundend-victory-scav-decimation
@@ -24,6 +27,7 @@
 
 - type: scenarioFaction
   id: Redacted
+  nameLocId: scenario-faction-redacted
   victoryLocId: scenario-roundend-victory-redacted
   winTypeLocIds:
     Decimation: scenario-roundend-victory-redacted-decimation

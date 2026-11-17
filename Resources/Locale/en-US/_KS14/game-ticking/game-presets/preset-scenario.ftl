@@ -3,6 +3,15 @@ scenario-description = Duke it out Battlefield 14 style in one of many preset sc
 
 scenario-lastmanstanding = You are the last man standing!
 
+scenario-roundend-skirmish = A skirmish between { $factions } has transpired.
+scenario-roundend-skirmish-and = { $others } and { $last }
+scenario-roundend-skirmish-unknown = A skirmish has transpired.
+
+scenario-faction-nt = Nanotrasen
+scenario-faction-syndie = the Syndicate
+scenario-faction-scav = the scavengers
+scenario-faction-redacted = the ████████
+
 # NT
 scenario-roundend-victory-nt = Nanotrasen is the victor.
 scenario-roundend-victory-nt-decimation = Nanotrasen has decimated the insurgent Syndicate threat!

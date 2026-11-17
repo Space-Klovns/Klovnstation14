@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chat.Systems;
 using Content.Server.Cloning.Components;
@@ -265,7 +266,7 @@ public sealed partial class CloningPodSystem : EntitySystem
         if (!this.IsPowered(ent.Owner, EntityManager))
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("cloning-pod-component-upgrade-emag-requirement"), ent.Owner);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cloning-pod-component-upgrade-emag-requirement"), ent.Owner);
         args.Handled = true;
     }
 

@@ -1,5 +1,4 @@
 using System.Linq;
-using Content.Client._KS14.BaronUI; // KS14
 using Content.Client.Stylesheets.Fonts;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -37,7 +36,7 @@ public partial class SystemStylesheet : CommonStylesheet
 
     public SystemStylesheet(object config, StylesheetManager man) : base(config)
     {
-        BaseFont = new NotoFontFamilyStack(ResCache);
+        BaseFont = Content.Client._KS14.Tgui.KsTguiTheme.CreateBaseFont(ResCache, _ksTgui); // KS14: new NotoFontFamilyStack(ResCache) -> follows the theme
         var rules = new[]
         {
             // Set up important rules that need to go first.
@@ -50,7 +49,7 @@ public partial class SystemStylesheet : CommonStylesheet
             // Finally, load all the other sheetlets.
             GetAllSheetletRules<PalettedStylesheet, CommonSheetletAttribute>(man),
             GetAllSheetletRules<SystemStylesheet, CommonSheetletAttribute>(man),
-            GetSheetletRules<PalettedStylesheet>(typeof(KsBaronUiSheetlet), man), // KS14
+            GetSheetletRules<PalettedStylesheet>(Content.Client._KS14.Tgui.KsTguiTheme.ThemeSheetlet(_ksTgui), man), // KS14
         };
 
         Stylesheet = new Stylesheet(rules.SelectMany(x => x).ToArray());

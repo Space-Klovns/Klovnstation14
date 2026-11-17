@@ -344,6 +344,32 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
         _pendingTab = _prefs.Tab;
     }
 
+    /// <summary>
+    ///     For a console with no sensor picture, the normal shuttle console: this window on the upstream console's data. Every
+    ///         grid shows, as it does there, and what only reads the sensor picture goes, since it would only ever read nothing.
+    /// </summary>
+    public void KsSetOpenPicture()
+    {
+        KsOpenPicture = true;
+        RadarContainer.KsSetOpenPicture();
+        MapContainer.KsOpenPicture = true;
+
+        EsmTabButton.Visible = false;
+        Sep3.Visible = false;
+        StatusStrip.Visible = false;
+
+        if (_pendingTab == KsInstrumentTab.Esm)
+            _pendingTab = KsInstrumentTab.Radar;
+    }
+
+    public bool KsOpenPicture { get; private set; }
+
+    public bool KsEsmTabShown => EsmTabButton.Visible;
+
+    public bool KsMapOpenPicture => MapContainer.KsOpenPicture;
+
+    public bool KsRadarOpenPicture => RadarContainer.KsOpenPicture;
+
     public void UpdateState(EntityUid owner, ShuttleBoundUserInterfaceState cState)
     {
         var coordinates = _entManager.GetCoordinates(cState.NavState.Coordinates);
@@ -421,9 +447,9 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
         if (_bootStartedAt != TimeSpan.MinValue)
         {
             var bootSince = (_timing.CurTime - _bootStartedAt).TotalSeconds;
-            if (bootSince < Hud.BootDuration && !reduced)
+            if (bootSince < Hud.BootDuration.TotalSeconds && !reduced)
             {
-                var progress = (float) (bootSince / Hud.BootDuration);
+                var progress = (float) (bootSince / Hud.BootDuration.TotalSeconds);
                 var flicker = Hud.Boot.Eval(bootSince, reducedMotion: false);
                 // The blink rides a rising envelope: dark strobing at first,
                 // settling to full brightness as the boot completes.
@@ -442,7 +468,7 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
             return;
 
         var since = (_timing.CurTime - _tabSwitchedAt).TotalSeconds;
-        if (since < Hud.TabFlickerDuration && !reduced)
+        if (since < Hud.TabFlickerDuration.TotalSeconds && !reduced)
         {
             var flicker = Hud.TabFlicker.Eval(since, reducedMotion: false);
             Contents.Modulate = Color.White.WithAlpha(Math.Clamp(flicker, 0f, 1f));

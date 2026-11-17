@@ -1,0 +1,31 @@
+ent-BriefcaseBrownFilled = { ent-BriefcaseBrown }
+    .desc = { ent-BriefcaseBrown.desc }
+    .suffix = Заполненный, Бумага
+
+ent-BriefcaseSyndieLobbyingBundleFilled = { ent-BriefcaseSyndie }
+    .desc = { ent-BriefcaseSyndie.desc }
+    .suffix = Синдикат, Кредиты
+
+ent-BriefcaseSyndieSniperBundleFilled = { ent-BriefcaseBrown }
+    .desc = { ent-BriefcaseBrown.desc }
+    .suffix = Заполненный, Христов
+
+ent-BriefcaseThiefBribingBundleFilled = { ent-BriefcaseSyndie }
+    .desc = { ent-BriefcaseSyndie.desc }
+    .suffix = Вор, Кредиты
+
+ent-BriefcaseWeaponBulldogFilled = защищённый оружейный кейс для Бульдога
+    .desc = { ent-BriefcaseWeaponSmall.desc }
+    .suffix = { ent-BriefcaseWeaponSmall.suffix }
+
+ent-BriefcaseWeaponC20Filled = защищённый оружейный кейс для C-20r
+    .desc = { ent-BriefcaseWeaponSmall.desc }
+    .suffix = { ent-BriefcaseWeaponSmall.suffix }
+
+ent-BriefcaseWeaponChinaLakeFilled = защищённый оружейный кейс для China Lake
+    .desc = { ent-BriefcaseWeapon.desc }
+    .suffix = { ent-BriefcaseWeapon.suffix }
+
+ent-BriefcaseWeaponHushpupFilled = защищённый оружейный кейс для Глухаря
+    .desc = { ent-BriefcaseWeaponSmall.desc }
+    .suffix = { ent-BriefcaseWeaponSmall.suffix }

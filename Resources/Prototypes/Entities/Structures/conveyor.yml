@@ -15,6 +15,7 @@
     sprite: Structures/conveyor.rsi
     state: conveyor_stopped
     drawdepth: HighFloorObjects
+  - type: KsForceAmbientOcclusion # KS14
   - type: SyncSprite
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver

@@ -20,6 +20,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     private PathfindingSystem _pathfind = default!;
     private SharedTransformSystem _transform = default!;
     [Dependency] private Interaction.InteractionSystem _interactionSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
 
     /// <summary>
     /// When to shut the task down.
@@ -74,6 +75,15 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     public bool RequireLosForRangeCheck;
 
     // KS14
+    /// <summary>
+    ///     For a move that is about getting a shot: with this, line of sight in <see cref="StopOnLineOfSight"/> and
+    ///         <see cref="RequireLosForRangeCheck"/> means a clear shot with what it is holding. A window stops a hand and
+    ///         lets through a laser, and stops a bullet.
+    /// </summary>
+    [DataField]
+    public bool LineOfFire;
+
+    // KS14
     [DataField]
     public bool WeAreAtTargetCoordsAfterSuccessfullyPlanning = true;
 
@@ -114,7 +124,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var targetMapCoords = _transform.ToMapCoordinates(targetCoordinates);
         var distance = (targetMapCoords.Position - ownerMapCoords.Position).Length();
 
-        if (RequireLosForRangeCheck ? _interactionSystem.InRangeUnobstructed(ownerMapCoords, targetMapCoords, range: range) : distance <= range)
+        if (RequireLosForRangeCheck ? IsClear(owner, ownerMapCoords, targetMapCoords, distance, range) : distance <= range)
         // KS14: ANK: end
         {
             // In range
@@ -141,7 +151,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             blackboard.GetValue<EntityUid>(NPCBlackboard.Owner),
             xform.Coordinates,
                 targetCoordinates,
-            RequireLosForRangeCheck ? MathF.Min(_interactionSystem.UnobstructedDistance(ownerMapCoords, targetMapCoords), range) : range, // KS14: RequireLosForRangeCheck
+            RequireLosForRangeCheck ? MathF.Min(GetClearDistance(owner, ownerMapCoords, targetMapCoords), range) : range, // KS14: RequireLosForRangeCheck
             cancelToken,
             _pathfind.GetFlags(blackboard));
 
@@ -162,6 +172,21 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // KS14 end
     }
 
+    // KS14 start
+    private bool IsClear(EntityUid owner, MapCoordinates from, MapCoordinates to, float distance, float range)
+    {
+        if (!LineOfFire)
+            return _interactionSystem.InRangeUnobstructed(from, to, range: range);
+
+        return distance <= range && _npcLineOfFireSystem.IsClear(from, to, _npcLineOfFireSystem.GetShotMask(owner));
+    }
+
+    private float GetClearDistance(EntityUid owner, MapCoordinates from, MapCoordinates to)
+    {
+        return LineOfFire ? _npcLineOfFireSystem.GetClearDistance(owner, from, to) : _interactionSystem.UnobstructedDistance(from, to);
+    }
+    // KS14 end
+
     // Given steering is complicated we'll hand it off to a dedicated system rather than this singleton operator.
 
     public override void Startup(NPCBlackboard blackboard)
@@ -170,12 +195,20 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
         // Need to remove the planning value for execution.
         blackboard.Remove<EntityCoordinates>(NPCBlackboard.OwnerCoordinates);
-        var targetCoordinates = blackboard.GetValue<EntityCoordinates>(TargetKey);
         var uid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+
+        // KS14 start: coordinates on a target can outlive it, if it was deleted after planning: there is nowhere to go. Update fails.
+        // So can a plan outlive its coordinates: a key left by the plan before can pass a check while planning, and be gone
+        //      once that plan has shut down.
+        if (!blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) ||
+            !targetCoordinates.IsValid(_entManager))
+            return;
+        // KS14 end
 
         // Re-use the path we may have if applicable.
         var comp = _steering.Register(uid, targetCoordinates);
         comp.ArriveOnLineOfSight = StopOnLineOfSight;
+        comp.KsArriveOnLineOfFire = LineOfFire; // KS14
 
         // KS14: ANK: add RequireLosForRangeCheck
         comp.Range = RequireLosForRangeCheck ? 0f : blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
@@ -212,11 +245,20 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         if (!_entManager.TryGetComponent<NPCSteeringComponent>(owner, out var steering))
             return HTNOperatorStatus.Failed;
 
+        // KS14 start: see Startup. Checked here too, as steering left over from a move in the background says nothing about this one.
+        if (!blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) || !targetCoordinates.IsValid(_entManager))
+            return HTNOperatorStatus.Failed;
+        // KS14 end
+
         // KS14: ANK: start
         if (RequireLosForRangeCheck)
         {
             var range = blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
-            steering.Range = _interactionSystem.InRangeUnobstructed(owner, steering.Coordinates, range: range) ?
+            var inRange = LineOfFire
+                ? _npcLineOfFireSystem.HasLineOfFire(owner, steering.Coordinates, range)
+                : _interactionSystem.InRangeUnobstructed(owner, steering.Coordinates, range: range);
+
+            steering.Range = inRange ?
                 range :
                 0f;
         }
@@ -225,6 +267,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // Just keep moving in the background and let the other tasks handle it.
         if ((ShutdownState == HTNPlanState.PlanFinished || ShutdownState == HTNPlanState.Never /* KS14: ANK: include Never */) && steering.Status == SteeringStatus.Moving)
         {
+            _entManager.EnsureComponent<NpcBackgroundMoveComponent>(owner); // KS14: later tasks run with its hands now; see the component
             return HTNOperatorStatus.Finished;
         }
 

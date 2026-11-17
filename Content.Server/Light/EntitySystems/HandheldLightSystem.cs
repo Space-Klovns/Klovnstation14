@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Actions;
 using Content.Server.Popups;
 using Content.Shared.Actions;
@@ -197,7 +198,7 @@ namespace Content.Server.Light.EntitySystems
             if (!_powerCell.TryGetBatteryFromSlotOrEntity(uid.Owner, out var battery))
             {
                 _audio.PlayPvs(_audio.ResolveSound(component.TurnOnFailSound), uid);
-                _popup.PopupEntity(Loc.GetString("handheld-light-component-cell-missing-message"), uid, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handheld-light-component-cell-missing-message"), uid, user);
                 return false;
             }
 
@@ -207,7 +208,7 @@ namespace Content.Server.Light.EntitySystems
             if (component.Wattage > _battery.GetCharge(battery.Value.AsNullable()))
             {
                 _audio.PlayPvs(_audio.ResolveSound(component.TurnOnFailSound), uid);
-                _popup.PopupEntity(Loc.GetString("handheld-light-component-cell-dead-message"), uid, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handheld-light-component-cell-dead-message"), uid, user);
                 return false;
             }
 

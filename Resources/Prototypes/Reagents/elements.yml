@@ -6,8 +6,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: metallic
   color: "#848789"
-  boilingPoint: 2327.0
-  meltingPoint: 660.0
+  boilingPoint: 2743.0 # KS14: 2327.0 -> 2743.0, realistic value
+  meltingPoint: 933.47 # KS14: 660.0 -> 933.47, realistic value
 
 - type: reagent
   id: Carbon
@@ -17,8 +17,8 @@
   physicalDesc: reagent-physical-desc-crystalline
   flavor: bitter
   color: "#22282b"
-  boilingPoint: 4200.0
-  meltingPoint: 3550.0
+  boilingPoint: 3915.0 # KS14: 4200.0 -> 3915.0, realistic value, sublimation point
+  meltingPoint: 3823.0 # KS14: 3550.0 -> 3823.0, realistic value
 
 - type: reagent
   id: Chlorine
@@ -28,8 +28,8 @@
   physicalDesc: reagent-physical-desc-gaseous
   flavor: bitter
   color: "#a2ff00"
-  meltingPoint: -101.5
-  boilingPoint: -34.04
+  meltingPoint: 171.65 # KS14: -101.5 -> 171.65, Kelvin
+  boilingPoint: 239.11 # KS14: -34.04 -> 239.11, Kelvin
   plantMetabolism:
     - !type:PlantAdjustWater
       amount: -0.5
@@ -55,8 +55,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: metallic
   color: "#b05b3c"
-  boilingPoint: 2595.0
-  meltingPoint: 1083.0
+  boilingPoint: 2835.0 # KS14: 2595.0 -> 2835.0, realistic value
+  meltingPoint: 1357.77 # KS14: 1083.0 -> 1357.77, realistic value
   metabolisms:
     Bloodstream:
       metabolismRate: 0.1
@@ -83,8 +83,8 @@
   physicalDesc: reagent-physical-desc-gaseous
   flavor: bitter
   color: "#ba85cc"
-  boilingPoint: -188.11
-  meltingPoint: -219.67
+  boilingPoint: 85.04 # KS14: -188.11 -> 85.04, Kelvin
+  meltingPoint: 53.48 # KS14: -219.67 -> 53.48, Kelvin
   plantMetabolism:
     - !type:PlantAdjustWater
       amount: -0.5
@@ -110,8 +110,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: metallic
   color: "#F7C430"
-  boilingPoint: 2700.0
-  meltingPoint: 1064.76
+  boilingPoint: 3243.0 # KS14: 2700.0 -> 3243.0, realistic value
+  meltingPoint: 1337.33 # KS14: 1064.76 -> 1337.33, realistic value
 
 - type: reagent
   id: Hydrogen
@@ -121,8 +121,8 @@
   physicalDesc: reagent-physical-desc-gaseous
   flavor: bitter
   color: "#cccccc"
-  boilingPoint: -253.0
-  meltingPoint: -259.2
+  boilingPoint: 20.28 # KS14: -253.0 -> 20.28, realistic value
+  meltingPoint: 13.99 # KS14: -259.2 -> 13.99, realistic value
 
 - type: reagent
   id: Iodine
@@ -132,8 +132,8 @@
   physicalDesc: reagent-physical-desc-dark-brown
   flavor: bitter
   color: "#BC8A00"
-  boilingPoint: 184.3
-  meltingPoint: 113.7
+  boilingPoint: 457.45 # KS14: 184.3 -> 457.45, Kelvin
+  meltingPoint: 386.85 # KS14: 113.7 -> 386.85, Kelvin
 
 - type: reagent
   id: Iron
@@ -143,8 +143,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: metallic
   color: "#434b4d"
-  boilingPoint: 2862.0
-  meltingPoint: 1538.0
+  boilingPoint: 3134.0 # KS14: 2862.0 -> 3134.0, realistic value
+  meltingPoint: 1811.0 # KS14: 1538.0 -> 1811.0, realistic value
   metabolisms:
     Bloodstream:
       metabolismRate: 0.1
@@ -171,8 +171,8 @@
   physicalDesc: reagent-physical-desc-shiny
   flavor: metallic
   color: "#d6c0a7"
-  meltingPoint: 180.5
-  boilingPoint: 1330.0
+  meltingPoint: 453.65 # KS14: 180.5 -> 453.65, Kelvin
+  boilingPoint: 1603.15 # KS14: 1330.0 -> 1603.15, Kelvin
   metabolisms:
     Bloodstream:
       metabolismRate: 0.1
@@ -198,8 +198,8 @@
   physicalDesc: reagent-physical-desc-shiny
   flavor: metallic
   color: "#929296"
-  meltingPoint: -38.83
-  boilingPoint: 356.73
+  meltingPoint: 234.32 # KS14: -38.83 -> 234.32, Kelvin
+  boilingPoint: 629.88 # KS14: 356.73 -> 629.88, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -219,8 +219,8 @@
   physicalDesc: reagent-physical-desc-shiny
   flavor: metallic
   color: "#c6c8cc"
-  meltingPoint: 65.5
-  boilingPoint: 759.0
+  meltingPoint: 336.53 # KS14: 65.5 -> 336.53, realistic value
+  boilingPoint: 1032.0 # KS14: 759.0 -> 1032.0, realistic value
 
 - type: reagent
   id: Phosphorus
@@ -230,8 +230,8 @@
   physicalDesc: reagent-physical-desc-powdery
   flavor: metallic
   color: "#f5da9a"
-  meltingPoint: 44.2
-  boilingPoint: 280.5
+  meltingPoint: 317.35 # KS14: 44.2 -> 317.35, Kelvin
+  boilingPoint: 553.65 # KS14: 280.5 -> 553.65, Kelvin
   plantMetabolism:
     - !type:PlantAdjustNutrition
       amount: 0.1
@@ -249,8 +249,8 @@
   physicalDesc: reagent-physical-desc-glowing
   flavor: metallic
   color: "#00ff04"
-  meltingPoint: 700.0
-  boilingPoint: 1737.0
+  meltingPoint: 973.15 # KS14: 700.0 -> 973.15, Kelvin
+  boilingPoint: 2010.15 # KS14: 1737.0 -> 2010.15, Kelvin
 
 - type: reagent
   id: Silicon
@@ -260,8 +260,8 @@
   physicalDesc: reagent-physical-desc-crystalline
   flavor: metallic
   color: "#364266"
-  boilingPoint: 3265.0
-  meltingPoint: 1414.0
+  boilingPoint: 3538.15 # KS14: 3265.0 -> 3538.15, Kelvin
+  meltingPoint: 1687.15 # KS14: 1414.0 -> 1687.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -278,8 +278,8 @@
   physicalDesc: reagent-physical-desc-reasonably-metallic
   flavor: metallic
   color: "#d0d0d0"
-  boilingPoint: 2212.0
-  meltingPoint: 960.5
+  boilingPoint: 2435.0 # KS14: 2212.0 -> 2435.0, realistic value
+  meltingPoint: 1234.93 # KS14: 960.5 -> 1234.93, realistic value
 
 - type: reagent
   id: Sulfur
@@ -289,8 +289,8 @@
   physicalDesc: reagent-physical-desc-powdery
   flavor: bitter
   color: "#fff385"
-  boilingPoint: 445.0
-  meltingPoint: 120.0
+  boilingPoint: 717.8 # KS14: 445.0 -> 717.8, realistic value
+  meltingPoint: 388.36 # KS14: 120.0 -> 388.36, realistic value
   metabolisms:
     Bloodstream:
       effects:
@@ -307,8 +307,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: bitter
   color: "#a7b3d6"
-  meltingPoint: 97.8
-  boilingPoint: 883.0
+  meltingPoint: 370.95 # KS14: 97.8 -> 370.95, Kelvin
+  boilingPoint: 1156.15 # KS14: 883.0 -> 1156.15, Kelvin
 
 - type: reagent
   id: Uranium
@@ -318,8 +318,8 @@
   physicalDesc: reagent-physical-desc-metallic
   flavor: metallic
   color: "#8fa191"
-  meltingPoint: 1133.0
-  boilingPoint: 4131.0
+  meltingPoint: 1405.3 # KS14: 1133.0 -> 1405.3, realistic value
+  boilingPoint: 4404.0 # KS14: 4131.0 -> 4404.0, realistic value
   plantMetabolism:
   - !type:PlantAdjustMutationLevel
     amount: 0.6
@@ -346,5 +346,5 @@
   physicalDesc: reagent-physical-desc-shiny
   flavor: metallic
   color: "#bababa"
-  meltingPoint: 419.5
-  boilingPoint: 907.0
+  meltingPoint: 692.65 # KS14: 419.5 -> 692.65, Kelvin
+  boilingPoint: 1180.15 # KS14: 907.0 -> 1180.15, Kelvin

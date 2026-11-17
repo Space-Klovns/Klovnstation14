@@ -1,0 +1,12 @@
+# The tgui theme of an antagonist's communications console window (KsTguiUiTheme). Consoles without one are Nanotrasen.
+- type: !PartialOnly entity
+  id: SyndicateComputerComms
+  components:
+  - type: KsTguiUiTheme
+    theme: Syndicate
+
+- type: !PartialOnly entity
+  id: WizardComputerComms
+  components:
+  - type: KsTguiUiTheme
+    theme: Wizard

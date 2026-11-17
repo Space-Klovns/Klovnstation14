@@ -1,0 +1,119 @@
+using Content.Server._KS14.Atmos;
+using Content.Server._KS14.Atmos.FoamBlanket;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.FixedPoint;
+using Content.Shared.Fluids.Components;
+using Robust.Shared.Configuration;
+using Robust.Shared.Timing;
+
+namespace Content.Server.Fluids.EntitySystems;
+
+/// <summary>
+///     Heat exchange between a puddle's solution and the air on its tile, by conduction and thermal radiation.
+/// </summary>
+/// <remarks>
+///     A puddle under a foam blanket is insulated from the air: its heat goes through the blanket instead
+///         (<see cref="KsFoamBlanketSystem"/>).
+/// </remarks>
+public sealed partial class PuddleSystem
+{
+    [Dependency] private KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.Ice.KsIceSheetSystem _iceSheetSystem = default!;
+
+    private static readonly TimeSpan AirHeatExchangeInterval = TimeSpan.FromSeconds(1d);
+
+    /// <summary>Thermal conductance between a puddle of at least <see cref="AirHeatExchangeReferenceVolume"/> and its tile's air, in W/K.</summary>
+    private const float AirHeatExchangeConductance = 15f;
+
+    /// <summary>Puddle volume at and above which the full conductance applies; smaller puddles scale down linearly.</summary>
+    private const float AirHeatExchangeReferenceVolume = 20f;
+
+    /// <summary>Temperature differences below this (in kelvin) are ignored.</summary>
+    private const float AirHeatExchangeMinimumDelta = 0.5f;
+
+    /// <summary>
+    ///     Heat to put into puddle solutions, gathered while walking the puddle cache and applied after it. Applying a
+    ///     thermal energy updates the solution's chemicals, which can run reactions that spawn or delete puddles.
+    /// </summary>
+    private readonly List<(Entity<SolutionComponent> Solution, float Heat)> _pendingAirHeatExchanges = new();
+
+    private TimeSpan _nextAirHeatExchange = TimeSpan.MinValue;
+    private TimeSpan _lastAirHeatExchange = TimeSpan.MinValue;
+
+    private void UpdateAirHeatExchange()
+    {
+        var curTime = _gameTiming.CurTime;
+        if (curTime < _nextAirHeatExchange)
+            return;
+
+        var deltaTime = _lastAirHeatExchange == TimeSpan.MinValue
+            ? (float)AirHeatExchangeInterval.TotalSeconds
+            : (float)(curTime - _lastAirHeatExchange).TotalSeconds;
+
+        _lastAirHeatExchange = curTime;
+        _nextAirHeatExchange = curTime + AirHeatExchangeInterval;
+
+        if (deltaTime <= 0f)
+            return;
+
+        _pendingAirHeatExchanges.Clear();
+
+        foreach (var (gridUid, tilePuddles) in _gridPuddleCache)
+        {
+            foreach (var (indices, puddle) in tilePuddles)
+                ConductHeatToNeighbours(puddle, gridUid, tilePuddles, indices, deltaTime);
+
+            foreach (var (indices, puddle) in tilePuddles)
+                ExchangeHeatWithAir(puddle, gridUid, tilePuddles, indices, deltaTime);
+        }
+
+        // The cache is no longer being walked, so reactions are free to spawn or delete puddles now.
+        foreach (var (solutionEntity, heat) in _pendingAirHeatExchanges)
+        {
+            if (TerminatingOrDeleted(solutionEntity.Owner))
+                continue;
+
+            _solutionContainerSystem.AddThermalEnergy(solutionEntity, heat);
+        }
+
+        _pendingAirHeatExchanges.Clear();
+
+        // Ice sheets in the same pass, with the same conductance and coverage, now that the puddles are done.
+        _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume);
+    }
+
+    private void ExchangeHeatWithAir(
+        Entity<PuddleComponent> puddle,
+        EntityUid gridUid,
+        Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
+        Vector2i indices,
+        float deltaTime)
+    {
+        if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution))
+            return;
+
+        if (solution.Volume <= FixedPoint2.Zero)
+            return;
+
+        // Insulated by a blanket over it, which carries the heat on to the air itself.
+        if (_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _))
+            return;
+
+        // A puddle smaller than the reference volume covers that share of the tile, for radiation as for conduction.
+        var coverage = MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume);
+
+        // Its share of the puddle's capacity, as its neighbours take theirs (CountHeatContacts).
+        var heat = _airHeatExchangeSystem.ExchangeWithTile(gridUid,
+            indices,
+            solution.GetHeatCapacity(ProtoMan) / CountHeatContacts(tilePuddles, indices, exchangesWithAir: true),
+            solution.Temperature,
+            AirHeatExchangeConductance * coverage,
+            radiatingArea: coverage,
+            deltaTime);
+
+        if (heat != 0f && puddle.Comp.Solution is { } solutionEntity)
+            _pendingAirHeatExchanges.Add((solutionEntity, heat));
+    }
+}

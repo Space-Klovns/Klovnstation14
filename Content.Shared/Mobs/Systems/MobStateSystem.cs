@@ -17,6 +17,7 @@ public partial class MobStateSystem : EntitySystem
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private Content.Shared._KS14.Mobs.Systems.KsSoftCritSystem _ksSoftCritSystem = default!; // KS14
     private ISawmill _sawmill = default!;
 
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;

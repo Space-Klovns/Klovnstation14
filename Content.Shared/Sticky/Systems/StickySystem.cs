@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
@@ -86,7 +87,7 @@ public sealed partial class StickySystem : EntitySystem
         // show message to user
         if (comp.StickPopupStart != null)
         {
-            var msg = Loc.GetString(comp.StickPopupStart);
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(comp.StickPopupStart);
             _popup.PopupClient(msg, user, user);
         }
 
@@ -136,7 +137,7 @@ public sealed partial class StickySystem : EntitySystem
         // show message to user
         if (comp.UnstickPopupStart != null)
         {
-            var msg = Loc.GetString(comp.UnstickPopupStart);
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(comp.UnstickPopupStart);
             _popup.PopupClient(msg, user, user);
         }
 
@@ -167,7 +168,7 @@ public sealed partial class StickySystem : EntitySystem
         // show message to user
         if (comp.StickPopupSuccess != null)
         {
-            var msg = Loc.GetString(comp.StickPopupSuccess);
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(comp.StickPopupSuccess);
             _popup.PopupClient(msg, user, user);
         }
 
@@ -209,7 +210,7 @@ public sealed partial class StickySystem : EntitySystem
         // show message to user
         if (comp.UnstickPopupSuccess != null)
         {
-            var msg = Loc.GetString(comp.UnstickPopupSuccess);
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(comp.UnstickPopupSuccess);
             _popup.PopupClient(msg, user, user);
         }
 

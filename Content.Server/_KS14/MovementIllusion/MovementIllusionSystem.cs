@@ -11,27 +11,13 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
-    // TODO LCDC: ON ENGINE UPDATE: FIX THIS
-    /*[Dependency]*/
-    private /*readonly*/ EntityQuery<MovementIllusionMapComponent> _illMapQuery = default;
-    /*[Dependency]*/
-    private /*readonly*/ EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default;
-    /*[Dependency]*/
-    private /*readonly*/ EntityQuery<PhysicsComponent> _physicsQuery = default;
+    [Dependency] private EntityQuery<MovementIllusionMapComponent> _illusionMapQuery = default!;
+    [Dependency] private EntityQuery<MovementIllusionFocusComponent> _illusionFocusQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     private static readonly TimeSpan CleanupDelay = TimeSpan.FromSeconds(120f);
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(6f);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // TODO LCDC: ON ENGINE UPDATE: FIX THIS
-        _illMapQuery = GetEntityQuery<MovementIllusionMapComponent>();
-        _illFocusQuery = GetEntityQuery<MovementIllusionFocusComponent>();
-        _physicsQuery = GetEntityQuery<PhysicsComponent>();
-    }
 
     public override void Update(float frameTime)
     {
@@ -60,14 +46,14 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     private void OnParentChanged(ref EntParentChangedMessage args)
     {
         if (args.Transform.MapUid is not { } mapUid ||
-            !_illMapQuery.TryGetComponent(mapUid, out var illusionMapComponent) ||
+            !_illusionMapQuery.TryGetComponent(mapUid, out var illusionMapComponent) ||
             Paused(mapUid))
             return;
 
-        if (_illFocusQuery.HasComponent(args.Entity))
+        if (_illusionFocusQuery.HasComponent(args.Entity))
             return;
 
-        if (_illFocusQuery.HasComponent(args.Transform.ParentUid))
+        if (_illusionFocusQuery.HasComponent(args.Transform.ParentUid))
             RemComp<MovementIllusionBanishedComponent>(args.Entity);
         else if (_physicsQuery.TryGetComponent(args.Entity, out var physicsComponent))
         {

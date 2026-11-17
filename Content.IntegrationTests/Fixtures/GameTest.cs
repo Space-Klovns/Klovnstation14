@@ -227,6 +227,8 @@ public abstract partial class GameTest
     [TearDown]
     public virtual async Task DoTeardown()
     {
+        string? ksFailure = null; // KS14: see the finally block
+
         try
         {
             // In some cool future we might be able to make this only throw out the pair
@@ -235,6 +237,12 @@ public abstract partial class GameTest
             // So not yet.
             if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
             {
+                // KS14 start: the dirty dispose below replaces this failure with a bare "Test was dirty-disposed",
+                //      often reported as NotExecuted, so write the real one to the output where it survives
+                var result = TestContext.CurrentContext.Result;
+                TestContext.Out.WriteLine($"Test failed before teardown: {result.Message}{Environment.NewLine}{result.StackTrace}");
+                ksFailure = result.Message;
+                // KS14 end
                 _pairDestroyed = true; // Blow it up, we failed and it might be screwed.
                 return;
             }
@@ -247,10 +255,11 @@ public abstract partial class GameTest
             // And other teardown logic will go here. Eventually.
 
         }
-        catch (Exception)
+        catch (Exception e)
         {
             _pairDestroyed = true;
-            Assert.Fail();
+            // KS14: say why, or the failure reads as a bare "Test was dirty-disposed" with no cause
+            Assert.Fail($"Teardown threw: {e}");
             throw;
         }
         finally
@@ -261,6 +270,11 @@ public abstract partial class GameTest
                 await Pair.CleanReturnAsync();
             else
                 await Pair.DisposeAsync();
+
+            // KS14: the dirty dispose's Assert.Warn can take the place of the failure, which the test adapter then reports as
+            //      skipped and the run as successful. Fail again after it, so a failing test can never pass for a skipped one.
+            if (ksFailure != null)
+                Assert.Fail($"Test failed before teardown: {ksFailure}");
         }
     }
 }

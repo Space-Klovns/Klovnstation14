@@ -2,13 +2,14 @@
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       MinSize="200 200"
-                      Title="Options">
+                      Title="{Loc 'ks-mcqdialogue-default-title'}">
     <BoxContainer Orientation="Vertical"
                   Margin="5 5 5 5"
                   SeparationOverride="10">
 
         <controls:StripeBack>
-            <Label Text="Select one"
+            <Label Name="PromptLabel"
+                   Text="{Loc 'ks-mcqdialogue-default-prompt'}"
                    HorizontalAlignment="Center"/>
         </controls:StripeBack>
 

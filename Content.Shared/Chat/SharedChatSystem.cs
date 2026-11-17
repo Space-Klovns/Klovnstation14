@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 using Content.Shared.ActionBlocker;
@@ -173,7 +174,7 @@ public abstract partial class SharedChatSystem : EntitySystem
         {
             output = SanitizeMessageCapital(input[1..].TrimStart());
             if (!quiet)
-                _popup.PopupEntity(Loc.GetString("chat-manager-no-radio-key"), source, source);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chat-manager-no-radio-key"), source, source);
             return true;
         }
 
@@ -193,7 +194,7 @@ public abstract partial class SharedChatSystem : EntitySystem
 
         if (!_keyCodes.TryGetValue(channelKey, out channel) && !quiet)
         {
-            var msg = Loc.GetString("chat-manager-no-such-channel", ("key", channelKey));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("chat-manager-no-such-channel", ("key", channelKey));
             _popup.PopupEntity(msg, source, source);
         }
 
@@ -378,7 +379,9 @@ public abstract partial class SharedChatSystem : EntitySystem
         string? nameOverride = null,
         bool checkRadioPrefix = true,
         bool ignoreActionBlocker = false,
-        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */,
+        EntityUid? ksTranslationSource = null, // BS: UPSTREAM-BS-TRANSLATION-001, authenticated source of relayed speech.
+        string? ksRelayedTranslationText = null // BS: Original text is absent on muffled relay deliveries.
         )
     { }
 

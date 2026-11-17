@@ -23,6 +23,8 @@ public sealed partial class GasPressureRegulatorSystem : SharedGasPressureRegula
     [Dependency] private SharedAmbientSoundSystem _ambientSound = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private AtmosphereSystem _atmosphere = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsLiquidFlowSystem _ksLiquidFlowSystem = default!; // KS14
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private IGameTiming _timing = default!;
 
@@ -136,12 +138,19 @@ public sealed partial class GasPressureRegulatorSystem : SharedGasPressureRegula
         var desiredVolumeToTransfer = deltaMolesToTransfer * ((Atmospherics.R * t1) / p1);
 
         // And finally, limit the transfer volume to the max flow rate of the valve.
+        var ksMaxVolume = ent.Comp.MaxTransferRate * _atmosphere.PumpSpeedup() * args.dt; // KS14
         var actualVolumeToTransfer = Math.Min(desiredVolumeToTransfer,
-            ent.Comp.MaxTransferRate * _atmosphere.PumpSpeedup() * args.dt);
+            ksMaxVolume /* KS14: hoisted */);
 
         // We remove the gas from the inlet and merge it into the outlet.
-        var removed = inletPipeNode.Air.RemoveVolume(actualVolumeToTransfer);
+        // KS14 start: the gas throttles, and liquid crosses by the orifice law. Over its threshold the regulator relieves
+        //     liquid fully open, down to the threshold: a net packed with liquid is over pressure with almost no gas to move.
+        var removed = inletPipeNode.Air.RemoveVolume(actualVolumeToTransfer, includeLiquid: false);
+        _ksTransferThermoSystem.Apply(removed, p1, p2, doesWork: false);
         _atmosphere.Merge(outletPipeNode.Air, removed);
+        _ksLiquidFlowSystem.Transfer(inletPipeNode.Air, outletPipeNode.Air, ent.Comp.KsLiquidConductance, args.dt,
+            minimumInletPressure: ent.Comp.Threshold);
+        // KS14 end
 
         // Calculate the flow rate in L/s for the UI.
         var sentFlowRate = MathF.Round(actualVolumeToTransfer / args.dt, 1);

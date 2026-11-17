@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Alert;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.EntitySystems;
@@ -84,7 +85,7 @@ public abstract partial class SharedInternalsSystem : EntitySystem
         // Check if a mask is present.
         if (internals.BreathTools.Count == 0)
         {
-            var message = user == target ? Loc.GetString("internals-self-no-breath-tool") : Loc.GetString("internals-other-no-breath-tool", ("ent", Identity.Name(target, EntityManager, user)));
+            var message = user == target ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("internals-self-no-breath-tool") : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("internals-other-no-breath-tool", ("ent", Identity.Name(target, EntityManager, user)));
             _popupSystem.PopupClient(message, target, user);
             return false;
         }
@@ -95,7 +96,7 @@ public abstract partial class SharedInternalsSystem : EntitySystem
         // If they're not on then check if we have a mask to use
         if (tank == null)
         {
-            var message = user == target ? Loc.GetString("internals-self-no-tank") : Loc.GetString("internals-other-no-tank", ("ent", Identity.Name(target, EntityManager, user)));
+            var message = user == target ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("internals-self-no-tank") : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("internals-other-no-tank", ("ent", Identity.Name(target, EntityManager, user)));
             _popupSystem.PopupClient(message, target, user);
             return false;
         }

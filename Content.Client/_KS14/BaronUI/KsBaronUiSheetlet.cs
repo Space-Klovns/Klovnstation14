@@ -1,10 +1,11 @@
+using System.Linq;
+using Content.Client._KS14.SalvageTablet;
+using Content.Client._KS14.Tgui;
 using Content.Client.Resources;
 using Content.Client.Stylesheets;
-using Content.Client.Stylesheets.Fonts;
 using Content.Client.Chat.UI;
 using Content.Client.UserInterface.Controls;
-using Content.Client.UserInterface.Screens;
-using Content.Client.UserInterface.Systems.Chat.Controls;
+using Content.Client.UserInterface.Controls.FancyTree;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -18,7 +19,7 @@ namespace Content.Client._KS14.BaronUI;
 /// Provides the Baron UI chrome without extending the upstream stylesheet configuration interfaces.
 /// The textures are temporary assets imported from brapmine's Baron UI implementation.
 /// </summary>
-public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
+public sealed partial class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
 {
     public const string ButtonStyle1 = "KsBaronButtonStyle1";
     public const string ButtonStyle2 = "KsBaronButtonStyle2";
@@ -89,10 +90,21 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             ContentMarginTopOverride = 10,
         };
 
+        // A heading's chevron follows its state through the heading's own style box; the stock one can't.
+        var chevron = sheet.GetTextureOr(
+            ((Content.Client.Stylesheets.SheetletConfigs.IIconConfig)sheet).InvertedTriangleIconPath,
+            Content.Client.Stylesheets.Stylesheets.NanotrasenStylesheet.TextureRoot);
+
         return
         [
+            E<CollapsibleHeading>().Box(new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox { Texture = chevron }),
+            E<CollapsibleHeading>().PseudoPressed().Box(
+                new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox { Open = true, Texture = chevron }),
+            E<CollapsibleHeading>().ParentOf(E<BoxContainer>().ParentOf(E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle)))
+                .Modulate(Color.Transparent),
             E<Label>().Font(regularFont),
             E<Label>().Class("FancyWindowTitle").Font(boldFont),
+            E<BoxContainer>().Class(KsTguiSheetlet.StyleClassHeaderRow).Margin(new Thickness(15, 15, 15, 28)),
             E<Label>().Class(DefaultWindow.StyleClassWindowTitle).Font(boldFont),
             // Apply Baron typography to formatted UI text such as examine entries.
             E<RichTextLabel>().Font(regularFont),
@@ -149,6 +161,19 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<ContainerButton>().Class(ButtonStyle4).Box(button4),
             E<ContainerButton>().Class(ButtonStyle5).Box(button5),
 
+            // Let the enclosing Baron panel show through entry lists, including nested guidebook categories.
+            E<TreeItem>().Panel(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassEvenRow).Box(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassOddRow).Box(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassSelected).Box(new StyleBoxFlat(Color.Black.WithAlpha(0.3f))),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .PseudoHovered().Box(new StyleBoxFlat(Color.Black.WithAlpha(0.15f))),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassSelected).PseudoHovered().Box(new StyleBoxFlat(Color.Black.WithAlpha(0.4f))),
+
             // KS14: make the Baron texture the default PanelContainer chrome across menus.
             E<PanelContainer>().Panel(panelDark1Clean).Modulate(Color.White),
             E<PanelContainer>().Class(StyleClass.BackgroundPanel).Panel(panelDark1).Modulate(Color.White),
@@ -197,6 +222,53 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, scrollHover),
+            // The ported tgui windows, which Baron opens too (KsBaronUiSheetlet.Tgui.cs).
+            .. TguiControlRules(regularFont, boldFont, regularFontSmall),
+
+            // After the tgui control rules: the cart's - and + are transparent tgui buttons, and their own rules, as
+            //      specific as the transparent button's, win by coming later.
+            .. KsSalvageTabletStyleClasses.Rules(
+                tracked: Color.FromHex("#5BA85B"),
+                requested: Color.FromHex("#E8A33D"),
+                low: Color.FromHex("#D9443B")),
+            .. SalvageTabletAmountButtonRules(),
+        ];
+    }
+
+    /// <summary>
+    ///     The S.P.A.M. cart's bare - and +: no plate in any state, and no tint on the nothing it draws. Each state needs its
+    ///         own rule, as the button rules set a box and a tint per state.
+    /// </summary>
+    private static StyleRule[] SalvageTabletAmountButtonRules()
+    {
+        var empty = new StyleBoxEmpty();
+        return
+        [
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoNormal()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoHovered()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoPressed()
+                .Box(empty).Modulate(Color.White),
+            E<ContainerButton>().Class(ContainerButton.StyleClassButton).Class(KsSalvageTabletStyleClasses.AmountButton).PseudoDisabled()
+                .Box(empty).Modulate(Color.White),
+
+            // The cart's - and + are tgui buttons, which Baron styles with rules on the KsTguiButton type; these,
+            //      as specific and later, keep them bare.
+            .. new[]
+            {
+                ContainerButton.StylePseudoClassNormal,
+                ContainerButton.StylePseudoClassHover,
+                ContainerButton.StylePseudoClassPressed,
+                ContainerButton.StylePseudoClassDisabled,
+            }.Select(pseudo => E<Content.Client._KS14.Tgui.Controls.KsTguiButton>()
+                .Class(ContainerButton.StyleClassButton)
+                .Class(KsSalvageTabletStyleClasses.AmountButton)
+                .Pseudo(pseudo)
+                .Box(empty)
+                .Modulate(Color.White)),
         ];
     }
 

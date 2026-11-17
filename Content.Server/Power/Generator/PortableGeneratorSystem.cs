@@ -1,4 +1,5 @@
-﻿using Content.Server.DoAfter;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.DoAfter;
 using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
@@ -124,7 +125,7 @@ public sealed partial class PortableGeneratorSystem : SharedPortableGeneratorSys
             if (user is null)
                 return;
 
-            _popup.PopupEntity(Loc.GetString("portable-generator-start-success"), uid, user.Value);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portable-generator-start-success"), uid, user.Value);
 
         }
         else
@@ -135,7 +136,7 @@ public sealed partial class PortableGeneratorSystem : SharedPortableGeneratorSys
             if (user is null)
                 return;
 
-            _popup.PopupEntity(Loc.GetString("portable-generator-start-fail"), uid, user.Value);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portable-generator-start-fail"), uid, user.Value);
         }
     }
 

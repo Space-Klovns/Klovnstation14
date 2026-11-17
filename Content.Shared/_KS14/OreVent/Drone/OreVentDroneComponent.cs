@@ -1,3 +1,4 @@
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
@@ -35,6 +36,21 @@ public sealed partial class OreVentDroneComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadOnly)]
     public OreVentDroneMovement LastMovementState = OreVentDroneMovement.None;
+
+    /// <summary>
+    ///     Chance, from 0 to 1, that an escaping drone says it has to go home, then never makes it.
+    /// </summary>
+    [DataField]
+    public float FunnyEndingChance = 0.01f;
+
+    /// <summary>
+    ///     Whether this drone, escaping, is going to blow up as it leaves.
+    /// </summary>
+    [ViewVariables]
+    public bool FunnyEnding;
+
+    [DataField]
+    public SoundSpecifier FunnyEndingSound = new SoundPathSpecifier("/Audio/Effects/explosion3.ogg", AudioParams.Default.WithVolume(-6f));
 }
 
 [Serializable, NetSerializable]

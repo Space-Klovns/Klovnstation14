@@ -29,7 +29,7 @@ public sealed partial class AnalysisConsoleBoundUserInterface(EntityUid owner, E
 
         _consoleMenu.OnServerSelectionButtonPressed += () =>
         {
-            SendMessage(new ConsoleServerSelectionMessage());
+            SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
         };
         _consoleMenu.OnExtractButtonPressed += () =>
         {

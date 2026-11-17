@@ -20,6 +20,7 @@ namespace Content.Client.Administration.UI.Tabs.ObjectsTab
 
             ObjectNameLabel.OnKeyBindDown += ObjectNameClicked;
             EntityIDLabel.OnKeyBindDown += EntityIDClicked;
+            Content.Client._KS14.Tgui.Admin.KsTguiTableRowLook.Attach(this, BackgroundColorPanel, striped: false, header: true); // KS14: tgui table header
         }
 
         public Label GetHeader(Header header)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Managers;
 using Content.Server.Popups;
@@ -178,7 +179,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
             {
                 state.CooldownUntil = now + TimeSpan.FromSeconds((double)_cooldownSeconds);
                 EndBurst(chunk.UserId, state);
-                _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-cooldown"), speakerUid, session, type: PopupType.SmallCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create("ks-voice-popup-cooldown"), speakerUid, session, type: PopupType.SmallCaution);
                 block = KsVoiceBlockReason.Cooldown;
             }
         }

@@ -1,12 +1,16 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Numerics;
 using Content.Shared._KS14.OreVent.Drone;
 using Content.Shared.DoAfter;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.OreVent;
 
 public sealed partial class OreVentSystem : EntitySystem
 {
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+
     private void InitialiseTapping()
     {
     }
@@ -28,7 +32,7 @@ public sealed partial class OreVentSystem : EntitySystem
         {
             CancelTapping(entity!);
 
-            _popupSystem.PopupEntity(Loc.GetString("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
             ClearAreaAround(entity, entity.Comp.ClearRadius / 2f);
 
             return;
@@ -104,6 +108,8 @@ public sealed partial class OreVentSystem : EntitySystem
         if (!_netManager.IsServer)
             return;
 
+        // TODO KS14: tgstation also puts ash smoke particles (/particles/smoke/ash) over the vent for the whole wave
+        //      defence, removed when it ends. There is no particle system to port them to yet.
         var processEntityUid = SpawnAtPosition(entity.Comp.TappingProcessEntityProto, new EntityCoordinates(entity, Vector2.Zero));
         entity.Comp.TappingProcessEntityUid = processEntityUid;
     }
@@ -111,7 +117,7 @@ public sealed partial class OreVentSystem : EntitySystem
     /// <summary>
     ///     Called when tapping is stopped, regardless of success or failure.
     /// </summary>
-    private void OnTappingEnded(Entity<OreVentComponent> entity, MetaDataComponent? metaDataComponent = null)
+    private void OnTappingEnded(Entity<OreVentComponent> entity, bool success, MetaDataComponent? metaDataComponent = null)
     {
         entity.Comp.BeingTapped = false;
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.BeingTapped), meta: metaDataComponent);
@@ -121,7 +127,7 @@ public sealed partial class OreVentSystem : EntitySystem
 
         if (entity.Comp.DroneEntityUid is { } droneUid &&
             !TerminatingOrDeleted(droneUid))
-            _oreVentDroneSystem.Escape(droneUid);
+            _oreVentDroneSystem.Escape(droneUid, success);
 
         entity.Comp.DroneEntityUid = null;
     }
@@ -137,13 +143,20 @@ public sealed partial class OreVentSystem : EntitySystem
             return;
 
         // Change necessary vars
-        OnTappingEnded(entity!, metaDataComponent: metaDataComponent);
+        OnTappingEnded(entity!, success: true, metaDataComponent: metaDataComponent);
 
         entity.Comp.Tapped = true;
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.Tapped), meta: metaDataComponent);
 
         _oreWellSystem.GenerateOreWellWithSettings(entity.Owner, entity.Comp.OreWellSettingId);
         _appearanceSystem.SetData(entity.Owner, OreVentVisuals.Tapped, true);
+
+        // The server's alone: the client runs this too, for its copy of the do-after.
+        if (_netManager.IsServer)
+        {
+            _audioSystem.PlayPvs(entity.Comp.TappedSound, entity.Owner);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-specific-orevent-tapped"), entity.Owner, type: Popups.PopupType.Medium);
+        }
     }
 
     /// <summary>
@@ -156,6 +169,13 @@ public sealed partial class OreVentSystem : EntitySystem
             !EntityManager.MetaQuery.Resolve(entity.Owner, ref metaDataComponent))
             return;
 
-        OnTappingEnded(entity!, metaDataComponent: metaDataComponent);
+        // A destroyed drone cancels tapping, and the do-after it breaks then comes back here as cancelled.
+        if (!entity.Comp.BeingTapped)
+            return;
+
+        OnTappingEnded(entity!, success: false, metaDataComponent: metaDataComponent);
+
+        if (_netManager.IsServer)
+            _audioSystem.PlayPvs(entity.Comp.TappingFailedSound, entity.Owner);
     }
 }

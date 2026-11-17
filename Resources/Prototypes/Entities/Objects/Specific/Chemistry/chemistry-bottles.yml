@@ -5,6 +5,10 @@
   abstract: true
   description: A small bottle.
   components:
+  - type: KsExplosiveContainer # KS14: explodes when shot or burned, if it holds anything explosive
+    solution: drink
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: drink
   - type: Tag
     tags:
     - Bottle

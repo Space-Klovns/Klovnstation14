@@ -2,7 +2,8 @@ rpd-component-piping = Piping
 rpd-component-atmosphericutility = Atmospheric Utility
 rpd-component-pumps = Pumps & Valves
 rpd-component-vents = Vents
-rcd-component-sensors-monitors = Sensors & Monitors
+# KS14: match the RPD radial menu's message ID.
+rpd-component-sensors-monitors = Sensors & Monitors
 rcd-rpd-mode-primary = Primary
 rcd-rpd-mode-secondary = Secondary
 rcd-rpd-mode-tertiary = Tertiary

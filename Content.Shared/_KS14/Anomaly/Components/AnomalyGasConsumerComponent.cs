@@ -35,11 +35,11 @@ public sealed partial class AnomalyGasConsumerComponent : Component
     public float SecondaryGasPenalty = 0.5f;
 
     /// <summary>
-    /// How often the anomaly checks the atmosphere (in seconds).
+    /// How often the anomaly checks the atmosphere.
     /// Capped between 0.5 and 2.0 in logic.
     /// </summary>
     [DataField("updateInterval")]
-    public float UpdateInterval = 1.0f;
+    public TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
     #endregion
 
     #region Gameplay State

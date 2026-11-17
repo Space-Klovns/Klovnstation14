@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
@@ -45,7 +46,7 @@ public sealed partial class MeleeForceUnwieldWeaponSystem : EntitySystem
             return;
 
         // Show popup to the target if it actually did unwield something
-        var message = Loc.GetString("melee-force-unwield-popup");
+        var message = KsPopupMessage.Create("melee-force-unwield-popup");
         _popup.PopupEntity(message, ent.Owner, ent.Owner);
     }
 }

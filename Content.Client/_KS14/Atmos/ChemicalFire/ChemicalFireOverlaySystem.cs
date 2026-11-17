@@ -21,9 +21,15 @@ public sealed partial class ChemicalFireOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var overlay = new ChemicalFireOverlay(ProtoMan.Index(UnshadedShader).Instance());
-        dependencyCollection.InjectDependencies(overlay, oneOff: true);
+        var unshadedShader = ProtoMan.Index(UnshadedShader).Instance();
 
+        AddOverlay(dependencyCollection, new ChemicalFireUnderOverlay(unshadedShader));
+        AddOverlay(dependencyCollection, new ChemicalFireOverOverlay(unshadedShader));
+    }
+
+    private void AddOverlay(IDependencyCollection dependencyCollection, ChemicalFireOverlay overlay)
+    {
+        dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);
     }
 
@@ -31,6 +37,7 @@ public sealed partial class ChemicalFireOverlaySystem : EntitySystem
     {
         base.Shutdown();
 
-        _overlayManager.RemoveOverlay<ChemicalFireOverlay>();
+        _overlayManager.RemoveOverlay<ChemicalFireUnderOverlay>();
+        _overlayManager.RemoveOverlay<ChemicalFireOverOverlay>();
     }
 }

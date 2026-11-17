@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Components;
@@ -26,6 +27,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
     [Dependency] private SharedStackSystem _heap = default!; // KS14
     [Dependency] private SharedAudioSystem _audio = default!; // KS14: Added to shared
     [Dependency] private SharedPopupSystem _popup = default!; // KS14: Added to shared
+    [Dependency] private Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem _ksPowerReceiver = default!; // KS14
 
     /// <summary>
     /// Default volume for a sheet if the material's entity prototype has no material composition.
@@ -390,6 +392,11 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         if (!Resolve(toInsert, ref material, ref composition, false))
             return false;
 
+        // KS14 start: moved from the server, or the client predicts an insert that the server then refuses
+        if (!_ksPowerReceiver.IsPowered(receiver))
+            return false;
+        // KS14 end
+
         if (_whitelistSystem.IsWhitelistFail(storage.Whitelist, toInsert))
             return false;
 
@@ -449,17 +456,20 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         else if (!CanTakeVolume(receiver, totalVolume, storage, localOnly: true))
             return false;
 
-        // TODO LCDC: test if this works with entities made up of more than 1 material
+        // KS14 start: the limit is shared by every material, so each one gets only what the ones before it left
+        var newTotalVolume = oldTotalVolume;
         foreach (var (mat, vol) in composition.MaterialComposition)
         {
             var amountAdded = vol * maximumMultiplier;
 
             // amount of material added will be limited so that it doesnt go over storagelimit
             if (storage.StorageLimit is { } storageLimit)
-                amountAdded = Math.Min(amountAdded, storageLimit - oldTotalVolume);
+                amountAdded = Math.Min(amountAdded, storageLimit - newTotalVolume);
 
-            TryChangeMaterialAmount(receiver, mat, amountAdded, storage);
+            if (amountAdded > 0 && TryChangeMaterialAmount(receiver, mat, amountAdded, storage))
+                newTotalVolume += amountAdded;
         }
+        // KS14 end
 
         var insertingComp = EnsureComp<InsertingMaterialStorageComponent>(receiver);
         insertingComp.EndTime = _timing.CurTime + storage.InsertionTime;
@@ -474,9 +484,14 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         var ev = new MaterialEntityInsertedEvent(material);
         RaiseLocalEvent(receiver, ref ev);
 
+        // KS14 start: who put in what, and how much of it was taken
+        var ksInsertedEvent = new Content.Shared._KS14.Materials.KsMaterialEntityInsertedEvent(user, toInsert, maximumMultiplier);
+        RaiseLocalEvent(receiver, ref ksInsertedEvent);
+        // KS14 end
+
         // KS14: moved ts to shared
         _audio.PlayPredicted(storage.InsertingSound, receiver, user);
-        _popup.PopupPredicted(Loc.GetString("machine-insert-item",
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-insert-item",
                 ("user", user),
                 ("machine", receiver),
                 ("item", Identity.Name(toInsert, EntityManager))),

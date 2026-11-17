@@ -27,24 +27,21 @@ public sealed partial class NpcRetaliationWarningSystem : EntitySystem
             var ourMapPos = _transformSystem.GetMapCoordinates(sourceUid);
             foreach (var (warnedUid, time) in component.ExpiryTimes)
             {
-                if (TerminatingOrDeleted(warnedUid))
-                    goto removeIt;
-
-                var otherMapPos = _transformSystem.GetMapCoordinates(warnedUid);
-                if (ourMapPos.MapId != otherMapPos.MapId ||
-                    (otherMapPos.Position - ourMapPos.Position).LengthSquared() > component.DistanceThresholdSq)
+                // Gone or out of range: dropped without retaliating.
+                if (!TerminatingOrDeleted(warnedUid))
                 {
-                    goto removeIt;
+                    var otherMapPos = _transformSystem.GetMapCoordinates(warnedUid);
+                    if (ourMapPos.MapId == otherMapPos.MapId &&
+                        (otherMapPos.Position - ourMapPos.Position).LengthSquared() <= component.DistanceThresholdSq)
+                    {
+                        if (_gameTiming.CurTime < time)
+                            continue;
+
+                        if (TryComp<NPCRetaliationComponent>(sourceUid, out var retaliationComponent))
+                            _retaliationSystem.TryRetaliate((sourceUid, retaliationComponent), warnedUid, tryWarn: false);
+                    }
                 }
 
-                if (_gameTiming.CurTime < time)
-                    continue;
-
-                if (!TryComp<NPCRetaliationComponent>(sourceUid, out var retaliationComponent))
-                    goto removeIt;
-
-                _retaliationSystem.TryRetaliate((sourceUid, retaliationComponent), warnedUid, tryWarn: false);
-            removeIt:
                 removed.Add(warnedUid);
             }
 

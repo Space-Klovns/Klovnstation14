@@ -221,8 +221,8 @@
   - Medical
   flavor: cold
   color: "#b3f1ff"
-  boilingPoint: 50.0
-  meltingPoint: 45.0
+  boilingPoint: 323.15 # KS14: 50.0 -> 323.15, Kelvin
+  meltingPoint: 318.15 # KS14: 45.0 -> 318.15, Kelvin
   tileReactions:
   - !type:CreateEntityTileReaction
     entity: IceCrust

@@ -1,4 +1,4 @@
-using Content.Server.Examine;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Robust.Server.GameObjects;
@@ -13,7 +13,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 public sealed partial class CoordinatesInLOSCon : UtilityConsideration
 {
     [Dependency] private TransformSystem _transformSystem = default!;
-    [Dependency] private ExamineSystem _examineSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
 
     /// <summary>
     ///     Coordinates that must be visible by the target for this to be valid.
@@ -28,12 +28,9 @@ public sealed partial class CoordinatesInLOSCon : UtilityConsideration
 
         //var radius = blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(EntityManager), EntityManager);
 
-        // this could use one small optimisation but who cares
-        return _examineSystem.InRangeUnOccluded(
+        return _npcLineOfSightSystem.InLineOfSight(
             _transformSystem.GetMapCoordinates(targetUid),
             _transformSystem.ToMapCoordinates(toCoordinates),
-            Radius + 0.5f,
-            null
-        ) ? 1f : 0f;
+            Radius + 0.5f) ? 1f : 0f;
     }
 }

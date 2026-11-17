@@ -24,7 +24,7 @@
     - ClothingOuterArmorBasic
     - ClothingHeadHelmetERTSecurity
     - ClothingBeltMilitaryWebbingERT
-    - NanoplantNtPDA # intentionally after webbing so it doesnt go on belt
+    - NanoplantNtPDA
     - ClothingHandsGlovesCombat
     - Machete
     - Gauze
@@ -182,7 +182,7 @@
     - ClothingMaskGasSyndicate
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
-    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
+    - TiderfallSyndiePDA
     - ClothingEyesHudSyndicate # it's about time
     - ClothingHandsGlovesCombat
     - FlashlightSeclite

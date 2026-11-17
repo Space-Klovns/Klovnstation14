@@ -1,0 +1,38 @@
+# Not hydrocarbons, so machines can handle these by themselves: both leave a mixture physically anyway.
+
+- type: reagent
+  id: KsHydrogenSulfide
+  name: reagent-name-ks-hydrogen-sulfide
+  desc: reagent-desc-ks-hydrogen-sulfide
+  group: Toxins
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: bitter
+  color: "#d8d890"
+  boilingPoint: 213
+  meltingPoint: 187
+  fluidmos:
+    molarMass: 34
+    latentHeat: 250
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 2
+            Asphyxiation: 2
+
+- type: reagent
+  id: KsPetroleumCoke
+  name: reagent-name-ks-petroleum-coke
+  desc: reagent-desc-ks-petroleum-coke
+  group: Elements
+  physicalDesc: reagent-physical-desc-powdery
+  flavor: bitter
+  color: "#23201e"
+  meltingPoint: 3800
+  fluidmos:
+    molarMass: 12

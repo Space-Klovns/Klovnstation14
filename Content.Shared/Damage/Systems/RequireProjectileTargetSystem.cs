@@ -27,6 +27,11 @@ public sealed partial class RequireProjectileTargetSystem : EntitySystem
             return;
 
         var other = args.OtherEntity;
+        // KS14 start: projectiles that hit regardless
+        if (HasComp<Content.Shared._KS14.Projectiles.IgnoreRequireProjectileTargetComponent>(other))
+            return;
+        // KS14 end
+
         if (TryComp(other, out ProjectileComponent? projectile) &&
             CompOrNull<TargetedProjectileComponent>(other)?.Target != ent)
         {

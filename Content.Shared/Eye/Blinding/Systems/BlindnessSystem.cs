@@ -1,5 +1,5 @@
+using Content.Shared._KS14.Flash; // KS14
 using Content.Shared.Eye.Blinding.Components;
-using Content.Shared.Flash;
 using Content.Shared.StatusEffectNew;
 using Robust.Shared.Prototypes;
 
@@ -18,7 +18,7 @@ public sealed partial class BlindnessSystem : EntitySystem
         SubscribeLocalEvent<BlindnessStatusEffectComponent, StatusEffectAppliedEvent>(OnApplied);
         SubscribeLocalEvent<BlindnessStatusEffectComponent, StatusEffectRemovedEvent>(OnRemoved);
         SubscribeLocalEvent<BlindnessStatusEffectComponent, StatusEffectRelayedEvent<CanSeeAttemptEvent>>(OnBlindTrySee);
-        SubscribeLocalEvent<BlindnessStatusEffectComponent, StatusEffectRelayedEvent<FlashAttemptEvent>>(OnFlashAttempt);
+        SubscribeLocalEvent<BlindnessStatusEffectComponent, StatusEffectRelayedEvent<KsCanFlashEvent>>(OnCanFlash); // KS14: was FlashAttemptEvent
     }
 
     private void OnApplied(Entity<BlindnessStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
@@ -38,7 +38,7 @@ public sealed partial class BlindnessSystem : EntitySystem
         args.Args = ev;
     }
 
-    private void OnFlashAttempt(Entity<BlindnessStatusEffectComponent> ent, ref StatusEffectRelayedEvent<FlashAttemptEvent> args)
+    private void OnCanFlash(Entity<BlindnessStatusEffectComponent> ent, ref StatusEffectRelayedEvent<KsCanFlashEvent> args) // KS14: was FlashAttemptEvent
     {
         var ev = args.Args;
         ev.Cancelled = true;

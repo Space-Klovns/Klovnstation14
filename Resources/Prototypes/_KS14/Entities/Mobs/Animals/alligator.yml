@@ -1,0 +1,86 @@
+- type: entity
+  parent: SimpleMobBase
+  id: KsMobSpaceAlligator
+  name: space alligator
+  description: A large, formerly aquatic reptile with a nasty temper.
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    noRot: false
+    sprite: _KS14/Mobs/Animals/maint_croc.rsi
+    layers:
+    - state: croc
+      map: [ "enum.DamageStateVisualLayers.Base", "alligator" ]
+    - state: death_roll
+      map: [ "deathRoll" ]
+      visible: false
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.StrapVisuals.State:
+        alligator:
+          True: { visible: false }
+          False: { visible: true }
+        deathRoll:
+          True: { visible: true }
+          False: { visible: false }
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: croc
+      Critical:
+        Base: croc_dead
+      Dead:
+        Base: croc_dead
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      130: Dead
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.42
+        density: 90
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: NpcFactionMember
+    factions:
+    - SimpleHostile
+  - type: HTN
+    rootTask:
+      task: SimpleHostileCompound
+  - type: NPCRetaliation
+  - type: MeleeWeapon
+    attackRate: 0.667
+    angle: 0
+    altDisarm: false
+    animation: WeaponArcBite
+    soundHit:
+      path: /Audio/Effects/bite.ogg
+    damage:
+      types:
+        Slash: 5
+        Piercing: 10
+  - type: StaminaDamageOnHit
+    damage: 25
+  - type: Strap
+    position: Down
+    rotation: 90
+    buckleOffset: 0,-1
+    buckleOnInteractHand: false
+    buckleSound: null
+    unbuckleSound: null
+    whitelist:
+      components:
+      - HumanoidProfile
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 2
+    - id: KsClothingHeadHatGatorCloak
+      prob: 0.2
+  - type: KsAlligator

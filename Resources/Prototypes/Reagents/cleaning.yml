@@ -8,8 +8,8 @@
   - Chemist
   flavor: bitter
   color: "#a1000b"
-  boilingPoint: 111.0
-  meltingPoint: -5.0
+  boilingPoint: 384.15 # KS14: 111.0 -> 384.15, Kelvin
+  meltingPoint: 268.15 # KS14: -5.0 -> 268.15, Kelvin
   metabolisms:
     Bloodstream:
       effects:
@@ -40,8 +40,8 @@
   flavor: bitter
   color: "#c8ff69"
   recognizable: true
-  boilingPoint: 147.0 # Made this up, loosely based on bleach
-  meltingPoint: -11.0
+  boilingPoint: 420.15 # KS14: 147.0 -> 420.15, Kelvin. Made this up, loosely based on bleach
+  meltingPoint: 262.15 # KS14: -11.0 -> 262.15, Kelvin
   tileReactions:
     - !type:CleanTileReaction
       cleanCost: 0.1
@@ -56,8 +56,8 @@
   flavor: clean
   color: "#c8dfc9"
   recognizable: true
-  boilingPoint: 100.0
-  meltingPoint: 60.0
+  boilingPoint: 373.15 # KS14: 100.0 -> 373.15, Kelvin
+  meltingPoint: 333.15 # KS14: 60.0 -> 333.15, Kelvin
   slipData:
     requiredSlipSpeed: 3.5
   friction: 0.3 # Slightly less friction than water, but not as bad as space lube
@@ -89,8 +89,8 @@
   flavor: funny
   color: "#77b58e"
   recognizable: true
-  boilingPoint: 290.0 # Glycerin
-  meltingPoint: 18.2
+  boilingPoint: 563.15 # KS14: 290.0 -> 563.15, Kelvin. Glycerin
+  meltingPoint: 291.35 # KS14: 18.2 -> 291.35, Kelvin
   tileReactions:
   - !type:SpillTileReaction
   friction: 0.05
@@ -102,8 +102,8 @@
   physicalDesc: reagent-physical-desc-sticky
   flavor: glue
   color: "#ffffff"
-  boilingPoint: 250.0
-  meltingPoint: 380.0
+  boilingPoint: 523.15 # KS14: 250.0 -> 523.15, Kelvin
+  meltingPoint: 653.15 # KS14: 380.0 -> 653.15, Kelvin
   tileReactions:
   - !type:SpillTileReaction
   viscosity: 0.5

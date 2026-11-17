@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions.Components;
 using Content.Shared.Actions.Events;
 using Content.Shared.Popups;
@@ -68,7 +69,7 @@ public sealed partial class ConfirmableActionSystem : EntitySystem
         comp.NextUnprime = comp.NextConfirm + comp.PrimeTime;
         Dirty(uid, comp);
 
-        _popup.PopupClient(Loc.GetString(comp.Popup), user, user, PopupType.LargeCaution);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.Popup), user, user, PopupType.LargeCaution);
     }
 
     private void Unprime(Entity<ConfirmableActionComponent> ent)

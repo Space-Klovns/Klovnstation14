@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.IdentityManagement;
 using Content.Shared.Mindshield.Components;
 using Content.Shared.Popups;
@@ -44,7 +45,7 @@ public abstract partial class SharedRevolutionarySystem : EntitySystem
             var name = Identity.Entity(uid, EntityManager);
             RemComp<RevolutionaryComponent>(uid);
             _sharedStun.TryUpdateParalyzeDuration(uid, stunTime);
-            _popupSystem.PopupEntity(Loc.GetString("rev-break-control", ("name", name)), uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rev-break-control", ("name", name)), uid);
         }
     }
 

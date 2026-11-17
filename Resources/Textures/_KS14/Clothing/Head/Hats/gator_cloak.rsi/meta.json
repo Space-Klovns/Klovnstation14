@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from SurfShack13 at https://github.com/forgman6/SurfShack13/tree/1b811aa73c7129d203d43dda641ca3c8c22941da/surfshack13/icons (obj/clothing/head/costume.dmi and mob/clothing/head/costume.dmi)",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "equipped-HELMET",
+      "directions": 4
+    }
+  ]
+}

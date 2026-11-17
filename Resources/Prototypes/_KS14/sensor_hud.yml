@@ -174,10 +174,10 @@
     base: 1.0
     amplitude: 0.6
   # Seconds a stale contact fades from live colour to the memory-ghost tone (0 = snap).
-  ghostFadeSeconds: 1.5
+  ghostFade: 1.5
   # Contact ping: the expanding ring on first detection / live-again. Seconds per
   # ping (0 disables) and its starting alpha.
-  pingSeconds: 0.8
+  pingDuration: 0.8
   pingAlpha: 0.9
   # Shell power-on: a blink riding a rising envelope over bootDuration seconds.
   boot:

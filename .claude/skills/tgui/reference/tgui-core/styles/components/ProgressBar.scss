@@ -1,0 +1,47 @@
+@use "../colors";
+
+.ProgressBar {
+  position: relative;
+  display: inline-block;
+  align-content: center;
+  width: 100%;
+  min-height: var(--button-height);
+  padding: 0 var(--space-m);
+  background-color: var(--progress-bar-background);
+  border: var(--border-thickness-tiny) solid;
+  border-color: var(--progress-bar-color);
+  border-radius: var(--progress-bar-border-radius);
+  transition: border-color var(--progress-bar-transition) ease-out;
+
+  &__fill {
+    position: absolute;
+    inset: 0;
+    background-color: var(--progress-bar-color);
+
+    &--animated {
+      transition-property: background-color, width;
+      transition-duration: var(--progress-bar-transition);
+    }
+  }
+
+  &__content {
+    user-select: none;
+    position: relative;
+    text-align: right;
+    width: 100%;
+  }
+}
+
+.ProgressBar--color--default {
+  --progress-bar-color: hsl(
+    from var(--progress-bar-fill) h s calc(l - var(--adjust-color))
+  );
+}
+
+@each $color-name, $color-value in colors.$color-map {
+  .ProgressBar--color--#{$color-name} {
+    --progress-bar-color: hsl(
+      from #{$color-value} h s calc(l - var(--adjust-color))
+    );
+  }
+}

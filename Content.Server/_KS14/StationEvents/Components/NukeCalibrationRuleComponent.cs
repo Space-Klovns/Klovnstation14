@@ -4,7 +4,7 @@ using Robust.Shared.Audio;
 // wizden-april-fools-2025 nuke-calibration -> ks14 port:
 namespace Content.Server._KS14.StationEvents.Components;
 
-[RegisterComponent, Access(typeof(NukeCalibrationRule))]
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(NukeCalibrationRule))]
 public sealed partial class NukeCalibrationRuleComponent : Component
 {
     /// <summary>
@@ -26,11 +26,19 @@ public sealed partial class NukeCalibrationRuleComponent : Component
     [DataField]
     public EntityUid AffectedNuke;
     [DataField]
-    public float NukeTimer = 180f;
+    public TimeSpan NukeTimer = TimeSpan.FromSeconds(180);
     [DataField]
     public float AutoDisarmChance = 0.5f;
+    /// <summary>
+    /// How long after the nuke is armed the first announcement is made.
+    /// </summary>
     [DataField]
-    public float TimeUntilFirstAnnouncement = 25f;
+    public TimeSpan FirstAnnouncementDelay = TimeSpan.FromSeconds(25);
+    /// <summary>
+    /// When the first announcement is made: <see cref="FirstAnnouncementDelay"/> after the rule started.
+    /// </summary>
+    [DataField, AutoPausedField]
+    public TimeSpan? FirstAnnouncementAt;
     [DataField]
     public bool FirstAnnouncementMade = false;
 }

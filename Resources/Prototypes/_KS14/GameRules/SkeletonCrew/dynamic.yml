@@ -1,0 +1,63 @@
+# The antagonists of Skeleton Crew: a smaller, faster DynamicRule than upstream's, for 3 to 25 players.
+#   Only antagonists a small crew can answer are picked, each at most once a round.
+- type: entity
+  parent: BaseGameRule
+  id: KsSkeletonCrewDynamicRule
+  components:
+  - type: GameRule
+    minPlayers: 3
+  - type: DynamicRule
+    startingBudgetMin: 150
+    startingBudgetMax: 250
+    budgetPerSecond: 0.15
+    minRuleInterval: 360 # 6 minutes
+    maxRuleInterval: 900 # 15 minutes
+    table: !type:AllSelector
+      children:
+      # Roundstart major rules
+      - !type:GroupSelector
+        conditions:
+        - !type:RoundDurationCondition
+          max: 1
+        children:
+        - id: Traitor
+          conditions:
+          - !type:HasBudgetCondition
+          - !type:MaxRuleOccurenceCondition
+      # Roundstart minor rules
+      - !type:GroupSelector
+        conditions:
+        - !type:RoundDurationCondition
+          max: 1
+        children:
+        - id: Thief
+          prob: 0.5
+          conditions:
+          - !type:HasBudgetCondition
+          - !type:MaxRuleOccurenceCondition
+          - !type:PlayerCountCondition
+            min: 6 # a traitor and a thief in a crew of three leaves one player to catch them
+      # Midround rules
+      - !type:GroupSelector
+        conditions:
+        - !type:RoundDurationCondition
+          min: 300 # 5 minutes
+        children:
+        - id: ParadoxCloneSpawn
+          weight: 25
+          conditions:
+          - !type:HasBudgetCondition
+          - !type:MaxRuleOccurenceCondition
+          - !type:PlayerCountCondition
+            min: 5
+          - !type:RoundDurationCondition
+            min: 600 # 10 minutes
+        - id: SleeperAgents
+          weight: 15
+          conditions:
+          - !type:HasBudgetCondition
+          - !type:MaxRuleOccurenceCondition
+          - !type:PlayerCountCondition
+            min: 8
+          - !type:RoundDurationCondition
+            min: 900 # 15 minutes

@@ -16,4 +16,12 @@ public sealed partial class GasPassiveGateComponent : Component
     [ViewVariables(VVAccess.ReadOnly)]
     [DataField]
     public float FlowRate;
+
+    // KS14 start
+    /// <summary>
+    ///     KS14: units of liquid per second per square root kPa that cross this device by the orifice law, apart from its gas.
+    /// </summary>
+    [DataField]
+    public float KsLiquidConductance = Content.Shared._KS14.Fluidmos.KsFluidmos.DefaultLiquidConductance;
+    // KS14 end
 }

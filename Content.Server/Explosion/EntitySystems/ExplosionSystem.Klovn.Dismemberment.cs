@@ -73,8 +73,6 @@ public sealed partial class ExplosionSystem
             _bloodSpraySystem.HandleBleedEffects(
                 (entity.Owner, bloodstreamComponent),
                 totalDamage,
-                transformComponent,
-                transformComponent.GridUid ?? transformComponent.ParentUid,
                 positionalDelta
             );
         }

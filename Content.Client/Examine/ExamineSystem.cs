@@ -7,6 +7,7 @@ using Content.Shared.IdentityManagement;
 using Content.Shared.Input;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Item;
+using Content.Shared.Localizations; // KS14
 using Content.Shared.Verbs;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
@@ -419,7 +420,12 @@ namespace Content.Client.Examine
                 {
                     _idCounter += 1;
                 }
-                RaiseNetworkEvent(new ExamineSystemMessages.RequestExamineInfoMessage(GetNetEntity(entity), _idCounter, true));
+                // KS14 start: request authoritative examine text in the client's language
+                RaiseNetworkEvent(new ExamineSystemMessages.RequestExamineInfoMessage(GetNetEntity(entity), _idCounter, getVerbs: true)
+                {
+                    ClientLocale = Loc.DefaultCulture?.Name ?? ContentLocalizationManager.DefaultCultureName,
+                });
+                // KS14 end
             }
 
             RaiseLocalEvent(entity, new ClientExaminedEvent(entity, playerEnt.Value));

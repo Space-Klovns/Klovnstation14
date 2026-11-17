@@ -143,8 +143,8 @@
   flavor: salty
   color: "#cfd1d0"
   recognizable: true
-  boilingPoint: 1465.0
-  meltingPoint: 800.7
+  boilingPoint: 1738.15 # KS14: 1465.0 -> 1738.15, Kelvin
+  meltingPoint: 1073.85 # KS14: 800.7 -> 1073.85, Kelvin
   plantMetabolism:
   - !type:PlantAdjustWater
     amount: -3

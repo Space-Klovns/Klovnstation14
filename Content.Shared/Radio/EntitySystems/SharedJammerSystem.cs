@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.DeviceNetwork.Components;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
@@ -50,8 +51,8 @@ public abstract partial class SharedJammerSystem : EntitySystem
         if (args.User == null)
             return;
 
-        var state = Loc.GetString(args.Activated ? "radio-jammer-component-on-state" : "radio-jammer-component-off-state");
-        var message = Loc.GetString("radio-jammer-component-on-use", ("state", state));
+        var state = KsPopupMessage.Create /* KS14: defer nested popup label */(args.Activated ? "radio-jammer-component-on-state" : "radio-jammer-component-off-state");
+        var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("radio-jammer-component-on-use", ("state", state));
         _popup.PopupPredicted(message, args.User.Value, args.User.Value);
     }
 
@@ -88,7 +89,7 @@ public abstract partial class SharedJammerSystem : EntitySystem
                     // The range should be updated when it turns on again!
                     _jammer.TrySetRange(entity.Owner, GetCurrentRange(entity));
 
-                    _popup.PopupClient(Loc.GetString(setting.Message), user, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(setting.Message), user, user);
                 },
                 Text = Loc.GetString(setting.Name),
             };

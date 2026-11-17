@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Numerics;
 using Content.Shared.Actions;
 using Content.Shared.Damage.Systems;
@@ -31,7 +32,7 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         if (_gravity.IsWeightless(args.Performer) || _standing.IsDown(args.Performer))
         {
             if (entity.Comp.JumpFailedPopup != null)
-                _popup.PopupClient(Loc.GetString(entity.Comp.JumpFailedPopup.Value), args.Performer, args.Performer);
+                _popup.PopupClient(KsPopupMessage.Create(entity.Comp.JumpFailedPopup.Value), args.Performer, args.Performer);
             return;
         }
 

@@ -1,0 +1,31 @@
+ent-BaseBureaucraticStorageFill = { "" }
+    .desc = { "" }
+    .suffix = Заполненный
+
+ent-BaseFilingCabinet = { ent-BaseStructureDynamic }
+    .desc = Шкаф для хранения всего, что пожелаете.
+    .suffix = Пустой
+
+ent-filingCabinet = картотечный шкаф
+    .desc = { ent-BaseFilingCabinet.desc }
+    .suffix = { ent-BaseFilingCabinet.suffix }
+
+ent-filingCabinetDrawer = комод
+    .desc = Маленький шкафчик для хранения предметов. Теперь на колёсиках!
+    .suffix = { ent-BaseFilingCabinet.suffix }
+
+ent-filingCabinetDrawerRandom = { ent-filingCabinetDrawer }
+    .desc = { ent-filingCabinetDrawer.desc }
+    .suffix = { ent-BaseBureaucraticStorageFill.suffix }
+
+ent-filingCabinetRandom = { ent-filingCabinet }
+    .desc = { ent-filingCabinet.desc }
+    .suffix = { ent-BaseBureaucraticStorageFill.suffix }
+
+ent-filingCabinetTall = высокий шкаф
+    .desc = { ent-BaseFilingCabinet.desc }
+    .suffix = { ent-BaseFilingCabinet.suffix }
+
+ent-filingCabinetTallRandom = { ent-filingCabinetTall }
+    .desc = { ent-filingCabinetTall.desc }
+    .suffix = { ent-BaseBureaucraticStorageFill.suffix }

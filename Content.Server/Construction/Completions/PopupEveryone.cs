@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Shared.Construction;
 using Robust.Shared.Player;
@@ -12,7 +13,7 @@ namespace Content.Server.Construction.Completions
         public void PerformAction(EntityUid uid, EntityUid? userUid, IEntityManager entityManager)
         {
             entityManager.EntitySysManager.GetEntitySystem<PopupSystem>()
-                .PopupEntity(Loc.GetString(Text), uid);
+                .PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(Text), uid);
         }
     }
 }

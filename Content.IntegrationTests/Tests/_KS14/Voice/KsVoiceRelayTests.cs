@@ -624,6 +624,10 @@ public sealed class KsVoiceRelayTests : GameTest
             .RunAsync(CancellationToken.None);
         await SendText(page.Client, JsonSerializer.Serialize(new { type = "auth", token }));
 
+        // "hello" goes out only once the page is registered, so the ticks below are sure to see the connection.
+        //      Without it they can run before authentication finishes, and nothing would tick again to send "state".
+        await ReadText(page.Client);
+
         // Waiting in the lobby, as it were.
         await Pair.RunTicksSync(5);
         var inLobby = await ReadStateReason(page);

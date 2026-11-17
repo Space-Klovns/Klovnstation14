@@ -1,0 +1,200 @@
+# Ported from TerraGov-Marine-Corps at c3c072e3644f4526d0099a79f361bde3aee9b4c7:
+#   code/datums/elements/debris.dm: /particles/impact_smoke, /particles/debris
+#   code/modules/projectiles/gun_system.dm: /particles/firing_smoke, /particles/overheat_smoke
+# BYOND values converted to SS14 units: pixels / 32 = metres, per decisecond x10 = per second, per ds^2 x100,
+# deciseconds / 10 = seconds, friction f per ds -> 1 - (1 - f)^10 per second. See Klovn/Docs/particles.md.
+
+# A bullet's impact on a surface. KsImpactSurfaceSystem turns each emitter (KsParticles rotation) so that its -y
+# points back at the shooter, out of the surface, which is where TGMC sends both.
+
+# /particles/impact_smoke: count 5, spawning 15 per ds, so five at once; the holder goes at 0.7 s, as they die.
+# TGMC's fade (3.3 s) outlasts the lifespan, so the puff starts faint and only fades further: a wisp, as there.
+- type: ksParticles
+  id: KsImpactSmoke
+  count: 5
+  burst: 5
+  spawning: 0
+  oneShot: true
+  lifespan: 0.7
+  fade: 3.3
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_mist.rsi
+      state: mist
+  scale: 0.1
+  grow: 0.65
+  spin: { kind: num, a: -200, b: 200 }
+  velocity: [ 0, -11.5625 ]
+  friction: { kind: num, a: 0.9718, b: 0.9999 }
+  # TGMC's circle 8, 8, applied as BYOND does (added to the velocity every tick, against the friction): a smooth
+  #   wander. As a jolt each step it shook.
+  drift: { kind: circle, a: 2.5, b: 2.5 }
+  driftMode: Accelerate
+  # A puff meeting a wall rolls off it softly and spreads along it, rather than passing through or springing back.
+  collision:
+    onHit: Bounce
+    bounce: 0.35
+    friction: 0.3
+    radius: 0.1
+
+# /particles/debris, as the debris element sets it up: count and spawning both its debris_amount, so one burst.
+- type: ksParticles
+  abstract: true
+  id: KsImpactDebrisBase
+  count: 5
+  burst: 5
+  spawning: 0
+  oneShot: true
+  lifespan: 0.7
+  fade: 0.4
+  velocity: [ 0, -12.5 ]
+  friction: { kind: num, a: 0.9718, b: 0.9999 }
+  # TGMC's generator(GEN_CIRCLE, offset, offset) with offset = rand(-6, 6): anywhere up to 6 px out.
+  position: { kind: circle, a: 0, b: 0.1875 }
+  rotation: { kind: num, a: -20, b: 20 }
+  spin: { kind: num, a: -200, b: 200 }
+  drift: { kind: circle, a: 0, b: 2.8125, dist: square }
+  # Chips bounce off the walls around them rather than flying into the next one.
+  collision:
+    onHit: Bounce
+    bounce: 0.3
+    friction: 0.4
+    radius: 0.04
+
+# DEBRIS_SPARKS: metal walls, girders, metal barricades, shuttles. Eight of them, and lit by themselves.
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisSparks
+  count: 8
+  burst: 8
+  unshaded: true
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: spark
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisWood
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: wood
+  # Flakes drift smoothly, as BYOND applies drift (to the velocity every tick, against the friction), rather than
+  #   jolted each step. The base's TGMC values; sparks and the rest keep the jolts.
+  driftMode: Accelerate
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisRock
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: rock
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisGlass
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: glass
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisLeaf
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: leaf
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisSnow
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: snow
+
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisPaper
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: paper
+
+# /particles/firing_smoke: a puff out of the muzzle along the shot. KsGunFiringSmokeSystem turns -y along the shot.
+# Toned down from TGMC's (five puffs at 12.5 m/s, growing to two tiles across), which fired constantly reads as fog:
+# three, slower, smaller and shorter-lived, but still a visible puff.
+- type: ksParticles
+  id: KsGunFiringSmoke
+  count: 3
+  burst: 3
+  spawning: 0
+  oneShot: true
+  lifespan: 0.6
+  fade: 1.2
+  color: "#FFFFFFB3"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_mist.rsi
+      state: mist
+  scale: 0.08
+  grow: 0.35
+  spin: { kind: num, a: -200, b: 200 }
+  velocity: { kind: box, a: [ -0.3, -3 ], b: [ 0.3, -2 ] }
+  friction: { kind: num, a: 0.9718, b: 0.9999 }
+  drift: { kind: circle, a: 0, b: 0.5 }
+  # A puff meeting a wall rolls off it softly and spreads along it, rather than passing through or springing back.
+  collision:
+    onHit: Bounce
+    bounce: 0.35
+    friction: 0.3
+    radius: 0.1
+
+# /particles/overheat_smoke: smoke curling up off a hot gun, for as long as it is hot. KsGunOverheatSmokeSystem turns
+# it on and off. TGMC's 3 per ds into a cap of 1000, its z-drift (GEN_SPHERE) only ordering them.
+- type: ksParticles
+  id: KsGunOverheatSmoke
+  count: 1000
+  spawning: 30
+  lifespan: 1.5
+  fade: 1
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke_small.rsi
+      state: smoke_1
+    weight: 1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke_small.rsi
+      state: smoke_2
+    weight: 1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke_small.rsi
+      state: smoke_3
+    weight: 2
+  # TGMC's position list(8, 8) only moves BYOND's corner origin onto the gun; here the emitter is already on it.
+  velocity: [ 0, 0.09375 ]
+  gravity: 0, 2.96875
+  friction: 0.8926
+  grow: 0.5
+  drift: { kind: sphere, a: 0, b: 0.3125, dist: normal }
+
+# Armour soaking a hit (the Armor impact material): grey chips off the plate, and a few sparks with them.
+- type: ksParticles
+  parent: KsImpactDebrisBase
+  id: KsImpactDebrisArmor
+  count: 4
+  burst: 4
+  color: "#9A9CA2"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
+      state: snow
+
+- type: ksParticles
+  parent: KsImpactDebrisSparks
+  id: KsImpactArmorSparks
+  count: 3
+  burst: 3

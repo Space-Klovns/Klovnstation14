@@ -23,8 +23,8 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     /// <remarks>
     ///     A missing mixture is treated as "unknown", not "no gas" - this is what happens on the client, which
     ///         has no atmos data to check against; it predicts optimistically and lets the server's own answer
-    ///         correct it if it turns out to be wrong. An immutable mixture (space) is real data, so that still
-    ///         vetoes.
+    ///         correct it if it turns out to be wrong. Immutable air is real data: a map's atmosphere feeds a fire
+    ///         if it holds what the fire burns, and vacuum starves it.
     /// </remarks>
     [SubscribeLocalEvent]
     private void OnCanSustain(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireCanSustainEvent args)
@@ -32,25 +32,53 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         if (args.Mixture is not { } mixture)
             return;
 
-        if (mixture.Immutable)
-        {
+        if (IsStarved(entity.Comp, mixture))
             args.Deny();
-            return;
-        }
+    }
 
-        foreach (var gas in entity.Comp.Gases.Keys)
+    /// <summary>
+    ///     Whether the tile has too little of what the chemfire burns: none of its gases above a trace, or less of them
+    ///         together than <see cref="ChemicalFireGasConsumerComponent.MinimumMoleFraction"/>.
+    /// </summary>
+    public static bool IsStarved(ChemicalFireGasConsumerComponent component, GasMixture mixture)
+    {
+        var anyAboveTrace = false;
+        var moles = 0f;
+        foreach (var gas in component.Gases.Keys)
         {
-            if (mixture.GetMoles(gas) >= Atmospherics.Epsilon)
-                return;
+            var gasMoles = mixture.GetMoles(gas);
+            anyAboveTrace |= gasMoles >= Atmospherics.Epsilon;
+            moles += gasMoles;
         }
 
-        args.Deny();
+        if (!anyAboveTrace)
+            return true;
+
+        if (component.MinimumMoleFraction <= 0f)
+            return false;
+
+        var totalMoles = mixture.TotalMoles;
+        return totalMoles <= 0f || moles / totalMoles < component.MinimumMoleFraction;
     }
 
     [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
-        if (args.Mixture is not { } mixture || mixture.Immutable)
+        if (args.Mixture is not { } mixture)
+            return;
+
+        // Starved before it eats anything this tick: crowded out, rather than burnt through, or its air gone from under it.
+        if (entity.Comp.ExtinguishWhenDepleted &&
+            (entity.Comp.MinimumMoleFraction > 0f || mixture.Immutable) &&
+            IsStarved(entity.Comp, mixture) &&
+            _chemicalFireQuery.TryGetComponent(entity.Owner, out var starvedFireComponent))
+        {
+            _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent), playSound: true);
+            return;
+        }
+
+        // A map's air feeds the fire and takes what it makes without changing, so it can't burn through it.
+        if (mixture.Immutable)
             return;
 
         var consumedAmount = 0f;
@@ -85,6 +113,6 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
             return;
 
-        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent));
+        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent), playSound: true);
     }
 }

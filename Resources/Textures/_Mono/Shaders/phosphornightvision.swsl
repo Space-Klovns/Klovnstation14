@@ -16,7 +16,7 @@ uniform highp float CONE_DISTANCE_FEATHER; // Soft fade at the coneâ€™s end (0â€
 uniform highp float VIEW_ANGLE;            // Rotation of the cone in radians.
 uniform highp float FREEDOM = 0.07; // KS14: Radius of the fade-out of cone, at the same origin as the cone.
 uniform highp vec2 ZOOM; // KS14
-uniform highp vec2 EYE_OFFSET; // KS14
+uniform highp vec2 PLAYER_POSITION; // KS14: where the viewer is, in this target's pixels (origin bottom-left)
 
 uniform highp float TIME_FRACTION;         // signed time fraction, -1..1 (see spec)
 uniform highp float WIPE_FEATHER = 0.25;   // softness of the top-to-bottom wipe edge, in UV units
@@ -36,7 +36,9 @@ highp float coneMask(
     highp vec2 fragcoord,
     highp vec2 screenSize
 ) {
-    highp vec2 center = screenSize * 0.5 + (EYE_OFFSET * ZOOM * 32); // TODO LCDC: fix this with zoom (like when wielding xl8)
+    // KS14: the cone starts at the viewer, worked out on the CPU by the viewport itself, so a camera moved off them
+    //      (eye offset, e.g. a wielded xl8), zoom, eye rotation and render scale are all already accounted for.
+    highp vec2 center = PLAYER_POSITION;
     highp vec2 delta = fragcoord - center;
 
     // Distance from screen center in pixels.

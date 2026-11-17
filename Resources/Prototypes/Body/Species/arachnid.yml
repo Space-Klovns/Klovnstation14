@@ -109,6 +109,11 @@
     damage:
       types:
         Asphyxiation: 1.5 # This makes space and crit more lethal to arachnids.
+    # KS14 start: this species' own rate in crit too, rather than inheriting the base's
+    critDamage:
+      types:
+        Asphyxiation: 1.5
+    # KS14 end
     damageRecovery:
       types:
         Asphyxiation: -0.5

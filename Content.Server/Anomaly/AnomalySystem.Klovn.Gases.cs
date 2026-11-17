@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared.Anomaly.Components; // KS14
 using Content.Shared._KS14.Anomaly.Components;
 using Content.Shared._KS14.Anomaly.Prototypes;
@@ -64,7 +63,7 @@ public sealed partial class AnomalySystem
             }
 
             state.Accumulator += frameTime;
-            var interval = Math.Clamp(consumer.UpdateInterval, 0.5f, 2.0f);
+            var interval = Math.Clamp((float)consumer.UpdateInterval.TotalSeconds, 0.5f, 2.0f);
 
             if (state.Accumulator < interval)
                 continue;

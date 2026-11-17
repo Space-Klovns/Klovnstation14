@@ -13,7 +13,7 @@ public partial class RadiationSystem
         SubscribeLocalEvent<RadiationBlockerComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<RadiationBlockerComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<RadiationBlockerComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<RadiationBlockerComponent, ReAnchorEvent>(OnReAnchor);
+        /* SubscribeLocalEvent<RadiationBlockerComponent, ReAnchorEvent>(OnReAnchor); */ // KS14: v292 raises normal anchor events during grid splits.
 
         SubscribeLocalEvent<RadiationBlockerComponent, DoorStateChangedEvent>(OnDoorChanged);
 
@@ -46,6 +46,8 @@ public partial class RadiationSystem
         }
     }
 
+    // KS14: removed upstream re-anchor handler; normal anchor events now cover grid splits.
+    /*
     private void OnReAnchor(EntityUid uid, RadiationBlockerComponent component, ref ReAnchorEvent args)
     {
         // probably grid was split
@@ -54,6 +56,7 @@ public partial class RadiationSystem
         // and move it to the new one
         AddTile(uid, component);
     }
+    */
 
     private void OnDoorChanged(EntityUid uid, RadiationBlockerComponent component, DoorStateChangedEvent args)
     {

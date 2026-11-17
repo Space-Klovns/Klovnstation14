@@ -26,7 +26,8 @@ namespace Content.Shared.Atmos.Piping.Unary.Components
             Gas.Frezon,
             Gas.Zipion, // KS14
             Gas.Encalite, // KS14
-            Gas.Evaporin // KS14
+            Gas.Evaporin, // KS14
+            Gas.Hydrogen // KS14
         };
 
         // Presets for 'dumb' air alarm modes

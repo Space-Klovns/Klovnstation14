@@ -287,9 +287,24 @@ public sealed partial class KsMapScreen : BoxContainer
         _contactGrids = grids;
     }
 
+    /// <summary>
+    ///     A console with no sensor picture lists every grid, as upstream's does. Set before its first state.
+    /// </summary>
+    public bool KsOpenPicture
+    {
+        get => _openPicture;
+        set
+        {
+            _openPicture = value;
+            MapSensorsButton.Visible = !value;
+        }
+    }
+
+    private bool _openPicture;
+
     private bool ContactVisible(EntityUid grid)
     {
-        return _contactGrids != null && _contactGrids.Contains(_entManager.GetNetEntity(grid));
+        return _openPicture || _contactGrids != null && _contactGrids.Contains(_entManager.GetNetEntity(grid));
     }
 
     private void OnVisChange(Control obj)

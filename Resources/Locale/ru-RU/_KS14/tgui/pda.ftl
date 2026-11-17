@@ -1,0 +1,15 @@
+ks-tgui-pda-title = Главное меню NtOS
+ks-tgui-pda-details = Подробности
+ks-tgui-pda-owner = Владелец
+ks-tgui-pda-id-name = Имя на ID
+ks-tgui-pda-assignment = Должность
+ks-tgui-pda-station = Станция
+ks-tgui-pda-alert-level = Уровень тревоги
+ks-tgui-pda-shift-time = Длительность смены
+ks-tgui-pda-pai = ИИ-помощник
+ks-tgui-pda-eject-pai = Извлечь ИИ-помощника
+ks-tgui-pda-running = Запущено
+ks-tgui-pda-minimize = Свернуть
+ks-tgui-pda-close-program = Закрыть программу
+ks-tgui-pda-power-off = Закрыть
+ks-tgui-pda-copy = Копировать

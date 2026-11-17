@@ -59,6 +59,7 @@ namespace Content.Server.Verbs
                     Log.Error($"Unknown verb type received: {key}");
             }
 
+            using var culture = VerbLocalization.BeginCultureScope(args.ClientLocale); // KS14: match client verbs and localized execution requests
             var response =
                 new VerbsResponseEvent(args.EntityUid, GetLocalVerbs(GetEntity(args.EntityUid), attached, verbTypes, force));
             RaiseNetworkEvent(response, player.Channel);

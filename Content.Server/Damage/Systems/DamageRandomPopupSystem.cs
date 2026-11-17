@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Damage.Components;
 using Content.Server.Popups;
 using Content.Shared.Damage;
@@ -23,6 +24,6 @@ public sealed partial class DamageRandomPopupSystem : EntitySystem
 
     private void OnDamageChange(EntityUid uid, DamageRandomPopupComponent component, DamageChangedEvent args)
     {
-        _popupSystem.PopupEntity(Loc.GetString(_random.Pick(component.Popups)), uid);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(_random.Pick(component.Popups)), uid);
     }
 }

@@ -1,0 +1,15 @@
+# Sprites from Stalker14. As combat gloves: insulated.
+- type: entity
+  parent: ClothingHandsGlovesSyntheticBase
+  id: KsClothingHandsGlovesBlackPadded
+  name: padded black gloves
+  description: Thick black gloves, padded over the knuckles and insulated.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/Hands/Gloves/mitts.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/Hands/Gloves/mitts.rsi
+  - type: Insulated
+  - type: Fiber
+    fiberMaterial: fibers-insulative
+    fiberColor: fibers-black

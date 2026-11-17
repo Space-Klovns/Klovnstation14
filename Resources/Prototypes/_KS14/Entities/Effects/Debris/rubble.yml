@@ -1,0 +1,33 @@
+# tgstation's /obj/effect/decal/cleanable/rubble, left about by ore vents as they clear.
+- type: entity
+  id: KsRubble
+  name: rubble
+  description: A pile of rubble.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _KS14/Effects/rubble.rsi
+    state: rubble
+    drawdepth: FloorObjects
+  - type: Clickable
+
+  - type: Damageable
+    damageModifierSet: Rock
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 8
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/break_stone.ogg
+          params:
+            volume: -7

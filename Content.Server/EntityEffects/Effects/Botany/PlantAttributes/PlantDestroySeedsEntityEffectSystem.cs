@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Botany.Components;
 using Content.Server.Botany.Systems;
 using Content.Server.Popups;
@@ -20,7 +21,7 @@ public sealed partial class PlantDestroySeedsEntityEffectSystem : EntityEffectSy
             return;
 
         _popup.PopupEntity(
-            Loc.GetString("botany-plant-seedsdestroyed"),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-plant-seedsdestroyed"),
             entity,
             PopupType.SmallCaution
         );

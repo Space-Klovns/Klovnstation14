@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using Content.Packaging._KS14.Localization; // KS14
 using Robust.Packaging;
 using Robust.Packaging.AssetProcessing;
 using Robust.Packaging.AssetProcessing.Passes;
@@ -75,7 +76,10 @@ public static class ClientPackaging
         };
         dropSvgPass.AddDependency(graph.Input).AddBefore(graph.PresetPasses);
 
-        AssetGraph.CalculateGraph([pass, dropSvgPass, .. graph.AllPasses], logger);
+        var nameCachePass = new KsPrototypeNameCachePass(); // KS14: compile names from the exact resource inputs
+        nameCachePass.AddDependency(graph.Input).AddBefore(graph.PresetPasses); // KS14
+        graph.Output.AddDependency(nameCachePass); // KS14
+        AssetGraph.CalculateGraph([pass, dropSvgPass, nameCachePass /* KS14: added */, .. graph.AllPasses], logger);
 
         var inputPass = graph.Input;
 
@@ -109,5 +113,7 @@ public static class ClientPackaging
         // KS14 End
 
         inputPass.InjectFinished();
+        await nameCachePass.FinishedTask.WaitAsync(cancel); // KS14: propagate cache compilation failures to the packaging caller
+        nameCachePass.ThrowIfCompilationFailed(); // KS14
     }
 }

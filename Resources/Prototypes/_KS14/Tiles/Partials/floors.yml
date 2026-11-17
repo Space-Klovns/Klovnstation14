@@ -1,0 +1,5 @@
+# Bitumen paves station floors with this, so a crowbar has to be able to take it back up.
+- type: !PartialOnly tile
+  id: FloorAsphalt
+  deconstructTools:
+  - Prying

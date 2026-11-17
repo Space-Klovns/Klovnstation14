@@ -1,0 +1,63 @@
+# TGMC's debris element kinds (code/__DEFINES/particles.dm DEBRIS_*), at c3c072e3644f4526d0099a79f361bde3aee9b4c7.
+# A surface names one with KsImpactSurface; see Partials/ for which.
+
+# Anything else that is not a mob: TGMC's /atom default, smoke and no debris.
+- type: ksImpactMaterial
+  id: Default
+
+# DEBRIS_SPARKS. No bounce sound: metal walls already ricochet every hit (RangedDamageSound, MetalBulletImpact).
+- type: ksImpactMaterial
+  id: Metal
+  debris: KsImpactDebrisSparks
+
+- type: ksImpactMaterial
+  id: Wood
+  debris: KsImpactDebrisWood
+  sound:
+    collection: KsBulletRicochet
+
+- type: ksImpactMaterial
+  id: Rock
+  debris: KsImpactDebrisRock
+  sound:
+    collection: KsBulletRicochet
+
+- type: ksImpactMaterial
+  id: Glass
+  debris: KsImpactDebrisGlass
+  sound:
+    collection: KsBulletRicochet
+
+- type: ksImpactMaterial
+  id: Leaf
+  debris: KsImpactDebrisLeaf
+  sound:
+    collection: KsBulletRicochet
+
+- type: ksImpactMaterial
+  id: Snow
+  debris: KsImpactDebrisSnow
+  sound:
+    collection: KsBulletRicochet
+
+- type: ksImpactMaterial
+  id: Paper
+  debris: KsImpactDebrisPaper
+  sound:
+    collection: KsBulletRicochet
+
+# A silicon mob (a borg, a robot): sparks thrown back at the shooter, no smoke, no bounce sound (its own hit sound plays).
+- type: ksImpactMaterial
+  id: Silicon
+  debris: KsImpactDebrisSparks
+  smoke: null
+
+# A mob's armour soaking most of a ballistic hit (KsImpactSurfaceSystem.ArmorMaterial): chips off the plate and a few
+# sparks, back at the shooter, and a little blood out of the exit wound (BloodSpraySystem.SpawnExitWoundMist). Its
+# armour sound plays already.
+- type: ksImpactMaterial
+  id: Armor
+  debris: KsImpactDebrisArmor
+  extraDebris:
+  - KsImpactArmorSparks
+  smoke: null

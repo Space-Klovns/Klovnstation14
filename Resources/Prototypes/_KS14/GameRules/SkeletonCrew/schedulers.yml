@@ -1,0 +1,42 @@
+# The main Skeleton Crew scheduler: an event every 1.5 to 4 minutes, against upstream's 3 to 10.
+- type: entity
+  parent: BaseGameRule
+  id: KsSkeletonCrewEventScheduler
+  components:
+  - type: BasicStationEventScheduler
+    minimumTimeUntilFirstEvent: 90
+    maximumSpanUntilFirstEvent: 60
+    minMaxEventTiming:
+      min: 90
+      max: 240
+    scheduledGameRules: !type:NestedSelector
+      tableId: KsSkeletonCrewEventsTable
+
+# Events that change little on their own (critters, hallucinations, cargo gifts). They run on a scheduler of their
+#   own, so they never take one of the main scheduler's slots.
+- type: entity
+  parent: BaseGameRule
+  id: KsSkeletonCrewFluffScheduler
+  components:
+  - type: BasicStationEventScheduler
+    minimumTimeUntilFirstEvent: 300
+    maximumSpanUntilFirstEvent: 180
+    minMaxEventTiming:
+      min: 480
+      max: 900
+    scheduledGameRules: !type:NestedSelector
+      tableId: KsSkeletonCrewFluffEventsTable
+
+# Space dust only: small, local hull damage, and no meteor swarms.
+- type: entity
+  parent: BaseGameRule
+  id: KsSkeletonCrewDustScheduler
+  components:
+  - type: BasicStationEventScheduler
+    minimumTimeUntilFirstEvent: 600
+    maximumSpanUntilFirstEvent: 120
+    minMaxEventTiming:
+      min: 360
+      max: 600
+    scheduledGameRules: !type:NestedSelector
+      tableId: MeteorSwarmDustEventsTable

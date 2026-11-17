@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Power.Components;
@@ -139,9 +140,9 @@ public sealed partial class PowerCellSystem
                 return false;
 
             if (predicted)
-                _popup.PopupClient(Loc.GetString("power-cell-no-battery"), ent.Owner, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-no-battery"), ent.Owner, user.Value);
             else
-                _popup.PopupEntity(Loc.GetString("power-cell-no-battery"), ent.Owner, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-no-battery"), ent.Owner, user.Value);
 
             return false;
         }
@@ -152,9 +153,9 @@ public sealed partial class PowerCellSystem
                 return false;
 
             if (predicted)
-                _popup.PopupClient(Loc.GetString("power-cell-insufficient"), ent.Owner, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-insufficient"), ent.Owner, user.Value);
             else
-                _popup.PopupEntity(Loc.GetString("power-cell-insufficient"), ent.Owner, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-insufficient"), ent.Owner, user.Value);
 
             return false;
         }
@@ -178,9 +179,9 @@ public sealed partial class PowerCellSystem
                 return false;
 
             if (predicted)
-                _popup.PopupClient(Loc.GetString("power-cell-no-battery"), ent.Owner, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-no-battery"), ent.Owner, user.Value);
             else
-                _popup.PopupEntity(Loc.GetString("power-cell-no-battery"), ent.Owner, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-no-battery"), ent.Owner, user.Value);
 
             return false;
         }
@@ -191,9 +192,9 @@ public sealed partial class PowerCellSystem
                 return false;
 
             if (predicted)
-                _popup.PopupClient(Loc.GetString("power-cell-insufficient"), ent.Owner, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-insufficient"), ent.Owner, user.Value);
             else
-                _popup.PopupEntity(Loc.GetString("power-cell-insufficient"), ent.Owner, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("power-cell-insufficient"), ent.Owner, user.Value);
 
             return false;
         }

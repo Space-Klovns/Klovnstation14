@@ -10,17 +10,18 @@
                 layouter autoresizes the window to be too small
             -->
 
-            <Label Text="{Loc 'solar-control-window-output-power'}"/><Label Text=""/>
+            <!-- KS14: label column in the tgui LabeledList colour under the tgui theme (class is theme-gated) -->
+            <Label Text="{Loc 'solar-control-window-output-power'}" StyleClasses="KsTguiLabelKey"/><Label Text=""/>
             <Label Name="OutputPower"/><Label Text="{Loc 'solar-control-window-watts'}"/>
 
-            <Label Text="{Loc 'solar-control-window-sun-angle'}"/><Label Text=""/>
+            <Label Text="{Loc 'solar-control-window-sun-angle'}" StyleClasses="KsTguiLabelKey"/><Label Text=""/>
             <Label Name="SunAngle"/><Label Text="{Loc 'solar-control-window-degrees'}"/>
 
 
-            <Label Text="{Loc 'solar-control-window-panel-angle'}"/><Label Text=""/>
+            <Label Text="{Loc 'solar-control-window-panel-angle'}" StyleClasses="KsTguiLabelKey"/><Label Text=""/>
             <LineEdit Name="PanelRotation" HorizontalExpand="True"/><Label Text="{Loc 'solar-control-window-degrees'}"/>
 
-            <Label Text="{Loc 'solar-control-window-panel-angular-velocity'}"/><Label Text=""/>
+            <Label Text="{Loc 'solar-control-window-panel-angular-velocity'}" StyleClasses="KsTguiLabelKey"/><Label Text=""/>
             <LineEdit Name="PanelVelocity" HorizontalExpand="True"/><Label Text="{Loc 'solar-control-window-degrees-per-minute'}"/>
 
 

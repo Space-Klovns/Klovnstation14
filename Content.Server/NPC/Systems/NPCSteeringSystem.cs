@@ -1,9 +1,11 @@
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Components; // KS14
 using Content.Server.Administration.Managers;
 using Content.Server.Destructible;
 using Content.Server.DoAfter;
+using Content.Server._KS14.NPC.Dangers; // KS14
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Events;
 using Content.Server.NPC.Pathfinding;
@@ -67,12 +69,13 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private PryingSystem _pryingSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
     [Dependency] private SharedMeleeWeaponSystem _melee = default!;
     [Dependency] private SharedMoverController _mover = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedCombatModeSystem _combat = default!;
-    [Dependency] private AccessReaderSystem _accessReaderSystem = default!; // KS14: ANK
+    /* [Dependency] private AccessReaderSystem _accessReaderSystem = default!; */ // KS14: ANK; removed again, steering goes by what the NPC believes about a door now, see NpcDoorSystem
 
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<MovementSpeedModifierComponent> _modifierQuery = default!;
@@ -102,6 +105,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         base.Initialize();
 
+        _ksIsLoose = otherUid => otherUid == _ksBeelineGoalUid || !Transform(otherUid).Anchored; // KS14: see KsIsBeelineClear
         Log.Level = LogLevel.Info;
 
         for (var i = 0; i < InterestDirections; i++)
@@ -186,6 +190,8 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         ResetStuck(component, Transform(uid).Coordinates);
         component.Coordinates = coordinates;
+        component.KsNode = EntityCoordinates.Invalid; // KS14: a new move, so no progress towards a node yet - see IsCirclingNode
+        RemComp<NpcBackgroundMoveComponent>(uid); // KS14: a new move is the task at hand until its operator says otherwise
         return component;
     }
 
@@ -222,6 +228,8 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         component.PathfindToken?.Cancel();
         component.PathfindToken = null;
         RemComp<NPCSteeringComponent>(uid);
+        RemComp<NpcBackgroundMoveComponent>(uid); // KS14
+        _npcDoorSystem.StopSteeringBreach(uid); // KS14: a door it was forcing on the way: the tool goes back now, not after whatever comes next has run with it in hand
     }
 
     public override void Update(float frameTime)
@@ -325,6 +333,15 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
             return;
         }
 
+        // KS14 start: part way over something it is climbing, it cannot move until it is over: that is waiting, not being
+        //      stuck for good, which is what giving up the path below would make of it
+        if (TryComp<ClimbingComponent>(uid, out var ksClimbingComponent) && ksClimbingComponent.NextTransition != null)
+        {
+            SetDirection(uid, mover, steering, Vector2.Zero);
+            return;
+        }
+        // KS14 end
+
         // Can't move at all, just noop input.
         if (!mover.CanMove)
         {
@@ -383,6 +400,10 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         Separation(uid, offsetRot, worldPos, agentRadius, layer, mask, body, xform, danger);
 
+        // KS14: a juke takes no path
+        if (!steering.CanSeek)
+            AvoidDangerousSteps(uid, steering, xform, danger);
+
         // Blend last and current tick
         Blend(steering, frameTime, interest, danger);
 
@@ -421,6 +442,52 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         return new EntityCoordinates(poly.GraphUid, poly.Box.Center);
     }
 
+    // KS14 start
+    /// <summary>
+    /// How long a clear straight line to a near target is trusted before it is looked at again: a ray, and the path
+    /// request is asked about every tick.
+    /// </summary>
+    private static readonly TimeSpan KsBeelineCheckInterval = TimeSpan.FromSeconds(0.3);
+
+    /// <summary>
+    /// Whether nothing anchored stands between <paramref name="uid"/> and its target, near enough to walk straight at
+    /// (<see cref="NPCSteeringComponent.RepathRange"/>). Mobs don't count: they move, and the path would ignore them too.
+    /// Nor does what the target coordinates are on: a goal that is itself anchored - a door, a machine - is not in its
+    /// own way, and counted, every step of the last tile and a half to one asked for a path instead.
+    /// </summary>
+    private bool KsIsBeelineClear(EntityUid uid, NPCSteeringComponent steering, float targetDistance)
+    {
+        var now = _timing.CurTime;
+        if (now < steering.KsBeelineClearUntil)
+            return true;
+
+        _ksBeelineGoalUid = steering.Coordinates.EntityId;
+
+        if (!TryComp<PhysicsComponent>(uid, out var physics) ||
+            !_interaction.InRangeUnobstructed(uid,
+                steering.Coordinates,
+                targetDistance + 0.1f,
+                (CollisionGroup) physics.CollisionMask,
+                _ksIsLoose))
+            return false;
+
+        steering.KsBeelineClearUntil = now + KsBeelineCheckInterval;
+        return true;
+    }
+
+    /// <summary>
+    /// Ignores anything not anchored in place, and <see cref="_ksBeelineGoalUid"/>, for <see cref="KsIsBeelineClear"/>.
+    /// Made once, not per call.
+    /// </summary>
+    private SharedInteractionSystem.Ignored _ksIsLoose = default!;
+
+    /// <summary>
+    /// What the coordinates being checked by <see cref="KsIsBeelineClear"/> are on, for <see cref="_ksIsLoose"/>: set
+    /// before each check, in place of a closure made for each. Steering runs one NPC at a time.
+    /// </summary>
+    private EntityUid _ksBeelineGoalUid;
+    // KS14 end
+
     /// <summary>
     /// Get a new job from the pathfindingsystem
     /// </summary>
@@ -428,7 +495,9 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         // If we already have a pathfinding request then don't grab another.
         // If we're in range then just beeline them; this can avoid stutter stepping and is an easy way to look nicer.
-        if (steering.Pathfind || targetDistance < steering.RepathRange)
+        // KS14: unless something is in the way - a railing, a table - when walking straight at it only presses it up
+        //      against that, for good
+        if (steering.Pathfind || targetDistance < steering.RepathRange && KsIsBeelineClear(uid, steering, targetDistance))
             return;
 
         // Short-circuit with no path.
@@ -438,6 +507,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         // Thanks past sloth I already realised.
         if (targetPoly != null &&
             steering.Coordinates.Position.Equals(Vector2.Zero) &&
+            _pathfindingSystem.GetAvoidedDangers(uid) == NpcTileDangerKind.None && // KS14: a straight line goes through whatever is in the way
             TryComp<PhysicsComponent>(uid, out var physics) &&
             _interaction.InRangeUnobstructed(uid, steering.Coordinates.EntityId, range: 30f, (CollisionGroup)physics.CollisionMask))
         {
@@ -449,6 +519,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         steering.PathfindToken = new CancellationTokenSource();
 
         var flags = _pathfindingSystem.GetFlags(uid);
+        var dangerVersion = _pathfindingSystem.TileDangerVersion; // KS14: see NoteDangerOnPath
 
         var result = await _pathfindingSystem.GetPathSafe(
             uid,
@@ -463,6 +534,13 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         if (result.Result == PathResult.NoPath)
         {
             steering.CurrentPath.Clear();
+
+            // KS14 start: no way round the doors it was going round rather than forcing: they are the only way, so it
+            //      asks again, through them. Not a failure
+            if (_npcDoorSystem.GiveUpDetours(uid))
+                return;
+            // KS14 end
+
             steering.FailedPathCount++;
 
             if (steering.FailedPathCount >= NPCSteeringComponent.FailedPathLimit)
@@ -476,8 +554,20 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         var targetPos = _transform.ToMapCoordinates(steering.Coordinates);
         var ourPos = _transform.GetMapCoordinates(uid, xform: xform);
 
+        // KS14 start: going round doors it could force, a way round that needs another door forced, or is far longer,
+        //      is no way round: it forces the door instead, asking again for a path through it
+        if (!_npcDoorSystem.IsDetourWorthTaking(uid, ourPos, result.Path, targetPos))
+        {
+            steering.CurrentPath.Clear();
+            _npcDoorSystem.GiveUpDetours(uid);
+            return;
+        }
+        // KS14 end
+
         PrunePath(uid, ourPos, targetPos.Position - ourPos.Position, result.Path);
         steering.CurrentPath = new Queue<PathPoly>(result.Path);
+        steering.KsNode = EntityCoordinates.Invalid; // KS14: a new path, so no progress towards a node yet - see IsCirclingNode
+        NoteDangerOnPath(uid, steering, result.KsIgnoredDangers ? null : dangerVersion); // KS14
     }
 
     // TODO: Move these to movercontroller

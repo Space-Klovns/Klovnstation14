@@ -139,8 +139,8 @@
   physicalDesc: reagent-physical-desc-strong-smelling
   flavor: alcohol
   color: "#b05b3c"
-  boilingPoint: 78.2
-  meltingPoint: -114.1
+  boilingPoint: 351.35 # KS14: 78.2 -> 351.35, Kelvin
+  meltingPoint: 159.05 # KS14: -114.1 -> 159.05, Kelvin
   metabolisms:
     Metabolites:
       metabolismRate: 0.05

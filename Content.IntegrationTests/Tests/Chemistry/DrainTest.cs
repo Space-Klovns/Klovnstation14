@@ -94,6 +94,7 @@ public sealed class DrainTest : InteractionTest
     [Test]
     public async Task DrainPuddleTest()
     {
+        await Pair.Server.WaitPost(() => Pair.Server.CfgMan.SetCVar(Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f)); // KS14: on an airless map, a puddle would freeze as it radiated
         var solutionContainerSys = SEntMan.System<SharedSolutionContainerSystem>();
 
         // Spawn a puddle at the player coordinates;

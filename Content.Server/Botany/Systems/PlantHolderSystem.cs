@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Botany.Components;
 using Content.Server.Hands.Systems;
@@ -184,9 +185,9 @@ public sealed partial class PlantHolderSystem : EntitySystem
                     return;
 
                 args.Handled = true;
-                var name = Loc.GetString(seed.Name);
-                var noun = Loc.GetString(seed.Noun);
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-plant-success-message",
+                var name = KsPopupMessage.Create /* KS14: defer popup argument translation */(seed.Name);
+                var noun = KsPopupMessage.Create /* KS14: defer popup argument translation */(seed.Noun);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-plant-success-message",
                     ("seedName", name),
                     ("seedNoun", noun)), args.User, PopupType.Medium);
 
@@ -219,7 +220,7 @@ public sealed partial class PlantHolderSystem : EntitySystem
             }
 
             args.Handled = true;
-            _popup.PopupCursor(Loc.GetString("plant-holder-component-already-seeded-message",
+            _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-already-seeded-message",
                 ("name", Comp<MetaDataComponent>(uid).EntityName)), args.User, PopupType.Medium);
             return;
         }
@@ -229,16 +230,16 @@ public sealed partial class PlantHolderSystem : EntitySystem
             args.Handled = true;
             if (component.WeedLevel > 0)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-remove-weeds-message",
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-remove-weeds-message",
                     ("name", Comp<MetaDataComponent>(uid).EntityName)), args.User, PopupType.Medium);
-                _popup.PopupEntity(Loc.GetString("plant-holder-component-remove-weeds-others-message",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-remove-weeds-others-message",
                     ("otherName", Comp<MetaDataComponent>(args.User).EntityName)), uid, Filter.PvsExcept(args.User), true);
                 component.WeedLevel = 0;
                 UpdateSprite(uid, component);
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-no-weeds-message"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-no-weeds-message"), args.User);
             }
 
             return;
@@ -249,15 +250,15 @@ public sealed partial class PlantHolderSystem : EntitySystem
             args.Handled = true;
             if (component.Seed != null)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-remove-plant-message",
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-remove-plant-message",
                     ("name", Comp<MetaDataComponent>(uid).EntityName)), args.User, PopupType.Medium);
-                _popup.PopupEntity(Loc.GetString("plant-holder-component-remove-plant-others-message",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-remove-plant-others-message",
                     ("name", Comp<MetaDataComponent>(args.User).EntityName)), uid, Filter.PvsExcept(args.User), true);
                 RemovePlant(uid, component);
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-no-plant-message",
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-no-plant-message",
                     ("name", Comp<MetaDataComponent>(uid).EntityName)), args.User);
             }
 
@@ -269,25 +270,25 @@ public sealed partial class PlantHolderSystem : EntitySystem
             args.Handled = true;
             if (component.Seed == null)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-nothing-to-sample-message"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-nothing-to-sample-message"), args.User);
                 return;
             }
 
             if (component.Sampled)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-already-sampled-message"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-already-sampled-message"), args.User);
                 return;
             }
 
             if (component.Dead)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-dead-plant-message"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-dead-plant-message"), args.User);
                 return;
             }
 
             if (GetCurrentGrowthStage(entity) <= 1)
             {
-                _popup.PopupCursor(Loc.GetString("plant-holder-component-early-sample-message"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-early-sample-message"), args.User);
                 return;
             }
 
@@ -307,7 +308,7 @@ public sealed partial class PlantHolderSystem : EntitySystem
             var seed = _botany.SpawnSeedPacket(packetSeed, Transform(args.User).Coordinates, args.User, healthOverride);
             _randomHelper.RandomOffset(seed, 0.25f);
             var displayName = Loc.GetString(component.Seed.DisplayName);
-            _popup.PopupCursor(Loc.GetString("plant-holder-component-take-sample-message",
+            _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-take-sample-message",
                 ("seedName", displayName)), args.User);
 
             DoScream(entity.Owner, component.Seed);
@@ -332,10 +333,10 @@ public sealed partial class PlantHolderSystem : EntitySystem
         if (TryComp<ProduceComponent>(args.Used, out var produce))
         {
             args.Handled = true;
-            _popup.PopupCursor(Loc.GetString("plant-holder-component-compost-message",
+            _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-compost-message",
                 ("owner", uid),
                 ("usingItem", args.Used)), args.User, PopupType.Medium);
-            _popup.PopupEntity(Loc.GetString("plant-holder-component-compost-others-message",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-compost-others-message",
                 ("user", Identity.Entity(args.User, EntityManager)),
                 ("usingItem", args.Used),
                 ("owner", uid)), uid, Filter.PvsExcept(args.User), true);
@@ -717,7 +718,7 @@ public sealed partial class PlantHolderSystem : EntitySystem
             {
                 if (!_botany.CanHarvest(component.Seed, activeItem))
                 {
-                    _popup.PopupCursor(Loc.GetString("plant-holder-component-ligneous-cant-harvest-message"), user);
+                    _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plant-holder-component-ligneous-cant-harvest-message"), user);
                     return false;
                 }
             }

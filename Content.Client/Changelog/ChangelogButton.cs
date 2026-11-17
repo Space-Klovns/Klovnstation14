@@ -7,6 +7,9 @@ namespace Content.Client.Changelog
     {
         [Dependency] private ChangelogManager _changelogManager = default!;
 
+        // KS14: the lobby shows the label as an uppercase chip
+        public bool KsUpperCase;
+
         public ChangelogButton()
         {
             IoCManager.InjectDependencies(this);
@@ -35,12 +38,12 @@ namespace Content.Client.Changelog
         {
             if (_changelogManager.NewChangelogEntries)
             {
-                Text = Loc.GetString("changelog-button-new-entries");
+                Text = Loc.GetString(KsUpperCase ? "ks-lobby-chip-changelog-new" : "changelog-button-new-entries") /* KS14: uppercase variant */;
                 StyleClasses.Add(StyleClass.Positive);
             }
             else
             {
-                Text = Loc.GetString("changelog-button");
+                Text = Loc.GetString(KsUpperCase ? "ks-lobby-chip-changelog" : "changelog-button") /* KS14: uppercase variant */;
                 StyleClasses.Remove(StyleClass.Positive);
             }
         }

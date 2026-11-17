@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Network;
 using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
@@ -13,6 +14,8 @@ public sealed class KsAdminMusicDataMessage : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
+        KsNetMessageLimits.AssertNotReceivedByServer(this);
+
         var count = buffer.ReadByte();
         if (count == 0)
         {
@@ -20,6 +23,8 @@ public sealed class KsAdminMusicDataMessage : NetMessage
             return;
         }
 
+        // A path, a float volume and a start time each.
+        buffer.AssertAtLeastSize(count * (NetMessageExt.MinSizeOfResPath + sizeof(float) + NetMessageExt.SizeOfTimeSpan));
         Entries = new KsAdminMusicEntry[count];
         for (var i = 0; i < count; i++)
             Entries[i] = new(new(buffer.ReadString()), buffer.ReadFloat(), buffer.ReadTimeSpan());

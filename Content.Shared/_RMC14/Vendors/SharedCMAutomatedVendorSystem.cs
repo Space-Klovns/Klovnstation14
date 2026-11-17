@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Hands;
@@ -169,14 +170,13 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
     protected virtual void OnVendBui(Entity<CMAutomatedVendorComponent> vendor, ref CMVendorVendBuiMsg args)
     {
-        _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor);
-
+        /* _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor); */ // KS14: moved below the input validation
         var comp = vendor.Comp;
         var sections = comp.Sections.Count;
         var actor = args.Actor;
         if (args.Section < 0 || args.Section >= sections)
         {
-            Log.Error($"{ToPrettyString(actor)} sent an invalid vend section: {args.Section}. Max: {sections}");
+            Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} sent an invalid vend section: {args.Section}. Max: {sections}");
             return;
         }
 
@@ -184,7 +184,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         var entries = section.Entries.Count;
         if (args.Entry < 0 || args.Entry >= entries)
         {
-            Log.Error($"{ToPrettyString(actor)} sent an invalid vend entry: {args.Entry}. Max: {entries}");
+            Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} sent an invalid vend entry: {args.Entry}. Max: {entries}");
             return;
         }
 
@@ -198,13 +198,15 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             return;
         }
 
+        _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor); // KS14: moved here, after the input validation
+
         var user = CompOrNull<CMVendorUserComponent>(actor);
         if (section.TakeAll is { } takeAll)
         {
             user = EnsureComp<CMVendorUserComponent>(actor);
             if (!user.TakeAll.Add((takeAll, entry.Id)))
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many take-alls.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many take-alls.");
                 return;
             }
 
@@ -216,7 +218,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             user = EnsureComp<CMVendorUserComponent>(actor);
             if (!user.TakeOne.Add(takeOne))
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many take-ones.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many take-ones.");
                 return;
             }
 
@@ -235,7 +237,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
             if (playerChoices >= choices.Amount)
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many choices.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many choices.");
                 return;
             }
 
@@ -261,9 +263,24 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 {
                     // FIXME
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor, actor);
                     return;
                 }
+
+                // KS14 start: derive the linked entries from the vendor's own data, args.LinkedEntries is client-sent and untrusted
+                var linkedEntryIndexes = new List<int>();
+                foreach (var linkedEntry in entry.LinkedEntries)
+                {
+                    var linkedEntryIndex = 0;
+                    foreach (var vendorEntry in section.Entries)
+                    {
+                        if (vendorEntry.Id == linkedEntry)
+                            linkedEntryIndexes.Add(linkedEntryIndex);
+
+                        linkedEntryIndex++;
+                    }
+                }
+                // KS14 end
 
                 // Get every RMCVendorSpec
                 var specVendors = EntityQueryEnumerator<RMCVendorSpecialistComponent>();
@@ -272,7 +289,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 // Goes through each RMCVendorSpec and gets the value for this kit type.
                 while (specVendors.MoveNext(out _, out var specVendorComponent))
                 {
-                    foreach (var linkedEntry in args.LinkedEntries)
+                    foreach (var linkedEntry in linkedEntryIndexes /* KS14: args.LinkedEntries -> server-derived */)
                     {
                         specVendorComponent.GlobalSharedVends.TryGetValue(linkedEntry, out var linkedCount);
                         allVendorsTotal += linkedCount;
@@ -286,7 +303,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 if (allVendorsTotal >= globalLimit)
                 {
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor.Owner, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor.Owner, actor);
                     return;
                 }
 
@@ -306,7 +323,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         {
             if (user == null)
             {
-                Log.Error(
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */(
                     $"{ToPrettyString(actor)} tried to buy {entry.Id} for {entry.Points} points without having points.");
                 return;
             }
@@ -316,7 +333,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 : user.ExtraPoints?.GetValueOrDefault(vendor.Comp.PointsType) ?? 0;
             if (userPoints < entry.Points)
             {
-                Log.Error(
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */(
                     $"{ToPrettyString(actor)} with {user.Points} tried to buy {entry.Id} for {entry.Points} points without having enough points.");
                 return;
             }
@@ -327,6 +344,11 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 user.ExtraPoints[vendor.Comp.PointsType] = userPoints - (entry.Points ?? 0);
 
             Dirty(actor, user);
+
+            // KS14 start: let whatever keeps these points elsewhere follow the purchase
+            var ksPointsSpentEvent = new Content.Shared._KS14.Vendors.KsVendorPointsSpentEvent(actor, vendor.Comp.PointsType, userPoints - (entry.Points ?? 0));
+            RaiseLocalEvent(ref ksPointsSpentEvent);
+            // KS14 end
         }
 
         if (entry.Amount != null)
@@ -357,6 +379,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 AmountUpdated(vendor, entry);
             }
         }
+        KsVendAlongside(vendor, actor, section); // KS14: vend the section's also-vend entry (base gear) before the pick
         var min = comp.MinOffset;
         var max = comp.MaxOffset;
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
@@ -367,17 +390,12 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         for (var i = 0; i < entry.Spawn; i++)
         {
             var offset = predictedRandom.NextVector2Box(min.X, min.Y, max.X, max.Y);
+            // KS14 start: a whole bundle is placed together, so that how it is listed doesn't decide what gets worn
             if (entity.TryGetComponent(out CMVendorBundleComponent? bundle, _compFactory))
-            {
-                foreach (var bundled in bundle.Bundle)
-                {
-                    Vend(vendor, actor, bundled, offset, entry.ReplaceSlot);
-                }
-            }
+                KsVendAll(vendor, actor, bundle.Bundle, offset, entry.ReplaceSlot);
             else
-            {
-                Vend(vendor, actor, entry.Id, offset, entry.ReplaceSlot);
-            }
+                KsVendAll(vendor, actor, [entry.Id], offset, entry.ReplaceSlot);
+            // KS14 end
         }
 
         if (entity.TryGetComponent(out CMChangeUserOnVendComponent? change, _compFactory) &&
@@ -387,6 +405,10 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         }
     }
 
+    // KS14: replaced by KsVendAll (SharedCMAutomatedVendorSystem.Klovn.Equip.cs). Grab equipped into every slot an
+    //      item fitted and then picked the item up regardless, so the first two items of a kit (jumpsuit, backpack)
+    //      were pulled back off into the hands, and what got worn depended on the order the kit listed it in.
+    /*
     private void Vend(EntityUid vendor, EntityUid player, EntProtoId toVend, Vector2 offset, SlotFlags? replaceSlot = null)
     {
 
@@ -457,6 +479,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
         return _hands.TryPickupAnyHand(playerUid, itemUid);
     }
+    */
 
     public void SetPoints(Entity<CMVendorUserComponent> user, int points)
     {

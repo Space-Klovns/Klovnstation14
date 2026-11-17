@@ -1,0 +1,12 @@
+# Smoke a squad may put in through a way in before going in (NpcRoomSmokeComponent). What each one does - screen, gas or
+#   both - is read from its SmokeOnTrigger, not stated here. Foam, cleaner and metal foam grenades are left out on purpose.
+
+- type: !PartialOnly entity
+  id: SmokeGrenade
+  components:
+  - type: NpcRoomSmoke
+
+- type: !PartialOnly entity
+  id: TearGasGrenade
+  components:
+  - type: NpcRoomSmoke

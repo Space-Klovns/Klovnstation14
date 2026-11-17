@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Instruments;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
@@ -36,7 +37,7 @@ public sealed partial class SwappableInstrumentSystem : EntitySystem
                 Act = () =>
                 {
                     _sharedInstrument.SetInstrumentProgram(uid, instrument, entry.Value.Item1, entry.Value.Item2);
-                    _popup.PopupEntity(Loc.GetString("swappable-instrument-component-style-set", ("style", entry.Key)),
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swappable-instrument-component-style-set", ("style", entry.Key)),
                         args.User, args.User);
                 }
             };

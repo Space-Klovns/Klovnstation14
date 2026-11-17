@@ -425,8 +425,8 @@
   flavor: water
   color: "#75b1f0"
   recognizable: true
-  boilingPoint: 100.0
-  meltingPoint: 0.0
+  boilingPoint: 373.15 # KS14: 100.0 -> 373.15, Kelvin
+  meltingPoint: 273.15 # KS14: 0.0 -> 273.15, Kelvin
   friction: 0.4
   metabolisms:
     Digestion:
@@ -455,8 +455,8 @@
   flavor: cold
   color: "#bed8e6"
   recognizable: true
-  meltingPoint: 0.0
-  boilingPoint: 100.0
+  meltingPoint: 273.15 # KS14: 0.0 -> 273.15, Kelvin
+  boilingPoint: 373.15 # KS14: 100.0 -> 373.15, Kelvin
   friction: 0.05 # Copied from Ice Crust
   metabolisms:
     Digestion:

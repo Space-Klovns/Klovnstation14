@@ -1,18 +1,18 @@
 - type: font
   id: Default
-  path: /Fonts/NotoSans/NotoSans-Regular.ttf
+  path: /Fonts/_KS14/BaronUI/FontStack-Regular.TTF # KS14: /Fonts/NotoSans/NotoSans-Regular.ttf -> BaronUI regular for default markup
 
 - type: font
   id: DefaultItalic
-  path: /Fonts/NotoSans/NotoSans-Italic.ttf
+  path: /Fonts/_KS14/BaronUI/FontStack-Italic.TTF # KS14: /Fonts/NotoSans/NotoSans-Italic.ttf -> BaronUI italic for default markup
 
 - type: font
   id: DefaultBold
-  path: /Fonts/NotoSans/NotoSans-Bold.ttf
+  path: /Fonts/_KS14/BaronUI/FontStack-Bold.ttf # KS14: /Fonts/NotoSans/NotoSans-Bold.ttf -> BaronUI bold for default markup
 
 - type: font
   id: DefaultBoldItalic
-  path: /Fonts/NotoSans/NotoSans-BoldItalic.ttf
+  path: /Fonts/_KS14/BaronUI/FontStack-BoldItalic.TTF # KS14: /Fonts/NotoSans/NotoSans-BoldItalic.ttf -> BaronUI bold italic for default markup
 
 - type: font
   id: NotoSansDisplay

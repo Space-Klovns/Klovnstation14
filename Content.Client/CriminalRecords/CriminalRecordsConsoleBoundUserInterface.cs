@@ -44,6 +44,7 @@ public sealed partial class CriminalRecordsConsoleBoundUserInterface : BoundUser
         _window.OnHistoryUpdated += UpdateHistory;
         _window.OnHistoryClosed += () => _historyWindow?.Close();
         _window.OnClose += Close;
+        this.WithGuide(_window); // KS14: made with new, so the guidebook button has to be asked for
 
         _historyWindow = new(comp.MaxStringLength);
         _historyWindow.OnAddHistory += line => SendMessage(new CriminalRecordAddHistory(line));

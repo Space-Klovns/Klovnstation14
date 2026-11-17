@@ -55,7 +55,6 @@
     flickData:
       layerKey: piston
       flickState: extending
-      finishState: extended
 
   # Sprite
   - type: Sprite
@@ -74,6 +73,7 @@
     visuals:
       enum.GasPistonVisuals.Extended:
         piston:
+          True: { state: extended }
           False: { state: base }
 
   # Atmos

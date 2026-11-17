@@ -1,4 +1,3 @@
-// KS14: added in this fork
 namespace Content.Shared.Atmos.Components;
 
 public sealed partial class MapAtmosphereComponent

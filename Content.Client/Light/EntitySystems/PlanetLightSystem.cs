@@ -24,11 +24,16 @@ public sealed partial class PlanetLightSystem : EntitySystem
 
             if (value)
             {
-                _overlayMan.AddOverlay(new AmbientOcclusionOverlay());
+                // KS14 start: the surface overlay draws what the AO overlay builds, so they come and go together
+                var ambientOcclusionOverlay = new AmbientOcclusionOverlay();
+                _overlayMan.AddOverlay(ambientOcclusionOverlay);
+                _overlayMan.AddOverlay(new Content.Client._KS14.Light.KsSurfaceAmbientOcclusionOverlay(ambientOcclusionOverlay));
+                // KS14 end
             }
             else
             {
                 _overlayMan.RemoveOverlay<AmbientOcclusionOverlay>();
+                _overlayMan.RemoveOverlay<Content.Client._KS14.Light.KsSurfaceAmbientOcclusionOverlay>(); // KS14
             }
         }
     }

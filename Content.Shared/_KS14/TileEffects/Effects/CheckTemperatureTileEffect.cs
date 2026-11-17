@@ -7,15 +7,23 @@ public sealed partial class CheckTemperatureTileEffect : KsTileEffect
     [DataField] public float? Minimum = null;
     [DataField] public float? Maximum = null;
 
-    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
+    /// <summary>
+    ///     Whether an open flame in the solution (<see cref="KsTileEffectContext.FlameTemperature"/>) counts toward
+    ///         <see cref="Minimum"/>, so that a lit welder dropped in fuel lights it, however cold the fuel. On unless a
+    ///         reagent only reacts to being heated through.
+    /// </summary>
+    [DataField] public bool LitByFlame = true;
+
+    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectContext context)
     {
-        if (reagentData.Solution is not { } solution)
+        if (context.Solution is not { } solution)
             return false;
 
         var temperature = solution.Temperature;
 
         if (Minimum is { } &&
-            temperature < Minimum)
+            temperature < Minimum &&
+            !(LitByFlame && context.FlameTemperature >= Minimum))
             return false;
 
         if (Maximum is { } &&

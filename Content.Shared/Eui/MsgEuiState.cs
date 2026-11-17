@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Network; // KS14
 
 namespace Content.Shared.Eui
 {
@@ -15,9 +16,12 @@ namespace Content.Shared.Eui
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer ser)
         {
+            KsNetMessageLimits.AssertNotReceivedByServer(this); // KS14: only the server sends this
             Id = buffer.ReadUInt32();
 
             var length = buffer.ReadVariableInt32();
+            buffer.AssertAtLeastSize(length);
+            KsNetMessageLimits.AssertAtMost(length, KsNetMessageLimits.MaxEuiStateBytes); // KS14: hard cap, stricter than upstream
             using var stream = new MemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             State = ser.Deserialize<EuiStateBase>(stream);

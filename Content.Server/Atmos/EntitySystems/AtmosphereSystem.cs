@@ -51,7 +51,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 
     private HashSet<EntityUid> _entSet = new();
 
-    private string[] _burntDecals = [];
+    /* private string[] _burntDecals = []; */ // KS14: removed, the burn marks moved to KsDecalOnSpawnSystem
 
     public override void Initialize()
     {
@@ -69,7 +69,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
         SubscribeLocalEvent<TileChangedEvent>(OnTileChanged);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 
-        CacheDecals();
+        /* CacheDecals(); */ // KS14: removed, see _burntDecals
     }
 
     public override void Shutdown()
@@ -89,8 +89,11 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs ev)
     {
+        // KS14: removed, see _burntDecals
+        /*
         if (ev.WasModified<DecalPrototype>())
             CacheDecals();
+        */
 
         KsOnPrototypesReloaded(ev); // KS14
     }
@@ -123,8 +126,11 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
         _exposedTimer -= ExposedUpdateDelay;
     }
 
+    // KS14: removed, see _burntDecals
+    /*
     private void CacheDecals()
     {
         _burntDecals = ProtoMan.EnumeratePrototypes<DecalPrototype>().Where(x => x.Tags.Contains("burnt")).Select(x => x.ID).ToArray();
     }
+    */
 }

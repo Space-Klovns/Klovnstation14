@@ -1,0 +1,88 @@
+<Document>
+  # Oil Refining
+  Crude oil is not one thing. It is a mixture of everything from gas to tar, and turning it into something useful is a long chain of [textlink="liquids in pipes" link="KsLiquidsInPipes"]: boiling it apart, then rebuilding the pieces. Every step needs the one before it.
+
+  ## Getting crude
+  Crude comes out of geysers on planets. Scan one to find out what it holds: [bold]crude oil[/bold], the harsher [bold]sour crude[/bold] with far more sulfur in it, or [bold]gas condensate[/bold], which is mostly light ends. Plumb the geyser to a [textlink="fluid port" link="KsFluidDevices"] to get it into pipes.
+
+  ## Machines can't sort oil
+  Nothing can pick one cut out of a mixture of oils. Select naphtha in a ChemMaster, a plumbing filter, a plumbing reactor or a smart fridge, and the whole mixture moves together, in the same proportions it started in. The only way to split oil is physics: boil it, condense it, or freeze it, in pipes. Gas filters can't see any of it, though they do see hydrogen, which is an ordinary gas.
+
+  ## Distilling
+  Heat the crude and put it through a [textlink="phase separator" link="KsFluidDevices"]. The vapor is richer in whatever boils easiest, and the liquid in whatever boils hardest. Condense the vapor in a radiator and you have one stage of a still. One stage is never clean: repeat it, and each stage gets you a purer cut. From lightest to heaviest:
+  - [bold]Refinery gas[/bold] comes off first. It stays vapor at room temperature.
+  - [bold]Naphtha[/bold], then [bold]kerosene[/bold], then [bold]diesel[/bold].
+  - What is left is the residue: [bold]vacuum gas oil[/bold], [bold]paraffin wax[/bold] and [bold]bitumen[/bold].
+
+  [bold]Organosulfur compounds[/bold] boil with the kerosene, so distilling will never get them out.
+
+  These are the temperatures each cut boils and melts at one atmosphere. Lower the pressure and every one of them boils cooler. A mixture boils somewhere between its parts, so heat a still to just past the cut you want and no further.
+
+  <KsGuideReagentPointsEmbed Reagents="KsRefineryGas,KsNaphtha,KsGasoline,KsKerosene,KsOrganosulfur,KsDiesel,KsParaffinWax,KsGasOil,KsBitumen"/>
+
+  ## Vacuum distilling
+  Don't try to boil the residue at normal pressure. Past a certain heat it cracks instead of boiling, and turns to [bold]petroleum coke[/bold], a solid that stays in your pipes. Lower the pressure and everything boils cooler: pump the still down hard, and the gas oil and wax come over before they can coke. The bitumen stays at the bottom.
+
+  Past these temperatures, the heavy cuts crack on their own, in any pipe:
+
+  <KsGuideFluidReactionEmbed Reactions="KsThermalCrackingGasOil,KsThermalCrackingBitumen"/>
+
+  Oil and water don't mix, so each keeps its own full vapor pressure. A mixture of oil and steam boils cooler than either, which is another way of getting heavy oil over without coking it.
+
+  ## Dewaxing
+  Wax stays dissolved in warm oil and crystallises out when you chill it. Chill the gas oil and the wax freezes solid. Pump the oil away while it is still liquid, then warm the pipe to melt the wax and drain it. Bitumen goes solid in the cold too, so keep it hot or it will clog your pipes.
+
+  ## Catalytic reactors
+  <Box>
+    <GuideEntityEmbed Entity="KsCatalyticReactor"/>
+  </Box>
+  <Box>
+    <GuideEntityEmbed Entity="KsCatalystBedPlatinum"/>
+    <GuideEntityEmbed Entity="KsCatalystBedCobaltMolybdenum"/>
+    <GuideEntityEmbed Entity="KsCatalystBedZeolite"/>
+    <GuideEntityEmbed Entity="KsCatalystBedAlumina"/>
+    <GuideEntityEmbed Entity="KsCatalystBedZieglerNatta"/>
+  </Box>
+  Distilling only sorts what crude already holds. To make anything new, you need a [textlink="catalytic reactor" link="KsFluidDevices"] and a catalyst bed from a protolathe, once Petrochemistry is researched. Each bed does one job, and only inside a set range of temperatures.
+
+  Reforming, catalytic cracking and steam cracking all run hotter than an ordinary heater can reach, so they need a [bold]hellfire heater[/bold]. Advanced Atmospherics unlocks the hellfire freezer board, and a screwdriver turns that board into a heater's.
+
+  - [bold]Hydrotreating[/bold] (cobalt-molybdenum). Hot, with hydrogen under pressure, it turns organosulfur compounds into diesel and [bold]hydrogen sulfide[/bold], a toxic gas you can flash off in a separator.
+  - [bold]The Claus process[/bold] (alumina). Hydrogen sulfide and oxygen become sulfur and steam, so the toxic gas ends up useful.
+  - [bold]Reforming[/bold] (platinum). Very hot, it turns naphtha into [bold]gasoline[/bold] and hydrogen, and that hydrogen feeds hydrotreating. Start it off with a hydrogen canister from cargo, or hydrogen from a chemical dispenser, which boils into the gas as soon as it reaches a pipe. Reforming soaks up heat and stalls itself, so reheat between reactors in a row. Sulfur kills platinum, so hydrotreat the naphtha first.
+  - [bold]Catalytic cracking[/bold] (zeolite). Hotter still, it breaks gas oil into gasoline, refinery gas and diesel. The coke it leaves wears the bed out.
+  - [bold]Polymerising[/bold] (Ziegler-Natta). Ethylene under pressure becomes [bold]polyethylene[/bold]. It gives off a great deal of heat, so cool it. Below the polymer's melting point it sets solid in the reactor. Let it overheat and it simply stops until it cools; only a heater can take the polymer hot enough to fall apart again. Water and sulfur kill the bed.
+
+  The temperatures each one needs:
+
+  <KsGuideFluidReactionEmbed Reactions="KsHydrotreating,KsClausProcess,KsCatalyticReforming,KsFluidCatalyticCracking,KsEthylenePolymerisation,KsPolyethyleneDepolymerisation"/>
+
+  ## Steam cracking
+  This one needs no reactor, just a great deal of heat. Naphtha or ethane in a pipe with plenty of steam, heated nearly as hot as a hellfire heater can go, cracks into [bold]ethylene[/bold] and a mix of lighter things. Take it away and quench it quickly: left hot, ethylene breaks down into coke and clogs the cracker.
+
+  Ethylene and [bold]ethane[/bold] boil very close together, far below room temperature. Splitting them takes a long, cold column, with an [textlink="expansion valve" link="KsFluidDevices"] and plenty of stages.
+
+  <KsGuideFluidReactionEmbed Reactions="KsSteamCrackingNaphtha,KsSteamCrackingEthane,KsEthyleneDecomposition"/>
+
+  <KsGuideReagentPointsEmbed Reagents="KsEthylene,KsEthane,KsHydrogenSulfide,KsPolyethylene,KsPetroleumCoke"/>
+
+  ## Clearing coke
+  Coke won't flow or melt. Burn it out: oxygen in a very hot pipe turns it into carbon dioxide.
+
+  <KsGuideFluidReactionEmbed Reactions="KsDecoking"/>
+
+  ## What it's all for
+  - [bold]Fuel.[/bold] A J.R.P.A.C.M.A.N. generator burns gasoline, diesel, kerosene and naphtha as well as welding fuel, and the better refined the fuel, the longer it lasts. Heavier and dirtier cuts burn too, just badly.
+  - [bold]Plastic walls.[/bold] Spill enough polyethylene and it sets into a wall where it lands.
+  - [bold]Asphalt.[/bold] Spilled bitumen paves the floor under it.
+  - [bold]Candles.[/bold] Spilled wax sets into one.
+  - [bold]Napalm.[/bold] Gasoline and polyethylene make it in a beaker.
+  - [bold]Plants.[/bold] Ethylene makes them grow faster.
+
+  ## Tips
+  - [bold]Mind your leaks.[/bold] Hot fuel on the floor lights itself.
+  - [bold]Keep hydrogen away from oxygen.[/bold] It has no colour and no overlay, and with oxygen it burns fiercely from a spark or anything hot, leaving steam.
+  - [bold]Don't pump a still dry.[/bold] An empty pipe at low pressure boils everything at once. Set a slow pump after a phase separator and a low liquid rate on it, so that liquid builds up, the pressure rises and the heater can do its work.
+  - [bold]Keep reactors short of pipe.[/bold] A bed works on the whole pipe net it sits in, and more pipe around it dilutes it. Pumps either side of a reactor set how long the feed spends inside.
+  - [bold]Examine a reactor[/bold] to see its bed's activity. Once that hits zero, the bed is spent.
+</Document>

@@ -7,9 +7,9 @@ namespace Content.Shared.Verbs
     ///     Contains combined name and icon information for a verb category.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class VerbCategory
+    public sealed partial /* KS14: store localization keys */ class VerbCategory
     {
-        public readonly string Text;
+        public string Text => Loc.GetString(LocalizationId); // KS14: localize static categories in the current request's culture
 
         public readonly SpriteSpecifier? Icon;
 
@@ -30,7 +30,7 @@ namespace Content.Shared.Verbs
 
         public VerbCategory(string text, string? icon, bool iconsOnly = false)
         {
-            Text = Loc.GetString(text);
+            LocalizationId = text; // KS14: retain the key rather than permanently caching translated text
             Icon = icon == null ? null : new SpriteSpecifier.Texture(new(icon));
             IconsOnly = iconsOnly;
         }

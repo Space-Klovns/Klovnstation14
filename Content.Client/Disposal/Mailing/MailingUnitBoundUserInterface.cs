@@ -34,6 +34,11 @@ public sealed partial class MailingUnitBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
+        // KS14 start: the tgui theme gets its own layout
+        if (OpenTgui())
+            return;
+        // KS14 end
+
         MailingUnitWindow = this.CreateWindow<MailingUnitWindow>();
         MailingUnitWindow.OpenCenteredRight();
 
@@ -49,6 +54,11 @@ public sealed partial class MailingUnitBoundUserInterface : BoundUserInterface
 
     public void Refresh(Entity<MailingUnitComponent> entity)
     {
+        // KS14 start: the tgui window, when that is the one open
+        if (RefreshTgui(entity))
+            return;
+        // KS14 end
+
         if (MailingUnitWindow == null)
             return;
 

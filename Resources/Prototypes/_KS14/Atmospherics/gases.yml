@@ -19,3 +19,16 @@
   color: '#8a2be2'
   reagent: Encalite
   pricePerMole: 0.5
+
+# Colourless, so it has no tile overlay: a hydrogen leak can't be seen.
+- type: gas
+  id: Hydrogen
+  name: gases-hydrogen
+  abbreviation: gas-hydrogen-abbreviation
+  molarHeatCapacity: 29
+  heatCapacityRatio: 1.41
+  molarMass: 2
+  color: '#d9e8ff'
+  reagent: Hydrogen
+  pricePerMole: 0.5
+  isFuel: true

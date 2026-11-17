@@ -34,3 +34,9 @@ As the repository contains private submodules, you may need to use this command 
 `git submodule update --init --recursive RobustToolbox`
 instead of the usual:
 `git submodule update --init --recursive`
+
+### Server stuck after `Flushing entities` on first launch
+
+On a fresh clone, the first server launch creates the SQLite database and runs every migration. If that launch is killed before it finishes, EF Core leaves a lock row in the `__EFMigrationsLock` table. Every later launch then waits for that lock forever: the log stops at `Flushing entities. Entity count: 0`, and the main thread sits in `TaskManager.BlockWaitOnTask`.
+
+To fix it, stop the server and delete the half-built database (`bin/Content.Server/data/preferences.db`, `-wal` and `-shm`). The next launch builds a fresh one. Let that launch finish, since it takes longer than usual.

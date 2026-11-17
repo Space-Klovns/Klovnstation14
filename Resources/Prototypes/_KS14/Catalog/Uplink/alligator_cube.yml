@@ -1,0 +1,9 @@
+- type: listing
+  id: UplinkKsSpaceAlligatorCube
+  name: uplink-ks-space-alligator-cube-name
+  description: uplink-ks-space-alligator-cube-desc
+  productEntity: KsSpaceAlligatorCube
+  cost:
+    Telecrystal: 10
+  categories:
+  - UplinkDisruption

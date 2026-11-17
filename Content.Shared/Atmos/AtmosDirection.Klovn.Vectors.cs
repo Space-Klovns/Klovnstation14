@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Numerics;
 
 namespace Content.Shared.Atmos

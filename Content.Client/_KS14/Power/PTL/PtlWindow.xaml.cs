@@ -9,7 +9,7 @@ namespace Content.Client._KS14.Power.PTL;
 public sealed partial class PtlWindow : FancyWindow
 {
     public event Action? OnTogglePressed;
-    public event Action<float>? OnDelayChanged;
+    public event Action<TimeSpan>? OnDelayChanged;
     public event Action? OnWithdrawPressed;
 
     public PtlWindow()
@@ -21,7 +21,8 @@ public sealed partial class PtlWindow : FancyWindow
 
         DelaySlider.OnReleased += _ =>
         {
-            OnDelayChanged?.Invoke(DelaySlider.Value);
+            // The slider counts in seconds.
+            OnDelayChanged?.Invoke(TimeSpan.FromSeconds(DelaySlider.Value));
         };
 
         DelaySlider.OnValueChanged += args =>
@@ -37,10 +38,12 @@ public sealed partial class PtlWindow : FancyWindow
 
         SpesosLabel.Text = state.SpesosHeld.ToString("N0");
 
-        DelaySlider.MinValue = state.MinDelay;
-        DelaySlider.MaxValue = state.MaxDelay;
-        DelaySlider.SetValueWithoutEvent(state.ShootDelay);
-        DelayValueLabel.Text = Loc.GetString("ptl-ui-delay-value", ("delay", state.ShootDelay.ToString("F0")));
+        DelaySlider.MinValue = (float)state.MinDelay.TotalSeconds;
+        DelaySlider.MaxValue = (float)state.MaxDelay.TotalSeconds;
+        // States come with every change of charge: one mid-drag would snap the slider back.
+        if (!DelaySlider.Grabbed)
+            DelaySlider.SetValueWithoutEvent((float)state.ShootDelay.TotalSeconds);
+        DelayValueLabel.Text = Loc.GetString("ptl-ui-delay-value", ("delay", state.ShootDelay.TotalSeconds.ToString("F0")));
 
         var chargeMj = state.CurrentCharge / 1_000_000f;
         var maxChargeMj = state.MaxCharge / 1_000_000f;

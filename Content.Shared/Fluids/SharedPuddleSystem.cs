@@ -203,7 +203,7 @@ public abstract partial class SharedPuddleSystem : EntitySystem
                 ref puddle.Solution,
                 out var solution))
         {
-            volume = solution.Volume / puddle.OverflowVolume;
+            volume = solution.Volume / KsGetOverflowVolume(puddle, solution) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
 
             // Make blood stand out more
             // Kinda EH
@@ -240,7 +240,7 @@ public abstract partial class SharedPuddleSystem : EntitySystem
 
         // This is the base amount of reagent needed before a puddle can be considered slippery. Is defined based on
         // the sprite threshold for a puddle larger than 5 pixels.
-        var smallPuddleThreshold = FixedPoint2.New(entity.Comp.OverflowVolume.Float() * LowThreshold);
+        var smallPuddleThreshold = FixedPoint2.New(KsGetOverflowVolume(entity.Comp, solution) /* KS14: was entity.Comp.OverflowVolume, see KsGetOverflowVolume */.Float() * LowThreshold);
 
         // Stores how many units of slippery reagents a puddle has
         var slipperyUnits = FixedPoint2.Zero;
@@ -347,6 +347,8 @@ public abstract partial class SharedPuddleSystem : EntitySystem
 
     public void DoTileReactions(TileRef tileRef, Solution solution)
     {
+        using var ksTemperatureScope = KsBeginTileReactionTemperature(solution.Temperature); // KS14: tile reactions that spill read the source's temperature
+
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {
             var (reagent, quantity) = solution.Contents[i];

@@ -92,6 +92,8 @@ public sealed partial class GameMapManager : IGameMapManager
                 break;
             _previousMaps.Enqueue(map.ID);
         }
+
+        KsInitialize(); // KS14: raises KsSelectedMapChanged when the GameMap cvar changes the selection
     }
 
     public IEnumerable<GameMapPrototype> CurrentlyEligibleMaps()
@@ -137,6 +139,7 @@ public sealed partial class GameMapManager : IGameMapManager
     public void ClearSelectedMap()
     {
         _selectedMap = default!;
+        KsNotifySelectedMapChanged(); // KS14
     }
 
     public bool TrySelectMapIfEligible(string gameMap)
@@ -144,6 +147,7 @@ public sealed partial class GameMapManager : IGameMapManager
         if (!TryLookupMap(gameMap, out var map) || !IsMapEligible(map))
             return false;
         _selectedMap = map;
+        KsNotifySelectedMapChanged(); // KS14
         return true;
     }
 
@@ -152,12 +156,14 @@ public sealed partial class GameMapManager : IGameMapManager
         if (!TryLookupMap(gameMap, out var map))
             throw new ArgumentException($"The map \"{gameMap}\" is invalid!");
         _selectedMap = map;
+        KsNotifySelectedMapChanged(); // KS14
     }
 
     public void SelectMapRandom()
     {
         var maps = CurrentlyEligibleMaps().ToList();
         _selectedMap = _random.Pick(maps);
+        KsNotifySelectedMapChanged(); // KS14
     }
 
     public void SelectMapFromRotationQueue(bool markAsPlayed = false)
@@ -165,6 +171,7 @@ public sealed partial class GameMapManager : IGameMapManager
         var map = GetFirstInRotationQueue();
 
         _selectedMap = map;
+        KsNotifySelectedMapChanged(); // KS14
 
         if (markAsPlayed)
             EnqueueMap(map.ID);

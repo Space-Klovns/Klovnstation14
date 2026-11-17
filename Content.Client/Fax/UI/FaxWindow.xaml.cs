@@ -8,7 +8,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Fax.UI;
 
 [GenerateTypedNameReferences]
-public sealed partial class FaxWindow : DefaultWindow
+public sealed partial class FaxWindow : DefaultWindow, Content.Client._KS14.Tgui.Windows.Fax.IKsFaxWindow // KS14: interface
 {
     public event Action? FileButtonPressed;
     public event Action? PaperButtonPressed;
@@ -17,7 +17,7 @@ public sealed partial class FaxWindow : DefaultWindow
     public event Action? RefreshButtonPressed;
     public event Action<string>? PeerSelected;
 
-    public bool OfficePaper = false;
+    public bool OfficePaper { get; private set; } = false; // KS14: field -> property, for the interface
 
     public FaxWindow()
     {

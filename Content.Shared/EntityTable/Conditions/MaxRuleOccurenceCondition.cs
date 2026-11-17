@@ -47,6 +47,11 @@ public sealed partial class MaxRuleOccurenceCondition : EntityTableCondition
         if (rule == string.Empty)
             return false;
 
+        // KS14 start: a simulated round supplies its own rule history
+        if (ctx.TryGetData<IReadOnlyList<(TimeSpan, string)>>(Content.Shared._KS14.EntityTable.KsSimulationContextKeys.PreviousGameRules, out var simulatedRules))
+            return simulatedRules.Count(p => p.Item2 == rule) < Max;
+        // KS14 end
+
         var gameTicker = entMan.System<SharedGameTicker>();
 
         return gameTicker.AllPreviousGameRules.Count(p => p.Item2 == rule) < Max;

@@ -188,7 +188,7 @@ public sealed partial class SurveillanceCameraRouterSystem : EntitySystem
         var payload = new NetworkPayload()
         {
             { DeviceNetworkConstants.Command, SurveillanceCameraSystem.CameraSubnetData },
-            { SurveillanceCameraSystem.CameraSubnetData, router.SubnetFrequencyId }
+            { SurveillanceCameraSystem.CameraSubnetData, router.SubnetFrequencyId.Value.Id /* KS14: ProtoId -> string, the monitor reads a string */ }
         };
 
         _deviceNetworkSystem.QueuePacket(uid, origin, payload);

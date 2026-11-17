@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Wires;
 using Content.Shared.Speech;
@@ -40,6 +41,6 @@ public sealed partial class SpeechWireAction : ComponentWireAction<SpeechCompone
 
     public override void Pulse(EntityUid user, Wire wire, SpeechComponent component)
     {
-        _popup.PopupEntity(Loc.GetString("wire-speech-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wire-speech-pulse", ("name", wire.Owner)), wire.Owner);
     }
 }

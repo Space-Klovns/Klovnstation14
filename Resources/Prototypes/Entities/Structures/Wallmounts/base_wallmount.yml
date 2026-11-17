@@ -14,6 +14,7 @@
     canCollide: false
   - type: Clickable
   - type: WallMount
+  - type: KsNoAmbientOcclusion # KS14
   - type: InteractionOutline
   - type: Transform
     anchored: true

@@ -47,3 +47,27 @@
         Piercing: 0.75
         Radiation: 0.35
         Heat: 0.75
+
+# Black plate armour, with sprites from Stalker14. Between a bulletproof vest and the raid suit: all-round protection, no
+#   resistance to vacuum, and the suit storage slot an air tank goes in.
+- type: entity
+  parent: [ BaseCentcommContraband, ClothingOuterBaseLarge, AllowSuitStorageClothing ]
+  id: KsClothingOuterArmorBlackPlate
+  name: black plate armor
+  description: Heavy black plates over a padded suit, and nothing on any of it to say whose it is.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/outerClothing/legat_deserter.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/outerClothing/legat_deserter.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.5
+        Heat: 0.75
+      flatReductions:
+        Piercing: 10
+  - type: ExplosionResistance
+    damageCoefficient: 0.7

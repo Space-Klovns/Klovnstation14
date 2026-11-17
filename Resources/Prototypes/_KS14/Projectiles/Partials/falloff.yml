@@ -1,0 +1,94 @@
+# Distance damage falloff for ballistic bullets. Lasers, rockets, grenades, energy and magic bolts also inherit
+# BaseBullet, so the component goes on the ballistic bullet roots instead of on BaseBullet itself.
+# Sniper rounds (BulletAntiMateriel, BulletAntiMaterielAP: the Hristov and the musket) are left out on purpose, they do not fall off.
+- type: !PartialOnly entity
+  id: BaseBulletPractice
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BaseBulletIncendiary
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BaseBulletAP
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BaseBulletUranium
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletCaselessRifle
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletHeavyRifle
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletLightRifle
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletMagnum
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletPistol
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: BulletRifle
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletShotgunSlug
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletShotgunBeanbag
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletShotgun
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletShotgunImprovised
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletGrapeshot
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletGlass
+  components:
+  - type: KsProjectileFalloff
+
+- type: !PartialOnly entity
+  id: PelletShotgunMech
+  components:
+  - type: KsProjectileFalloff
+
+# The Kardashev-Mosin is a sniper: its round (shared with other light rifles) does not fall off when fired from it.
+- type: !PartialOnly entity
+  id: WeaponSniperMosin
+  components:
+  - type: KsGunProjectileFalloff
+    minMultiplier: 1

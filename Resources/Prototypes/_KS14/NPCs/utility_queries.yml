@@ -16,3 +16,16 @@
       slope: 0.5
       exponent: 0.5
       yOffset: 0
+
+# NearbyGunTargets, preferring a hostile its rounds can get to: what turrets pick from (TurretCompound,
+#   EnergyTurretCompound, LaserTurretCompound). A ballistic turret that sees a hostile through a window takes one in the open
+#   instead, however much nearer the one behind glass is; with only that one, it still takes it on, aims and holds fire.
+- type: utilityQuery
+  parent: NearbyGunTargets # its query and considerations, whatever upstream makes of them, and this one's besides
+  id: KsTurretGunTargets
+  considerations:
+  # One ray per candidate. Pushed inheritance puts it ahead of the parent's, so it is cast before the cheap checks too: a
+  #   few rays a turret, every replan.
+  - !type:KsTargetInLineOfFireCon
+    curve: !type:BoolCurve
+      lowScore: 0.001 # not out of the question: aimed at, holding fire, when it is the only one

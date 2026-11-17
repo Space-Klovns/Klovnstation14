@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared._KS14.Anchorless.Components;
@@ -100,7 +101,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("anchorless-communion-message"), ent.Owner, ent.Owner, PopupType.Medium);
+        _popupSystem.PopupEntity(KsPopupMessage.Create("anchorless-communion-message"), ent.Owner, ent.Owner, PopupType.Medium);
         if (_net.IsClient)
             return;
 

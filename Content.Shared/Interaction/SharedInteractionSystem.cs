@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared._ES.Interaction;
@@ -832,7 +833,7 @@ namespace Content.Shared.Interaction
 
             if (!inRange && popup && _gameTiming.IsFirstTimePredicted)
             {
-                var message = Loc.GetString("interaction-system-user-interaction-cannot-reach");
+                var message = KsPopupMessage.Create /* KS14: defer popup translation */("interaction-system-user-interaction-cannot-reach");
                 _popupSystem.PopupClient(message, origin, origin);
             }
 
@@ -991,7 +992,7 @@ namespace Content.Shared.Interaction
 
             if (!inRange && popup && _gameTiming.IsFirstTimePredicted)
             {
-                var message = Loc.GetString("interaction-system-user-interaction-cannot-reach");
+                var message = KsPopupMessage.Create /* KS14: defer popup translation */("interaction-system-user-interaction-cannot-reach");
                 _popupSystem.PopupEntity(message, origin, origin);
             }
 

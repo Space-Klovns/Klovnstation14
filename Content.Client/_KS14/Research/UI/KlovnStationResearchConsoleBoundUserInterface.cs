@@ -39,7 +39,7 @@ public sealed partial class KlovnStationResearchConsoleBoundUserInterface : Boun
 
         _consoleMenu.OnServerButtonPressed += () =>
         {
-            SendMessage(new ConsoleServerSelectionMessage());
+            SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
         };
     }
 

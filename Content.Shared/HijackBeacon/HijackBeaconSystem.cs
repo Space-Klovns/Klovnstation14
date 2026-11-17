@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Cargo.Components;
 using Content.Shared.Chat;
 using Content.Shared.Construction.Components;
@@ -298,7 +299,7 @@ public sealed partial class HijackBeaconSystem : EntitySystem
             return;
 
         _transform.AnchorEntity(ent, beaconXForm);
-        _popup.PopupPredicted(Loc.GetString("hijack-beacon-popup-anchor"), ent, null);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("hijack-beacon-popup-anchor"), ent, null);
     }
 
     /// <summary>
@@ -312,7 +313,7 @@ public sealed partial class HijackBeaconSystem : EntitySystem
             return;
 
         _transform.Unanchor(ent, beaconXForm);
-        _popup.PopupPredicted(Loc.GetString("hijack-beacon-popup-unanchor"), ent, null);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("hijack-beacon-popup-unanchor"), ent, null);
     }
 
     /// <summary>

@@ -79,6 +79,15 @@ namespace Content.Server.Body.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public DamageSpecifier Damage = default!;
 
+        // KS14 start: crit asphyxiation separate from suffocation
+        /// <summary>
+        ///     Damage taken each suffocating cycle while in critical condition, where nobody breathes. Null uses
+        ///         <see cref="Damage"/>, so suffocating can be made deadlier without making crit die faster too.
+        /// </summary>
+        [DataField]
+        public DamageSpecifier? CritDamage;
+        // KS14 end
+
         [DataField(required: true)]
         [ViewVariables(VVAccess.ReadWrite)]
         public DamageSpecifier DamageRecovery = default!;

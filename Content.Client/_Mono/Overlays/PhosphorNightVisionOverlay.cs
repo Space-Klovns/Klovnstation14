@@ -156,6 +156,13 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         AnimationTime = _gameTiming.CurTime;
     }
 
+    // KS14 start: not drawn into portal views (viewer state or screen-texture effect)
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        return !Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive;
+    }
+    // KS14 end
+
     protected override void Draw(in OverlayDrawArgs args)
     {
         if (ScreenTexture == null)
@@ -307,7 +314,11 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 _nightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
                 _nightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
                 _nightVisionShader.SetParameter("ZOOM", _eyeEntity!.Value.Comp1.Zoom);
-                _nightVisionShader.SetParameter("EYE_OFFSET", _eyeEntity!.Value.Comp1.Offset);
+                // KS14 start: the viewer's position in the target's pixels, for the cone's origin. WorldToLocal is from the
+                //      top-left; the shader's fragment coordinates are from the bottom-left.
+                var viewerLocal = args.Viewport.WorldToLocal(_transformSystem.GetWorldPosition(_eyeEntity!.Value.Comp3));
+                _nightVisionShader.SetParameter("PLAYER_POSITION", new System.Numerics.Vector2(viewerLocal.X, args.Viewport.Size.Y - viewerLocal.Y));
+                // KS14 end
 
                 // Adjusting these weights is somewhat tricky.
                 // The offset controls the amount of spacing (in px) of the sample - going further out will result in more blur

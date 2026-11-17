@@ -26,6 +26,7 @@ public sealed partial class ProgressColorSystem : EntitySystem
     public override void Initialize()
     {
         Subs.CVar(_configuration, CCVars.AccessibilityColorblindFriendly, OnColorBlindFriendlyChanged, true);
+        Subs.CVar(_configuration, Content.Shared._KS14.CCVar.KsCCVars.TguiStyle, value => _ksTgui = value, true); // KS14
     }
 
     private void OnColorBlindFriendlyChanged(bool value, in CVarChangeInfo info)
@@ -37,6 +38,9 @@ public sealed partial class ProgressColorSystem : EntitySystem
     {
         if (!_colorBlindFriendly)
         {
+            if (_ksTgui) // KS14: tgui's good, average and bad
+                return KsTguiProgressColor(progress);
+
             if (progress >= 1.0f)
             {
                 return new Color(0f, 1f, 0f);

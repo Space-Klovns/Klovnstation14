@@ -1,0 +1,37 @@
+<Document>
+# Химические вещества
+
+Химические вещества — это мощный инструмент, который при употреблении может вызывать самые разные эффекты. Некоторые из них можно найти в растениях, приобрести из грузов или синтезировать путем смешивания с другими химическими веществами.
+
+Знание различных типов химических веществ и их эффектов важно для того, чтобы уметь справляться с травмами и опасностями.
+
+## Элементы
+<GuideReagentGroupEmbed Group="Elements"/>
+
+## Медицина
+<GuideReagentGroupEmbed Group="Medicine"/>
+
+## Наркотики
+<GuideReagentGroupEmbed Group="Narcotics"/>
+
+## Пиротехника
+<GuideReagentGroupEmbed Group="Pyrotechnic"/>
+
+## Токсины
+<GuideReagentGroupEmbed Group="Toxins"/>
+
+## Продукты питания
+<GuideReagentGroupEmbed Group="Foods"/>
+
+## Ботаника
+<GuideReagentGroupEmbed Group="Botanical"/>
+
+## Биологический
+<GuideReagentGroupEmbed Group="Biological"/>
+
+## Особое
+<GuideReagentGroupEmbed Group="Special"/>
+
+## Прочее
+<GuideReagentGroupEmbed Group="Unknown"/>
+</Document>

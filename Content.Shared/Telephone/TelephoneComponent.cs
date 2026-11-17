@@ -188,7 +188,8 @@ public readonly record struct TelephoneMessageSentEvent(string Message, MsgChatM
 /// Raised when a chat message is received by a telephone from another
 /// </summary>
 [ByRefEvent]
-public readonly record struct TelephoneMessageReceivedEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource, Entity<TelephoneComponent> TelephoneSource, KsUtteranceContext? KsLanguage = null /* KS14 */);
+// BS: UPSTREAM-BS-TRANSLATION-001, only clear microphone deliveries carry pre-accent translation text.
+public readonly record struct TelephoneMessageReceivedEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource, Entity<TelephoneComponent> TelephoneSource, KsUtteranceContext? KsLanguage = null /* KS14 */, string? KsTranslationText = null);
 
 #endregion
 

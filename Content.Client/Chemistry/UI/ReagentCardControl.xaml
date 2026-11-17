@@ -1,4 +1,6 @@
-<Control xmlns="https://spacestation14.io" HorizontalExpand="True">
+<Control xmlns="https://spacestation14.io"
+         xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
+         HorizontalExpand="True">
     <BoxContainer Name="MainContainer"
                   Orientation="Horizontal"
                   HorizontalExpand="True">
@@ -23,7 +25,8 @@
                 </BoxContainer>
             </BoxContainer>
         </Button>
-        <Button Name="EjectButton"
+        <!-- KS14: restyles its icon label when disabled, under tgui -->
+        <ksTgui:KsRestylingButton Name="EjectButton"
                 StyleClasses="OpenLeft"
                 VerticalExpand="True"
                 SetWidth="20">
@@ -31,6 +34,6 @@
                    VerticalAlignment="Center"
                    HorizontalAlignment="Center"
                    Margin="-7 -4 0 0" />
-        </Button>
+        </ksTgui:KsRestylingButton>
     </BoxContainer>
 </Control>

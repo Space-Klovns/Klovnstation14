@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
@@ -125,15 +126,15 @@ public abstract partial class SharedToolSystem
                 var drained = SolutionContainerSystem.Drain(target, targetSoln.Value, trans);
                 SolutionContainerSystem.TryAddSolution(solution.Value, drained);
                 _audioSystem.PlayPredicted(entity.Comp.WelderRefill, entity, user: args.User);
-                _popup.PopupClient(Loc.GetString("welder-component-after-interact-refueled-message"), entity, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("welder-component-after-interact-refueled-message"), entity, args.User);
             }
             else if (welderSolution.AvailableVolume <= 0)
             {
-                _popup.PopupClient(Loc.GetString("welder-component-already-full"), entity, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("welder-component-already-full"), entity, args.User);
             }
             else
             {
-                _popup.PopupClient(Loc.GetString("welder-component-no-fuel-in-tank", ("owner", args.Target)), entity, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("welder-component-no-fuel-in-tank", ("owner", args.Target)), entity, args.User);
             }
 
             args.Handled = true;
@@ -144,7 +145,7 @@ public abstract partial class SharedToolSystem
     {
         if (!ItemToggle.IsActivated(entity.Owner))
         {
-            _popup.PopupClient(Loc.GetString("welder-component-welder-not-lit-message"), entity, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("welder-component-welder-not-lit-message"), entity, user);
             ev.Cancel();
         }
 
@@ -152,7 +153,7 @@ public abstract partial class SharedToolSystem
 
         if (requiredFuel > currentFuel)
         {
-            _popup.PopupClient(Loc.GetString("welder-component-cannot-weld-message"), entity, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("welder-component-cannot-weld-message"), entity, user);
             ev.Cancel();
         }
     }

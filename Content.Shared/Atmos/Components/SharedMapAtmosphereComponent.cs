@@ -15,6 +15,14 @@ public sealed class MapAtmosphereComponentState : ComponentState
 {
     public SharedGasTileOverlaySystem.GasOverlayData Overlay;
 
+    // KS14 start: the map's air, so the client knows what is outside too. See SharedAtmosphereSystem.GetMapMixture.
+    //      GasMixture is not net-serializable, so it comes as its parts.
+    public bool Space = true;
+    public float[]? Moles;
+    public float Temperature;
+    public float Volume;
+    // KS14 end
+
     public MapAtmosphereComponentState(SharedGasTileOverlaySystem.GasOverlayData overlay)
     {
         Overlay = overlay;

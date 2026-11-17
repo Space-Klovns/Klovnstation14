@@ -1,5 +1,6 @@
 using Content.Shared._KS14.Chat;
 using Content.Shared._KS14.EmoteAudioEffect; // KS14
+using Content.Shared._KS14.Flash; // KS14
 using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Armor;
 using Content.Shared.Atmos;
@@ -87,6 +88,7 @@ public partial class InventorySystem
         SubscribeLocalEvent<InventoryComponent, GetContrabandDetailsEvent>(RefRelayInventoryEvent);
         SubscribeLocalEvent<InventoryComponent, KsRefreshLanguagesEvent>(RefRelayInventoryEvent); // KS14
         SubscribeLocalEvent<InventoryComponent, FlashAttemptEvent>(RefRelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, KsCanFlashEvent>(RefRelayInventoryEvent); // KS14
         SubscribeLocalEvent<InventoryComponent, WieldAttemptEvent>(RefRelayInventoryEvent);
         SubscribeLocalEvent<InventoryComponent, UnwieldAttemptEvent>(RefRelayInventoryEvent);
         SubscribeLocalEvent<InventoryComponent, IngestionAttemptEvent>(RefRelayInventoryEvent);

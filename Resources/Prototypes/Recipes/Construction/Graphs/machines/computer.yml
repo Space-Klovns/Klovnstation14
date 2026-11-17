@@ -123,6 +123,11 @@
       entity: !type:BoardNodeEntity { container: board }
       edges:
         - to: monitorUnsecured
+          # KS14 start: a locked console (id-locked shuttle console) can't be pried apart; no-op for entities without a Lock
+          conditions:
+            - !type:Locked
+              locked: false
+          # KS14 end
           completed:
             - !type:RaiseEvent
                 event: !type:MachineDeconstructedEvent

@@ -1,0 +1,193 @@
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Content.Client.Gameplay;
+using Content.Client.UserInterface.Screens;
+using Content.Client.UserInterface.Systems.Chat;
+using Content.Client.UserInterface.Systems.Chat.Widgets;
+using Content.Client.UserInterface.Systems.Guidebook;
+using Content.Shared.CCVar;
+using Robust.Client;
+using Robust.Client.Graphics;
+using Robust.Client.State;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controllers;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Configuration;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+
+namespace Content.Client._KS14.TempKs;
+
+// TEMPORARY
+public sealed class TempKsController : UIController
+{
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IStateManager _stateManager = default!;
+    [Dependency] private IConsoleHost _consoleHost = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IGameController _gameController = default!;
+
+    private readonly List<(string Name, Action Act, float Wait)> _steps = new();
+    private int _index = -1;
+    private TimeSpan _next;
+    private TimeSpan? _gameplaySince;
+    private int _shotCount;
+
+    private void Server(string command, float wait = 2.0f) => _steps.Add(("cmd " + command, () => _consoleHost.ExecuteCommand(command), wait));
+    private void Act(string name, Action act, float wait = 1.0f) => _steps.Add((name, act, wait));
+    private void Shot(string name) => _steps.Add(("shot " + name, () => Shoot(name), 1.0f));
+
+    // Set to a scenario-name fragment (e.g. "canister") to shoot only that one; empty shoots everything.
+    private const string Only = "";
+
+    private void Scenario(string name, string command, float wait = 2.5f)
+    {
+        if (Only != "" && !name.Contains(Only))
+            return;
+
+        Server(command, 1.5f);
+        Server("tempksopen", wait);
+        Shot(name);
+        Act("closeall", CloseAll, 0.3f);
+        Server("tempksclear", 0.7f);
+    }
+
+    private void CloseAll()
+    {
+        foreach (var window in UIManager.WindowRoot.Children.OfType<BaseWindow>().ToList())
+            window.Close();
+    }
+
+    private void Build()
+    {
+        if (Only == "")
+            Server("say TempKs test line one", 0.5f);
+        Scenario("01_vending_engivend", "tempks VendingMachineEngivend");
+        Scenario("02_autolathe", "tempks Autolathe lathe", 3f);
+        Scenario("03_reagent_dispenser", "tempks ChemDispenser beaker", 3f);
+        Scenario("04_chem_master", "tempks ChemMaster beaker", 3f);
+        Scenario("05_apc", "tempks APCBasic");
+        Scenario("06_air_alarm", "tempks AirAlarm");
+        Scenario("07_gas_pressure_pump", "tempks GasPressurePump");
+        Scenario("08_gas_volume_pump", "tempks GasVolumePump");
+        Scenario("09_gas_filter", "tempks GasFilter");
+        Scenario("10_gas_mixer", "tempks GasMixer");
+        Scenario("11_gas_canister", "tempks AirCanister");
+        Scenario("12_thermomachine_freezer", "tempks GasThermoMachineFreezer");
+        Scenario("13_fax", "tempks FaxMachineBase");
+        Scenario("14_cargo_request", "tempks ComputerCargoOrders");
+        Scenario("15_pda", "tempks PassengerPDA hand");
+        Scenario("16_wires_airlock", "tempks AirlockEngineering panel wires");
+        Scenario("17_crew_monitor", "tempks ComputerCrewMonitoring", 3.5f);
+        Scenario("18_power_monitor", "tempks ComputerPowerMonitoring", 3.5f);
+        Scenario("19_id_card_console", "tempks ComputerId");
+        Scenario("20_rcd_radial", "tempks RCD hand");
+
+        if (Only == "")
+        {
+        Act("late join", () => Content.Client._KS14.Tgui.Windows.LateJoin.KsLateJoinWindowFactory.Create().OpenCentered(), 2f);
+        Shot("21_late_join");
+        Act("closeall", CloseAll, 0.5f);
+
+        Act("guidebook", () => UIManager.GetUIController<GuidebookUIController>().OpenGuidebook(selected: "Medicine"), 3f);
+        Shot("22_guidebook_chemical");
+        Act("closeall", CloseAll, 0.5f);
+
+        foreach (var layout in new[] { ("Default", "overlay"), ("Separated", "separated") })
+        {
+            var tag = layout.Item2;
+            Act("layout " + layout.Item1, () => _configurationManager.SetCVar(CCVars.UILayout, layout.Item1), 3f);
+            Server("say TempKs chat message alpha", 0.4f);
+            Server("me waves hello", 0.4f);
+            Server("say TempKs chat message bravo with a much longer line of text to see wrapping behaviour in the chat panel", 0.4f);
+            Server("ooc ooc test message", 0.4f);
+            Server("whisper psst", 1.0f);
+            Shot("30_chat_" + tag + "_messages");
+            Act("focus chat", FocusChat, 1.0f);
+            Shot("31_chat_" + tag + "_T_pressed");
+            Act("settings open", () => SetSettings(true), 1.0f);
+            Shot("32_chat_" + tag + "_settings");
+            Act("settings close", () => { SetSettings(false); UIManager.KeyboardFocused?.ReleaseKeyboardFocus(); }, 1.0f);
+        }
+
+        }
+
+        Act("done", () => _gameController.Shutdown("tempks done"), 1f);
+    }
+
+    private ChatBox? MainChat() => UIManager.GetUIController<ChatUIController>().Chats.FirstOrDefault(c => c.Main);
+
+    private void FocusChat()
+    {
+        var method = typeof(ChatUIController).GetMethod("FocusChat", BindingFlags.NonPublic | BindingFlags.Instance);
+        method!.Invoke(UIManager.GetUIController<ChatUIController>(), null);
+    }
+
+    private void SetSettings(bool open)
+    {
+        var chat = MainChat();
+        if (chat == null)
+        {
+            Logger.Error("TempKs: no main chat");
+            return;
+        }
+
+        typeof(ChatBox).GetMethod("KsSetSettingsOpen", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(chat, new object[] { open });
+    }
+
+    public override void FrameUpdate(FrameEventArgs args)
+    {
+        if (_stateManager.CurrentState is not GameplayState)
+            return;
+
+        _gameplaySince ??= _gameTiming.RealTime;
+        if (_gameTiming.RealTime - _gameplaySince < TimeSpan.FromSeconds(10))
+            return;
+
+        if (_index == -1)
+        {
+            Build();
+            _index = 0;
+            _next = _gameTiming.RealTime;
+        }
+
+        if (_index >= _steps.Count || _gameTiming.RealTime < _next)
+            return;
+
+        var step = _steps[_index++];
+        Logger.Info($"TempKs step {_index}: {step.Name}");
+        try
+        {
+            step.Act();
+        }
+        catch (Exception e)
+        {
+            Logger.Error($"TempKs step {step.Name} threw: {e}");
+        }
+
+        _next = _gameTiming.RealTime + TimeSpan.FromSeconds(step.Wait);
+    }
+
+    private void Shoot(string name)
+    {
+        _clyde.Screenshot(ScreenshotType.Final, image => Save(image, name));
+    }
+
+    private void Save<T>(Image<T> image, string name) where T : unmanaged, IPixel<T>
+    {
+        var directory = new ResPath("/TguiShots");
+        if (!_resourceManager.UserData.IsDir(directory))
+            _resourceManager.UserData.CreateDir(directory);
+
+        using var file = _resourceManager.UserData.Open(directory / $"{name}.png", FileMode.Create, FileAccess.Write, FileShare.None);
+        image.SaveAsPng(file);
+        Logger.Info($"TempKs saved {name}");
+    }
+}

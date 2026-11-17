@@ -8,13 +8,13 @@
     duration: 6.5
     temperature: 1500
     exposedVolume: 50
-    heatPower: 7000
+    heatPower: 12000
   - type: ChemicalFireGasConsumer
     gases:
-      Oxygen: 3
+      Oxygen: 1.5
     producedGasRatios:
-      CarbonDioxide: 2.92
-      WaterVapor: 0.08
+      CarbonDioxide: 1.4
+      WaterVapor: 0.1
 
 # Plasma-fed: eats the tile's plasma and goes out the moment there is none left.
 - type: entity
@@ -53,6 +53,13 @@
     color: "#ffc291"
     duration: 7
     temperature: 2900
-    heatPower: 12000
+    heatPower: 18000
+    extinguishable: false # thermite burns through a dousing
+    # Foam has to win a fight with it: a blanket smothers it at its foam over 26 a second, while the fire puts all its
+    #     heat into boiling the blanket (about 0.27u a second, at the ~67600 J a unit of foam takes). A full blanket
+    #     left alone adds up to only maxFoam^2 / (2 * 0.27 * 26), about 0.9 of the progress needed, so it loses; one
+    #     kept topped up by spraying wins in 26 / maxFoam, about 7.5 seconds. KsFoamContestTest checks both.
+    foamSmotherResistance: 26
+    foamHeatFraction: 1
   - type: SparkOnTrigger
   - type: TriggerOnSpawn

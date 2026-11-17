@@ -1,3 +1,4 @@
+using Content.Server._KS14.Fluids; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Body.Systems;
 using Content.Server.Spreader;
@@ -265,6 +266,10 @@ public sealed partial class SmokeSystem : EntitySystem
         if (!_solutionContainerSystem.ResolveSolution(entity, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution) || bloodSolution.AvailableVolume <= 0)
             return;
 
+        // KS14: whatever is about to breathe this hears of it first, and can put its internals on
+        var ksExposureEvent = new KsSmokeExposureEvent(smokeUid, solution);
+        RaiseLocalEvent(entity, ref ksExposureEvent);
+
         var blockIngestion = _internals.AreInternalsWorking(entity);
 
         var cloneSolution = solution.Clone();
@@ -305,13 +310,23 @@ public sealed partial class SmokeSystem : EntitySystem
 
         var tile = _map.GetTileRef(xform.GridUid.Value, mapGrid, xform.Coordinates);
 
+        EqualizeTemperatureWithPuddle(component.Solution!.Value, tile); // KS14: puddle heat exchange, before ReactionTile
+
+        using var ksTemperatureScope = _puddleSystem.KsBeginTileReactionTemperature(solution.Temperature); // KS14: tile reactions that spill read the smoke's temperature
+
         foreach (var reagentQuantity in solution.Contents.ToArray())
         {
             if (reagentQuantity.Quantity == FixedPoint2.Zero)
                 continue;
 
             var reagent = ProtoMan.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
-            reagent.ReactionTile(tile, reagentQuantity.Quantity, EntityManager, reagentQuantity.Reagent.Data);
+            /* KS14: was reagent.ReactionTile(...) with the result ignored */
+            var consumed = ReactionTileConsumingExtinguish(tile, reagent, reagentQuantity.Quantity, reagentQuantity.Reagent.Data);
+
+            // KS14 start: water boiled off by an extinguish reaction leaves the smoke
+            if (consumed > FixedPoint2.Zero)
+                _solutionContainerSystem.RemoveReagent(component.Solution!.Value, reagentQuantity.Reagent, FixedPoint2.Min(consumed, reagentQuantity.Quantity));
+            // KS14 end
         }
     }
 

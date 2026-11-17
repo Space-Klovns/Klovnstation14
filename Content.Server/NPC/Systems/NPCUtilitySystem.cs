@@ -81,6 +81,9 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         {
             foreach (var consideration in compound.Considerations)
                 consideration.Initialise(dependencyCollection);
+
+            foreach (var query in compound.Query)
+                query.Initialise(dependencyCollection);
         }
     }
 
@@ -127,6 +130,15 @@ public sealed partial class NPCUtilitySystem : EntitySystem
             _entPool.Return(ents);
             return UtilityResult.Empty;
         }
+
+        // KS14 start: a locking shooter stays on the target it has while that target is still valid and in sight
+        if (bestOnly && KsTryKeepCurrentTarget(blackboard, weh, ents, out var keptTarget))
+        {
+            blackboard.Remove<EntityUid>(NPCBlackboard.UtilityTarget);
+            _entPool.Return(ents);
+            return keptTarget;
+        }
+        // KS14 end
 
         var results = new Dictionary<EntityUid, float>();
         var highestScore = 0f;
@@ -187,7 +199,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private float GetScore(NPCBlackboard blackboard, EntityUid targetUid, UtilityConsideration consideration)
+    internal /* KS14: private -> internal, reused by KsLogicCon */ float GetScore(NPCBlackboard blackboard, EntityUid targetUid, UtilityConsideration consideration)
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         switch (consideration)
@@ -518,7 +530,8 @@ public sealed partial class NPCUtilitySystem : EntitySystem
                     break;
                 }
             default:
-                throw new NotImplementedException();
+                query.AddEntities(blackboard, owner, entities); // KS14: custom queries add their own; throw new NotImplementedException() moved into the base
+                break;
         }
     }
 

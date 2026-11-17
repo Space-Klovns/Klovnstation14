@@ -1,0 +1,118 @@
+# Ore: put it in an ore bag that has the tablet attached.
+
+- type: ksSalvageTask
+  id: KsSalvageTaskIron
+  name: ks-salvage-tablet-task-iron
+  icon: SteelOre1
+  objective: !type:KsSalvageOreObjective
+    stack: SteelOre
+  minAmount: 30
+  maxAmount: 60
+  pointsPerUnit: 2
+  reputation: 2
+
+- type: ksSalvageTask
+  id: KsSalvageTaskQuartz
+  name: ks-salvage-tablet-task-quartz
+  icon: SpaceQuartz1
+  objective: !type:KsSalvageOreObjective
+    stack: SpaceQuartz
+  minAmount: 20
+  maxAmount: 40
+  pointsPerUnit: 2
+  reputation: 2
+
+- type: ksSalvageTask
+  id: KsSalvageTaskPlasma
+  name: ks-salvage-tablet-task-plasma
+  icon: PlasmaOre1
+  objective: !type:KsSalvageOreObjective
+    stack: PlasmaOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 8
+  reputation: 3
+
+- type: ksSalvageTask
+  id: KsSalvageTaskSilver
+  name: ks-salvage-tablet-task-silver
+  icon: SilverOre1
+  objective: !type:KsSalvageOreObjective
+    stack: SilverOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 8
+  reputation: 3
+  minRank: 1
+
+- type: ksSalvageTask
+  id: KsSalvageTaskGold
+  name: ks-salvage-tablet-task-gold
+  icon: GoldOre1
+  objective: !type:KsSalvageOreObjective
+    stack: GoldOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 9
+  reputation: 3
+  minRank: 1
+
+- type: ksSalvageTask
+  id: KsSalvageTaskUranium
+  name: ks-salvage-tablet-task-uranium
+  icon: UraniumOre1
+  objective: !type:KsSalvageOreObjective
+    stack: UraniumOre
+  minAmount: 10
+  maxAmount: 25
+  pointsPerUnit: 15
+  reputation: 4
+  minRank: 2
+
+- type: ksSalvageTask
+  id: KsSalvageTaskDiamond
+  name: ks-salvage-tablet-task-diamond
+  icon: DiamondOre1
+  objective: !type:KsSalvageOreObjective
+    stack: DiamondOre
+  minAmount: 5
+  maxAmount: 12
+  pointsPerUnit: 25
+  reputation: 5
+  minRank: 3
+
+# Fauna: kill it, then use the tablet on the body.
+
+- type: ksSalvageTask
+  id: KsSalvageTaskBasilisk
+  name: ks-salvage-tablet-task-basilisk
+  icon: MobBasilisk
+  objective: !type:KsSalvageCorpseObjective
+    prototypes: [ MobBasilisk ]
+  minAmount: 1
+  maxAmount: 3
+  pointsPerUnit: 120
+  reputation: 3
+
+- type: ksSalvageTask
+  id: KsSalvageTaskGoliath
+  name: ks-salvage-tablet-task-goliath
+  icon: MobGoliath
+  objective: !type:KsSalvageCorpseObjective
+    prototypes: [ MobGoliath ]
+  minAmount: 1
+  maxAmount: 3
+  pointsPerUnit: 150
+  reputation: 4
+
+- type: ksSalvageTask
+  id: KsSalvageTaskWatcher
+  name: ks-salvage-tablet-task-watcher
+  icon: MobWatcherLavaland
+  objective: !type:KsSalvageCorpseObjective
+    prototypes: [ MobWatcherLavaland, MobWatcherIcewing, MobWatcherMagmawing, MobWatcherPride ]
+  minAmount: 2
+  maxAmount: 4
+  pointsPerUnit: 100
+  reputation: 3
+  minRank: 1

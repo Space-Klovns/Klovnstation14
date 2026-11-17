@@ -19,7 +19,7 @@ namespace Content.Server.Atmos.EntitySystems
             SubscribeLocalEvent<AirtightComponent, ComponentInit>(OnAirtightInit);
             SubscribeLocalEvent<AirtightComponent, ComponentShutdown>(OnAirtightShutdown);
             SubscribeLocalEvent<AirtightComponent, AnchorStateChangedEvent>(OnAirtightPositionChanged);
-            SubscribeLocalEvent<AirtightComponent, ReAnchorEvent>(OnAirtightReAnchor);
+            /* SubscribeLocalEvent<AirtightComponent, ReAnchorEvent>(OnAirtightReAnchor); */ // KS14: v292 raises normal anchor events during grid splits.
             SubscribeLocalEvent<AirtightComponent, MoveEvent>(OnAirtightMoved);
         }
 
@@ -56,6 +56,7 @@ namespace Content.Server.Atmos.EntitySystems
         private void OnAirtightPositionChanged(EntityUid uid, AirtightComponent airtight, ref AnchorStateChangedEvent args)
         {
             var xform = args.Transform;
+            var oldPosition = airtight.LastPosition; // KS14: upstream #45353, invalidate both grids after a split.
 
             if (!TryComp(xform.GridUid, out MapGridComponent? grid))
                 return;
@@ -70,8 +71,19 @@ namespace Content.Server.Atmos.EntitySystems
 
             var airtightEv = new AirtightChanged(uid, airtight, false, (gridId.Value, tilePos));
             RaiseLocalEvent(uid, ref airtightEv, true);
+
+            // KS14 start: upstream #45353 replaces ReAnchorEvent with normal anchor events.
+            if (oldPosition != default && oldPosition != airtight.LastPosition)
+            {
+                InvalidatePosition(oldPosition.Grid, oldPosition.Tile);
+                var oldAirtightEv = new AirtightChanged(uid, airtight, false, oldPosition);
+                RaiseLocalEvent(uid, ref oldAirtightEv, true);
+            }
+            // KS14 end
         }
 
+        // KS14: removed upstream re-anchor handler; normal anchor events now cover grid splits.
+        /*
         private void OnAirtightReAnchor(EntityUid uid, AirtightComponent airtight, ref ReAnchorEvent args)
         {
             foreach (var gridId in new[] { args.OldGrid, args.Grid })
@@ -84,6 +96,7 @@ namespace Content.Server.Atmos.EntitySystems
                 RaiseLocalEvent(uid, ref airtightEv, true);
             }
         }
+        */
 
         private void OnAirtightMoved(Entity<AirtightComponent> ent, ref MoveEvent ev)
         {

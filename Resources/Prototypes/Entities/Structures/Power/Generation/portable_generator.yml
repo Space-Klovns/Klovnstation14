@@ -334,6 +334,8 @@
       gasType: CarbonDioxide
       # Full tank is 25 moles of gas
       moleRatio: 0.5
+    - type: KsCookOff # KS14: explodes once its explosive contents get hot
+      solution: tank
     - type: Explosive
       explosionType: Default
       tileBreakScale: 0

@@ -109,7 +109,8 @@
       types: {}
   - type: Sprite
     noRot: true
-    sprite: Structures/Storage/closet.rsi
+    sprite: _KS14/Structures/Storage/closet.rsi # KS14: Structures/Storage/closet.rsi -> _KS14/Structures/Storage/closet.rsi, tgstation's closets
+    offset: 0,0.25 # KS14: tgstation's closets are 48px tall and stand on the bottom of their tile
     layers:
     - state: cursed
       map: [ "enum.StorageVisualLayers.Base" ]
@@ -124,10 +125,16 @@
     - state: welded
       visible: false
       map: [ "enum.WeldableLayers.BaseWelded" ]
+  # KS14 start: the lock layer is the cursed door, so it swings with the door
+  - type: KsClosetDoorVisuals
+    layers:
+      enum.LockVisualLayers.Lock: Front
+      enum.PaperLabelVisuals.Layer: Front
+  # KS14 end
   #TODO: Will have to eventually make a custom visualizer for cursed lockers
   - type: EntityStorageVisuals
     stateBaseClosed: decursed
-    stateDoorOpen: decursed_open
+    # stateDoorOpen: decursed_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: decursed_door
   - type: Fixtures
     fixtures:

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Atmos.Rotting;
 using Content.Shared.Chat;
 using Content.Shared.Damage.Components;
@@ -90,7 +91,7 @@ public abstract partial class SharedDefibrillatorSystem : EntitySystem
 
         if (!_toggle.IsActivated(ent.Owner))
         {
-            _popup.PopupClient(Loc.GetString("defibrillator-not-on"), ent.Owner, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defibrillator-not-on"), ent.Owner, user);
             return false;
         }
 

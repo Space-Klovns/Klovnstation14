@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Globalization;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
@@ -90,7 +91,7 @@ public sealed partial class CryostorageSystem : SharedCryostorageSystem
 
         if (!_accessReader.IsAllowed(attachedEntity, ent))
         {
-            _popup.PopupEntity(Loc.GetString("cryostorage-popup-access-denied"), attachedEntity, attachedEntity);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cryostorage-popup-access-denied"), attachedEntity, attachedEntity);
             return;
         }
 

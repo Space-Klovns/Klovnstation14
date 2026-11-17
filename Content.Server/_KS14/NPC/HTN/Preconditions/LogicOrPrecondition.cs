@@ -7,9 +7,8 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 ///     Returns true (or false if inverted) only one or more of the specified
 ///         preconditions are met.
 /// </summary>
-public sealed partial class LogicOrPrecondition : HTNPrecondition
+public sealed partial class LogicOrPrecondition : KsInvertiblePrecondition
 {
-    [DataField] public bool Invert;
     [DataField(required: true)] public HTNPrecondition[] Conditions;
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -20,16 +19,16 @@ public sealed partial class LogicOrPrecondition : HTNPrecondition
             condition.Initialize(sysManager);
     }
 
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
         foreach (var condition in Conditions)
         {
             if (!condition.IsMet(blackboard))
                 continue;
 
-            return !Invert;
+            return true;
         }
 
-        return Invert;
+        return false;
     }
 }

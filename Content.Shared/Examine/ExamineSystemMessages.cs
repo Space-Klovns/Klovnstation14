@@ -4,10 +4,10 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Examine
 {
-    public static class ExamineSystemMessages
+    public static partial /* KS14: locale-aware examine requests */ class ExamineSystemMessages
     {
         [Serializable, NetSerializable]
-        public sealed class RequestExamineInfoMessage : EntityEventArgs
+        public sealed partial /* KS14: locale-aware examine requests */ class RequestExamineInfoMessage : EntityEventArgs
         {
             public readonly NetEntity NetEntity;
 

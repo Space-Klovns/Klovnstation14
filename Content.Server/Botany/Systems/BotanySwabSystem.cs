@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Botany.Components;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
@@ -64,7 +65,7 @@ public sealed partial class BotanySwabSystem : EntitySystem
         {
             // Pick up pollen
             swab.SeedData = plant.Seed;
-            _popupSystem.PopupEntity(Loc.GetString("botany-swab-from"), args.Args.Target.Value, args.Args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-swab-from"), args.Args.Target.Value, args.Args.User);
         }
         else
         {
@@ -73,7 +74,7 @@ public sealed partial class BotanySwabSystem : EntitySystem
                 return;
             plant.Seed = _mutationSystem.Cross(swab.SeedData, old); // Cross-pollenate
             swab.SeedData = old; // Transfer old plant pollen to swab
-            _popupSystem.PopupEntity(Loc.GetString("botany-swab-to"), args.Args.Target.Value, args.Args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-swab-to"), args.Args.Target.Value, args.Args.User);
         }
 
         args.Handled = true;

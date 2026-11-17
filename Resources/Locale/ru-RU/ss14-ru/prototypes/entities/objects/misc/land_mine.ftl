@@ -1,0 +1,23 @@
+ent-BaseLandMine = { "" }
+    .desc = { "" }
+
+ent-LandMineExplosive = { ent-LandMineExplosiveUnarmed }
+    .desc = { ent-LandMineExplosiveUnarmed.desc }
+    .suffix = активирован
+
+ent-LandMineExplosiveUnarmed = взрывная мина
+    .desc = { ent-BaseLandMine.desc }
+
+ent-LandMineKick = { ent-LandMineKickUnarmed }
+    .desc = { ent-LandMineKickUnarmed.desc }
+    .suffix = активирован
+
+ent-LandMineKickUnarmed = кикающая мина
+    .desc = { ent-BaseLandMine.desc }
+
+ent-LandMineModular = { ent-LandMineModularUnarmed }
+    .desc = { ent-LandMineModularUnarmed.desc }
+    .suffix = активирован
+
+ent-LandMineModularUnarmed = модульная мина
+    .desc = Этот плохиш может скрывать в себе множество опасностей. Или велосипедный клаксон.
