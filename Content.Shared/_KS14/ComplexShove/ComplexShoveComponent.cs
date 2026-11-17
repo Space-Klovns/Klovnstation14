@@ -32,7 +32,7 @@ public sealed partial class ComplexShoveComponent : Component
     ///     Someone lying within this distance of an obstacle's centre is already on it, and isn't sent onto it again.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public float OnObstacleDistance = 0.5f;
+    public float OnObstacleDistance = 0.375f;
 
     /// <summary>
     ///     Radius of the area at the end of the obstacle probe searched for a <see cref="KsShoveObstacleComponent"/>.

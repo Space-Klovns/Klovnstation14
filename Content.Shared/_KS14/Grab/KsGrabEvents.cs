@@ -1,4 +1,3 @@
-using System.Numerics;
 using Content.Shared.Alert;
 using Content.Shared.DoAfter;
 using Robust.Shared.Serialization;
@@ -49,26 +48,6 @@ public sealed partial class KsGrabUpgradeDoAfterEvent : SimpleDoAfterEvent
     }
 
     public override DoAfterEvent Clone() => this;
-}
-
-/// <summary>
-///     Raised on someone brought to their thrower's position to be thrown from it, on a client predicting the throw.
-///     Their sprite slides there over <see cref="Duration"/>, from where it was drawn, rather than jumping.
-/// </summary>
-/// <param name="Offset">Where they were, relative to where they are now, in their parent's frame.</param>
-[ByRefEvent]
-public readonly record struct KsThrownFromHandsEvent(Vector2 Offset, TimeSpan Duration);
-
-/// <summary>
-///     <see cref="KsThrownFromHandsEvent"/> for everyone who sees the throw but the thrower, whose own client
-///         predicts it.
-/// </summary>
-[Serializable, NetSerializable]
-public sealed class KsThrownFromHandsMessage(NetEntity thrown, Vector2 offset, TimeSpan duration) : EntityEventArgs
-{
-    public readonly NetEntity Thrown = thrown;
-    public readonly Vector2 Offset = offset;
-    public readonly TimeSpan Duration = duration;
 }
 
 /// <summary>

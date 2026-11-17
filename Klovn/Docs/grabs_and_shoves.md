@@ -49,6 +49,7 @@ never deals stamina damage. The outcome, checked in this order:
 | A wall or anything else solid, first shove | Pushed and staggered, as with nothing behind them | 3 s | knocked down at once |
 | A wall or anything else solid, while staggered | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Target already down, a table behind them | Put onto the table; a glass one shatters | — | the same |
+| A glass table, on top of the above | Shatters, and stuns for 1 s (upstream: 2 s) | 1 s | — |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
 "Behind" means past the target, along the line from the shover through the target: within three quarters of a tile
@@ -403,14 +404,9 @@ that can't grab) leaves the victim to land as any thrown thing does:
 
 **Where the throw starts.** `ThrowHeldItem` aims from the thrower to the click, and an item leaves from the thrower's
 position because that is where a dropped hand item is. A held victim is up to a hold distance away, so
-`BringToThrower` moves them onto the thrower before the throw, and the throw then leaves from there as it is aimed.
-So that nothing is seen to jump, the victim's sprite is slid over instead: the thrower's client raises
-`KsThrownFromHandsEvent` on the victim as it predicts the throw, the server sends `KsThrownFromHandsMessage` to
-everyone else, and `KsThrownFromHandsVisualsSystem` (client) animates `SpriteComponent.Offset` from where they were
-drawn to zero over `KsGrabber.ThrowPullInTime` (0.15 s). It sets the starting offset itself as well: an animation
-only writes its first frame on the next frame update, and for that one frame the victim would be drawn at the
-thrower, then back where they were. Someone carried is already at the carrier's position, and is
-put down there, so a carry needs none of this.
+`OnBeforeThrow` puts them at the thrower's coordinates at once, and the throw leaves from there as it is aimed. It is
+shared code, so the thrower's client does the same as it predicts the throw; there is no slide or other visual
+smoothing. Someone carried is already at the carrier's position, and is put down there.
 
 #### Thrown or shoved into an open closet
 
@@ -559,7 +555,8 @@ NPC toggles go through `SetInCombatMode` and make no sound.
   closed one doesn't (a shove into it knocks down), and an open one lets a thrown item be.
 - `Tests/_KS14/Storage/KsEntityStorageCatchPredictionTest.cs` and `Tests/_KS14/Grab/KsGrabThrowPredictionTest.cs`:
   what the acting player's own client predicts, on a real connected client. The closet shuts on the shoved at once
-  and stays shut on every tick after; a thrown victim starts at the thrower, in flight, with the slide under way.
+  and stays shut on every tick after; a thrown victim starts at the thrower and keeps flying along the throw on every
+  tick after, without snapping back.
 - `Tests/_KS14/Grab/KsCuffResistTest.cs`: resisting while cuffed starts breaking out; with nothing to resist, nothing
   takes the attempt.
 

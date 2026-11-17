@@ -338,6 +338,40 @@ public sealed class KsShoveTest : GameTest
     }
 
     /// <summary>
+    ///     Slammed through a glass table, the target is stunned for the table's short stun, and stays knocked down
+    ///         for the shove's own knockdown after it has passed.
+    /// </summary>
+    [Test]
+    public async Task GlassTableSlamStunsBriefly()
+    {
+        var (shoverUid, targetUid, tableUid) = await SetUp(_human, behind: GlassTable);
+        var stunSeconds = 0f;
+        var knockdownSeconds = 0d;
+
+        await Server.WaitAssertion(() =>
+        {
+            stunSeconds = SEntMan.GetComponent<GlassTableComponent>(tableUid!.Value).StunTime;
+            knockdownSeconds = SEntMan.GetComponent<KsShoveObstacleComponent>(tableUid.Value).KnockdownTime.TotalSeconds;
+            Assert.That(knockdownSeconds, Is.GreaterThan(stunSeconds + 1), "This test needs the knockdown to outlast the stun.");
+
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), "A slam through a glass table must stun.");
+        });
+
+        var timing = Server.ResolveDependency<IGameTiming>();
+        await Pair.RunTicksSync((int)MathF.Ceiling((stunSeconds + 0.5f) * (float)timing.TickRate));
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), Is.False, "The stun must be over after the table's stun time.");
+                Assert.That(IsKnockedDown(targetUid), "The shove's knockdown must outlast the stun.");
+            });
+        });
+    }
+
+    /// <summary>
     ///     Someone lying where a shove put them can be shoved on, onto the next table: a second glass table shatters
     ///         under them as the first did, and an ordinary one takes them from the one they lie on.
     /// </summary>

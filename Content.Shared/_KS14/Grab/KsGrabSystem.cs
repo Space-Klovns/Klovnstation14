@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using Content.Shared._KS14.ComplexShove;
 using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.PopupLocalization;
@@ -192,7 +191,9 @@ public sealed partial class KsGrabSystem : EntitySystem
         }
 
         // Dropping the hand afterwards lets go of the pull, so the victim flies free.
-        BringToThrower(grabber, victim);
+        // The throw is aimed from the thrower, and leaves from there as anything thrown from a hand does: the victim is
+        // put there at once, on the client predicting the throw as on the server.
+        _transformSystem.SetCoordinates(victim, Transform(grabber).Coordinates);
         args.ItemUid = victim;
         args.ThrowSpeed *= stage.ThrowSpeedModifier;
         MarkThrown(victim, grabber);
@@ -595,35 +596,6 @@ public sealed partial class KsGrabSystem : EntitySystem
     }
 
     #region Thrown victims
-
-    /// <summary>
-    ///     A throw starts where the thrower stands, as it does for anything in a hand, not where the victim was held:
-    ///         the throw is aimed from there. Their sprite is slid over rather than left to jump.
-    /// </summary>
-    private void BringToThrower(Entity<KsGrabberComponent> thrower, EntityUid victim)
-    {
-        var throwerTransform = Transform(thrower);
-        var victimTransform = Transform(victim);
-        var sameParent = throwerTransform.ParentUid == victimTransform.ParentUid;
-        var offset = victimTransform.LocalPosition - throwerTransform.LocalPosition;
-        _transformSystem.SetCoordinates(victim, throwerTransform.Coordinates);
-
-        // Across a grid's edge there is no one frame to slide in, and the hop is as short either way.
-        if (!sameParent || offset == Vector2.Zero)
-            return;
-
-        var duration = thrower.Comp.ThrowPullInTime;
-        if (_netManager.IsServer)
-        {
-            RaiseNetworkEvent(new KsThrownFromHandsMessage(GetNetEntity(victim), offset, duration),
-                Filter.PvsExcept(thrower, entityManager: EntityManager));
-        }
-        else if (_gameTiming.IsFirstTimePredicted)
-        {
-            var thrownEvent = new KsThrownFromHandsEvent(offset, duration);
-            RaiseLocalEvent(victim, ref thrownEvent);
-        }
-    }
 
     /// <summary>
     ///     Marks someone sent flying by <paramref name="thrower"/>, so whatever they slam into knocks them over.

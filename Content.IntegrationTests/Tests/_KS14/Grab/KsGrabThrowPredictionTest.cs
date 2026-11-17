@@ -16,7 +16,6 @@ using Content.Shared.Standing;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Melee;
 using NUnit.Framework;
-using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -28,8 +27,8 @@ namespace Content.IntegrationTests.Tests._KS14.Grab;
 
 /// <summary>
 ///     Throwing a grabbed victim, as the thrower's own client predicts it: the moment the client asks for the throw,
-///         before the server has said anything, the victim is already where the thrower stands, in flight, with their
-///         sprite sliding over from where it was drawn.
+///         before the server has said anything, the victim is already where the thrower stands and in flight, and
+///         they keep flying on every tick after, without snapping back or waiting for the server.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsGrabSystem))]
@@ -105,7 +104,7 @@ public sealed class KsGrabThrowPredictionTest : GameTest
         {
             var transformSystem = CEntMan.System<SharedTransformSystem>();
             var held = (transformSystem.GetWorldPosition(clientVictimUid) - transformSystem.GetWorldPosition(clientGrabberUid)).Length();
-            Assert.That(held, Is.GreaterThan(0.2f), "The victim must be held at arm's length for this to show anything.");
+            Assert.That(held, Is.GreaterThan(MaxSidewaysDrift), "The victim must be held at arm's length for this to show anything.");
 
             // What a click in throw mode sends. The client runs its own prediction of it at once.
             CEntMan.RaisePredictiveEvent(new KsThrowModeThrowEvent(target));
@@ -115,13 +114,49 @@ public sealed class KsGrabThrowPredictionTest : GameTest
             {
                 Assert.That(start, Is.LessThan(0.01f), "The client must predict the victim starting from their thrower.");
                 Assert.That(CEntMan.HasComponent<ThrownItemComponent>(clientVictimUid), "The client must predict the victim's flight.");
-                Assert.That(CEntMan.System<AnimationPlayerSystem>().HasRunningAnimation(clientVictimUid, "ks-thrown-from-hands"),
-                    "The client must slide the victim's sprite over, not let it jump.");
-                Assert.That(CEntMan.GetComponent<SpriteComponent>(clientVictimUid).Offset.Length(), Is.GreaterThan(0.2f),
-                    "The slide must start from where the victim was drawn.");
             });
         });
+
+        // The flight itself, tick by tick, on the client alone: thrown north, the victim only ever goes north. Snapping
+        // back towards where they were held, or hanging in place until the server catches up, is what an unpredicted
+        // throw looks like.
+        var lastY = float.MinValue;
+        var firstY = 0f;
+        for (var tick = 1; tick <= WatchedTicks; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Client.WaitAssertion(() =>
+            {
+                var transformSystem = CEntMan.System<SharedTransformSystem>();
+                var position = transformSystem.GetWorldPosition(clientVictimUid);
+                var grabberPosition = transformSystem.GetWorldPosition(clientGrabberUid);
+                if (tick == 1)
+                    firstY = position.Y;
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(position.Y, Is.GreaterThanOrEqualTo(lastY - 0.01f),
+                        $"The victim went backwards on the client {tick} ticks after the throw.");
+                    Assert.That(MathF.Abs(position.X - grabberPosition.X), Is.LessThan(MaxSidewaysDrift),
+                        $"The victim left the line of the throw on the client {tick} ticks after it: they must fly from the thrower, not from where they were held.");
+                });
+                lastY = position.Y;
+            });
+        }
+
+        Assert.That(lastY - firstY, Is.GreaterThan(1f), "The victim must have flown on the client.");
     }
+
+    /// <summary>
+    ///     How many ticks the flight is watched for: well past the round trip to the server.
+    /// </summary>
+    private const int WatchedTicks = 15;
+
+    /// <summary>
+    ///     How far east or west of the thrower a victim thrown north may stray. They were held further off than this,
+    ///         so a flight that started from where they were held fails it.
+    /// </summary>
+    private const float MaxSidewaysDrift = 0.3f;
 
     private async Task RunSeconds(double seconds)
     {
