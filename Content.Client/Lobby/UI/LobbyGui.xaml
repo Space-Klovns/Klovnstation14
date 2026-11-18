@@ -1,4 +1,4 @@
-<!-- KS14: reworked into the tactical lobby layout; upstream original kept in LobbyGui.xaml.old -->
+<!-- KS14: reworked into the "Escape from Klovn" main menu; the tactical layout is kept in LobbyGui.xaml.tactical, upstream's in LobbyGui.xaml.old -->
 <lobbyUi:LobbyGui
     xmlns="https://spacestation14.io"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,6 +7,7 @@
     xmlns:lobbyUi="clr-namespace:Content.Client.Lobby.UI"
     xmlns:info="clr-namespace:Content.Client.Info"
     xmlns:viewport="clr-namespace:Content.Client.Viewport"
+    xmlns:tarkov="clr-namespace:Content.Client._KS14.Lobby.Tarkov"
     xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Chat.Widgets">
     <!-- Background -->
     <TextureRect Access="Public"
@@ -29,214 +30,256 @@
         </Control>
     </BoxContainer>
 
-    <!-- Contrast fades; anchored by LobbyGui.xaml.cs -->
-    <PanelContainer Name="KsFadeLeft" StyleClasses="KsLobbyFadeLeft" MouseFilter="Ignore"/>
+    <!-- Fade into the bar; anchored by LobbyGui.xaml.cs. The art's own grade is a shader (LobbyGui.Klovn.Contrast.cs). -->
     <PanelContainer Name="KsFadeBottom" StyleClasses="KsLobbyFadeBottom" MouseFilter="Ignore"/>
 
-    <!-- Vertical root: main layout above a full-width bottom bar -->
+    <!-- Lens glare over the art, under the UI -->
+    <tarkov:KsTarkovLightLeaks Name="KsLightLeaks" Access="Public"/>
+
+    <!-- Everything above the art glows where it is bright -->
+    <tarkov:KsTarkovBloomHost Name="KsBloom" Access="Public">
+    <!-- Vertical root: the menu above the full-width navigation bar -->
     <BoxContainer Name="KsRoot" Orientation="Vertical" SeparationOverride="0">
-    <BoxContainer Name="MainContainer"
-                  VerticalExpand="True"
-                  HorizontalExpand="True"
-                  Orientation="Horizontal"
-                  SeparationOverride="0">
-        <SplitContainer State="Auto"
-                        ResizeMode="NotResizable"
-                        HorizontalExpand="True">
-            <!-- LHS Controls -->
-            <BoxContainer Name="LeftSide"
-                          Orientation="Vertical"
-                          SeparationOverride="0"
-                          HorizontalExpand="True">
-                <Control Name="DefaultState"
-                         VerticalExpand="True">
-                    <BoxContainer Orientation="Vertical" VerticalExpand="True" HorizontalExpand="True">
-                        <BoxContainer Orientation="Horizontal" VerticalExpand="True" HorizontalExpand="True">
-                            <!-- Menu column -->
-                            <BoxContainer Name="KsMenuColumn"
-                                          Orientation="Vertical"
-                                          Margin="60 48 20 16"
-                                          MinWidth="260"
-                                          SeparationOverride="6">
-                                <Label Name="ServerName"
-                                       Access="Public"
-                                       MaxWidth="460"
-                                       StyleClasses="KsLobbyTitle"
-                                       HorizontalAlignment="Left"/>
-                                <Label Name="StationTime"
-                                       Access="Public"
-                                       StyleClasses="KsLobbySubtitle"
-                                       HorizontalAlignment="Left"/>
-                                <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1" Margin="0 6" HorizontalAlignment="Stretch"/>
-                                <!-- Countdown: StartTime is the small caption, StartTimeValue the big number (LobbyGui.KsSetCountdown) -->
-                                <Label Name="StartTime"
-                                       Access="Public"
-                                       Visible="False"
-                                       StyleClasses="KsLobbySubtitle"
-                                       HorizontalAlignment="Left"/>
-                                <!-- Negative top margin: the big face's line height leaves a gap under the caption. -->
-                                <Label Name="StartTimeValue"
-                                       Access="Public"
-                                       Visible="False"
-                                       Margin="0 -12 0 0"
-                                       StyleClasses="KsLobbyCountdown"
-                                       HorizontalAlignment="Left"/>
-                                <RichTextLabel Name="PlaytimeComment"
-                                               StyleClasses="KsLobbyRichText"
-                                               Visible="False"
-                                               Access="Public"
-                                               MaxWidth="420"
-                                               HorizontalAlignment="Left"/>
-                                <Control MinHeight="20" VerticalExpand="True"/>
-                                <Button Name="ReadyButton"
-                                        Access="Public"
-                                        ToggleMode="True"
-                                        Text="{Loc 'ks-lobby-menu-ready'}"
-                                        StyleClasses="KsLobbyMenuButton"
-                                        HorizontalAlignment="Left"/>
-                                <cc:UICommandButton Command="observe"
-                                                    Name="ObserveButton"
-                                                    Access="Public"
-                                                    Text="{Loc 'ks-lobby-menu-observe'}"
-                                                    StyleClasses="KsLobbyMenuButton"
-                                                    HorizontalAlignment="Left"
-                                                    WindowType="{x:Type lobbyUi:ObserveWarningWindow}"/>
-                                <Button Name="ManifestButton"
-                                        Access="Public"
-                                        Text="{Loc 'ks-lobby-menu-manifest'}"
-                                        StyleClasses="KsLobbyMenuButton"
-                                        HorizontalAlignment="Left"/>
-                                <Button Name="OptionsButton"
-                                        Access="Public"
-                                        Text="{Loc 'ks-lobby-menu-options'}"
-                                        StyleClasses="KsLobbyMenuButton"
-                                        HorizontalAlignment="Left"/>
-                                <Control MinHeight="18"/>
-                                <Button Name="LeaveButton"
-                                        Access="Public"
-                                        Text="{Loc 'ks-lobby-menu-leave'}"
-                                        StyleClasses="KsLobbyMenuButton"
-                                        HorizontalAlignment="Left"/>
-                                <!-- Voting Popups -->
-                                <BoxContainer Orientation="Vertical"
-                                              SeparationOverride="4"
-                                              Name="VoteContainer"
-                                              Access="Public"
-                                              HorizontalAlignment="Left"
-                                              Margin="0 8"/>
+        <Control Name="KsContent" VerticalExpand="True" HorizontalExpand="True">
+
+            <!-- Everything the old lobby showed that the main menu does not: kept in the tree so the chat, server info,
+                 AHelp and vote controllers keep working, and so it can be brought back. -->
+            <BoxContainer Name="KsHiddenLegacy" Orientation="Vertical" Visible="False">
+                <Label Name="ServerName" Access="Public"/>
+                <Label Name="StationTime" Access="Public"/>
+                <Label Name="StartTime" Access="Public"/>
+                <RichTextLabel Name="PlaytimeComment" Access="Public"/>
+                <lobbyUi:LobbyCharacterPreviewPanel Name="CharacterPreview" Access="Public"/>
+                <Button Name="AHelpButton" Access="Public" Text="{Loc 'ks-lobby-menu-ahelp'}"/>
+                <vote:VoteCallMenuButton Name="CallVoteButton"/>
+                <PanelContainer Name="RightSide" Access="Public" VerticalExpand="True">
+                    <BoxContainer Orientation="Vertical">
+                        <info:ServerInfo Name="ServerInfo" Access="Public"/>
+                        <widgets:ChatBox Name="Chat" Access="Public" VerticalExpand="True" MinHeight="50"/>
+                    </BoxContainer>
+                </PanelContainer>
+                <RichTextLabel Name="LobbySong" Access="Public"/>
+                <RichTextLabel Name="LobbyBackground" Access="Public"/>
+                <info:LinkBanner Name="LinkBanner"/>
+                <info:DevInfoBanner Name="DevInfoBanner"/>
+            </BoxContainer>
+
+            <!-- The main menu -->
+            <Control Name="DefaultState" VerticalExpand="True" HorizontalExpand="True">
+                <BoxContainer Orientation="Vertical" VerticalExpand="True" HorizontalExpand="True" SeparationOverride="0">
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.55"/>
+
+                    <!-- Wordmark -->
+                    <TextureRect Name="KsLogo"
+                                 Access="Public"
+                                 TexturePath="/Textures/_KS14/Lobby/Tarkov/wordmark.png"
+                                 Stretch="KeepAspectCentered"
+                                 HorizontalAlignment="Center"
+                                 MaxSize="930 300"
+                                 MouseFilter="Ignore"/>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.5"/>
+
+                    <!-- Season banner: the box (with its halo, corners and glow) and the lockup are drawn art -->
+                    <PanelContainer Name="KsBanner" StyleClasses="KsTarkovBannerPanel" HorizontalAlignment="Center" SetSize="820 120">
+                        <BoxContainer Orientation="Horizontal" Margin="18 0 0 0" SeparationOverride="0">
+                            <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/emblem_hex.png"
+                                         Stretch="KeepAspectCentered"
+                                         SetSize="72 72"
+                                         VerticalAlignment="Center"
+                                         Margin="0 0 14 0"/>
+                            <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/lockup.png"
+                                         Stretch="KeepCentered"
+                                         SetSize="420 96"
+                                         VerticalAlignment="Center"
+                                         Margin="0 0 0 6"/>
+                            <Control HorizontalExpand="True"/>
+                            <BoxContainer Orientation="Vertical" VerticalAlignment="Center" MinWidth="110" SeparationOverride="4">
+                                <Label Text="{Loc 'ks-tarkov-banner-players'}" StyleClasses="KsTarkovBannerCaption" HorizontalAlignment="Center"/>
+                                <Label Name="BannerPlayers" Access="Public" StyleClasses="KsTarkovBannerValue" HorizontalAlignment="Center"/>
                             </BoxContainer>
-                            <!-- Character info block -->
-                            <BoxContainer Orientation="Vertical"
-                                          HorizontalExpand="True"
-                                          VerticalExpand="True">
-                                <Control VerticalExpand="True"/>
-                                <lobbyUi:LobbyCharacterPreviewPanel Name="CharacterPreview"
-                                                                    Access="Public"
-                                                                    HorizontalAlignment="Right"
-                                                                    Margin="0 0 40 0"/>
-                                <Control VerticalExpand="True"/>
+                            <PanelContainer StyleClasses="KsTarkovBannerDivider" MinWidth="1" VerticalAlignment="Stretch" Margin="0 30"/>
+                            <BoxContainer Orientation="Vertical" VerticalAlignment="Center" MinWidth="150" SeparationOverride="4">
+                                <Label Text="{Loc 'ks-tarkov-banner-timer'}" StyleClasses="KsTarkovBannerCaption" HorizontalAlignment="Center"/>
+                                <Label Name="StartTimeValue" Access="Public" StyleClasses="KsTarkovBannerValue" HorizontalAlignment="Center"/>
+                            </BoxContainer>
+                        </BoxContainer>
+                    </PanelContainer>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.55"/>
+
+                    <!-- The menu -->
+                    <BoxContainer Name="KsMenuColumn"
+                                  Orientation="Vertical"
+                                  HorizontalAlignment="Center"
+                                  SeparationOverride="14">
+                        <Button Name="ReadyButton"
+                                Access="Public"
+                                ToggleMode="True"
+                                Text="{Loc 'ks-tarkov-menu-escape'}"
+                                StyleClasses="KsTarkovMenuTitle"
+                                HorizontalAlignment="Center"/>
+                        <Label Name="ReadyStatus"
+                               Access="Public"
+                               StyleClasses="KsTarkovStatus"
+                               HorizontalAlignment="Center"
+                               Margin="0 -14 0 6"/>
+                        <Button Name="CharacterButton"
+                                Access="Public"
+                                Text="{Loc 'ks-tarkov-menu-character'}"
+                                StyleClasses="KsTarkovMenuItem"
+                                HorizontalAlignment="Center"/>
+                        <cc:UICommandButton Command="observe"
+                                            Name="ObserveButton"
+                                            Access="Public"
+                                            Text="{Loc 'ks-tarkov-menu-trading'}"
+                                            StyleClasses="KsTarkovMenuItem"
+                                            HorizontalAlignment="Center"
+                                            WindowType="{x:Type lobbyUi:ObserveWarningWindow}"/>
+                        <Button Name="ManifestButton"
+                                Access="Public"
+                                Text="{Loc 'ks-tarkov-menu-hideout'}"
+                                StyleClasses="KsTarkovMenuItem"
+                                HorizontalAlignment="Center"/>
+                        <Button Name="LeaveButton"
+                                Access="Public"
+                                Text="{Loc 'ks-tarkov-menu-exit'}"
+                                StyleClasses="KsTarkovMenuItem"
+                                HorizontalAlignment="Center"/>
+                    </BoxContainer>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.9"/>
+                </BoxContainer>
+
+                <!-- Bottom-left: expansions tile and build line -->
+                <BoxContainer Orientation="Vertical"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Bottom"
+                              Margin="14 0 0 22"
+                              SeparationOverride="2">
+                    <BoxContainer Orientation="Horizontal" SeparationOverride="8" Margin="0 0 0 2">
+                        <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_expansions.png"
+                                     Stretch="KeepAspectCentered"
+                                     MinSize="34 34"
+                                     MaxSize="34 34"
+                                     ModulateSelfOverride="#F0A21E"
+                                     VerticalAlignment="Center"/>
+                        <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Center">
+                            <Label Text="{Loc 'ks-tarkov-corner-new'}" StyleClasses="KsTarkovNewChip" HorizontalAlignment="Left"/>
+                            <Label Text="{Loc 'ks-tarkov-corner-expansions'}" StyleClasses="KsTarkovExpansionsTitle" Margin="0 -4 0 -2"/>
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="5" Margin="12 0 0 0">
+                                <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_coin.png"
+                                             Stretch="KeepAspectCentered"
+                                             MinSize="12 12"
+                                             MaxSize="12 12"
+                                             ModulateSelfOverride="#C98A1C"
+                                             VerticalAlignment="Center"/>
+                                <Label Text="50" StyleClasses="KsTarkovCoinText" VerticalAlignment="Center"/>
                             </BoxContainer>
                         </BoxContainer>
                     </BoxContainer>
-                </Control>
-                <!-- Character setup state -->
-                <!-- This is injected on startup. Funky! -->
-                <Control Access="Public"
-                         Visible="False"
-                         Name="CharacterSetupState"
-                         VerticalExpand="True"/>
-            </BoxContainer>
-            <!-- Right Panel -->
-            <PanelContainer Name="RightSide"
-                            Access="Public"
-                            StyleClasses="KsLobbyFadeRight"
-                            HorizontalAlignment="Right"
-                            VerticalExpand="True"
-                            VerticalAlignment="Stretch">
+                    <Label Name="KsVersion" Access="Public" StyleClasses="KsTarkovVersion"/>
+                </BoxContainer>
+
+                <!-- Vote popups -->
                 <BoxContainer Orientation="Vertical"
-                              HorizontalExpand="True"
-                              Margin="24 10 10 10">
-                    <!-- Utility row -->
-                    <BoxContainer Orientation="Horizontal"
-                                  MinSize="0 30"
-                                  Margin="0 10 22 0"
-                                  SeparationOverride="6"
-                                  HorizontalAlignment="Right">
-                        <Button Name="AHelpButton"
-                                Access="Public"
-                                Text="{Loc 'ks-lobby-menu-ahelp'}"
-                                StyleClasses="KsLobbyMenuButtonSmall" VerticalAlignment="Center"/>
-                        <vote:VoteCallMenuButton Name="CallVoteButton"
-                                                 StyleClasses="KsLobbyMenuButtonSmall" VerticalAlignment="Center"/>
+                              SeparationOverride="4"
+                              Name="VoteContainer"
+                              Access="Public"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Top"
+                              Margin="0 16 16 0"/>
+
+                <!-- Bottom-right: zone label -->
+                <BoxContainer Orientation="Horizontal"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Bottom"
+                              Margin="0 0 16 24"
+                              SeparationOverride="10">
+                    <Label Text="{Loc 'ks-tarkov-corner-zone'}" StyleClasses="KsTarkovZoneLabel" VerticalAlignment="Center"/>
+                    <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/emblem_pve.png"
+                                 Stretch="KeepAspectCentered"
+                                 MinSize="32 32"
+                                 MaxSize="32 32"
+                                 VerticalAlignment="Center"/>
+                </BoxContainer>
+            </Control>
+
+            <!-- Character setup state. This is injected on startup. Funky! -->
+            <Control Access="Public"
+                     Visible="False"
+                     Name="CharacterSetupState"
+                     VerticalExpand="True"
+                     HorizontalExpand="True">
+                <PanelContainer StyleClasses="KsTarkovSetupBackdrop" MouseFilter="Stop"/>
+            </Control>
+        </Control>
+
+        <!-- Navigation bar: badges sit on the bar's top edge, the black strip is behind the tabs -->
+        <Control Name="KsBottomBar" MinHeight="48">
+            <PanelContainer StyleClasses="KsTarkovBar" VerticalAlignment="Bottom" SetHeight="34" MouseFilter="Stop"/>
+            <BoxContainer Orientation="Horizontal" VerticalAlignment="Bottom" Margin="4 0 4 0" SeparationOverride="10">
+                <!-- Left -->
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-main-menu'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_menu.png" Active="True"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsTarkovBadge"><Label Text="1" StyleClasses="KsTarkovBadgeText"/></PanelContainer></BoxContainer>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-hideout'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_hideout.png" Opaque="True"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <BoxContainer Orientation="Horizontal" SeparationOverride="4">
+                        <tarkov:KsTarkovNavTab IconPath="/Textures/_KS14/Lobby/Tarkov/icon_player.png" Slot="True"/>
+                        <tarkov:KsTarkovNavTab IconPath="/Textures/_KS14/Lobby/Tarkov/icon_plus.png" Dim="True" Slot="True"/>
+                        <tarkov:KsTarkovNavTab IconPath="/Textures/_KS14/Lobby/Tarkov/icon_plus.png" Dim="True" Slot="True"/>
+                        <tarkov:KsTarkovNavTab IconPath="/Textures/_KS14/Lobby/Tarkov/icon_plus.png" Dim="True" Slot="True"/>
+                        <tarkov:KsTarkovNavTab IconPath="/Textures/_KS14/Lobby/Tarkov/icon_plus.png" Dim="True" Slot="True"/>
                     </BoxContainer>
-                    <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1" Margin="0 6"/>
-                    <!-- Server info -->
-                    <Label Text="{Loc 'ks-lobby-subtitle-server-info'}"
-                           StyleClasses="KsLobbySubtitle"
-                           Margin="0 4"/>
-                    <info:ServerInfo Name="ServerInfo"
-                                     Access="Public"
-                                     StyleClasses="KsLobbyRichText"
-                                     MinSize="0 30"
-                                     VerticalExpand="false"
-                                     MaxWidth="400"
-                                     HorizontalAlignment="Left"/>
-                    <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1" Margin="0 8"/>
-                    <widgets:ChatBox Name="Chat"
-                                     Access="Public"
-                                     VerticalExpand="True"
-                                     MinHeight="50"/>
                 </BoxContainer>
-                <TextureButton Name="CollapseButton"
-                               TexturePath="filled_right_arrow.svg.192dpi"
-                               HorizontalAlignment="Right"
-                               VerticalAlignment="Top"
-                               Margin="0 2 2 0"
-                               ModulateSelfOverride="#DEDEDE"
-                               Scale="0.5 0.5"/>
-            </PanelContainer>
-        </SplitContainer>
-        <PanelContainer Name="ExpandPanel"
-                        StyleClasses="KsLobbyGlass"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0 2 2 0"
-                        Visible="False">
-            <TextureButton Name="ExpandButton"
-                           TexturePath="filled_left_arrow.svg.192dpi"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           ModulateSelfOverride="#DEDEDE"
-                           Scale="0.5 0.5"/>
-        </PanelContainer>
-    </BoxContainer>
-    <!-- Full-width bottom bar -->
-    <BoxContainer Name="KsBottomBar" Orientation="Vertical" SeparationOverride="0">
-        <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1"/>
-        <PanelContainer StyleClasses="KsLobbyBottomBar">
-            <BoxContainer Orientation="Horizontal" Margin="24 12">
-                <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalAlignment="Center">
-                    <RichTextLabel Name="LobbySong"
-                                   Access="Public"
-                                   StyleClasses="KsLobbyRichText"
-                                   HorizontalAlignment="Left"/>
-                    <RichTextLabel Name="LobbyBackground"
-                                   Access="Public"
-                                   StyleClasses="KsLobbyRichText"
-                                   HorizontalAlignment="Left"/>
+
+                <Control HorizontalExpand="True"/>
+
+                <!-- Right -->
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsTarkovBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_exclaim.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <tarkov:KsTarkovNavTab Name="CharacterTab" Access="Public" Text="{Loc 'ks-tarkov-tab-character'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_character.png"/>
                 </BoxContainer>
-                <BoxContainer Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                    <info:LinkBanner Name="LinkBanner"
-                                     VerticalExpand="false"
-                                     VerticalAlignment="Center"
-                                     HorizontalAlignment="Right"/>
-                    <info:DevInfoBanner Name="DevInfoBanner"
-                                        VerticalExpand="false"
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Right"/>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-traders'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_cart.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-flea'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_flea.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-builds'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_builds.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Left" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 0 2"><PanelContainer StyleClasses="KsTarkovBadge"><Label Text="10" StyleClasses="KsTarkovBadgeText"/></PanelContainer><PanelContainer StyleClasses="KsTarkovBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><Label Text="4" StyleClasses="KsTarkovBadgeText"/><TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_record.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-handbook'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_handbook.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsTarkovBadgeGrey"><Label Text="14" StyleClasses="KsTarkovBadgeText"/></PanelContainer></BoxContainer>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-messenger'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_messenger.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-survey'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_survey.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 30 2"><PanelContainer StyleClasses="KsTarkovBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_warning.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <tarkov:KsTarkovNavTab Text="{Loc 'ks-tarkov-tab-expansions'}" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_expansions.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <tarkov:KsTarkovNavTab Name="OptionsButton" Access="Public" IconPath="/Textures/_KS14/Lobby/Tarkov/icon_cog.png"/>
                 </BoxContainer>
             </BoxContainer>
-        </PanelContainer>
+        </Control>
     </BoxContainer>
-    </BoxContainer>
+    </tarkov:KsTarkovBloomHost>
 </lobbyUi:LobbyGui>

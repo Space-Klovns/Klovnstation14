@@ -15,18 +15,15 @@ public sealed partial class LobbyGui
     private static readonly Color KsFlashColor = Color.FromHex("#FFE9C4");
 
     /// <summary>
-    ///     Shows the countdown block. Null or empty arguments hide the matching label, and both empty hides the block.
+    ///     Fills the banner's TIMER cell. <paramref name="caption"/> is unused by the main menu, which has a fixed TIMER
+    ///         caption; a null <paramref name="value"/> shows the idle dashes.
     ///     Pass <paramref name="secondsLeft"/> while a live countdown runs: in the last <see cref="KsUrgentSeconds"/> the
-    ///         value shifts from amber toward red and flashes on every second. Called every frame, so it animates.
+    ///         value shifts from the accent toward red and flashes on every second. Called every frame, so it animates.
     /// </summary>
     public void KsSetCountdown(string? caption, string? value, double? secondsLeft = null)
     {
         StartTime.Text = caption ?? string.Empty;
-        StartTime.Visible = !string.IsNullOrEmpty(caption);
-
-        StartTimeValue.Text = value ?? string.Empty;
-        StartTimeValue.Visible = !string.IsNullOrEmpty(value);
-
+        StartTimeValue.Text = string.IsNullOrEmpty(value) ? Loc.GetString("ks-tarkov-banner-timer-idle") : value;
         StartTimeValue.FontColorOverride = KsGetCountdownColor(secondsLeft);
     }
 

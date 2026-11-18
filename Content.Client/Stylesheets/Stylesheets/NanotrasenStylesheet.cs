@@ -58,6 +58,7 @@ public partial class NanotrasenStylesheet : CommonStylesheet
             GetAllSheetletRules<NanotrasenStylesheet, CommonSheetletAttribute>(man),
             GetSheetletRules<PalettedStylesheet>(Content.Client._KS14.Tgui.KsTguiTheme.ThemeSheetlet(_ksTgui), man), // KS14
             GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.Lobby.KsLobbySheetlet), man), // KS14
+            GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.Lobby.Tarkov.KsTarkovSheetlet), man), // KS14
         };
 
         Stylesheet = new Stylesheet(rules.SelectMany(x => x).ToArray());

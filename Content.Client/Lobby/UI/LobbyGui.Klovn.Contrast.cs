@@ -1,55 +1,32 @@
 using System.Numerics;
-using Content.Client._KS14.Lobby;
 using Content.Shared._KS14.CCVar;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client.Lobby.UI;
 
-// The lobby backdrop shader: dims bright art under the text regions (cvar). The backdrop is never blurred.
+// The lobby backdrop shader: a film grade over the lobby art (vignette, darkening, fringe, scanlines), behind the cvar
+//      klovn.lobby.adaptive_contrast. It replaced the per-region dimming of the tactical layout. The backdrop is never blurred.
 public sealed partial class LobbyGui
 {
-    private static readonly ProtoId<ShaderPrototype> KsContrastShaderId = "KsLobbyContrast";
-    private const float KsRegionPaddingPixels = 16f;
-    private const float KsFeatherPixels = 64f; // how far past a region's edge the dimming fades out
-    private const int KsMaxRegions = 4;
+    private static readonly ProtoId<ShaderPrototype> KsGradeShaderId = "KsLobbyGrade";
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
 
-    private readonly Robust.Client.Graphics.StyleBoxEmpty _noPanel = new();
     private ShaderInstance? _contrastShader;
     private Action<bool>? _contrastCVarHandler;
     private bool _contrastEnabled;
     private bool _contrastDirty = true;
-    private readonly Control[] _contrastRegionControls = new Control[KsMaxRegions];
-    private readonly string[] _regionParameters = ["region0", "region1", "region2", "region3"];
 
     private void KsInitialiseContrast()
     {
-        _contrastShader = _prototypeManager.Index(KsContrastShaderId).InstanceUnique();
+        _contrastShader = _prototypeManager.Index(KsGradeShaderId).InstanceUnique();
 
-        _contrastRegionControls[0] = KsMenuColumn;
-        _contrastRegionControls[1] = CharacterPreview;
-        _contrastRegionControls[2] = RightSide;
-        _contrastRegionControls[3] = CharacterSetupState; // text over the backdrop in character setup
-
-        // Rects are recomputed lazily in Draw when one of these says the layout moved (see KsMarkContrastDirty).
         OnResized += KsMarkContrastDirty;
-        KsViewport.OnResized += KsMarkContrastDirty;
         Background.OnResized += KsMarkContrastDirty;
-        foreach (var region in _contrastRegionControls)
-        {
-            region.OnResized += KsMarkContrastDirty;
-        }
-
-        // Visibility notifications reach every descendant, so DefaultState covers the menu column and the preview.
-        DefaultState.OnVisibilityChanged += KsMarkContrastDirty;
-        CharacterSetupState.OnVisibilityChanged += KsMarkContrastDirty;
-        RightSide.OnVisibilityChanged += KsMarkContrastDirty;
 
         _contrastEnabled = _configurationManager.GetCVar(KsCCVars.LobbyAdaptiveContrast);
         KsApplyContrastShader();
@@ -93,11 +70,6 @@ public sealed partial class LobbyGui
         _contrastCVarHandler = null;
     }
 
-    private void KsMarkContrastDirty(Control control)
-    {
-        _contrastDirty = true;
-    }
-
     private void KsMarkContrastDirty()
     {
         _contrastDirty = true;
@@ -109,66 +81,26 @@ public sealed partial class LobbyGui
         if (_contrastShader == null)
             return;
 
-        // Only the lobby art is dimmed. The camera shows the live game, which the dimming would misrepresent, and
-        //      lobby art changes only between rounds, so the regions are all that ever needs recomputing.
-        var contrast = _contrastEnabled && !KsViewportContainer.Visible;
-        var shader = contrast ? _contrastShader : null;
+        // Only the lobby art is graded. The camera shows the live game, which the grade would misrepresent.
+        var grade = _contrastEnabled && !KsViewportContainer.Visible;
+        var shader = grade ? _contrastShader : null;
         Background.ShaderOverride = shader;
         KsViewport.KsDrawShader = shader;
 
-        // The dimming already darkens the chat column, so the right-edge fade would stack on it as a visible stripe.
-        RightSide.PanelOverride = contrast ? _noPanel : null;
-
-        _contrastShader.SetParameter("strength", contrast ? 1f : 0f);
+        _contrastShader.SetParameter("strength", grade ? 1f : 0f);
         _contrastDirty = true;
-    }
-
-    private void KsRecomputeContrastRegions()
-    {
-        if (_contrastShader == null)
-            return;
-
-        UIBox2 quadPixels;
-        if (KsViewportContainer.Visible)
-        {
-            var drawBox = KsViewport.KsGetDrawBox();
-            if (drawBox == null)
-                return; // The viewport is created on its first draw; stay dirty and retry next frame.
-
-            quadPixels = UIBox2.FromDimensions(
-                (Vector2)KsViewport.GlobalPixelPosition + (Vector2)drawBox.Value.TopLeft,
-                (Vector2)drawBox.Value.Size);
-        }
-        else
-        {
-            quadPixels = UIBox2.FromDimensions((Vector2)Background.GlobalPixelPosition, (Vector2)Background.PixelSize);
-        }
-
-        _contrastDirty = false;
-        _contrastShader.SetParameter("quadPixelSize", quadPixels.Size);
-        _contrastShader.SetParameter("feather", KsFeatherPixels * UIScale);
-        var padding = KsRegionPaddingPixels * UIScale;
-        for (var i = 0; i < KsMaxRegions; i++)
-        {
-            var region = _contrastRegionControls[i];
-            var mapped = Vector4.Zero;
-            if (region.VisibleInTree)
-            {
-                var regionPixels = UIBox2.FromDimensions((Vector2)region.GlobalPixelPosition, (Vector2)region.PixelSize);
-                mapped = KsLobbyContrastMath.RegionToQuadSpace(regionPixels, quadPixels, padding);
-            }
-
-            _contrastShader.SetParameter(_regionParameters[i], mapped);
-        }
     }
 
     protected override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
 
-        // Runs after layout, and only does work when a region or the backdrop changed.
-        if (_contrastDirty)
-            KsRecomputeContrastRegions();
+        // Runs after layout, and only does work when the backdrop changed size.
+        if (!_contrastDirty || _contrastShader == null)
+            return;
+
+        _contrastDirty = false;
+        _contrastShader.SetParameter("quadPixelSize", (Vector2)Background.PixelSize);
     }
 
     protected override void Dispose(bool disposing)

@@ -5,7 +5,8 @@ namespace Content.Shared._KS14.CCVar;
 public sealed partial class KsCCVars
 {
     /// <summary>
-    ///     Dim bright lobby art behind the lobby text so the white text stays readable. Read by the lobby UI only.
+    ///     The screen effect on the lobby art (KsLobbyGrade: darkening, curvature, subpixel mask, static), so the bright
+    ///         menu reads over any art. Read by the lobby UI only. The name predates the main menu, which replaced dimming.
     /// </summary>
     public static readonly CVarDef<bool> LobbyAdaptiveContrast =
         CVarDef.Create("klovn.lobby.adaptive_contrast", true, CVar.CLIENTONLY | CVar.ARCHIVE);

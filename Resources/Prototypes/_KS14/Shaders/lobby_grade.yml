@@ -1,0 +1,18 @@
+# The main menu's backdrop grade (LobbyGui.Klovn.Contrast.cs), on the lobby art only.
+- type: shader
+  id: KsLobbyGrade
+  kind: source
+  path: "/Textures/_KS14/Shaders/lobby_grade.swsl"
+  params:
+    strength: 1.0
+    quadPixelSize: 1920,1080
+    exposure: 0.06
+    desaturation: 0.45
+    vignette: 0.85
+    fringe: 0.006
+    scanlines: 0.3
+    subpixelMask: 0.35
+    staticAmount: 0.012
+    roll: 0.12
+    curvature: 0.022
+    maskPitch: 3.0

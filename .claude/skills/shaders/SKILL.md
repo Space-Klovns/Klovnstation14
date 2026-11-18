@@ -33,6 +33,12 @@ GLSL ES 1.0-ish with a small header language on top.
 
 Code gets the prototype by id: `ProtoMan.Index<ShaderPrototype>(id)`.
 
+**`blend_mode` in YAML is read only for `kind: canvas`.** A `kind: source` instance takes its blend mode from the
+`.swsl` header alone (`ShaderPrototype._cacheInstance`), so `blend_mode:` on a source prototype silently does nothing and
+the shader draws with normal blending. The header doesn't accept `premultiplied`. For an additive pass over the opaque
+screen, use `blend_mode add;` in the header (`SrcAlpha, DstAlpha`) and output alpha 1 (`lobby_bloom_composite.swsl`).
+`KsTguiTabsMask` and `KsTguiScaledRaster` still declare `blend_mode: premultiplied` in YAML, which has no effect.
+
 ## What a .swsl looks like
 
 ```glsl
