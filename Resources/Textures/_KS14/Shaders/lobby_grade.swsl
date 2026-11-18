@@ -1,7 +1,7 @@
 // The main menu's backdrop grade: the lobby art is pulled down, cooled and desaturated, with a heavy vignette and a colour
 // fringe that grows toward the edges, then shown as if on a slightly curved screen: the picture bulges a little (barrel
-// distortion) into a dark rounded bezel, under a staggered RGB slot mask that bends with the glass, with a slow roll of
-// brightness and very faint coloured static. Whatever the art is, it reads as a dim backdrop under the
+// distortion), zoomed just enough that it always fills the glass, under a staggered RGB slot mask that bends with it, with
+// a slow roll of brightness and very faint coloured static. Whatever the art is, it reads as a dim backdrop under the
 // bright menu. Nothing is blurred and the UI is not touched: this is on the background only.
 // zTexture() returns linear colour, so exposure and the vignette multiply light, as a camera would.
 light_mode unshaded;
@@ -33,21 +33,25 @@ void fragment()
     highp vec2 aspectScale = vec2(aspect, 1.0) / length(vec2(aspect, 1.0));
     highp float radius = length(p * aspectScale) * 2.0;
 
-    // Curved glass: each point shows the picture from a little further out, more so toward the corners. The texture
-    //      UV moves with it, scaled by how fast UV runs across the quad (constant, read off the derivatives), so it works
-    //      whatever part of the art KeepAspectCovered shows.
+    // Curved glass: each point shows the picture from a little further out, more so toward the corners. The bulge is
+    //      largest at the corners, 1 + curvature there, so dividing by that keeps every point inside the picture: it is
+    //      zoomed slightly instead of leaving dark gaps at the edges. The texture UV moves with it, scaled by how fast UV
+    //      runs across the quad (constant, read off the derivatives), so it works whatever part of the art
+    //      KeepAspectCovered shows.
     highp float bulge = curvature * strength;
-    highp vec2 curved = p * (1.0 + bulge * dot(p * aspectScale * 2.0, p * aspectScale * 2.0));
+    highp vec2 curved = p * (1.0 + bulge * dot(p * aspectScale * 2.0, p * aspectScale * 2.0)) / (1.0 + bulge);
     highp vec2 uvPerP = vec2(dFdx(UV.x) / dFdx(p.x), dFdy(UV.y) / dFdy(p.y));
     highp vec2 uv = UV + (curved - p) * uvPerP;
 
-    // Past the glass's edge is the bezel: dark, with a soft rounded border a few pixels wide.
-    highp vec2 overshoot = max(abs(curved) - vec2(0.5), vec2(0.0)) * quadPixelSize;
-    highp float bezel = 1.0 - smoothstep(0.0, 4.0, length(overshoot));
+    // The part of the texture the quad shows, so the fringe's offset samples never reach past it.
+    highp vec2 uvCornerA = UV + (vec2(-0.5) - p) * uvPerP;
+    highp vec2 uvCornerB = UV + (vec2(0.5) - p) * uvPerP;
+    highp vec2 uvMin = min(uvCornerA, uvCornerB);
+    highp vec2 uvMax = max(uvCornerA, uvCornerB);
 
     highp vec2 shift = curved * fringe * strength * radius;
     highp vec4 centre = zTexture(uv);
-    highp vec3 col = vec3(zTexture(uv + shift).r, centre.g, zTexture(uv - shift).b);
+    highp vec3 col = vec3(zTexture(clamp(uv + shift, uvMin, uvMax)).r, centre.g, zTexture(clamp(uv - shift, uvMin, uvMax)).b);
 
     highp float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
     col = mix(col, vec3(lum), desaturation * strength);
@@ -80,6 +84,5 @@ void fragment()
     highp vec3 noise = vec3(hash(cell), hash(cell + 71.3), hash(cell + 149.9)) - 0.5;
     col = max(col + noise * staticAmount * strength, 0.0);
 
-    col *= mix(1.0, bezel, strength);
     COLOR = vec4(col, centre.a);
 }

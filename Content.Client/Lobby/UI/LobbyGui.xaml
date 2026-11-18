@@ -151,11 +151,12 @@
                     <Control VerticalExpand="True" SizeFlagsStretchRatio="0.9"/>
                 </BoxContainer>
 
-                <!-- Bottom-left: expansions tile and build line -->
+                <!-- Bottom-left: expansions tile and build line. The negative bottom margin lets the build line sit just over
+                     the bar, in the badge row's height (no badge is that far left). -->
                 <BoxContainer Orientation="Vertical"
                               HorizontalAlignment="Left"
                               VerticalAlignment="Bottom"
-                              Margin="14 0 0 22"
+                              Margin="14 0 0 -12"
                               SeparationOverride="2">
                     <BoxContainer Orientation="Horizontal" SeparationOverride="8" Margin="0 0 0 2">
                         <TextureRect TexturePath="/Textures/_KS14/Lobby/Tarkov/icon_expansions.png"

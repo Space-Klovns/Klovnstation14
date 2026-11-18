@@ -59,8 +59,8 @@ void fragment()
     // Warm spills in the bottom corners, behind the expansions tile and the zone label: stretched sideways, with
     //      faint horizontal banding, as light smeared across the lens.
     highp float banding = 0.88 + 0.12 * sin(p.y / (9.0 * u) + sin(p.x / (140.0 * u)) * 2.0);
-    highp vec2 bl = (p - vec2(w * 0.07, h * 0.87)) / (vec2(0.2, 0.09) * size);
-    highp vec2 br = (p - vec2(w * 0.94, h * 0.9)) / (vec2(0.17, 0.08) * size);
+    highp vec2 bl = (p - vec2(w * 0.06, h * 0.93)) / (vec2(0.11, 0.06) * size);
+    highp vec2 br = (p - vec2(w * 0.95, h * 0.93)) / (vec2(0.09, 0.055) * size);
     light += vec3(0.85, 0.28, 0.06) * exp(-dot(bl, bl)) * banding * 0.27;
     light += vec3(0.8, 0.1, 0.06) * exp(-dot(br, br)) * banding * 0.3;
 

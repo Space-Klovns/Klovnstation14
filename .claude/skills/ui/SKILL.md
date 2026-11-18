@@ -455,7 +455,7 @@ Effects:
 - **Additive passes use `blend_mode add;` in the `.swsl` header, output alpha 1.** A prototype's `blend_mode` is ignored
   for source shaders (see the shaders skill); normal blending at alpha 1 covers what is behind, at alpha 0 adds nothing.
 - **Backdrop grade** (cvar `klovn.lobby.adaptive_contrast`, the KS14 option "Screen effect on the lobby background"):
-  exposure, desaturation, vignette, edge fringe, slight barrel curvature into a dark bezel, a staggered RGB slot mask
+  exposure, desaturation, vignette, edge fringe, slight barrel curvature (zoomed to fill, no bezel), a staggered RGB slot mask
   on the curved coordinates, slow brightness roll, faint coloured static. Off while the lobby-view camera shows.
   `quadPixelSize` is set in `LobbyGui.Draw` only after a resize.
 - **Lobby art is server-picked** and sent in `TickerLobbyStatusEvent`; `forcedLobbyBackground` on a `gameMap` forces one.
