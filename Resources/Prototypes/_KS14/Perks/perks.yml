@@ -1,0 +1,38 @@
+# Field Commander perks. Each grants nothing yet: abilities are added as components (and status effects, actions or
+#     items) to these lists; see Klovn/Docs/perks.md.
+
+- type: ksPerk
+  id: KsPerkDamage
+  name: ks-perk-damage-name
+  description: ks-perk-damage-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: damage
+  alert: KsPerkDamage
+
+- type: ksPerk
+  id: KsPerkTank
+  name: ks-perk-tank-name
+  description: ks-perk-tank-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: tank
+  alert: KsPerkTank
+
+- type: ksPerk
+  id: KsPerkHealing
+  name: ks-perk-healing-name
+  description: ks-perk-healing-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: healing
+  alert: KsPerkHealing
+
+- type: ksPerk
+  id: KsPerkSupport
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: support
+  alert: KsPerkSupport
