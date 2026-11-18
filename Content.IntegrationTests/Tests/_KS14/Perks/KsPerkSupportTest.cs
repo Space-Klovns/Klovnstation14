@@ -14,6 +14,7 @@ using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Movement.Components;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.Power.Components;
 using Content.Shared.Weapons.Ranged.Components;
@@ -33,6 +34,8 @@ namespace Content.IntegrationTests.Tests._KS14.Perks;
 [TestFixture]
 [TestOf(typeof(KsAmmoDropSystem))]
 [TestOf(typeof(KsCompanionSystem))]
+[TestOf(typeof(KsRallySystem))]
+[TestOf(typeof(KsRallyBuffSystem))]
 public sealed class KsPerkSupportTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
@@ -44,6 +47,7 @@ public sealed class KsPerkSupportTest : GameTest
     private readonly EntProtoId _laserGun = "KsTestPerkSupportLaserGun";
     private readonly ProtoId<KsPerkPrototype> _ammoDropPerk = "KsTestPerkSupportAmmoDrop";
     private readonly ProtoId<KsPerkPrototype> _turretPerk = "KsTestPerkSupportShoulderTurret";
+    private readonly ProtoId<KsPerkPrototype> _rallyPerk = "KsTestPerkSupportRally";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
 
@@ -92,6 +96,7 @@ public sealed class KsPerkSupportTest : GameTest
         layer:
         - MobLayer
   - type: Hands
+  - type: MovementSpeedModifier
   - type: MobState
   - type: MobThresholds
     thresholds:
@@ -167,6 +172,26 @@ public sealed class KsPerkSupportTest : GameTest
         6.28
       RangedRange: !type:Single
         9
+
+- type: entity
+  id: KsTestPerkSupportRallyZone
+  components:
+  - type: KsRallyZone
+
+- type: ksPerk
+  id: KsTestPerkSupportRally
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+  icon: { sprite: _KS14/Interface/Perks/perks.rsi, state: support }
+  components:
+  - type: KsRallyAbility
+    radius: 2
+    delay: 0.5
+    duration: 1.5
+    speedMultiplier: 1.5
+    fireRateMultiplier: 2
+    damageMultiplier: 3
+    zone: KsTestPerkSupportRallyZone
 
 - type: ksPerk
   id: KsTestPerkSupportShoulderTurret
@@ -445,6 +470,105 @@ public sealed class KsPerkSupportTest : GameTest
         {
             Assert.That(turretHit, "a foe's bullet should hit the turret");
             Assert.That(damageableSystem.GetTotalDamage(ownerUid), Is.EqualTo(FixedPoint2.Zero), "the bullet should have hit the turret, not its owner");
+        });
+    }
+
+    private float FireRate(EntityUid holderUid)
+    {
+        var gunUid = Pair.Server.System<SharedHandsSystem>().GetActiveItem(holderUid)!.Value;
+        return Pair.Server.EntMan.GetComponent<GunComponent>(gunUid).FireRateModified;
+    }
+
+    private float WalkModifier(EntityUid uid) => Pair.Server.EntMan.GetComponent<MovementSpeedModifierComponent>(uid).WalkSpeedModifier;
+
+    /// <summary>
+    ///     A called rally waits out its delay, then rallies the caller and friends inside it, not foes nor friends
+    ///         outside: faster on foot and on the trigger, harder hitting, a gun picked up meanwhile included; all of it
+    ///         gone when it wears off.
+    /// </summary>
+    [Test]
+    public async Task RallyBuffsFriendsInsideAfterTheDelayAndWearsOff()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        KsRallyAbilityComponent ability = default!;
+        EntityUid callerUid = default, friendUid = default, foeUid = default, outsiderUid = default;
+        var baseFireRate = 0f;
+
+        await server.WaitAssertion(() =>
+        {
+            callerUid = SpawnBody(_body, testMap, 0.5f, _rifle);
+            Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(callerUid, _rallyPerk), "the test perk should be given");
+            ability = entMan.GetComponent<KsRallyAbilityComponent>(callerUid);
+            friendUid = SpawnBody(_body, testMap, 0.5f + ability.Radius / 2f, _rifle);
+            foeUid = SpawnBody(_foe, testMap, 0.5f - ability.Radius / 2f, _rifle);
+            outsiderUid = SpawnBody(_body, testMap, 0.5f + ability.Radius + 2f, _rifle);
+            baseFireRate = FireRate(friendUid);
+
+            server.System<KsRallySystem>().Call((callerUid, ability));
+            Assert.That(entMan.HasComponent<KsRallyBuffComponent>(friendUid), Is.False, "nobody should be rallied before the delay");
+        });
+
+        await Pair.RunTicksSync(Ticks((float)ability.Delay.TotalSeconds + 0.2f));
+        await server.WaitAssertion(() =>
+        {
+            foreach (var uid in new[] { callerUid, friendUid })
+            {
+                Assert.That(entMan.HasComponent<KsRallyBuffComponent>(uid), $"{uid} inside should be rallied");
+                Assert.That(FireRate(uid), Is.EqualTo(baseFireRate * ability.FireRateMultiplier).Within(0.001f), "a rallied gun should fire faster");
+                Assert.That(WalkModifier(uid), Is.EqualTo(ability.SpeedMultiplier).Within(0.001f), "the rallied should move faster");
+            }
+
+            foreach (var uid in new[] { foeUid, outsiderUid })
+            {
+                Assert.That(entMan.HasComponent<KsRallyBuffComponent>(uid), Is.False, $"{uid} should not be rallied");
+                Assert.That(FireRate(uid), Is.EqualTo(baseFireRate).Within(0.001f));
+            }
+
+            // A gun dropped goes back to its own rate, and picked up again is rallied.
+            var handsSystem = server.System<SharedHandsSystem>();
+            var gunUid = handsSystem.GetActiveItem(friendUid)!.Value;
+            Assert.That(handsSystem.TryDrop(friendUid, gunUid, checkActionBlocker: false));
+            Assert.That(entMan.GetComponent<GunComponent>(gunUid).FireRateModified, Is.EqualTo(baseFireRate).Within(0.001f), "a dropped gun should lose the rally");
+            Assert.That(handsSystem.TryPickupAnyHand(friendUid, gunUid, checkActionBlocker: false));
+            Assert.That(FireRate(friendUid), Is.EqualTo(baseFireRate * ability.FireRateMultiplier).Within(0.001f), "a gun picked up should be rallied");
+        });
+
+        // A shot hits harder, once the gun picked up is ready.
+        await Pair.RunTicksSync(Ticks(0.3f));
+        await server.WaitAssertion(() =>
+        {
+            var gunUid = server.System<SharedHandsSystem>().GetActiveItem(friendUid)!.Value;
+            var bullet = server.ProtoMan.Index<EntityPrototype>(entMan.GetComponent<BallisticAmmoProviderComponent>(Magazine(friendUid).Owner).Proto!.Value);
+            var before = new HashSet<EntityUid>();
+            var projectiles = entMan.EntityQueryEnumerator<Content.Shared.Projectiles.ProjectileComponent>();
+            while (projectiles.MoveNext(out var projectileUid, out _))
+                before.Add(projectileUid);
+
+            Assert.That(server.System<SharedGunSystem>().AttemptShoot(friendUid, (gunUid, entMan.GetComponent<GunComponent>(gunUid)),
+                new EntityCoordinates(testMap.Grid, 0.5f + ability.Radius / 2f, 6.5f)), "the friend should fire");
+            projectiles = entMan.EntityQueryEnumerator<Content.Shared.Projectiles.ProjectileComponent>();
+            var fired = false;
+            while (projectiles.MoveNext(out var projectileUid, out var projectileComponent))
+            {
+                if (before.Contains(projectileUid))
+                    continue;
+
+                fired = true;
+                Assert.That(projectileComponent.Damage.GetTotal(), Is.EqualTo(FixedPoint2.New(5f * ability.DamageMultiplier)),
+                    "a rallied shot should hit harder");
+            }
+
+            Assert.That(fired, "the shot should be found");
+        });
+
+        await Pair.RunTicksSync(Ticks((float)ability.Duration.TotalSeconds));
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.HasComponent<KsRallyBuffComponent>(friendUid), Is.False, "the rally should wear off");
+            Assert.That(FireRate(friendUid), Is.EqualTo(baseFireRate).Within(0.001f), "the gun should be back to its own rate");
+            Assert.That(WalkModifier(friendUid), Is.EqualTo(1f).Within(0.001f), "the friend should be back to their own speed");
         });
     }
 }

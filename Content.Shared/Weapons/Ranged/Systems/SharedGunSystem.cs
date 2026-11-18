@@ -897,6 +897,11 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         RaiseLocalEvent(gun, ref ev);
 
+        // KS14 start: whoever holds the gun may modify it too (perk buffs); they refresh it as they gain or lose a say
+        if (Containers.TryGetContainingContainer(gun.Owner, out var ksHolderContainer))
+            RaiseLocalEvent(ksHolderContainer.Owner, ref ev);
+        // KS14 end
+
         if (comp.SoundGunshotModified != ev.SoundGunshot)
         {
             comp.SoundGunshotModified = ev.SoundGunshot;

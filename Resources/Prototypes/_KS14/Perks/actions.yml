@@ -27,3 +27,17 @@
     icon: Interface/Actions/scream.png
   - type: InstantAction
     event: !type:KsDrawFireActionEvent
+
+- type: entity
+  id: ActionKsRally
+  name: Rally
+  description: Mark the ground around you. Moments later every friend inside moves, fires and hits harder for a while.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 45
+    icon:
+      sprite: _KS14/Interface/Perks/perks.rsi
+      state: support
+  - type: InstantAction
+    event: !type:KsRallyActionEvent

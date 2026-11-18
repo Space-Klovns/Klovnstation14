@@ -116,3 +116,15 @@
       mode: Attached
       offset: -0.3, 0.25
       respawnDelay: 45
+  # 1.5 s from the call to the rally: long enough to see the ring and step in.
+  - type: KsRallyAbility
+    radius: 3
+    delay: 1.5
+    duration: 12
+    speedMultiplier: 1.2
+    fireRateMultiplier: 1.25
+    damageMultiplier: 1.2
+    zone: KsRallyZone
+    alert: KsRallied
+  actions:
+  - ActionKsRally

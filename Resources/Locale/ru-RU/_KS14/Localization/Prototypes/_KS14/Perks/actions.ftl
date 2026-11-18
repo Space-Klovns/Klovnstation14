@@ -5,3 +5,7 @@ ent-ActionKsLivingShield = Живой щит
 # Resources\Prototypes\_KS14\Perks\actions.yml
 ent-ActionKsDrawFire = Вызвать огонь на себя
     .desc = Бросить врагу вызов, чтобы на время он стрелял по вам, а не по остальным.
+
+# Resources\Prototypes\_KS14\Perks\actions.yml
+ent-ActionKsRally = Сплочение
+    .desc = Отметьте землю вокруг себя. Через мгновение все союзники внутри двигаются, стреляют и бьют сильнее какое-то время.

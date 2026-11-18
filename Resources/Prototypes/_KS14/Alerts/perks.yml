@@ -31,3 +31,12 @@
     state: support
   name: ks-perk-support-name
   description: ks-perk-support-desc
+
+# Shown with the time left while rallied (KsRallyAbility).
+- type: alert
+  id: KsRallied
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: support
+  name: ks-perk-support-rallied-alert-name
+  description: ks-perk-support-rallied-alert-desc
