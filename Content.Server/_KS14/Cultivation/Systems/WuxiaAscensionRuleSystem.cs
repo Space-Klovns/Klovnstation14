@@ -133,10 +133,10 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         rule.WinnerName = Name(winner);
         EnsureComp<SupremeSovereignComponent>(winner);
         _visualsSystem.Breakthrough(winner);
-        _noticeSystem.Proclaim(winner, Loc.GetString("ascension-peak-announcement", ("winner", Name(winner)),
-                ("minutes", (int) rule.RoundEndDelay.TotalMinutes)),
+        _noticeSystem.Proclaim(winner, Loc.GetString("ascension-peak-announcement", ("winner", Name(winner))),
             Loc.GetString("mandate-omen-sender"), announcementSound: CultivationVisualsSystem.ThunderclapSound, colorOverride: Color.Gold);
         _noticeSystem.Notify(winner, Loc.GetString("ascension-peak-self"), PopupType.Large, alsoToChat: true);
+        // The shuttle's own announcement, with its countdown, follows Heaven's.
         _roundEndSystem.RequestRoundEnd(rule.RoundEndDelay, checkCooldown: false, cantRecall: true);
     }
 
