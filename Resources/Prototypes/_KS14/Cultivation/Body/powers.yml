@@ -324,7 +324,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesClearEyes
   group: Eyes
-  level: 1
+  level: 3
   name: body-power-eyes-clear-eyes-name
   description: body-power-eyes-clear-eyes-desc
   components:
@@ -362,7 +362,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesHealerSEyes
   group: Eyes
-  level: 3
+  level: 1
   name: body-power-eyes-healer-s-eyes-name
   description: body-power-eyes-healer-s-eyes-desc
   components:
