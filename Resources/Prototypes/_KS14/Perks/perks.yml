@@ -1,5 +1,5 @@
-# Field Commander perks. Each grants nothing yet: abilities are added as components (and status effects, actions or
-#     items) to these lists; see Klovn/Docs/perks.md.
+# Field Commander perks. Abilities are components (and status effects, actions or items) in these lists; see
+#     Klovn/Docs/perks.md.
 
 - type: ksPerk
   id: KsPerkDamage
@@ -9,6 +9,30 @@
     sprite: _KS14/Interface/Perks/perks.rsi
     state: damage
   alert: KsPerkDamage
+  components:
+  # At the cap a Lecter round (20) does 28: Field Commander elites (crit at 90) go down in 4 hits instead of 5, the
+  #     60-hp operatives still take 3, and a fully hit 25-round magazine averages +31%.
+  - type: KsDamageRampAbility
+    bonusPerHit: 0.04
+    maxBonus: 0.4
+  - type: KsMagazineAutoDropAbility
+  - type: KsCloseRangeBonusAbility
+    maxBonus: 0.25
+    fullBonusRange: 2
+    noBonusRange: 10
+  - type: KsRangeFalloffAbility
+    startRange: 10
+    endRange: 30
+    minMultiplier: 0.5
+  # 1 round of a 25-round magazine, 2 of a 30, 5 of a 100; the blast spares walls and structures
+  #     (KsAntiPersonnelRocket) and deals about 30 at its centre.
+  - type: KsExplosiveLastRoundsAbility
+    fraction: 0.05
+    minRounds: 1
+    explosionType: KsAntiPersonnelRocket
+    totalIntensity: 6
+    intensitySlope: 2
+    maxIntensity: 2
 
 - type: ksPerk
   id: KsPerkTank

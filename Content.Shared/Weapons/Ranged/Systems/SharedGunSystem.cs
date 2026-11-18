@@ -692,6 +692,13 @@ public abstract partial class SharedGunSystem : EntitySystem
             var firedProjectilesEv = new _KS14.Weapons.Ranged.KsGunFiredProjectilesEvent(shotProjectiles, user);
             RaiseLocalEvent(gun, ref firedProjectilesEv);
         }
+
+        // The same once per shot on whoever fired, hitscan included, for abilities of the shooter rather than the gun.
+        if (user is { } ksShooterUid)
+        {
+            var shooterFiredEv = new _KS14.Weapons.Ranged.KsShooterFiredGunEvent(gun, shotProjectiles);
+            RaiseLocalEvent(ksShooterUid, ref shooterFiredEv);
+        }
         // KS14 end
 
         void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
