@@ -15,6 +15,10 @@
     user: ks-thrown-slam-wall-user
     target: ks-thrown-slam-wall-target
     others: ks-thrown-slam-wall-others
+  wallDownedPopups:
+    user: ks-thrown-slam-wall-downed-user
+    target: ks-thrown-slam-wall-downed-target
+    others: ks-thrown-slam-wall-downed-others
   wallResistedPopups:
     user: ks-thrown-slam-wall-resisted-user
     target: ks-thrown-slam-wall-resisted-target

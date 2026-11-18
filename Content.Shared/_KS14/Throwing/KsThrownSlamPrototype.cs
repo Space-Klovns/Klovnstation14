@@ -40,6 +40,13 @@ public sealed partial class KsThrownSlamPrototype : IPrototype
     public KsAudiencePopups WallPopups;
 
     /// <summary>
+    ///     Popups for a slam into a wall by someone lying down already, as most thrown people are: the wall still
+    ///         keeps them down for <see cref="WallKnockdownTime"/>, but they don't "go down".
+    /// </summary>
+    [DataField]
+    public KsAudiencePopups WallDownedPopups;
+
+    /// <summary>
     ///     Popups for a slam into a wall whose knockdown doesn't take, such as while weightless.
     /// </summary>
     [DataField]

@@ -23,6 +23,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Collections;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -53,6 +54,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     [Dependency] private MovementModStatusSystem _movementModStatusSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedBuckleSystem _buckleSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedJitteringSystem _jitteringSystem = default!;
@@ -250,8 +252,14 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         return KsShoveOutcome.Disarmed;
     }
 
-    private void PopupShove(EntityUid shover, EntityUid target, KsAudiencePopups popups)
+    /// <param name="predicted">False where the source's client can't tell on which tick this happens, as in a
+    ///     collision in flight: its own popup is then never matched with the server's, and shows twice. The server
+    ///     then tells everyone and no client says anything itself.</param>
+    private void PopupShove(EntityUid shover, EntityUid target, KsAudiencePopups popups, bool predicted = true)
     {
+        if (!predicted && _netManager.IsClient)
+            return;
+
         _ksPopupSystem.PopupUserTargetOthers(target, shover, target, popups, PopupType.MediumCaution,
             ("shover", Identity.Entity(shover, EntityManager)),
             ("target", Identity.Entity(target, EntityManager)));
@@ -332,8 +340,11 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     /// </summary>
     /// <param name="source">Who sent them flying, for the popups, sounds and logs.</param>
     /// <param name="popups">Shown instead of the obstacle's own <see cref="KsShoveObstacleComponent.Popups"/>.</param>
+    /// <param name="predictedAnnouncement">Whether the source's client shows the popups and plays the sound itself,
+    ///     ahead of the server. False for a collision in flight, which client and server rarely have on the same tick:
+    ///     the server then tells everyone, the source included.</param>
     public void KnockIntoObstacle(EntityUid source, EntityUid target, Entity<KsShoveObstacleComponent> obstacle,
-        KsAudiencePopups? popups = null)
+        KsAudiencePopups? popups = null, bool predictedAnnouncement = true)
     {
         if (RaiseCollide(source, target, obstacle))
             return;
@@ -345,7 +356,7 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         if (obstacle.Comp.CollateralKnockdownTime is { } collateralTime)
             _stunSystem.TryKnockdown(obstacle.Owner, collateralTime, drop: false);
 
-        AnnounceObstacle(source, target, obstacle, popups ?? obstacle.Comp.Popups);
+        AnnounceObstacle(source, target, obstacle, popups ?? obstacle.Comp.Popups, predictedAnnouncement);
     }
 
     /// <summary>
@@ -381,17 +392,33 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     ///     The sound, popups and log of someone being sent into an obstacle.
     /// </summary>
     private void AnnounceObstacle(EntityUid source, EntityUid target, Entity<KsShoveObstacleComponent> obstacle,
-        KsAudiencePopups popups)
+        KsAudiencePopups popups, bool predicted = true)
     {
-        _audioSystem.PlayPredicted(obstacle.Comp.Sound, obstacle, source, AudioParams.Default.WithVariation(0.05f));
+        PlayShoveSound(obstacle.Comp.Sound, obstacle, source, predicted);
 
-        _ksPopupSystem.PopupUserTargetOthers(target, source, target, popups, PopupType.MediumCaution,
-            ("shover", Identity.Entity(source, EntityManager)),
-            ("target", Identity.Entity(target, EntityManager)),
-            ("obstacle", Identity.Entity(obstacle, EntityManager)));
+        if (predicted || _netManager.IsServer)
+        {
+            _ksPopupSystem.PopupUserTargetOthers(target, source, target, popups, PopupType.MediumCaution,
+                ("shover", Identity.Entity(source, EntityManager)),
+                ("target", Identity.Entity(target, EntityManager)),
+                ("obstacle", Identity.Entity(obstacle, EntityManager)));
+        }
 
         _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
             $"{ToPrettyString(source):user} sent {ToPrettyString(target):target} into {ToPrettyString(obstacle):obstacle}");
+    }
+
+    /// <summary>
+    ///     Plays a shove's sound. Predicted, the source's client plays it at once and the server leaves the source
+    ///         out; unpredicted, only the server plays it, to everyone.
+    /// </summary>
+    private void PlayShoveSound(SoundSpecifier? sound, EntityUid at, EntityUid source, bool predicted)
+    {
+        var audioParams = AudioParams.Default.WithVariation(0.05f);
+        if (predicted)
+            _audioSystem.PlayPredicted(sound, at, source, audioParams);
+        else if (_netManager.IsServer)
+            _audioSystem.PlayPvs(sound, at, audioParams);
     }
 
     /// <summary>
@@ -399,12 +426,23 @@ public sealed partial class ComplexShoveSystem : EntitySystem
     /// </summary>
     /// <param name="resistedPopups">Shown instead of <paramref name="popups"/> when the knockdown didn't take, such as
     ///     while weightless.</param>
+    /// <param name="downedPopups">Shown instead of <paramref name="popups"/> when they were lying down already, as
+    ///     someone thrown may be: they can't be said to go down. Without it, <paramref name="popups"/> is shown.</param>
+    /// <param name="predictedAnnouncement">As for <see cref="KnockIntoObstacle"/>.</param>
     public void KnockIntoWall(EntityUid source, EntityUid target, TimeSpan knockdownTime, SoundSpecifier? sound,
-        KsAudiencePopups popups, KsAudiencePopups resistedPopups)
+        KsAudiencePopups popups, KsAudiencePopups resistedPopups, KsAudiencePopups? downedPopups = null,
+        bool predictedAnnouncement = true)
     {
+        var wasDown = _standingStateSystem.IsDown(target);
         var knockedDown = _stunSystem.TryKnockdown(target, knockdownTime, drop: false);
-        _audioSystem.PlayPredicted(sound, target, source, AudioParams.Default.WithVariation(0.05f));
-        PopupShove(source, target, knockedDown ? popups : resistedPopups);
+        PlayShoveSound(sound, target, source, predictedAnnouncement);
+
+        if (!knockedDown)
+            PopupShove(source, target, resistedPopups, predictedAnnouncement);
+        else if (wasDown && downedPopups != null)
+            PopupShove(source, target, downedPopups.Value, predictedAnnouncement);
+        else
+            PopupShove(source, target, popups, predictedAnnouncement);
 
         if (knockedDown)
         {

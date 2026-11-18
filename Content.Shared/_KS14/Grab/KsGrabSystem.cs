@@ -198,7 +198,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         _transformSystem.SetCoordinates(victim, Transform(grabber).Coordinates);
         args.ItemUid = victim;
         args.ThrowSpeed *= stage.ThrowSpeedModifier;
-        MarkThrown(victim, grabber);
+        ThrowBody(victim, grabber);
 
         PopupGrab(grabber, victim, user: grabber, stage.ThrowPopups, PopupType.MediumCaution);
 
@@ -600,13 +600,20 @@ public sealed partial class KsGrabSystem : EntitySystem
     #region Thrown victims
 
     /// <summary>
-    ///     Marks someone sent flying by <paramref name="thrower"/>, so whatever they slam into knocks them over, as
-    ///         the thrower's <see cref="KsGrabberComponent.ThrowSlam"/> says (<see cref="KsThrownSlamSystem"/>).
+    ///     What throwing a body takes and does, for a <paramref name="victim"/> that <paramref name="thrower"/> is
+    ///         sending flying: the thrower pays <see cref="KsGrabberComponent.ThrowStaminaCost"/>, and the victim is
+    ///         marked so that whatever they slam into knocks them over, as the thrower's
+    ///         <see cref="KsGrabberComponent.ThrowSlam"/> says (<see cref="KsThrownSlamSystem"/>).
     /// </summary>
-    public void MarkThrown(EntityUid victim, EntityUid thrower)
+    public void ThrowBody(EntityUid victim, EntityUid thrower)
     {
-        if (TryComp<KsGrabberComponent>(thrower, out var grabber))
-            _thrownSlamSystem.MarkThrown(victim, grabber.ThrowSlam, thrower);
+        if (!TryComp<KsGrabberComponent>(thrower, out var grabberComponent))
+            return;
+
+        if (grabberComponent.ThrowStaminaCost > 0f)
+            _staminaSystem.TakeStaminaDamage(thrower, grabberComponent.ThrowStaminaCost, source: thrower, visual: false);
+
+        _thrownSlamSystem.MarkThrown(victim, grabberComponent.ThrowSlam, thrower);
     }
 
     #endregion

@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Gravity;
@@ -9,6 +10,7 @@ using Content.Shared.CombatMode;
 using Content.Shared.DoAfter;
 using Content.Shared.Gravity;
 using Content.Shared.Input;
+using Content.Shared.Jittering;
 using Content.Shared.Standing;
 using Content.Shared.StatusEffectNew;
 using Content.Shared.Stunnable;
@@ -195,6 +197,56 @@ public sealed class KsShovePredictionTest : GameTest
             await Client.WaitAssertion(() =>
                 Assert.That(Problem(), Is.Null, $"The shove's outcome was lost on the client {tick} ticks after it."));
         }
+    }
+
+    /// <summary>
+    ///     The jitter of a predicted stagger is one animation carried on, not a new one in a new direction on every
+    ///         tick the client predicts the shove again: that shows as a violent shake until the server catches up.
+    /// </summary>
+    [Test]
+    public async Task PredictedStaggerJitterIsNotRestarted()
+    {
+        await SetUp(null);
+
+        var clientTargetUid = ToClient(_targetUid);
+        var netTarget = SEntMan.GetNetEntity(_targetUid);
+        var netCoordinates = SEntMan.GetNetCoordinates(SEntMan.GetComponent<TransformComponent>(_targetUid).Coordinates);
+
+        await Client.WaitAssertion(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new DisarmAttackEvent(netTarget, netCoordinates));
+            Assert.That(CEntMan.HasComponent<JitteringComponent>(clientTargetUid), "The client must predict the stagger's jitter.");
+        });
+
+        // Each new jitter animation picks a new direction. One is due each time the last has run its length.
+        var directionChanges = 0;
+        var allowedChanges = 0;
+        Vector2 lastDirection = default;
+        await Client.WaitPost(() =>
+        {
+            var jitteringComponent = CEntMan.GetComponent<JitteringComponent>(clientTargetUid);
+            lastDirection = jitteringComponent.LastJitter;
+            var ticksPerAnimation = Client.ResolveDependency<IGameTiming>().TickRate / jitteringComponent.Frequency;
+            allowedChanges = (int)Math.Ceiling(PredictedAheadTicks / ticksPerAnimation) + 1;
+        });
+
+        for (var tick = 1; tick <= PredictedAheadTicks; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Client.WaitAssertion(() =>
+            {
+                Assert.That(CEntMan.TryGetComponent<JitteringComponent>(clientTargetUid, out var jitteringComponent),
+                    $"The client lost the jitter {tick} ticks after the shove.");
+
+                if (jitteringComponent!.LastJitter != lastDirection)
+                    directionChanges++;
+
+                lastDirection = jitteringComponent.LastJitter;
+            });
+        }
+
+        Assert.That(directionChanges, Is.LessThanOrEqualTo(allowedChanges),
+            "The jitter animation was started anew while the client predicted the shove again.");
     }
 
     /// <summary>

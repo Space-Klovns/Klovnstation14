@@ -484,7 +484,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         // Dropping the hand afterwards puts them down, collision and all, just before they fly.
         var carried = carrier.Comp.Carried;
         args.ItemUid = carried;
-        _grabSystem.MarkThrown(carried, carrier);
+        _grabSystem.ThrowBody(carried, carrier);
 
         PopupCarry(carrier, carried, user: carrier, ThrowPopups);
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(carrier):user} threw {ToPrettyString(carried):target} off their back");

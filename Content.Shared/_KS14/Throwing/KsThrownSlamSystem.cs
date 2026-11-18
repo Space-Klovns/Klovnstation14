@@ -65,6 +65,9 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         var source = thrown.Comp.Source ?? thrown.Owner;
         var sourceless = thrown.Comp.Source == null;
 
+        // The slam is announced by the server alone. A thrower's client rarely has the hit on the server's tick, least
+        // of all against something moving, and a predicted popup that isn't matched by tick shows twice.
+
         // Read before the slam, which can stop them or put them on a table.
         var momentum = _physicsQuery.TryComp(thrown, out var thrownPhysicsComponent)
             ? thrownPhysicsComponent.LinearVelocity * thrownPhysicsComponent.Mass
@@ -73,7 +76,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         if (_obstacleQuery.TryComp(args.Target, out var obstacleComponent))
         {
             _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacleComponent),
-                popups: ForAudience(slam.ObstaclePopups, sourceless));
+                popups: ForAudience(slam.ObstaclePopups, sourceless), predictedAnnouncement: false);
 
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
             if (obstacleComponent.CollateralKnockdownTime != null)
@@ -88,7 +91,8 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         else if (_physicsQuery.CompOrNull(args.Target)?.BodyType == BodyType.Static)
         {
             _complexShoveSystem.KnockIntoWall(source, thrown, slam.WallKnockdownTime, slam.WallSound,
-                ForAudience(slam.WallPopups, sourceless), ForAudience(slam.WallResistedPopups, sourceless));
+                ForAudience(slam.WallPopups, sourceless), ForAudience(slam.WallResistedPopups, sourceless),
+                downedPopups: ForAudience(slam.WallDownedPopups, sourceless), predictedAnnouncement: false);
         }
         else
         {

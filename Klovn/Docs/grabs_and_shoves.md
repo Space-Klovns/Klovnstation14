@@ -389,7 +389,8 @@ both bodies, because a shorter joint doesn't wake a sleeping body. `RequiredDist
 `BeforeThrowEvent` (raised by `PredictedHandsSystem.ThrowHeldItem` before it drops the thrown item) on the grabber:
 if the thrown item is the grab's virtual item and the stage `AllowsThrow`, the victim must be **down**. If they're
 standing, the throw is cancelled with `ks-grab-throw-need-down` (pin them first). Otherwise it swaps `ItemUid` to the
-victim, scales `ThrowSpeed`, and calls `MarkThrown` (adds `KsThrownSlamComponent`, below). The drop that follows deletes the virtual item synchronously, which ends
+victim, scales `ThrowSpeed`, and calls `ThrowBody` (the thrower takes `KsGrabber.ThrowStaminaCost` stamina damage, and
+the victim gets `KsThrownSlamComponent`, below). The drop that follows deletes the virtual item synchronously, which ends
 the pull, so the victim flies free.
 
 #### Slamming into things (`KsThrownSlamSystem`)
@@ -398,7 +399,8 @@ Nothing about the slam belongs to grabs. `Content.Shared/_KS14/Throwing` holds i
 flying:
 - `KsThrownSlamPrototype` (`ksThrownSlam`) is what a slam does: `ImpactDamage` to the thrown and `CollateralDamage`
   to a person hit (an obstacle with `CollateralKnockdownTime`, so not a table), dealt by the server only;
-  `WallKnockdownTime`, `WallSound`, `WallPopups` and `WallResistedPopups` for a wall; `ObstaclePopups`, shown instead
+  `WallKnockdownTime`, `WallSound`, `WallPopups`, `WallDownedPopups` (for someone lying down already, who can't be
+  said to "go down") and `WallResistedPopups` for a wall; `ObstaclePopups`, shown instead
   of the obstacle's own; `StopsMomentum`; and `MomentumTransfer`. `KsThrownSlam` is the one a grab uses, and a fair
   default.
 - `KsThrownSlamSystem.MarkThrown(thrown, slam, source)` adds `KsThrownSlamComponent` to someone just thrown. `source`
@@ -407,7 +409,7 @@ flying:
 
 To make something else slam people, throw them with `ThrowingSystem.TryThrow` and call `MarkThrown`; where the throw
 is predicted, call it on the client too. A grabber's `KsGrabber.ThrowSlam` names its prototype, and
-`KsGrabSystem.MarkThrown` passes it on, so a thrower without a `KsGrabber` leaves the victim to land as any thrown
+`KsGrabSystem.ThrowBody` passes it on, so a thrower without a `KsGrabber` leaves the victim to land as any thrown
 thing does.
 
 The first `ThrowDoHitEvent` on someone marked calls `ComplexShoveSystem.KnockIntoObstacle` for an obstacle (a
@@ -436,6 +438,21 @@ confirmed the grip takes it out of the hand again, which raises `VirtualItemDele
 `PullingSystem.OnVirtualItemDeleted` stopped the pull for it. The grip then came and went on the client every other
 tick, and a shove in an off tick was predicted as a plain shove while the server pinned. `PullingSystem` (a `KS14`
 edit) and `KsFiremanCarrySystem` now ignore that event while `IGameTiming.ApplyingState`.
+
+**A slam is announced by the server alone.** A predicted popup is only matched with the server's copy of it when
+both were made on the same tick (`PopupSystem._predictionInstances`). That holds for anything done on an input, but
+not for a collision in flight: the thrower's client rarely has the hit on the server's tick, least of all against
+something moving, and each mismatch showed the popup twice. So `KsThrownSlamSystem` passes
+`predictedAnnouncement: false` to `KnockIntoObstacle` and `KnockIntoWall`: no client shows the popups or plays the
+sound itself, and the server sends them to everyone, the thrower included. The knockdown and the stop are still
+predicted.
+
+**A predicted jitter is one animation.** A shove's stagger jitters (`JitteringComponent`), and the shover's client
+predicts it. Until the server confirms it, every state takes the component off and the next prediction puts it back.
+Stock `JitteringSystem` snapped the sprite back and started a new animation in a new direction each time, a violent
+shake for a round trip. `JitteringSystem.Klovn.Prediction.cs` leaves the stop for the next frame and drops it if the
+component is back by then, restoring what the lost component knew (`PredictedStaggerJitterIsNotRestarted` in
+`KsShovePredictionTest`).
 
 **Only the first hit counts, and which is first is decided.** Two things are often hit in the same tick: a window
 and the grille under it share a hitbox. Two rules keep that from being chance:
@@ -518,7 +535,7 @@ After `CarryTime` the system:
 The carried can't move or stand, and the carrier is slowed.
 
 **Throwing**: `BeforeThrowEvent` on `KsCarryingComponent` swaps a carry hand's virtual item for the carried and calls
-`KsGrabSystem.MarkThrown`. The drop that follows deletes the hand item, which ends the carry (unparent, collision back
+`KsGrabSystem.ThrowBody`. The drop that follows deletes the hand item, which ends the carry (unparent, collision back
 on) before the throw.
 
 Ending is all in one place, `OnCarriedShutdown`: `StopCarrying` only removes `KsBeingCarriedComponent`. Anything that

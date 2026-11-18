@@ -646,7 +646,13 @@ public sealed class KsGrabTest : GameTest
             damageBefore = SEntMan.System<DamageableSystem>().GetAllDamage(victimUid).GetTotal();
             SelectGrabHand(grabberUid);
             var target = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(6f, 0f));
+            var staminaBefore = SEntMan.GetComponent<StaminaComponent>(grabberUid).StaminaDamage;
             Assert.That(SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target));
+
+            var throwCost = SEntMan.GetComponent<KsGrabberComponent>(grabberUid).ThrowStaminaCost;
+            Assert.That(throwCost, Is.GreaterThan(0f), "This test needs a throw to cost stamina.");
+            Assert.That(SEntMan.GetComponent<StaminaComponent>(grabberUid).StaminaDamage,
+                Is.EqualTo(staminaBefore + throwCost).Within(0.01f), "Throwing someone must cost the thrower stamina.");
         });
 
         await RunSeconds(1.5);
