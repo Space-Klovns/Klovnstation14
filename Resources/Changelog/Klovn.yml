@@ -3076,3 +3076,23 @@ Entries:
       message: Emagged cargo consoles can order some INTERESTING stuff.
   id: 276
   time: '2026-11-18T00:33:03.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: >-
+        Grab levels. In combat mode, ctrl-click someone you're pulling to grip
+        them aggressively, by the neck, then strangle them. Shove someone you
+        hold to pin them, and throw them once they're down: they slam into walls
+        and people.
+    - type: Add
+      message: Fireman carry. Alt-click someone lying down to lift them onto your back.
+    - type: Tweak
+      message: Pulling no longer takes a hand.
+    - type: Tweak
+      message: Someone buckled to a seat or a bed can't be shoved.
+    - type: Remove
+      message: >-
+        Right-clicking yourself in combat mode no longer stands you up
+        instantly.
+  id: 277
+  time: '2026-11-18T19:53:47.0000000+00:00'
