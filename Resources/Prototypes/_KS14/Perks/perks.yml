@@ -104,3 +104,8 @@
     sprite: _KS14/Interface/Perks/perks.rsi
     state: support
   alert: KsPerkSupport
+  components:
+  # About one kill in five leaves a resupply for whoever needs it most.
+  - type: KsAmmoDropAbility
+    chance: 0.2
+    pickup: KsAmmoPickup
