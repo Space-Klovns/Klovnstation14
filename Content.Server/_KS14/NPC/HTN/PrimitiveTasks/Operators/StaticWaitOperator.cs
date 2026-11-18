@@ -26,7 +26,8 @@ public sealed partial class StaticWaitOperator : HTNOperator
         timer += frameTime;
         blackboard.SetValue(TimerKey, timer);
 
-        return timer > blackboard.GetValue<float>(DelayKey) ? HTNOperatorStatus.Finished : HTNOperatorStatus.Continuing;
+        // A missing delay is no wait, not a throw: one throw here stops the HTN update of every NPC after this one.
+        return timer > blackboard.GetValueOrDefault<float>(DelayKey, _entityManager) ? HTNOperatorStatus.Finished : HTNOperatorStatus.Continuing;
     }
 
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
