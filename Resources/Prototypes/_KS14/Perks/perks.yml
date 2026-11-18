@@ -109,3 +109,10 @@
   - type: KsAmmoDropAbility
     chance: 0.2
     pickup: KsAmmoPickup
+  # Up by one shoulder, in the owner's frame, so it turns with them.
+  - type: KsCompanions
+    companions:
+    - prototype: KsMobCompanionShoulderTurret
+      mode: Attached
+      offset: -0.3, 0.25
+      respawnDelay: 45

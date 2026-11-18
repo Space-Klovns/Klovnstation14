@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.Companions;
 using Content.Server._KS14.Perks.Support;
 using Content.Shared._KS14.Perks;
 using Content.Shared._KS14.Perks.Support;
@@ -31,6 +32,7 @@ namespace Content.IntegrationTests.Tests._KS14.Perks;
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsAmmoDropSystem))]
+[TestOf(typeof(KsCompanionSystem))]
 public sealed class KsPerkSupportTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
@@ -41,6 +43,7 @@ public sealed class KsPerkSupportTest : GameTest
     private readonly EntProtoId _rifle = "KsTestPerkSupportRifle";
     private readonly EntProtoId _laserGun = "KsTestPerkSupportLaserGun";
     private readonly ProtoId<KsPerkPrototype> _ammoDropPerk = "KsTestPerkSupportAmmoDrop";
+    private readonly ProtoId<KsPerkPrototype> _turretPerk = "KsTestPerkSupportShoulderTurret";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
 
@@ -113,6 +116,71 @@ public sealed class KsPerkSupportTest : GameTest
   parent: BaseBullet
   id: KsTestPerkSupportBullet
   categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Blunt: 5
+
+- type: entity
+  id: KsTestPerkSupportTurret
+  components:
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.15
+        density: 10
+        layer:
+        - BulletImpassable
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      10000: Dead
+  - type: CombatMode
+    toggleMouseRotator: false
+  - type: NoRotateOnInteract
+  - type: NoRotateOnMove
+  - type: Gun
+    fireRate: 4
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BasicEntityAmmoProvider
+    proto: KsTestPerkSupportBullet
+    capacity: 3
+  - type: RechargeBasicEntityAmmo
+    rechargeCooldown: 0.5
+  - type: HTN
+    rootTask:
+      task: KsShoulderTurretCompound
+    blackboard:
+      RotateSpeed: !type:Single
+        6.28
+      RangedRange: !type:Single
+        9
+
+- type: ksPerk
+  id: KsTestPerkSupportShoulderTurret
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+  icon: { sprite: _KS14/Interface/Perks/perks.rsi, state: support }
+  components:
+  - type: KsCompanions
+    companions:
+    - prototype: KsTestPerkSupportTurret
+      mode: Attached
+      offset: 0.7, 0.7
+      respawnDelay: 60
+      materialiseDuration: 0.1
 
 - type: entity
   id: KsTestPerkSupportCartridge
@@ -142,6 +210,8 @@ public sealed class KsPerkSupportTest : GameTest
   components:
   - type: Gun
     fireRate: 100
+    minAngle: 0
+    maxAngle: 0
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
@@ -305,6 +375,76 @@ public sealed class KsPerkSupportTest : GameTest
             Assert.That(server.System<SharedBatterySystem>().GetCharge((gunUid, battery)), Is.EqualTo(battery.MaxCharge),
                 "a friend's battery gun should be recharged");
             Assert.That(Pickups(), Is.Empty, "the second pickup should be used up");
+        });
+    }
+
+    /// <summary>
+    ///     A turret riding on its owner's shoulder (an attached companion) still turns, fires and hits a foe, and is
+    ///         hit by a foe's bullets itself.
+    /// </summary>
+    [Test]
+    public async Task ShoulderTurretAimsFiresAndIsHit()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var damageableSystem = server.System<DamageableSystem>();
+        EntityUid ownerUid = default;
+        EntityUid turretUid = default;
+        EntityUid foeUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            ownerUid = SpawnBody(_body, testMap, 0.5f);
+            Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(ownerUid, _turretPerk), "the test perk should be given");
+            Assert.That(server.System<KsCompanionSystem>().TryGetCompanion(ownerUid, 0, out var companionUid), "the turret should be out");
+            turretUid = companionUid!.Value;
+            Assert.That(entMan.GetComponent<TransformComponent>(turretUid).ParentUid, Is.EqualTo(ownerUid), "the turret should ride on its owner");
+
+            foeUid = SpawnBody(_foe, testMap, 5.5f);
+        });
+
+        // It turns to the foe and shoots it.
+        var hit = false;
+        for (var i = 0; i < 20 && !hit; i++)
+        {
+            await Pair.RunTicksSync(Ticks(0.5f));
+            await server.WaitPost(() => hit = damageableSystem.GetTotalDamage(foeUid) > FixedPoint2.Zero);
+        }
+
+        Assert.That(hit, "the shoulder turret should shoot the foe");
+
+        // A foe straight above it shoots down at it, clear of the owner.
+        EntityUid shooterUid = default;
+        await server.WaitPost(() =>
+        {
+            entMan.DeleteEntity(foeUid);
+            var turretPosition = server.System<SharedTransformSystem>().GetWorldPosition(turretUid);
+            shooterUid = SpawnBody(_foe, testMap, 0f, _rifle);
+            server.System<SharedTransformSystem>().SetWorldPosition(shooterUid, turretPosition + new System.Numerics.Vector2(0f, 4f));
+        });
+        await Pair.RunTicksSync(1);
+
+        await server.WaitPost(() =>
+        {
+            var gunUid = server.System<SharedHandsSystem>().GetActiveItem(shooterUid)!.Value;
+            var turretCoordinates = server.System<SharedTransformSystem>().GetMapCoordinates(turretUid);
+            var target = server.System<SharedTransformSystem>().ToCoordinates(turretCoordinates);
+            Assert.That(server.System<SharedGunSystem>().AttemptShoot(shooterUid, (gunUid, entMan.GetComponent<GunComponent>(gunUid)), target),
+                "the foe should fire");
+        });
+
+        var turretHit = false;
+        for (var i = 0; i < 20 && !turretHit; i++)
+        {
+            await Pair.RunTicksSync(2);
+            await server.WaitPost(() => turretHit = damageableSystem.GetTotalDamage(turretUid) > FixedPoint2.Zero);
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(turretHit, "a foe's bullet should hit the turret");
+            Assert.That(damageableSystem.GetTotalDamage(ownerUid), Is.EqualTo(FixedPoint2.Zero), "the bullet should have hit the turret, not its owner");
         });
     }
 }
