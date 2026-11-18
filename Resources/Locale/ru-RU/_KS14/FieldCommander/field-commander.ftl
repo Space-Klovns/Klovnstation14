@@ -134,3 +134,8 @@ ks-fieldcommander-intel-doctrine-swarm = Полевое управление. М
 ks-fieldcommander-intel-doctrine-spearhead = Полевое управление. Эту волну ведут их лучшие. Держитесь и сосредоточьте огонь.
 ks-fieldcommander-intel-doctrine-airborne = Полевое управление. Вижу десантные капсулы. Следите за небом над вашими позициями.
 ks-fieldcommander-intel-doctrine-hoard = Полевое управление. Волна слабая. Они что-то копят — используйте время.
+
+ks-fieldcommander-wave-status-paused = { $wave ->
+    [0] Волны приостановлены
+   *[other] Волна { $wave } · пауза
+}

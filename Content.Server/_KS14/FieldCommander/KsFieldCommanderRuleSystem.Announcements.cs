@@ -28,7 +28,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         if (intel is { } intelId)
         {
             var sound = !(major && taunt != null);
-            component.PendingIntel.Add(new KsFieldCommanderPendingIntel(_gameTiming.CurTime + component.IntelDelay, Loc.GetString(intelId, intelArguments), sound));
+            component.PendingIntel.Add(new KsFieldCommanderPendingIntel(GetCommanderTime(component) + component.IntelDelay, Loc.GetString(intelId, intelArguments), sound));
         }
     }
 

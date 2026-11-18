@@ -83,6 +83,10 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!component.Prepared && !TryPrepare(component))
             return;
 
+        // The commander's clock is stopped: nothing it schedules comes due, though its units fight on.
+        if (component.PausedAt != null)
+            return;
+
         var curTime = _gameTiming.CurTime;
         var elapsed = GetElapsed(component, gameRule, curTime);
 
@@ -148,11 +152,11 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     }
 
     /// <summary>
-    ///     How far along the timeline the rule is, counting any phase set by hand.
+    ///     How far along the timeline the rule is, counting any phase set by hand, and standing still while paused.
     /// </summary>
     private static TimeSpan GetElapsed(KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, TimeSpan curTime)
     {
-        return curTime - gameRule.ActivatedAt + component.TimeOffset;
+        return (component.PausedAt ?? curTime) - gameRule.ActivatedAt + component.TimeOffset;
     }
 
     /// <summary>
@@ -165,7 +169,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (phaseIndex < 0 || phaseIndex >= component.Phases.Count)
             return;
 
-        var curTime = _gameTiming.CurTime;
+        var curTime = GetCommanderTime(component);
         component.TimeOffset += component.Phases[phaseIndex].Start - GetElapsed(component, rule.Comp2, curTime);
         EnterPhase((rule.Owner, component), phaseIndex, curTime);
     }
@@ -178,7 +182,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, _gameTiming.CurTime));
+        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, GetCommanderTime(rule.Comp)));
         SendWave(rule, phase);
     }
 
@@ -188,7 +192,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     public void ForceUplink(Entity<KsFieldCommanderRuleComponent> rule)
     {
         var phase = TryGetPhase(rule.Comp, out var currentPhase) ? currentPhase : new KsFieldCommanderPhase();
-        DeployUplink(rule, phase, _gameTiming.CurTime);
+        DeployUplink(rule, phase, GetCommanderTime(rule.Comp));
     }
 
     private static bool TryGetPhase(KsFieldCommanderRuleComponent component, out KsFieldCommanderPhase phase)

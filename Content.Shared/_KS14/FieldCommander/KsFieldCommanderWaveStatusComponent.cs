@@ -19,4 +19,10 @@ public sealed partial class KsFieldCommanderWaveStatusComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField, AutoPausedField]
     public TimeSpan? NextWaveTime;
+
+    /// <summary>
+    ///     Whether the commander is paused, so that no wave comes however long the timer says.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Paused;
 }

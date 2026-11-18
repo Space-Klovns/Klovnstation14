@@ -231,6 +231,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var statusComponent = EnsureComp<KsFieldCommanderWaveStatusComponent>(mapUid);
         statusComponent.Wave = component.WavesSent;
         statusComponent.NextWaveTime = component.NextWaveTime == TimeSpan.MaxValue ? null : component.NextWaveTime;
+        statusComponent.Paused = component.PausedAt != null;
         Dirty(mapUid, statusComponent);
     }
 

@@ -136,3 +136,8 @@ ks-fieldcommander-intel-doctrine-swarm = Field Operations. That's a lot of light
 ks-fieldcommander-intel-doctrine-spearhead = Field Operations. Their best are leading this one. Hold fast and focus fire.
 ks-fieldcommander-intel-doctrine-airborne = Field Operations. Drop pods on scope. Watch the sky inside your lines.
 ks-fieldcommander-intel-doctrine-hoard = Field Operations. That wave is light. They're holding something back; use the time.
+
+ks-fieldcommander-wave-status-paused = { $wave ->
+    [0] Waves paused
+   *[other] Wave { $wave } · paused
+}

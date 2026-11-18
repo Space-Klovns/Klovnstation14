@@ -46,7 +46,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     public string GetStatus(Entity<KsFieldCommanderRuleComponent, GameRuleComponent> rule)
     {
         var component = rule.Comp1;
-        var curTime = _gameTiming.CurTime;
+        var curTime = GetCommanderTime(component);
         var elapsed = GetElapsed(component, rule.Comp2, curTime);
 
         var battlefield = SurveyBattlefield(component);
@@ -82,6 +82,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             ("dead", battlefield.DeadDefenders),
             ("waves", component.WavesSent),
             ("uplink", uplink)));
+
+        if (IsPaused(component))
+            builder.AppendLine(Loc.GetString("cmd-ks_fcstatus-paused"));
 
         builder.AppendLine(Loc.GetString("cmd-ks_fcstatus-stuck",
             ("stuck", CountStuckUnits(rule.Owner)),
