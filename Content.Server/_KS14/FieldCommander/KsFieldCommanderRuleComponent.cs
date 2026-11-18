@@ -784,6 +784,13 @@ public sealed partial class KsFieldCommanderAsset
     public bool GiveOrders = true;
 
     /// <summary>
+    ///     How many tiles from its target the commander's orders keep this unit (<see cref="KsFieldCommanderRuleSystem.GetStandOffCoordinates"/>):
+    ///         a sniper's distance. Zero sends it at the target itself.
+    /// </summary>
+    [DataField]
+    public float StandOff;
+
+    /// <summary>
     ///     The commander's taunt, sent once with each wave this is part of.
     /// </summary>
     [DataField]

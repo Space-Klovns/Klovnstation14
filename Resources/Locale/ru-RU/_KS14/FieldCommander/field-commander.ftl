@@ -59,6 +59,8 @@ ks-fieldcommander-intel-driller = Полевое управление. Приб�
 ks-fieldcommander-asset-drone = Слышите жужжание? Это за вами.
 ks-fieldcommander-intel-drone = Полевое управление. Приближаются дроны-камикадзе. Перед взрывом они пищат и вспыхивают красным: отходите или сбивайте их.
 ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } пищит всё чаще и чаще!
+ks-fieldcommander-asset-sniper = Не высовывайтесь. Или высовывайтесь, и я сниму вам головы.
+ks-fieldcommander-intel-sniper = Полевое управление. Противник выставил снайпера. Следите за красным лазером: как только он перестанет мигать, последует выстрел. Снайпер бьёт издалека и отходит, если на него бросаются.
 
 ## Objectives and the uplink
 

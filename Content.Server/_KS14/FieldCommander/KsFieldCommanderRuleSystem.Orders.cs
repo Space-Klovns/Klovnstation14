@@ -64,7 +64,31 @@ public sealed partial class KsFieldCommanderRuleSystem
              FindNearestOutsideSafeZones(component, unitCoordinates, battlefield.Objectives)) is not { } target)
             return;
 
-        OrderUnitTo(unit, target);
+        var standOff = unit.Comp.AssetIndex < component.Assets.Count ? component.Assets[unit.Comp.AssetIndex].StandOff : 0f;
+        OrderUnitTo(unit, GetStandOffCoordinates(unitCoordinates, target, standOff));
+    }
+
+    /// <summary>
+    ///     Where a unit at <paramref name="from"/> that keeps <paramref name="standOff"/> tiles from
+    ///         <paramref name="target"/> is sent: that far from the target on the line back to the unit, so it closes in
+    ///         from farther and backs off from nearer. Failing free floor there, the nearest free floor on the way in.
+    /// </summary>
+    public MapCoordinates GetStandOffCoordinates(MapCoordinates from, MapCoordinates target, float standOff)
+    {
+        var offset = from.Position - target.Position;
+        var length = offset.Length();
+        if (!(standOff > 0f) || length < 0.01f || from.MapId != target.MapId)
+            return target;
+
+        var direction = offset / length;
+        for (var distance = standOff; distance > 0f; distance -= 1f)
+        {
+            var candidate = new MapCoordinates(target.Position + direction * distance, target.MapId);
+            if (TryGetFreeTile(candidate, out _, out var tileMapCoordinates))
+                return tileMapCoordinates;
+        }
+
+        return target;
     }
 
     private void OrderUnitTo(Entity<KsFieldCommanderUnitComponent> unit, MapCoordinates target)

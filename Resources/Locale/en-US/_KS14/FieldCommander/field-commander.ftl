@@ -58,6 +58,8 @@ ks-fieldcommander-intel-driller = Field Operations. A breaching borg is inbound.
 ks-fieldcommander-asset-drone = Listen. Hear that buzzing? It's looking for you.
 ks-fieldcommander-intel-drone = Field Operations. Suicide drones inbound. They beep and flash red before they blow: get clear or shoot them down.
 ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } beeps faster and faster!
+ks-fieldcommander-asset-sniper = Keep your heads down. Or don't, and I'll take them off.
+ks-fieldcommander-intel-sniper = Field Operations. Enemy sniper deployed. Watch for a red laser: once it stops blinking, it fires. It shoots from far off and backs away if you rush it.
 
 ## Objectives and the uplink
 
