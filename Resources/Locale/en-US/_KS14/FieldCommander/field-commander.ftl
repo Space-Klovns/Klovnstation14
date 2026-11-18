@@ -60,6 +60,8 @@ ks-fieldcommander-intel-drone = Field Operations. Suicide drones inbound. They b
 ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } beeps faster and faster!
 ks-fieldcommander-asset-sniper = Keep your heads down. Or don't, and I'll take them off.
 ks-fieldcommander-intel-sniper = Field Operations. Enemy sniper deployed. Watch for a red laser: once it stops blinking, it fires. It shoots from far off and backs away if you rush it.
+ks-fieldcommander-asset-juggernaut = Hear those footsteps? Run. It won't help.
+ks-fieldcommander-intel-juggernaut = Field Operations. A juggernaut is inbound: a machine gun, the bulk to soak up magazine after magazine, and it can't be stunned or tripped. It's slow, so keep your distance and pour it on.
 
 ## Objectives and the uplink
 

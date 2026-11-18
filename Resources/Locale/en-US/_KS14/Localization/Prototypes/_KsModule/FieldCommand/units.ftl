@@ -15,3 +15,6 @@ ent-KsCartridgeAntiMaterielFieldCommander = cartridge (.60 anti-materiel)
 ent-KsWeaponSniperHristovFieldCommander = Hristov
     .desc = For when you absolutely, positively need to make someone regret their life choices from a safe distance. Uses .60 anti-materiel ammo.
     .suffix = KS14, NPC, Field Commander
+ent-KsWeaponLightMachineGunL6FieldCommander = L6 SAW
+    .desc = Developed by Waffle Corp, the L6 Squad Automatic Weapon is a deadly light machine gun often used by the Gorlex Marauders. Although bulky and cumbersome, its heavy barrel and high ammo capacity make it perfect for suppressing combatants with a hail of bullets. Feeds from .30 ammo belts.
+    .suffix = KS14, NPC, Field Commander
