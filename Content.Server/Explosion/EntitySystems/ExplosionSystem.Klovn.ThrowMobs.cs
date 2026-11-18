@@ -7,6 +7,7 @@ using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Stunnable;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 
 namespace Content.Server.Explosion.EntitySystems;
 
@@ -16,6 +17,7 @@ public sealed partial class ExplosionSystem
     [Dependency] private KsThrownSlamSystem _ksThrownSlamSystem = default!;
     [Dependency] private PullingSystem _ksPullingSystem = default!;
     [Dependency] private SharedBuckleSystem _ksBuckleSystem = default!;
+    [Dependency] private SharedPhysicsSystem _ksPhysicsSystem = default!;
     [Dependency] private SharedStunSystem _ksStunSystem = default!;
 
     [Dependency] private EntityQuery<KsExplosionThrownComponent> _explosionThrownQuery = default!;
@@ -55,6 +57,12 @@ public sealed partial class ExplosionSystem
         _throwingSystem.TryThrow(mob, direction * distance, physicsComponent, transformComponent, baseThrowSpeed: speed,
             predicted: false);
         _ksThrownSlamSystem.MarkThrown(mob, thrownComponent.Slam);
+
+        // A throw adds to the speed they already had, from running or from another blast a moment ago. The cap is on
+        // how fast they end up, not on what each blast adds.
+        var velocity = physicsComponent.LinearVelocity;
+        if (velocity.LengthSquared() > thrownComponent.MaxSpeed * thrownComponent.MaxSpeed)
+            _ksPhysicsSystem.SetLinearVelocity(mob, velocity.Normalized() * thrownComponent.MaxSpeed, body: physicsComponent);
 
         _adminLogger.Add(LogType.ExplosionHit, LogImpact.Medium,
             $"Explosion at {epicenter:epicenter} threw {ToPrettyString(mob):subject} {distance:distance} tiles at {speed:speed} m/s (throw force {throwForce:force})");

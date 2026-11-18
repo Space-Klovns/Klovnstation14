@@ -62,6 +62,8 @@ public sealed partial class KsEntityStorageCatchSystem : EntitySystem
             (!_entityStorageSystem.CanInsert(caught, storage, entityStorage) ||
              !_entityStorageSystem.Insert(caught, storage, entityStorage)))
         {
+            // It couldn't take them after all: it stands open again, as it was, rather than shut on nobody.
+            _entityStorageSystem.OpenStorage(storage, entityStorage, user);
             return false;
         }
 

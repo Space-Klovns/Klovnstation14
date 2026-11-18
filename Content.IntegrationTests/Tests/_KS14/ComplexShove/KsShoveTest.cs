@@ -352,7 +352,7 @@ public sealed class KsShoveTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            stunSeconds = SEntMan.GetComponent<GlassTableComponent>(tableUid!.Value).StunTime;
+            stunSeconds = SEntMan.GetComponent<GlassTableComponent>(tableUid!.Value).KsPlacedStunTime;
             knockdownSeconds = SEntMan.GetComponent<KsShoveObstacleComponent>(tableUid.Value).KnockdownTime.TotalSeconds;
             Assert.That(knockdownSeconds, Is.GreaterThan(stunSeconds + 1), "This test needs the knockdown to outlast the stun.");
 

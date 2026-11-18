@@ -1,4 +1,6 @@
 #nullable enable
+using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Explosion;
@@ -11,6 +13,8 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 
@@ -28,6 +32,7 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
     public override PoolSettings PoolSettings => new() { Dirty = true };
 
     private readonly EntProtoId _mob = "KsTestBlastThrownMob";
+    private readonly EntProtoId _cappedMob = "KsTestBlastThrownCappedMob";
     private readonly ProtoId<ExplosionPrototype> _explosion = "KsTestMobThrowExplosion";
 
     // The explosion is harmless, so that the mob is still whole to be measured. The mob's caps are out of reach of
@@ -55,6 +60,19 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
     distancePerForce: 0.15
     maxDistance: 100
     knockdownTime: 2
+
+# One whose speed cap any blast here reaches.
+- type: entity
+  parent: MobHuman
+  id: KsTestBlastThrownCappedMob
+  components:
+  - type: KsExplosionThrown
+    minThrowForce: 15
+    speedPerForce: 0.4
+    maxSpeed: 5
+    distancePerForce: 0.15
+    maxDistance: 100
+    knockdownTime: 2
 ";
 
     /// <summary>
@@ -67,7 +85,12 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
     /// </summary>
     /// <param name="forceOverThreshold">The blast's throw force on the mob's tile, as a multiple of the weakest
     ///     that lifts the mob.</param>
-    private async Task<(float Distance, bool Marked)> Blast(float forceOverThreshold)
+    /// <param name="mob">The mob to blast, <see cref="_mob"/> if not given.</param>
+    /// <param name="incomingSpeed">The speed the mob already has, away from the blast, when it is hit. It is held
+    ///     in place at that speed until then, so <c>Distance</c> means nothing with it.</param>
+    /// <returns><c>TopSpeed</c> is the fastest the mob went once thrown.</returns>
+    private async Task<(float Distance, bool Marked, float TopSpeed)> Blast(float forceOverThreshold, EntProtoId? mob = null,
+        float incomingSpeed = 0f)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid mobUid = default;
@@ -85,7 +108,7 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
 
             var gravityComponent = SEntMan.EnsureComponent<GravityComponent>(testMap.Grid.Owner);
             SEntMan.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
-            mobUid = SEntMan.SpawnEntity(_mob, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            mobUid = SEntMan.SpawnEntity(mob ?? _mob, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
         });
 
         await Pair.RunTicksSync(5);
@@ -104,15 +127,52 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
         });
 
         var marked = false;
+        var topSpeed = 0f;
         for (var tick = 0; tick < 150; tick++)
         {
+            if (!marked && incomingSpeed > 0f)
+            {
+                await Server.WaitPost(() =>
+                {
+                    SEntMan.System<SharedTransformSystem>().SetCoordinates(mobUid, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+                    SEntMan.System<SharedPhysicsSystem>().SetLinearVelocity(mobUid, new Vector2(incomingSpeed, 0f));
+                });
+            }
+
             await Pair.RunTicksSync(1);
-            await Server.WaitPost(() => marked |= SEntMan.HasComponent<KsThrownSlamComponent>(mobUid));
+            await Server.WaitPost(() =>
+            {
+                marked |= SEntMan.HasComponent<KsThrownSlamComponent>(mobUid);
+                if (marked)
+                    topSpeed = MathF.Max(topSpeed, SEntMan.GetComponent<PhysicsComponent>(mobUid).LinearVelocity.Length());
+            });
         }
 
         var distance = 0f;
         await Server.WaitPost(() => distance = SEntMan.System<SharedTransformSystem>().GetWorldPosition(mobUid).X - 1.5f);
-        return (distance, marked);
+        return (distance, marked, topSpeed);
+    }
+
+    /// <summary>
+    ///     A throw adds to the speed a mob already has, as from another blast a moment before: the cap is on the speed
+    ///         it ends up with.
+    /// </summary>
+    [Test]
+    public async Task BlastOnAMovingMobStaysUnderTheSpeedCap()
+    {
+        var thrown = await Blast(3f, _cappedMob, incomingSpeed: 30f);
+        var maxSpeed = 0f;
+        await Server.WaitPost(() =>
+            maxSpeed = SProtoMan.Index(_cappedMob).Components.Values
+                .Select(entry => entry.Component).OfType<KsExplosionThrownComponent>().Single().MaxSpeed);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(thrown.Marked, "This test needs the blasts to throw the mob.");
+            Assert.That(thrown.TopSpeed, Is.GreaterThan(maxSpeed * 0.5f), "This test needs the mob to reach a speed near its cap.");
+            Assert.That(thrown.TopSpeed, Is.LessThanOrEqualTo(maxSpeed * 1.05f),
+                "A blast must not throw a mob that was already moving faster than its speed cap.");
+        });
     }
 
     [Test]

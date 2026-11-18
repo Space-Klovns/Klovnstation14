@@ -35,6 +35,7 @@ public sealed class KsEntityStorageCatchTest : GameTest
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Item = "Wrench";
     private readonly EntProtoId _closet = "KsCatchThrownTestCloset";
+    private readonly EntProtoId _tinyCloset = "KsCatchThrownTestTinyCloset";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -45,7 +46,50 @@ public sealed class KsEntityStorageCatchTest : GameTest
   - type: KsEntityStorageCatch
   - type: KsShoveObstacle
     takesWhoStandsInIt: true
+
+# Too small for anybody.
+- type: entity
+  parent: KsCatchThrownTestCloset
+  id: KsCatchThrownTestTinyCloset
+  components:
+  - type: EntityStorage
+    maxSize: 0.01
 ";
+
+    /// <summary>
+    ///     A closet that turns out not to take someone, which only shows once it is shut, stands open again.
+    /// </summary>
+    [Test]
+    public async Task ClosetThatCantTakeThemStaysOpen()
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid closetUid = default;
+        EntityUid humanUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            // A tile away: out of what the closet takes in by shutting, so that it is asked whether they fit.
+            closetUid = SEntMan.SpawnEntity(_tinyCloset, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            humanUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            SEntMan.System<SharedEntityStorageSystem>().OpenStorage(closetUid);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var storage = SEntMan.GetComponent<EntityStorageComponent>(closetUid);
+            Assert.That(storage.Open, "This test needs the closet open.");
+
+            var caught = SEntMan.System<KsEntityStorageCatchSystem>()
+                .TryCatch((closetUid, SEntMan.GetComponent<KsEntityStorageCatchComponent>(closetUid)), humanUid, user: null);
+
+            Assert.That(caught, Is.False, "This test needs a closet too small to take them.");
+            Assert.That(storage.Contents.Contains(humanUid), Is.False);
+            Assert.That(storage.Open, "A closet that couldn't take them must stand open again.");
+        });
+    }
+
 
     /// <param name="throwMob">Whether a person is thrown, or an item.</param>
     /// <param name="open">Whether the closet stands open when they reach it.</param>

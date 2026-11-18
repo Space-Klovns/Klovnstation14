@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using Content.Shared._KS14.ComplexShove;
 using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.PopupLocalization;
-using Content.Shared._KS14.Random.Helpers;
 using Content.Shared._KS14.Resist;
 using Content.Shared._KS14.Throwing;
 using Content.Shared.ActionBlocker;
@@ -504,6 +503,7 @@ public sealed partial class KsGrabSystem : EntitySystem
     /// <summary>
     ///     The victim tries to break the grip. A grip that doesn't hold them in place always lets go.
     /// </summary>
+    /// <returns>Whether they got free. Never on a client, for a grip that holds: only the server rolls.</returns>
     public bool TryResist(Entity<KsGrabbableComponent> victim)
     {
         if (!TryGetGrabber(victim, out var grabber, out var stage) || !TryComp<PullableComponent>(victim, out var pullable))
@@ -526,13 +526,13 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (attempt.Cancelled)
             return false;
 
-        // Seeded the same on the client and the server, so the predicted result is the real one.
-        var random = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
-            KsSharedRandomExtensions.GetNetId(victim.Owner, EntityManager),
-            KsSharedRandomExtensions.GetNetId(grabber.Value.Owner, EntityManager),
-            (int)_gameTiming.CurTick.Value);
+        // The roll is the server's alone. A roll a client could predict is one a modified client could look ahead
+        // at, to struggle only on a tick that wins. The client predicts the attempt and its cooldown, and hears how
+        // it went from the server.
+        if (_netManager.IsClient)
+            return false;
 
-        if (random.Prob(Math.Clamp(attempt.Chance, 0f, 1f)))
+        if (_robustRandom.Prob(Math.Clamp(attempt.Chance, 0f, 1f)))
         {
             PopupGrab(grabber.Value, victim, user: victim, ResistSuccessPopups, PopupType.MediumCaution);
             _adminLogger.Add(LogType.Action, LogImpact.Low,
@@ -543,7 +543,7 @@ public sealed partial class KsGrabSystem : EntitySystem
             return true;
         }
 
-        var staminaDamage = random.NextFloat(stage.ResistFailStaminaDamageMin,
+        var staminaDamage = _robustRandom.NextFloat(stage.ResistFailStaminaDamageMin,
             Math.Max(stage.ResistFailStaminaDamageMin, stage.ResistFailStaminaDamageMax));
         if (staminaDamage > 0f)
             _staminaSystem.TakeStaminaDamage(victim, staminaDamage, source: grabber, visual: false);

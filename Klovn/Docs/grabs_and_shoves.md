@@ -49,7 +49,7 @@ never deals stamina damage. The outcome, checked in this order:
 | A wall or anything else solid, first shove | Pushed and staggered, as with nothing behind them | 3 s | knocked down at once |
 | A wall or anything else solid, while staggered | Knocked down | 3 s | 2 s (`SHOVE_KNOCKDOWN_SOLID`) |
 | Target already down, a table behind them | Put onto the table; a glass one shatters | — | the same |
-| A glass table, on top of the above | Shatters, and stuns for 1 s (upstream: 2 s) | 1 s | — |
+| A glass table, on top of the above | Shatters, and stuns for 1 s (`GlassTable.KsPlacedStunTime`; climbing onto one yourself still stuns for the stock 2 s) | 1 s | — |
 | Nothing behind them | Pushed away and staggered (×0.85 speed) | 3 s | 3 s, capped at 10 s |
 
 "Behind" means past the target, along the line from the shover through the target: within three quarters of a tile
@@ -357,6 +357,9 @@ grip first and the cuffs next, tgstation's order.
 Nobody incapacitated or stunned resists. A stage that doesn't block movement just lets go. Otherwise:
 - `ResistCooldown` applies
 - `KsGrabResistAttemptEvent` lets other systems change the chance
+- The roll is the server's alone (`IRobustRandom`). A roll seeded so that a client could predict it is one a
+  modified client could look ahead at, to struggle only on a tick that wins. The client predicts the attempt and its
+  cooldown; whether it worked comes from the server
 - the roll uses `KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(victim, grabber, tick)`, so the
   predicting client gets the server's result
 - a failure deals `ResistFailStaminaDamageMin..Max` stamina damage
@@ -430,7 +433,8 @@ is data on the component: `MinThrowForce` (below it the mob stays put), `SpeedPe
 `DistancePerForce` and `MaxDistance`, `KnockdownTime` and `Slam`. The force is the explosion's own throw force on the
 mob's tile, ten times the square root of the intensity there, and is zero wherever the explosion throws nothing: a
 large explosion (over `explosion.throw_limit` tiles) throws only at its rim. A buckled mob is left alone, and a pull
-on the mob is broken first. The throw is not predicted: a blast is the server's.
+on the mob is broken first. The throw is not predicted: a blast is the server's. A throw adds to the speed the mob
+already has, so after it the mob's speed is cut back to `MaxSpeed`: blasts in quick succession don't add up past it.
 
 **What a grab and a carry refuse.** A pacifist (`PacifiedComponent`) can hold someone by the neck, but can't
 tighten to a stage that has `Damage`, deals none if pacified while already choking, and can't throw a body out of a
@@ -504,7 +508,8 @@ ways:
 It is shared, and predicted for whoever does it: a shove is predicted, and a client simulates what it throws
 (`PredictedThrownItemComponent`), so it sees the hit, shuts the door and plays its sound at once. Whoever sent them in
 is passed as the closing `user`, so the server leaves them out of its own sound, and is named in the component's
-`Popups` (`user`, `target`, `storage`). With no user, nothing is said.
+`Popups` (`user`, `target`, `storage`). With no user, nothing is said. Whether someone fits can only be asked once
+the closet is shut, so `TryCatch` shuts it first; if it then can't take them, it opens again.
 - An open closet's fixture keeps `BulletImpassable`, which the non-hard throwing fixture's `ThrownItem` mask hits,
   though nobody walking is stopped by it. That is why the event fires at all.
 - It closes the storage first, then inserts. An open `EntityStorage` reports that anything can be inserted and
