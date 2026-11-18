@@ -399,7 +399,8 @@ flying:
 - `KsThrownSlamPrototype` (`ksThrownSlam`) is what a slam does: `ImpactDamage` to the thrown and `CollateralDamage`
   to a person hit (an obstacle with `CollateralKnockdownTime`, so not a table), dealt by the server only;
   `WallKnockdownTime`, `WallSound`, `WallPopups` and `WallResistedPopups` for a wall; `ObstaclePopups`, shown instead
-  of the obstacle's own; and `StopsMomentum`. `KsThrownSlam` is the one a grab uses, and a fair default.
+  of the obstacle's own; `StopsMomentum`; and `MomentumTransfer`. `KsThrownSlam` is the one a grab uses, and a fair
+  default.
 - `KsThrownSlamSystem.MarkThrown(thrown, slam, source)` adds `KsThrownSlamComponent` to someone just thrown. `source`
   is whoever threw them, or null when nobody did (a blast): then the thrown gets the target's popup, everyone else
   the others', and damage has no origin.
@@ -415,6 +416,19 @@ person, a table) or `KnockIntoWall` for any static body. The marker goes on that
 non-hard throwing fixture, which hits people's hard fixtures, so this works for people too. Being non-hard, that
 fixture stops nobody: without `StopsMomentum` someone thrown into a person slams into them and flies on. With it the
 slam zeroes their velocity, unless what they hit took them inside.
+
+What they brought goes to whoever was in the way: a person hit (again an obstacle with `CollateralKnockdownTime`)
+gets an impulse of the thrown's momentum times `MomentumTransfer`, and slides on with it. Tables and walls go
+nowhere, and loose things are hard bodies that the collision itself already pushes, so neither is given anything.
+
+**Explosions** are the second user. Stock explosions throw only dynamic bodies, which a mob isn't, so
+`ExplosionSystem.KsThrowMob` (`ExplosionSystem.Klovn.ThrowMobs.cs`, called from `ProcessEntity`) throws any mob with
+`KsExplosionThrownComponent` (on `BaseSpeciesMob`) away from the epicenter and marks it, with no source. Everything
+is data on the component: `MinThrowForce` (below it the mob stays put), `SpeedPerForce` and `MaxSpeed`,
+`DistancePerForce` and `MaxDistance`, `KnockdownTime` and `Slam`. The force is the explosion's own throw force on the
+mob's tile, ten times the square root of the intensity there, and is zero wherever the explosion throws nothing: a
+large explosion (over `explosion.throw_limit` tiles) throws only at its rim. A buckled mob is left alone, and a pull
+on the mob is broken first. The throw is not predicted: a blast is the server's.
 
 **A state must not let go of a predicted grip.** An aggressive grip puts a virtual item in the grabber's hand, and
 on the grabber's client that item is a predicted entity. Every server state that arrives before the server has

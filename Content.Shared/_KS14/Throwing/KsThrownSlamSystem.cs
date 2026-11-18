@@ -64,6 +64,9 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         var source = thrown.Comp.Source ?? thrown.Owner;
         var sourceless = thrown.Comp.Source == null;
 
+        // Read before the slam, which can stop them or put them on a table.
+        var momentum = TryComp<PhysicsComponent>(thrown, out var physics) ? physics.LinearVelocity * physics.Mass : Vector2.Zero;
+
         if (TryComp<KsShoveObstacleComponent>(args.Target, out var obstacle))
         {
             _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacle),
@@ -71,7 +74,13 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
 
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
             if (obstacle.CollateralKnockdownTime != null)
+            {
                 DealDamage(args.Target, slam.CollateralDamage, thrown.Comp.Source);
+
+                // And is carried on by what hit them.
+                if (slam.MomentumTransfer > 0f)
+                    _physicsSystem.ApplyLinearImpulse(args.Target, momentum * slam.MomentumTransfer);
+            }
         }
         else if (CompOrNull<PhysicsComponent>(args.Target)?.BodyType == BodyType.Static)
         {

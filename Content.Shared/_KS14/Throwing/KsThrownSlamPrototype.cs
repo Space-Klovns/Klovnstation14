@@ -62,4 +62,12 @@ public sealed partial class KsThrownSlamPrototype : IPrototype
     /// </summary>
     [DataField]
     public bool StopsMomentum = true;
+
+    /// <summary>
+    ///     How much of their momentum goes to a person they slam into, who is pushed on by it: 1 is all of it. Only
+    ///         someone in the way takes it (an obstacle with a <c>CollateralKnockdownTime</c>); a table or a wall
+    ///         goes nowhere, and loose things are already pushed by the collision itself.
+    /// </summary>
+    [DataField]
+    public float MomentumTransfer = 1f;
 }

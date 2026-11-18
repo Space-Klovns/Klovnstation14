@@ -147,6 +147,7 @@
   - type: KsGrabbable
   - type: KsFiremanCarrier
   - type: KsThrowMode
+  - type: KsExplosionThrown # explosions send them flying, into whatever is behind them
   # KS14 end
   - type: Speech
     speechSounds: Alto

@@ -34,6 +34,11 @@ public sealed class KsThrownSlamTest : GameTest
     private static readonly ProtoId<KsThrownSlamPrototype> Slam = "KsThrownSlam";
     private readonly EntProtoId _wall = "KsThrownSlamTestWall";
 
+    /// <summary>
+    ///     Where what they are thrown at stands; the thrown starts three tiles west of it.
+    /// </summary>
+    private const float ObstacleX = 3.5f;
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -79,7 +84,7 @@ public sealed class KsThrownSlamTest : GameTest
             SEntMan.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
 
             thrownUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
-            obstacleUid = SEntMan.SpawnEntity(intoPerson ? Human : _wall, new EntityCoordinates(testMap.Grid, 3.5f, 0.5f));
+            obstacleUid = SEntMan.SpawnEntity(intoPerson ? Human : _wall, new EntityCoordinates(testMap.Grid, ObstacleX, 0.5f));
         });
 
         await Pair.RunTicksSync(5);
@@ -121,7 +126,11 @@ public sealed class KsThrownSlamTest : GameTest
                 Assert.That(SEntMan.GetComponent<PhysicsComponent>(thrownUid).LinearVelocity.Length(), Is.LessThan(0.1f),
                     "They must be at rest after the slam.");
                 if (intoPerson)
+                {
                     Assert.That(SEntMan.HasComponent<KnockedDownComponent>(obstacleUid), "Whoever they hit must go down too.");
+                    Assert.That(transformSystem.GetWorldPosition(obstacleUid).X, Is.GreaterThan(ObstacleX + 0.25f),
+                        "Whoever they hit must be pushed on by the momentum they brought.");
+                }
             });
         });
     }
