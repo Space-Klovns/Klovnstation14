@@ -1,3 +1,4 @@
+using Content.Shared.GameTicking;
 using Content.Server.Station.Systems;
 using Content.Shared.Doors.Components;
 using Content.Shared.Maps;
@@ -60,43 +61,123 @@ public sealed partial class CultivationLootSystem : EntitySystem
     private const int MaintenanceQiManuals = 3;
     private const int MaintenanceMartialManuals = 2;
     private const float ScriptureChance = 0.3f;
+    private const int BountifulQiManuals = 5;
+    private const int BountifulMartialManuals = 7;
+    private const int BountifulBodyArts = 3;
+    private const int BountifulLegendaries = 3;
+
+    private static readonly HashSet<string> LegendaryIds = new() { "KsDragonSlayingSaber" };
+
+    static CultivationLootSystem()
+    {
+        foreach (var legendary in Legendaries)
+            LegendaryIds.Add(legendary[0]);
+    }
+
+    /// <summary>
+    ///     Legendaries already handed out this round, so none turns up twice.
+    /// </summary>
+    private readonly HashSet<string> _spawnedLegendaries = new();
 
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private TurfSystem _turfSystem = default!;
 
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestart);
+    }
+
     /// <summary>
     ///     Hide the round's cultivation loot about a station grid.
     /// </summary>
-    public void SpawnLoot(EntityUid gridUid)
+    public void SpawnLoot(EntityUid gridUid, bool bountiful = false)
     {
         var maintenance = MaintenanceSpots(gridUid);
-        for (var i = 0; i < MaintenanceQiManuals; i++)
+        if (bountiful)
+        {
+            // Wuxia: Ascension. Everyone is cultivating, so there's far more to find: every element's manual at least
+            //     once, a heap of martial arts, several copies of the body's arts, and three different legendaries.
+            foreach (var manual in QiManuals)
+                SpawnAt(manual, maintenance, gridUid);
+        }
+
+        for (var i = 0; i < (bountiful ? BountifulQiManuals : MaintenanceQiManuals); i++)
             SpawnAt(_robustRandom.Pick(QiManuals), maintenance, gridUid);
 
-        for (var i = 0; i < MaintenanceMartialManuals; i++)
-            SpawnAt(_robustRandom.Pick(MartialManuals), maintenance, gridUid);
+        // Martial manuals are drawn without repeats until every one is out.
+        var martial = new List<EntProtoId>(MartialManuals);
+        for (var i = 0; i < (bountiful ? BountifulMartialManuals : MaintenanceMartialManuals) && martial.Count > 0; i++)
+            SpawnAt(_robustRandom.PickAndTake(martial), maintenance, gridUid);
 
         SpawnAt(AncestralRing, maintenance, gridUid);
-        SpawnLegendary(maintenance, gridUid);
-        SpawnAt(BodyMoldingArt, maintenance, gridUid);
-        SpawnAt(BodyPrimer, maintenance, gridUid);
-        if (_robustRandom.Prob(ScriptureChance))
+        for (var i = 0; i < (bountiful ? BountifulLegendaries : 1); i++)
+            SpawnLegendary(maintenance, gridUid);
+
+        for (var i = 0; i < (bountiful ? BountifulBodyArts : 1); i++)
+        {
+            SpawnAt(BodyMoldingArt, maintenance, gridUid);
+            SpawnAt(BodyPrimer, maintenance, gridUid);
+        }
+
+        if (bountiful || _robustRandom.Prob(ScriptureChance))
             SpawnAt(DemonicScripture, maintenance, gridUid);
 
         var library = SpotsBeside(gridUid, "Bookshelf");
-        SpawnAt(_robustRandom.Pick(QiManuals), library, gridUid);
-        SpawnAt(BodyPrimer, library, gridUid);
+        for (var i = 0; i < (bountiful ? 2 : 1); i++)
+        {
+            SpawnAt(_robustRandom.Pick(QiManuals), library, gridUid);
+            SpawnAt(BodyPrimer, library, gridUid);
+        }
+    }
+
+    /// <summary>
+    ///     Pick a legendary (or pair) that isn't already in the round, or null when every one is out. The same
+    ///         artifact never turns up twice.
+    /// </summary>
+    private EntProtoId[]? PickLegendary()
+    {
+        var present = new HashSet<string>();
+        var query = EntityQueryEnumerator<MetaDataComponent>();
+        while (query.MoveNext(out _, out var metaData))
+        {
+            if (metaData.EntityPrototype is { } prototype && LegendaryIds.Contains(prototype.ID))
+                present.Add(prototype.ID);
+        }
+
+        var choices = new List<EntProtoId[]>();
+        foreach (var legendary in Legendaries)
+        {
+            if (!_spawnedLegendaries.Contains(legendary[0]) && !present.Contains(legendary[0]))
+                choices.Add(legendary);
+        }
+
+        if (choices.Count == 0)
+            return null;
+
+        var chosen = _robustRandom.Pick(choices);
+        _spawnedLegendaries.Add(chosen[0]);
+        return chosen;
+    }
+
+    private void OnRoundRestart(RoundRestartCleanupEvent args)
+    {
+        _spawnedLegendaries.Clear();
     }
 
     /// <summary>
     ///     A legendary artifact (or pair) appears at a spot, as from the Imperial Treasury.
     /// </summary>
-    public void SpawnLegendaryAt(MapCoordinates coordinates)
+    public bool SpawnLegendaryAt(MapCoordinates coordinates)
     {
-        foreach (var artifact in _robustRandom.Pick(Legendaries))
+        if (PickLegendary() is not { } legendary)
+            return false;
+
+        foreach (var artifact in legendary)
             Spawn(artifact, coordinates);
+        return true;
     }
 
     /// <summary>
@@ -104,7 +185,9 @@ public sealed partial class CultivationLootSystem : EntitySystem
     /// </summary>
     public void SpawnLegendary(List<EntityCoordinates> spots, EntityUid gridUid)
     {
-        var legendary = _robustRandom.Pick(Legendaries);
+        if (PickLegendary() is not { } legendary)
+            return;
+
         var first = spots.Count > 0 ? _robustRandom.PickAndTake(spots) : RandomSpot(gridUid);
         if (first is not { } spot)
             return;

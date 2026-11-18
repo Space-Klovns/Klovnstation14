@@ -33,8 +33,14 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     private static readonly TimeSpan FirstBloomMax = TimeSpan.FromMinutes(18);
     private static readonly TimeSpan BloomMin = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan BloomMax = TimeSpan.FromMinutes(20);
+    /// <summary>
+    ///     In Wuxia: Ascension heavenly treasures bloom about twice as often.
+    /// </summary>
+    private const float AscensionBloomScale = 0.55f;
+
     private static readonly TimeSpan PetalInterval = TimeSpan.FromSeconds(3);
 
+    [Dependency] private WuxiaAscensionRuleSystem _ascensionSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -91,13 +97,13 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
         var now = _gameTiming.CurTime;
         if (_nextBloom == TimeSpan.Zero)
         {
-            _nextBloom = now + _robustRandom.Next(FirstBloomMin, FirstBloomMax);
+            _nextBloom = now + _robustRandom.Next(FirstBloomMin, FirstBloomMax) * (_ascensionSystem.Active() ? AscensionBloomScale : 1f);
             foreach (var omenTime in OmenTimes)
                 _omens.Add(now + omenTime);
         }
         else if (now >= _nextBloom)
         {
-            _nextBloom = now + _robustRandom.Next(BloomMin, BloomMax);
+            _nextBloom = now + _robustRandom.Next(BloomMin, BloomMax) * (_ascensionSystem.Active() ? AscensionBloomScale : 1f);
             TryBloom();
         }
 

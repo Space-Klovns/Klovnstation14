@@ -18,6 +18,7 @@ public sealed partial class WuxiaWorldRuleSystem : GameRuleSystem<WuxiaWorldRule
 {
     public static readonly EntProtoId WorldRule = "KsWuxiaWorld";
 
+    [Dependency] private WuxiaAscensionRuleSystem _ascensionSystem = default!;
     [Dependency] private CultivationLootSystem _lootSystem = default!;
     [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private MandateSystem _mandateSystem = default!;
@@ -62,7 +63,7 @@ public sealed partial class WuxiaWorldRuleSystem : GameRuleSystem<WuxiaWorldRule
         {
             EnsureComp<WuxiaRoundComponent>(stationUid);
             if (_stationSystem.GetLargestGrid(stationUid) is { } gridUid)
-                _lootSystem.SpawnLoot(gridUid);
+                _lootSystem.SpawnLoot(gridUid, bountiful: _ascensionSystem.Active());
         }
         // Heaven grants its Mandate to the heads of staff already aboard.
         _mandateSystem.GrantExistingHeads();

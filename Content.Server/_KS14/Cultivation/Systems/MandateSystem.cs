@@ -770,11 +770,9 @@ public sealed partial class MandateSystem : EntitySystem
         var artifactChance = entity.Comp.SonOfHeaven
             ? (entity.Comp.TreasuryArtifactGiven ? 0.5f : tier >= 1 ? 1f : 0.3f)
             : (tier >= 2 ? 0.25f : 0.05f);
-        if (_robustRandom.Prob(artifactChance))
-        {
+        // Only a legendary not already in the round: once every one is out, the treasury has none left to give.
+        if (_robustRandom.Prob(artifactChance) && _lootSystem.SpawnLegendaryAt(here))
             entity.Comp.TreasuryArtifactGiven = true;
-            _lootSystem.SpawnLegendaryAt(here);
-        }
 
         _visualsSystem.Wave(entity, FxColour.Gold, big: true);
         _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);

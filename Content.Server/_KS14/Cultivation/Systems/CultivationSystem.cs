@@ -79,6 +79,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
     private static readonly SoundSpecifier LearnSound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
 
+    [Dependency] private CultivationDurabilitySystem _durabilitySystem = default!;
     [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private AncestralRingSystem _ringSystem = default!;
@@ -171,6 +172,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
         GrantTechniques(entity);
         _cultivationSystem.UpdateAlerts(entity);
+        _durabilitySystem.Refresh(entity);
 
         // Handed over next tick: a mob spawned already a cultivator may not have its hands set up yet.
         if (entity.Comp.StartingManuals.Count > 0)
@@ -202,6 +204,7 @@ public sealed partial class CultivationSystem : EntitySystem
     private void OnRealmChanged(Entity<CultivatorComponent> entity, ref CultivationRealmChangedEvent args)
     {
         GrantTechniques(entity);
+        _durabilitySystem.Refresh(entity);
     }
 
     /// <summary>

@@ -39,6 +39,13 @@ can add what it notices; meditation raises `CultivationMeditatedEvent` after eac
 The antagonist is `KsCultivator` (rule `KsCultivators`): one to three cultivators, each starting with a random
 law manual in hand.
 
+## Durability
+
+Both paths get harder to kill as they climb, but neither becomes unkillable; a crew that gangs up still brings one down.
+
+- **Qi:** +10 / +25 / +40 / +60 health by realm (Qi Condensation to Nascent Soul), and 5% / 10% / 15% less brute and burn damage from Foundation Establishment up. A Nascent Soul drops at about 1.75 times what drops a mortal.
+- **Body:** much tougher, since the path is harder: +10 to +20 health per stage (125 by the ninth), more from tempering powers, and the chest's powers cut brute damage by up to 35%.
+
 ## Where and how to cultivate
 
 - **Cultivation mat** (`KsCultivationMat`, crafted from 3 cloth). Meditating on one lets the surroundings matter
@@ -142,7 +149,7 @@ Nobles (+15%), Jinyiwei (+10%) and members of sects sworn to a ruler (+10%) cult
 
 ## Wuxia: Ascension
 
-A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn; right-click it to walk the path of qi or the path of the body (the choice is for life). Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, half damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events (treasures, legendaries, the Mandate) run as in the Wuxia preset.
+A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn; right-click it to walk the path of qi or the path of the body (the choice is for life). Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, half damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events run as in the Wuxia preset, but richer: every element's manual is hidden in maintenance plus five more, seven different martial manuals, three sets of the body's arts, a demonic scripture, two shelves' worth in the library, three different legendaries, and heavenly treasures bloom about twice as often. No legendary ever turns up twice in a round, from loot, the Imperial Treasury or anywhere else.
 
 ## The Demonic Path
 
@@ -358,10 +365,10 @@ The sprites are hand-placed pixel art fitted to the human body parts.
 `Content.IntegrationTests/Tests/_KS14/Cultivation` keeps a core set:
 - `CultivationTest`: the qi core (realms, meditation, breakthroughs, deviation);
 - `BodyCultivationTest`: the body path;
-- `CultivationPowerTest`: realm power, Buddha's Palm, body fists, Hundred Fists, technique slots and night vision;
+- `CultivationPowerTest`: realm power, Buddha's Palm, body fists and destruction, durability, Hundred Fists, technique slots and night vision;
 - `CultivationSpeedTest`: what speeds cultivation up;
 - `HeartDemonTest`: heart demons fight their host;
-- `LegendaryTest`: the legendaries;
+- `LegendaryTest`: the legendaries, which never turn up twice;
 - `MandateTest`: the Mandate of Heaven;
 - `AscensionTest`: the Ascension gamemode's path choice and its Supreme Sovereign;
 - `CultivationLocaleTest`: every cultivation locale key resolves.

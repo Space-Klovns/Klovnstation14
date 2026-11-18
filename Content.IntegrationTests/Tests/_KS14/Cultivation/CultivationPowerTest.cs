@@ -11,6 +11,8 @@ using Content.Shared._KS14.Cultivation.Systems;
 using Content.Shared.Actions;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 
@@ -78,6 +80,39 @@ public sealed class CultivationPowerTest : GameTest
                 Assert.That(BodyArtSystem.Destruction(stage + 1), Is.GreaterThan(BodyArtSystem.Destruction(stage)), $"Stage {stage + 1} breaks no more than stage {stage}.");
             Assert.That(BodyArtSystem.Destruction(BodyCultivatorComponent.MaxStage),
                 Is.GreaterThan(BodyArtSystem.Destruction(BodyCultivatorComponent.MaxStage - 1) * 1.3f), "The ninth stage hardly breaks more than the eighth.");
+        });
+    }
+
+    [Test]
+    public async Task TestDurabilityScales()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var thresholdSystem = SEntMan.System<MobThresholdSystem>();
+            var cultivationSystem = SEntMan.System<SharedCultivationSystem>();
+            var bodySystem = SEntMan.System<SharedBodyCultivationSystem>();
+            float Critical(EntityUid uid) => thresholdSystem.TryGetThresholdForState(uid, MobState.Critical, out var threshold)
+                ? threshold.Value.Float()
+                : 0f;
+
+            var mortal = Critical(SEntMan.SpawnEntity("MobHuman", MapCoordinatesNullspace()));
+            var qiUid = SEntMan.SpawnEntity("KsTestPowerCultivator", MapCoordinatesNullspace());
+            var qiStart = Critical(qiUid);
+            cultivationSystem.SetRealm(qiUid, CultivationRealm.NascentSoul);
+            var qiPeak = Critical(qiUid);
+
+            var bodyUid = SEntMan.SpawnEntity("KsTestPowerBody", MapCoordinatesNullspace());
+            for (var stage = 0; stage < BodyCultivatorComponent.MaxStage; stage++)
+                bodySystem.AdvanceStage(bodyUid);
+            var bodyPeak = Critical(bodyUid);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(qiStart, Is.GreaterThan(mortal), "Qi Condensation is no tougher than a mortal.");
+                Assert.That(qiPeak, Is.GreaterThan(qiStart), "A Nascent Soul is no tougher than Qi Condensation.");
+                Assert.That(qiPeak, Is.LessThan(mortal * 2f), "A Nascent Soul is tougher than intended.");
+                Assert.That(bodyPeak, Is.GreaterThan(qiPeak * 1.2f), "The body path isn't clearly tougher than qi.");
+            }
         });
     }
 

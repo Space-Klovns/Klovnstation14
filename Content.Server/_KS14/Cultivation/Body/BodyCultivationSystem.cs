@@ -75,6 +75,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         ("ActionBodyPrimordialRoar", 9),
     };
 
+    [Dependency] private CultivationDurabilitySystem _durabilitySystem = default!;
     [Dependency] private Content.Shared._Mono.PhosphorNightVision.SharedPhosphorNightVisionSystem _nightVisionSystem = default!;
     [Dependency] private Content.Server._KS14.Cultivation.Systems.CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -162,12 +163,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _bodySystem.SetNextTick(entity.Comp, currentTime + TickInterval);
         _bodySystem.SetNextPassiveTempering(entity.Comp, currentTime + PassiveTemperingInterval);
 
-        float? critical = _mobThresholdSystem.TryGetThresholdForState(entity, MobState.Critical, out var criticalThreshold)
-            ? criticalThreshold.Value.Float()
-            : null;
-        float? dead = _mobThresholdSystem.TryGetThresholdForState(entity, MobState.Dead, out var deadThreshold)
-            ? deadThreshold.Value.Float()
-            : null;
+        var (critical, dead) = _durabilitySystem.BaseThresholds(entity);
         _bodySystem.SetBaseThresholds(entity.Comp, critical, dead);
 
         _bodySystem.Recalculate(entity);
@@ -209,10 +205,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     /// </summary>
     private void ApplyHealthBonus(Entity<BodyCultivatorComponent> entity)
     {
-        if (entity.Comp.BaseCriticalThreshold is { } critical)
-            _mobThresholdSystem.SetMobStateThreshold(entity, FixedPoint2.New(critical + entity.Comp.HealthBonus), MobState.Critical);
-        if (entity.Comp.BaseDeadThreshold is { } dead)
-            _mobThresholdSystem.SetMobStateThreshold(entity, FixedPoint2.New(dead + entity.Comp.HealthBonus), MobState.Dead);
+        _durabilitySystem.Refresh(entity);
     }
 
     public void GrantStageArts(Entity<BodyCultivatorComponent> entity)

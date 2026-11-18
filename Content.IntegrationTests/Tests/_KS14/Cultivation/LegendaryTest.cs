@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -72,6 +73,36 @@ public sealed class LegendaryTest : GameTest
                 Assert.That(hardening.IronShirtEnd, Is.LessThanOrEqualTo(timing.CurTime), "The Heaven Reliant Sword didn't cut through Iron Shirt.");
                 Assert.That(SEntMan.System<DamageableSystem>().GetTotalDamage(victimUid), Is.EqualTo(FixedPoint2.New(20)),
                     "A legendary blow was not true damage.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestLegendariesNeverRepeat()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var lootSystem = SEntMan.System<CultivationLootSystem>();
+            var spawned = 0;
+            while (spawned < 40 && lootSystem.SpawnLegendaryAt(map.MapCoords))
+                spawned++;
+
+            var counts = new System.Collections.Generic.Dictionary<string, int>();
+            var query = SEntMan.EntityQueryEnumerator<MetaDataComponent>();
+            while (query.MoveNext(out _, out var metaData))
+            {
+                if (metaData.EntityPrototype?.ID is { } id && id.StartsWith("Ks"))
+                    counts[id] = counts.GetValueOrDefault(id) + 1;
+            }
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(spawned, Is.InRange(2, 39), "The legendaries never ran out, or none spawned.");
+                Assert.That(counts.GetValueOrDefault("KsGanjiang"), Is.LessThanOrEqualTo(1), "Ganjiang turned up twice.");
+                Assert.That(counts.GetValueOrDefault("KsXuanyuanSword"), Is.LessThanOrEqualTo(1), "The Xuanyuan Sword turned up twice.");
+                Assert.That(counts.GetValueOrDefault("KsRuyiJinguBang"), Is.LessThanOrEqualTo(1), "The Ruyi Jingu Bang turned up twice.");
             }
         });
     }
