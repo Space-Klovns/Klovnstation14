@@ -13,7 +13,7 @@ while it holds the perk. Field Commander defenders pick one per round; the frame
 | Field Commander storage, `ks_fcperk` | `Content.Server/_KS14/FieldCommander/*Perks.cs`, `KsFieldCommanderPerkCommand.cs` |
 | Perks, alerts, icons | `Resources/Prototypes/_KS14/Perks/perks.yml`, `Resources/Prototypes/_KS14/Alerts/perks.yml`, `Resources/Textures/_KS14/Interface/Perks/perks.rsi` (placeholders) |
 | Text | `Resources/Locale/{en-US,ru-RU}/_KS14/perks/perks.ftl` |
-| Tests | `Content.IntegrationTests/Tests/_KS14/Perks/KsPerkTest.cs` |
+| Tests | `Content.IntegrationTests/Tests/_KS14/Perks/` (`KsPerkTest`, `KsPerkDamageTest`, `KsPerkTankTest`) |
 
 ## What a perk grants
 
@@ -49,7 +49,7 @@ networked.
 
 ## Adding an ability
 
-1. A component with the ability's data, in `Content.Shared/_KS14/Perks/Abilities/` (or the feature's own folder), and a
+1. A component with the ability's data, in `Content.Shared/_KS14/Perks/<Perk>/` (or the feature's own folder), and a
    system acting on it. Set it up on `ComponentStartup`/`MapInit` and undo it on `ComponentShutdown`, because removing
    the perk removes the component (CONTRIBUTING §6).
 2. List the component in the perk's `components`, with its tuning there rather than in C#.
@@ -60,6 +60,25 @@ networked.
 
 If an ability needs to know about the perk rather than its component, subscribe to `KsPerkAddedEvent` /
 `KsPerkRemovedEvent` on the body.
+
+## Abilities
+
+| Perk | Ability | Component | Notes |
+| --- | --- | --- | --- |
+| Damage | Ramp | `KsDamageRampAbility` | +`bonusPerHit` per hit on a living mob, up to `maxBonus`; bullets carry it from when they were fired, beams get it as they land. Lost on a reload (a new magazine, or more rounds than last shot left), running dry, dropping or switching guns. Hits are counted on the server. |
+| Damage | Close-range bonus | `KsCloseRangeBonusAbility` | Full `maxBonus` inside `fullBonusRange`, none past `noBonusRange`, by the distance the shot flew. |
+| Damage | Falloff | `KsRangeFalloffAbility` | Full damage to `startRange`, down to `minMultiplier` at `endRange`. |
+| Damage | Magazine auto-drop | `KsMagazineAutoDropAbility` | Ejects an empty magazine with a beep, for guns without `AutoEject`. |
+| Damage | Explosive last rounds | `KsExplosiveLastRoundsAbility` | The last `fraction` (at least `minRounds`) of a magazine that went in full explode on hit (server); tracer tinted and an extra fire sound. |
+| Tank | Crit auto-injector | `KsCritAutoInjectorAbility` | Injects `injection` on going critical; cooldown drawn over `cooldownAlert`. |
+| Tank | Living Shield | `KsLivingShieldAbility`, `ActionKsLivingShield` | Soaks damage up to `capacity` (server), slows, blocks firing; breaks loudly; `cooldown` starts when it goes down. |
+| Tank | Draw Fire | `KsDrawFireAbility`, `ActionKsDrawFire` | Sets the server's `KsNpcTargetPriorityComponent` for `duration`, read by `KsTargetPriorityCon` (wired into the public `NearbyGunTargets` and `NearbyMeleeTargets` by a partial); the previous priority is put back. |
+| Tank | Better armour | `ksRequiredPerk` on a `CMAutomatedVendor` entry | Checked where the vend is validated; greyed out in the window for anyone else. |
+
+Gun abilities hear the shot through `KsShooterFiredGunEvent` (raised on the shooter after each shot), the shot's pre-fire
+state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamageModifyEvent` and
+`KsShooterHitscanHitEvent`. Distance-scaled ones stamp `KsPerkShotOriginComponent` on the bullet and answer
+`KsModifyPerkShotRangeDamageEvent` on the shooter.
 
 ## The picker
 
