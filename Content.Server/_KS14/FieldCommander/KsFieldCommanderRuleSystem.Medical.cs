@@ -28,6 +28,16 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
+    ///     How much of everything a defender took was any defender's doing, 0 to 1.
+    /// </summary>
+    public static float GetDefenderShare(KsFieldCommanderDamageLedgerComponent ledgerComponent)
+    {
+        var defenderDamage = GetDefenderDamage(ledgerComponent);
+        var total = defenderDamage + ledgerComponent.OtherDamage;
+        return total <= 0f ? 0f : Math.Clamp(defenderDamage / total, 0f, 1f);
+    }
+
+    /// <summary>
     ///     Keeps who brought a defender down on their body, from the ledger about to be wiped, for whoever revives them.
     /// </summary>
     private void RecordDeath(EntityUid targetUid, KsFieldCommanderDamageLedgerComponent? ledgerComponent)
@@ -80,8 +90,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Pays whoever healed a living defender for each point healed, less their share of the damage the defender has
-    ///         taken. Nothing for healing oneself, or the dead.
+    ///     Pays whoever healed a living defender for each point healed, less the defenders' share, anyone's, of the
+    ///         damage the defender has taken. Nothing for healing oneself, or the dead.
     /// </summary>
     private void RewardHealing(EntityUid targetUid, DamageChangedEvent args, KsFieldCommanderDamageLedgerComponent? ledgerComponent)
     {
@@ -103,9 +113,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             !_playerManager.TryGetSessionById(healerUserId, out var session))
             return;
 
+        // Every defender's share, not only the healer's: otherwise one shoots a defender and another heals them, and
+        //      they take turns.
         var share = ledgerComponent == null
             ? 0f
-            : GetBlameShare(ledgerComponent.Damage, ledgerComponent.OtherDamage, healerUserId);
+            : GetDefenderShare(ledgerComponent);
 
         var query = QueryActiveRules();
         while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))

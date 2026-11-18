@@ -127,6 +127,35 @@ public sealed class KsFieldCommanderMedicalPointsTest : GameTest
     }
 
     /// <summary>
+    ///     Damage another defender dealt is taken off the pay too, so that one can't shoot a defender for the other to
+    ///         heal.
+    /// </summary>
+    [Test]
+    public async Task HealingPaysLessAnyDefendersShare()
+    {
+        var server = Pair.Server;
+        var (ruleUid, medic, patient) = await SetUp();
+        var otherSession = await server.AddDummySession();
+
+        await server.WaitAssertion(() =>
+        {
+            var component = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+
+            var shooterUid = server.EntMan.SpawnAtPosition(_defender, server.EntMan.GetComponent<TransformComponent>(patient).Coordinates);
+            server.PlayerMan.SetAttachedEntity(otherSession, shooterUid);
+
+            Damage(patient, 20f, originUid: null);
+            Damage(patient, 60f, originUid: shooterUid);
+
+            Damage(patient, -40f, originUid: medic);
+            var expected = (int)MathF.Floor(40f * component.HealPointsPerDamage * (1f - 0.75f));
+            Assert.That(expected, Is.GreaterThan(0), "precondition: the heal is worth something");
+            Assert.That(GetPoints(ruleUid), Is.EqualTo(expected),
+                "healing should pay less the share of the damage any defender dealt, not only the healer's");
+        });
+    }
+
+    /// <summary>
     ///     Reviving a dead defender pays, less the reviver's share of what killed them, and only once per cooldown.
     /// </summary>
     [Test]
