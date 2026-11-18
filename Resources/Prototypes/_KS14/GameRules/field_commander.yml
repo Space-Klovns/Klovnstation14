@@ -156,3 +156,19 @@
     casingDelay: 60
     itemDelay: 300
     bodyDelay: 300
+
+# Keeps blood from flooding the battlefield: it evaporates, a full puddle (50u) in about a minute
+#     (50u at 0.8u/s). Rates are units per second, as a reagent's evaporationSpeed; water's is 0.3.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderBloodEvaporation
+  components:
+  - type: KsMinimumEvaporationRule
+    minimumRates:
+      Blood: 0.8
+      InsectBlood: 0.8
+      CopperBlood: 0.8
+      AmmoniaBlood: 0.8
+      SulfurBlood: 0.8
+      ZombieBlood: 0.8
+      Slime: 0.8
