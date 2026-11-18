@@ -22,6 +22,13 @@ public sealed partial class KsFieldCommanderAsset
     /// </summary>
     [DataField]
     public bool GuaranteedOnPhaseEnter;
+
+    /// <summary>
+    ///     Taken out of the commander's hands: never bought, guaranteed or queued again. Assets are never removed,
+    ///         as units in the field point at theirs by index, so this is how one is retired.
+    /// </summary>
+    [DataField]
+    public bool Disabled;
 }
 
 public sealed partial class KsFieldCommanderRuleComponent

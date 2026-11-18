@@ -76,7 +76,8 @@ public sealed partial class KsFieldCommanderRuleSystem
                 var asset = component.Assets[i];
 
                 var weight = GetAssetWeight(asset, doctrine);
-                if (asset.MinPhase > component.PhaseIndex ||
+                if (asset.Disabled ||
+                    asset.MinPhase > component.PhaseIndex ||
                     asset.Cost > budget ||
                     !(weight > 0f) ||
                     !CanFieldAsset(asset, i, capacity, aliveByAsset))

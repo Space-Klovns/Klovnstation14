@@ -77,11 +77,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Whether an index names an asset that can still be sent.
+    ///     Whether an index names an asset that can still be sent: one that exists, and is not disabled.
     /// </summary>
     private static bool IsUsableAsset(KsFieldCommanderRuleComponent component, int assetIndex)
     {
-        return assetIndex >= 0 && assetIndex < component.Assets.Count;
+        return assetIndex >= 0 && assetIndex < component.Assets.Count && !component.Assets[assetIndex].Disabled;
     }
 
     /// <summary>
@@ -101,7 +101,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         foreach (var purchase in wave.Purchases)
         {
-            if (purchase.Asset < 0 || purchase.Asset >= component.Assets.Count)
+            // Disabled since it was queued, or never there.
+            if (!IsUsableAsset(component, purchase.Asset))
                 continue;
 
             var asset = component.Assets[purchase.Asset];

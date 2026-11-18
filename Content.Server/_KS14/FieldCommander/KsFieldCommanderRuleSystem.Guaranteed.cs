@@ -12,7 +12,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// <param name="waveNumber">The round's wave about to be sent, counting from 1.</param>
     public static bool IsGuaranteed(KsFieldCommanderRuleComponent component, KsFieldCommanderAsset asset, int waveNumber)
     {
-        if (asset.MinPhase > component.PhaseIndex)
+        if (asset.Disabled || asset.MinPhase > component.PhaseIndex)
             return false;
 
         if (asset.GuaranteedEveryWaves > 0 && waveNumber > 0 && waveNumber % asset.GuaranteedEveryWaves == 0)
