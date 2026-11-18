@@ -1,0 +1,8 @@
+- files: ["armband_left.png", "armband_right.png", "balaclava.png", "helmet_attachment.png", "helmet_cover.png"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from Monolith via Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883"
+  source: "https://github.com/PunishedJoe/Battlefield14/tree/d24a6e8c2f5d995e6bdd0a2571e406923e53f883/Resources/Textures/Interface/Plasmafire/Slots"
+- files: ["sling.png"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883"
+  source: "https://github.com/PunishedJoe/Battlefield14/tree/d24a6e8c2f5d995e6bdd0a2571e406923e53f883/Resources/Textures/Interface/Plasmafire/Slots"

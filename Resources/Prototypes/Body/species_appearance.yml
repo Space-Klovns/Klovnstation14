@@ -40,10 +40,14 @@
     # KS14: Belt clothing goes over outerClothing ("belt" was originally here)
     - map: [ "id" ]
     - map: [ "outerClothing" ]
+    - map: [ "webbing" ] # BF14-BLU: added, worn over the vest
+    - map: [ "leftarmband" ] # BF14-BLU: added
+    - map: [ "rightarmband" ] # BF14-BLU: added
     - map: [ "belt" ] # KS14: Belt clothing goes over outerClothing
     - map: [ "back" ]
     - map: [ "neck" ]
     - map: [ "suitstorage" ]
+    - map: [ "suitstorage2" ] # BF14-BLU: added
 
     # Stuff that goes in front of equipment
     - map: [ "enum.HumanoidVisualLayers.SnoutCover" ]
@@ -55,8 +59,11 @@
     - map: [ "enum.HumanoidVisualLayers.TailOverlay" ]
 
     # Stuff that goes in front of stuff that goes in front of equipment
+    - map: [ "balaclava" ] # BF14-BLU: added, under the mask
     - map: [ "mask" ]
     - map: [ "head" ]
+    - map: [ "helmetcover" ] # BF14-BLU: added, over the helmet
+    - map: [ "helmetattachment" ] # BF14-BLU: added
     - map: [ "pocket1" ]
     - map: [ "pocket2" ]
 
