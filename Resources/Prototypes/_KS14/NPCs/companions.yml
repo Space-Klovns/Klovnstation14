@@ -1,0 +1,8 @@
+# Companions (Content.Server/_KS14/Companions/): KsCompanionSystem keeps FollowTarget on the owner, or on a patient.
+
+- type: htnCompound
+  id: KsCompanionMedibotCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: FollowCompound

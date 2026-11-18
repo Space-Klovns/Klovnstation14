@@ -89,6 +89,10 @@
   - type: KsLifestealAbility
     fraction: 0.2
   - type: KsNoBleedingAbility
+  - type: KsCompanions
+    companions:
+    - prototype: KsMobCompanionMedibot
+      respawnDelay: 60
 
 - type: ksPerk
   id: KsPerkSupport
