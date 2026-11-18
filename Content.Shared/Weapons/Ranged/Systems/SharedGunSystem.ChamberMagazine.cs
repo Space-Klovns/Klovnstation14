@@ -387,7 +387,7 @@ public abstract partial class SharedGunSystem
                 }
 
                 // If no more ammo then open bolt.
-                if (relayedArgs.Ammo.Count == 0)
+                if (relayedArgs.Ammo.Count == 0 && component.AutoOpenBoltOnEmpty /* BF14-BLU: added */)
                 {
                     SetBoltClosed(uid, component, false, user: args.User, appearance: appearance);
                 }
