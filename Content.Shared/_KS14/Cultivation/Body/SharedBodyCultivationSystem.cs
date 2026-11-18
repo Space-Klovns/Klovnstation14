@@ -280,7 +280,15 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
 
         entity.Comp.Committed = true;
         Dirty(entity);
+        // The Molding Art's first exercises: enough banked to forge every part once straight away, so the path can
+        //     be walked from the moment it's chosen.
+        AddTempering(entity, StartingTempering);
     }
+
+    /// <summary>
+    ///     Tempering banked on committing to the Body Molding Art: one level for every part.
+    /// </summary>
+    public static readonly float StartingTempering = AllGroups.Length * PartCost(1);
 
     /// <summary>
     ///     Everything forged into the body, as tempering points: every part's levels and progress, plus what's pending.

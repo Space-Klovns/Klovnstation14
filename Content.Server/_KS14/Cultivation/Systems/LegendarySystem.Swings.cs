@@ -4,7 +4,7 @@ using Content.Shared.Weapons.Melee.Events;
 namespace Content.Server._KS14.Cultivation.Systems;
 
 /// <summary>
-///     The legendary weapons' swings: each leaves a slash of its own colour on whatever it hits, turned along the blow.
+///     The legendary weapons' swings: each throws sparks of its own colour off whatever it hits.
 /// </summary>
 public sealed partial class LegendarySystem
 {
@@ -21,10 +21,10 @@ public sealed partial class LegendarySystem
             if (at.MapId != from.MapId)
                 continue;
 
-            var effectUid = Spawn(entity.Comp.HitEffect, at);
-            var direction = at.Position - from.Position;
-            if (direction.LengthSquared() > 0.001f)
-                _transformSystem.SetWorldRotation(effectUid, direction.ToWorldAngle());
+            // Thrown off the near side of the target, toward the blade.
+            var direction = from.Position - at.Position;
+            var offset = direction.LengthSquared() > 0.001f ? System.Numerics.Vector2.Normalize(direction) * 0.25f : System.Numerics.Vector2.Zero;
+            Spawn(entity.Comp.HitEffect, at.Offset(offset));
         }
     }
 }

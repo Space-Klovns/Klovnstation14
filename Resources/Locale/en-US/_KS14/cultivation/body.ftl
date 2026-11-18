@@ -68,7 +68,7 @@ body-punch-topple = {CAPITALIZE(THE($user))}'s fist knocks {THE($target)} off {P
 body-manual-qi-cultivator = Your meridians are already full of qi. The path of the flesh is closed to you.
 body-manual-known = You already know everything this book can teach you.
 body-manual-primer = Your hard training begins to temper your body. Fight, take hits and Forge the Body to reach Copper Skin.
-body-manual-committed = You commit to the Body Molding Art. Your meridians seal into muscle and bone: the way of qi is closed to you, but your body can now be forged to the Primordial Chaos Body.
+body-manual-committed = You commit to the Body Molding Art. Your meridians seal into muscle and bone: the way of qi is closed to you, but your body can now be forged to the Primordial Chaos Body. Its first exercises have given you some training to start with: use Forge the Body to pour it into your parts. Fight, take hits and punch things to earn more.
 
 ## Arts
 

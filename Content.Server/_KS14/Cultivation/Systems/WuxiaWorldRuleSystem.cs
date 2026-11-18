@@ -1,3 +1,4 @@
+using Content.Server._KS14.Cultivation.Components;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Station.Systems;
@@ -67,6 +68,11 @@ public sealed partial class WuxiaWorldRuleSystem : GameRuleSystem<WuxiaWorldRule
         }
         // Heaven grants its Mandate to the heads of staff already aboard.
         _mandateSystem.GrantExistingHeads();
+
+        // Everyone already aboard has a standing in the jianghu they can examine themselves for.
+        var bodies = EntityQueryEnumerator<Content.Shared.Humanoid.HumanoidProfileComponent, Robust.Shared.Player.ActorComponent>();
+        while (bodies.MoveNext(out var bodyUid, out _, out _))
+            EnsureComp<JianghuExamineComponent>(bodyUid);
     }
 
     protected override void Ended(EntityUid uid, WuxiaWorldRuleComponent component, GameRuleComponent gameRule, GameRuleEndedEvent args)

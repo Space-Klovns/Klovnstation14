@@ -127,6 +127,12 @@ public sealed partial class HeavenReliantComponent : Component
 [RegisterComponent, AutoGenerateComponentPause, Access(typeof(LegendarySystem))]
 public sealed partial class DragonSaberComponent : Component
 {
+    /// <summary>
+    ///     Until when a second strike with the Heaven Reliant Sword clashes the two: the first only warns.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ClashArmedUntil;
+
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan AwakeUntil;
 
@@ -435,7 +441,7 @@ public sealed partial class WindFireWheelsComponent : Component
 public sealed partial class LegendaryTreasureHitComponent : Component;
 
 /// <summary>
-///     A legendary weapon's own mark: a slash of its colour left on whatever it hits.
+///     A legendary weapon's own mark: sparks of its colour thrown off whatever it hits.
 /// </summary>
 [RegisterComponent, Access(typeof(LegendarySystem))]
 public sealed partial class LegendarySwingComponent : Component

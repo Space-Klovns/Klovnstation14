@@ -3,7 +3,6 @@
 jianghu-face-gained = You gain face! ({$reason}) Face: {$face}
 jianghu-face-lost = You lose face! ({$reason}) Face: {$face}
 
-jianghu-reason-draw = an honorable draw
 jianghu-reason-won = won an honor duel
 jianghu-reason-lost = lost an honor duel
 jianghu-reason-fled = fled from a duel
@@ -198,3 +197,8 @@ wuxia-bamboo-splits = The bamboo staff splits down its length and falls apart!
 wuxia-needle-acupoint = A needle strikes an acupoint and your limbs grow heavy!
 wuxia-smoke-pellet-crushed = {CAPITALIZE(THE($user))} crushes something and vanishes into a cloud of smoke!
 construction-step-condition-wuxia-round = Only in a wuxia round.
+jianghu-ranking-no-title = no title yet
+jianghu-ranking-self = Your face: {$face} ({$title}). {$rank ->
+    [0] You are not on the ranking; win an honor duel to claim a place.
+   *[other] You are ranked #{$rank}.
+}

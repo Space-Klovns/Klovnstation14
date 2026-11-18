@@ -111,4 +111,33 @@ public sealed class MandateTest : GameTest
             }
         });
     }
+
+    [Test]
+    public async Task TestHeavensPunishmentStrikes()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid condemnedUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var mandateSystem = SEntMan.System<MandateSystem>();
+            var mindSystem = SEntMan.System<SharedMindSystem>();
+            var rulerUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            condemnedUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            mindSystem.TransferTo(mindSystem.CreateMind(null).Owner, rulerUid);
+            Assert.That(mandateSystem.Grant(rulerUid, null, son: true, job: "Captain"), Is.Not.Null, "Heaven granted nothing.");
+            var ruler = (rulerUid, SEntMan.GetComponent<MandateOfHeavenComponent>(rulerUid));
+            Assert.That(mandateSystem.Use(ruler, MandatePower.Punishment, condemnedUid), Is.True, "Heaven's Punishment failed.");
+        });
+
+        // Three bolts, 1.2 seconds apart.
+        await Server.WaitRunTicks(300);
+
+        await Server.WaitAssertion(() =>
+        {
+            var damage = SEntMan.System<DamageableSystem>().GetTotalDamage(condemnedUid);
+            Assert.That(damage, Is.GreaterThanOrEqualTo(FixedPoint2.New(60)), $"Heaven's Punishment only did {damage} damage.");
+            Assert.That(SEntMan.HasComponent<HeavensPunishmentComponent>(condemnedUid), Is.False, "The punishment never finished.");
+        });
+    }
 }

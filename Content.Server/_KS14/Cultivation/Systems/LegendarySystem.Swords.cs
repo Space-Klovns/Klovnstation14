@@ -1,3 +1,4 @@
+using Content.Shared.Interaction;
 using System.Numerics;
 using Content.Server._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation;
@@ -277,17 +278,82 @@ public sealed partial class LegendarySystem
     [SubscribeLocalEvent]
     private void OnSaberVerbs(Entity<DragonSaberComponent> entity, ref GetVerbsEvent<Verb> args)
     {
-        if (!args.CanAccess || !args.CanInteract || args.Using is not { } swordUid || !HasComp<HeavenReliantComponent>(swordUid))
+        // The sword in any hand: right-click the saber.
+        if (!args.CanAccess || !args.CanInteract || HeldWith<HeavenReliantComponent>(args.User) is not { } swordUid)
             return;
 
+        AddClashVerb(ref args, entity, swordUid);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnReliantVerbs(Entity<HeavenReliantComponent> entity, ref GetVerbsEvent<Verb> args)
+    {
+        // Or the saber in any hand: right-click the sword.
+        if (!args.CanAccess || !args.CanInteract || HeldWith<DragonSaberComponent>(args.User) is not { } saberUid)
+            return;
+
+        AddClashVerb(ref args, saberUid, entity);
+    }
+
+    /// <summary>
+    ///     Strike one blade with the other (click it with the other in hand): the first strike warns, a second within
+    ///         five seconds clashes them.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnSaberStruck(Entity<DragonSaberComponent> entity, ref InteractUsingEvent args)
+    {
+        if (args.Handled || !HasComp<HeavenReliantComponent>(args.Used))
+            return;
+
+        args.Handled = true;
+        TryClash(entity, args.Used, args.User);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnReliantStruck(Entity<HeavenReliantComponent> entity, ref InteractUsingEvent args)
+    {
+        if (args.Handled || !TryComp<DragonSaberComponent>(args.Used, out var saber))
+            return;
+
+        args.Handled = true;
+        TryClash((args.Used, saber), entity, args.User);
+    }
+
+    private void TryClash(Entity<DragonSaberComponent> saber, EntityUid swordUid, EntityUid userUid)
+    {
+        var now = _gameTiming.CurTime;
+        if (now > saber.Comp.ClashArmedUntil)
+        {
+            saber.Comp.ClashArmedUntil = now + TimeSpan.FromSeconds(5);
+            _visualsSystem.Play(CultivationVisualsSystem.TempleBellSound, saber);
+            _noticeSystem.Notify(userUid, Loc.GetString("legendary-secret-warning"), PopupType.LargeCaution);
+            return;
+        }
+
+        RevealSecret(saber, swordUid, userUid);
+    }
+
+    private void AddClashVerb(ref GetVerbsEvent<Verb> args, EntityUid saberUid, EntityUid swordUid)
+    {
         var userUid = args.User;
         args.Verbs.Add(new Verb
         {
             Text = Loc.GetString("legendary-secret-verb"),
             Message = Loc.GetString("legendary-secret-verb-message"),
             ConfirmationPopup = true,
-            Act = () => RevealSecret(entity, swordUid, userUid),
+            Act = () => RevealSecret(saberUid, swordUid, userUid),
         });
+    }
+
+    private EntityUid? HeldWith<T>(EntityUid userUid) where T : IComponent
+    {
+        foreach (var heldUid in _handsSystem.EnumerateHeld(userUid))
+        {
+            if (HasComp<T>(heldUid))
+                return heldUid;
+        }
+
+        return null;
     }
 
     public void RevealSecret(EntityUid saberUid, EntityUid swordUid, EntityUid userUid)

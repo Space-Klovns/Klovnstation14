@@ -54,14 +54,12 @@ public sealed partial class CultivationAdminSystem : EntitySystem
 
     private Verb MakeVerb(VerbCategory category, string text, Action act, int priority = 0)
     {
-        // The core verbs sit in the admin Debug menu, named by which part of cultivation they touch. The long lists of
-        //     laws and arts to teach get their own dropdown instead.
-        var teach = category == MartialCategory;
-        var label = teach ? text : $"{Loc.GetString(category.Text)}: {text}";
+        // Everything sits in the admin Debug menu, named by which part of cultivation it touches.
+        var label = $"{Loc.GetString(category.Text)}: {text}";
         return new Verb
         {
             Text = label,
-            Category = teach ? MartialCategory : VerbCategory.Debug,
+            Category = VerbCategory.Debug,
             Act = act,
             Priority = priority,
             Impact = LogImpact.Medium,

@@ -1,3 +1,4 @@
+using Content.Shared.GameTicking;
 using Content.Server._KS14.Cultivation.Components;
 using Content.Shared.Examine;
 using Content.Shared.Mind;
@@ -13,6 +14,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class JianghuSystem : EntitySystem
 {
+    [Dependency] private WuxiaWorldRuleSystem _wuxiaWorldSystem = default!;
     [Dependency] private WuxiaAscensionRuleSystem _ascensionSystem = default!;
     [Dependency] private MandateSystem _mandateSystem = default!;
     [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
@@ -42,6 +44,16 @@ public sealed partial class JianghuSystem : EntitySystem
     public int GetFace(EntityUid bodyUid)
     {
         return TryFaceComponent(bodyUid, out var faceComponent) ? faceComponent.Face : 0;
+    }
+
+    /// <summary>
+    ///     Everyone aboard in a wuxia round has a standing in the jianghu, so everyone can examine themselves for it.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnPlayerSpawned(PlayerSpawnCompleteEvent args)
+    {
+        if (_wuxiaWorldSystem.WuxiaActive())
+            EnsureComp<JianghuExamineComponent>(args.Mob);
     }
 
     public bool IsDishonored(EntityUid bodyUid)
@@ -123,6 +135,16 @@ public sealed partial class JianghuSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnJianghuExamined(Entity<JianghuExamineComponent> entity, ref ExaminedEvent args)
     {
+        // Looking yourself over: your exact face and rank, and the Martial World Ranking.
+        if (args.Examiner == entity.Owner)
+        {
+            var face = GetFace(entity);
+            var ownTitle = FaceTitle(face) is { } titleId ? Loc.GetString(titleId) : Loc.GetString("jianghu-ranking-no-title");
+            args.PushMarkup(Loc.GetString("jianghu-ranking-self", ("face", face), ("title", ownTitle), ("rank", RankOf(entity))));
+            foreach (var rankingLine in RankingLines())
+                args.PushMarkup(rankingLine);
+        }
+
         ExamineStanding(entity, ref args);
         if (!TryFaceComponent(entity, out var faceComponent))
             return;

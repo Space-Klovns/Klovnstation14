@@ -1071,6 +1071,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#9fe3ffee"
     layers:
     - state: aura
@@ -1093,6 +1094,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#ffd55aee"
     layers:
     - state: aura
@@ -1115,6 +1117,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#d4dbeaee"
     layers:
     - state: aura
@@ -1137,6 +1140,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#4fb3ffee"
     layers:
     - state: aura
@@ -1159,6 +1163,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#ff6a1fee"
     layers:
     - state: aura
@@ -1181,6 +1186,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#c99560ee"
     layers:
     - state: aura
@@ -1203,6 +1209,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#5fd35fee"
     layers:
     - state: aura
@@ -1225,6 +1232,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#d0251cee"
     layers:
     - state: aura
@@ -1247,6 +1255,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#9b5cffee"
     layers:
     - state: aura
@@ -1269,6 +1278,7 @@
     sprite: _KS14/Cultivation/qi_effects.rsi
     drawdepth: SmallMobs
     noRot: true
+    offset: 0, 0.2
     color: "#d8f4ffee"
     layers:
     - state: aura

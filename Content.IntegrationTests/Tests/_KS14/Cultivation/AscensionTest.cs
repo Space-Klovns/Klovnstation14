@@ -67,4 +67,35 @@ public sealed class AscensionTest : GameTest
             }
         });
     }
+
+    [Test]
+    public async Task TestBodyBookCommitsAndForges()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid userUid = default, bookUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var ascensionSystem = SEntMan.System<WuxiaAscensionRuleSystem>();
+            userUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var scroll = SEntMan.SpawnEntity("KsPathChoice", map.GridCoords);
+            bookUid = ascensionSystem.Choose(userUid, scroll, CultivationPathOption.Body)!.Value;
+            Assert.That(SEntMan.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().IsHolding(userUid, bookUid), Is.True,
+                "The Body Molding Art isn't in hand.");
+            SEntMan.System<Content.Shared.Interaction.SharedInteractionSystem>().UseInHandInteraction(userUid, bookUid);
+        });
+
+        await Server.WaitRunTicks(400);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.TryGetComponent<BodyCultivatorComponent>(userUid, out var body) && body.Committed, Is.True,
+                "Reading the Body Molding Art didn't commit.");
+            var forge = false;
+            foreach (var action in SEntMan.System<Content.Shared.Actions.SharedActionsSystem>().GetActions(userUid))
+                forge |= SEntMan.GetComponent<MetaDataComponent>(action.Owner).EntityPrototype?.ID == "ActionBodyForge";
+            Assert.That(forge, Is.True, "There's no Forge the Body button.");
+            Assert.That(body!.Tempering, Is.GreaterThan(0f), "Committing gave nothing to forge with.");
+        });
+    }
 }

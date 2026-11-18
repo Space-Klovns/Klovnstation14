@@ -46,6 +46,41 @@ Both paths get harder to kill as they climb, but neither becomes unkillable; a c
 - **Qi:** +10 / +25 / +40 / +60 health by realm (Qi Condensation to Nascent Soul), and 5% / 10% / 15% less brute and burn damage from Foundation Establishment up. A Nascent Soul drops at about 1.75 times what drops a mortal.
 - **Body:** much tougher, since the path is harder: +10 to +20 health per stage (125 by the ninth), more from tempering powers, and the chest's powers cut brute damage by up to 35%.
 
+## What speeds up cultivation
+
+All of these add together, and most count for both paths (qi insight while meditating, body tempering from training).
+
+| Bonus | Amount | Applies to |
+|---|---|---|
+| Martial World Ranking, top 3 | +10% | qi and body |
+| Sect members nearby | +10% each, up to +30% | qi and body |
+| Sworn siblings together | +15% | qi and body |
+| Noble / Jinyiwei / sect sworn to a ruler | +15% / +10% / +10% | qi and body |
+| Holding the Mandate | faster cultivation | qi and body |
+| Wuxia: Ascension | about double | qi and body |
+| Cultivation sites, ancestral ring | varies | qi meditation |
+| Gu worm sips, Devouring Art (Demonic Path) | +1 insight per sip, +30 per corpse | qi |
+
+Face does **not** change cultivation speed. It only matters through titles, the ranking (which duels also move) and the Green Dragon Crescent Blade.
+
+## Face, titles and the ranking
+
+Examining yourself in a wuxia round shows your exact face, title and rank, and the Martial World Ranking.
+
+| Event | Face |
+|---|---|
+| Win an honor duel | +5 (+5 more against a rival sect; doubled in a tournament) |
+| Draw | nothing (so face can't be farmed) |
+| Complete a sect mission | +3 to every member |
+| Crowned Martial Champion | +10 |
+| Pardoned by a ruler | reset to 0 if negative, then +3 |
+| Lose an honor duel | -2 |
+| Flee a duel / interfere in one | -5 |
+| Sect plaque destroyed | -2 to every member |
+| Betray a sworn sibling | -10 |
+
+Titles: 30+ Martial Legend, 15+ Renowned Hero, 5+ Rising Talent, below 0 Shamed, -10 or less Disgraced. The Green Dragon Crescent Blade's honour damage is 10 + half the wielder's face (4 to 24).
+
 ## Where and how to cultivate
 
 - **Cultivation mat** (`KsCultivationMat`, crafted from 3 cloth). Meditating on one lets the surroundings matter
@@ -194,9 +229,9 @@ smells the path, gu worms, jiangshi, a planted palm and the stained hands that s
   prompt: a challenger holding something is first asked whether to wager it, then the one challenged can accept,
   accept wagering what they hold, or refuse (unanswered challenges lapse after 20 seconds). Stakes wait in a
   container on their owner. The duel ends when a fighter is down, stamina-critical or three quarters of the way to
-  critical condition, yields, flees past 12 tiles, vanishes, or three minutes pass (a draw: both gain 1 face and keep
+  critical condition, yields, flees past 12 tiles, vanishes, or three minutes pass (a draw: nobody gains anything and both keep
   their stakes). The winner gains 5 face and every stake; the loser loses 2, or 5 for fleeing. Winner and
-  cultivators watching gain insight, at most every two minutes. A third party who damages a duelist is disgraced for
+  cultivators watching gain insight, at most every two minutes (a draw gives nobody anything). A third party who damages a duelist is disgraced for
   ten minutes and loses 5 face. `HonorDuelResolvingEvent` lets anything raise the face a win is worth;
   `HonorDuelFinishedEvent` reports the result. The Exploding Heart Palm can't be used in a duel.
 - **Sects:** Found Sect (Foundation, 50 qi) asks for a name through `QuickDialogSystem` and makes a sect: a

@@ -369,4 +369,31 @@ public sealed class LegendaryTest : GameTest
             }
         });
     }
+
+    [Test]
+    public async Task TestBladesClashByStriking()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var handsSystem = SEntMan.System<SharedHandsSystem>();
+            var interactionSystem = SEntMan.System<Content.Shared.Interaction.SharedInteractionSystem>();
+            var userUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var swordUid = SEntMan.SpawnEntity("KsHeavenReliantSword", map.GridCoords);
+            var saberUid = SEntMan.SpawnEntity("KsDragonSlayingSaber", map.GridCoords);
+            handsSystem.TryPickupAnyHand(userUid, swordUid);
+
+            // The first strike only warns; the second clashes them.
+            interactionSystem.InteractUsing(userUid, swordUid, saberUid, SEntMan.GetComponent<TransformComponent>(saberUid).Coordinates);
+            Assert.That(SEntMan.Deleted(saberUid) || SEntMan.IsQueuedForDeletion(saberUid), Is.False, "One strike clashed them without warning.");
+            interactionSystem.InteractUsing(userUid, swordUid, saberUid, SEntMan.GetComponent<TransformComponent>(saberUid).Coordinates);
+
+            var revealed = false;
+            var query = SEntMan.EntityQueryEnumerator<MetaDataComponent>();
+            while (query.MoveNext(out _, out var metaData))
+                revealed |= metaData.EntityPrototype?.ID == "KsNineYinManual";
+            Assert.That(revealed, Is.True, "Striking the saber twice with the sword didn't reveal the Nine Yin Manual.");
+        });
+    }
 }

@@ -342,8 +342,7 @@ public sealed partial class JianghuSystem
         if (winnerUid is not { } winner || loserUid is not { } loser)
         {
             _noticeSystem.Announce(oneUid, Loc.GetString("jianghu-duel-draw", ("one", oneUid), ("two", twoUid)), type: PopupType.Large);
-            AdjustFace(oneUid, 1, "jianghu-reason-draw");
-            AdjustFace(twoUid, 1, "jianghu-reason-draw");
+            // A draw earns nothing: otherwise two friends could farm face by drawing over and over.
             ReturnStake(oneUid);
             ReturnStake(twoUid);
         }
@@ -362,15 +361,16 @@ public sealed partial class JianghuSystem
             // The winner takes every stake.
             GiveStake(winner, winner);
             GiveStake(loser, winner);
-        }
 
-        // Watching masters fight is educational.
-        _spectators.Clear();
-        _entityLookupSystem.GetEntitiesInRange(Transform(winnerUid ?? oneUid).Coordinates, SpectatorRange, _spectators);
-        foreach (var spectatorEntity in _spectators)
-        {
-            if (spectatorEntity.Owner != oneUid && spectatorEntity.Owner != twoUid && _mobStateSystem.IsAlive(spectatorEntity))
-                TryDuelInsight(spectatorEntity, 5f);
+            // Watching masters fight is educational, but only a fight someone actually won: a draw teaches nothing,
+            //     so friends can't farm insight by drawing in front of each other.
+            _spectators.Clear();
+            _entityLookupSystem.GetEntitiesInRange(Transform(winner).Coordinates, SpectatorRange, _spectators);
+            foreach (var spectatorEntity in _spectators)
+            {
+                if (spectatorEntity.Owner != oneUid && spectatorEntity.Owner != twoUid && _mobStateSystem.IsAlive(spectatorEntity))
+                    TryDuelInsight(spectatorEntity, 5f);
+            }
         }
 
         EndDuel(oneUid);

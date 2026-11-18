@@ -94,6 +94,12 @@ public sealed partial class MandateSystem : EntitySystem
         { "Quartermaster", "Cargo" },
     };
 
+    /// <summary>
+    ///     Shock damage from each of Heaven's Punishment's three bolts.
+    /// </summary>
+    private const int PunishmentShock = 25;
+
+    [Dependency] private Content.Server.Electrocution.ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
@@ -293,7 +299,10 @@ public sealed partial class MandateSystem : EntitySystem
 
             punishment.NextStrike = now + TimeSpan.FromSeconds(1.2);
             _visualsSystem.HeavenBolt(uid);
-            _damageableSystem.TryChangeDamage(uid, CultivationSystem.Damage("Shock", 20f), ignoreResistances: true);
+            // A real electrocution: the jolt, the shaking and the stun. No glove or insulation stops heaven; if the
+            //     shock can't take hold at all, the bolt still burns them.
+            if (!_electrocutionSystem.TryDoElectrocution(uid, null, PunishmentShock, TimeSpan.FromSeconds(3), refresh: true, ignoreInsulation: true))
+                _damageableSystem.TryChangeDamage(uid, CultivationSystem.Damage("Shock", PunishmentShock), ignoreResistances: true);
             _stunSystem.TryKnockdown(uid, TimeSpan.FromSeconds(2));
             if (--punishment.StrikesLeft <= 0)
                 RemCompDeferred<HeavensPunishmentComponent>(uid);
