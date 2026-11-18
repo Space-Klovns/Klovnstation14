@@ -122,3 +122,15 @@ ks-fieldcommander-endless-vote-no = Отступить
 ks-fieldcommander-intel-endless-vote = Полевое управление. Аплинк уничтожен, поле за вами. Голосуйте в течение { $seconds } с: отступить или окопаться и узнать, сколько вы продержитесь.
 ks-fieldcommander-endless = Думали, это всё? Всё, что у меня осталось, идёт за вами, и будет идти дальше.
 ks-fieldcommander-intel-endless = Полевое управление. Вы держите оборону. Каждая волна будет больше и раньше предыдущей. Держитесь сколько сможете.
+
+## Doctrines: how the commander spends a wave's budget
+
+ks-fieldcommander-doctrine-standard = Обычная
+ks-fieldcommander-doctrine-swarm = Рой
+ks-fieldcommander-doctrine-spearhead = Остриё
+ks-fieldcommander-doctrine-airborne = Десант
+ks-fieldcommander-doctrine-hoard = Накопление
+ks-fieldcommander-intel-doctrine-swarm = Полевое управление. Много лёгкой пехоты. Не прекращайте огонь и не дайте себя обойти.
+ks-fieldcommander-intel-doctrine-spearhead = Полевое управление. Эту волну ведут их лучшие. Держитесь и сосредоточьте огонь.
+ks-fieldcommander-intel-doctrine-airborne = Полевое управление. Вижу десантные капсулы. Следите за небом над вашими позициями.
+ks-fieldcommander-intel-doctrine-hoard = Полевое управление. Волна слабая. Они что-то копят — используйте время.

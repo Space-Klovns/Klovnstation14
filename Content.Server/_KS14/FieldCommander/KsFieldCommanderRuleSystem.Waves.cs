@@ -56,11 +56,13 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///         purchase would put more than <paramref name="capacity"/> units in the field. Returns the indices bought
     ///         into <paramref name="purchases"/> and what was left of the budget.
     /// </summary>
+    /// <param name="doctrine">Reweights the assets by their tags, if given.</param>
     public float BuyAssets(KsFieldCommanderRuleComponent component,
         float budget,
         int capacity,
         Dictionary<int, int> aliveByAsset,
-        List<int> purchases)
+        List<int> purchases,
+        KsFieldCommanderDoctrine? doctrine = null)
     {
         var candidates = new List<int>();
 
@@ -73,14 +75,15 @@ public sealed partial class KsFieldCommanderRuleSystem
             {
                 var asset = component.Assets[i];
 
+                var weight = GetAssetWeight(asset, doctrine);
                 if (asset.MinPhase > component.PhaseIndex ||
                     asset.Cost > budget ||
-                    asset.Weight <= 0f ||
+                    !(weight > 0f) ||
                     !CanFieldAsset(asset, i, capacity, aliveByAsset))
                     continue;
 
                 candidates.Add(i);
-                totalWeight += asset.Weight;
+                totalWeight += weight;
             }
 
             if (candidates.Count == 0)
@@ -90,7 +93,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             var picked = candidates[^1];
             foreach (var candidate in candidates)
             {
-                roll -= component.Assets[candidate].Weight;
+                roll -= GetAssetWeight(component.Assets[candidate], doctrine);
                 if (roll > 0f)
                     continue;
 
@@ -262,9 +265,15 @@ public sealed partial class KsFieldCommanderRuleSystem
         var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
 
-        // What has to come first, charged to the budget; then whatever the rest buys.
+        rule.Comp.DoctrineIndex = PickDoctrine(rule.Comp);
+        var doctrine = rule.Comp.DoctrineIndex >= 0 ? rule.Comp.Doctrines[rule.Comp.DoctrineIndex] : null;
+
+        // What has to come first, charged to the budget; then whatever the doctrine spends of the rest. What it holds
+        //      back is left over, to carry.
         var guaranteedCost = BuyGuaranteedAssets(rule.Comp, rule.Comp.WavesSent + 1, ref capacity, aliveByAsset, purchases);
-        var leftover = BuyAssets(rule.Comp, budget - guaranteedCost, capacity, aliveByAsset, purchases);
+        var available = budget - guaranteedCost;
+        var spendable = GetSpendableBudget(available, doctrine);
+        var leftover = available - (spendable - BuyAssets(rule.Comp, spendable, capacity, aliveByAsset, purchases, doctrine));
 
         var arrivalSum = Vector2.Zero;
         var arrivalCount = 0;
@@ -296,6 +305,9 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         Transmit(rule.Comp, PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
             ("count", sent), ("direction", direction), ("number", rule.Comp.WavesSent));
+
+        if (doctrine != null)
+            Transmit(rule.Comp, doctrine.Announcement, major: false, doctrine.Intel);
 
         // Once each for whatever came, however many of it.
         var reported = new HashSet<KsFieldCommanderAsset>();

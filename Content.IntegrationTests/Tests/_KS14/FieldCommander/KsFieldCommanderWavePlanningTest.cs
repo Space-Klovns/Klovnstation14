@@ -25,6 +25,8 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _guaranteedRule = "KsTestFcPlanningGuaranteedRule";
+    private readonly EntProtoId _doctrineRule = "KsTestFcPlanningDoctrineRule";
+    private readonly EntProtoId _hoardRule = "KsTestFcPlanningHoardRule";
     private readonly EntProtoId _defender = "KsTestFcPlanningDefender";
 
     [TestPrototypes]
@@ -92,6 +94,48 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
       weight: 0
       minPhase: 1
       guaranteedOnPhaseEnter: true
+
+- type: entity
+  parent: KsTestFcPlanningBaseRule
+  id: KsTestFcPlanningDoctrineRule
+  components:
+  - type: KsFieldCommanderRule
+    doctrines:
+    - name: ks-fieldcommander-doctrine-swarm
+      tagWeights:
+        heavy: 0
+        light: 2
+    assets:
+    - entity: KsTestFcPlanningUnit
+      tags:
+      - light
+    - entity: KsTestFcPlanningUnit
+      tags:
+      - heavy
+
+- type: entity
+  parent: KsTestFcPlanningBaseRule
+  id: KsTestFcPlanningHoardRule
+  components:
+  - type: KsFieldCommanderRule
+    phases:
+    - name: ks-fieldcommander-phase-probing
+      start: 1000
+      waveInterval: 1000
+      firstWaveDelay: 1000
+      budget: 10
+      budgetPerExtraDefender: 0
+    - name: ks-fieldcommander-phase-siege
+      start: 2000
+    doctrines:
+    - name: ks-fieldcommander-doctrine-hoard
+      budgetMultiplier: 0.5
+    # Not yet available, however much it outweighs the other.
+    - name: ks-fieldcommander-doctrine-standard
+      weight: 1000
+      minPhase: 1
+    assets:
+    - entity: KsTestFcPlanningUnit
 ";
 
     private async Task<EntityUid> SetUp(EntProtoId commanderRule)
@@ -167,6 +211,63 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
             var wave4 = SendWave(ruleUid, seen);
             Assert.That(wave4, Does.Not.Contain(2), "the phase asset comes only with the phase's first wave");
             Assert.That(wave4, Does.Not.Contain(1), "a guaranteed asset still keeps to its alive cap");
+        });
+    }
+
+    [Test]
+    public async Task DoctrineReweightsTheAssetsByTag()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_doctrineRule);
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var rule = GetRule(ruleUid);
+            system.SetPhase(rule, 0);
+            var component = rule.Comp1;
+            Assert.That(system.PickDoctrine(component), Is.EqualTo(0));
+
+            var withDoctrine = new List<int>();
+            var without = new List<int>();
+            for (var i = 0; i < 50; i++)
+            {
+                system.BuyAssets(component, 1f, 10, new Dictionary<int, int>(), withDoctrine, component.Doctrines[0]);
+                system.BuyAssets(component, 1f, 10, new Dictionary<int, int>(), without);
+            }
+
+            Assert.That(withDoctrine, Has.Count.EqualTo(50));
+            Assert.That(withDoctrine, Does.Not.Contain(1), "the doctrine weighs the heavy tag at nothing");
+            Assert.That(without, Does.Contain(1), "without the doctrine, both assets are bought");
+            Assert.That(KsFieldCommanderRuleSystem.GetAssetWeight(component.Assets[0], component.Doctrines[0]),
+                Is.EqualTo(component.Assets[0].Weight * 2f), "the light tag is weighed double");
+        });
+    }
+
+    [Test]
+    public async Task HoardDoctrineCarriesWhatItDoesNotSpend()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_hoardRule);
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var rule = GetRule(ruleUid);
+            system.SetPhase(rule, 0);
+
+            var phase = rule.Comp1.Phases[0];
+            var doctrine = rule.Comp1.Doctrines[0];
+            var budget = KsFieldCommanderRuleSystem.GetWaveBudget(phase, 1, rule.Comp1.AdaptiveMultiplier);
+            var spent = KsFieldCommanderRuleSystem.GetSpendableBudget(budget, doctrine);
+            Assert.That(spent, Is.LessThan(budget), "precondition: the doctrine spends less than the budget");
+
+            var sent = SendWave(ruleUid, new HashSet<EntityUid>());
+
+            Assert.That(rule.Comp1.DoctrineIndex, Is.EqualTo(0), "the only doctrine available in the first phase should be picked");
+            Assert.That(sent, Has.Count.EqualTo((int)(spent / rule.Comp1.Assets[0].Cost)), "only the doctrine's share should be spent");
+            Assert.That(rule.Comp1.CarriedBudget, Is.EqualTo(budget - spent).Within(0.001f),
+                "what it held back should be carried to the next wave");
         });
     }
 }

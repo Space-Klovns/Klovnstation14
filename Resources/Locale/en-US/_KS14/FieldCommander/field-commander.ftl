@@ -124,3 +124,15 @@ ks-fieldcommander-endless-vote-no = Pull out
 ks-fieldcommander-intel-endless-vote = Field Operations. The uplink is down, the field is yours. Vote within { $seconds } seconds: pull out, or dig in and see how long you last.
 ks-fieldcommander-endless = You think that was all of it? Everything I have left is coming for you, and it will keep coming.
 ks-fieldcommander-intel-endless = Field Operations. You're holding the line. Every wave will be bigger and sooner than the last. Hold as long as you can.
+
+## Doctrines: how the commander spends a wave's budget
+
+ks-fieldcommander-doctrine-standard = Standard
+ks-fieldcommander-doctrine-swarm = Swarm
+ks-fieldcommander-doctrine-spearhead = Spearhead
+ks-fieldcommander-doctrine-airborne = Airborne
+ks-fieldcommander-doctrine-hoard = Hoard
+ks-fieldcommander-intel-doctrine-swarm = Field Operations. That's a lot of light infantry. Keep the fire up and don't let them flank.
+ks-fieldcommander-intel-doctrine-spearhead = Field Operations. Their best are leading this one. Hold fast and focus fire.
+ks-fieldcommander-intel-doctrine-airborne = Field Operations. Drop pods on scope. Watch the sky inside your lines.
+ks-fieldcommander-intel-doctrine-hoard = Field Operations. That wave is light. They're holding something back; use the time.
