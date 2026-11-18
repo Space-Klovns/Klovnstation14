@@ -31,11 +31,11 @@ public sealed partial class KsDownedDrawDepthSystem : EntitySystem
         if (args.Sprite is not { } spriteComponent)
             return;
 
-        var sprite = new Entity<SpriteComponent>(entity.Owner, spriteComponent);
+        var spriteEntity = new Entity<SpriteComponent>(entity.Owner, spriteComponent);
         if (!entity.Comp.Standing)
-            Lower(sprite);
+            Lower(spriteEntity);
         else
-            Restore(sprite);
+            Restore(spriteEntity);
     }
 
     [SubscribeLocalEvent]
@@ -45,24 +45,24 @@ public sealed partial class KsDownedDrawDepthSystem : EntitySystem
             Restore((entity.Owner, spriteComponent));
     }
 
-    private void Lower(Entity<SpriteComponent> sprite)
+    private void Lower(Entity<SpriteComponent> spriteEntity)
     {
-        if (HasComp<KsDownedDrawDepthComponent>(sprite) || sprite.Comp.DrawDepth <= (int)DownedDrawDepth)
+        if (HasComp<KsDownedDrawDepthComponent>(spriteEntity) || spriteEntity.Comp.DrawDepth <= (int)DownedDrawDepth)
             return;
 
-        var downedComponent = AddComp<KsDownedDrawDepthComponent>(sprite);
-        downedComponent.OriginalDrawDepth = sprite.Comp.DrawDepth;
-        _spriteSystem.SetDrawDepth(sprite.AsNullable(), (int)DownedDrawDepth);
+        var downedComponent = AddComp<KsDownedDrawDepthComponent>(spriteEntity);
+        downedComponent.OriginalDrawDepth = spriteEntity.Comp.DrawDepth;
+        _spriteSystem.SetDrawDepth(spriteEntity.AsNullable(), (int)DownedDrawDepth);
     }
 
-    private void Restore(Entity<SpriteComponent> sprite)
+    private void Restore(Entity<SpriteComponent> spriteEntity)
     {
-        if (!TryComp<KsDownedDrawDepthComponent>(sprite, out var downedComponent))
+        if (!TryComp<KsDownedDrawDepthComponent>(spriteEntity, out var downedComponent))
             return;
 
-        if (sprite.Comp.DrawDepth == (int)DownedDrawDepth)
-            _spriteSystem.SetDrawDepth(sprite.AsNullable(), downedComponent.OriginalDrawDepth);
+        if (spriteEntity.Comp.DrawDepth == (int)DownedDrawDepth)
+            _spriteSystem.SetDrawDepth(spriteEntity.AsNullable(), downedComponent.OriginalDrawDepth);
 
-        RemComp<KsDownedDrawDepthComponent>(sprite);
+        RemComp<KsDownedDrawDepthComponent>(spriteEntity);
     }
 }
