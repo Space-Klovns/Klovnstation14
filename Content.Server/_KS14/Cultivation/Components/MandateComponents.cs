@@ -78,8 +78,17 @@ public sealed partial class MandateOfHeavenComponent : Component
     [DataField]
     public List<string> Lineage = new();
 
+    /// <summary>
+    ///     The Imperial Court button.
+    /// </summary>
     [DataField]
-    public List<EntityUid> Powers = new();
+    public EntityUid? CourtAction;
+
+    /// <summary>
+    ///     When each power can be used again.
+    /// </summary>
+    [DataField]
+    public Dictionary<Content.Shared._KS14.Cultivation.MandatePower, TimeSpan> ReadyAt = new();
 }
 
 /// <summary>

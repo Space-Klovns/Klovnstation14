@@ -7,8 +7,8 @@ mandate-title-count = Count
 mandate-title-viscount = Viscount
 mandate-title-baron = Baron
 
-mandate-granted = You hold the Mandate of Heaven over {$domain}. Rule justly: if you die, are demoted, or are kept in chains, heaven withdraws it, and a jade seal falls for others to claim. Your imperial powers wait in your Techniques menu.
-mandate-granted-son = You are the Son of Heaven, and rule {$domain}. Rule justly: if you die, are demoted, or are kept in chains, heaven withdraws its Mandate, and the Heirloom Seal of the Realm falls for others to claim. Your imperial powers wait in your Techniques menu.
+mandate-granted = You hold the Mandate of Heaven over {$domain}. Rule justly: if you die, are demoted, or are kept in chains, heaven withdraws it, and a jade seal falls for others to claim. Your imperial powers are all in the Imperial Court button.
+mandate-granted-son = You are the Son of Heaven, and rule {$domain}. Rule justly: if you die, are demoted, or are kept in chains, heaven withdraws its Mandate, and the Heirloom Seal of the Realm falls for others to claim. Your imperial powers are all in the Imperial Court button.
 mandate-examine = [color=#d4a017][bold]{CAPITALIZE(SUBJECT($ruler))} {CONJUGATE-BASIC($ruler, "bear", "bears")} the Mandate of Heaven as {$title}.[/bold][/color]{$seized ->
     [yes] {" "}Heaven granted it when {SUBJECT($ruler)} seized the seal.
    *[no] {""}
@@ -71,3 +71,14 @@ mandate-punishment-spent = You have called down heaven's punishment as often as 
 mandate-punishment-shout = HEAVEN, STRIKE DOWN {$condemned}!
 mandate-punishment-omen = The Son of Heaven has called down heaven's punishment upon {$condemned}.
 jianghu-reason-pardoned = an imperial pardon
+mandate-power-decree = Imperial Decree
+mandate-power-kneel = Kneel!
+mandate-power-treasury = Imperial Treasury
+mandate-power-pardon = Imperial Pardon
+mandate-power-jinyiwei = Appoint Jinyiwei
+mandate-power-fealty = Accept Fealty
+mandate-power-ennoble = Ennoble
+mandate-power-punishment = Heaven's Punishment
+mandate-power-ready-in = {$power} (ready in {$seconds}s)
+mandate-power-no-one = {$power}: there is no one near enough.
+mandate-power-cooling = That power is ready again in {$seconds} seconds.

@@ -44,8 +44,18 @@ public sealed class MandateTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(SEntMan.HasComponent<SonOfHeavenComponent>(rulerUid), Is.True, "The Captain isn't the Son of Heaven.");
-                Assert.That(SEntMan.GetComponent<CultivationLoadoutComponent>(rulerUid).Learned, Has.Count.GreaterThanOrEqualTo(8),
-                    "The imperial powers weren't filed in the Techniques menu.");
+                Assert.That(SEntMan.GetComponent<MandateOfHeavenComponent>(rulerUid).CourtAction, Is.Not.Null, "There's no Imperial Court button.");
+                Assert.That(mandateSystem.PowersOf(SEntMan.GetComponent<MandateOfHeavenComponent>(rulerUid)).Count(), Is.EqualTo(8),
+                    "The Son of Heaven doesn't have all eight powers.");
+            }
+
+            // A power from the court: ennoble someone, and it cools down.
+            var ruler = (rulerUid, SEntMan.GetComponent<MandateOfHeavenComponent>(rulerUid));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(mandateSystem.Use(ruler, MandatePower.Ennoble, mortalUid), Is.True, "Ennoble failed.");
+                Assert.That(SEntMan.HasComponent<ImperialNobleComponent>(mortalUid), Is.True, "Nobody was ennobled.");
+                Assert.That(mandateSystem.Use(ruler, MandatePower.Ennoble, claimantUid), Is.False, "Ennoble didn't cool down.");
             }
 
             // Heaven's Protection: the same blow hurts a ruler less.

@@ -576,7 +576,8 @@ public sealed partial class JianghuSystem
         return FellowshipBonus(bodyUid) + RankingInsightBonusFor(bodyUid)
                + (HasComp<SwornTogetherComponent>(bodyUid) ? SwornTogetherBonus : 0f)
                + (GetSect(bodyUid) is { Comp.Liege: { } liege } && HasComp<MandateOfHeavenComponent>(liege) ? LiegeBonus : 0f)
-               + _mandateSystem.CultivationBonus(bodyUid);
+               + _mandateSystem.CultivationBonus(bodyUid)
+               + _ascensionSystem.SpeedBonus();
     }
 
     /// <summary>

@@ -29,6 +29,7 @@ using Content.Shared.Roles.Jobs;
 using Content.Shared.Stunnable;
 using Content.Shared.Damage.Components;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -56,9 +57,27 @@ public sealed partial class MandateSystem : EntitySystem
     private static readonly TimeSpan RegicideWindow = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RegicideDuration = TimeSpan.FromMinutes(5);
     private static readonly EntProtoId JadeSealPrototype = "KsJadeSeal";
-    private static readonly EntProtoId DecreeAction = "ActionKsImperialDecree";
-    private static readonly EntProtoId[] RulerPowers = { "ActionKsMandateKneel", "ActionKsMandateTreasury", "ActionKsMandatePardon", "ActionKsMandateJinyiwei", "ActionKsMandateFealty" };
-    private static readonly EntProtoId[] SonPowers = { "ActionKsMandateEnnoble", "ActionKsMandatePunishment" };
+    private static readonly EntProtoId CourtAction = "ActionKsImperialCourt";
+
+    private static readonly MandatePower[] RulerPowers = { MandatePower.Decree, MandatePower.Kneel, MandatePower.Treasury, MandatePower.Pardon, MandatePower.Jinyiwei, MandatePower.Fealty };
+    private static readonly MandatePower[] SonPowers = { MandatePower.Ennoble, MandatePower.Punishment };
+
+    private static readonly Dictionary<MandatePower, TimeSpan> Cooldowns = new()
+    {
+        { MandatePower.Decree, TimeSpan.FromSeconds(90) },
+        { MandatePower.Kneel, TimeSpan.FromSeconds(60) },
+        { MandatePower.Treasury, TimeSpan.FromSeconds(10) },
+        { MandatePower.Pardon, TimeSpan.FromMinutes(5) },
+        { MandatePower.Jinyiwei, TimeSpan.FromSeconds(30) },
+        { MandatePower.Fealty, TimeSpan.FromSeconds(60) },
+        { MandatePower.Ennoble, TimeSpan.FromSeconds(30) },
+        { MandatePower.Punishment, TimeSpan.FromSeconds(30) },
+    };
+
+    /// <summary>
+    ///     How far away someone can be and still be named in the court.
+    /// </summary>
+    private const float CourtRange = 9f;
     private static readonly LocId[] NobleTitles = { "mandate-title-duke", "mandate-title-marquis", "mandate-title-count", "mandate-title-viscount", "mandate-title-baron" };
 
     /// <summary>
@@ -79,7 +98,6 @@ public sealed partial class MandateSystem : EntitySystem
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
-    [Dependency] private CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private CultivationLootSystem _lootSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private CultivationStanceSystem _stanceSystem = default!;
@@ -87,6 +105,7 @@ public sealed partial class MandateSystem : EntitySystem
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private JianghuSystem _jianghuSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
     [Dependency] private QuickDialogSystem _quickDialogSystem = default!;
@@ -158,14 +177,11 @@ public sealed partial class MandateSystem : EntitySystem
         if (son)
             EnsureComp<SonOfHeavenComponent>(uid);
 
-        foreach (var power in son ? RulerPowers.Concat(SonPowers).Prepend(DecreeAction) : RulerPowers.Prepend(DecreeAction))
-        {
-            if (_actionsSystem.AddAction(uid, power) is { } actionUid)
-            {
-                mandate.Powers.Add(actionUid);
-                _loadoutSystem.Learned(uid, actionUid);
-            }
-        }
+        // One button for every power: the Imperial Court.
+        mandate.CourtAction = _actionsSystem.AddAction(uid, CourtAction);
+        var ui = EnsureComp<UserInterfaceComponent>(uid);
+        if (!_uiSystem.HasUi(uid, ImperialCourtUiKey.Key, ui))
+            _uiSystem.SetUi((uid, ui), ImperialCourtUiKey.Key, new InterfaceData("ImperialCourtBoundUserInterface"));
 
         _visualsSystem.Wave(uid, FxColour.Gold, big: true);
         _noticeSystem.Notify(uid, Loc.GetString(son ? "mandate-granted-son" : "mandate-granted", ("domain", DomainName(mandate))), PopupType.Large, alsoToChat: true);
@@ -228,8 +244,9 @@ public sealed partial class MandateSystem : EntitySystem
     private void OnMandateRemoved(Entity<MandateOfHeavenComponent> entity, ref ComponentRemove args)
     {
         RemComp<SonOfHeavenComponent>(entity);
-        foreach (var power in entity.Comp.Powers)
-            _loadoutSystem.Forget(entity, power);
+        _actionsSystem.RemoveAction(entity.Owner, entity.Comp.CourtAction);
+        QueueDel(entity.Comp.CourtAction);
+        _uiSystem.CloseUi(entity.Owner, ImperialCourtUiKey.Key);
 
         // Titles and offices die with the throne.
         foreach (var appointee in entity.Comp.Nobles.Concat(entity.Comp.Guards))
@@ -568,6 +585,75 @@ public sealed partial class MandateSystem : EntitySystem
 
     #region Powers
 
+    public IEnumerable<MandatePower> PowersOf(MandateOfHeavenComponent mandate)
+    {
+        return mandate.SonOfHeaven ? RulerPowers.Concat(SonPowers) : RulerPowers;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnCourtAction(Entity<MandateOfHeavenComponent> entity, ref ImperialCourtActionEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = true;
+        UpdateCourt(entity);
+        _uiSystem.CloseUi(entity.Owner, ImperialCourtUiKey.Key, args.Performer);
+        _uiSystem.OpenUi(entity.Owner, ImperialCourtUiKey.Key, args.Performer);
+    }
+
+    private void UpdateCourt(Entity<MandateOfHeavenComponent> entity)
+    {
+        var people = Around(entity, CourtRange).Where(uid => HasComp<MindContainerComponent>(uid)).Select(uid => GetNetEntity(uid)).ToList();
+        _uiSystem.SetUiState(entity.Owner, ImperialCourtUiKey.Key,
+            new ImperialCourtState(PowersOf(entity.Comp).ToList(), new Dictionary<MandatePower, TimeSpan>(entity.Comp.ReadyAt), people));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnCourtPower(Entity<MandateOfHeavenComponent> entity, ref ImperialCourtPowerMessage args)
+    {
+        Use(entity, args.Power, GetEntity(args.Target));
+        UpdateCourt(entity);
+    }
+
+    /// <summary>
+    ///     A ruler uses one of their powers (on someone, for a targeted one). Fails if it isn't theirs, is still cooling
+    ///         down, or the one named isn't close by.
+    /// </summary>
+    public bool Use(Entity<MandateOfHeavenComponent> entity, MandatePower power, EntityUid? target)
+    {
+        if (!PowersOf(entity.Comp).Contains(power) || !_mobStateSystem.IsAlive(entity))
+            return false;
+
+        var now = _gameTiming.CurTime;
+        if (entity.Comp.ReadyAt.TryGetValue(power, out var ready) && now < ready)
+        {
+            _noticeSystem.Notify(entity, Loc.GetString("mandate-power-cooling", ("seconds", (int) Math.Ceiling((ready - now).TotalSeconds))), PopupType.SmallCaution);
+            return false;
+        }
+
+        var subject = target ?? entity.Owner;
+        if (MandatePowers.Targeted(power)
+            && (target is not { } named || named == entity.Owner || TerminatingOrDeleted(named)
+                || !_transformSystem.InRange((named, null), (entity.Owner, null), CourtRange)))
+            return false;
+
+        entity.Comp.ReadyAt[power] = now + Cooldowns[power];
+        switch (power)
+        {
+            case MandatePower.Decree: CourtDecree(entity, subject); break;
+            case MandatePower.Kneel: CourtKneel(entity, subject); break;
+            case MandatePower.Treasury: CourtTreasury(entity, subject); break;
+            case MandatePower.Pardon: CourtPardon(entity, subject); break;
+            case MandatePower.Jinyiwei: CourtJinyiwei(entity, subject); break;
+            case MandatePower.Fealty: CourtFealty(entity, subject); break;
+            case MandatePower.Ennoble: CourtEnnoble(entity, subject); break;
+            case MandatePower.Punishment: CourtPunishment(entity, subject); break;
+        }
+
+        return true;
+    }
+
     /// <summary>
     ///     Living people around a ruler.
     /// </summary>
@@ -594,13 +680,11 @@ public sealed partial class MandateSystem : EntitySystem
                && department.Roles.Contains(jobId);
     }
 
-    [SubscribeLocalEvent]
-    private void OnDecree(Entity<MandateOfHeavenComponent> entity, ref ImperialDecreeActionEvent args)
+    private void CourtDecree(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || !TryComp<ActorComponent>(entity, out var actor))
+        if (!TryComp<ActorComponent>(entity, out var actor))
             return;
 
-        args.Handled = true;
         var ruler = entity.Owner;
         _quickDialogSystem.OpenDialog<string>(actor.PlayerSession, Loc.GetString("mandate-decree-title"), Loc.GetString("mandate-decree-prompt"),
             text =>
@@ -646,13 +730,8 @@ public sealed partial class MandateSystem : EntitySystem
         }
     }
 
-    [SubscribeLocalEvent]
-    private void OnKneel(Entity<MandateOfHeavenComponent> entity, ref MandateKneelActionEvent args)
+    private void CourtKneel(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled)
-            return;
-
-        args.Handled = true;
         Proclaim(entity, Loc.GetString("mandate-kneel-shout"));
         _visualsSystem.ArtOn(CultivationVisualsSystem.ArtRoarGold, entity);
         var reach = (entity.Comp.SonOfHeaven ? 6f : 4f) + entity.Comp.DynastyTier;
@@ -667,13 +746,8 @@ public sealed partial class MandateSystem : EntitySystem
         }
     }
 
-    [SubscribeLocalEvent]
-    private void OnTreasury(Entity<MandateOfHeavenComponent> entity, ref MandateTreasuryActionEvent args)
+    private void CourtTreasury(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled)
-            return;
-
-        args.Handled = true;
         if (entity.Comp.TreasuryCharges <= 0)
         {
             _noticeSystem.Notify(entity, Loc.GetString("mandate-treasury-empty"), PopupType.SmallCaution);
@@ -707,26 +781,22 @@ public sealed partial class MandateSystem : EntitySystem
         _noticeSystem.Announce(entity, Loc.GetString("mandate-treasury-opened", ("ruler", entity.Owner)), type: PopupType.Medium);
     }
 
-    [SubscribeLocalEvent]
-    private void OnPardon(Entity<MandateOfHeavenComponent> entity, ref MandatePardonActionEvent args)
+    private void CourtPardon(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || args.Target == entity.Owner)
+        if (target == entity.Owner)
             return;
 
-        args.Handled = true;
-        _jianghuSystem.Pardon(args.Target);
-        Proclaim(entity, Loc.GetString("mandate-pardon-words", ("subject", Name(args.Target))));
-        _visualsSystem.Wave(args.Target, FxColour.Gold);
+        _jianghuSystem.Pardon(target);
+        Proclaim(entity, Loc.GetString("mandate-pardon-words", ("subject", Name(target))));
+        _visualsSystem.Wave(target, FxColour.Gold);
     }
 
-    [SubscribeLocalEvent]
-    private void OnJinyiwei(Entity<MandateOfHeavenComponent> entity, ref MandateJinyiweiActionEvent args)
+    private void CourtJinyiwei(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || args.Target == entity.Owner)
+        if (target == entity.Owner)
             return;
 
-        args.Handled = true;
-        var appointee = args.Target;
+        var appointee = target;
         if (TryComp<ImperialGuardComponent>(appointee, out var existing) && existing.Lord == entity.Owner)
         {
             RemComp<ImperialGuardComponent>(appointee);
@@ -754,14 +824,12 @@ public sealed partial class MandateSystem : EntitySystem
         });
     }
 
-    [SubscribeLocalEvent]
-    private void OnFealty(Entity<MandateOfHeavenComponent> entity, ref MandateFealtyActionEvent args)
+    private void CourtFealty(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || args.Target == entity.Owner)
+        if (target == entity.Owner)
             return;
 
-        args.Handled = true;
-        var master = args.Target;
+        var master = target;
         if (_jianghuSystem.GetSect(master) is not { } sect || !_jianghuSystem.IsSectMaster(master))
         {
             _noticeSystem.Notify(entity, Loc.GetString("mandate-fealty-not-master"), PopupType.SmallCaution);
@@ -776,14 +844,12 @@ public sealed partial class MandateSystem : EntitySystem
         });
     }
 
-    [SubscribeLocalEvent]
-    private void OnEnnoble(Entity<MandateOfHeavenComponent> entity, ref MandateEnnobleActionEvent args)
+    private void CourtEnnoble(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || args.Target == entity.Owner || !entity.Comp.SonOfHeaven)
+        if (target == entity.Owner || !entity.Comp.SonOfHeaven)
             return;
 
-        args.Handled = true;
-        var subject = args.Target;
+        var subject = target;
         if (TryComp<ImperialNobleComponent>(subject, out var existing))
         {
             Proclaim(entity, Loc.GetString("mandate-ennoble-stripped", ("subject", Name(subject)), ("title", Loc.GetString(existing.Title))));
@@ -809,13 +875,11 @@ public sealed partial class MandateSystem : EntitySystem
         Proclaim(entity, Loc.GetString("mandate-ennoble-words", ("subject", Name(subject)), ("title", Loc.GetString(title))));
     }
 
-    [SubscribeLocalEvent]
-    private void OnPunishment(Entity<MandateOfHeavenComponent> entity, ref MandatePunishmentActionEvent args)
+    private void CourtPunishment(Entity<MandateOfHeavenComponent> entity, EntityUid target)
     {
-        if (args.Handled || args.Target == entity.Owner || !entity.Comp.SonOfHeaven)
+        if (target == entity.Owner || !entity.Comp.SonOfHeaven)
             return;
 
-        args.Handled = true;
         if (entity.Comp.PunishmentCharges <= 0)
         {
             _noticeSystem.Notify(entity, Loc.GetString("mandate-punishment-spent"), PopupType.SmallCaution);
@@ -823,10 +887,10 @@ public sealed partial class MandateSystem : EntitySystem
         }
 
         entity.Comp.PunishmentCharges--;
-        Proclaim(entity, Loc.GetString("mandate-punishment-shout", ("condemned", Name(args.Target).ToUpperInvariant())));
-        _chatSystem.DispatchStationAnnouncement(entity, Loc.GetString("mandate-punishment-omen", ("condemned", Name(args.Target))),
+        Proclaim(entity, Loc.GetString("mandate-punishment-shout", ("condemned", Name(target).ToUpperInvariant())));
+        _chatSystem.DispatchStationAnnouncement(entity, Loc.GetString("mandate-punishment-omen", ("condemned", Name(target))),
             Loc.GetString("mandate-omen-sender"), playDefaultSound: false, colorOverride: Color.Gold);
-        var punishment = EnsureComp<HeavensPunishmentComponent>(args.Target);
+        var punishment = EnsureComp<HeavensPunishmentComponent>(target);
         punishment.StrikesLeft = 3;
         punishment.NextStrike = _gameTiming.CurTime;
     }

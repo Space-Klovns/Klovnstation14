@@ -329,10 +329,12 @@
   description: body-power-eyes-clear-eyes-desc
   components:
   - type: PhosphorNightVision
+    enabled: true
     action: ActionTogglePhosphorNightVision
     phosphorColor: "#ffe9c0"
     lightingColor: "#FFFFFF20"
     amplification: 40
+  - type: FlashImmunity
 
 - type: bodyTemperingPower
   id: KsBodyEyesUnblinkingEyes
@@ -352,6 +354,7 @@
   replaceComponents: true
   components:
   - type: PhosphorNightVision
+    enabled: true
     action: ActionTogglePhosphorNightVision
     phosphorColor: "#fff6e6"
     lightingColor: "#FFFFFF38"

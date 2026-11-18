@@ -52,3 +52,9 @@ public record struct CultivationInsightMultiplierEvent(float Multiplier);
 /// </summary>
 [ByRefEvent]
 public record struct BodyTemperingMultiplierEvent(float Multiplier);
+
+/// <summary>
+///     Broadcast when someone reaches the top of a path: Nascent Soul, or the ninth stage of the body.
+/// </summary>
+[ByRefEvent]
+public readonly record struct CultivationPeakReachedEvent(EntityUid Cultivator);

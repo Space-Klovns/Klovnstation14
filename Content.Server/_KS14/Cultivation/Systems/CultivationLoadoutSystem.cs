@@ -124,7 +124,9 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
 
         args.Handled = true;
         Prune(entity);
-        _uiSystem.TryToggleUi(entity.Owner, TechniqueLoadoutUiKey.Key, args.Performer);
+        // Always open it afresh in the middle of the screen, so a menu dragged away is never lost.
+        _uiSystem.CloseUi(entity.Owner, TechniqueLoadoutUiKey.Key, args.Performer);
+        _uiSystem.OpenUi(entity.Owner, TechniqueLoadoutUiKey.Key, args.Performer);
     }
 
     private void OnToggle(Entity<CultivationLoadoutComponent> entity, ref TechniqueLoadoutToggleMessage args)

@@ -357,7 +357,7 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         // Each stage also makes you a little faster.
         bodyCultivator.SpeedMultiplier = 1f + 0.01f * (float)bodyCultivator.Stage;
 
-        // A Primordial Chaos Body can't be shocked.
+        // A Primordial Chaos Body can't be shocked, and its fists are a clear step above every stage before.
         if (bodyCultivator.Stage >= BodyCultivatorComponent.MaxStage)
             bodyCultivator.DamageMultipliers["Shock"] = 0f;
 
@@ -390,12 +390,23 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
             bodyCultivator.EternalHeart |= power.EternalHeart;
         }
 
+        bodyCultivator.PunchDamage *= StageStrength(bodyCultivator.Stage);
+
         Dirty(entity);
         _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(entity);
 
         var ev = new BodyPowersChangedEvent(newlyUnlocked);
         RaiseLocalEvent(entity, ref ev);
         return newlyUnlocked;
+    }
+
+    /// <summary>
+    ///     How much of their strength a body cultivator's blows and arts carry at a stage. Only the ninth stage, a
+    ///         Primordial Chaos Body, hits with all of it; every stage before holds back, so the last step up is a big one.
+    /// </summary>
+    public static float StageStrength(int stage)
+    {
+        return stage >= BodyCultivatorComponent.MaxStage ? 1f : 0.55f + 0.03f * stage;
     }
 
     public void SetNextTick(BodyCultivatorComponent bodyCultivator, TimeSpan next)

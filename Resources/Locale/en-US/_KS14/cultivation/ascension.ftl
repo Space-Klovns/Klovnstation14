@@ -1,0 +1,10 @@
+ascension-path-given = Heaven is watching this station. You hold a Fork in the Road: right-click it to walk the path of qi or the path of the body. The first to reach the peak rules over everyone.
+ascension-path-how = Right-click the scroll to choose the path of qi or the path of the body.
+ascension-path-qi = Walk the path of qi
+ascension-path-body = Walk the path of the body
+ascension-chose-qi = Qi stirs in {THE($user)}'s meridians as they set foot on the path of cultivation.
+ascension-chose-body = {CAPITALIZE(THE($user))} clenches their fists and sets foot on the path of the body.
+ascension-peak-announcement = Heaven trembles: {$winner} has reached the peak of cultivation and stands above everyone aboard as the Supreme Sovereign. The shuttle arrives in {$minutes} minutes. Pray they are merciful.
+ascension-peak-self = You stand at the peak of cultivation, the Supreme Sovereign of this station. Blows land on you at half strength. Settle every score before the shuttle comes.
+ascension-round-end-winner = {$winner} reached the peak of cultivation first and was proclaimed Supreme Sovereign.
+ascension-round-end-none = Nobody reached the peak of cultivation.

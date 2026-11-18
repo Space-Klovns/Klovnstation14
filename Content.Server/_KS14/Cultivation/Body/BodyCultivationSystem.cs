@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Server._KS14.Cultivation.Systems;
+using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared.Actions;
@@ -74,6 +75,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         ("ActionBodyPrimordialRoar", 9),
     };
 
+    [Dependency] private Content.Shared._Mono.PhosphorNightVision.SharedPhosphorNightVisionSystem _nightVisionSystem = default!;
     [Dependency] private Content.Server._KS14.Cultivation.Systems.CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
@@ -179,6 +181,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         GrantStageArts(entity);
         ScaleCooldowns(entity);
         _loadoutSystem.RefreshSlots(entity);
+        if (args.NewStage >= BodyCultivatorComponent.MaxStage && args.OldStage < BodyCultivatorComponent.MaxStage)
+        {
+            var peak = new CultivationPeakReachedEvent(entity);
+            RaiseLocalEvent(ref peak);
+        }
     }
 
     [SubscribeLocalEvent]
@@ -189,6 +196,9 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         foreach (var power in args.NewlyUnlocked)
         {
             EntityManager.AddComponents(entity, power.Components, removeExisting: power.ReplaceComponents);
+            // Tempered eyes see in the dark from the moment they open.
+            if (TryComp<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(entity, out var nightVision) && !nightVision.Enabled)
+                _nightVisionSystem.SetEnabled((entity, nightVision), true, entity);
             _noticeSystem.Notify(entity, Loc.GetString("body-power-unlocked",
                 ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), type: PopupType.Medium, alsoToChat: true);
         }

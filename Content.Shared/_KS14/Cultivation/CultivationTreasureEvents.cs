@@ -26,22 +26,6 @@ public sealed partial class SpiritHerbPickDoAfterEvent : SimpleDoAfterEvent;
 /// </summary>
 public sealed partial class NameHeirActionEvent : EntityTargetActionEvent;
 
-// The Mandate of Heaven.
-public sealed partial class ImperialDecreeActionEvent : InstantActionEvent;
-
-public sealed partial class MandateKneelActionEvent : InstantActionEvent;
-
-public sealed partial class MandateTreasuryActionEvent : InstantActionEvent;
-
-public sealed partial class MandatePardonActionEvent : EntityTargetActionEvent;
-
-public sealed partial class MandateJinyiweiActionEvent : EntityTargetActionEvent;
-
-public sealed partial class MandateFealtyActionEvent : EntityTargetActionEvent;
-
-public sealed partial class MandateEnnobleActionEvent : EntityTargetActionEvent;
-
-public sealed partial class MandatePunishmentActionEvent : EntityTargetActionEvent;
-
+// The Mandate of Heaven: raising a jade seal to heaven.
 [Serializable, NetSerializable]
 public sealed partial class JadeSealClaimDoAfterEvent : SimpleDoAfterEvent;

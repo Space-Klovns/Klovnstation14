@@ -73,3 +73,18 @@
   - KsWuxiaWorld
   - BasicStationEventScheduler
   - BasicRoundstartVariation
+
+# Wuxia: Ascension. Everyone may take up cultivation; the first to the peak is Supreme Sovereign and has until the
+# shuttle comes to settle every score.
+- type: gamePreset
+  id: KsWuxiaAscension
+  alias:
+  - ascension
+  - wuxiaascension
+  name: wuxia-ascension-title
+  description: wuxia-ascension-description
+  showInVote: true
+  rules:
+  - KsWuxiaAscension
+  - KsWuxiaWorld
+  - BasicRoundstartVariation

@@ -52,12 +52,14 @@ public sealed partial class CultivationAdminSystem : EntitySystem
         AddMartialVerbs(targetUid, args.Verbs);
     }
 
-    private static Verb MakeVerb(VerbCategory category, string text, Action act, int priority = 0)
+    private Verb MakeVerb(VerbCategory category, string text, Action act, int priority = 0)
     {
+        // Everything sits in the admin Debug menu, named by which part of cultivation it touches.
+        var label = $"{Loc.GetString(category.Text)}: {text}";
         return new Verb
         {
-            Text = text,
-            Category = category,
+            Text = label,
+            Category = VerbCategory.Debug,
             Act = act,
             Priority = priority,
             Impact = LogImpact.Medium,

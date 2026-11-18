@@ -120,7 +120,7 @@ rules their department with heaven's blessing, and the Captain is the Son of Hea
 the Xuanyuan Sword answers to). Heads already aboard get theirs when the jianghu wakes.
 
 **What a ruler has:**
-- a golden aura (a dragon for the Son);
+- a golden aura; the Son of Heaven also has a golden dragon coiling around them and chasing a flaming pearl (`temple.rsi`, two layers so it passes behind and in front of them);
 - Dragon Qi: the weak who strike them are slowed, and later knocked down;
 - Heaven's Protection: 10-20% less damage, and one fatal blow turned aside every 6-10 minutes, with lightning for
   the attacker;
@@ -129,7 +129,7 @@ the Xuanyuan Sword answers to). Heads already aboard get theirs when the jianghu
 
 All of these grow with the dynasty's age (15, 30 and 60 minutes).
 
-**Powers** go through the Techniques menu: Imperial Decree (rallies their people; station-wide for the Son), Kneel!,
+**Powers** are all in one **Imperial Court** button, a radial menu (`ImperialCourtBoundUserInterface`). Powers used on someone open a second ring of the people within nine tiles, and each power keeps its own cooldown. The powers: Imperial Decree (rallies their people; station-wide for the Son), Kneel!,
 Imperial Treasury (herbs, talismans, gold, a manual, sometimes a legendary), Imperial Pardon, Appoint Jinyiwei and
 Accept Fealty (both need the other player to accept). The Son also has Ennoble and Heaven's Punishment (three bolts).
 
@@ -139,6 +139,10 @@ claims the Mandate. Whoever struck the ruler down is marked a regicide for five 
 
 Nobles (+15%), Jinyiwei (+10%) and members of sects sworn to a ruler (+10%) cultivate faster
 (`JianghuSystem.CompanyBonus`).
+
+## Wuxia: Ascension
+
+A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn; right-click it to walk the path of qi or the path of the body (the choice is for life). Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, half damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events (treasures, legendaries, the Mandate) run as in the Wuxia preset.
 
 ## The Demonic Path
 
@@ -351,9 +355,13 @@ The sprites are hand-placed pixel art fitted to the human body parts.
 
 ## Tests
 
-`Content.IntegrationTests/Tests/_KS14/Cultivation` keeps a core set: the qi core, the body path, realm power and the
-the body path, the Demonic Path, the jianghu, sects, sworn brotherhood, fighting styles and weapons, and `CultivationLocaleTest` checks every cultivation locale key resolves
-The Dugu counter, Eternal Heart,
-concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked
-by breaking what they cover and watching them fail. The Eternal Heart test was vacuous at first: a gibbed body reads
-as "not dead". The rest still need the same check.
+`Content.IntegrationTests/Tests/_KS14/Cultivation` keeps a core set:
+- `CultivationTest`: the qi core (realms, meditation, breakthroughs, deviation);
+- `BodyCultivationTest`: the body path;
+- `CultivationPowerTest`: realm power, Buddha's Palm, body fists, Hundred Fists, technique slots and night vision;
+- `CultivationSpeedTest`: what speeds cultivation up;
+- `HeartDemonTest`: heart demons fight their host;
+- `LegendaryTest`: the legendaries;
+- `MandateTest`: the Mandate of Heaven;
+- `AscensionTest`: the Ascension gamemode's path choice and its Supreme Sovereign;
+- `CultivationLocaleTest`: every cultivation locale key resolves.

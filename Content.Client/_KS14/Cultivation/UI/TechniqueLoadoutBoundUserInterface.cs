@@ -20,7 +20,7 @@ public sealed class TechniqueLoadoutBoundUserInterface(EntityUid owner, Enum uiK
         base.Open();
         _menu = this.CreateWindow<SimpleRadialMenu>();
         Update();
-        _menu.OpenOverMouseScreenPosition();
+        _menu.OpenCentered();
     }
 
     public override void Update()

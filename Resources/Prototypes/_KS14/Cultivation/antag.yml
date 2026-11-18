@@ -62,3 +62,23 @@
   id: KsWuxiaWorld
   components:
   - type: WuxiaWorldRule
+
+# Wuxia: Ascension. Everyone may cultivate and they race for the peak. See WuxiaAscensionRuleSystem.
+- type: entity
+  parent: BaseGameRule
+  id: KsWuxiaAscension
+  components:
+  - type: WuxiaAscensionRule
+
+- type: entity
+  parent: BaseItem
+  id: KsPathChoice
+  name: Fork in the Road
+  description: A silk scroll painted with two roads, one rising into the clouds as qi, one cut into the mountain as flesh and bone. Right-click it to choose your path; the choice is for life.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: body_primer
+  - type: Item
+    size: Small
+  - type: PathChoice

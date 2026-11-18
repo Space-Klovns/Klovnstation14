@@ -170,6 +170,10 @@ public sealed partial class BodyArtSystem : EntitySystem
             return false;
 
         damage *= ArtDamageMultiplier;
+
+        // The ninth stage is the end of the path: the stages before it hold back, so it stands clearly above them.
+        if (_bodyCultivatorQuery.TryComp(userUid, out var userBody))
+            damage *= SharedBodyCultivationSystem.StageStrength(userBody.Stage);
         _visualsSystem.Strike(userUid, victimUid, FxColour.Earth);
         if (PathPower(victimUid) > PathPower(userUid))
         {
@@ -541,13 +545,14 @@ public sealed partial class BodyArtSystem : EntitySystem
         var direction = Towards(entity, args.Target, out var distance);
         distance = MathF.Min(distance, (float)(3 + stage));
 
-        // From Crimson Blood the landing cracks the ground and floors everyone around.
+        // The landing hits everyone around it, harder the further along the path; from Crimson Blood it cracks the
+        //     ground and floors them too.
         var landingComponent = new BodyLandingComponent();
-        if (stage >= 5)
+        if (stage >= 2)
         {
-            landingComponent.Radius = 1f + (float)((stage - 5) / 2);
-            landingComponent.Damage = (float)(2 + stage);
-            landingComponent.Knockdown = TimeSpan.FromSeconds(1 + stage * 0.1);
+            landingComponent.Radius = stage >= 5 ? 1f + (float)((stage - 5) / 2) : 0.8f;
+            landingComponent.Damage = 4f + 2f * stage + 0.6f * stage * stage;
+            landingComponent.Knockdown = stage >= 5 ? TimeSpan.FromSeconds(1 + stage * 0.1) : TimeSpan.Zero;
             landingComponent.Smash = stage >= 7 ? (float)(60 + 10 * stage) : 0f;
         }
 
@@ -838,7 +843,7 @@ public sealed partial class BodyArtSystem : EntitySystem
                 if (!bowled.Add(victimUid))
                     continue;
 
-                if (Hit(entity, victimUid, (float)(10 + 2 * stage), TimeSpan.FromSeconds(1.5)))
+                if (Hit(entity, victimUid, 10f + 2f * stage + 0.5f * stage * stage, TimeSpan.FromSeconds(1.5)))
                     _throwingSystem.TryThrow(victimUid, new Vector2(-direction.Y, direction.X) * 2f, baseThrowSpeed: 10f, user: entity, recoil: false);
             }
         }
@@ -887,8 +892,8 @@ public sealed partial class BodyArtSystem : EntitySystem
         Launch(entity, direction * distance, 30f, entity, new BodyLandingComponent
         {
             Radius = 2f,
-            Damage = (float)(10 + stage),
-            CentreDamage = (float)(10 + 2 * stage),
+            Damage = 10f + stage + 0.5f * stage * stage,
+            CentreDamage = 10f + 2f * stage + 0.8f * stage * stage,
             Knockdown = TimeSpan.FromSeconds(2),
             Smash = (float)(80 + 10 * stage),
         });
@@ -946,7 +951,7 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         Shout(entity, "body-art-sky-splitting-palm");
         ShatterLine(entity, _transformSystem.GetMapCoordinates(entity).Position, direction, 7 + 2 * stage, stage >= 9 ? 2 : (stage >= 7 ? 1 : 0),
-            (float)(15 + 3 * stage), WallTier(stage));
+            15f + 3f * stage + 0.9f * stage * stage, WallTier(stage));
         Impact(_transformSystem.GetMapCoordinates(entity), 1.5f, strength: 2f);
         _visualsSystem.Distort(_transformSystem.GetMapCoordinates(entity), FxDistortion.Push);
         _audioSystem.PlayPvs(RumbleSound, entity);

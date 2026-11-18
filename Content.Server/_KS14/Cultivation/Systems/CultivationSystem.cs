@@ -640,6 +640,12 @@ public sealed partial class CultivationSystem : EntitySystem
 
         var newRealm = entity.Comp.Realm + 1;
         _cultivationSystem.SetRealm(entity.AsNullable(), newRealm);
+        if (newRealm == CultivationRealm.NascentSoul)
+        {
+            var peak = new CultivationPeakReachedEvent(entity);
+            RaiseLocalEvent(ref peak);
+        }
+
         _loadoutSystem.RefreshSlots(entity);
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-30));
 
