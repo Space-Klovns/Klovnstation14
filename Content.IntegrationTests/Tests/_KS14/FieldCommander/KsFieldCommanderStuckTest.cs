@@ -28,15 +28,19 @@ public sealed class KsFieldCommanderStuckTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = false, Dirty = true };
 
-    private static readonly EntProtoId NanotrasenObjective = "KsScenarioObjectiveNanotrasen";
-
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _rule = "KsTestFcStuckRule";
     private readonly EntProtoId _slowRule = "KsTestFcStuckSlowRule";
     private readonly EntProtoId _capRule = "KsTestFcStuckCapRule";
     private readonly EntProtoId _defender = "KsTestFcStuckDefender";
+    private readonly EntProtoId _objective = "KsTestFcStuckObjective";
 
     private const int HalfExtent = 30;
+
+    /// <summary>
+    ///     How far east of the box the defender stands in the sight test.
+    /// </summary>
+    private const float DefenderOffset = 8f;
 
     /// <summary>
     ///     Units that stand where they are put, so that only the rule moves them. Checks every half second; the steps
@@ -50,6 +54,12 @@ public sealed class KsFieldCommanderStuckTest : GameTest
   - type: MobState
   - type: ScenarioFactionMember
     id: Nanotrasen
+
+- type: entity
+  id: KsTestFcStuckObjective
+  components:
+  - type: ScenarioObjective
+    factionId: Nanotrasen
 
 - type: entity
   id: KsTestFcStuckUnit
@@ -153,7 +163,7 @@ public sealed class KsFieldCommanderStuckTest : GameTest
         await Server.WaitPost(() =>
         {
             KsFieldCommanderTestHelpers.FillFloor(Server, testMap, HalfExtent);
-            SEntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            SEntMan.SpawnAtPosition(_objective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             SEntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, defenderPosition));
             ruleUid = KsFieldCommanderTestHelpers.StartRules(Server, rule).CommanderUid;
         });
@@ -299,14 +309,14 @@ public sealed class KsFieldCommanderStuckTest : GameTest
     public async Task UnitInDefenderSightIsNeverDissolved()
     {
         // Eight tiles off in the open: in sight, and out of what counts as a fight.
-        var (_, ruleUid, unitUid) = await SetUp(_rule, new Vector2(Box.X + 8.5f, Box.Y + 0.5f));
+        var (_, ruleUid, unitUid) = await SetUp(_rule, new Vector2(Box.X + DefenderOffset + 0.5f, Box.Y + 0.5f));
 
         var seconds = 0f;
         await Server.WaitPost(() =>
         {
             var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
-            Assert.That(8f, Is.GreaterThan(ruleComponent.StuckContactRange).And.LessThan(ruleComponent.DefenderSightRange),
-                "the defender should be in sight and out of contact");
+            Assert.That(ruleComponent.StuckContactRange, Is.LessThan(DefenderOffset), "the defender should be out of contact");
+            Assert.That(ruleComponent.DefenderSightRange, Is.GreaterThan(DefenderOffset), "and in sight");
             seconds = (float)(ruleComponent.StuckRelocateAfter + ruleComponent.OrderInterval * 6).TotalSeconds;
         });
 
@@ -366,7 +376,7 @@ public sealed class KsFieldCommanderStuckTest : GameTest
         await Server.WaitPost(() =>
         {
             KsFieldCommanderTestHelpers.FillFloor(Server, testMap, HalfExtent);
-            SEntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            SEntMan.SpawnAtPosition(_objective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             SEntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 18.5f, 18.5f));
             ruleUid = KsFieldCommanderTestHelpers.StartRules(Server, _capRule).CommanderUid;
         });
