@@ -224,6 +224,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     private void EnterPhase(Entity<KsFieldCommanderRuleComponent> rule, int phaseIndex, TimeSpan curTime)
     {
         rule.Comp.PhaseIndex = phaseIndex;
+        rule.Comp.PhaseWavesSent = 0;
         var phase = rule.Comp.Phases[phaseIndex];
 
         SetNextWave(rule.Comp, ScheduleWave(phase, curTime + phase.FirstWaveDelay));

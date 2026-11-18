@@ -75,12 +75,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
                 if (asset.MinPhase > component.PhaseIndex ||
                     asset.Cost > budget ||
-                    asset.Count > capacity ||
-                    asset.Weight <= 0f)
-                    continue;
-
-                if (asset.MaxAlive > 0 &&
-                    aliveByAsset.GetValueOrDefault(i) + asset.Count > asset.MaxAlive)
+                    asset.Weight <= 0f ||
+                    !CanFieldAsset(asset, i, capacity, aliveByAsset))
                     continue;
 
                 candidates.Add(i);
@@ -265,7 +261,10 @@ public sealed partial class KsFieldCommanderRuleSystem
         var budgetScale = GetEndlessBudgetScale(rule.Comp);
         var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
-        var leftover = BuyAssets(rule.Comp, budget, capacity, aliveByAsset, purchases);
+
+        // What has to come first, charged to the budget; then whatever the rest buys.
+        var guaranteedCost = BuyGuaranteedAssets(rule.Comp, rule.Comp.WavesSent + 1, ref capacity, aliveByAsset, purchases);
+        var leftover = BuyAssets(rule.Comp, budget - guaranteedCost, capacity, aliveByAsset, purchases);
 
         var arrivalSum = Vector2.Zero;
         var arrivalCount = 0;
@@ -273,7 +272,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
-        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget * budgetScale);
+        rule.Comp.CarriedBudget = Math.Clamp(sent > 0 ? leftover : budget, 0f, MathF.Max(0f, phase.Budget * budgetScale));
 
         var struck = _robustRandom.Prob(Math.Clamp(phase.StrikeChance, 0f, 1f)) && TryStrike(rule.Comp, battlefield);
 
@@ -281,6 +280,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
+        rule.Comp.PhaseWavesSent++;
         if (rule.Comp.Endless)
             rule.Comp.EndlessWavesSent++;
 
