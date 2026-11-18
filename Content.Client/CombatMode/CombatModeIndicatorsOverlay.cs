@@ -23,6 +23,7 @@ public sealed partial class CombatModeIndicatorsOverlay : Overlay
     private readonly IEyeManager _eye;
     private readonly CombatModeSystem _combat;
     private readonly HandsSystem _hands = default!;
+    private readonly Content.Client._Battlefield14.Wieldable.KsWieldedCrosshairSystem _ksWieldedCrosshairSystem; // BF14-BLU: added
 
     private readonly Texture _gunSight;
     private readonly Texture _gunBoltSight;
@@ -42,6 +43,7 @@ public sealed partial class CombatModeIndicatorsOverlay : Overlay
         _eye = eye;
         _combat = combatSys;
         _hands = hands;
+        _ksWieldedCrosshairSystem = _entMan.System<Content.Client._Battlefield14.Wieldable.KsWieldedCrosshairSystem>(); // BF14-BLU: added
 
         var spriteSys = _entMan.EntitySysManager.GetEntitySystem<SpriteSystem>();
         _gunSight = spriteSys.Frame0(new SpriteSpecifier.Rsi(new ResPath("/Textures/Interface/Misc/crosshair_pointers.rsi"),
@@ -77,6 +79,15 @@ public sealed partial class CombatModeIndicatorsOverlay : Overlay
         var mousePos = mouseScreenPosition.Position;
         var uiScale = (args.ViewportControl as Control)?.UIScale ?? 1f;
         var limitedScale = uiScale > 1.25f ? 1.25f : uiScale;
+
+        // BF14-BLU start: a wielded gun's own crosshair, drawn as it is rather than as the outlined sight
+        if (_ksWieldedCrosshairSystem.GetActiveCrosshair() is { } crosshair)
+        {
+            var crosshairSize = crosshair.Size * limitedScale;
+            args.ScreenHandle.DrawTextureRect(crosshair, UIBox2.FromDimensions(mousePos - crosshairSize * 0.5f, crosshairSize));
+            return;
+        }
+        // BF14-BLU end
 
         var sight = isHandGunItem ? (isGunBolted ? _gunSight : _gunBoltSight) : _meleeSight;
         DrawSight(sight, args.ScreenHandle, mousePos, limitedScale * Scale);
