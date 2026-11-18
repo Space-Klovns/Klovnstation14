@@ -1,0 +1,22 @@
+# Lets the public target queries weigh KsNpcTargetPriorityComponent (Draw Fire, and anything else given a priority).
+#     Targets without one all score the same, so the order among them is unchanged.
+
+- type: !PartialOnly utilityQuery
+  id: NearbyGunTargets
+  considerations:
+  - !type:KsTargetPriorityCon
+    curve: !type:QuadraticCurve
+      slope: 1
+      exponent: 1
+      yOffset: 0
+      xOffset: 0
+
+- type: !PartialOnly utilityQuery
+  id: NearbyMeleeTargets
+  considerations:
+  - !type:KsTargetPriorityCon
+    curve: !type:QuadraticCurve
+      slope: 1
+      exponent: 1
+      yOffset: 0
+      xOffset: 0

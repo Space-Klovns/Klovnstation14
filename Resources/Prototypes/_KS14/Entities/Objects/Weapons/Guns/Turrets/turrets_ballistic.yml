@@ -46,6 +46,10 @@
   - type: NpcFactionMember
     factions:
     - NanoTrasen
+  # Shot before people by NPCs that weigh priority (KsTargetPriorityCon), whose default is 0.1. With no mob state a
+  #     turret scores little for its health, which this more than makes up for.
+  - type: KsNpcTargetPriority
+    priority: 0.8
 
 - type: entity
   parent: [ WeaponTurretSyndicate, KsBaseTurretTracking ]
