@@ -92,3 +92,4 @@ mandate-power-fealty-desc = Accept a sect master's oath; their whole sect cultiv
 mandate-power-ennoble-desc = Raise someone to the nobility, from duke down to baron; nobles cultivate faster.
 mandate-power-punishment-desc = Call down heaven's punishment: three lightning bolts strike the one you name.
 cultivation-proclamation-wrap = [font size=14][bold]{$sender}[/bold][/font]{"\u000A"}[font size=12]{$message}[/font]
+mandate-jinyiwei-ask-ascension = In this Ascension, a sworn guard serves the court: you could no longer win by reaching the peak, and your duty would be to stop those who try.

@@ -116,3 +116,20 @@
   - type: MindRole
     antagPrototype: KsAscensionBody
   - type: AscensionContenderRole
+
+# Ascension's heads of staff and Jinyiwei: they can't claim the peak, and hunt those who try.
+- type: antag
+  id: KsAscensionCourt
+  name: roles-antag-ks-ascension-court-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-court-objective
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionCourt
+  name: Ascension Court Enforcer Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionCourt
+  - type: AscensionContenderRole

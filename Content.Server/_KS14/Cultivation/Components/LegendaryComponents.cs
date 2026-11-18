@@ -449,3 +449,13 @@ public sealed partial class LegendarySwingComponent : Component
     [DataField(required: true)]
     public Robust.Shared.Prototypes.EntProtoId HitEffect;
 }
+
+/// <summary>
+///     A Pluck Hairs clone: it fights its master's target, and whoever its master strikes with the Ruyi.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class SageCloneComponent : Component
+{
+    [DataField]
+    public EntityUid Master;
+}

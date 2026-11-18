@@ -1,3 +1,4 @@
+using Content.Server._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Server.Chat.Systems;
 using Content.Server.GameTicking;
@@ -34,6 +35,7 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
 
     private static readonly EntProtoId QiContenderRole = "MindRoleKsAscensionQi";
     private static readonly EntProtoId BodyContenderRole = "MindRoleKsAscensionBody";
+    private static readonly EntProtoId CourtEnforcerRole = "MindRoleKsAscensionCourt";
 
     [Dependency] private Content.Shared.Mind.SharedMindSystem _mindSystem = default!;
     [Dependency] private Content.Shared.Roles.SharedRoleSystem _roleSystem = default!;
@@ -43,6 +45,7 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private Content.Shared.Roles.Jobs.SharedJobSystem _jobSystem = default!;
     [Dependency] private CultivationSystem _cultivationSystem = default!;
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
 
@@ -150,9 +153,10 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
                 _cultivationSystem.TryLearnLaw(user, ElementLaws[(int) option]);
         }
 
-        // In Ascension, everyone racing for the peak is an antagonist to everyone else.
+        // In Ascension, everyone racing for the peak is an antagonist to everyone else, except the court: heads of
+        //     staff and their sworn guards enforce heaven's order and can't claim the peak themselves.
         if (Active() && _mindSystem.TryGetMind(user, out var mindId, out _) && !_roleSystem.MindHasRole<AscensionContenderRoleComponent>(mindId))
-            _roleSystem.MindAddRole(mindId, body ? BodyContenderRole : QiContenderRole);
+            _roleSystem.MindAddRole(mindId, CourtBound(user) ? CourtEnforcerRole : body ? BodyContenderRole : QiContenderRole);
 
         _visualsSystem.Wave(user, body ? FxColour.Earth : FxColour.Qi, big: true);
         return true;
@@ -169,6 +173,34 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
 
     #endregion
 
+    /// <summary>
+    ///     Keep someone's Ascension role in step with whether they're bound to the court: joining the Jinyiwei turns a
+    ///         contender into a Court Enforcer, and leaving it turns them back.
+    /// </summary>
+    public void RefreshRole(EntityUid uid)
+    {
+        if (!Active() || !_mindSystem.TryGetMind(uid, out var mindId, out _)
+            || !_roleSystem.MindHasRole<AscensionContenderRoleComponent>(mindId))
+            return;
+
+        var body = TryComp<BodyCultivatorComponent>(uid, out var bodyComponent) && bodyComponent.Committed;
+        _roleSystem.MindRemoveRole<AscensionContenderRoleComponent>(mindId);
+        _roleSystem.MindAddRole(mindId, CourtBound(uid) ? CourtEnforcerRole : body ? BodyContenderRole : QiContenderRole);
+    }
+
+    /// <summary>
+    ///     Heads of staff by job (a stolen ID doesn't count) and the Jinyiwei sworn to a ruler: they can't win Ascension
+    ///         themselves; their duty is to stop anyone else from reaching the peak.
+    /// </summary>
+    public bool CourtBound(EntityUid uid)
+    {
+        if (HasComp<ImperialGuardComponent>(uid))
+            return true;
+
+        return _mindSystem.TryGetMind(uid, out var mindId, out _)
+               && _jobSystem.MindTryGetJobId(mindId, out var jobId) && jobId is { } job && MandateSystem.IsHeadJob(job.Id);
+    }
+
     #region The peak
 
     private void OnPeakReached(ref CultivationPeakReachedEvent args)
@@ -180,6 +212,13 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         var winner = args.Cultivator;
         if (!_mobStateSystem.IsAlive(winner))
             return;
+
+        // The court serves heaven's order; it doesn't seize it.
+        if (CourtBound(winner))
+        {
+            _noticeSystem.Notify(winner, Loc.GetString("ascension-peak-court"), PopupType.Large, alsoToChat: true);
+            return;
+        }
 
         rule.Winner = winner;
         rule.WinnerName = Name(winner);

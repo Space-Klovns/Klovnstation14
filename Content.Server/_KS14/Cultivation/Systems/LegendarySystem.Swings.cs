@@ -14,6 +14,23 @@ public sealed partial class LegendarySystem
         if (!args.IsHit || args.HitEntities.Count == 0)
             return;
 
+        // The Ruyi's clones turn on whoever their master strikes.
+        if (HasComp<RuyiStaffComponent>(entity))
+        {
+            var clones = EntityQueryEnumerator<SageCloneComponent>();
+            while (clones.MoveNext(out var cloneUid, out var clone))
+            {
+                if (clone.Master != args.User)
+                    continue;
+
+                foreach (var hitUid in args.HitEntities)
+                {
+                    if (hitUid != cloneUid && HasComp<Content.Shared.Mobs.Components.MobStateComponent>(hitUid))
+                        _npcFactionSystem.AggroEntity(cloneUid, hitUid);
+                }
+            }
+        }
+
         var from = _transformSystem.GetMapCoordinates(args.User);
         foreach (var hitUid in args.HitEntities)
         {

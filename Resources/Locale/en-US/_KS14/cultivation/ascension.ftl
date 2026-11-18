@@ -10,3 +10,6 @@ roles-antag-ks-ascension-body-name = Body Cultivator
 roles-antag-ks-ascension-objective = Reach the peak of cultivation (Nascent Soul, or the ninth stage of the body) before anyone else. Everyone aboard is racing you; settle scores however you like.
 ascension-chose-qi = Qi stirs in your meridians: you have awakened. Meditate to gather qi and insight, and find a cultivation manual to take up an element's law.
 cultivator-path-given = You hold a Fork in the Road: use it in hand to walk the path of qi or the path of the body. The jianghu does not forgive the weak.
+roles-antag-ks-ascension-court-name = Court Enforcer
+roles-antag-ks-ascension-court-objective = You serve heaven's order: as a head of staff or a sworn guard you can't claim the peak yourself. Cultivate to grow strong, and stop anyone else from ascending.
+ascension-peak-court = You stand at the peak of cultivation, but you serve the court: heaven's order is yours to keep, not to seize. Your duty is still to stop anyone else from reaching it.

@@ -1,3 +1,4 @@
+using Content.Shared.Verbs;
 using System.Linq;
 using Content.Server.Administration;
 using Content.Server.Chat.Systems;
@@ -99,6 +100,7 @@ public sealed partial class MandateSystem : EntitySystem
     /// </summary>
     private const int PunishmentShock = 25;
 
+    [Dependency] private WuxiaAscensionRuleSystem _ascensionSystem = default!;
     [Dependency] private Content.Server.Electrocution.ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
@@ -146,6 +148,14 @@ public sealed partial class MandateSystem : EntitySystem
     /// <summary>
     ///     When the jianghu wakes mid-round, the heads already aboard receive their Mandates.
     /// </summary>
+    /// <summary>
+    ///     Whether this job is a head of staff (one heaven grants a Mandate to).
+    /// </summary>
+    public static bool IsHeadJob(string jobId)
+    {
+        return Heads.ContainsKey(jobId);
+    }
+
     public void GrantExistingHeads()
     {
         var bodies = EntityQueryEnumerator<MindContainerComponent>();
@@ -262,6 +272,7 @@ public sealed partial class MandateSystem : EntitySystem
 
             RemComp<ImperialNobleComponent>(appointee);
             RemComp<ImperialGuardComponent>(appointee);
+            _ascensionSystem.RefreshRole(appointee);
             _noticeSystem.Notify(appointee, Loc.GetString("mandate-office-falls"), PopupType.MediumCaution);
         }
 
@@ -808,6 +819,7 @@ public sealed partial class MandateSystem : EntitySystem
         {
             RemComp<ImperialGuardComponent>(appointee);
             entity.Comp.Guards.Remove(appointee);
+            _ascensionSystem.RefreshRole(appointee);
             Proclaim(entity, Loc.GetString("mandate-jinyiwei-dismissed", ("subject", Name(appointee))));
             return;
         }
@@ -820,13 +832,19 @@ public sealed partial class MandateSystem : EntitySystem
         }
 
         var ruler = entity.Owner;
-        Ask(appointee, Loc.GetString("mandate-jinyiwei-title"), Loc.GetString("mandate-jinyiwei-ask", ("ruler", Name(ruler))), () =>
+        // Joining is always the appointee's choice. In Ascension it costs them the race, and the question says so.
+        var question = Loc.GetString("mandate-jinyiwei-ask", ("ruler", Name(ruler)));
+        if (_ascensionSystem.Active())
+            question += " " + Loc.GetString("mandate-jinyiwei-ask-ascension");
+
+        Ask(appointee, Loc.GetString("mandate-jinyiwei-title"), question, () =>
         {
             if (TerminatingOrDeleted(ruler) || !TryComp<MandateOfHeavenComponent>(ruler, out var mandate))
                 return;
 
             EnsureComp<ImperialGuardComponent>(appointee).Lord = ruler;
             mandate.Guards.Add(appointee);
+            _ascensionSystem.RefreshRole(appointee);
             Proclaim(ruler, Loc.GetString("mandate-jinyiwei-appointed", ("subject", Name(appointee))));
         });
     }

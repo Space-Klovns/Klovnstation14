@@ -209,6 +209,7 @@ public sealed partial class LegendarySystem
             // They share the wielder's factions, so ordinary crew count as friends and plain retaliation would refuse
             //     them: mark the target hostile outright. The clones still never turn on their master.
             _npcFactionSystem.AggroEntity(cloneUid, args.Target);
+            EnsureComp<SageCloneComponent>(cloneUid).Master = args.Performer;
         }
     }
 
