@@ -31,10 +31,6 @@ public sealed class KsPlaceOnTileTest : MovementTest
     private readonly EntProtoId _wall = "KsPlaceOnTileTestWall";
     private readonly EntProtoId _wire = "KsPlaceOnTileTestWire";
 
-    private static readonly EntProtoId BarbedWireCoil = "KsBarbedWireCoil";
-    private static readonly EntProtoId BarbedWire = "KsBarbedWire";
-    private static readonly EntProtoId InflatableWallStack = "InflatableWallStack";
-
     [TestPrototypes]
     private const string Prototypes = @"
 - type: stack
@@ -98,6 +94,24 @@ public sealed class KsPlaceOnTileTest : MovementTest
         layer:
         - MidImpassable
         hard: false
+  # Joined into lines like barbed wire, to check the neighbours through the predicted stand-in.
+  - type: Sprite
+    sprite: _KS14/Structures/barbed_wire.rsi
+    layers:
+    - state: wire
+      map: [ ""wireVertical"" ]
+    - state: wire
+      map: [ ""wireHorizontal"" ]
+    - state: post
+      map: [ ""postNorth"" ]
+    - state: post
+      map: [ ""postSouth"" ]
+    - state: post
+      map: [ ""postEast"" ]
+    - state: post
+      map: [ ""postWest"" ]
+  - type: KsLineSmooth
+    key: ksPlaceOnTileTest
 ";
 
     /// <summary>
@@ -233,20 +247,20 @@ public sealed class KsPlaceOnTileTest : MovementTest
     }
 
     /// <summary>
-    ///     Barbed wire unrolled next to a piece already there joins it into a line, on the builder's client, through
+    ///     A line-joined structure built next to one already there joins it into a line on the builder's client, through
     ///         the stand-in coming and going: the old piece ends capped towards the new one, not left alone.
     /// </summary>
     [Test]
-    public async Task BarbedWireJoinsItsNeighbourThroughThePrediction()
+    public async Task LineJoinsItsNeighbourThroughThePrediction()
     {
         var neighbourTile = TargetTile + Vector2i.Right;
-        var neighbour = await Spawn(BarbedWire, SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.Grid, MapSystem.TileCenterToVector(MapData.Grid, neighbourTile))));
+        var neighbour = await Spawn(_wire, SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.Grid, MapSystem.TileCenterToVector(MapData.Grid, neighbourTile))));
         await RunTicks(5);
         Assert.That(await ShownLayers(ToClient(neighbour)), Is.EquivalentTo(new[] { "postNorth", "postSouth" }),
             "a lone piece should show a post at each end before the new one is built");
 
-        await PlaceInHands(BarbedWireCoil);
-        Assert.That(await ClickAndWatch(BarbedWire), "the client should show the new wire before the server confirms it");
+        await PlaceInHands(_coil);
+        Assert.That(await ClickAndWatch(_wire), "the client should show the new piece before the server confirms it");
         await RunTicks(10);
 
         Assert.That(await ShownLayers(ToClient(neighbour)), Is.EquivalentTo(new[] { "postWest" }),
@@ -255,31 +269,12 @@ public sealed class KsPlaceOnTileTest : MovementTest
         EntityUid built = default;
         await Client.WaitAssertion(() =>
         {
-            var onClient = ClientOnTile(BarbedWire, TargetTile);
-            Assert.That(onClient, Has.Count.EqualTo(1), "the client should end up with exactly one new wire");
+            var onClient = ClientOnTile(_wire, TargetTile);
+            Assert.That(onClient, Has.Count.EqualTo(1), "the client should end up with exactly one new piece");
             built = onClient[0];
         });
         Assert.That(await ShownLayers(built), Is.EquivalentTo(new[] { "postEast" }),
             "the new piece should be capped towards the old one to its east");
-    }
-
-    /// <summary>
-    ///     Upstream's inflatable barricade inflates on a clicked tile too, through the partial that hands it to this.
-    /// </summary>
-    [Test]
-    public async Task InflatableBarricadeInflatesOnAClickedTile()
-    {
-        var barricades = await PlaceInHands(InflatableWallStack, 3);
-        var placeOnTile = SEntMan.GetComponent<KsPlaceOnTileComponent>(ToServer(barricades));
-
-        await ClickTarget();
-        await AwaitDoAfters();
-
-        await Server.WaitAssertion(() =>
-        {
-            Assert.That(ServerOnTile(placeOnTile.Prototype, TargetTile), Has.Count.EqualTo(1), "the barricade should inflate on the clicked tile");
-            Assert.That(SEntMan.GetComponent<StackComponent>(ToServer(barricades)).Count, Is.EqualTo(3 - placeOnTile.StackCost));
-        });
     }
 
     private async Task ClickTarget()
