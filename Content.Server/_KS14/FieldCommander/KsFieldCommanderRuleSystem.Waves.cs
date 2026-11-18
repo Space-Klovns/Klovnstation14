@@ -264,20 +264,36 @@ public sealed partial class KsFieldCommanderRuleSystem
         var budgetScale = GetEndlessBudgetScale(rule.Comp);
         var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
+        KsFieldCommanderDoctrine? doctrine = null;
+        float leftover;
 
-        rule.Comp.DoctrineIndex = PickDoctrine(rule.Comp);
-        var doctrine = rule.Comp.DoctrineIndex >= 0 ? rule.Comp.Doctrines[rule.Comp.DoctrineIndex] : null;
+        // A wave written out in advance comes in place of what the budget would buy, and costs nothing.
+        var queuedWave = rule.Comp.QueuedWaves.Count > 0 ? rule.Comp.QueuedWaves[0] : null;
+        if (TryTakeQueuedWave(rule.Comp, rule.Comp.HardMaxAlive - CountLivingUnits(rule.Owner, null), purchases, out var queuedAnnouncement))
+        {
+            rule.Comp.DoctrineIndex = -1;
+            leftover = budget;
+        }
+        else
+        {
+            rule.Comp.DoctrineIndex = PickDoctrine(rule.Comp);
+            doctrine = rule.Comp.DoctrineIndex >= 0 ? rule.Comp.Doctrines[rule.Comp.DoctrineIndex] : null;
 
-        // What has to come first, charged to the budget; then whatever the doctrine spends of the rest. What it holds
-        //      back is left over, to carry.
-        var guaranteedCost = BuyGuaranteedAssets(rule.Comp, rule.Comp.WavesSent + 1, ref capacity, aliveByAsset, purchases);
-        var available = budget - guaranteedCost;
-        var spendable = GetSpendableBudget(available, doctrine);
-        var leftover = available - (spendable - BuyAssets(rule.Comp, spendable, capacity, aliveByAsset, purchases, doctrine));
+            // What has to come first, charged to the budget; then whatever the doctrine spends of the rest. What it
+            //      holds back is left over, to carry.
+            var guaranteedCost = BuyGuaranteedAssets(rule.Comp, rule.Comp.WavesSent + 1, ref capacity, aliveByAsset, purchases);
+            var available = budget - guaranteedCost;
+            var spendable = GetSpendableBudget(available, doctrine);
+            leftover = available - (spendable - BuyAssets(rule.Comp, spendable, capacity, aliveByAsset, purchases, doctrine));
+        }
 
         var arrivalSum = Vector2.Zero;
         var arrivalCount = 0;
         var sent = Deliver(rule, purchases, battlefield, ref arrivalSum, ref arrivalCount);
+
+        // A queued wave that could not go waits for the next.
+        if (sent == 0 && queuedWave != null)
+            rule.Comp.QueuedWaves.Insert(0, queuedWave);
 
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
@@ -303,7 +319,10 @@ public sealed partial class KsFieldCommanderRuleSystem
             ? GetCompassDirection(arrivalSum / arrivalCount - GetBaseCentre(rule.Comp, battlefield.Anchors))
             : string.Empty;
 
-        Transmit(rule.Comp, PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
+        if (queuedAnnouncement != null)
+            AnnounceQueuedWave(rule.Comp, queuedAnnouncement);
+
+        Transmit(rule.Comp, queuedAnnouncement != null ? null : PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
             ("count", sent), ("direction", direction), ("number", rule.Comp.WavesSent));
 
         if (doctrine != null)

@@ -27,6 +27,7 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
     private readonly EntProtoId _guaranteedRule = "KsTestFcPlanningGuaranteedRule";
     private readonly EntProtoId _doctrineRule = "KsTestFcPlanningDoctrineRule";
     private readonly EntProtoId _hoardRule = "KsTestFcPlanningHoardRule";
+    private readonly EntProtoId _queueRule = "KsTestFcPlanningQueueRule";
     private readonly EntProtoId _defender = "KsTestFcPlanningDefender";
 
     [TestPrototypes]
@@ -136,6 +137,17 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
       minPhase: 1
     assets:
     - entity: KsTestFcPlanningUnit
+
+- type: entity
+  parent: KsTestFcPlanningBaseRule
+  id: KsTestFcPlanningQueueRule
+  components:
+  - type: KsFieldCommanderRule
+    assets:
+    - entity: KsTestFcPlanningUnit
+    # Never bought by the budget.
+    - entity: KsTestFcPlanningUnit
+      weight: 0
 ";
 
     private async Task<EntityUid> SetUp(EntProtoId commanderRule)
@@ -268,6 +280,41 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
             Assert.That(sent, Has.Count.EqualTo((int)(spent / rule.Comp1.Assets[0].Cost)), "only the doctrine's share should be spent");
             Assert.That(rule.Comp1.CarriedBudget, Is.EqualTo(budget - spent).Within(0.001f),
                 "what it held back should be carried to the next wave");
+        });
+    }
+
+    [Test]
+    public async Task QueuedWaveIsSentInPlaceOfTheBudgetsAndOnlyOnce()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_queueRule);
+        const string announcement = "  { $literal } is not a locale id  ";
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var rule = GetRule(ruleUid);
+            system.SetPhase(rule, 0);
+            var entity = new Entity<KsFieldCommanderRuleComponent>(ruleUid, rule.Comp1);
+
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (7, 1) }, null), Is.False, "an unknown asset is refused");
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)>(), null), Is.False, "an empty wave is refused");
+            Assert.That(rule.Comp1.QueuedWaves, Is.Empty);
+
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (1, 3) }, announcement), Is.True);
+            Assert.That(rule.Comp1.QueuedWaves[0].Announcement, Is.EqualTo(announcement.Trim()),
+                "what the admin typed is kept as it is, only trimmed");
+
+            var carried = rule.Comp1.CarriedBudget;
+            var seen = new HashSet<EntityUid>();
+            var queued = SendWave(ruleUid, seen);
+            Assert.That(queued, Is.EqualTo(new[] { 1, 1, 1 }), "the queued wave should be sent as written, and nothing else");
+            Assert.That(rule.Comp1.QueuedWaves, Is.Empty, "a queued wave is sent once");
+            Assert.That(rule.Comp1.CarriedBudget, Is.GreaterThanOrEqualTo(carried), "a queued wave costs nothing");
+
+            var next = SendWave(ruleUid, seen);
+            Assert.That(next, Is.Not.Empty);
+            Assert.That(next, Does.Not.Contain(1), "the wave after is the budget's again");
         });
     }
 }
