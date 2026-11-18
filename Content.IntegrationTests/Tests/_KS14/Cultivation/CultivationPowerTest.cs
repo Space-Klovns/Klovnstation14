@@ -72,6 +72,12 @@ public sealed class CultivationPowerTest : GameTest
 
             var late = SEntMan.GetComponent<BodyCultivatorComponent>(uid).PunchDamage;
             Assert.That(late, Is.GreaterThan(early * 10f).And.GreaterThan(40f), "A Primordial Chaos Body's fists are hardly deadlier.");
+
+            // Destruction climbs with every stage, and the ninth stands clearly above the eighth.
+            for (var stage = 1; stage < BodyCultivatorComponent.MaxStage; stage++)
+                Assert.That(BodyArtSystem.Destruction(stage + 1), Is.GreaterThan(BodyArtSystem.Destruction(stage)), $"Stage {stage + 1} breaks no more than stage {stage}.");
+            Assert.That(BodyArtSystem.Destruction(BodyCultivatorComponent.MaxStage),
+                Is.GreaterThan(BodyArtSystem.Destruction(BodyCultivatorComponent.MaxStage - 1) * 1.3f), "The ninth stage hardly breaks more than the eighth.");
         });
     }
 

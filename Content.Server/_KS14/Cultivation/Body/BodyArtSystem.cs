@@ -326,11 +326,29 @@ public sealed partial class BodyArtSystem : EntitySystem
     }
 
     /// <summary>
+    ///     How hard a stage's arts hit structures: about a third at the first stage, about the old figure in the middle
+    ///         stages, a little over twice it at the ninth.
+    /// </summary>
+    public static float Destruction(int stage)
+    {
+        return SharedBodyCultivationSystem.StageStrength(stage) * (0.5f + 0.02f * stage * stage);
+    }
+
+    /// <summary>
     ///     Smash everything breakable around a point: windows, grilles, tables and machines always; walls by tier.
     ///         Below the tier that breaks them, walls still take <paramref name="wallChip"/>, so a few blows bring one down.
     /// </summary>
     public void Smash(MapCoordinates centre, float radius, float power, int wallTier, EntityUid userUid, float wallChip = 0f)
     {
+        // Destruction grows with the square of the stage, as the blows against people do, and the stages before the
+        //     ninth hold back the same way.
+        if (_bodyCultivatorQuery.TryComp(userUid, out var userBody))
+        {
+            var scale = Destruction(userBody.Stage);
+            power *= scale;
+            wallChip *= scale;
+        }
+
         Crack(centre, radius, chance: 0.5f);
         _breakables.Clear();
         _entityLookupSystem.GetEntitiesInRange(centre, radius, _breakables, flags: LookupFlags.Static | LookupFlags.Dynamic);
