@@ -404,8 +404,17 @@ public sealed partial class ComplexShoveSystem : EntitySystem
                 ("obstacle", Identity.Entity(obstacle, EntityManager)));
         }
 
-        _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
-            $"{ToPrettyString(source):user} sent {ToPrettyString(target):target} into {ToPrettyString(obstacle):obstacle}");
+        // Nobody sent them, as with someone thrown by a blast, when they stand in as their own source.
+        if (source == target)
+        {
+            _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
+                $"{ToPrettyString(target):target} was sent into {ToPrettyString(obstacle):obstacle} by nobody");
+        }
+        else
+        {
+            _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
+                $"{ToPrettyString(source):user} sent {ToPrettyString(target):target} into {ToPrettyString(obstacle):obstacle}");
+        }
     }
 
     /// <summary>
@@ -444,7 +453,15 @@ public sealed partial class ComplexShoveSystem : EntitySystem
         else
             PopupShove(source, target, popups, predictedAnnouncement);
 
-        if (knockedDown)
+        if (!knockedDown)
+            return;
+
+        if (source == target)
+        {
+            _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
+                $"{ToPrettyString(target):target} was sent into a wall by nobody");
+        }
+        else
         {
             _adminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium,
                 $"{ToPrettyString(source):user} sent {ToPrettyString(target):target} into a wall");

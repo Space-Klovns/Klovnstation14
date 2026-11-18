@@ -1,6 +1,7 @@
 using Content.Server._KS14.Explosion;
 using Content.Shared._KS14.Throwing;
 using Content.Shared.Buckle;
+using Content.Shared.Database;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Stunnable;
@@ -54,5 +55,8 @@ public sealed partial class ExplosionSystem
         _throwingSystem.TryThrow(mob, direction * distance, physicsComponent, transformComponent, baseThrowSpeed: speed,
             predicted: false);
         _ksThrownSlamSystem.MarkThrown(mob, thrownComponent.Slam);
+
+        _adminLogger.Add(LogType.ExplosionHit, LogImpact.Medium,
+            $"Explosion at {epicenter:epicenter} threw {ToPrettyString(mob):subject} {distance:distance} tiles at {speed:speed} m/s (throw force {throwForce:force})");
     }
 }

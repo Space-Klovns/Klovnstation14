@@ -73,8 +73,16 @@ public sealed partial class KsEntityStorageCatchSystem : EntitySystem
                 ("storage", storage.Owner));
         }
 
-        _adminLogger.Add(LogType.Landed, LogImpact.Low,
-            $"{ToPrettyString(caught):target} was sent by {ToPrettyString(user):player} into {ToPrettyString(storage):storage}, which shut on them");
+        if (user is { } senderUid)
+        {
+            _adminLogger.Add(LogType.Landed, LogImpact.Low,
+                $"{ToPrettyString(caught):target} was sent by {ToPrettyString(senderUid):player} into {ToPrettyString(storage):storage}, which shut on them");
+        }
+        else
+        {
+            _adminLogger.Add(LogType.Landed, LogImpact.Low,
+                $"{ToPrettyString(caught):target} was sent by nobody into {ToPrettyString(storage):storage}, which shut on them");
+        }
         return true;
     }
 }

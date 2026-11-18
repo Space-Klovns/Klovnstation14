@@ -428,8 +428,12 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
             return;
 
         args.Handled = true;
-        if (CanWriggle(uid))
-            StopCarrying(uid);
+        if (!CanWriggle(uid))
+            return;
+
+        _adminLogger.Add(LogType.Action, LogImpact.Low,
+            $"{ToPrettyString(uid):user} wriggled off {ToPrettyString(component.Carrier):target}'s back");
+        StopCarrying(uid);
     }
 
     /// <summary>

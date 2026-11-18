@@ -70,7 +70,7 @@ public sealed partial class KsGrabberComponent : Component
     ///     Stamina damage this grabber takes for throwing someone, out of a grab or off their back.
     /// </summary>
     [DataField]
-    public float ThrowStaminaCost = 15f;
+    public float ThrowStaminaCost = 10f;
 
     /// <summary>
     ///     tgstation's <c>CLICK_CD_GRABBING</c>: time between two tries to tighten the grip.

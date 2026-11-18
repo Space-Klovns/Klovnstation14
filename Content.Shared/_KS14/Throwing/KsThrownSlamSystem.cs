@@ -1,8 +1,11 @@
 using System.Numerics;
 using Content.Shared._KS14.ComplexShove;
 using Content.Shared._KS14.KsPopup;
+using Content.Shared.Administration.Logs;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.FixedPoint;
 using Content.Shared.Throwing;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
@@ -26,6 +29,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
@@ -73,6 +77,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
             ? thrownPhysicsComponent.LinearVelocity * thrownPhysicsComponent.Mass
             : Vector2.Zero;
 
+        var collateralDamageDealt = FixedPoint2.Zero;
         if (_obstacleQuery.TryComp(args.Target, out var obstacleComponent))
         {
             _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacleComponent),
@@ -81,7 +86,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
             if (obstacleComponent.CollateralKnockdownTime != null)
             {
-                DealDamage(args.Target, slam.CollateralDamage, thrown.Comp.Source);
+                collateralDamageDealt = DealDamage(args.Target, slam.CollateralDamage, thrown.Comp.Source);
 
                 // And is carried on by what hit them.
                 if (slam.MomentumTransfer > 0f)
@@ -101,7 +106,23 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
 
         // Only the first thing they slam into counts.
         RemCompDeferred<KsThrownSlamComponent>(thrown);
-        DealDamage(thrown, slam.ImpactDamage, thrown.Comp.Source);
+        var impactDamageDealt = DealDamage(thrown, slam.ImpactDamage, thrown.Comp.Source);
+
+        // That they hit it is logged by the throw, and that it knocked them over by the shove system: what is left to
+        // say is what it cost them.
+        if (impactDamageDealt > FixedPoint2.Zero || collateralDamageDealt > FixedPoint2.Zero)
+        {
+            if (thrown.Comp.Source is { } thrower)
+            {
+                _adminLogger.Add(LogType.ThrowHit, LogImpact.Medium,
+                    $"{ToPrettyString(thrown):target}, thrown by {ToPrettyString(thrower):user}, took {impactDamageDealt:damage} damage slamming into {ToPrettyString(args.Target):obstacle}, which took {collateralDamageDealt:collateral} damage");
+            }
+            else
+            {
+                _adminLogger.Add(LogType.ThrowHit, LogImpact.Medium,
+                    $"{ToPrettyString(thrown):target}, thrown by nobody, took {impactDamageDealt:damage} damage slamming into {ToPrettyString(args.Target):obstacle}, which took {collateralDamageDealt:collateral} damage");
+            }
+        }
 
         // Unless what they hit took them inside, they stop where they hit it.
         if (slam.StopsMomentum && !_containerSystem.IsEntityInContainer(thrown))
@@ -122,12 +143,13 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
     /// <summary>
     ///     Damage from the slam, dealt by the server only, so health doesn't flicker on a predicting client.
     /// </summary>
-    private void DealDamage(EntityUid uid, DamageSpecifier? damage, EntityUid? origin)
+    /// <returns>How much was dealt in all: nothing on a client.</returns>
+    private FixedPoint2 DealDamage(EntityUid uid, DamageSpecifier? damage, EntityUid? origin)
     {
         if (_netManager.IsClient || damage == null || damage.Empty)
-            return;
+            return FixedPoint2.Zero;
 
-        _damageableSystem.ChangeDamage(uid, damage, origin: origin);
+        return _damageableSystem.ChangeDamage(uid, damage, origin: origin).GetTotal();
     }
 
     [SubscribeLocalEvent]
