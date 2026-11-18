@@ -22,13 +22,26 @@ public sealed partial class KsNpcGrabResistSystem : EntitySystem
     {
         // Raised on the grabber as well. A plain pull isn't fought: otherwise nobody could ever get a grip on an NPC.
         if (args.Victim == npc.Owner && args.NewStage.BlocksVictimMovement)
-            EnsureComp<KsNpcResistingComponent>(npc);
+            StartResisting(npc);
     }
 
     [SubscribeLocalEvent]
     private void OnCarryStarted(Entity<HTNComponent> npc, ref KsCarryStartedEvent args)
     {
-        EnsureComp<KsNpcResistingComponent>(npc);
+        StartResisting(npc);
+    }
+
+    private void StartResisting(EntityUid npcUid)
+    {
+        // Let go and held again within a tick, the marker from the last hold is still there, on its way out: it
+        // would be found, kept, and gone by the end of the tick.
+        if (TryComp<KsNpcResistingComponent>(npcUid, out var leavingComponent) &&
+            leavingComponent.LifeStage > ComponentLifeStage.Running)
+        {
+            RemComp<KsNpcResistingComponent>(npcUid);
+        }
+
+        EnsureComp<KsNpcResistingComponent>(npcUid);
     }
 
     public override void Update(float frameTime)

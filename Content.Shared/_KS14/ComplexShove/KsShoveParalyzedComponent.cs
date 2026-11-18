@@ -8,6 +8,7 @@ namespace Content.Shared._KS14.ComplexShove;
 ///         hold, once; after that, shoves only push them.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[Access(typeof(ComplexShoveSystem))]
 public sealed partial class KsShoveParalyzedComponent : Component
 {
     /// <summary>

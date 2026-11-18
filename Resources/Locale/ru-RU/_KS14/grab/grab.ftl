@@ -47,6 +47,8 @@ alerts-ks-grabbed-strangle-desc = Из тебя выдавливают жизн�
 
 ks-grab-need-combat = Чтобы схватить { THE($victim) } крепче, нужен боевой режим!
 ks-grab-throw-need-down = Сначала повали { THE($victim) } на пол, потом бросай!
+ks-grab-pacified = Ты не хочешь причинять вред { THE($victim) }!
+ks-grab-pacified-throw = Ты не хочешь причинять вред { THE($victim) } броском!
 
 # Толчок того, кого крепко держишь, прижимает его к полу.
 ks-grab-pin-others = { CAPITALIZE(THE($grabber)) } прижимает { THE($victim) } к полу!

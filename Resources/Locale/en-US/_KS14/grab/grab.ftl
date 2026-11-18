@@ -47,6 +47,8 @@ alerts-ks-grabbed-strangle-desc = Someone is choking the life out of you! Click,
 
 ks-grab-need-combat = You need to be in combat mode to grip {THE($victim)} any tighter!
 ks-grab-throw-need-down = You need to get {THE($victim)} on the ground before you can throw {OBJECT($victim)}!
+ks-grab-pacified = You don't want to hurt {THE($victim)}!
+ks-grab-pacified-throw = You don't want to hurt {THE($victim)} by throwing {OBJECT($victim)}!
 
 # Shoving someone held tight pins them to the floor.
 ks-grab-pin-others = {CAPITALIZE(THE($grabber))} pins {THE($victim)} to the floor!

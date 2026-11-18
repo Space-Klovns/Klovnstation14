@@ -6,6 +6,7 @@ using Content.Server.Gravity;
 using Content.Shared._KS14.Carrying;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.Alert;
+using Content.Shared.Buckle;
 using Content.Shared.CombatMode;
 using Content.Shared.Throwing;
 using Content.Shared.Verbs;
@@ -27,6 +28,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
 
@@ -41,6 +43,8 @@ namespace Content.IntegrationTests.Tests._KS14.Grab;
 public sealed class KsFiremanCarryTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
+
+    private static readonly EntProtoId Bed = "Bed";
 
     private async Task<(EntityUid Carrier, EntityUid Victim)> SetUp(bool grab, bool prone, bool pull = true)
     {
@@ -246,6 +250,45 @@ public sealed class KsFiremanCarryTest : GameTest
         await Server.WaitAssertion(() =>
             Assert.That(SEntMan.System<SharedHandsSystem>().EnumerateHeld(carrierUid).Any(held => SEntMan.HasComponent<VirtualItemComponent>(held)),
                 Is.False, "Both hands must be free after the throw."));
+    }
+
+    /// <summary>
+    ///     Someone on a back can't be pulled off it, by the carrier or anyone else.
+    /// </summary>
+    [Test]
+    public async Task TheCarriedCantBePulled()
+    {
+        var (carrierUid, victimUid) = await SetUp(grab: true, prone: true);
+        await Lift(carrierUid, victimUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            SEntMan.System<PullingSystem>().TogglePull(victimUid, carrierUid);
+            Assert.That(SEntMan.GetComponent<PullableComponent>(victimUid).Puller, Is.Null, "Someone carried must not be pulled.");
+            Assert.That(IsCarried(carrierUid, victimUid), Describe(carrierUid, victimUid));
+        });
+    }
+
+    /// <summary>
+    ///     Someone strapped to a bed isn't lifted off it: they have to be unbuckled first.
+    /// </summary>
+    [Test]
+    public async Task TheBuckledArentLifted()
+    {
+        var (carrierUid, victimUid) = await SetUp(grab: false, prone: false, pull: false);
+
+        await Server.WaitAssertion(() =>
+        {
+            var bedUid = SEntMan.SpawnEntity(Bed, SEntMan.GetComponent<TransformComponent>(victimUid).Coordinates);
+            var buckleSystem = SEntMan.System<SharedBuckleSystem>();
+            Assert.That(buckleSystem.TryBuckle(victimUid, victimUid, bedUid), "This test needs the victim buckled.");
+            Assert.That(SEntMan.System<StandingStateSystem>().IsDown(victimUid),
+                "This test needs the victim lying down, so that only the buckle stops the carry.");
+
+            Assert.That(DragOntoSelf(carrierUid, victimUid) && HasRunningDoAfter(carrierUid), Is.False,
+                "Someone buckled must not be lifted.");
+            Assert.That(buckleSystem.IsBuckled(victimUid), "The refused carry must leave them buckled.");
+        });
     }
 
     /// <summary>

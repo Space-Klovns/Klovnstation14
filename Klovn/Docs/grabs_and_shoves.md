@@ -432,6 +432,13 @@ mob's tile, ten times the square root of the intensity there, and is zero wherev
 large explosion (over `explosion.throw_limit` tiles) throws only at its rim. A buckled mob is left alone, and a pull
 on the mob is broken first. The throw is not predicted: a blast is the server's.
 
+**What a grab and a carry refuse.** A pacifist (`PacifiedComponent`) can hold someone by the neck, but can't
+tighten to a stage that has `Damage`, deals none if pacified while already choking, and can't throw a body out of a
+grab or off their back. Someone carried can't be pulled or grabbed, nor pull anything (`BeingPulledAttemptEvent` and
+`StartPullAttemptEvent` on `KsBeingCarriedComponent`). Someone buckled can't be lifted until unbuckled, and a buckled
+carrier lifts nobody. Who can struggle is one check for both, `KsGrabSystem.CanStruggle`: not the incapacitated, the
+stunned or the sleeping.
+
 **A state must not let go of a predicted grip.** An aggressive grip puts a virtual item in the grabber's hand, and
 on the grabber's client that item is a predicted entity. Every server state that arrives before the server has
 confirmed the grip takes it out of the hand again, which raises `VirtualItemDeletedEvent`, and stock
@@ -439,13 +446,21 @@ confirmed the grip takes it out of the hand again, which raises `VirtualItemDele
 tick, and a shove in an off tick was predicted as a plain shove while the server pinned. `PullingSystem` (a `KS14`
 edit) and `KsFiremanCarrySystem` now ignore that event while `IGameTiming.ApplyingState`.
 
-**A slam is announced by the server alone.** A predicted popup is only matched with the server's copy of it when
-both were made on the same tick (`PopupSystem._predictionInstances`). That holds for anything done on an input, but
-not for a collision in flight: the thrower's client rarely has the hit on the server's tick, least of all against
-something moving, and each mismatch showed the popup twice. So `KsThrownSlamSystem` passes
-`predictedAnnouncement: false` to `KnockIntoObstacle` and `KnockIntoWall`: no client shows the popups or plays the
-sound itself, and the server sends them to everyone, the thrower included. The knockdown and the stop are still
-predicted.
+**A slam is announced once, predicted.** A predicted popup is dropped when the server's copy arrives, and stock the
+two are matched by tick (`PopupSystem._predictionInstances`). That holds for anything done on an input, but not for a
+collision in flight: the thrower's client rarely has the hit on the server's tick, least of all against something
+moving. Two things keep the thrower from seeing a slam twice:
+- `PopupSystem.KsTryRemoveNearbyPrediction` (client, `PopupSystem.Klovn.Prediction.cs`): a server entity popup with
+  no predicted twin on its own tick takes the nearest one saying the same on the same entity within half a second.
+- `KsThrownSlamSystem.ShouldAnnounce`: until the server confirms the hit, each state brings the marker back and the
+  client can predict the same slam again a tick later. A client announces only the first slam of an entity within a
+  second, and passes `announce: false` to `KnockIntoObstacle` / `KnockIntoWall` for the rest.
+
+**A throw's effects wait for the throw.** `BeforeThrowEvent` only swaps the victim in for the hand item. The drop
+that follows it can still fail, so the stamina cost, the slam marker, the move to the thrower, the popups and the
+admin log are all done on `ThrowEvent`, which `ThrowingSystem.TryThrow` raises on the thrower once the body is on
+its way. `KsGrabSystem` and `KsFiremanCarrySystem` each remember the throw they let through in `_expectedThrow`
+(thrower, victim, tick) and act only on the `ThrowEvent` that matches it.
 
 **A predicted jitter is one animation.** A shove's stagger jitters (`JitteringComponent`), and the shover's client
 predicts it. Until the server confirms it, every state takes the component off and the next prediction puts it back.

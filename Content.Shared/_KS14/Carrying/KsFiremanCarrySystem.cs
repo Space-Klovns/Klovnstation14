@@ -21,7 +21,9 @@ using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
-using Content.Shared.Bed.Sleep;
+using Content.Shared.Buckle;
+using Content.Shared.CombatMode.Pacification;
+using Content.Shared.Pulling.Events;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Standing;
 using Content.Shared.Stunnable;
@@ -48,9 +50,9 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private KsGrabSystem _grabSystem = default!;
     [Dependency] private KsPopupSystem _ksPopupSystem = default!;
-    [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
     [Dependency] private PullingSystem _pullingSystem = default!;
+    [Dependency] private SharedBuckleSystem _buckleSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
@@ -70,6 +72,12 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     private static readonly KsAudiencePopups DonePopups = new("ks-carry-done-user", "ks-carry-done-target", "ks-carry-done-others");
     private static readonly KsAudiencePopups DropPopups = new("ks-carry-drop-user", "ks-carry-drop-target", "ks-carry-drop-others");
     private static readonly KsAudiencePopups EscapePopups = new("ks-carry-escape-user", "ks-carry-escape-target", "ks-carry-escape-others");
+    /// <summary>
+    ///     A throw of someone carried that <see cref="OnBeforeThrow"/> let through, until the throw itself is raised
+    ///         later in the same call. One left over from a throw that never happened is told by its tick.
+    /// </summary>
+    private (EntityUid Thrower, EntityUid Carried, GameTick Tick)? _expectedThrow;
+
     private static readonly KsAudiencePopups ThrowPopups = new("ks-carry-throw-user", "ks-carry-throw-target", "ks-carry-throw-others");
 
     public override void Initialize()
@@ -186,6 +194,10 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         }
 
         if (_containerSystem.IsEntityInContainer(carrier) || _containerSystem.IsEntityInContainer(victim))
+            return false;
+
+        // Someone strapped in has to be unbuckled first, as for a pull.
+        if (_buckleSystem.IsBuckled(victim) || _buckleSystem.IsBuckled(carrier))
             return false;
 
         // A carry takes hands; one holding the grab is freed by it.
@@ -441,8 +453,7 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     /// </summary>
     public bool CanWriggle(EntityUid carried)
     {
-        return !_mobStateSystem.IsIncapacitated(carried) && !HasComp<StunnedComponent>(carried) &&
-               !HasComp<SleepingComponent>(carried);
+        return _grabSystem.CanStruggle(carried);
     }
 
     /// <summary>
@@ -485,13 +496,60 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
         if (args.Cancelled || CompOrNull<VirtualItemComponent>(args.ItemUid)?.BlockingEntity != carrier.Comp.Carried)
             return;
 
-        // Dropping the hand afterwards puts them down, collision and all, just before they fly.
         var carried = carrier.Comp.Carried;
-        args.ItemUid = carried;
-        _grabSystem.ThrowBody(carried, carrier);
 
-        PopupCarry(carrier, carried, user: carrier, ThrowPopups);
-        _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(carrier):user} threw {ToPrettyString(carried):target} off their back");
+        // Throwing a body into things is an attack.
+        if (HasComp<PacifiedComponent>(carrier))
+        {
+            args.Cancelled = true;
+            _popupSystem.PopupEntity(
+                KsPopupMessage.Create("ks-carry-pacified-throw", ("carried", Identity.Entity(carried, EntityManager))), carrier, carrier);
+            return;
+        }
+
+        // Dropping the hand afterwards puts them down, collision and all, just before they fly. That drop can still
+        // fail, so what the throw costs and does waits for the throw itself (OnThrow).
+        args.ItemUid = carried;
+        _expectedThrow = (carrier, carried, _gameTiming.CurTick);
+    }
+
+    /// <summary>
+    ///     The throw asked for in <see cref="OnBeforeThrow"/> has happened. By now the carry is over, so this is on
+    ///         the carrier, not the carry.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnThrow(Entity<KsFiremanCarrierComponent> carrier, ref ThrowEvent args)
+    {
+        if (_expectedThrow is not { } expected)
+            return;
+
+        _expectedThrow = null;
+        if (expected.Thrower != carrier.Owner || expected.Carried != args.Thrown || expected.Tick != _gameTiming.CurTick)
+            return;
+
+        _grabSystem.ThrowBody(expected.Carried, carrier);
+
+        PopupCarry(carrier, expected.Carried, user: carrier, ThrowPopups);
+        _adminLogger.Add(LogType.Action, LogImpact.Medium,
+            $"{ToPrettyString(carrier):user} threw {ToPrettyString(expected.Carried):target} off their back");
+    }
+
+    /// <summary>
+    ///     Someone on a back is held already: nobody else can pull or grab them off it.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnCarriedBeingPulledAttempt(EntityUid uid, KsBeingCarriedComponent component, BeingPulledAttemptEvent args)
+    {
+        args.Cancel();
+    }
+
+    /// <summary>
+    ///     Nor can they drag anything along from up there.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnCarriedStartPullAttempt(EntityUid uid, KsBeingCarriedComponent component, StartPullAttemptEvent args)
+    {
+        args.Cancel();
     }
 
     [SubscribeLocalEvent]

@@ -6,7 +6,9 @@ using Content.Shared._KS14.Random.Helpers;
 using Content.Shared._KS14.Resist;
 using Content.Shared._KS14.Throwing;
 using Content.Shared.ActionBlocker;
+using Content.Shared.Bed.Sleep;
 using Content.Shared.CombatMode;
+using Content.Shared.CombatMode.Pacification;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Alert;
@@ -76,6 +78,12 @@ public sealed partial class KsGrabSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
+
+    /// <summary>
+    ///     A throw of someone held that <see cref="OnBeforeThrow"/> let through, until the throw itself is raised later
+    ///         in the same call. One left over from a throw that never happened is told by its tick.
+    /// </summary>
+    private (EntityUid Thrower, EntityUid Victim, GameTick Tick, KsAudiencePopups Popups)? _expectedThrow;
 
     private static readonly KsAudiencePopups PinPopups = new("ks-grab-pin-user", "ks-grab-pin-target", "ks-grab-pin-others");
 
@@ -192,18 +200,43 @@ public sealed partial class KsGrabSystem : EntitySystem
             return;
         }
 
-        // Dropping the hand afterwards lets go of the pull, so the victim flies free.
-        // The throw is aimed from the thrower, and leaves from there as anything thrown from a hand does: the victim is
-        // put there at once, on the client predicting the throw as on the server.
-        _transformSystem.SetCoordinates(victim, Transform(grabber).Coordinates);
+        // Throwing a body into things is an attack.
+        if (HasComp<PacifiedComponent>(grabber))
+        {
+            args.Cancelled = true;
+            PopupGrabber(grabber, victim, "ks-grab-pacified-throw");
+            return;
+        }
+
+        // Dropping the hand afterwards lets go of the pull, so the victim flies free. That drop can still fail, so
+        // what the throw costs and does waits for the throw itself (OnThrow).
         args.ItemUid = victim;
         args.ThrowSpeed *= stage.ThrowSpeedModifier;
-        ThrowBody(victim, grabber);
+        _expectedThrow = (grabber, victim, _gameTiming.CurTick, stage.ThrowPopups);
+    }
 
-        PopupGrab(grabber, victim, user: grabber, stage.ThrowPopups, PopupType.MediumCaution);
+    /// <summary>
+    ///     The throw asked for in <see cref="OnBeforeThrow"/> has happened.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnThrow(Entity<KsGrabberComponent> grabber, ref ThrowEvent args)
+    {
+        if (_expectedThrow is not { } expected)
+            return;
+
+        _expectedThrow = null;
+        if (expected.Thrower != grabber.Owner || expected.Victim != args.Thrown || expected.Tick != _gameTiming.CurTick)
+            return;
+
+        // The throw is aimed from the thrower, and leaves from there as anything thrown from a hand does: the victim is
+        // put there at once, on the client predicting the throw as on the server.
+        _transformSystem.SetCoordinates(expected.Victim, Transform(grabber).Coordinates);
+        ThrowBody(expected.Victim, grabber);
+
+        PopupGrab(grabber, expected.Victim, user: grabber, expected.Popups, PopupType.MediumCaution);
 
         _adminLogger.Add(LogType.Action, LogImpact.Medium,
-            $"{ToPrettyString(grabber):user} threw {ToPrettyString(victim):target} out of a grab");
+            $"{ToPrettyString(grabber):user} threw {ToPrettyString(expected.Victim):target} out of a grab");
     }
 
     /// <summary>
@@ -238,6 +271,14 @@ public sealed partial class KsGrabSystem : EntitySystem
             return false;
 
         var nextStage = ProtoMan.Index(grabber.Comp.Stages[next]);
+
+        // A pacifist holds on as tight as they like, but won't choke anyone.
+        if (nextStage.Damage != null && HasComp<PacifiedComponent>(grabber))
+        {
+            PopupGrabber(grabber, victim, "ks-grab-pacified");
+            return false;
+        }
+
         if (nextStage.UpgradeTime <= TimeSpan.Zero)
         {
             EnterStage(grabber, victim, GetStage(grabber), next);
@@ -468,8 +509,7 @@ public sealed partial class KsGrabSystem : EntitySystem
         if (!TryGetGrabber(victim, out var grabber, out var stage) || !TryComp<PullableComponent>(victim, out var pullable))
             return false;
 
-        // Out cold or stunned, nobody struggles.
-        if (_mobStateSystem.IsIncapacitated(victim) || HasComp<StunnedComponent>(victim))
+        if (!CanStruggle(victim))
             return false;
 
         if (!stage.BlocksVictimMovement)
@@ -557,14 +597,27 @@ public sealed partial class KsGrabSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Whether someone held or carried is in a state to fight it: out cold, asleep or stunned, nobody struggles.
+    /// </summary>
+    public bool CanStruggle(EntityUid uid)
+    {
+        return !_mobStateSystem.IsIncapacitated(uid) && !HasComp<StunnedComponent>(uid) &&
+               !HasComp<SleepingComponent>(uid);
+    }
+
+    /// <summary>
     ///     Deals the stage's <see cref="KsGrabStagePrototype.Damage"/> once its interval is up.
     /// </summary>
     private void DealStageDamage(Entity<KsGrabberComponent> grabber, EntityUid victim, KsGrabStagePrototype stage,
         TimeSpan curTime)
     {
         // Out of reach, the grip can't choke: nothing is dealt until they're close again.
-        if (stage.Damage is not { } damage || curTime < grabber.Comp.NextDamage || !IsCloseEnough(grabber, victim, stage))
+        // Nor can someone pacified while already choking.
+        if (stage.Damage is not { } damage || curTime < grabber.Comp.NextDamage || !IsCloseEnough(grabber, victim, stage) ||
+            HasComp<PacifiedComponent>(grabber))
+        {
             return;
+        }
 
         grabber.Comp.NextDamage = curTime + stage.DamageInterval;
         Dirty(grabber);

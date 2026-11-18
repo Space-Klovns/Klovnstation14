@@ -11,12 +11,23 @@ public sealed partial class ThrownItemSystem
     /// <summary>
     ///     Hits found this physics step, in the order physics found them. Drained when the step ends.
     /// </summary>
-    private readonly List<(EntityUid Thrown, EntityUid Target, int Priority)> _pendingHits = new();
+    private readonly List<(EntityUid Thrown, EntityUid Target, int Priority, int Order)> _pendingHits = new();
+
+    /// <summary>
+    ///     The same hits by who hit what, to tell a repeat without going through the list.
+    /// </summary>
+    private readonly HashSet<(EntityUid Thrown, EntityUid Target)> _pendingHitPairs = new();
 
     /// <summary>
     ///     The list being raised: a hit can start another throw, whose hits must wait for their own step.
     /// </summary>
-    private readonly List<(EntityUid Thrown, EntityUid Target, int Priority)> _raisingHits = new();
+    private readonly List<(EntityUid Thrown, EntityUid Target, int Priority, int Order)> _raisingHits = new();
+
+    /// <summary>
+    ///     Highest priority first; equal priorities keep the order physics found them in, as before.
+    /// </summary>
+    private static readonly Comparison<(EntityUid Thrown, EntityUid Target, int Priority, int Order)> HitOrder =
+        (a, b) => a.Priority != b.Priority ? b.Priority.CompareTo(a.Priority) : a.Order.CompareTo(b.Order);
 
     /// <summary>
     ///     Where each thrown thing was when its hits began to be raised. Scratch for <see cref="OnPhysicsAfterSolve"/>.
@@ -26,13 +37,10 @@ public sealed partial class ThrownItemSystem
     private void QueueHit(EntityUid thrown, EntityUid target)
     {
         // Each of a thrown thing's fixtures reports the same hit.
-        foreach (var (pendingThrown, pendingTarget, _) in _pendingHits)
-        {
-            if (pendingThrown == thrown && pendingTarget == target)
-                return;
-        }
+        if (!_pendingHitPairs.Add((thrown, target)))
+            return;
 
-        _pendingHits.Add((thrown, target, _hitPriorityQuery.CompOrNull(target)?.Priority ?? 0));
+        _pendingHits.Add((thrown, target, _hitPriorityQuery.CompOrNull(target)?.Priority ?? 0, _pendingHits.Count));
     }
 
     [SubscribeLocalEvent]
@@ -44,23 +52,11 @@ public sealed partial class ThrownItemSystem
         _raisingHits.Clear();
         _raisingHits.AddRange(_pendingHits);
         _pendingHits.Clear();
-
-        // A stable sort by hand: equal priorities keep the order physics found them in, as before.
-        for (var i = 1; i < _raisingHits.Count; i++)
-        {
-            var hit = _raisingHits[i];
-            var j = i - 1;
-            while (j >= 0 && _raisingHits[j].Priority < hit.Priority)
-            {
-                _raisingHits[j + 1] = _raisingHits[j];
-                j--;
-            }
-
-            _raisingHits[j + 1] = hit;
-        }
+        _pendingHitPairs.Clear();
+        _raisingHits.Sort(HitOrder);
 
         _parentsBeforeHits.Clear();
-        foreach (var (thrown, target, _) in _raisingHits)
+        foreach (var (thrown, target, _, _) in _raisingHits)
         {
             // An earlier hit can have ended the throw, or deleted either of them.
             if (TerminatingOrDeleted(thrown) || TerminatingOrDeleted(target) ||

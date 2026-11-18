@@ -11,6 +11,7 @@ using Content.Shared._Trauma.Hands;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Alert;
 using Content.Shared.CombatMode;
+using Content.Shared.CombatMode.Pacification;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Gravity;
@@ -577,6 +578,53 @@ public sealed class KsGrabTest : GameTest
             Assert.That(SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target));
             Assert.That(IsPulling(grabberUid, victimUid), Is.False, "Throwing the victim must let go of them.");
             Assert.That(SEntMan.HasComponent<ThrownItemComponent>(victimUid), "Throwing the grab's hand must throw the victim.");
+        });
+    }
+
+    /// <summary>
+    ///     A pacifist can hold someone by the neck, but neither chokes nor throws them: a throw that is refused costs
+    ///         nothing and leaves the victim unmarked where they were.
+    /// </summary>
+    [Test]
+    public async Task PacifistsNeitherChokeNorThrow()
+    {
+        var (grabberUid, victimUid) = await SetUp();
+        await Server.WaitPost(() => SEntMan.EnsureComponent<PacifiedComponent>(grabberUid));
+        await GrabAggressively(grabberUid, victimUid);
+
+        await RunSeconds(1);
+        await Server.WaitPost(() => CtrlClick(grabberUid, victimUid));
+        await RunSeconds(SProtoMan.Index(NeckStage).UpgradeTime.TotalSeconds);
+
+        var strangle = SProtoMan.Index(StrangleStage);
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(Stage(grabberUid), Is.EqualTo(2), "A pacifist must still be able to hold someone by the neck.");
+            Assert.That(strangle.Damage, Is.Not.Null, "This test needs the next stage to do damage.");
+            CtrlClick(grabberUid, victimUid);
+        });
+
+        await RunSeconds(strangle.UpgradeTime.TotalSeconds + 1);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(Stage(grabberUid), Is.EqualTo(2), "A pacifist must not tighten a grip to one that does damage.");
+            Assert.That(IsDown(victimUid), "This test needs the victim down, so that only pacifism stops the throw.");
+
+            SelectGrabHand(grabberUid);
+            var staminaBefore = SEntMan.GetComponent<StaminaComponent>(grabberUid).StaminaDamage;
+            var positionBefore = SEntMan.System<SharedTransformSystem>().GetWorldPosition(victimUid);
+            var target = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(4f, 0f));
+            SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target);
+
+            Assert.That(IsPulling(grabberUid, victimUid), "A pacifist must not throw the victim.");
+            Assert.That(SEntMan.HasComponent<ThrownItemComponent>(victimUid), Is.False);
+            Assert.That(SEntMan.HasComponent<KsThrownSlamComponent>(victimUid), Is.False,
+                "A throw that didn't happen must not leave the victim marked to slam.");
+            Assert.That(SEntMan.GetComponent<StaminaComponent>(grabberUid).StaminaDamage, Is.EqualTo(staminaBefore).Within(0.01f),
+                "A throw that didn't happen must cost nothing.");
+            Assert.That(SEntMan.System<SharedTransformSystem>().GetWorldPosition(victimUid), Is.EqualTo(positionBefore),
+                "A throw that didn't happen must not move the victim.");
         });
     }
 

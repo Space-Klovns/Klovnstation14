@@ -13,6 +13,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Throwing;
 
@@ -28,10 +29,24 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
     [Dependency] private EntityQuery<KsShoveObstacleComponent> _obstacleQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+
+    /// <summary>
+    ///     How long after a client announced a predicted slam it stays quiet about another of the same entity.
+    /// </summary>
+    private static readonly TimeSpan RepeatedSlamWindow = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     Client only: when each thrown entity's predicted slam was last announced. Entries past
+    ///         <see cref="RepeatedSlamWindow"/> are dropped on the next slam.
+    /// </summary>
+    private readonly Dictionary<EntityUid, TimeSpan> _slamAnnouncements = new();
+
+    private readonly List<EntityUid> _expiredSlamAnnouncements = new();
 
     /// <summary>
     ///     Marks someone who has just been sent flying, so that the first thing they hit slams them as
@@ -69,8 +84,8 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         var source = thrown.Comp.Source ?? thrown.Owner;
         var sourceless = thrown.Comp.Source == null;
 
-        // The slam is announced by the server alone. A thrower's client rarely has the hit on the server's tick, least
-        // of all against something moving, and a predicted popup that isn't matched by tick shows twice.
+        // A client that predicts the same slam twice says it once.
+        var announce = ShouldAnnounce(thrown);
 
         // Read before the slam, which can stop them or put them on a table.
         var momentum = _physicsQuery.TryComp(thrown, out var thrownPhysicsComponent)
@@ -81,7 +96,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         if (_obstacleQuery.TryComp(args.Target, out var obstacleComponent))
         {
             _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacleComponent),
-                popups: ForAudience(slam.ObstaclePopups, sourceless), predictedAnnouncement: false);
+                popups: ForAudience(slam.ObstaclePopups, sourceless), announce: announce);
 
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
             if (obstacleComponent.CollateralKnockdownTime != null)
@@ -97,7 +112,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         {
             _complexShoveSystem.KnockIntoWall(source, thrown, slam.WallKnockdownTime, slam.WallSound,
                 ForAudience(slam.WallPopups, sourceless), ForAudience(slam.WallResistedPopups, sourceless),
-                downedPopups: ForAudience(slam.WallDownedPopups, sourceless), predictedAnnouncement: false);
+                downedPopups: ForAudience(slam.WallDownedPopups, sourceless), announce: announce);
         }
         else
         {
@@ -130,6 +145,37 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
             _physicsSystem.SetLinearVelocity(thrown, Vector2.Zero);
             _physicsSystem.SetAngularVelocity(thrown, 0f);
         }
+    }
+
+    /// <summary>
+    ///     Whether this slam of <paramref name="thrown"/> is to be heard and seen. On the server, always. A client
+    ///         predicts the hit on its own tick, and each state before the server confirms it brings the marker back,
+    ///         so that it can predict the same slam again a tick or two later, against something moving above all:
+    ///         it then announces only the first within <see cref="RepeatedSlamWindow"/>.
+    /// </summary>
+    private bool ShouldAnnounce(EntityUid thrown)
+    {
+        if (_netManager.IsServer)
+            return true;
+
+        // Nothing is shown or played on a repeated prediction pass anyway, and it mustn't count as the first.
+        if (!_gameTiming.IsFirstTimePredicted)
+            return false;
+
+        var curTime = _gameTiming.CurTime;
+        _expiredSlamAnnouncements.Clear();
+        foreach (var (announcedUid, announcedAt) in _slamAnnouncements)
+        {
+            if (curTime - announcedAt >= RepeatedSlamWindow || curTime < announcedAt)
+                _expiredSlamAnnouncements.Add(announcedUid);
+        }
+
+        foreach (var expiredUid in _expiredSlamAnnouncements)
+        {
+            _slamAnnouncements.Remove(expiredUid);
+        }
+
+        return _slamAnnouncements.TryAdd(thrown, curTime);
     }
 
     /// <summary>

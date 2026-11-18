@@ -36,7 +36,7 @@
 
   ## What a tight grip lets you do
   - [bold]Pin them.[/bold] Shove them while you hold them, as above.
-  - [bold]Throw them.[/bold] Only once they're on the floor. Make the hand holding them your active hand, then throw it at where they should go with [color=yellow][bold][keybind="ThrowItemInHand"][/bold][/color], or with throw mode on, just click there. A neck grip or tighter throws them harder. Throwing a body is tiring: it costs you some stamina. Whatever they slam into knocks them over as a shove would, and hurts: another person goes down with them, both bruised, and is knocked along by the impact, and a wall puts them on the floor. An explosion throws people the same way, further the closer and bigger it is.
+  - [bold]Throw them.[/bold] Only once they're on the floor. Make the hand holding them your active hand, then throw it at where they should go with [color=yellow][bold][keybind="ThrowItemInHand"][/bold][/color], or with throw mode on, just click there. A neck grip or tighter throws them harder. Throwing a body is tiring: it costs you some stamina. A pacifist can hold on, even by the neck, but can neither strangle nor throw anyone. Whatever they slam into knocks them over as a shove would, and hurts: another person goes down with them, both bruised, and is knocked along by the impact, and a wall puts them on the floor. An explosion throws people the same way, further the closer and bigger it is.
   - [bold]Let go.[/bold] Dropping the hand that holds them lets go, as does [color=yellow][bold][keybind="ReleasePulledObject"][/bold][/color].
 
   ## Throw mode
