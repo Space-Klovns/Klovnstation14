@@ -13,7 +13,7 @@ while it holds the perk. Field Commander defenders pick one per round; the frame
 | Field Commander storage, `ks_fcperk` | `Content.Server/_KS14/FieldCommander/*Perks.cs`, `KsFieldCommanderPerkCommand.cs` |
 | Perks, alerts, icons | `Resources/Prototypes/_KS14/Perks/perks.yml`, `Resources/Prototypes/_KS14/Alerts/perks.yml`, `Resources/Textures/_KS14/Interface/Perks/perks.rsi` (placeholders) |
 | Text | `Resources/Locale/{en-US,ru-RU}/_KS14/perks/perks.ftl` |
-| Tests | `Content.IntegrationTests/Tests/_KS14/Perks/` (`KsPerkTest`, `KsPerkDamageTest`, `KsPerkTankTest`) |
+| Tests | `Content.IntegrationTests/Tests/_KS14/Perks/` (`KsPerkTest`, `KsPerkDamageTest`, `KsPerkTankTest`, `KsPerkHealingTest`), `Companions/`, `MedicalBeam/` |
 
 ## What a perk grants
 
@@ -74,6 +74,12 @@ If an ability needs to know about the perk rather than its component, subscribe 
 | Tank | Living Shield | `KsLivingShieldAbility`, `ActionKsLivingShield` | Soaks damage up to `capacity` (server), slows, blocks firing; breaks loudly; `cooldown` starts when it goes down. |
 | Tank | Draw Fire | `KsDrawFireAbility`, `ActionKsDrawFire` | Sets the server's `KsNpcTargetPriorityComponent` for `duration`, read by `KsTargetPriorityCon` (wired into the public `NearbyGunTargets` and `NearbyMeleeTargets` by a partial); the previous priority is put back. |
 | Tank | Better armour | `ksRequiredPerk` on a `CMAutomatedVendor` entry | Checked where the vend is validated; greyed out in the window for anyone else. |
+| Healing | Faster metabolism | `KsMetabolismRateAbility` | Divides the metabolic interval multiplier (`GetMetabolicMultiplierEvent`) by `rateMultiplier`. |
+| Healing | Medical HUD | `ShowHealthBars`, `ShowHealthIcons` | The upstream HUD components, on the body. |
+| Healing | Lifesteal | `KsLifestealAbility` | Heals `fraction` of the damage dealt to a living, non-friendly mob (`DamageDealtEvent` on the target, `KsKillCreditSystem.GetAttacker`, or the holder of what dealt it); server. |
+| Healing | No bleeding | `KsNoBleedingAbility` | Closes any bleed after damage opens it, and zeroes bleed ticks. |
+| Healing | Medibot | `KsCompanions` with `KsMobCompanionMedibot` | A companion (below); `KsCombatMedic` beeps for `windup`, then injects the worst hurt friendly in reach. |
+| Healing | Medigun | item `KsMedicalBeamGun`, `KsMedicalBeamGun` | Port of tg's medbeam: a cancelled shot locks a beam on a friendly in range and sight, healing each `tickInterval`; breaks with a popup and buzz; drawn by `KsMedicalBeamOverlay`. |
 
 Gun abilities hear the shot through `KsShooterFiredGunEvent` (raised on the shooter after each shot), the shot's pre-fire
 state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamageModifyEvent` and

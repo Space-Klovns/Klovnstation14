@@ -7,5 +7,6 @@ ks-perk-tank-desc = Takes the punishment so the others don't have to.
     Injects a combat cocktail on going critical, on a cooldown. Can raise a living shield that soaks damage, and draw the enemy's fire. Better armour waits in the gear vendor.
 ks-perk-healing-name = Healing
 ks-perk-healing-desc = Keeps themselves and everyone around them on their feet.
+    Medicine works faster, health shows at a glance, wounds don't bleed, and hurting the enemy heals you. A combat medibot follows and patches up friends, and the medical beamgun heals a friend in sight from afar.
 ks-perk-support-name = Support
 ks-perk-support-desc = Keeps the squad supplied and fighting harder together.

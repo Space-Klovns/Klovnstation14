@@ -93,6 +93,8 @@
     companions:
     - prototype: KsMobCompanionMedibot
       respawnDelay: 60
+  items:
+  - KsMedicalBeamGun
 
 - type: ksPerk
   id: KsPerkSupport
