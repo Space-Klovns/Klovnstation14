@@ -145,25 +145,48 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Docks the defenders who killed one of their own. The penalty is scaled by how much of everything the
-    ///         victim took was their own side's doing (<see cref="GetTeamkillPenalty"/>), and split between those
-    ///         defenders by how much each dealt: the one who dealt the most is the teamkiller and the rest assisted.
-    ///         Kills of the commander's units are paid in <see cref="RewardUnitKill"/>.
+    ///     A defender's death and return: see <see cref="OnDefenderDied"/>, and <see cref="RewardRevive"/> for being
+    ///         brought back.
     /// </summary>
     // MobStateChangedEvent is a by-value class event, so this is a plain broadcast handler.
     [SubscribeLocalEvent]
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
-        if (args.NewMobState != MobState.Dead ||
-            !TryComp<KsFieldCommanderDamageLedgerComponent>(args.Target, out var ledgerComponent) ||
-            // A unit's ledger is paid and wiped by RewardUnitKill, whichever of the two handlers hears of the death first.
-            HasComp<KsFieldCommanderUnitComponent>(args.Target))
+        // A unit's ledger is paid and wiped by RewardUnitKill, whichever of the two handlers hears of the death first.
+        if (HasComp<KsFieldCommanderUnitComponent>(args.Target))
             return;
 
+        if (args.NewMobState == MobState.Dead)
+            OnDefenderDied(args.Target);
+        else if (args.OldMobState == MobState.Dead)
+            RewardRevive(args.Target, args.Origin);
+    }
+
+    /// <summary>
+    ///     Docks the defenders who killed one of their own. The penalty is scaled by how much of everything the
+    ///         victim took was their own side's doing (<see cref="GetTeamkillPenalty"/>), and split between those
+    ///         defenders by how much each dealt: the one who dealt the most is the teamkiller and the rest assisted.
+    ///         Kills of the commander's units are paid in <see cref="RewardUnitKill"/>. Who did it is kept on the body
+    ///         for whoever revives it (<see cref="KsFieldCommanderDeathRecordComponent"/>).
+    /// </summary>
+    private void OnDefenderDied(EntityUid targetUid)
+    {
+        TryComp<KsFieldCommanderDamageLedgerComponent>(targetUid, out var ledgerComponent);
+
+        var recorded = false;
         var query = QueryActiveRules();
         while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))
         {
-            if (!IsDefender(ruleComponent, args.Target))
+            if (!IsDefender(ruleComponent, targetUid))
+                continue;
+
+            if (!recorded)
+            {
+                RecordDeath(targetUid, ledgerComponent);
+                recorded = true;
+            }
+
+            if (ledgerComponent == null)
                 continue;
 
             var defenderDamage = GetDefenderDamage(ledgerComponent);
@@ -171,11 +194,12 @@ public sealed partial class KsFieldCommanderRuleSystem
                 continue;
 
             var penalty = GetTeamkillPenalty(ruleComponent, defenderDamage / (defenderDamage + ledgerComponent.OtherDamage));
-            PayShares((ruleUid, ruleComponent), ledgerComponent, penalty, TeamkillReason, TeamkillAssistReason, GetReasonName(args.Target));
+            PayShares((ruleUid, ruleComponent), ledgerComponent, penalty, TeamkillReason, TeamkillAssistReason, GetReasonName(targetUid));
         }
 
         // Paid out: whoever brings them back starts with a clean slate.
-        WipeLedger((args.Target, ledgerComponent));
+        if (ledgerComponent != null)
+            WipeLedger((targetUid, ledgerComponent));
     }
 
     /// <summary>
@@ -280,7 +304,13 @@ public sealed partial class KsFieldCommanderRuleSystem
         //      healing can leave them unhurt, and only a ledger can be wiped. GetAllDamage copies the whole dictionary.
         if (!args.DamageIncreased)
         {
-            if (TryComp<KsFieldCommanderDamageLedgerComponent>(defenderUid, out var healedLedgerComponent) &&
+            TryComp<KsFieldCommanderDamageLedgerComponent>(defenderUid, out var healedLedgerComponent);
+
+            // Paid from the ledger as it stands, before a full heal wipes it.
+            if (args.Origin != null)
+                RewardHealing(defenderUid, args, healedLedgerComponent);
+
+            if (healedLedgerComponent != null &&
                 !_damageableSystem.GetAllDamage((defenderUid, args.Damageable)).AnyPositive())
                 WipeLedger((defenderUid, healedLedgerComponent));
 

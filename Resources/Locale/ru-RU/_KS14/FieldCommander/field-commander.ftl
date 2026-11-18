@@ -139,3 +139,6 @@ ks-fieldcommander-wave-status-paused = { $wave ->
     [0] Волны приостановлены
    *[other] Волна { $wave } · пауза
 }
+
+ks-fieldcommander-points-revive = Реанимация: { $name }
+ks-fieldcommander-points-heal = Лечение: { $name }

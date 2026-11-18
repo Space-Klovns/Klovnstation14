@@ -141,3 +141,6 @@ ks-fieldcommander-wave-status-paused = { $wave ->
     [0] Waves paused
    *[other] Wave { $wave } · paused
 }
+
+ks-fieldcommander-points-revive = Revived: { $name }
+ks-fieldcommander-points-heal = Healed: { $name }
