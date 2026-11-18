@@ -27,10 +27,11 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
 
-    private static readonly EntProtoId Human = "MobHuman";
+    private readonly EntProtoId _mob = "KsTestBlastThrownMob";
     private readonly ProtoId<ExplosionPrototype> _explosion = "KsTestMobThrowExplosion";
 
-    // Harmless, so that the mob is still whole to be measured.
+    // The explosion is harmless, so that the mob is still whole to be measured. The mob's caps are out of reach of
+    // any blast here, so that distance keeps growing with force.
     [TestPrototypes]
     private const string Prototypes = @"
 - type: explosion
@@ -42,13 +43,31 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
   tileBreakIntensity: [ 0 ]
   texturePath: /Textures/Effects/fire.rsi
   fireStates: 3
+
+- type: entity
+  parent: MobHuman
+  id: KsTestBlastThrownMob
+  components:
+  - type: KsExplosionThrown
+    minThrowForce: 15
+    speedPerForce: 0.4
+    maxSpeed: 100
+    distancePerForce: 0.15
+    maxDistance: 100
+    knockdownTime: 2
 ";
 
     /// <summary>
-    ///     How far east the mob ends up after a blast of this intensity one tile west of it, and whether it was marked
-    ///         to slam on the way.
+    ///     <c>ExplosionSystem</c>'s throw force on a tile is this times the square root of the intensity there.
     /// </summary>
-    private async Task<(float Distance, bool Marked)> Blast(float tileIntensity)
+    private const float ThrowForcePerRootIntensity = 10f;
+
+    /// <summary>
+    ///     How far east the mob ends up after a blast one tile west of it, and whether it was marked to slam on the way.
+    /// </summary>
+    /// <param name="forceOverThreshold">The blast's throw force on the mob's tile, as a multiple of the weakest
+    ///     that lifts the mob.</param>
+    private async Task<(float Distance, bool Marked)> Blast(float forceOverThreshold)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid mobUid = default;
@@ -66,15 +85,20 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
 
             var gravityComponent = SEntMan.EnsureComponent<GravityComponent>(testMap.Grid.Owner);
             SEntMan.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
-            mobUid = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            mobUid = SEntMan.SpawnEntity(_mob, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
         });
 
         await Pair.RunTicksSync(5);
 
         await Server.WaitPost(() =>
         {
+            var throwForce = SEntMan.GetComponent<KsExplosionThrownComponent>(mobUid).MinThrowForce * forceOverThreshold;
+            var rootIntensity = throwForce / ThrowForcePerRootIntensity;
+            var tileIntensity = rootIntensity * rootIntensity;
+
             var epicenter = SEntMan.System<SharedTransformSystem>().ToMapCoordinates(new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
-            // Small and steep: an explosion over a large area throws only at its rim.
+            // Small and steep: an explosion over a large area throws only at its rim. One tile out, a slope of half
+            // the wanted intensity under a cap of one and a half times it leaves just that intensity.
             SEntMan.System<ExplosionSystem>().QueueExplosion(epicenter, _explosion, totalIntensity: tileIntensity * 12f,
                 slope: tileIntensity / 2f, maxTileIntensity: tileIntensity * 1.5f, cause: null);
         });
@@ -95,8 +119,8 @@ public sealed class KsExplosionThrowsMobsTest : GameTest
     public async Task StrongerBlastThrowsFurther()
     {
         var weak = await Blast(0.5f);
-        var middling = await Blast(4f);
-        var strong = await Blast(16f);
+        var middling = await Blast(1.5f);
+        var strong = await Blast(3f);
 
         Assert.Multiple(() =>
         {

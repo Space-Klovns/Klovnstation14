@@ -108,7 +108,7 @@ public sealed class KsGrabPinPredictionTest : GameTest
             {
                 await Pair.RunTicksSync(1);
                 await Client.WaitAssertion(() =>
-                    Assert.That(CEntMan.GetComponent<KsGrabberComponent>(clientGrabberUid).Stage, Is.EqualTo(1),
+                    Assert.That(ClientHoldsTight(clientGrabberUid),
                         $"The client lost its own tightened grip {tick} ticks after the ctrl-click."));
             }
         }
@@ -120,8 +120,7 @@ public sealed class KsGrabPinPredictionTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            Assert.That(CEntMan.GetComponent<KsGrabberComponent>(clientGrabberUid).Stage, Is.EqualTo(1),
-                "The client must hold the victim aggressively before the shove.");
+            Assert.That(ClientHoldsTight(clientGrabberUid), "The client must hold the victim tight before the shove.");
 
             // What a right-click in combat mode sends. The client runs its own prediction of it at once.
             CEntMan.RaisePredictiveEvent(new DisarmAttackEvent(netVictim, netCoordinates));
@@ -150,6 +149,15 @@ public sealed class KsGrabPinPredictionTest : GameTest
 
         await Server.WaitAssertion(() =>
             Assert.That(SEntMan.GetComponent<KsGrabberComponent>(grabberUid).Pinned, "The server must pin the victim too."));
+    }
+
+    /// <summary>
+    ///     Whether the client has the grabber's grip at a stage that holds the victim in place: the kind a shove pins.
+    /// </summary>
+    private bool ClientHoldsTight(EntityUid clientGrabberUid)
+    {
+        var grabberComponent = CEntMan.GetComponent<KsGrabberComponent>(clientGrabberUid);
+        return CProtoMan.Index(grabberComponent.Stages[grabberComponent.Stage]).BlocksVictimMovement;
     }
 
     private const int WatchedTicks = 20;

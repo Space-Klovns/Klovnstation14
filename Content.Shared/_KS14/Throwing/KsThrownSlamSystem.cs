@@ -22,9 +22,10 @@ namespace Content.Shared._KS14.Throwing;
 public sealed partial class KsThrownSlamSystem : EntitySystem
 {
     [Dependency] private ComplexShoveSystem _complexShoveSystem = default!;
+    [Dependency] private EntityQuery<KsShoveObstacleComponent> _obstacleQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
@@ -35,10 +36,10 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
     /// <param name="source">Who threw them, or null when nobody did.</param>
     public void MarkThrown(EntityUid thrown, ProtoId<KsThrownSlamPrototype> slam, EntityUid? source = null)
     {
-        var component = EnsureComp<KsThrownSlamComponent>(thrown);
-        component.Slam = slam;
-        component.Source = source;
-        Dirty(thrown, component);
+        var thrownSlamComponent = EnsureComp<KsThrownSlamComponent>(thrown);
+        thrownSlamComponent.Slam = slam;
+        thrownSlamComponent.Source = source;
+        Dirty(thrown, thrownSlamComponent);
     }
 
     [SubscribeLocalEvent]
@@ -49,7 +50,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         if (thrown.Comp.LifeStage > ComponentLifeStage.Running)
             return;
 
-        if (args.Target == thrown.Comp.Source || !_prototypeManager.Resolve(thrown.Comp.Slam, out var slam))
+        if (args.Target == thrown.Comp.Source || !ProtoMan.Resolve(thrown.Comp.Slam, out var slam))
             return;
 
         // Caught by what they hit, as by a closet shutting on them: they're inside it, not slammed against it.
@@ -65,15 +66,17 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
         var sourceless = thrown.Comp.Source == null;
 
         // Read before the slam, which can stop them or put them on a table.
-        var momentum = TryComp<PhysicsComponent>(thrown, out var physics) ? physics.LinearVelocity * physics.Mass : Vector2.Zero;
+        var momentum = _physicsQuery.TryComp(thrown, out var thrownPhysicsComponent)
+            ? thrownPhysicsComponent.LinearVelocity * thrownPhysicsComponent.Mass
+            : Vector2.Zero;
 
-        if (TryComp<KsShoveObstacleComponent>(args.Target, out var obstacle))
+        if (_obstacleQuery.TryComp(args.Target, out var obstacleComponent))
         {
-            _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacle),
-                ForAudience(slam.ObstaclePopups, sourceless));
+            _complexShoveSystem.KnockIntoObstacle(source, thrown, (args.Target, obstacleComponent),
+                popups: ForAudience(slam.ObstaclePopups, sourceless));
 
             // Someone in the way is hit as hard, if they can be hurt; a table isn't.
-            if (obstacle.CollateralKnockdownTime != null)
+            if (obstacleComponent.CollateralKnockdownTime != null)
             {
                 DealDamage(args.Target, slam.CollateralDamage, thrown.Comp.Source);
 
@@ -82,7 +85,7 @@ public sealed partial class KsThrownSlamSystem : EntitySystem
                     _physicsSystem.ApplyLinearImpulse(args.Target, momentum * slam.MomentumTransfer);
             }
         }
-        else if (CompOrNull<PhysicsComponent>(args.Target)?.BodyType == BodyType.Static)
+        else if (_physicsQuery.CompOrNull(args.Target)?.BodyType == BodyType.Static)
         {
             _complexShoveSystem.KnockIntoWall(source, thrown, slam.WallKnockdownTime, slam.WallSound,
                 ForAudience(slam.WallPopups, sourceless), ForAudience(slam.WallResistedPopups, sourceless));

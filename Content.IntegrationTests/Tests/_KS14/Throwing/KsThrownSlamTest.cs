@@ -31,7 +31,7 @@ public sealed class KsThrownSlamTest : GameTest
     public override PoolSettings PoolSettings => new() { Dirty = true };
 
     private static readonly EntProtoId Human = "MobHuman";
-    private static readonly ProtoId<KsThrownSlamPrototype> Slam = "KsThrownSlam";
+    private readonly ProtoId<KsThrownSlamPrototype> _slam = "KsThrownSlamTestSlam";
     private readonly EntProtoId _wall = "KsThrownSlamTestWall";
 
     /// <summary>
@@ -41,6 +41,18 @@ public sealed class KsThrownSlamTest : GameTest
 
     [TestPrototypes]
     private const string Prototypes = @"
+- type: ksThrownSlam
+  id: KsThrownSlamTestSlam
+  wallKnockdownTime: 30
+  impactDamage:
+    types:
+      Blunt: 10
+  collateralDamage:
+    types:
+      Blunt: 10
+  stopsMomentum: true
+  momentumTransfer: 1
+
 - type: entity
   id: KsThrownSlamTestWall
   components:
@@ -91,16 +103,16 @@ public sealed class KsThrownSlamTest : GameTest
 
         await Server.WaitPost(() =>
         {
-            SEntMan.System<ThrowingSystem>().TryThrow(thrownUid, new Vector2(7f, 0f), 10f);
+            SEntMan.System<ThrowingSystem>().TryThrow(thrownUid, new Vector2(7f, 0f), baseThrowSpeed: 10f);
             if (marked)
-                SEntMan.System<KsThrownSlamSystem>().MarkThrown(thrownUid, Slam);
+                SEntMan.System<KsThrownSlamSystem>().MarkThrown(thrownUid, _slam);
         });
 
         await Pair.RunTicksSync((int)(1.5 * timing.TickRate));
 
         await Server.WaitAssertion(() =>
         {
-            var slam = SProtoMan.Index(Slam);
+            var slam = SProtoMan.Index(_slam);
             var damage = SEntMan.System<DamageableSystem>().GetAllDamage(thrownUid).GetTotal();
             var knockedDown = SEntMan.HasComponent<KnockedDownComponent>(thrownUid);
             var impact = slam.ImpactDamage!;
