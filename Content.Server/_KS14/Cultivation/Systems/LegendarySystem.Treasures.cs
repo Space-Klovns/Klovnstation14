@@ -524,35 +524,37 @@ public sealed partial class LegendarySystem
 
     /// <summary>
     ///     Swallow Heaven and Earth: every loose thing within five tiles flies into the pouch.
+    ///     Used from its own action, so using the pouch in hand opens it like any bag.
     /// </summary>
     [SubscribeLocalEvent]
-    private void OnPouchUsed(Entity<QiankunPouchComponent> entity, ref UseInHandEvent args)
+    private void OnPouchSwallow(Entity<QiankunPouchComponent> entity, ref QiankunSwallowActionEvent args)
     {
         if (args.Handled)
             return;
 
         args.Handled = true;
+        var user = args.Performer;
         var now = _gameTiming.CurTime;
         if (now < entity.Comp.NextSwallow)
         {
-            _noticeSystem.Notify(args.User, Loc.GetString("legendary-pouch-wind"));
+            _noticeSystem.Notify(user, Loc.GetString("legendary-pouch-wind"));
             return;
         }
 
         entity.Comp.NextSwallow = now + entity.Comp.Cooldown;
-        Shout(args.User, "legendary-pouch-swallow");
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtVoidMotes, args.User);
+        Shout(user, "legendary-pouch-swallow");
+        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtVoidMotes, user);
         var swallowed = 0;
-        foreach (var uid in _entityLookupSystem.GetEntitiesInRange(Transform(args.User).Coordinates, 5f, LookupFlags.Dynamic | LookupFlags.Sundries))
+        foreach (var uid in _entityLookupSystem.GetEntitiesInRange(Transform(user).Coordinates, 5f, LookupFlags.Dynamic | LookupFlags.Sundries))
         {
             if (uid == entity.Owner || !HasComp<ItemComponent>(uid) || Transform(uid).Anchored || _containerSystem.IsEntityInContainer(uid))
                 continue;
 
-            if (_storageSystem.Insert(entity, uid, out _, user: args.User, playSound: false))
+            if (_storageSystem.Insert(entity, uid, out _, user: user, playSound: false))
                 swallowed++;
         }
 
-        _noticeSystem.Notify(args.User, Loc.GetString("legendary-pouch-swallowed", ("count", swallowed)), PopupType.Medium);
+        _noticeSystem.Notify(user, Loc.GetString("legendary-pouch-swallowed", ("count", swallowed)), PopupType.Medium);
     }
 
     /// <summary>

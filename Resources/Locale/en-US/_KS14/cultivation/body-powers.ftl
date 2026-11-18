@@ -109,10 +109,10 @@ body-power-legs-thousand-league-legs-name = Thousand-League Legs
 body-power-legs-thousand-league-legs-desc = Nothing slows you down, and you're faster still.
 
 body-power-eyes-clear-eyes-name = Clear Eyes
-body-power-eyes-clear-eyes-desc = You see in the dark (on from the start; the night vision button turns it off), and flashes can't blind you.
+body-power-eyes-clear-eyes-desc = Flashes can't blind you.
 
-body-power-eyes-unblinking-eyes-name = Unblinking Eyes
-body-power-eyes-unblinking-eyes-desc = Flashes can't blind you.
+body-power-eyes-unblinking-eyes-name = Night Eyes
+body-power-eyes-unblinking-eyes-desc = You see in the dark (on from the start; the Tempered Eyes button turns it off).
 
 body-power-eyes-hunter-s-sight-name = Hunter's Sight
 body-power-eyes-hunter-s-sight-desc = True night vision: darkness hides nothing from you.

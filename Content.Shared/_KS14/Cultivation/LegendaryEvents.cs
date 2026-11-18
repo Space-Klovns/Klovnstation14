@@ -73,3 +73,8 @@ public sealed partial class WumuCommandActionEvent : InstantActionEvent
 ///     The Seven-Star Sword, all seven stars lit: a river of starlight pours out down a line.
 /// </summary>
 public sealed partial class SevenStarsActionEvent : WorldTargetActionEvent;
+
+/// <summary>
+///     Swallow Heaven and Earth: every loose item nearby flies into the Qiankun Pouch.
+/// </summary>
+public sealed partial class QiankunSwallowActionEvent : InstantActionEvent;

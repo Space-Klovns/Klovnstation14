@@ -25,6 +25,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveGold
@@ -49,6 +52,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveMetal
@@ -73,6 +79,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveWater
@@ -97,6 +106,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveFire
@@ -121,6 +133,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveEarth
@@ -145,6 +160,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveWood
@@ -169,6 +187,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBlood
@@ -193,6 +214,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveVoid
@@ -217,6 +241,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveSense
@@ -241,6 +268,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigQi
@@ -265,6 +295,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigGold
@@ -289,6 +322,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigMetal
@@ -313,6 +349,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigWater
@@ -337,6 +376,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigFire
@@ -361,6 +403,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigEarth
@@ -385,6 +430,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigWood
@@ -409,6 +457,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigBlood
@@ -433,6 +484,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigVoid
@@ -457,6 +511,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaveBigSense
@@ -481,6 +538,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkQi
@@ -504,6 +564,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkGold
@@ -527,6 +590,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkMetal
@@ -550,6 +616,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkWater
@@ -573,6 +642,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkFire
@@ -596,6 +668,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkEarth
@@ -619,6 +694,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkWood
@@ -642,6 +720,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkBlood
@@ -665,6 +746,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkVoid
@@ -688,6 +772,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSparkSense
@@ -711,6 +798,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesQi
@@ -734,6 +824,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesGold
@@ -757,6 +850,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesMetal
@@ -780,6 +876,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesWater
@@ -803,6 +902,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesFire
@@ -826,6 +928,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesEarth
@@ -849,6 +954,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesWood
@@ -872,6 +980,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesBlood
@@ -895,6 +1006,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesVoid
@@ -918,6 +1032,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxMotesSense
@@ -941,6 +1058,9 @@
     duration: 2.0
   - type: TimedDespawn
     lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraQi
@@ -960,6 +1080,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraGold
@@ -979,6 +1102,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraMetal
@@ -998,6 +1124,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraWater
@@ -1017,6 +1146,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraFire
@@ -1036,6 +1168,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraEarth
@@ -1055,6 +1190,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraWood
@@ -1074,6 +1212,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraBlood
@@ -1093,6 +1234,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraVoid
@@ -1112,6 +1256,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxAuraSense
@@ -1131,6 +1278,9 @@
     radius: 2.0
     energy: 1.4
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeQi
@@ -1150,6 +1300,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeGold
@@ -1169,6 +1322,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeMetal
@@ -1188,6 +1344,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeWater
@@ -1207,6 +1366,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeFire
@@ -1226,6 +1388,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeEarth
@@ -1245,6 +1410,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeWood
@@ -1264,6 +1432,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeBlood
@@ -1283,6 +1454,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeVoid
@@ -1302,6 +1476,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDomeSense
@@ -1321,6 +1498,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilQi
@@ -1340,6 +1520,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilGold
@@ -1359,6 +1542,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilMetal
@@ -1378,6 +1564,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilWater
@@ -1397,6 +1586,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilFire
@@ -1416,6 +1608,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilEarth
@@ -1435,6 +1630,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilWood
@@ -1454,6 +1652,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilBlood
@@ -1473,6 +1674,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilVoid
@@ -1492,6 +1696,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSigilSense
@@ -1511,6 +1718,9 @@
     radius: 2.0
     energy: 1.0
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastQi
@@ -1535,6 +1745,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigQi
@@ -1559,6 +1772,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastGold
@@ -1583,6 +1799,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigGold
@@ -1607,6 +1826,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastMetal
@@ -1631,6 +1853,9 @@
     duration: 0.42
   - type: TimedDespawn
     lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigMetal
@@ -1655,6 +1880,9 @@
     duration: 0.42
   - type: TimedDespawn
     lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastWater
@@ -1679,6 +1907,9 @@
     duration: 0.63
   - type: TimedDespawn
     lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigWater
@@ -1703,6 +1934,9 @@
     duration: 0.63
   - type: TimedDespawn
     lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastFire
@@ -1727,6 +1961,9 @@
     duration: 0.42
   - type: TimedDespawn
     lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigFire
@@ -1751,6 +1988,9 @@
     duration: 0.42
   - type: TimedDespawn
     lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastEarth
@@ -1775,6 +2015,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigEarth
@@ -1799,6 +2042,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastWood
@@ -1823,6 +2069,9 @@
     duration: 0.54
   - type: TimedDespawn
     lifetime: 0.54
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigWood
@@ -1847,6 +2096,9 @@
     duration: 0.54
   - type: TimedDespawn
     lifetime: 0.54
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBlood
@@ -1871,6 +2123,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigBlood
@@ -1895,6 +2150,9 @@
     duration: 0.3
   - type: TimedDespawn
     lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastVoid
@@ -1919,6 +2177,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigVoid
@@ -1943,6 +2204,9 @@
     duration: 0.48
   - type: TimedDespawn
     lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastSense
@@ -1967,6 +2231,9 @@
     duration: 0.63
   - type: TimedDespawn
     lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxCastBigSense
@@ -1991,6 +2258,9 @@
     duration: 0.63
   - type: TimedDespawn
     lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxPillar
@@ -2016,3 +2286,6 @@
     duration: 0.8
   - type: TimedDespawn
     lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu

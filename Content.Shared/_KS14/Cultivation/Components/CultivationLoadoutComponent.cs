@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.Cultivation.Components;
 ///     Which of their techniques, arts and jianghu actions a cultivator has on their action bar. Everything they learn
 ///         is kept, but only <see cref="Slots"/> are equipped at a time; the rest wait in the Techniques menu.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 public sealed partial class CultivationLoadoutComponent : Component
 {
     /// <summary>

@@ -19,6 +19,8 @@ public sealed class TechniqueLoadoutBoundUserInterface(EntityUid owner, Enum uiK
     {
         base.Open();
         _menu = this.CreateWindow<SimpleRadialMenu>();
+        // Stays open, so several techniques can be equipped or put away in a row.
+        _menu.CloseOnSelect = false;
         Update();
         _menu.OpenCentered();
     }
@@ -35,12 +37,14 @@ public sealed class TechniqueLoadoutBoundUserInterface(EntityUid owner, Enum uiK
                 continue;
 
             var equipped = loadout.Equipped.Contains(actionUid);
-            var name = EntMan.GetComponent<MetaDataComponent>(actionUid).EntityName;
+            var metaData = EntMan.GetComponent<MetaDataComponent>(actionUid);
+            var name = metaData.EntityName;
+            var description = metaData.EntityDescription;
             buttons.Add(new RadialMenuActionOption<NetEntity>(Toggle, EntMan.GetNetEntity(actionUid))
             {
                 IconSpecifier = RadialMenuIconSpecifier.With(action.Icon),
                 ToolTip = Loc.GetString(equipped ? "cultivation-loadout-equipped" : "cultivation-loadout-stored-tip",
-                    ("technique", name), ("count", loadout.Equipped.Count), ("slots", loadout.Slots)),
+                    ("technique", name), ("count", loadout.Equipped.Count), ("slots", loadout.Slots), ("description", description)),
                 BackgroundColor = equipped ? Palettes.Green.Element.WithAlpha(128) : null,
             });
         }

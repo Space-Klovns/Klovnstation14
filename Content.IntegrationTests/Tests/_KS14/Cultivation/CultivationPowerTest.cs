@@ -250,14 +250,19 @@ public sealed class CultivationPowerTest : GameTest
             var bodySystem = SEntMan.System<SharedBodyCultivationSystem>();
             var uid = SEntMan.SpawnEntity("KsTestPowerBody", MapCoordinatesNullspace());
             var body = SEntMan.GetComponent<BodyCultivatorComponent>(uid);
-            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 1);
+            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 5);
+            bodySystem.Recalculate((uid, body));
+            Assert.That(SEntMan.HasComponent<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(uid), Is.False,
+                "Night vision came before the sixth level of the eyes.");
+
+            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 6);
             bodySystem.Recalculate((uid, body));
             Assert.That(SEntMan.TryGetComponent<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(uid, out var clear), Is.True,
-                "Clear Eyes gave no night vision.");
+                "Night Eyes gave no night vision.");
             Assert.That(clear!.ActionEntity, Is.Not.Null, "There's no button to turn the night vision on.");
             var weak = clear.Amplification;
 
-            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 3);
+            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 7);
             bodySystem.Recalculate((uid, body));
             Assert.That(SEntMan.GetComponent<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(uid).Amplification, Is.GreaterThan(weak),
                 "Hunter's Sight didn't sharpen the night vision.");

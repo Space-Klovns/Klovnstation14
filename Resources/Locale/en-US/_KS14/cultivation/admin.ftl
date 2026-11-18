@@ -2,7 +2,7 @@
 
 verb-categories-cultivation-qi = Cultivation: Qi
 verb-categories-cultivation-body = Cultivation: Body
-verb-categories-cultivation-martial = Cultivation: Martial Arts
+verb-categories-cultivation-martial = Cultivation: Teach
 
 cultivation-admin-awaken = Awaken as a cultivator
 cultivation-admin-break-through = Break through to the next realm

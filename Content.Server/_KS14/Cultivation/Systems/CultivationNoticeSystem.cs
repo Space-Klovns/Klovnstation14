@@ -1,3 +1,8 @@
+using Content.Shared.Station.Components;
+using Content.Server.Station.Systems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Utility;
 using Content.Server.Chat.Managers;
 using Content.Shared.Chat;
 using Content.Shared.Popups;
@@ -24,6 +29,10 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
     [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+
+    private static readonly SoundSpecifier DefaultProclamationSound = new SoundPathSpecifier("/Audio/Announcements/announce.ogg");
 
     private readonly Dictionary<EntityUid, Queue<(string Message, PopupType Type, bool Public)>> _pending = new();
     private readonly Dictionary<EntityUid, TimeSpan> _nextNotice = new();
@@ -50,6 +59,30 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
     public void Announce(EntityUid uid, string message, PopupType type = PopupType.Small)
     {
         Enqueue(uid, message, type, isPublic: true);
+    }
+
+    /// <summary>
+    ///     A proclamation in everyone's chat: the sender's line in large bold, then the message, without the word
+    ///         "Announcement" a station announcement adds. With a source, only those on its station hear it.
+    /// </summary>
+    public void Proclaim(EntityUid? source, string message, string? sender = null, bool playSound = true,
+        SoundSpecifier? announcementSound = null, Color? colorOverride = null, bool playDefaultSound = true)
+    {
+        var filter = Filter.Broadcast();
+        if (source is { } sourceUid)
+        {
+            if (_stationSystem.GetOwningStation(sourceUid) is not { } station
+                || !TryComp<StationDataComponent>(station, out var stationData))
+                return;
+
+            filter = _stationSystem.GetInStation(stationData);
+        }
+
+        var wrapped = Loc.GetString("cultivation-proclamation-wrap", ("sender", sender ?? Loc.GetString("mandate-omen-sender")),
+            ("message", FormattedMessage.EscapeText(message)));
+        _chatManager.ChatMessageToManyFiltered(filter, ChatChannel.Radio, message, wrapped, source ?? EntityUid.Invalid, false, true, colorOverride);
+        if (playSound && playDefaultSound)
+            _audioSystem.PlayGlobal(announcementSound ?? DefaultProclamationSound, filter, true, AudioParams.Default.WithVolume(-2f));
     }
 
     /// <summary>

@@ -1,3 +1,5 @@
+using Content.Shared.Physics;
+using Content.Shared.Maps;
 using System.Numerics;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Cultivation;
@@ -73,6 +75,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private TurfSystem _turfSystem = default!;
     [Dependency] private EntityQuery<BodyCultivatorComponent> _bodyCultivatorQuery = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
 
@@ -225,8 +228,13 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         if (args.Handled)
             return;
 
+        // The void runs beneath walls and doors: any open floor within reach will do, even past a wall or a door you
+        //     have no access to. Only a spot inside something solid, or off the station, is refused.
         var targetMap = _transformSystem.ToMapCoordinates(args.Target);
-        if (!_interactionSystem.InRangeUnobstructed(_transformSystem.GetMapCoordinates(entity), targetMap, range: args.MaxDistance))
+        var here = _transformSystem.GetMapCoordinates(entity);
+        if (targetMap.MapId != here.MapId || (targetMap.Position - here.Position).Length() > args.MaxDistance
+            || !_turfSystem.TryGetTileRef(args.Target, out var tile) || _turfSystem.IsSpace(tile.Value)
+            || _turfSystem.IsTileBlocked(tile.Value, CollisionGroup.Impassable))
         {
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-void-step-blocked"));
             return;

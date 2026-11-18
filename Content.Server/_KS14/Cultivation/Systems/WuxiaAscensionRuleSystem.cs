@@ -24,7 +24,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// <summary>
 ///     Wuxia: Ascension. Everyone aboard is handed a Fork in the Road and chooses the path of qi or of the body;
 ///         cultivation goes twice as fast; the first to reach the peak (Nascent Soul, or the ninth stage of the body) is
-///         proclaimed the Supreme Sovereign, takes half damage from every blow, and has until the shuttle comes to settle
+///         proclaimed the Supreme Sovereign, takes a quarter less damage from every blow, and has until the shuttle comes to settle
 ///         every score aboard.
 /// </summary>
 public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscensionRuleComponent>
@@ -32,7 +32,6 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
     private static readonly EntProtoId PathChoicePrototype = "KsPathChoice";
 
     [Dependency] private ChatSystem _chatSystem = default!;
-    [Dependency] private CultivationAdminSystem _adminSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
@@ -44,8 +43,7 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         base.Initialize();
         SubscribeLocalEvent<PlayerSpawnCompleteEvent>(OnPlayerSpawned);
         SubscribeLocalEvent<CultivationPeakReachedEvent>(OnPeakReached);
-        SubscribeLocalEvent<PathChoiceComponent, GetVerbsEvent<Verb>>(OnPathVerbs);
-        SubscribeLocalEvent<PathChoiceComponent, UseInHandEvent>(OnPathUsed);
+        Subs.BuiEvents<PathChoiceComponent>(PathChoiceUiKey.Key, subs => subs.Event<PathChoiceMessage>(OnPathChosen));
         SubscribeLocalEvent<SupremeSovereignComponent, DamageModifyEvent>(OnSovereignDamage);
     }
 
@@ -91,53 +89,30 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
 
     #region The path choice
 
-    private void OnPathUsed(Entity<PathChoiceComponent> entity, ref UseInHandEvent args)
+    private void OnPathChosen(Entity<PathChoiceComponent> entity, ref PathChoiceMessage args)
     {
-        if (args.Handled)
-            return;
-
-        args.Handled = true;
-        _noticeSystem.Notify(args.User, Loc.GetString("ascension-path-how"), PopupType.Medium);
-    }
-
-    private void OnPathVerbs(Entity<PathChoiceComponent> entity, ref GetVerbsEvent<Verb> args)
-    {
-        if (!args.CanAccess || !args.CanInteract || !HasComp<HumanoidProfileComponent>(args.User))
-            return;
-
-        var user = args.User;
-        var scroll = entity.Owner;
-        args.Verbs.Add(new Verb
-        {
-            Text = Loc.GetString("ascension-path-qi"),
-            Act = () => Choose(user, scroll, body: false),
-            Priority = 2,
-        });
-        args.Verbs.Add(new Verb
-        {
-            Text = Loc.GetString("ascension-path-body"),
-            Act = () => Choose(user, scroll, body: true),
-            Priority = 1,
-        });
+        Choose(args.Actor, entity, args.Option);
     }
 
     /// <summary>
-    ///     Walk a path: awaken as a qi cultivator, or commit the body to the Body Molding Art.
+    ///     Take a road: the scroll becomes that path's book (a qi law of the chosen element, or the Body Molding Art),
+    ///         ready in hand to be read. Reading it is what sets them on the path, as in any wuxia round.
     /// </summary>
-    public void Choose(EntityUid user, EntityUid scroll, bool body)
+    public EntityUid? Choose(EntityUid user, EntityUid scroll, CultivationPathOption option)
     {
         if (TerminatingOrDeleted(scroll) || HasComp<CultivatorComponent>(user)
             || TryComp<BodyCultivatorComponent>(user, out var existing) && existing.Committed)
-            return;
+            return null;
 
-        if (body)
-            _adminSystem.StartBodyPath(user, commit: true);
-        else
-            _adminSystem.Awaken(user);
-
-        _visualsSystem.Wave(user, body ? FxColour.Earth : FxColour.Qi, big: true);
-        _noticeSystem.Announce(user, Loc.GetString(body ? "ascension-chose-body" : "ascension-chose-qi", ("user", user)), type: PopupType.Medium);
+        var body = option == CultivationPathOption.Body;
+        var book = Spawn(body ? CultivationLootSystem.BodyMoldingArt : CultivationLootSystem.QiManuals[(int) option],
+            Transform(user).Coordinates);
         QueueDel(scroll);
+        _handsSystem.PickupOrDrop(user, book, checkActionBlocker: false);
+        _visualsSystem.Wave(user, body ? FxColour.Earth : FxColour.Qi, big: true);
+        _noticeSystem.Notify(user, Loc.GetString(body ? "ascension-chose-body" : "ascension-chose-qi", ("book", book)),
+            PopupType.Medium, alsoToChat: true);
+        return book;
     }
 
     #endregion
@@ -158,7 +133,7 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         rule.WinnerName = Name(winner);
         EnsureComp<SupremeSovereignComponent>(winner);
         _visualsSystem.Breakthrough(winner);
-        _chatSystem.DispatchStationAnnouncement(winner, Loc.GetString("ascension-peak-announcement", ("winner", Name(winner)),
+        _noticeSystem.Proclaim(winner, Loc.GetString("ascension-peak-announcement", ("winner", Name(winner)),
                 ("minutes", (int) rule.RoundEndDelay.TotalMinutes)),
             Loc.GetString("mandate-omen-sender"), announcementSound: CultivationVisualsSystem.ThunderclapSound, colorOverride: Color.Gold);
         _noticeSystem.Notify(winner, Loc.GetString("ascension-peak-self"), PopupType.Large, alsoToChat: true);

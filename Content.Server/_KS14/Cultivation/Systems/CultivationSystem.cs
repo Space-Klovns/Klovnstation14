@@ -351,8 +351,18 @@ public sealed partial class CultivationSystem : EntitySystem
     /// </summary>
     public float Power(EntityUid? casterUid)
     {
-        return casterUid is { } uid && _cultivatorQuery.TryComp(uid, out var cultivatorComponent) ? PowerFor(cultivatorComponent.Realm) : 1f;
+        if (casterUid is not { } uid || !_cultivatorQuery.TryComp(uid, out var cultivatorComponent))
+            return 1f;
+
+        // Demonic qi is wild and vicious: every technique of someone on the Demonic Path hits harder.
+        var power = PowerFor(cultivatorComponent.Realm);
+        return HasComp<DemonicPathComponent>(uid) ? power * DemonicPowerMultiplier : power;
     }
+
+    /// <summary>
+    ///     How much harder the Demonic Path's techniques hit.
+    /// </summary>
+    public const float DemonicPowerMultiplier = 1.3f;
 
     /// <summary>
     ///     Technique damage, scaled by the caster's realm power.

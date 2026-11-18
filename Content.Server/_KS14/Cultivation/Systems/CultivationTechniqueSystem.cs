@@ -165,8 +165,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.Art(CultivationVisualsSystem.ArtPalmFire, args.Target);
-        _visualsSystem.Flames(args.Target, 0.3f, 3);
+        _visualsSystem.FireBurst(args.Target, 5);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         var stacks = (_sharedCultivationSystem.HasRoot(entity, CultivationElement.Fire) ? args.FireStacks * 2f : args.FireStacks) * _cultivationSystem.Power(entity);
 
@@ -184,8 +183,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtFireRingBig, entity);
-        _visualsSystem.Flames(entity, 3f, 18);
+        _visualsSystem.FireRing(entity, 3f, 16, 22);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         foreach (var victimUid in MobsAround(entity, args.Range))
         {

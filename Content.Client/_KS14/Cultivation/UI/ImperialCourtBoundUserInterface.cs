@@ -53,9 +53,10 @@ public sealed partial class ImperialCourtBoundUserInterface(EntityUid owner, Enu
             var name = Loc.GetString($"mandate-power-{power.ToString().ToLowerInvariant()}");
             var icon = RadialMenuIconSpecifier.With(new SpriteSpecifier.Rsi(Icons, IconStates[power]));
             var cooling = court.ReadyAt.TryGetValue(power, out var ready) && now < ready;
+            var description = Loc.GetString($"mandate-power-{power.ToString().ToLowerInvariant()}-desc");
             var tip = cooling
                 ? Loc.GetString("mandate-power-ready-in", ("power", name), ("seconds", (int) Math.Ceiling((ready - now).TotalSeconds)))
-                : name;
+                : Loc.GetString("mandate-power-tip", ("power", name), ("description", description));
             var background = cooling ? Palettes.Neutral.Element.WithAlpha(90) : (Color?) null;
 
             if (!MandatePowers.Targeted(power))

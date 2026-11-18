@@ -39,7 +39,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationStirGu
   name: Stir the Gu
-  description: Make your gu worms writhe inside their hosts, wherever they are. Crippling pain and poison; the worms die doing it. 5 qi.
+  description: Make your gu worms writhe inside their hosts, wherever they are. Crippling pain, heavy poison that grows with your realm, and they're knocked flat; the worms die doing it. 5 qi.
   components:
   - type: Action
     useDelay: 10
@@ -68,7 +68,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationCorpsePuppet
   name: Corpse Puppet
-  description: String a corpse beside you up with demonic qi. It hops after you as a jiangshi and fights whoever hurts you for two minutes, a minute more for every realm above Golden Core, then collapses. Any talisman pressed to its brow drops it at once. 50 qi.
+  description: String a corpse beside you up with demonic qi. It hops after you as a jiangshi and fights whoever hurts you for three minutes, a minute more for every realm above Golden Core, then collapses. Any talisman pressed to its brow drops it at once. 50 qi.
   components:
   - type: Action
     useDelay: 90
@@ -85,7 +85,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationBloodEscape
   name: Heavenly Demon Blood Escape
-  description: Spit out a quarter of your life as blood and let it carry you 8 to 15 tiles away in a random direction. No grip or cuff can hold the blood. 30 qi.
+  description: Spit out a sixth of your life as blood and let it carry you 8 to 15 tiles away in a random direction. No grip or cuff can hold the blood. 30 qi.
   components:
   - type: Action
     useDelay: 120
@@ -97,10 +97,10 @@
   parent: BaseActionCultivation
   id: ActionCultivationExplodingHeartPalm
   name: Five-Point Exploding Heart Palm
-  description: Strike five points around the heart of someone beside you. After five steps, one more for every realm they stand above you, their heart bursts. Standing still is safe. Acupoint Sealing or two cycles of meditation undo it. Heavy armour turns your fingers aside, it can't be used in an honor duel, and your palms reek of it for five minutes. 60 qi.
+  description: Strike five points around the heart of someone beside you. After five steps, one more for every realm they stand above you, their heart bursts. Standing still is safe. Acupoint Sealing or two cycles of meditation undo it. Heavy armour turns your fingers aside, it can't be used in an honor duel, and your palms reek of it for five minutes. 45 qi.
   components:
   - type: Action
-    useDelay: 180
+    useDelay: 120
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: exploding_heart }
   - type: TargetAction
   - type: EntityTargetAction

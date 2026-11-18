@@ -39,17 +39,21 @@ public sealed class AscensionTest : GameTest
             var bodyUid = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
             var qiScroll = SEntMan.SpawnEntity("KsPathChoice", map.GridCoords);
             var bodyScroll = SEntMan.SpawnEntity("KsPathChoice", map.GridCoords);
-            ascensionSystem.Choose(qiUid, qiScroll, body: false);
-            ascensionSystem.Choose(bodyUid, bodyScroll, body: true);
+            var qiBook = ascensionSystem.Choose(qiUid, qiScroll, CultivationPathOption.Fire);
+            var bodyBook = ascensionSystem.Choose(bodyUid, bodyScroll, CultivationPathOption.Body);
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(SEntMan.HasComponent<CultivatorComponent>(qiUid), Is.True, "The path of qi didn't awaken anyone.");
-                Assert.That(SEntMan.TryGetComponent<BodyCultivatorComponent>(bodyUid, out var body) && body.Committed, Is.True,
-                    "The path of the body didn't commit anyone.");
-                Assert.That(SEntMan.HasComponent<CultivatorComponent>(bodyUid), Is.False, "The body cultivator also got qi.");
+                Assert.That(qiBook is { } q && SEntMan.GetComponent<MetaDataComponent>(q).EntityPrototype?.ID == "CultivationManualFire", Is.True,
+                    "Choosing fire didn't hand over the fire manual.");
+                Assert.That(bodyBook is { } b && SEntMan.GetComponent<MetaDataComponent>(b).EntityPrototype?.ID == "BodyManualMoldingArt", Is.True,
+                    "Choosing the body didn't hand over the Body Molding Art.");
                 Assert.That(ascensionSystem.SpeedBonus(), Is.GreaterThan(0f), "Ascension doesn't speed cultivation.");
             }
+
+            // The books are what set them on their paths, as in any wuxia round.
+            SEntMan.EnsureComponent<CultivatorComponent>(qiUid);
+            SEntMan.System<Content.Shared._KS14.Cultivation.Body.SharedBodyCultivationSystem>().Commit((bodyUid, SEntMan.EnsureComponent<BodyCultivatorComponent>(bodyUid)));
 
             var peak = new CultivationPeakReachedEvent(bodyUid);
             SEntMan.EventBus.RaiseEvent(EventSource.Local, ref peak);

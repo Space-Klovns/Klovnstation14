@@ -32,6 +32,8 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId[] HeavenBoltEffects = { "KsFxHeavenBolt0", "KsFxHeavenBolt1", "KsFxHeavenBolt2" };
     public static readonly SoundSpecifier ThunderclapSound = new SoundPathSpecifier("/Audio/Effects/Lightning/lightningbolt.ogg");
     private static readonly EntProtoId FlameEffect = "KsFxFlame";
+    private static readonly EntProtoId FlameBigEffect = "KsFxFlameBig";
+    private static readonly EntProtoId FlameSmallEffect = "KsFxFlameSmall";
     private static readonly EntProtoId RiftEffect = "KsFxVoidRift";
     private static readonly EntProtoId RubbleEffect = "KsFxRubble";
     private static readonly EntProtoId DustEffect = "KsBodyDust";
@@ -411,6 +413,44 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     {
         if (!TerminatingOrDeleted(atUid))
             Flames(_transformSystem.GetMapCoordinates(atUid), radius, count);
+    }
+
+    /// <summary>
+    ///     A burst of real fire on someone: a tall flame on them and smaller ones licking out around it.
+    /// </summary>
+    public void FireBurst(EntityUid atUid, int count = 4)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        Spawn(FlameBigEffect, centre);
+        for (var flame = 0; flame < count; flame++)
+            Spawn(_robustRandom.Prob(0.5f) ? FlameEffect : FlameSmallEffect, centre.Offset(_robustRandom.NextVector2(0.7f)));
+    }
+
+    /// <summary>
+    ///     Real fire roaring out from someone in a ring: tall flames around the edge, smaller ones filling it in.
+    /// </summary>
+    public void FireRing(EntityUid atUid, float radius, int ringFlames, int innerFlames)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        var start = _robustRandom.NextFloat(0f, MathF.Tau);
+        for (var flame = 0; flame < ringFlames; flame++)
+        {
+            var angle = start + flame * MathF.Tau / ringFlames;
+            var offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius * _robustRandom.NextFloat(0.85f, 1.05f);
+            Spawn(FlameBigEffect, centre.Offset(offset));
+        }
+
+        for (var flame = 0; flame < innerFlames; flame++)
+        {
+            var offset = _robustRandom.NextAngle().ToVec() * _robustRandom.NextFloat(0.6f, radius * 0.85f);
+            Spawn(_robustRandom.Prob(0.5f) ? FlameEffect : FlameSmallEffect, centre.Offset(offset));
+        }
     }
 
     public void WaveAt(MapCoordinates centre, FxColour colour, bool big = false)

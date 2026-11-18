@@ -361,8 +361,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.Art(CultivationVisualsSystem.ArtEmbers, args.Target);
-        _visualsSystem.Flames(args.Target, 0.3f, 2);
+        _visualsSystem.FireBurst(args.Target, 2);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _flammableSystem.AdjustFireStacks(args.Target, 1f, ignite: true);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-kindle", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
@@ -375,8 +374,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtFireRing, entity);
-        _visualsSystem.Flames(entity, args.Range, 14);
+        _visualsSystem.FireRing(entity, args.Range, 12, 12);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 1.5f);
         foreach (var victimUid in Hostiles(entity, args.Range))
@@ -668,6 +666,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         var behind = entity.Comp.LastPosition;
         entity.Comp.LastPosition = here;
+        // Real fire where they stepped, and a scorch of embers glowing as it dies down.
         _chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, _transformSystem.ToCoordinates(behind), duration: TimeSpan.FromSeconds(4));
         Spawn(MoltenStepEffect, behind);
     }

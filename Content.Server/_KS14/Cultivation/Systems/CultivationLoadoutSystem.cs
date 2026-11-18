@@ -20,6 +20,18 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
 {
     public static readonly EntProtoId MenuAction = "ActionKsTechniques";
 
+    /// <summary>
+    ///     Techniques for outside a fight. They're learned into the Techniques menu without being put on the bar.
+    /// </summary>
+    private static readonly HashSet<string> UtilityTechniques = new()
+    {
+        "ActionCultivationSpiritualSense", "ActionJianghuDuel", "ActionCultivationWriteTalisman", "ActionJianghuFoundSect",
+        "ActionCultivationTransmitLaw", "ActionCultivationForgetLaw", "ActionCultivationGatheringArray",
+        "ActionCultivationBarrierArray", "ActionCultivationAlarmArray", "ActionCultivationBeastContract",
+        "ActionCultivationSummonBeast", "ActionCultivationConcealment", "ActionJianghuDeclareRivalry",
+        "ActionJianghuSectTransmission", "ActionJianghuYield", "ActionBodyDisciple", "ActionBodyRemold", "ActionBodyBoneSetting",
+    };
+
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
@@ -103,7 +115,13 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
             return;
 
         loadout.Comp.Learned.Add(args.Action);
-        if (loadout.Comp.Equipped.Count < loadout.Comp.Slots)
+        // Utility techniques never take a slot by themselves: they wait in the menu, so the bar fills with fighting
+        //     techniques first.
+        if (MetaData(args.Action).EntityPrototype?.ID is { } protoId && UtilityTechniques.Contains(protoId))
+        {
+            _actionsSystem.RemoveAction(entity.Owner, args.Action);
+        }
+        else if (loadout.Comp.Equipped.Count < loadout.Comp.Slots)
         {
             loadout.Comp.Equipped.Add(args.Action);
         }

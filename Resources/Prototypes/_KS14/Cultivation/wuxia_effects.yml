@@ -26,6 +26,9 @@
     netsync: false
   - type: TimedDespawn
     lifetime: 2.4
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   parent: KsFxBuddhaPalm
@@ -74,6 +77,9 @@
     - state: palm_shadow
   - type: TimedDespawn
     lifetime: 1.55
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   parent: KsFxPalmShadow
@@ -109,6 +115,9 @@
     - state: crater
   - type: TimedDespawn
     lifetime: 30
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   parent: KsFxCrater
@@ -144,6 +153,9 @@
     - state: rubble
   - type: TimedDespawn
     lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Snaps open sideways, then pinches shut.
 - type: entity
@@ -166,6 +178,9 @@
     netsync: false
   - type: TimedDespawn
     lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxSwordQiImpact
@@ -187,6 +202,9 @@
     netsync: false
   - type: TimedDespawn
     lifetime: 0.5
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxThornSplinters
@@ -202,6 +220,9 @@
   - type: EffectVisuals
   - type: TimedDespawn
     lifetime: 0.5
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Shoots up out of the floor and sways while it holds someone.
 - type: entity
@@ -217,27 +238,38 @@
     - state: vines
   - type: TimedDespawn
     lifetime: 3
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Glowing magma footprints, cooling to black.
 - type: entity
   id: KsFxMoltenStep
   categories: [ HideSpawnMenu ]
-  name: molten footprints
-  description: Footprints of glowing magma, slowly cooling.
+  name: smouldering embers
+  description: Where they stepped, the floor still smoulders.
   components:
+  # Low real flames that linger and die down after the fire on the spot burns out.
   - type: Sprite
-    sprite: _KS14/Cultivation/wuxia_32.rsi
+    sprite: Effects/fire.rsi
     drawdepth: FloorObjects
+    noRot: true
     layers:
-    - state: molten_steps
+    - state: 1
       shader: unshaded
+      color: "#ffb07acc"
   - type: PointLight
-    color: "#ff7a2c"
-    radius: 1.5
-    energy: 1.2
+    color: "#ff6a1c"
+    radius: 1.6
+    energy: 1.6
     netsync: false
+  - type: LightFade
+    duration: 6
   - type: TimedDespawn
-    lifetime: 9.8
+    lifetime: 6
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Lasting states, worn over the body.
 - type: entity
@@ -259,6 +291,9 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxWaterBubble
@@ -278,6 +313,9 @@
     radius: 2
     energy: 1
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   parent: KsFxWaterBubble
@@ -309,6 +347,9 @@
     radius: 3.5
     energy: 2
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxHeartDemonAura
@@ -327,6 +368,9 @@
     radius: 2
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxBeastAura
@@ -341,6 +385,9 @@
     - state: beast_aura
       shader: unshaded
       color: "#ffffffaa"
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxStormCloud
@@ -360,6 +407,9 @@
     radius: 3
     energy: 1
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Mountain Collapse: a boulder dropping out of the sky onto each foe.
 - type: entity
@@ -375,6 +425,9 @@
     - state: falling_rock
   - type: TimedDespawn
     lifetime: 0.62
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Tidal Surge: a ring of water rearing up and crashing outward.
 - type: entity
@@ -397,6 +450,9 @@
     netsync: false
   - type: TimedDespawn
     lifetime: 0.59
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Sword Riding: the glowing flying sword under the rider's feet.
 - type: entity
@@ -417,6 +473,9 @@
     radius: 2
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Qinggong: a puff of golden cloud left where the leap began.
 - type: entity
@@ -433,6 +492,9 @@
       offset: 0, -0.3
   - type: TimedDespawn
     lifetime: 1.19
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Sword Formation: three blades wheeling round their master for as long as it lasts.
 - type: entity
@@ -452,3 +514,6 @@
     radius: 2.5
     energy: 1.5
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu

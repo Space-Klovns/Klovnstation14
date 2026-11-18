@@ -289,7 +289,7 @@ public sealed class LegendaryTest : GameTest
 
             var pouchUid = SEntMan.SpawnEntity("KsQiankunPouch", map.GridCoords);
             var looseUid = SEntMan.SpawnEntity("SheetSteel1", map.GridCoords);
-            var ev = new UseInHandEvent(userUid);
+            var ev = new QiankunSwallowActionEvent { Performer = userUid };
             SEntMan.EventBus.RaiseLocalEvent(pouchUid, ev);
             var stored = SEntMan.GetComponent<StorageComponent>(pouchUid).Container.ContainedEntities;
 

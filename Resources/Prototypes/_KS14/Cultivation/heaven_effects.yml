@@ -24,6 +24,9 @@
     duration: 0.47
   - type: TimedDespawn
     lifetime: 0.47
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   parent: KsFxHeavenBolt0
@@ -81,6 +84,9 @@
     duration: 0.5
   - type: TimedDespawn
     lifetime: 0.53
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Lightning crawling over a body for as long as it lasts (the Thunderclap stance).
 - type: entity
@@ -100,6 +106,9 @@
     radius: 2.5
     energy: 2
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Lightning still crawling over someone heaven has just struck (or just let through).
 - type: entity
@@ -133,3 +142,6 @@
     duration: 1.1
   - type: TimedDespawn
     lifetime: 1.1
+  - type: Tag
+    tags:
+    - HideContextMenu

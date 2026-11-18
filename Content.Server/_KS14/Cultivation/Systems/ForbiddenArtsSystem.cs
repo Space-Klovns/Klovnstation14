@@ -77,7 +77,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     /// </summary>
     private static readonly (string Type, float Amount)[] DevourHealing =
     {
-        ("Blunt", 7f), ("Slash", 7f), ("Piercing", 6f), ("Heat", 10f), ("Shock", 5f), ("Caustic", 5f),
+        ("Blunt", 18f), ("Slash", 18f), ("Piercing", 15f), ("Heat", 20f), ("Shock", 10f), ("Caustic", 10f), ("Poison", 10f),
     };
     private static readonly SoundSpecifier CurseSound = new SoundPathSpecifier("/Audio/Magic/disintegrate.ogg");
     private static readonly TimeSpan TaintDecayInterval = TimeSpan.FromMinutes(1);
@@ -155,9 +155,12 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
                 continue;
             }
 
-            _damageableSystem.TryChangeDamage(hostUid, CultivationSystem.Damage("Poison", 1f), interruptsDoAfters: false);
+            _damageableSystem.TryChangeDamage(hostUid, CultivationSystem.Damage("Poison", 2f), interruptsDoAfters: false);
             if (wormComponent.Master is { } masterUid && !TerminatingOrDeleted(masterUid))
-                _sharedCultivationSystem.AddQi(masterUid, 2f);
+            {
+                _sharedCultivationSystem.AddQi(masterUid, 4f);
+                _sharedCultivationSystem.AddInsight(masterUid, 1f);
+            }
         }
 
         UpdateBursts();
@@ -400,8 +403,8 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         // Someone dying gives up a little of their life and qi.
         if (!_mobStateSystem.IsDead(victimUid))
         {
-            var drainDamage = CultivationSystem.Damage("Blunt", 15f);
-            drainDamage.DamageDict.Add("Asphyxiation", FixedPoint2.New(15));
+            var drainDamage = CultivationSystem.Damage("Blunt", 25f);
+            drainDamage.DamageDict.Add("Asphyxiation", FixedPoint2.New(25));
             _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(entity, drainDamage), ignoreResistances: true, origin: entity);
             if (victimCultivator != null)
             {
@@ -410,7 +413,7 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
                 _sharedCultivationSystem.AddQi(entity.AsNullable(), stolen);
             }
 
-            _sharedCultivationSystem.AddInsight(entity.AsNullable(), 5f);
+            _sharedCultivationSystem.AddInsight(entity.AsNullable(), 10f);
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-drained", ("target", victimUid)));
             _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(entity):player} drained {ToPrettyString(victimUid):target} with the Devouring Art");
             return;
@@ -427,13 +430,13 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
         foreach (var (damageType, amount) in DevourHealing)
             healingDamage.DamageDict.Add(damageType, FixedPoint2.New(-amount));
         _damageableSystem.TryChangeDamage(entity.Owner, healingDamage, ignoreResistances: true, interruptsDoAfters: false);
-        _sharedCultivationSystem.AddQi(entity.AsNullable(), 30f);
+        _sharedCultivationSystem.AddQi(entity.AsNullable(), 60f);
 
-        var insight = 15f;
+        var insight = 30f;
         if (victimCultivator != null)
         {
             // A dead cultivator's cultivation is the richest meal of all.
-            var stolenInsight = victimCultivator.Insight / 4f;
+            var stolenInsight = victimCultivator.Insight / 3f;
             _sharedCultivationSystem.ScaleInsight((victimUid, victimCultivator), 0.75f);
             insight += stolenInsight;
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-devour-cultivator", ("target", victimUid)), type: PopupType.MediumCaution);
@@ -528,9 +531,11 @@ public sealed partial class ForbiddenArtsSystem : EntitySystem
     /// </summary>
     private void StirWorm(Entity<GuWormComponent> host)
     {
-        _stunSystem.TryUpdateParalyzeDuration(host, TimeSpan.FromSeconds(2));
-        _damageableSystem.TryChangeDamage(host.Owner, CultivationSystem.Damage("Poison", 15f), ignoreResistances: true);
-        _staminaSystem.TakeStaminaDamage(host, 30f);
+        // The worm's bite grows with its master's realm.
+        var power = _cultivationSystem.Power(host.Comp.Master);
+        _stunSystem.TryUpdateParalyzeDuration(host, TimeSpan.FromSeconds(3));
+        _damageableSystem.TryChangeDamage(host.Owner, CultivationSystem.Damage("Poison", 30f * power), ignoreResistances: true);
+        _staminaSystem.TakeStaminaDamage(host, 60f);
         _vomitSystem.Vomit(host, force: true);
         _noticeSystem.Announce(host, Loc.GetString("cultivation-gu-chewing", ("target", host.Owner)), type: PopupType.LargeCaution);
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(host.Comp.Master):player} stirred the gu worm in {ToPrettyString(host.Owner):target}");

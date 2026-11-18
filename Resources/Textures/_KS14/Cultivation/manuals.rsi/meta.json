@@ -78,6 +78,9 @@
     },
     {
       "name": "manual_wood"
+    },
+    {
+      "name": "path_choice"
     }
   ]
 }

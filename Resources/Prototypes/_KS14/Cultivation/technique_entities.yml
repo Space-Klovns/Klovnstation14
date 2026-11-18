@@ -163,7 +163,7 @@
   - type: StaminaDamageOnCollide
     damage: 15
 
-# A nascent soul out walking: a small golden figure that flies over tables and crowds.
+# A nascent soul out walking: a small golden figure that flies over tables and crowds, and through walls.
 - type: entity
   parent: [ SimpleSpaceMobBase, FlyingMobBase ]
   id: KsNascentSoul
@@ -186,6 +186,16 @@
   - type: PointLight
     color: "#ffd860"
     radius: 2
+  # Spirit, not flesh: it drifts through walls and doors like a ghost. Blows in melee still land on it.
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.3
+        density: 15
+        layer:
+        - GhostImpassable
 
 # A spirit beast fights its master's enemies, and otherwise stays at their heel.
 - type: htnCompound

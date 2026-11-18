@@ -28,13 +28,13 @@ public sealed partial class WuxiaAscensionRuleComponent : Component
 }
 
 /// <summary>
-///     The one who reached the peak first. Blows land on them at half strength.
+///     The one who reached the peak first. Blows land on them at three-quarter strength.
 /// </summary>
 [RegisterComponent]
 public sealed partial class SupremeSovereignComponent : Component
 {
     [DataField]
-    public float DamageMultiplier = 0.5f;
+    public float DamageMultiplier = 0.75f;
 }
 
 /// <summary>

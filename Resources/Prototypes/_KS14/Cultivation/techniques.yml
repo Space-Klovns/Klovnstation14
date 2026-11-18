@@ -48,7 +48,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationVoidStep
   name: Void Step
-  description: Tear a hole in space and step through it to a spot you can see, up to six tiles away. 25 qi.
+  description: Tear a hole in space and step through it to any open spot up to six tiles away, straight through walls and locked doors. 25 qi.
   components:
   - type: Action
     useDelay: 12
@@ -191,7 +191,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationBodyOutsideBody
   name: Body Outside the Body
-  description: Your nascent soul steps out as a small golden figure for thirty seconds, flying over tables and crowds. If it's destroyed, your body pays. 50 qi.
+  description: Your nascent soul steps out as a small golden figure for thirty seconds, flying over tables and crowds and straight through walls. If it's destroyed, your body pays. 50 qi.
   components:
   - type: Action
     useDelay: 120

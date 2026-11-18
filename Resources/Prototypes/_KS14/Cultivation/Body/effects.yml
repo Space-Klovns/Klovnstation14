@@ -60,6 +60,57 @@
     lifetime: 1.2
 
 # Fire for show: it lights the room and flickers out. What actually burns is up to the technique.
+# Real fire, the same flames a burning room shows, in three sizes; fire techniques are built from these.
+- type: entity
+  id: KsFxFlameBig
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: Effects/fire.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: 3
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1e"
+    radius: 4
+    energy: 4
+    netsync: false
+  - type: LightFade
+    duration: 2.4
+  - type: TimedDespawn
+    lifetime: 2.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxFlameSmall
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: Effects/fire.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: 1
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.6
+  - type: TimedDespawn
+    lifetime: 1.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
 - type: entity
   id: KsFxFlame
   categories: [ HideSpawnMenu ]
@@ -80,6 +131,9 @@
     duration: 2
   - type: TimedDespawn
     lifetime: 2
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Bend the picture around a point for a moment, like the air round a singularity.
 - type: entity
@@ -92,6 +146,9 @@
     falloffPower: 2.2
   - type: TimedDespawn
     lifetime: 0.6
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDistortionPulse
@@ -103,6 +160,9 @@
     falloffPower: 2.2
   - type: TimedDespawn
     lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDistortionRoar
@@ -114,3 +174,6 @@
     falloffPower: 1.8
   - type: TimedDespawn
     lifetime: 1.2
+  - type: Tag
+    tags:
+    - HideContextMenu

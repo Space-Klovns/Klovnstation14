@@ -28,6 +28,7 @@
     sprite: _KS14/Cultivation/temple.rsi
     drawdepth: SmallMobs
     noRot: true
+    scale: 0.7, 0.7
     layers:
     - state: dragon_back
       shader: unshaded
@@ -36,6 +37,9 @@
     radius: 3
     energy: 2
     netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 - type: entity
   id: KsFxDragonAuraFront
@@ -46,9 +50,13 @@
     sprite: _KS14/Cultivation/temple.rsi
     drawdepth: Effects
     noRot: true
+    scale: 0.7, 0.7
     layers:
     - state: dragon_front
       shader: unshaded
+  - type: Tag
+    tags:
+    - HideContextMenu
 
 # Every power of the Mandate in one button: a radial menu of the powers, and for those used on someone, the people
 # nearby. Cooldowns are kept per power by MandateSystem.

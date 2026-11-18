@@ -39,7 +39,7 @@ public sealed partial class CultivationSystem
 
         _cultivationSystem.SetBreakthrough(entity.Comp, AscensionCycles, readiness);
         _heartDemonSystem.Summon(entity, lifetime: TimeSpan.FromSeconds(AscensionCycles * entity.Comp.BreakthroughCycle.TotalSeconds));
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("cultivation-ascension-begins", ("user", entity.Owner)),
+        _noticeSystem.Proclaim(null, Loc.GetString("cultivation-ascension-begins", ("user", entity.Owner)),
             Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
         _noticeSystem.Notify(entity, Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
             ("readiness", readiness)), type: PopupType.Medium);
@@ -84,7 +84,7 @@ public sealed partial class CultivationSystem
     public void Ascend(Entity<CultivatorComponent> entity)
     {
         _visualsSystem.Breakthrough(entity);
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("cultivation-ascended", ("user", entity.Owner)),
+        _noticeSystem.Proclaim(null, Loc.GetString("cultivation-ascended", ("user", entity.Owner)),
             Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
         _audioSystem.PlayPvs(BreakthroughSound, entity);
 

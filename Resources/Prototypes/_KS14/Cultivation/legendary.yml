@@ -298,9 +298,11 @@
   - type: QiankunPouch
   - type: ActionGrant
     actions:
+    - ActionKsQiankunSwallow
     - ActionKsQiankunRelease
   - type: ItemActionGrant
     actions:
+    - ActionKsQiankunSwallow
     - ActionKsQiankunRelease
   - type: ContainerContainer
     containers:
@@ -406,6 +408,18 @@
     range: 20
   - type: WorldTargetAction
     event: !type:PlantainFirestormActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsQiankunSwallow
+  name: Swallow Heaven and Earth
+  description: Every loose item within five tiles flies into the pouch.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: qiankun_pouch }
+  - type: InstantAction
+    event: !type:QiankunSwallowActionEvent
 
 - type: entity
   parent: BaseActionCultivation

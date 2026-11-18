@@ -149,7 +149,7 @@ Nobles (+15%), Jinyiwei (+10%) and members of sects sworn to a ruler (+10%) cult
 
 ## Wuxia: Ascension
 
-A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn; right-click it to walk the path of qi or the path of the body (the choice is for life). Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, half damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events run as in the Wuxia preset, but richer: every element's manual is hidden in maintenance plus five more, seven different martial manuals, three sets of the body's arts, a demonic scripture, two shelves' worth in the library, three different legendaries, and heavenly treasures bloom about twice as often. No legendary ever turns up twice in a round, from loot, the Imperial Treasury or anywhere else.
+A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn. Using it opens a radial menu (`PathChoiceBoundUserInterface`) with the path of qi, then one of the five elements, or the path of the body, each described on hover. The scroll becomes that path's book (the element's qi manual or the Body Molding Art), and reading it sets them on the path for life. Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, a quarter less damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events run as in the Wuxia preset, but richer: every element's manual is hidden in maintenance plus five more, seven different martial manuals, three sets of the body's arts, a demonic scripture, two shelves' worth in the library, three different legendaries, and heavenly treasures bloom about twice as often. No legendary ever turns up twice in a round, from loot, the Imperial Treasury or anywhere else.
 
 ## The Demonic Path
 
@@ -159,18 +159,20 @@ mortal and adds `DemonicPathComponent` as a master. A master's Transmit Demonic 
 (`KsDemonicTransmission`) for one disciple: reading it is consent, needs no antagonist role, and makes a disciple who
 can never pass the arts on.
 
+Demonic qi is vicious: every technique of someone on the path hits 30% harder (`CultivationSystem.DemonicPowerMultiplier`).
+
 The arts are in `ForbiddenArtsSystem.ForbiddenTechniques`, granted by realm alongside the rest:
 
 - **Devouring Art:** drain someone dying, or devour a corpse for qi, insight and healing. A devoured corpse becomes
-  `Unrevivable` (still cloneable). A dead cultivator gives up a quarter of their insight.
+  `Unrevivable` (still cloneable). A dead cultivator gives up a third of their insight.
 - **Gu worms:** a worm sips its host's health into the master's qi for five minutes. Holy water in the blood drives
-  it out. Stir the Gu makes every worm bite at once, spending them.
+  it out. Each sip also feeds the master a little insight. Stir the Gu makes every worm bite at once (poison scaled by the master's realm, and a knockdown), spending them.
 - **Soul Search:** read a helpless (cuffed, stunned, knocked down or critical) person's job and hidden antagonist
   roles, sent privately to the searcher's chat.
 - **Corpse Puppet:** a `KsJiangshi` wearing the corpse's appearance, with the real body held in a container. It
   follows its master and retaliates for them. It collapses when its time runs out, when it is cut down, or when any
   qi talisman is used on it; the body always drops out.
-- **Heavenly Demon Blood Escape:** a quarter of the way to critical condition in blood, for a jump of 8 to 15 tiles
+- **Heavenly Demon Blood Escape:** a sixth of the way to critical condition in blood, for a jump of 8 to 15 tiles
   that breaks pulls and cuffs.
 - **Five-Point Exploding Heart Palm:** `ExplodingHeartComponent` counts the victim's own steps (not dragged or
   thrown) and bursts the heart when they run out, with the count shown as an alert. Chest protection that stops 40%

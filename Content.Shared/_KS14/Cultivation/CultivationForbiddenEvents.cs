@@ -47,7 +47,7 @@ public sealed partial class CorpsePuppetActionEvent : EntityTargetActionEvent
     ///     How long the puppet lasts at Golden Core; a minute more for every realm above it.
     /// </summary>
     [DataField]
-    public TimeSpan BaseLifetime = TimeSpan.FromMinutes(2);
+    public TimeSpan BaseLifetime = TimeSpan.FromMinutes(3);
 
     [DataField]
     public EntProtoId Puppet = "KsJiangshi";
@@ -68,13 +68,13 @@ public sealed partial class BloodEscapeActionEvent : InstantActionEvent
     ///     How much of the way to critical condition the escape costs in blood.
     /// </summary>
     [DataField]
-    public float LifeFraction = 0.25f;
+    public float LifeFraction = 0.15f;
 }
 
 public sealed partial class ExplodingHeartPalmActionEvent : EntityTargetActionEvent
 {
     [DataField]
-    public float QiCost = 60f;
+    public float QiCost = 45f;
 
     [DataField]
     public int BaseSteps = 5;

@@ -227,12 +227,12 @@ public sealed partial class MandateSystem : EntitySystem
         _noticeSystem.Notify(entity, Loc.GetString("mandate-withdrawn-self"), PopupType.LargeCaution, alsoToChat: true);
         if (mandate.SonOfHeaven)
         {
-            _chatSystem.DispatchStationAnnouncement(entity, Loc.GetString("mandate-withdrawn-son", ("ruler", Name(entity)), ("reason", because)),
+            _noticeSystem.Proclaim(entity, Loc.GetString("mandate-withdrawn-son", ("ruler", Name(entity)), ("reason", because)),
                 Loc.GetString("mandate-omen-sender"), announcementSound: CultivationVisualsSystem.ThunderclapSound, colorOverride: Color.Gold);
         }
         else
         {
-            _chatSystem.DispatchStationAnnouncement(entity, Loc.GetString("mandate-withdrawn", ("ruler", Name(entity)), ("domain", DomainName(mandate)),
+            _noticeSystem.Proclaim(entity, Loc.GetString("mandate-withdrawn", ("ruler", Name(entity)), ("domain", DomainName(mandate)),
                 ("reason", because)), Loc.GetString("mandate-omen-sender"), playDefaultSound: false, colorOverride: Color.Gold);
         }
 
@@ -430,7 +430,7 @@ public sealed partial class MandateSystem : EntitySystem
             return false;
 
         _visualsSystem.Breakthrough(user);
-        _chatSystem.DispatchStationAnnouncement(user, entity.Comp.SonOfHeaven
+        _noticeSystem.Proclaim(user, entity.Comp.SonOfHeaven
                 ? Loc.GetString("mandate-claimed-son", ("ruler", Name(user)))
                 : Loc.GetString("mandate-claimed", ("ruler", Name(user)), ("domain", DomainName(mandate.Comp))),
             Loc.GetString("mandate-omen-sender"), playDefaultSound: false, colorOverride: Color.Gold);
@@ -709,7 +709,7 @@ public sealed partial class MandateSystem : EntitySystem
         _visualsSystem.Play(CultivationVisualsSystem.GreatBellSound, entity);
         if (entity.Comp.SonOfHeaven)
         {
-            _chatSystem.DispatchStationAnnouncement(entity, text, Loc.GetString("mandate-decree-sender-son", ("ruler", Name(entity))),
+            _noticeSystem.Proclaim(entity, text, Loc.GetString("mandate-decree-sender-son", ("ruler", Name(entity))),
                 announcementSound: CultivationVisualsSystem.GreatBellSound, colorOverride: Color.Gold);
         }
         else
@@ -886,7 +886,7 @@ public sealed partial class MandateSystem : EntitySystem
 
         entity.Comp.PunishmentCharges--;
         Proclaim(entity, Loc.GetString("mandate-punishment-shout", ("condemned", Name(target).ToUpperInvariant())));
-        _chatSystem.DispatchStationAnnouncement(entity, Loc.GetString("mandate-punishment-omen", ("condemned", Name(target))),
+        _noticeSystem.Proclaim(entity, Loc.GetString("mandate-punishment-omen", ("condemned", Name(target))),
             Loc.GetString("mandate-omen-sender"), playDefaultSound: false, colorOverride: Color.Gold);
         var punishment = EnsureComp<HeavensPunishmentComponent>(target);
         punishment.StrikesLeft = 3;

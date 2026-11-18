@@ -99,7 +99,7 @@ legendary-mirror-sealed = The eight trigrams lock around your meridians and sine
 ## Qiankun Pouch
 
 legendary-pouch-legend = Qian and Kun, heaven and earth. The inside of this pouch is larger than the outside, which is the point.
-legendary-pouch-power = Use it in hand to Swallow Heaven and Earth: every loose item within five tiles flies into the pouch. Release Heaven and Earth hurls everything inside at a spot. Someone beside its holder can step into its world to hide for up to thirty seconds.
+legendary-pouch-power = It opens like any bag, only far bigger inside. Swallow Heaven and Earth: every loose item within five tiles flies into the pouch. Release Heaven and Earth hurls everything inside at a spot. Someone beside its holder can step into its world to hide for up to thirty seconds.
 legendary-pouch-wind = The pouch is full of wind!
 legendary-pouch-swallow = SWALLOW HEAVEN AND EARTH!
 legendary-pouch-swallowed = {$count ->
@@ -162,7 +162,7 @@ legendary-ruyi-controls = [bold]Use in hand (Z):[/bold] grow or shrink it. [bold
 legendary-gourd-controls = [bold]Action button while held:[/bold] Call Their Name, then click someone. [bold]Use in hand (Z):[/bold] let out whoever is inside.
 legendary-fan-controls = [bold]Use in hand (Z):[/bold] Typhoon all around you. [bold]Action buttons while held:[/bold] Hurricane and Firestorm, then click a direction.
 legendary-mirror-controls = [bold]Use in hand (Z):[/bold] the Eight Trigrams Seal. Just holding it turns shots aside.
-legendary-pouch-controls = [bold]Use in hand (Z):[/bold] Swallow Heaven and Earth. [bold]Action button while held:[/bold] Release Heaven and Earth, then click a spot. [bold]Alt-click its holder[/bold] to hide inside.
+legendary-pouch-controls = [bold]Use in hand (Z):[/bold] open it. [bold]Action buttons while held:[/bold] Swallow Heaven and Earth; Release Heaven and Earth, then click a spot. [bold]Alt-click its holder[/bold] to hide inside.
 legendary-xuanyuan-controls = Only the Son of Heaven can wield it: hit with it as with any sword.
 legendary-dragon-blade-controls = [bold]Use in hand (Z):[/bold] wield it in both hands for its full reach and weight.
 legendary-seven-star-controls = Hit people to light its stars. [bold]Action button while held,[/bold] once all seven are lit: the Seven Stars, then click a direction.

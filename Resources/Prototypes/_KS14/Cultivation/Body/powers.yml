@@ -328,34 +328,33 @@
   name: body-power-eyes-clear-eyes-name
   description: body-power-eyes-clear-eyes-desc
   components:
-  - type: PhosphorNightVision
-    enabled: true
-    action: ActionTogglePhosphorNightVision
-    phosphorColor: "#ffe9c0"
-    lightingColor: "#FFFFFF20"
-    amplification: 40
   - type: FlashImmunity
 
 - type: bodyTemperingPower
   id: KsBodyEyesUnblinkingEyes
   group: Eyes
-  level: 2
+  level: 6
   name: body-power-eyes-unblinking-eyes-name
   description: body-power-eyes-unblinking-eyes-desc
   components:
-  - type: FlashImmunity
+  - type: PhosphorNightVision
+    enabled: true
+    action: ActionKsBodyNightEyes
+    phosphorColor: "#ffe9c0"
+    lightingColor: "#FFFFFF20"
+    amplification: 40
 
 - type: bodyTemperingPower
   id: KsBodyEyesHunterSSight
   group: Eyes
-  level: 3
+  level: 7
   name: body-power-eyes-hunter-s-sight-name
   description: body-power-eyes-hunter-s-sight-desc
   replaceComponents: true
   components:
   - type: PhosphorNightVision
     enabled: true
-    action: ActionTogglePhosphorNightVision
+    action: ActionKsBodyNightEyes
     phosphorColor: "#fff6e6"
     lightingColor: "#FFFFFF38"
     amplification: 160
@@ -363,7 +362,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesHealerSEyes
   group: Eyes
-  level: 4
+  level: 3
   name: body-power-eyes-healer-s-eyes-name
   description: body-power-eyes-healer-s-eyes-desc
   components:
@@ -372,7 +371,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesStoneReadingEyes
   group: Eyes
-  level: 5
+  level: 4
   name: body-power-eyes-stone-reading-eyes-name
   description: body-power-eyes-stone-reading-eyes-desc
   damageMultipliers:
@@ -383,7 +382,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesHeatSight
   group: Eyes
-  level: 6
+  level: 5
   name: body-power-eyes-heat-sight-name
   description: body-power-eyes-heat-sight-desc
   components:
@@ -392,7 +391,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesJudgingEyes
   group: Eyes
-  level: 7
+  level: 2
   name: body-power-eyes-judging-eyes-name
   description: body-power-eyes-judging-eyes-desc
   components:

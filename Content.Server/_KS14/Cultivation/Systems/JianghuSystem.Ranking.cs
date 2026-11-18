@@ -154,7 +154,7 @@ public sealed partial class JianghuSystem
 
         if (FirstUnderHeaven() == winnerMind && oldFirst != winnerMind)
         {
-            _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("jianghu-first-under-heaven", ("name", Name(winnerUid))),
+            _noticeSystem.Proclaim(null, Loc.GetString("jianghu-first-under-heaven", ("name", Name(winnerUid))),
                 Loc.GetString("jianghu-ranking-sender"), colorOverride: SectColor);
         }
     }
@@ -177,7 +177,7 @@ public sealed partial class JianghuSystem
             _ranking.RemoveRange(RankingSize, _ranking.Count - RankingSize);
 
         EnsureComp<JianghuExamineComponent>(bodyUid);
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(announcementLocId, ("name", Name(bodyUid))),
+        _noticeSystem.Proclaim(null, Loc.GetString(announcementLocId, ("name", Name(bodyUid))),
             Loc.GetString("jianghu-ranking-sender"), colorOverride: SectColor);
     }
 
@@ -242,7 +242,7 @@ public sealed partial class JianghuSystem
         _tournamentEndsAt = _gameTiming.CurTime + TournamentDuration;
         _tournamentCooldownUntil = _gameTiming.CurTime + TournamentCooldown;
         _tournamentWins.Clear();
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("jianghu-tournament-proclaimed", ("sect", FormattedMessage.EscapeText(host.Comp.SectName))),
+        _noticeSystem.Proclaim(null, Loc.GetString("jianghu-tournament-proclaimed", ("sect", FormattedMessage.EscapeText(host.Comp.SectName))),
             Loc.GetString("jianghu-tournament-sender"), colorOverride: SectColor);
         return true;
     }
@@ -271,13 +271,13 @@ public sealed partial class JianghuSystem
         _tournamentWins.Clear();
         if (championMind is not { } champion || !TryComp<MindComponent>(champion, out var mindComponent))
         {
-            _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("jianghu-tournament-empty"), Loc.GetString("jianghu-tournament-sender"),
+            _noticeSystem.Proclaim(null, Loc.GetString("jianghu-tournament-empty"), Loc.GetString("jianghu-tournament-sender"),
                 colorOverride: SectColor);
             return;
         }
 
         Champion = champion;
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("jianghu-tournament-champion",
+        _noticeSystem.Proclaim(null, Loc.GetString("jianghu-tournament-champion",
                 ("name", FormattedMessage.EscapeText(mindComponent.CharacterName ?? string.Empty)), ("wins", championWins)),
             Loc.GetString("jianghu-tournament-sender"), colorOverride: SectColor);
 

@@ -82,3 +82,13 @@ mandate-power-punishment = Heaven's Punishment
 mandate-power-ready-in = {$power} (ready in {$seconds}s)
 mandate-power-no-one = {$power}: there is no one near enough.
 mandate-power-cooling = That power is ready again in {$seconds} seconds.
+mandate-power-tip = {$power}: {$description}
+mandate-power-decree-desc = Proclaim a decree; your people nearby are rallied, faster and with their strength restored.
+mandate-power-kneel-desc = Command the weak around you to kneel: they're knocked down for a moment.
+mandate-power-treasury-desc = Open the treasury: spirit herbs, talismans, gold, a manual, and sometimes a legendary.
+mandate-power-pardon-desc = Pardon someone, wiping away their crimes against the jianghu.
+mandate-power-jinyiwei-desc = Offer someone a post in your Jinyiwei guard; they cultivate faster and are told when you're attacked.
+mandate-power-fealty-desc = Accept a sect master's oath; their whole sect cultivates faster under you.
+mandate-power-ennoble-desc = Raise someone to the nobility, from duke down to baron; nobles cultivate faster.
+mandate-power-punishment-desc = Call down heaven's punishment: three lightning bolts strike the one you name.
+cultivation-proclamation-wrap = [font size=14][bold]{$sender}[/bold][/font]{"\u000A"}[font size=12]{$message}[/font]
