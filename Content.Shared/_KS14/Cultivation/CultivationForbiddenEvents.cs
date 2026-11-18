@@ -8,40 +8,40 @@ namespace Content.Shared._KS14.Cultivation;
 // The Demonic Path: arts the righteous sects burned every copy of. Each event carries its own numbers so the action
 // prototypes can tune them.
 
-public sealed partial class DevouringArtActionEvent : EntityTargetActionEvent
+public sealed partial class DevouringArtActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 10f;
+    public float QiCost { get; set; } = 10f;
 }
 
-public sealed partial class GuWormActionEvent : EntityTargetActionEvent
+public sealed partial class GuWormActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 20f;
+    public float QiCost { get; set; } = 20f;
 
     [DataField]
     public TimeSpan Lifetime = TimeSpan.FromMinutes(5);
 }
 
-public sealed partial class StirGuActionEvent : InstantActionEvent
+public sealed partial class StirGuActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 5f;
+    public float QiCost { get; set; } = 5f;
 }
 
-public sealed partial class SoulSearchActionEvent : EntityTargetActionEvent
+public sealed partial class SoulSearchActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 35f;
+    public float QiCost { get; set; } = 35f;
 
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(8);
 }
 
-public sealed partial class CorpsePuppetActionEvent : EntityTargetActionEvent
+public sealed partial class CorpsePuppetActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 50f;
+    public float QiCost { get; set; } = 50f;
 
     /// <summary>
     ///     How long the puppet lasts at Golden Core; a minute more for every realm above it.
@@ -53,10 +53,10 @@ public sealed partial class CorpsePuppetActionEvent : EntityTargetActionEvent
     public EntProtoId Puppet = "KsJiangshi";
 }
 
-public sealed partial class BloodEscapeActionEvent : InstantActionEvent
+public sealed partial class BloodEscapeActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 30f;
+    public float QiCost { get; set; } = 30f;
 
     [DataField]
     public float MinDistance = 8f;
@@ -71,19 +71,19 @@ public sealed partial class BloodEscapeActionEvent : InstantActionEvent
     public float LifeFraction = 0.15f;
 }
 
-public sealed partial class ExplodingHeartPalmActionEvent : EntityTargetActionEvent
+public sealed partial class ExplodingHeartPalmActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 45f;
+    public float QiCost { get; set; } = 45f;
 
     [DataField]
     public int BaseSteps = 5;
 }
 
-public sealed partial class TransmitDemonicArtActionEvent : InstantActionEvent
+public sealed partial class TransmitDemonicArtActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 40f;
+    public float QiCost { get; set; } = 40f;
 }
 
 [Serializable, NetSerializable]

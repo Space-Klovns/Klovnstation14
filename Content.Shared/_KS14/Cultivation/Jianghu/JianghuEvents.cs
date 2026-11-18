@@ -39,10 +39,10 @@ public readonly record struct HonorDuelFinishedEvent(EntityUid FighterOne, Entit
 /// <summary>
 ///     Found a sect where you stand. The name is asked for in a dialog.
 /// </summary>
-public sealed partial class FoundSectActionEvent : InstantActionEvent
+public sealed partial class FoundSectActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 50f;
+    public float QiCost { get; set; } = 50f;
 }
 
 /// <summary>

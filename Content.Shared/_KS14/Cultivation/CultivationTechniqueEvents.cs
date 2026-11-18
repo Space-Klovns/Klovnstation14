@@ -10,10 +10,10 @@ namespace Content.Shared._KS14.Cultivation;
 /// <summary>
 ///     Hurl a blade of sword qi. Metal Root: three blades fan out instead of one.
 /// </summary>
-public sealed partial class CultivationFlyingSwordActionEvent : WorldTargetActionEvent
+public sealed partial class CultivationFlyingSwordActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 15f;
+    public float QiCost { get; set; } = 15f;
 
     [DataField]
     public EntProtoId Projectile = "ProjectileCultivationSwordQi";
@@ -31,10 +31,10 @@ public sealed partial class CultivationFlyingSwordActionEvent : WorldTargetActio
 /// <summary>
 ///     A rain of sword qi: several blades in a cone towards the target.
 /// </summary>
-public sealed partial class CultivationSwordRainActionEvent : WorldTargetActionEvent
+public sealed partial class CultivationSwordRainActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 40f;
+    public float QiCost { get; set; } = 40f;
 
     [DataField]
     public EntProtoId Projectile = "ProjectileCultivationSwordQi";
@@ -56,10 +56,10 @@ public sealed partial class CultivationSwordRainActionEvent : WorldTargetActionE
 /// <summary>
 ///     A palm strike wreathed in flame. Fire Root: the flames catch twice as hard.
 /// </summary>
-public sealed partial class CultivationBurningPalmActionEvent : EntityTargetActionEvent
+public sealed partial class CultivationBurningPalmActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 15f;
+    public float QiCost { get; set; } = 15f;
 
     [DataField]
     public float HeatDamage = 10f;
@@ -71,10 +71,10 @@ public sealed partial class CultivationBurningPalmActionEvent : EntityTargetActi
 /// <summary>
 ///     Set everyone who isn't a friend ablaze around you.
 /// </summary>
-public sealed partial class CultivationSeaOfFlamesActionEvent : InstantActionEvent
+public sealed partial class CultivationSeaOfFlamesActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 45f;
+    public float QiCost { get; set; } = 45f;
 
     [DataField]
     public float Range = 3f;
@@ -90,10 +90,10 @@ public sealed partial class CultivationSeaOfFlamesActionEvent : InstantActionEve
 /// <summary>
 ///     Still water around the body softens every blow. Water Root: the stored force crashes back out when it ends.
 /// </summary>
-public sealed partial class CultivationStillWaterWardActionEvent : InstantActionEvent
+public sealed partial class CultivationStillWaterWardActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 20f;
+    public float QiCost { get; set; } = 20f;
 
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(10);
@@ -105,10 +105,10 @@ public sealed partial class CultivationStillWaterWardActionEvent : InstantAction
 /// <summary>
 ///     A surge of water throws everyone who isn't a friend away from you.
 /// </summary>
-public sealed partial class CultivationTidalSurgeActionEvent : InstantActionEvent
+public sealed partial class CultivationTidalSurgeActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 40f;
+    public float QiCost { get; set; } = 40f;
 
     [DataField]
     public float Range = 3f;
@@ -127,10 +127,10 @@ public sealed partial class CultivationTidalSurgeActionEvent : InstantActionEven
 /// <summary>
 ///     Spring qi mends flesh. Wood Root: it also eases an internal injury, and some of it flows back to you.
 /// </summary>
-public sealed partial class CultivationSpringMendingActionEvent : EntityTargetActionEvent
+public sealed partial class CultivationSpringMendingActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 20f;
+    public float QiCost { get; set; } = 20f;
 
     [DataField]
     public float Heal = 20f;
@@ -139,10 +139,10 @@ public sealed partial class CultivationSpringMendingActionEvent : EntityTargetAc
 /// <summary>
 ///     Heal yourself and every friend around you.
 /// </summary>
-public sealed partial class CultivationMyriadSpringActionEvent : InstantActionEvent
+public sealed partial class CultivationMyriadSpringActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 45f;
+    public float QiCost { get; set; } = 45f;
 
     [DataField]
     public float Range = 4f;
@@ -158,10 +158,10 @@ public sealed partial class CultivationMyriadSpringActionEvent : InstantActionEv
 /// <summary>
 ///     Root yourself like a mountain: take less damage, but move slowly. Earth Root: harder still.
 /// </summary>
-public sealed partial class CultivationRootedStanceActionEvent : InstantActionEvent
+public sealed partial class CultivationRootedStanceActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 10f;
+    public float QiCost { get; set; } = 10f;
 
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(15);
@@ -179,10 +179,10 @@ public sealed partial class CultivationRootedStanceActionEvent : InstantActionEv
 /// <summary>
 ///     Bring the mountain down: everyone close who isn't a friend is battered and knocked flat.
 /// </summary>
-public sealed partial class CultivationMountainCollapseActionEvent : InstantActionEvent
+public sealed partial class CultivationMountainCollapseActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 40f;
+    public float QiCost { get; set; } = 40f;
 
     [DataField]
     public float Range = 2f;

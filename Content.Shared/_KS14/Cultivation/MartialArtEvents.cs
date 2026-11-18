@@ -14,10 +14,10 @@ public sealed partial class MartialArtReadManualDoAfterEvent : SimpleDoAfterEven
 ///     Eighteen Dragon-Subduing Palms: a palm that hits like a charging dragon. Each palm on the same target within
 ///         a few seconds hits harder and throws them further.
 /// </summary>
-public sealed partial class DragonPalmActionEvent : EntityTargetActionEvent
+public sealed partial class DragonPalmActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 15f;
+    public float QiCost { get; set; } = 15f;
 
     [DataField]
     public float BluntDamage = 12f;
@@ -38,10 +38,10 @@ public sealed partial class DragonPalmActionEvent : EntityTargetActionEvent
 /// <summary>
 ///     Six Meridians Divine Sword: sword qi fired from the fingertips.
 /// </summary>
-public sealed partial class SixMeridiansActionEvent : WorldTargetActionEvent
+public sealed partial class SixMeridiansActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 10f;
+    public float QiCost { get; set; } = 10f;
 
     [DataField]
     public EntProtoId Projectile = "ProjectileSixMeridiansSwordQi";
@@ -93,10 +93,10 @@ public sealed partial class StarAbsorbingActionEvent : EntityTargetActionEvent
 /// <summary>
 ///     Great Shift of Heaven and Earth: for a few seconds, projectiles that hit you are turned back.
 /// </summary>
-public sealed partial class GreatShiftActionEvent : InstantActionEvent
+public sealed partial class GreatShiftActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost = 30f;
+    public float QiCost { get; set; } = 30f;
 
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(6);
