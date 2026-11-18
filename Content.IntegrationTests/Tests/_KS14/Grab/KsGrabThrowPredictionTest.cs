@@ -20,10 +20,13 @@ using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
@@ -48,6 +51,10 @@ public sealed class KsGrabThrowPredictionTest : GameTest
     [TestCase(false)]
     public async Task ClientPredictsTheThrowFromTheThrower(bool throwKey)
     {
+        // The client predicts well past the last server state, as it does with real latency: every state then resets
+        // the throw and it has to be predicted again, several times over, before the server confirms it.
+        await Client.WaitPost(() => Client.ResolveDependency<IConfigurationManager>().SetCVar(CVars.NetPredictTickBias, PredictedAheadTicks));
+
         var testMap = await Pair.CreateTestMap();
         EntityUid grabberUid = default;
         EntityUid victimUid = default;
@@ -147,7 +154,7 @@ public sealed class KsGrabThrowPredictionTest : GameTest
 
         // The flight itself, tick by tick: thrown north, the victim only ever goes north on the client, and stays in
         // line with the thrower. Snapping back towards where they were held is what a throw lost on re-prediction
-        // looks like. The test server answers within a tick, so this can't show how the wait for a far server looks.
+        // looks like. The client predicts PredictedAheadTicks ahead, so the throw is reset and predicted again that many times over.
         var lastY = float.MinValue;
         var firstY = 0f;
         for (var tick = 1; tick <= WatchedTicks; tick++)
@@ -163,6 +170,8 @@ public sealed class KsGrabThrowPredictionTest : GameTest
 
                 Assert.Multiple(() =>
                 {
+                    Assert.That(CEntMan.GetComponent<PhysicsComponent>(clientVictimUid).Predict,
+                        $"The victim's physics must be predicted on the client {tick} ticks after the throw.");
                     Assert.That(position.Y, Is.GreaterThanOrEqualTo(lastY - 0.01f),
                         $"The victim went backwards on the client {tick} ticks after the throw.");
                     Assert.That(MathF.Abs(position.X - grabberPosition.X), Is.LessThan(MaxSidewaysDrift),
@@ -179,6 +188,11 @@ public sealed class KsGrabThrowPredictionTest : GameTest
     ///     How many ticks the flight is watched for.
     /// </summary>
     private const int WatchedTicks = 15;
+
+    /// <summary>
+    ///     How far ahead of the server the client predicts, standing in for latency.
+    /// </summary>
+    private const int PredictedAheadTicks = 8;
 
     /// <summary>
     ///     How far east or west of the thrower a victim thrown north may stray. They were held further off than this,
