@@ -1,0 +1,68 @@
+<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    Title="{Loc ks-fieldcommander-admin-title}"
+    SetSize="1250 620"
+    MinSize="760 420">
+    <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+        <Label Name="NoRuleLabel" Text="{Loc ks-fieldcommander-admin-no-rule}" Visible="False" />
+        <!-- Status strip: the only part refreshed by itself. -->
+        <PanelContainer Name="StatusPanel" StyleClasses="BackgroundPanelDark">
+            <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="4">
+                <GridContainer Columns="4" HSeparationOverride="4" VSeparationOverride="4">
+                    <Label Name="PhaseLabel" HorizontalExpand="True" Margin="0 0 12 0" />
+                    <Label Name="DoctrineLabel" HorizontalExpand="True" Margin="0 0 12 0" />
+                    <Label Name="NextWaveLabel" HorizontalExpand="True" Margin="0 0 12 0" />
+                    <Label Name="NextPhaseLabel" HorizontalExpand="True" />
+                    <Label Name="AliveLabel" Margin="0 0 12 0" />
+                    <Label Name="DefendersLabel" Margin="0 0 12 0" />
+                    <Label Name="BudgetLabel" Margin="0 0 12 0" />
+                    <Label Name="WavesLabel" />
+                </GridContainer>
+                <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                    <Label Name="PausedLabel" VerticalAlignment="Center" MinWidth="90" />
+                    <Button Name="PauseButton" Text="{Loc ks-fieldcommander-admin-pause}" />
+                    <Button Name="ForceWaveButton" Text="{Loc ks-fieldcommander-admin-force-wave}" />
+                    <Button Name="RefreshButton" Text="{Loc ks-fieldcommander-admin-refresh}" />
+                    <Label Name="ResultLabel" VerticalAlignment="Center" HorizontalExpand="True" Margin="8 0 0 0" />
+                </BoxContainer>
+            </BoxContainer>
+        </PanelContainer>
+        <TabContainer Name="Tabs" VerticalExpand="True">
+            <!-- Phases -->
+            <ScrollContainer HScrollEnabled="True" VerticalExpand="True">
+                <GridContainer Name="PhasesGrid" Columns="7" HSeparationOverride="4" VSeparationOverride="4" Margin="4" />
+            </ScrollContainer>
+            <!-- Assets -->
+            <BoxContainer Orientation="Vertical" SeparationOverride="6">
+                <ScrollContainer HScrollEnabled="True" VerticalExpand="True">
+                    <GridContainer Name="AssetsGrid" Columns="14" HSeparationOverride="4" VSeparationOverride="4" Margin="4" />
+                </ScrollContainer>
+                <BoxContainer Orientation="Horizontal" SeparationOverride="6" Margin="4">
+                    <LineEdit Name="AddAssetEntity" MinWidth="260" PlaceHolder="{Loc ks-fieldcommander-admin-asset-add-placeholder}" />
+                    <Button Name="AddAssetButton" Text="{Loc ks-fieldcommander-admin-asset-add}" />
+                    <Label Text="{Loc ks-fieldcommander-admin-asset-add-hint}" StyleClasses="LabelWeak" VerticalAlignment="Center" />
+                </BoxContainer>
+            </BoxContainer>
+            <!-- Custom wave -->
+            <BoxContainer Orientation="Vertical" SeparationOverride="6" Margin="4">
+                <ScrollContainer VerticalExpand="True">
+                    <BoxContainer Name="WaveRows" Orientation="Vertical" SeparationOverride="4" />
+                </ScrollContainer>
+                <BoxContainer Orientation="Horizontal">
+                    <Button Name="AddWaveRowButton" Text="{Loc ks-fieldcommander-admin-wave-add-row}" />
+                </BoxContainer>
+                <Label Text="{Loc ks-fieldcommander-admin-wave-announcement}" />
+                <LineEdit Name="WaveAnnouncement" HorizontalExpand="True" PlaceHolder="{Loc ks-fieldcommander-admin-wave-announcement-placeholder}" />
+                <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                    <Button Name="QueueWaveButton" Text="{Loc ks-fieldcommander-admin-wave-queue}" />
+                    <Button Name="SendWaveButton" Text="{Loc ks-fieldcommander-admin-wave-send-now}" />
+                </BoxContainer>
+            </BoxContainer>
+            <!-- Queue -->
+            <ScrollContainer VerticalExpand="True">
+                <BoxContainer Name="QueueList" Orientation="Vertical" SeparationOverride="4" Margin="4" />
+            </ScrollContainer>
+        </TabContainer>
+    </BoxContainer>
+</controls:FancyWindow>
