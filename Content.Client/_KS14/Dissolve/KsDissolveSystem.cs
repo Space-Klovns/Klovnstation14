@@ -30,12 +30,14 @@ public sealed partial class KsDissolveSystem : EntitySystem
         var visualsComponent = new KsDissolveVisualsComponent
         {
             LocalStartTime = _gameTiming.CurTime,
+            Reverse = entity.Comp.Reverse,
             Shader = shader,
             Seed = (float)(entity.Owner.Id % 97),
         };
         AddComp(entity.Owner, visualsComponent);
 
-        shader.SetParameter("progress", 0f);
+        // A materialise starts from nothing.
+        shader.SetParameter("progress", entity.Comp.Reverse ? 1f : 0f);
         shader.SetParameter("seed", visualsComponent.Seed);
 
         // Stacks with any post-shader the sprite already has, ordered before the outlines.
@@ -78,16 +80,24 @@ public sealed partial class KsDissolveSystem : EntitySystem
             if (visualsComponent.Shader is not { } shader)
                 continue;
 
+            // A materialise turned into a dissolve (or back) starts again from now.
+            if (visualsComponent.Reverse != dissolveComponent.Reverse)
+            {
+                visualsComponent.Reverse = dissolveComponent.Reverse;
+                visualsComponent.LocalStartTime = _gameTiming.CurTime;
+            }
+
             var duration = dissolveComponent.Duration.TotalSeconds;
             var progress = duration > 0d
                 ? (float)Math.Clamp((curTime - visualsComponent.LocalStartTime).TotalSeconds / duration, 0d, 1d)
                 : 1f;
 
-            shader.SetParameter("progress", progress);
+            // A materialise is the dissolve played backwards, and ends whole; the server takes the component off.
+            shader.SetParameter("progress", dissolveComponent.Reverse ? 1f - progress : progress);
             shader.SetParameter("seed", visualsComponent.Seed);
 
             // Fully dissolved: hidden until the server's deletion arrives.
-            if (progress >= 1f && spriteComponent.Visible)
+            if (!dissolveComponent.Reverse && progress >= 1f && spriteComponent.Visible)
                 _spriteSystem.SetVisible((uid, spriteComponent), false);
         }
     }

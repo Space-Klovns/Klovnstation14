@@ -80,6 +80,39 @@ state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamag
 `KsShooterHitscanHitEvent`. Distance-scaled ones stamp `KsPerkShotOriginComponent` on the bullet and answer
 `KsModifyPerkShotRangeDamageEvent` on the shooter.
 
+## Companions
+
+`KsCompanionsComponent` (`Content.Shared/_KS14/Companions/`) on an owner lists companions; the server's
+`KsCompanionSystem` (`Content.Server/_KS14/Companions/`) keeps them. A perk gives the component like any other:
+
+```yaml
+- type: KsCompanions
+  companions:
+  - prototype: KsMobCompanionMedibot
+    mode: Follow             # or Attached
+    offset: 0, 0             # Attached only: where on the owner, in its frame
+    respawnDelay: 60
+    materialiseDuration: 1.5
+    dissolveDuration: 1.5
+    destroyedPopup: ks-companion-destroyed   # $companion, $seconds
+    returnedPopup: ks-companion-returned     # $companion
+```
+
+- **Spawning**: on the component's map init (the perk being given) each entry is spawned at the owner and materialises
+  (`KsDissolveSystem.Materialise`, the dissolve played backwards). It gets `KsCompanionComponent` (owner, index, mode,
+  offset; networked), the owner's NPC factions (replacing its own), the owner's `ScenarioFactionMember`, and
+  `KsFactionCollisionShooter`.
+- **Follow**: the companion's HTN blackboard `FollowTarget` is the owner; give it an HTN that runs `FollowCompound`.
+  `SetFollowOverride(companion, target)` sends it after something else for now, `null` back to the owner.
+- **Attached**: spawned parented to the owner at `offset`, and put back there whenever it is moved. Give it no hard
+  fixture on the owner's layers and no mover; it turns with the owner.
+- **Destroyed** (dead, or deleted without being let go): a popup to the owner, the wreck dissolves, and it comes back
+  after `respawnDelay`.
+- **Owner**: critical, nothing changes; dead, every companion dissolves and no timer runs; revived, they all come back.
+  A new body gets the perk, so its own companions. Removing the component (the perk) deletes them.
+- **API**: `TryGetCompanion(owner, index, out companion)`, `TryGetOwner(companion, out owner)`, `SetFollowOverride`.
+- Tests: `Content.IntegrationTests/Tests/_KS14/Companions/KsCompanionTest.cs`.
+
 ## The picker
 
 `SharedKsPerkChoiceSystem.RequestChoice(body, options, source)` opens a radial picker on the body for its player. It has
