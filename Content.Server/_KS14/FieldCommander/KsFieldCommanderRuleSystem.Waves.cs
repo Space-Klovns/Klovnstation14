@@ -273,8 +273,9 @@ public sealed partial class KsFieldCommanderRuleSystem
         var queuedWave = rule.Comp.QueuedWaves.Count > 0 ? rule.Comp.QueuedWaves[0] : null;
         if (TryTakeQueuedWave(rule.Comp, rule.Comp.HardMaxAlive - CountLivingUnits(rule.Owner, null), purchases, out var queuedAnnouncement))
         {
+            // Nothing spent, and nothing saved up either: the budget carried in stays as it was.
             rule.Comp.DoctrineIndex = -1;
-            leftover = budget;
+            leftover = rule.Comp.CarriedBudget;
         }
         else
         {
@@ -299,7 +300,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
-        rule.Comp.CarriedBudget = Math.Clamp(sent > 0 ? leftover : budget, 0f, MathF.Max(0f, phase.Budget * budgetScale));
+        rule.Comp.CarriedBudget = Math.Clamp(sent > 0 || queuedWave != null ? leftover : budget, 0f, MathF.Max(0f, phase.Budget * budgetScale));
 
         var struck = _robustRandom.Prob(Math.Clamp(phase.StrikeChance, 0f, 1f)) && TryStrike(rule.Comp, battlefield);
 

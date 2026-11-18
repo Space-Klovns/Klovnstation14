@@ -310,7 +310,7 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
             var queued = SendWave(ruleUid, seen);
             Assert.That(queued, Is.EqualTo(new[] { 1, 1, 1 }), "the queued wave should be sent as written, and nothing else");
             Assert.That(rule.Comp1.QueuedWaves, Is.Empty, "a queued wave is sent once");
-            Assert.That(rule.Comp1.CarriedBudget, Is.GreaterThanOrEqualTo(carried), "a queued wave costs nothing");
+            Assert.That(rule.Comp1.CarriedBudget, Is.EqualTo(carried), "a queued wave neither spends nor saves");
 
             var next = SendWave(ruleUid, seen);
             Assert.That(next, Is.Not.Empty);
