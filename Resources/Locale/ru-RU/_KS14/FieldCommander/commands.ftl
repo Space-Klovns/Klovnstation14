@@ -30,3 +30,16 @@ cmd-ks_fcstatus-uplink-none = не высажен
 cmd-ks_fcstatus-uplink-destroyed = уничтожен
 cmd-ks_fcstatus-uplink-active = удар через { $seconds } с
 cmd-ks_fcstatus-points = { $player }: { $points } очков
+cmd-ks_fcstatus-stuck = Застрявших бойцов сейчас: { $stuck }. Отправлено заново из-за застревания: { $relocated }, возвращено в бюджет: { $refunded }.
+
+cmd-ks_fcstuck-desc = Показывает каждого бойца полевого командира, который давно никуда не продвинулся, начиная с самых долгих, и что делают его рулёжка и HTN.
+cmd-ks_fcstuck-help = ks_fcstuck [секунд без продвижения, по умолчанию 0]
+cmd-ks_fcstuck-hint = [секунды]
+cmd-ks_fcstuck-none = Нет бойцов, которые так долго никуда не продвигались.
+cmd-ks_fcstuck-count = Бойцов: { $count }:
+
+ks-fieldcommander-stuck-unit = { $unit } в { $position }, идёт к { $goal } (ближе всего { $best }), без продвижения { $seconds } с, этап { $stage } ({ $reason }). Рулёжка: { $steering }. HTN: { $task }.
+ks-fieldcommander-stuck-steering = { $status }, неудачных путей { $failed }, узлов осталось { $path }, поиск пути { $pathfinding }, к { $target } в пределах { $range }
+ks-fieldcommander-stuck-htn-disabled = отключён
+ks-fieldcommander-stuck-htn-none = нет плана
+ks-fieldcommander-stuck-htn-plan = { $operator } (задача { $index } из { $count }, ветви { $branches })

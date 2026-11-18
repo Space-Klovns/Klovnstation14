@@ -83,6 +83,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             ("waves", component.WavesSent),
             ("uplink", uplink)));
 
+        builder.AppendLine(Loc.GetString("cmd-ks_fcstatus-stuck",
+            ("stuck", CountStuckUnits(rule.Owner)),
+            ("relocated", component.StuckUnitsRelocated),
+            ("refunded", component.StuckUnitsRefunded)));
+
         foreach (var (userId, points) in component.Points)
         {
             var playerName = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();

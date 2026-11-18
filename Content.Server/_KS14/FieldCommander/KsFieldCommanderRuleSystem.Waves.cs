@@ -180,11 +180,12 @@ public sealed partial class KsFieldCommanderRuleSystem
     private int CountLivingUnits(EntityUid ruleUid, Dictionary<int, int>? aliveByAsset)
     {
         var count = 0;
-        var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent, MobStateComponent>();
-        while (query.MoveNext(out var unitComponent, out var mobStateComponent))
+        // Not only mobs: a unit with no mob state, like a borg that is destroyed rather than killed, counts too.
+        var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent>();
+        while (query.MoveNext(out var unitUid, out var unitComponent))
         {
             if (unitComponent.RuleUid != ruleUid ||
-                mobStateComponent.CurrentState == MobState.Dead)
+                !IsUnitAlive(unitUid))
                 continue;
 
             count++;
@@ -424,7 +425,12 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// <param name="holdPosition">
     ///     Never gives it orders, whatever its asset says: it fights whoever comes, and nothing sends it away.
     /// </param>
-    private EntityUid? SpawnUnit(Entity<KsFieldCommanderRuleComponent> rule, int assetIndex, EntityCoordinates coordinates, bool holdPosition = false)
+    /// <param name="countSent">Whether it counts as sent: not for one sent again in place of a stuck one.</param>
+    private EntityUid? SpawnUnit(Entity<KsFieldCommanderRuleComponent> rule,
+        int assetIndex,
+        EntityCoordinates coordinates,
+        bool holdPosition = false,
+        bool countSent = true)
     {
         var asset = rule.Comp.Assets[assetIndex];
         EntityUid unitUid;
@@ -445,8 +451,11 @@ public sealed partial class KsFieldCommanderRuleSystem
         unitComponent.RuleUid = rule.Owner;
         unitComponent.AssetIndex = assetIndex;
         unitComponent.GiveOrders = asset.GiveOrders && !holdPosition;
+        ResetStuck(unitComponent);
 
-        rule.Comp.UnitsSent++;
+        if (countSent)
+            rule.Comp.UnitsSent++;
+
         return unitUid;
     }
 

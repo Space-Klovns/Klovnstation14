@@ -258,12 +258,15 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [SubscribeLocalEvent]
     private void OnPassengerDisembarked(Entity<KsFieldCommanderUnitComponent> entity, ref KsSupplyPodPassengerDisembarkedEvent args)
     {
+        // The time in the pod is no time spent stuck.
+        ResetStuck(entity.Comp);
+
         if (!entity.Comp.GiveOrders ||
             !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
             return;
 
         // Straight out of the pod and at them, rather than standing about until the next round of orders.
-        OrderUnit(ruleComponent, entity.Owner, SurveyBattlefield(ruleComponent));
+        OrderUnit(ruleComponent, entity, SurveyBattlefield(ruleComponent));
     }
 
     [SubscribeLocalEvent]

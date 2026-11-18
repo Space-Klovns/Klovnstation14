@@ -257,6 +257,10 @@ public sealed partial class KsFieldCommanderRuleSystem
     [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
     private void OnUnitDamageChanged(EntityUid unitUid, KsFieldCommanderUnitComponent unitComponent, DamageChangedEvent args)
     {
+        // A unit being shot at is in a fight, not stuck (see .Stuck).
+        if (args.DamageIncreased)
+            unitComponent.LastDamagedTime = _gameTiming.CurTime;
+
         if (TryComp<KsFieldCommanderRuleComponent>(unitComponent.RuleUid, out var ruleComponent))
             RecordDamage(unitUid, args, ruleComponent, recordOther: false);
     }
