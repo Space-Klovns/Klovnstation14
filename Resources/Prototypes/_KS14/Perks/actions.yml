@@ -1,0 +1,29 @@
+# Actions the perks grant (perks.yml).
+
+- type: entity
+  id: ActionKsLivingShield
+  name: Living Shield
+  description: Raise a shield that soaks all damage until it breaks. You move slowly and can't fire while it's up.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon:
+      sprite: Objects/Weapons/Melee/shields.rsi
+      state: riot-icon
+    iconOn:
+      sprite: Objects/Weapons/Melee/shields.rsi
+      state: riot_bullet-icon
+  - type: InstantAction
+    event: !type:KsLivingShieldActionEvent
+
+- type: entity
+  id: ActionKsDrawFire
+  name: Draw Fire
+  description: Bellow a challenge that makes the enemy shoot at you rather than anyone else, for a while.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 40
+    icon: Interface/Actions/scream.png
+  - type: InstantAction
+    event: !type:KsDrawFireActionEvent

@@ -42,6 +42,30 @@
     sprite: _KS14/Interface/Perks/perks.rsi
     state: tank
   alert: KsPerkTank
+  components:
+  - type: KsCritAutoInjectorAbility
+    cooldown: 180
+    cooldownAlert: KsPerkTank
+    injection:
+      reagents:
+      - ReagentId: Omnizine
+        Quantity: 10
+      - ReagentId: Epinephrine
+        Quantity: 10
+      - ReagentId: Klovnide
+        Quantity: 10
+  # 150 soaks seven or eight rifle rounds (20 each): time to cross open ground or pull a downed defender back.
+  - type: KsLivingShieldAbility
+    capacity: 150
+    walkModifier: 0.6
+    sprintModifier: 0.6
+    cooldown: 30
+  - type: KsDrawFireAbility
+    duration: 10
+    priority: 1
+  actions:
+  - ActionKsLivingShield
+  - ActionKsDrawFire
 
 - type: ksPerk
   id: KsPerkHealing
