@@ -57,26 +57,11 @@ ks-fieldcommander-admin-asset-header-min-phase = Мин. фаза
 ks-fieldcommander-admin-asset-header-max-alive = Макс. живых
 ks-fieldcommander-admin-asset-header-delivery = Доставка
 ks-fieldcommander-admin-asset-header-living = Живых
-ks-fieldcommander-admin-asset-header-notes = Метки, гарантия
 ks-fieldcommander-admin-asset-header-actions = { "" }
-ks-fieldcommander-admin-asset-notes = { $disabled ->
-    [true] отключён;{" "}
-   *[false] {""}
-}{ $hasTags ->
-    [true] { $tags }
-   *[false] без меток
-}{ $every ->
-    [0] {""}
-    [1] , каждую волну
-   *[other] , раз в { $every } { $every ->
-        [one] волну
-        [few] волны
-       *[many] волн
-    }
-}{ $onPhase ->
-    [true] , в начале фазы
-   *[false] {""}
-}
+ks-fieldcommander-admin-asset-header-tags = Метки
+ks-fieldcommander-admin-asset-header-every = Каждые N
+ks-fieldcommander-admin-asset-header-on-phase = Начало фазы
+ks-fieldcommander-admin-asset-tags-placeholder = infantry, pod
 ks-fieldcommander-admin-asset-disable = Отключить
 ks-fieldcommander-admin-asset-enable = Включить
 ks-fieldcommander-admin-asset-add = Добавить ресурс

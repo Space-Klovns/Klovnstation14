@@ -182,7 +182,10 @@ public readonly record struct KsFieldCommanderAdminAssetValues(
     float? Weight = null,
     int? MinPhase = null,
     int? MaxAlive = null,
-    byte? Delivery = null);
+    byte? Delivery = null,
+    int? GuaranteedEveryWaves = null,
+    bool? GuaranteedOnPhaseEnter = null,
+    List<string>? Tags = null);
 
 [Serializable, NetSerializable]
 public sealed class KsFieldCommanderAdminEditAssetMessage(NetEntity rule, int asset, KsFieldCommanderAdminAssetValues values)

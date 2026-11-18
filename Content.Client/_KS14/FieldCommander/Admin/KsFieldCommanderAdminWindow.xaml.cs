@@ -230,7 +230,7 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
 
         _assetRows.Clear();
         AssetsGrid.RemoveAllChildren();
-        foreach (var header in new[] { "index", "entity", "humanoid", "count", "cost", "weight", "min-phase", "max-alive", "delivery", "living", "notes", "actions" })
+        foreach (var header in new[] { "index", "entity", "humanoid", "count", "cost", "weight", "min-phase", "max-alive", "delivery", "living", "tags", "every", "on-phase", "actions" })
             AssetsGrid.AddChild(Header($"ks-fieldcommander-admin-asset-header-{header}"));
     }
 
@@ -494,8 +494,8 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
         private readonly int _index;
         private readonly KsFieldCommanderAdminWindow _window;
         private readonly Label _indexLabel;
-        private readonly EditField _entity = new(200);
-        private readonly EditField _humanoid = new(230);
+        private readonly EditField _entity = new(165);
+        private readonly EditField _humanoid = new(245);
         private readonly EditField _count = new(45);
         private readonly EditField _cost = new(55);
         private readonly EditField _weight = new(55);
@@ -503,10 +503,14 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
         private readonly EditField _maxAlive = new(45);
         private readonly OptionButton _delivery = new();
         private readonly Label _living = new();
-        private readonly Label _notes = new() { StyleClasses = { "LabelWeak" } };
+        private readonly EditField _tags = new(130);
+        private readonly EditField _every = new(45);
+        private readonly CheckBox _onPhase = new() { HorizontalAlignment = HAlignment.Center };
         private readonly Button _toggle = new();
         private byte _serverDelivery;
         private bool _takeDelivery = true;
+        private bool _serverOnPhase;
+        private bool _takeOnPhase = true;
         private bool _disabled;
 
         public AssetRow(KsFieldCommanderAdminWindow window, int index, List<string> deliveryNames)
@@ -543,8 +547,12 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             grid.AddChild(_maxAlive.Edit);
             grid.AddChild(_delivery);
             grid.AddChild(_living);
-            grid.AddChild(_notes);
+            grid.AddChild(_tags.Edit);
+            grid.AddChild(_every.Edit);
+            grid.AddChild(_onPhase);
             grid.AddChild(actions);
+
+            _tags.Edit.PlaceHolder = Loc.GetString("ks-fieldcommander-admin-asset-tags-placeholder");
         }
 
         public void Update(KsFieldCommanderAdminAssetData asset, KsFieldCommanderAdminEuiState state)
@@ -564,12 +572,14 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             _takeDelivery = false;
 
             _living.Text = asset.Living.ToString();
-            _notes.Text = Loc.GetString("ks-fieldcommander-admin-asset-notes",
-                ("hasTags", asset.Tags.Count > 0),
-                ("tags", string.Join(", ", asset.Tags.OrderBy(tag => tag))),
-                ("every", asset.GuaranteedEveryWaves),
-                ("onPhase", asset.GuaranteedOnPhaseEnter),
-                ("disabled", asset.Disabled));
+            _tags.SetServer(FormatTags(asset.Tags));
+            _every.SetServer(asset.GuaranteedEveryWaves.ToString());
+
+            if (_takeOnPhase || _onPhase.Pressed == _serverOnPhase)
+                _onPhase.Pressed = asset.GuaranteedOnPhaseEnter;
+
+            _serverOnPhase = asset.GuaranteedOnPhaseEnter;
+            _takeOnPhase = false;
 
             _disabled = asset.Disabled;
             _toggle.Text = Loc.GetString(asset.Disabled ? "ks-fieldcommander-admin-asset-enable" : "ks-fieldcommander-admin-asset-disable");
@@ -579,10 +589,11 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
 
         private void Apply()
         {
-            int? count = null, minPhase = null, maxAlive = null;
+            int? count = null, minPhase = null, maxAlive = null, every = null;
             float? cost = null, weight = null;
 
-            if (!TryInt(_count, ref count) ||
+            if (!TryInt(_every, ref every) ||
+                !TryInt(_count, ref count) ||
                 !TryInt(_minPhase, ref minPhase) ||
                 !TryInt(_maxAlive, ref maxAlive) ||
                 !TryFloat(_cost, ref cost) ||
@@ -606,11 +617,14 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             }
 
             byte? delivery = _delivery.SelectedId != _serverDelivery ? (byte)_delivery.SelectedId : null;
+            bool? onPhase = _onPhase.Pressed != _serverOnPhase ? _onPhase.Pressed : null;
+            var tags = _tags.Edited ? ParseTags(_tags.Text) : null;
 
-            foreach (var field in new[] { _entity, _humanoid, _count, _cost, _weight, _minPhase, _maxAlive })
+            foreach (var field in new[] { _entity, _humanoid, _count, _cost, _weight, _minPhase, _maxAlive, _tags, _every })
                 field.Sent();
 
             _takeDelivery = true;
+            _takeOnPhase = true;
 
             var values = new KsFieldCommanderAdminAssetValues(
                 Entity: string.IsNullOrEmpty(entity) ? null : entity,
@@ -620,9 +634,25 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
                 Weight: weight,
                 MinPhase: minPhase,
                 MaxAlive: maxAlive,
-                Delivery: delivery);
+                Delivery: delivery,
+                GuaranteedEveryWaves: every,
+                GuaranteedOnPhaseEnter: onPhase,
+                Tags: tags);
 
             _window.Send(rule => new KsFieldCommanderAdminEditAssetMessage(rule, _index, values));
+        }
+
+        private static string FormatTags(List<string> tags)
+        {
+            return string.Join(", ", tags.OrderBy(tag => tag, StringComparer.Ordinal));
+        }
+
+        /// <summary>
+        ///     Comma-separated, blanks dropped; an empty field clears every tag.
+        /// </summary>
+        private static List<string> ParseTags(string text)
+        {
+            return text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
         private static bool TryInt(EditField field, ref int? value)

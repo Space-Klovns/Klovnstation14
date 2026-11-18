@@ -1,4 +1,7 @@
+using System.Linq;
+using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
+using Content.Shared.Database;
 using Content.Server.EUI;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared.Administration;
@@ -17,6 +20,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
 {
     public const AdminFlags RequiredFlags = AdminFlags.Round;
 
+    [Dependency] private IAdminLogManager _adminLogManager = default!;
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IEntityManager _entityManager = default!;
 
@@ -133,6 +137,9 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
 
         if (!IsAllowed())
         {
+            _adminLogManager.Add(LogType.AdminCommands,
+                LogImpact.Medium,
+                $"{Player:player} was refused for lacking the admin flag: {Describe(adminMessage)}, through the field commander admin window");
             Close();
             return;
         }
@@ -156,6 +163,10 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
         var rule = found.Value;
         _ruleUid = rule.Owner;
         var accepted = Apply(rule, adminMessage);
+
+        _adminLogManager.Add(LogType.AdminCommands,
+            accepted ? LogImpact.Medium : LogImpact.Low,
+            $"{Player:player} {(accepted ? "" : "was refused: ")}{Describe(adminMessage)}, through the field commander admin window, on {_entityManager.ToPrettyString(rule.Owner):rule}");
 
         SendMessage(new KsFieldCommanderAdminResultMessage(accepted));
         StateDirty();
@@ -186,10 +197,10 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
                 return _ruleSystem.TryEditPhase(commander, editPhase.Phase, editPhase.Start, editPhase.WaveInterval, editPhase.Budget);
 
             case KsFieldCommanderAdminEditAssetMessage editAsset:
-                return _ruleSystem.TryEditAsset(commander, editAsset.Asset, ToEdit(editAsset.Values));
+                return _ruleSystem.TryEditAsset(commander, editAsset.Asset, ToEdit(editAsset.Values), ToSchedule(editAsset.Values));
 
             case KsFieldCommanderAdminAddAssetMessage addAsset:
-                return _ruleSystem.TryAddAsset(commander, ToEdit(addAsset.Values)) >= 0;
+                return _ruleSystem.TryAddAsset(commander, ToEdit(addAsset.Values), ToSchedule(addAsset.Values)) >= 0;
 
             case KsFieldCommanderAdminSetAssetDisabledMessage setDisabled:
                 return _ruleSystem.TrySetAssetDisabled(commander, setDisabled.Asset, setDisabled.Disabled);
@@ -220,6 +231,40 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
             MinPhase: values.MinPhase,
             MaxAlive: values.MaxAlive,
             Delivery: values.Delivery is { } delivery ? (KsFieldCommanderDelivery)delivery : null);
+    }
+
+    private static KsFieldCommanderAssetScheduleEdit ToSchedule(KsFieldCommanderAdminAssetValues values)
+    {
+        return new KsFieldCommanderAssetScheduleEdit(values.GuaranteedEveryWaves, values.GuaranteedOnPhaseEnter, values.Tags);
+    }
+
+    /// <summary>
+    ///     What a message asks for, for the admin log: everything it carries, the announcement's text included.
+    /// </summary>
+    private static string Describe(KsFieldCommanderAdminEuiMessage message)
+    {
+        return message switch
+        {
+            KsFieldCommanderAdminSetPausedMessage setPaused => setPaused.Paused ? "paused it" : "unpaused it",
+            KsFieldCommanderAdminForceWaveMessage => "forced a wave",
+            KsFieldCommanderAdminSetPhaseMessage setPhase => $"moved it to phase {setPhase.Phase}",
+            KsFieldCommanderAdminEditPhaseMessage editPhase =>
+                $"edited phase {editPhase.Phase}: start {editPhase.Start?.ToString() ?? "-"}, wave interval {editPhase.WaveInterval?.ToString() ?? "-"}, budget {editPhase.Budget?.ToString() ?? "-"}",
+            KsFieldCommanderAdminEditAssetMessage editAsset => $"edited asset {editAsset.Asset}: {DescribeValues(editAsset.Values)}",
+            KsFieldCommanderAdminAddAssetMessage addAsset => $"added an asset: {DescribeValues(addAsset.Values)}",
+            KsFieldCommanderAdminSetAssetDisabledMessage setDisabled => $"{(setDisabled.Disabled ? "disabled" : "enabled")} asset {setDisabled.Asset}",
+            KsFieldCommanderAdminQueueWaveMessage queueWave =>
+                $"{(queueWave.SendNow ? "sent a wave now" : "queued a wave")} of [{string.Join(", ", queueWave.Purchases?.Select(purchase => $"{purchase.Count}x asset {purchase.Asset}") ?? [])}] with announcement \"{queueWave.Announcement ?? "-"}\"",
+            _ => message.GetType().Name,
+        };
+    }
+
+    private static string DescribeValues(KsFieldCommanderAdminAssetValues values)
+    {
+        return $"entity {values.Entity ?? "-"}, humanoid {values.Humanoid ?? "-"}, count {values.Count?.ToString() ?? "-"}, cost {values.Cost?.ToString() ?? "-"}, " +
+               $"weight {values.Weight?.ToString() ?? "-"}, min phase {values.MinPhase?.ToString() ?? "-"}, max alive {values.MaxAlive?.ToString() ?? "-"}, " +
+               $"delivery {values.Delivery?.ToString() ?? "-"}, guaranteed every {values.GuaranteedEveryWaves?.ToString() ?? "-"} waves, " +
+               $"on phase start {values.GuaranteedOnPhaseEnter?.ToString() ?? "-"}, tags {(values.Tags is { } tags ? "[" + string.Join(", ", tags) + "]" : "-")}";
     }
 
     /// <summary>

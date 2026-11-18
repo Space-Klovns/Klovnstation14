@@ -57,22 +57,11 @@ ks-fieldcommander-admin-asset-header-min-phase = Min phase
 ks-fieldcommander-admin-asset-header-max-alive = Max alive
 ks-fieldcommander-admin-asset-header-delivery = Delivery
 ks-fieldcommander-admin-asset-header-living = Alive
-ks-fieldcommander-admin-asset-header-notes = Tags, guaranteed
 ks-fieldcommander-admin-asset-header-actions = { "" }
-ks-fieldcommander-admin-asset-notes = { $disabled ->
-    [true] disabled;{" "}
-   *[false] {""}
-}{ $hasTags ->
-    [true] { $tags }
-   *[false] no tags
-}{ $every ->
-    [0] {""}
-    [one] , every wave
-   *[other] , every { $every } waves
-}{ $onPhase ->
-    [true] , on phase start
-   *[false] {""}
-}
+ks-fieldcommander-admin-asset-header-tags = Tags
+ks-fieldcommander-admin-asset-header-every = Every N
+ks-fieldcommander-admin-asset-header-on-phase = Phase start
+ks-fieldcommander-admin-asset-tags-placeholder = infantry, pod
 ks-fieldcommander-admin-asset-disable = Disable
 ks-fieldcommander-admin-asset-enable = Enable
 ks-fieldcommander-admin-asset-add = Add asset

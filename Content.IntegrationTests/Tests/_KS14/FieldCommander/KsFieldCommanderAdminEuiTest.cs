@@ -33,6 +33,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
     private readonly EntProtoId _rule = "KsTestFcAdminEuiRule";
     private readonly EntProtoId _unit = "KsTestFcAdminEuiUnit";
     private readonly EntProtoId _otherUnit = "KsTestFcAdminEuiOtherUnit";
+    private readonly EntProtoId _defender = "KsTestFcAdminEuiDefender";
     private readonly EntProtoId _missing = "KsTestFcAdminEuiNoSuchPrototype";
 
     [TestPrototypes]
@@ -48,12 +49,27 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
   - type: MobState
 
 - type: entity
+  id: KsTestFcAdminEuiDefender
+  components:
+  - type: MobState
+  - type: ScenarioFactionMember
+    id: Nanotrasen
+
+- type: entity
   parent: BaseGameRule
   id: KsTestFcAdminEuiRule
   components:
   - type: KsFieldCommanderRule
+    minSpawnDistance: 6
+    maxSpawnDistance: 14
+    minDefenderDistance: 2
+    minPodDefenderDistance: 2
+    minPodObjectiveDistance: 6
+    defenderSightRange: 1
+    safeZoneRadius: 1
     uplinkPrototype: null
     briefingAnnouncement: null
+    endlessVote: false
     hardMaxAlive: 20
     phases:
     - name: ks-fieldcommander-phase-probing
@@ -77,6 +93,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
       guaranteedOnPhaseEnter: true
     - entity: KsTestFcAdminEuiUnit
       disabled: true
+    - entity: KsTestFcAdminEuiUnit
 ";
 
     private EntityUid _ruleUid;
@@ -86,14 +103,22 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
     private NetEntity RuleNetEntity => Server.EntMan.GetNetEntity(_ruleUid);
 
     /// <summary>
-    ///     Starts the test commander in its first phase, with the test player an admin or not.
+    ///     Starts the test commander in its first phase, with the test player an admin or not, and playing a defender
+    ///         on a floor its units can walk in on, so that a wave can go.
     /// </summary>
-    private async Task StartCommander(bool admin)
+    private async Task StartCommander(bool admin, bool defender = false)
     {
         var testMap = await Pair.CreateTestMap();
         await Server.WaitPost(() =>
         {
             Server.EntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            if (defender)
+            {
+                KsFieldCommanderTestHelpers.FillFloor(Server, testMap, halfExtent: 20);
+                var body = Server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+                Server.PlayerMan.SetAttachedEntity(Pair.Player!, body);
+            }
+
             _ruleUid = KsFieldCommanderTestHelpers.StartRules(Server, _rule).CommanderUid;
         });
 
@@ -202,7 +227,8 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(component.Phases[1].Budget, Is.EqualTo(12.5f), "budget");
 
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(
-                Entity: _otherUnit.Id, Count: 3, Cost: 6f, Weight: 7f, MinPhase: 0, MaxAlive: 8, Delivery: (byte)KsFieldCommanderDelivery.Foot)));
+                Entity: _otherUnit.Id, Count: 3, Cost: 6f, Weight: 7f, MinPhase: 0, MaxAlive: 8, Delivery: (byte)KsFieldCommanderDelivery.Foot,
+                GuaranteedEveryWaves: 4, GuaranteedOnPhaseEnter: false, Tags: [" pod ", "objective"])));
             var asset = component.Assets[0];
             Assert.Multiple(() =>
             {
@@ -213,12 +239,23 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
                 Assert.That(asset.MinPhase, Is.Zero, "min phase");
                 Assert.That(asset.MaxAlive, Is.EqualTo(8), "max alive");
                 Assert.That(asset.Delivery, Is.EqualTo(KsFieldCommanderDelivery.Foot), "delivery");
+                Assert.That(asset.GuaranteedEveryWaves, Is.EqualTo(4), "guaranteed every");
+                Assert.That(asset.GuaranteedOnPhaseEnter, Is.False, "guaranteed on phase start");
+                Assert.That(asset.Tags, Is.EquivalentTo(new[] { "pod", "objective" }), "tags, trimmed, in place of the old ones");
             });
 
+            // Fields left out stay as they are.
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(GuaranteedOnPhaseEnter: true)));
+            Assert.That(asset.GuaranteedOnPhaseEnter, Is.True);
+            Assert.That(asset.Tags, Has.Count.EqualTo(2), "tags left out are kept");
+            Assert.That(asset.GuaranteedEveryWaves, Is.EqualTo(4));
+
             var count = component.Assets.Count;
-            Handle(new KsFieldCommanderAdminAddAssetMessage(RuleNetEntity, new KsFieldCommanderAdminAssetValues(Entity: _otherUnit.Id)));
+            Handle(new KsFieldCommanderAdminAddAssetMessage(RuleNetEntity, new KsFieldCommanderAdminAssetValues(Entity: _otherUnit.Id, GuaranteedEveryWaves: 2, Tags: ["elite"])));
             Assert.That(component.Assets, Has.Count.EqualTo(count + 1), "add");
             Assert.That(component.Assets[count].Entity, Is.EqualTo(_otherUnit));
+            Assert.That(component.Assets[count].GuaranteedEveryWaves, Is.EqualTo(2), "an added asset's schedule");
+            Assert.That(component.Assets[count].Tags, Is.EquivalentTo(new[] { "elite" }));
 
             Handle(new KsFieldCommanderAdminSetAssetDisabledMessage(RuleNetEntity, 1, false));
             Assert.That(component.Assets[1].Disabled, Is.False, "enable");
@@ -257,6 +294,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             var component = RuleComponent;
             var asset = component.Assets[0];
             var (entity, cost, weight) = (asset.Entity, asset.Cost, asset.Weight);
+            var tags = asset.Tags.ToList();
             var phase = component.Phases[0];
             var (start, interval, budget) = (phase.Start, phase.WaveInterval, phase.Budget);
             var assets = component.Assets.Count;
@@ -272,6 +310,15 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Weight: float.PositiveInfinity)));
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Delivery: 200)));
             Handle(new KsFieldCommanderAdminEditPhaseMessage(RuleNetEntity, 0, null, null, float.NegativeInfinity));
+
+            // Bad tags, each refusing the whole edit, the cost with them.
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, Tags: ["ok", " "])));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, Tags: ["a,b"])));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f,
+                Tags: [new string('x', KsFieldCommanderRuleSystem.MaxEditedTagLength + 1)])));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f,
+                Tags: Enumerable.Range(0, KsFieldCommanderRuleSystem.MaxEditedTags + 1).Select(i => $"t{i}").ToList())));
+            Handle(new KsFieldCommanderAdminAddAssetMessage(RuleNetEntity, new KsFieldCommanderAdminAssetValues(Entity: _unit.Id, Tags: [""])));
             Handle(new KsFieldCommanderAdminEditPhaseMessage(RuleNetEntity, 0, component.Phases[1].Start + System.TimeSpan.FromSeconds(1), null, null));
 
             // Bad indices.
@@ -296,6 +343,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
                 Assert.That(asset.Entity, Is.EqualTo(entity), "an unknown prototype was taken");
                 Assert.That(asset.Cost, Is.EqualTo(cost), "a bad cost was taken");
                 Assert.That(asset.Weight, Is.EqualTo(weight), "a bad weight was taken");
+                Assert.That(asset.Tags, Is.EquivalentTo(tags), "bad tags were taken");
                 Assert.That(asset.Delivery, Is.EqualTo(KsFieldCommanderDelivery.Pod), "an undefined delivery was taken");
                 Assert.That(phase.Start, Is.EqualTo(start), "a start out of order was taken");
                 Assert.That(phase.WaveInterval, Is.EqualTo(interval));
@@ -312,6 +360,10 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(asset.Count, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedCount));
             Assert.That(asset.Cost, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedCost));
             Assert.That(asset.MaxAlive, Is.Zero);
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(GuaranteedEveryWaves: int.MaxValue)));
+            Assert.That(asset.GuaranteedEveryWaves, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedGuaranteedEveryWaves));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(GuaranteedEveryWaves: -5)));
+            Assert.That(asset.GuaranteedEveryWaves, Is.Zero);
             Handle(new KsFieldCommanderAdminEditPhaseMessage(RuleNetEntity, 1, null, System.TimeSpan.MaxValue, 1e30f));
             Assert.That(component.Phases[1].WaveInterval, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedTime));
             Assert.That(component.Phases[1].Budget, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedBudget));
@@ -321,7 +373,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
     [Test]
     public async Task TheStateCarriesWhatTheTabsShow()
     {
-        await StartCommander(admin: true);
+        await StartCommander(admin: true, defender: true);
 
         await Server.WaitPost(() =>
         {
@@ -398,33 +450,42 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(state.MaxCost, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedCost));
         });
 
-        // A living unit is counted against its asset.
+        // An asset edited through the window, then sent through it: the wave brings the edited prototype, and the
+        //     unit it sends is counted against its asset.
+        const int footAsset = 2;
         await Server.WaitPost(() =>
         {
-            var unitUid = Server.EntMan.SpawnEntity(_unit, MapCoordinates.Nullspace);
-            var unitComponent = Server.EntMan.AddComponent<KsFieldCommanderUnitComponent>(unitUid);
-            SetUnit(unitComponent, _ruleUid, 0);
-            Server.System<KsFieldCommanderAdminEuiSystem>().OpenEui(Pair.Player!);
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, footAsset, new KsFieldCommanderAdminAssetValues(Entity: _otherUnit.Id)));
+            Handle(new KsFieldCommanderAdminQueueWaveMessage(RuleNetEntity, [new KsFieldCommanderAdminPurchase(footAsset, 1)], "Now.", true));
         });
 
         await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var units = new List<EntityUid>();
+            var unitQuery = Server.EntMan.AllEntityQueryEnumerator<KsFieldCommanderUnitComponent>();
+            while (unitQuery.MoveNext(out var unitUid, out var unitComponent))
+            {
+                if (unitComponent.RuleUid == _ruleUid && unitComponent.AssetIndex == footAsset)
+                    units.Add(unitUid);
+            }
+
+            Assert.That(units, Has.Count.EqualTo(1), "the wave sent now brought no unit of the asset");
+            Assert.That(Server.EntMan.GetComponent<MetaDataComponent>(units[0]).EntityPrototype?.ID, Is.EqualTo(_otherUnit.Id),
+                "the wave did not bring the prototype the asset was edited to");
+            Assert.That(RuleComponent.QueuedWaves.Select(wave => wave.Announcement), Is.EqualTo(new[] { "Queued." }),
+                "the wave sent now went, and the one queued before still waits");
+        });
 
         await Client.WaitAssertion(() =>
         {
             var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children
                 .OfType<KsFieldCommanderAdminWindow>()
                 .Single();
-            Assert.That(window.State!.Assets[0].Living, Is.EqualTo(1), "a living unit is not counted");
+            Assert.That(window.State!.Assets[footAsset].Living, Is.EqualTo(1), "a living unit is not counted");
+            Assert.That(window.State.Assets[footAsset].Entity, Is.EqualTo(_otherUnit.Id));
             window.Close();
         });
-    }
-
-    /// <summary>
-    ///     Makes a unit of the commander's, as a wave would: its fields are the rule system's to write, so by reflection.
-    /// </summary>
-    private static void SetUnit(KsFieldCommanderUnitComponent component, EntityUid ruleUid, int assetIndex)
-    {
-        typeof(KsFieldCommanderUnitComponent).GetField(nameof(KsFieldCommanderUnitComponent.RuleUid))!.SetValue(component, ruleUid);
-        typeof(KsFieldCommanderUnitComponent).GetField(nameof(KsFieldCommanderUnitComponent.AssetIndex))!.SetValue(component, assetIndex);
     }
 }
