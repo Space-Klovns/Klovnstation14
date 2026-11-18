@@ -16,9 +16,9 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// <summary>
     ///     The perk a defender picked this round, if any.
     /// </summary>
-    public bool TryGetChosenPerk(KsFieldCommanderRuleComponent component, NetUserId userId, [NotNullWhen(true)] out ProtoId<KsPerkPrototype>? perk)
+    public bool TryGetChosenPerk(Entity<KsFieldCommanderRuleComponent> rule, NetUserId userId, [NotNullWhen(true)] out ProtoId<KsPerkPrototype>? perk)
     {
-        if (component.ChosenPerks.TryGetValue(userId, out var chosenPerk))
+        if (rule.Comp.ChosenPerks.TryGetValue(userId, out var chosenPerk))
         {
             perk = chosenPerk;
             return true;

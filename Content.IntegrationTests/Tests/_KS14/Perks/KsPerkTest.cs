@@ -32,9 +32,9 @@ public sealed class KsPerkTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
-    private static readonly EntProtoId NanotrasenObjective = "KsScenarioObjectiveNanotrasen";
-
     // Ids that exist only in the test prototypes below.
+    private readonly EntProtoId _objective = "KsTestPerkObjective";
+    private readonly EntProtoId _scenarioRule = "KsTestPerkScenarioRule";
     private readonly EntProtoId _body = "KsTestPerkBody";
     private readonly EntProtoId _defender = "KsTestPerkDefender";
     private readonly EntProtoId _commanderRule = "KsTestPerkCommanderRule";
@@ -67,9 +67,9 @@ public sealed class KsPerkTest : GameTest
   - type: StatusEffect
 
 - type: entity
-  parent: BaseMentalAction
   id: KsTestPerkAction
   components:
+  - type: Action
   - type: InstantAction
     event: !type:ScreamActionEvent
 
@@ -131,14 +131,28 @@ public sealed class KsPerkTest : GameTest
       0: Alive
       10: Dead
   - type: Damageable
+  - type: Injurable
     damageContainer: Biological
   - type: ScenarioFactionMember
     id: Nanotrasen
 
 - type: entity
-  parent: BaseGameRule
+  id: KsTestPerkObjective
+  components:
+  - type: ScenarioObjective
+    factionId: Nanotrasen
+
+- type: entity
+  id: KsTestPerkScenarioRule
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: ScenarioRule
+
+- type: entity
   id: KsTestPerkCommanderRule
   components:
+  - type: GameRule
   - type: KsFieldCommanderRule
     minSpawnDistance: 6
     maxSpawnDistance: 12
@@ -388,10 +402,13 @@ public sealed class KsPerkTest : GameTest
         await server.WaitPost(() =>
         {
             KsFieldCommanderTestHelpers.FillFloor(server, testMap, halfExtent: 8);
-            server.EntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            server.EntMan.SpawnAtPosition(_objective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             firstBody = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
             server.PlayerMan.SetAttachedEntity(Pair.Player!, firstBody);
-            ruleUid = KsFieldCommanderTestHelpers.StartRules(server, _commanderRule).CommanderUid;
+            // The scenario rule first, as the field commander preset starts them.
+            var ticker = server.System<Content.Server.GameTicking.GameTicker>();
+            Assert.That(ticker.StartGameRule(_scenarioRule, out _), Is.True);
+            Assert.That(ticker.StartGameRule(_commanderRule, out ruleUid), Is.True);
         });
 
         // The rule prepares the defenders already there, and asks.

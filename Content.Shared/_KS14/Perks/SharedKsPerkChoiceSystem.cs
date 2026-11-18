@@ -105,7 +105,7 @@ public abstract partial class SharedKsPerkChoiceSystem : EntitySystem
     private void OnClosed(EntityUid uid, KsPerkChoiceComponent component, BoundUIClosedEvent args)
     {
         if (_netManager.IsClient ||
-            !Equals(args.UiKey, KsPerkChoiceUiKey.Key) ||
+            args.UiKey is not KsPerkChoiceUiKey.Key || // a pattern, where Equals would box the enum
             component.LifeStage > ComponentLifeStage.Running ||
             TerminatingOrDeleted(uid) ||
             TerminatingOrDeleted(args.Actor))
