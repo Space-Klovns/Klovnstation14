@@ -35,9 +35,12 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class CultivationLawArtSystem : EntitySystem
 {
-    private static readonly SoundSpecifier SwordSound = new SoundPathSpecifier("/Audio/Weapons/Guns/Gunshots/Magic/staff_chaos.ogg");
     private static readonly SoundSpecifier WaterSound = new SoundPathSpecifier("/Audio/Effects/Fluids/splash.ogg");
     private static readonly SoundSpecifier FireSound = new SoundPathSpecifier("/Audio/Magic/fireball.ogg");
+    private static readonly SoundSpecifier MetalHitSound = new SoundCollectionSpecifier("MetalSlam");
+    private static readonly SoundSpecifier SwordDrawSound = new SoundPathSpecifier("/Audio/Items/unsheath.ogg");
+    private static readonly SoundSpecifier SloshSound = new SoundCollectionSpecifier("KsCultivationSlosh");
+    private static readonly SoundSpecifier RustleSound = new SoundCollectionSpecifier("KsCultivationRustle");
     private static readonly SoundSpecifier BellSound = new SoundPathSpecifier("/Audio/Effects/church_bell3.ogg");
     private static readonly SoundSpecifier PalmSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
     private static readonly SoundSpecifier IdolPalmSound = new SoundCollectionSpecifier("Explosion");
@@ -233,11 +236,12 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.Art(CultivationVisualsSystem.ArtFistQi, args.Target);
+        _visualsSystem.MetalSparks(args.Target, 4);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
         _damageableSystem.TryChangeDamage(args.Target, _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Slash", args.BonusDamage)), origin: entity);
-        _audioSystem.PlayPvs(SwordSound, entity);
+        _audioSystem.PlayPvs(MetalHitSound, args.Target);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-artifact-strike", ("user", entity.Owner), ("item", artifactUid), ("target", args.Target)), type: PopupType.MediumCaution);
     }
 
@@ -272,7 +276,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         var formationComponent = EnsureComp<SwordFormationComponent>(entity);
         formationComponent.EndTime = _gameTiming.CurTime + args.Duration;
-        _audioSystem.PlayPvs(SwordSound, entity);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-formation", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
@@ -301,12 +305,12 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.Art(CultivationVisualsSystem.ArtMendWater, args.Target);
+        _visualsSystem.WaterSplash(args.Target, 3);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _stunSystem.TryUnstun(args.Target);
         _stunSystem.TryStanding(args.Target);
         RemComp<CultivationSnaredComponent>(args.Target);
-        _audioSystem.PlayPvs(WaterSound, args.Target);
+        _audioSystem.PlayPvs(SloshSound, args.Target);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-calm-heart", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
 
@@ -329,7 +333,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         args.Handled = true;
         EnsureComp<MirrorLakeComponent>(entity).EndTime = _gameTiming.CurTime + args.Duration;
-        _audioSystem.PlayPvs(WaterSound, entity);
+        _visualsSystem.WaterSplash(entity, 3);
+        _audioSystem.PlayPvs(SloshSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-mirror-lake", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
@@ -401,9 +406,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtEmbers, entity);
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistBlood, entity);
-        _visualsSystem.Flames(entity, 0.4f, 4);
+        _visualsSystem.Mist(entity, CultivationVisualsSystem.MistBloodEffect);
+        _visualsSystem.FireBurst(entity, 3);
         _visualsSystem.Motes(entity, FxColour.Fire, args.Duration);
         _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", args.SelfDamage), ignoreResistances: true, interruptsDoAfters: false);
         _sharedCultivationSystem.AddQi(entity.AsNullable(), args.QiGain);
@@ -564,7 +568,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtPetals, entity);
+        _visualsSystem.WoodBloom(entity, 1.2f, 8);
         _plants.Clear();
         _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, args.Range, _plants);
         foreach (var plantEntity in _plants)
@@ -578,6 +582,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(GrowthSound, entity);
+        _audioSystem.PlayPvs(RustleSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-verdant-growth", ("user", entity.Owner), ("count", _plants.Count)), type: PopupType.Small);
     }
 
@@ -590,6 +595,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         SpawnAttachedTo(VinesEffect, new EntityCoordinates(args.Target, Vector2.Zero));
+        _visualsSystem.WoodBloom(args.Target, 0f, 4);
+        _audioSystem.PlayPvs(RustleSound, args.Target);
         _stanceSystem.ApplySnare(args.Target, args.Duration, 0f);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-binding-vines", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
     }
@@ -605,7 +612,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtMistSteam, entity);
+        _visualsSystem.Mist(entity, CultivationVisualsSystem.MistWaterEffect);
         var centre = Transform(entity).Coordinates;
         for (var x = -1; x <= 1; x++)
         {
@@ -638,7 +645,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             _gunSystem.ShootProjectile(thornUid, thornDirection, _physicsSystem.GetMapLinearVelocity(entity), entity, user: entity, speed: 20f);
         }
 
-        _audioSystem.PlayPvs(SwordSound, entity);
+        _audioSystem.PlayPvs(RustleSound, entity);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
     }
 
     [SubscribeLocalEvent]

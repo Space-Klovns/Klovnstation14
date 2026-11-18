@@ -23,11 +23,23 @@
   - type: Item
     sprite: Objects/Weapons/Melee/katana.rsi
   - type: MeleeWeapon
+    attackRate: 1.25
+    angle: 80
+    wideAnimationRotation: -135
+    swingBeverage: false
+    animation: KsWeaponArcGanjiangThrust
+    wideAnimation: KsWeaponArcGanjiang
     damage:
       types:
         Slash: 18
+    soundSwing:
+      path: /Audio/Weapons/eblademiss.ogg
+      params:
+        volume: -4
     soundHit:
       path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashGanjiang
   - type: LegendaryArtifact
     traits: WearsDown
     hitDamage: 5
@@ -48,6 +60,27 @@
     state: moye
   - type: TwinSword
     partner: KsGanjiang
+  # The female sword cuts from the other side: wielded together, the pair's arcs cross.
+  - type: MeleeWeapon
+    attackRate: 1.25
+    angle: 80
+    wideAnimationRotation: -135
+    swingLeft: true
+    swingBeverage: false
+    animation: KsWeaponArcMoyeThrust
+    wideAnimation: KsWeaponArcMoye
+    damage:
+      types:
+        Slash: 18
+    soundSwing:
+      path: /Audio/Weapons/eblademiss.ogg
+      params:
+        volume: -4
+        pitch: 1.15
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashMoye
 
 # ---------------------------------------------------------------- Heaven Reliant Sword and Dragon Slaying Saber
 
@@ -137,9 +170,20 @@
     sprite: Objects/Weapons/Melee/spear.rsi
   - type: MeleeWeapon
     range: 1.5
+    angle: 200
+    animationOffset: 1.3
+    wideAnimationRotation: -135
+    animation: KsWeaponArcRuyiThrust
+    wideAnimation: KsWeaponArcRuyi
     damage:
       types:
         Blunt: 1
+    soundSwing:
+      path: /Audio/Effects/thudswoosh.ogg
+      params:
+        pitch: 0.85
+  - type: LegendarySwing
+    hitEffect: KsFxImpactRuyi
   - type: LegendaryArtifact
     hitDamage: 10
     hitThrow: 5
@@ -535,12 +579,24 @@
     size: Huge
     sprite: Objects/Weapons/Melee/spear.rsi
   - type: MeleeWeapon
-    range: 1.5
+    range: 1.6
+    attackRate: 0.75
+    angle: 150
+    animationOffset: 1.3
+    wideAnimationRotation: -135
+    animation: KsWeaponArcGuandao
+    wideAnimation: KsWeaponArcGuandao
     damage:
       types:
         Slash: 10
+    soundSwing:
+      path: /Audio/Effects/thudswoosh.ogg
+      params:
+        pitch: 0.7
     soundHit:
       path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashGuandao
   - type: Wieldable
   - type: IncreaseDamageOnWield
     damage:

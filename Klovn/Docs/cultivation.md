@@ -105,6 +105,8 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
 - **Nine Yin Manual / Wumu Yishu** (`InheritanceManualComponent`): one reader each learns the Nine Yin White Bone Claw or
   the Command of the Wumu Yishu (`WumuFormationSystem`: faster, half stamina damage).
 
+**Swings** (`legendary_swings.yml`, `LegendarySystem.Swings`): Ganjiang and Moye cut fast with blue and crimson arcs, Moye from the other side so the pair's cuts cross; the Green Dragon Crescent Blade sweeps a slow, wide 150° crescent of jade; the Ruyi Jingu Bang drives golden thrusts and whirls through 200°. Each leaves a slash of its colour on what it hits.
+
 ## Heirs
 
 Ported from SS13 `inheritance.dm` (`InheritanceSystem`). Swearing brotherhood grants **Name Your Heir**. Taking a
@@ -291,6 +293,8 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
 Each step goes through the same code as play, so techniques, arts and powers are granted as usual.
 
 ## Visual and sound effects
+
+Fire techniques are built from the game's real fire (`FireBurst`, `FireRing`); water from the extinguisher's spray, chemical puffs and mist (`WaterSplash`, `WaterRing`); wood from green and blossom puffs and drifting pollen (`WoodBloom`); metal from real sparks (`MetalSparks`, and the sword qi's impact). Water techniques slosh and splash, wood rustles, and flying swords ring as they're drawn. Earth keeps its own look and sound.
 
 `CultivationVisualsSystem` is the one place effects come from.
 

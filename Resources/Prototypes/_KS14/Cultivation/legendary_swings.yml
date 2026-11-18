@@ -1,0 +1,201 @@
+# The legendary weapons' swings. The game swings the weapon's own sprite along these arcs; each carries a light in the
+# weapon's colour, and LegendarySwing leaves a slash of that colour on whatever it hits.
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcGanjiang
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Slash
+  - type: PointLight
+    color: "#5a8cff"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcGanjiangThrust
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Thrust
+  - type: PointLight
+    color: "#5a8cff"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcMoye
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Slash
+  - type: PointLight
+    color: "#ff5a6e"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcMoyeThrust
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Thrust
+  - type: PointLight
+    color: "#ff5a6e"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcGuandao
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Slash
+  - type: PointLight
+    color: "#4fe08a"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcRuyi
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Slash
+  - type: PointLight
+    color: "#ffd24a"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  parent: WeaponArcStatic
+  id: KsWeaponArcRuyiThrust
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WeaponArcVisuals
+    animation: Thrust
+  - type: PointLight
+    color: "#ffd24a"
+    radius: 2.2
+    energy: 2.5
+    netsync: false
+
+- type: entity
+  id: KsFxSlashGanjiang
+  categories: [ HideSpawnMenu ]
+  name: slash
+  components:
+  - type: Sprite
+    sprite: Effects/arcs.rsi
+    drawdepth: Effects
+    noRot: false
+    scale: 1.2, 1.2
+    layers:
+    - state: slash
+      shader: unshaded
+      color: "#7aa6ffff"
+  - type: PointLight
+    color: "#5a8cff"
+    radius: 1.8
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 0.35
+  - type: TimedDespawn
+    lifetime: 0.35
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSlashMoye
+  categories: [ HideSpawnMenu ]
+  name: slash
+  components:
+  - type: Sprite
+    sprite: Effects/arcs.rsi
+    drawdepth: Effects
+    noRot: false
+    scale: 1.2, 1.2
+    layers:
+    - state: slash
+      shader: unshaded
+      color: "#ff8a96ff"
+  - type: PointLight
+    color: "#ff5a6e"
+    radius: 1.8
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 0.35
+  - type: TimedDespawn
+    lifetime: 0.35
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSlashGuandao
+  categories: [ HideSpawnMenu ]
+  name: slash
+  components:
+  - type: Sprite
+    sprite: Effects/arcs.rsi
+    drawdepth: Effects
+    noRot: false
+    scale: 1.7, 1.7
+    layers:
+    - state: slash
+      shader: unshaded
+      color: "#7af0a8ff"
+  - type: PointLight
+    color: "#4fe08a"
+    radius: 1.8
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 0.35
+  - type: TimedDespawn
+    lifetime: 0.35
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxImpactRuyi
+  categories: [ HideSpawnMenu ]
+  name: slash
+  components:
+  - type: Sprite
+    sprite: Effects/arcs.rsi
+    drawdepth: Effects
+    noRot: false
+    scale: 1.4, 1.4
+    layers:
+    - state: smash
+      shader: unshaded
+      color: "#ffe07aff"
+  - type: PointLight
+    color: "#ffd24a"
+    radius: 1.8
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 0.35
+  - type: TimedDespawn
+    lifetime: 0.35
+  - type: Tag
+    tags:
+    - HideContextMenu

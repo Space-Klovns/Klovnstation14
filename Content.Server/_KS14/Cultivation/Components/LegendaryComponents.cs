@@ -433,3 +433,13 @@ public sealed partial class WindFireWheelsComponent : Component
 /// </summary>
 [RegisterComponent]
 public sealed partial class LegendaryTreasureHitComponent : Component;
+
+/// <summary>
+///     A legendary weapon's own mark: a slash of its colour left on whatever it hits.
+/// </summary>
+[RegisterComponent, Access(typeof(LegendarySystem))]
+public sealed partial class LegendarySwingComponent : Component
+{
+    [DataField(required: true)]
+    public Robust.Shared.Prototypes.EntProtoId HitEffect;
+}

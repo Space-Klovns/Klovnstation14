@@ -187,13 +187,15 @@
   categories: [ HideSpawnMenu ]
   name: sword qi
   components:
+  # Steel on steel: real sparks where the sword qi bites.
   - type: Sprite
-    sprite: _KS14/Cultivation/wuxia_32.rsi
+    sprite: Effects/sparks.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sword_qi_impact
+    - state: sparks
       shader: unshaded
+      color: "#e6f4ffff"
   - type: EffectVisuals
   - type: PointLight
     color: "#d8f0ff"

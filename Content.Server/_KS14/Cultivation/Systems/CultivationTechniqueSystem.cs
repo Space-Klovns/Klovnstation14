@@ -25,10 +25,14 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class CultivationTechniqueSystem : EntitySystem
 {
-    private static readonly SoundSpecifier SwordSound = new SoundPathSpecifier("/Audio/Weapons/Guns/Gunshots/Magic/staff_chaos.ogg");
     private static readonly SoundSpecifier FireSound = new SoundPathSpecifier("/Audio/Magic/fireball.ogg");
     private static readonly SoundSpecifier WaterSound = new SoundPathSpecifier("/Audio/Effects/Fluids/splash.ogg");
     private static readonly SoundSpecifier HealSound = new SoundPathSpecifier("/Audio/Magic/staff_healing.ogg");
+    private static readonly SoundSpecifier WaterRushSound = new SoundPathSpecifier("/Audio/_KS14/Weapons/Guns/FarsoundGunshots/water_spray.ogg");
+    private static readonly SoundSpecifier WindSound = new SoundPathSpecifier("/Audio/_KS14/Cultivation/qinggong.ogg");
+    private static readonly SoundSpecifier SwordDrawSound = new SoundPathSpecifier("/Audio/Items/unsheath.ogg");
+    private static readonly SoundSpecifier SloshSound = new SoundCollectionSpecifier("KsCultivationSlosh");
+    private static readonly SoundSpecifier RustleSound = new SoundCollectionSpecifier("KsCultivationRustle");
     private static readonly SoundSpecifier EarthSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
     private static readonly EntProtoId TideEffect = "KsFxTide";
     private static readonly EntProtoId FallingRockEffect = "KsFxFallingRock";
@@ -130,7 +134,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             FireBlade(entity, args.Projectile, Rotate(direction, -args.RootSpread), args.Speed);
         }
 
-        _audioSystem.PlayPvs(SwordSound, entity);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
     }
 
     [SubscribeLocalEvent]
@@ -150,7 +154,8 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             FireBlade(entity, args.Projectile, Rotate(direction, offset), args.Speed);
         }
 
-        _audioSystem.PlayPvs(SwordSound, entity);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
+        _audioSystem.PlayPvs(WindSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-sword-rain", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
@@ -206,11 +211,12 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
+        _visualsSystem.Mist(entity, CultivationVisualsSystem.MistWaterEffect);
         _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         var releaseWave = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Water);
         _cultivationStanceSystem.ApplyWard(entity, args.Duration, args.DamageMultiplier, releaseWave);
 
-        _audioSystem.PlayPvs(WaterSound, entity);
+        _audioSystem.PlayPvs(SloshSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-still-water", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
@@ -242,6 +248,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         args.Handled = true;
         _visualsSystem.Wave(entity, FxColour.Water, big: true);
+        _visualsSystem.WaterRing(entity, args.Range, 14);
         SpawnAttachedTo(TideEffect, new EntityCoordinates(entity, Vector2.Zero));
         foreach (var victimUid in MobsAround(entity, args.Range))
         {
@@ -254,6 +261,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
+        _audioSystem.PlayPvs(WaterRushSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-tidal-surge", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 
@@ -268,7 +276,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.Art(CultivationVisualsSystem.ArtMendWood, args.Target);
+        _visualsSystem.WoodBloom(args.Target, 0f, 5);
         _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
         _damageableSystem.HealEvenly(args.Target, FixedPoint2.New(-args.Heal * _cultivationSystem.Power(entity)), origin: entity);
 
@@ -280,6 +288,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(HealSound, args.Target);
+        _audioSystem.PlayPvs(RustleSound, args.Target);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-spring-mending", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Small);
     }
 
@@ -290,7 +299,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.ArtOn(CultivationVisualsSystem.ArtPetalsBig, entity);
+        _visualsSystem.WoodBloom(entity, 2.5f, 18);
         _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         _visualsSystem.Wave(entity, FxColour.Wood, big: true);
         _visualsSystem.Motes(entity, FxColour.Wood, TimeSpan.FromSeconds(3));
@@ -302,6 +311,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(HealSound, entity);
+        _audioSystem.PlayPvs(RustleSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), type: PopupType.Medium);
     }
 

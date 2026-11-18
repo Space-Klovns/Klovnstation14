@@ -34,6 +34,14 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId FlameEffect = "KsFxFlame";
     private static readonly EntProtoId FlameBigEffect = "KsFxFlameBig";
     private static readonly EntProtoId FlameSmallEffect = "KsFxFlameSmall";
+    private static readonly EntProtoId WaterSprayEffect = "KsFxWaterSpray";
+    private static readonly EntProtoId WaterPuffEffect = "KsFxWaterPuff";
+    public static readonly EntProtoId MistWaterEffect = "KsFxMistWater";
+    public static readonly EntProtoId MistBloodEffect = "KsFxMistBloodReal";
+    private static readonly EntProtoId LeafPuffEffect = "KsFxLeafPuff";
+    private static readonly EntProtoId BlossomPuffEffect = "KsFxBlossomPuff";
+    private static readonly EntProtoId PollenEffect = "KsFxPollen";
+    private static readonly EntProtoId MetalSparkEffect = "KsFxMetalSpark";
     private static readonly EntProtoId RiftEffect = "KsFxVoidRift";
     private static readonly EntProtoId RubbleEffect = "KsFxRubble";
     private static readonly EntProtoId DustEffect = "KsBodyDust";
@@ -413,6 +421,98 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     {
         if (!TerminatingOrDeleted(atUid))
             Flames(_transformSystem.GetMapCoordinates(atUid), radius, count);
+    }
+
+    /// <summary>
+    ///     Water bursting over someone: spray flung out in every direction, droplets, and a little mist.
+    /// </summary>
+    public void WaterSplash(EntityUid atUid, int count = 4)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        Spawn(MistWaterEffect, centre);
+        for (var drop = 0; drop < count; drop++)
+        {
+            var direction = _robustRandom.NextAngle().ToVec();
+            Spray(WaterSprayEffect, centre.Offset(direction * 0.35f), direction);
+            Spawn(WaterPuffEffect, centre.Offset(_robustRandom.NextVector2(0.6f)));
+        }
+    }
+
+    /// <summary>
+    ///     A wall of water crashing outward from someone in a ring, with mist rising behind it.
+    /// </summary>
+    public void WaterRing(EntityUid atUid, float radius, int count)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        var start = _robustRandom.NextFloat(0f, MathF.Tau);
+        for (var wave = 0; wave < count; wave++)
+        {
+            var angle = start + wave * MathF.Tau / count;
+            var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            Spray(WaterSprayEffect, centre.Offset(direction * radius * 0.45f), direction);
+            Spray(WaterSprayEffect, centre.Offset(direction * radius * 0.85f), direction);
+            Spawn(WaterPuffEffect, centre.Offset(direction * radius * _robustRandom.NextFloat(0.3f, 1f)));
+        }
+
+        for (var mist = 0; mist < 3; mist++)
+            Spawn(MistWaterEffect, centre.Offset(_robustRandom.NextVector2(radius * 0.5f)));
+    }
+
+    /// <summary>
+    ///     Green life welling up: puffs of leaves and drifting pollen.
+    /// </summary>
+    public void WoodBloom(EntityUid atUid, float radius, int count)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        for (var puff = 0; puff < count; puff++)
+        {
+            var offset = radius <= 0f ? _robustRandom.NextVector2(0.4f) : _robustRandom.NextAngle().ToVec() * _robustRandom.NextFloat(0.2f, radius);
+            Spawn(_robustRandom.Prob(0.6f) ? LeafPuffEffect : BlossomPuffEffect, centre.Offset(offset));
+        }
+
+        Spawn(PollenEffect, centre);
+        if (radius >= 1.5f)
+        {
+            for (var cloud = 0; cloud < 3; cloud++)
+                Spawn(PollenEffect, centre.Offset(_robustRandom.NextAngle().ToVec() * radius * 0.6f));
+        }
+    }
+
+    /// <summary>
+    ///     Steel on steel: a shower of sparks.
+    /// </summary>
+    public void MetalSparks(EntityUid atUid, int count = 3)
+    {
+        if (TerminatingOrDeleted(atUid))
+            return;
+
+        var centre = _transformSystem.GetMapCoordinates(atUid);
+        for (var spark = 0; spark < count; spark++)
+            Spawn(MetalSparkEffect, centre.Offset(_robustRandom.NextVector2(0.45f)));
+    }
+
+    /// <summary>
+    ///     Mist or smoke billowing over someone: steam, blood, dust or water.
+    /// </summary>
+    public void Mist(EntityUid atUid, EntProtoId mist)
+    {
+        if (!TerminatingOrDeleted(atUid))
+            Spawn(mist, _transformSystem.GetMapCoordinates(atUid));
+    }
+
+    private void Spray(EntProtoId prototype, MapCoordinates at, Vector2 direction)
+    {
+        var sprayUid = Spawn(prototype, at);
+        _transformSystem.SetWorldRotation(sprayUid, direction.ToWorldAngle());
     }
 
     /// <summary>
