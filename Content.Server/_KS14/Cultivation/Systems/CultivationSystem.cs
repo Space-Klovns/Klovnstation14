@@ -70,12 +70,16 @@ public sealed partial class CultivationSystem : EntitySystem
     /// <summary>
     ///     Chance per breakthrough cycle that heaven's lightning falls.
     /// </summary>
-    private const float LightningChance = 0.35f;
 
     /// <summary>
     ///     Chance a qi deviation tears a heart demon loose.
     /// </summary>
     private const float HeartDemonChance = 0.5f;
+
+    /// <summary>
+    ///     The lightning-target priority of grounding rods (3) and Tesla coils (4).
+    /// </summary>
+    private const int GroundingPriority = 3;
 
     private static readonly SoundSpecifier LearnSound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
 
@@ -578,6 +582,9 @@ public sealed partial class CultivationSystem : EntitySystem
         _noticeSystem.Notify(entity, Loc.GetString(effective >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
             ("readiness", effective), ("chance", (int)(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm) * 100))),
             type: PopupType.Medium);
+        var (strikeChance, strikeDamage) = BreakthroughLightning(entity.Comp.Realm);
+        _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Realm >= CultivationRealm.GoldenCore ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
+            ("chance", (int)(strikeChance * 100)), ("damage", (int)strikeDamage)), type: PopupType.Medium);
         return true;
     }
 
@@ -596,9 +603,9 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
         }
 
-        CallLightning(entity);
-
         var cyclesLeft = entity.Comp.BreakthroughCyclesLeft - 1;
+        CallLightning(entity, final: cyclesLeft <= 0);
+
         _cultivationSystem.SetBreakthrough(entity.Comp, cyclesLeft, entity.Comp.BreakthroughReadiness);
         if (cyclesLeft > 0)
         {
@@ -615,21 +622,47 @@ public sealed partial class CultivationSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Heaven notices. A bolt may fall on the one breaking through, unless a grounding rod nearby draws it away.
+    ///     How often heaven's lightning falls in each cycle of a breakthrough out of this realm, and how hard it hits.
+    ///         Leaving Qi Condensation is a light test; the step into Nascent Soul is a real storm, and its last cycle
+    ///         always strikes. Grounding rods nearby still draw bolts away, so preparing for it is the fair answer.
     /// </summary>
-    private void CallLightning(Entity<CultivatorComponent> entity, float chance = LightningChance)
+    public static (float Chance, float Damage) BreakthroughLightning(CultivationRealm realm)
+    {
+        var tier = (int)realm;
+        return (0.3f + 0.1f * tier, 5f + 6f * tier);
+    }
+
+    private void CallLightning(Entity<CultivatorComponent> entity, bool final = false)
+    {
+        var (chance, damage) = BreakthroughLightning(entity.Comp.Realm);
+        if (final && entity.Comp.Realm >= CultivationRealm.GoldenCore)
+            chance = 1f;
+
+        CallLightning(entity.Owner, chance, damage);
+    }
+
+    /// <summary>
+    ///     Heaven notices. A bolt may fall on the one breaking through, unless a grounding rod nearby draws it away.
+    ///         Body cultivators' later tribulations call it down too.
+    /// </summary>
+    public void CallLightning(EntityUid target, float chance, float damage)
     {
         if (!_robustRandom.Prob(chance))
             return;
 
-        var coordinates = Transform(entity).Coordinates;
+        var coordinates = Transform(target).Coordinates;
         var cloudUid = Spawn(TribulationCloud, coordinates.Offset(new System.Numerics.Vector2(0f, 3f)));
 
         _lightningTargets.Clear();
         _entityLookupSystem.GetEntitiesInRange(coordinates, 6f, _lightningTargets);
         foreach (var rod in _lightningTargets)
         {
-            if (!_robustRandom.Prob(0.6f))
+            // Only real lightning sinks (grounding rods and Tesla coils, set up and anchored) draw heaven's bolts away;
+            // people, machines and doors are lightning targets too, but heaven isn't fooled by them.
+            if (rod.Owner == target
+                || rod.Comp.Priority < GroundingPriority
+                || !Transform(rod).Anchored
+                || !_robustRandom.Prob(0.6f))
                 continue;
 
             _lightningSystem.ShootLightning(cloudUid, rod.Owner, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
@@ -638,11 +671,17 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
         }
 
-        _lightningSystem.ShootLightning(cloudUid, entity, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
-        _visualsSystem.HeavenBolt(entity);
-        var damage = 5f + 5f * (float)entity.Comp.Realm;
-        _damageableSystem.TryChangeDamage(entity.Owner, Damage("Shock", damage), ignoreResistances: true, interruptsDoAfters: false);
-        _noticeSystem.Announce(entity, Loc.GetString("cultivation-lightning-strikes", ("user", entity.Owner)), type: PopupType.MediumCaution);
+        _lightningSystem.ShootLightning(cloudUid, target, lightningPrototype: TribulationLightning, triggerLightningEvents: false);
+        _visualsSystem.HeavenBolt(target);
+        // Heaven's heavier strikes come down as a volley of bolts, one after another.
+        if (damage >= 15f)
+        {
+            _visualsSystem.HeavenBolt(target, 1);
+            _visualsSystem.HeavenBolt(target, 2);
+        }
+
+        _damageableSystem.TryChangeDamage(target, Damage("Shock", damage), ignoreResistances: true, interruptsDoAfters: false);
+        _noticeSystem.Announce(target, Loc.GetString("cultivation-lightning-strikes", ("user", target)), type: PopupType.MediumCaution);
     }
 
     /// <summary>

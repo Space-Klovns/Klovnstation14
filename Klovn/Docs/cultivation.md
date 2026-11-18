@@ -17,9 +17,12 @@ and injury alerts stay in step.
 - **Meditation** (`CultivationSystem`) is a repeating do-after: each cycle gathers insight and qi, every second
   cycle eases one stack of internal injury. A `CultivationQiSourceComponent` nearby multiplies both.
 - **Breakthrough** needs full insight and means enduring heaven's tribulation: `3 + 2 × realm` cycles of a
-  do-after, each with a chance of tribulation lightning (lightning rods nearby take most of it). Readiness
+  do-after, each with a chance of tribulation lightning (lightning rods nearby take most of it). The storm grows with
+  the realm being left (`CultivationSystem.BreakthroughLightning`): 30/40/50% a cycle for 5/11/17 shock, and the last
+  cycle of the step into Nascent Soul always strikes. Readiness
   (`CultivationSystem.BreakthroughReadiness`) is 50, minus 20 per injury, plus bonuses for a qi source, nearly full
-  qi and a tempered Dao heart; 70 or more is certain. Anything else can add to it through
+  qi and a tempered Dao heart; every realm already climbed takes 15 off, and 70 effective is certain. The odds and the
+  storm are told to the cultivator when it starts. Anything else can add to it through
   `CultivationBreakthroughReadinessEvent`. A failure (a qi deviation) halves insight, injures, and may tear loose a
   heart demon (`HeartDemonSystem`): kill it close by and the Dao heart is tempered, let it go and it costs more.
 - **Ascension:** at Nascent Soul with full insight, the breakthrough action begins a 20-cycle tribulation. Surviving
@@ -299,8 +302,12 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   ears, heart, lungs, liver, stomach). Raising a part to level `n` costs `2 + n`. Parts can go one level past the
   current stage.
 - **Tribulation of Flesh:** once every part is past the stage, a repeating do-after cracks the bones for a while
-  and then rolls readiness (70 or more always succeeds). Success raises the stage, adds health and opens new arts
-  (`BodyCultivationSystem.StageArts`).
+  and then rolls readiness. Readiness is 50, +10 fed, +10 rested (exhaustion under 10), +10 in the Mountain stance,
+  +10 on a meditation mat, +5 secluded, −20 badly hurt; from stage 4 each stage takes 3 off, and the step into stage 9 takes 20
+  (`SharedBodyCultivationSystem.TribulationPenalty`); 70 effective always succeeds. From stage 5 heaven's lightning
+  falls during it too (`TribulationLightning`: 15% a cycle +5% per stage, 4 + 1.5 × stage shock), and the last cycle of
+  the step into stage 9 always strikes. A failure exhausts, knocks down and, from stage 4, hurts. Success raises the
+  stage, adds health and opens new arts (`BodyCultivationSystem.StageArts`).
 - **Mortals stop at Copper Skin.** The Copper Skin Primer starts anyone on the path; the Body Molding Art commits
   them to it, which closes the way of qi. Qi cultivators can read neither.
 - **Powers:** every part has nine `bodyTemperingPower` prototypes, one per level, in `Body/powers.yml`.

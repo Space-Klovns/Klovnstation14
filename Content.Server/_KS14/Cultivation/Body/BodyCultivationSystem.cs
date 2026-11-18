@@ -90,6 +90,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
+    [Dependency] private CultivationSystem _cultivationSystem = default!;
+    [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -422,7 +424,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     #region Tribulation of Flesh
 
     /// <summary>
-    ///     How likely the Tribulation is to succeed: 70 or more always does.
+    ///     How ready the body is for its Tribulation: fed, rested, rooted in the Mountain stance and not badly hurt. The
+    ///         stage's own penalty is taken off when the chance is worked out.
     /// </summary>
     public int TribulationReadiness(Entity<BodyCultivatorComponent> entity)
     {
@@ -433,6 +436,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_bodySystem.GetStance(entity) == BodyStance.Mountain)
             readiness += 10;
+
+        if (entity.Comp.Exhaustion < 10f)
+            readiness += 10;
+
+        readiness += _siteSystem.BodyReadinessBonus(entity);
 
         if (_mobThresholdSystem.TryGetThresholdForState(entity, MobState.Critical, out var critical)
             && _damageableSystem.GetTotalDamage(entity.Owner) > critical.Value * 0.3)
@@ -478,7 +486,14 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return false;
 
         _bodySystem.SetTribulation(entity.Comp, cycles, readiness);
-        _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-start", ("user", entity.Owner), ("readiness", readiness)), type: PopupType.LargeCaution);
+        var chance = (int)(SharedBodyCultivationSystem.TribulationChance(readiness, entity.Comp.Stage) * 100);
+        _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-start", ("user", entity.Owner)), type: PopupType.LargeCaution);
+        _noticeSystem.Notify(entity, Loc.GetString("body-tribulation-odds",
+            ("readiness", readiness - SharedBodyCultivationSystem.TribulationPenalty(entity.Comp.Stage)), ("chance", chance)), type: PopupType.Medium);
+        var (strikeChance, strikeDamage) = SharedBodyCultivationSystem.TribulationLightning(entity.Comp.Stage);
+        if (strikeChance > 0f)
+            _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= BodyCultivatorComponent.MaxStage - 1 ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
+                ("chance", (int)(strikeChance * 100)), ("damage", (int)strikeDamage)), type: PopupType.Medium);
         return true;
     }
 
@@ -502,6 +517,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _visualsSystem.Spark(entity, FxColour.Earth);
 
         var left = entity.Comp.TribulationCyclesLeft - 1;
+        var (strikeChance, strikeDamage) = SharedBodyCultivationSystem.TribulationLightning(entity.Comp.Stage);
+        if (left <= 0 && entity.Comp.Stage >= BodyCultivatorComponent.MaxStage - 1)
+            strikeChance = 1f;
+        if (strikeChance > 0f)
+            _cultivationSystem.CallLightning(entity.Owner, strikeChance, strikeDamage);
+
         _bodySystem.SetTribulation(entity.Comp, left, entity.Comp.TribulationReadiness);
         if (left > 0)
         {
@@ -510,8 +531,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         var readiness = entity.Comp.TribulationReadiness;
-        var chance = readiness >= 70 ? 1f : (float)Math.Clamp(readiness, 5, 95) / 100f;
-        if (_robustRandom.Prob(chance))
+        if (_robustRandom.Prob(SharedBodyCultivationSystem.TribulationChance(readiness, entity.Comp.Stage)))
             SucceedTribulation(entity);
         else
             FailTribulation(entity);
@@ -534,6 +554,9 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _bodySystem.SetTribulation(entity.Comp, 0, 0);
         _bodySystem.AddExhaustion(entity.AsNullable(), 30f);
         _stunSystem.TryKnockdown(entity.Owner, TimeSpan.FromSeconds(3));
+        // The later the stage, the worse a body that comes apart is hurt.
+        if (entity.Comp.Stage >= 4)
+            _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", 2f * entity.Comp.Stage), ignoreResistances: true);
         _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-fail", ("user", entity.Owner)), type: PopupType.LargeCaution);
     }
 

@@ -13,13 +13,10 @@
         [
           0.3,
           0.3,
-          0.3,
-          0.3
+          0.12,
+          0.2
         ]
       ]
-    },
-    {
-      "name": "sigil_barrier"
     },
     {
       "name": "sigil_gathering"

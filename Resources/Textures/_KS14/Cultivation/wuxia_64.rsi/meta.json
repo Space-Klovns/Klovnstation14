@@ -65,24 +65,6 @@
       ]
     },
     {
-      "name": "dragon_aura",
-      "delays": [
-        [
-          0.15,
-          0.15,
-          0.15,
-          0.15,
-          0.15,
-          0.15,
-          0.15,
-          0.15
-        ]
-      ]
-    },
-    {
-      "name": "decree_scroll"
-    },
-    {
       "name": "dharma_idol",
       "delays": [
         [

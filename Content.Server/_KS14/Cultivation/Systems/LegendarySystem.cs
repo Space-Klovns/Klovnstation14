@@ -88,6 +88,10 @@ public sealed partial class LegendarySystem : EntitySystem
         if (victimUid == userUid || TerminatingOrDeleted(victimUid) || !HasComp<MobStateComponent>(victimUid) || _mobStateSystem.IsDead(victimUid))
             return false;
 
+        // Never your own hair clones.
+        if (TryComp<SageCloneComponent>(victimUid, out var clone) && clone.Master == userUid)
+            return false;
+
         var traits = artifactUid is { } uid && TryComp<LegendaryArtifactComponent>(uid, out var artifactComponent) ? artifactComponent.Traits : LegendaryTrait.None;
         if (TryComp<BodyCultivatorComponent>(victimUid, out var bodyComponent) && bodyComponent.Stage > 0)
         {

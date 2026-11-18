@@ -413,6 +413,36 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Heaven tests the later stages of the flesh harder. Up to the fourth stage readiness is taken as it is; past it
+    ///         every stage takes 3 more, and the last step, into a Primordial Chaos Body, takes 20 in all.
+    /// </summary>
+    public static int TribulationPenalty(int stage)
+    {
+        return Math.Max(0, stage - 3) * 3 + (stage >= BodyCultivatorComponent.MaxStage - 1 ? 5 : 0);
+    }
+
+    /// <summary>
+    ///     The chance a Tribulation of Flesh from this stage holds together: certain at 70 effective readiness.
+    /// </summary>
+    public static float TribulationChance(int readiness, int stage)
+    {
+        var effective = readiness - TribulationPenalty(stage);
+        return effective >= 70 ? 1f : (float)Math.Clamp(effective, 5, 95) / 100f;
+    }
+
+    /// <summary>
+    ///     From the sixth stage the flesh draws heaven's eye too: lightning falls during the tribulation, more often and
+    ///         harder each stage. The last cycle of the final step always strikes.
+    /// </summary>
+    public static (float Chance, float Damage) TribulationLightning(int stage)
+    {
+        if (stage < 5)
+            return (0f, 0f);
+
+        return (0.15f + 0.05f * (stage - 5), 4f + 1.5f * stage);
+    }
+
+    /// <summary>
     ///     How much of their strength a body cultivator's blows and arts carry at a stage. Only the ninth stage, a
     ///         Primordial Chaos Body, hits with all of it; every stage before holds back, so the last step up is a big one.
     /// </summary>

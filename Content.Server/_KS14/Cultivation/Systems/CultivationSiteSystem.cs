@@ -169,17 +169,7 @@ public sealed partial class CultivationSiteSystem : EntitySystem
         foreach (var (element, points) in CountElements(coordinates))
             report.ElementPoints[element] = points;
 
-        report.Secluded = true;
-        _nearby.Clear();
-        _entityLookupSystem.GetEntitiesInRange(coordinates, SeclusionRadius, _nearby);
-        foreach (var otherUid in _nearby)
-        {
-            if (otherUid != entity.Owner && HasComp<ActorComponent>(otherUid) && HasComp<MobStateComponent>(otherUid) && !_mobStateSystem.IsDead(otherUid))
-            {
-                report.Secluded = false;
-                break;
-            }
-        }
+        report.Secluded = Secluded(entity);
 
         var net = 0f;
         if (!report.HasMat)
@@ -225,6 +215,31 @@ public sealed partial class CultivationSiteSystem : EntitySystem
         report.Multiplier = 1f + (report.HasMat ? 0.1f : 0f) + Math.Clamp(net * 0.05f, -0.2f, 0.5f) + (report.Secluded ? 0.25f : 0f);
         report.ReadinessBonus = (report.HasMat ? 10 : 0) + Math.Clamp((int)MathF.Round(net * 3f), -20, 25) + (report.Secluded ? 5 : 0);
         return report;
+    }
+
+    /// <summary>
+    ///     Whether no other living player is close by.
+    /// </summary>
+    public bool Secluded(EntityUid uid)
+    {
+        _nearby.Clear();
+        _entityLookupSystem.GetEntitiesInRange(Transform(uid).Coordinates, SeclusionRadius, _nearby);
+        foreach (var otherUid in _nearby)
+        {
+            if (otherUid != uid && HasComp<ActorComponent>(otherUid) && HasComp<MobStateComponent>(otherUid) && !_mobStateSystem.IsDead(otherUid))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     What a place gives a body cultivator's Tribulation of Flesh. The flesh doesn't care for elements, only for a
+    ///         meditation mat to kneel on and nobody close by.
+    /// </summary>
+    public int BodyReadinessBonus(EntityUid uid)
+    {
+        return (OnMat(uid) ? 10 : 0) + (Secluded(uid) ? 5 : 0);
     }
 
     public string ElementName(CultivationElement element)

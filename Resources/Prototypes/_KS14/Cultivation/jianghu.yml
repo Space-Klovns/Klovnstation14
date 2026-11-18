@@ -20,17 +20,6 @@
 
 - type: entity
   parent: BaseActionCultivation
-  id: ActionJianghuYield
-  name: Yield
-  description: Concede the honor duel. You lose a little face, but keep your teeth.
-  components:
-  - type: Action
-    icon: { sprite: _KS14/Cultivation/actions.rsi, state: yield }
-  - type: InstantAction
-    event: !type:YieldDuelActionEvent
-
-- type: entity
-  parent: BaseActionCultivation
   id: ActionJianghuFoundSect
   name: Found Sect
   description: Establish your own sect where you stand and hang its plaque. Others ask to join at the plaque, members can send telepathic transmissions, cultivate faster together and near the plaque, and the sect is always set a mission. As Sect Master you can declare rivals and proclaim tournaments. 50 qi.

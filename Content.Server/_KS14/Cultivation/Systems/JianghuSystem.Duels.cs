@@ -394,17 +394,6 @@ public sealed partial class JianghuSystem
         RemCompDeferred<HonorDuelComponent>(fighterUid);
     }
 
-    [SubscribeLocalEvent]
-    private void OnYield(Entity<HonorDuelComponent> entity, ref YieldDuelActionEvent args)
-    {
-        if (args.Handled || entity.Comp.Ended)
-            return;
-
-        args.Handled = true;
-        _noticeSystem.Announce(entity, Loc.GetString("jianghu-duel-yields", ("user", entity.Owner)), type: PopupType.Medium);
-        FinishDuel(entity, entity.Comp.Opponent, winnerUid: entity.Comp.Opponent, outcome: HonorDuelOutcome.Yielded);
-    }
-
     /// <summary>
     ///     A third party who strikes a duelist is disgraced.
     /// </summary>

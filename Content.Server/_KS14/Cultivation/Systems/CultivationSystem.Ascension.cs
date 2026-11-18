@@ -19,7 +19,8 @@ namespace Content.Server._KS14.Cultivation.Systems;
 public sealed partial class CultivationSystem
 {
     private const int AscensionCycles = 20;
-    private const float AscensionLightningChance = 0.5f;
+    private const float AscensionLightningChance = 0.4f;
+    private const float AscensionLightningDamage = 15f;
 
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private GhostSystem _ghostSystem = default!;
@@ -41,8 +42,12 @@ public sealed partial class CultivationSystem
         _heartDemonSystem.Summon(entity, lifetime: TimeSpan.FromSeconds(AscensionCycles * entity.Comp.BreakthroughCycle.TotalSeconds));
         _noticeSystem.Proclaim(null, Loc.GetString("cultivation-ascension-begins", ("user", entity.Owner)),
             Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
-        _noticeSystem.Notify(entity, Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
-            ("readiness", readiness)), type: PopupType.Medium);
+        var effective = SharedCultivationSystem.EffectiveReadiness(readiness, entity.Comp.Realm);
+        _noticeSystem.Notify(entity, Loc.GetString(effective >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
+            ("readiness", effective), ("chance", (int)(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm) * 100))),
+            type: PopupType.Medium);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-storm-warning",
+            ("chance", (int)(AscensionLightningChance * 100)), ("damage", (int)AscensionLightningDamage)), type: PopupType.Medium);
         return true;
     }
 
@@ -60,7 +65,7 @@ public sealed partial class CultivationSystem
             return;
         }
 
-        CallLightning(entity, AscensionLightningChance);
+        CallLightning(entity.Owner, AscensionLightningChance, AscensionLightningDamage);
 
         var cyclesLeft = entity.Comp.BreakthroughCyclesLeft - 1;
         _cultivationSystem.SetBreakthrough(entity.Comp, cyclesLeft, entity.Comp.BreakthroughReadiness);

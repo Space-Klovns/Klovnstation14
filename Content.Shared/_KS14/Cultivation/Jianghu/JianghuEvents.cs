@@ -12,12 +12,10 @@ public sealed partial class ChallengeDuelActionEvent : EntityTargetActionEvent;
 /// <summary>
 ///     Concede the honor duel.
 /// </summary>
-public sealed partial class YieldDuelActionEvent : InstantActionEvent;
 
 public enum HonorDuelOutcome : byte
 {
     Defeated,
-    Yielded,
     Fled,
     Vanished,
     Draw,

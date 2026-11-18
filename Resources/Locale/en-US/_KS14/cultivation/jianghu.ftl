@@ -34,11 +34,9 @@ jianghu-duel-begins = {CAPITALIZE(THE($one))} and {THE($two)} bow to each other.
 jianghu-duel-draw = The duel between {THE($one)} and {THE($two)} ends in a draw. Both bow with respect.
 jianghu-duel-won = {CAPITALIZE(THE($winner))} wins the honor duel! {CAPITALIZE(THE($loser))} {$how}.
 jianghu-duel-how-Defeated = is beaten
-jianghu-duel-how-Yielded = has yielded
 jianghu-duel-how-Fled = has fled
 jianghu-duel-how-Vanished = has vanished
 jianghu-duel-how-Draw = has drawn
-jianghu-duel-yields = {CAPITALIZE(THE($user))} raises a hand and yields.
 jianghu-duel-interference = {CAPITALIZE(THE($user))} interferes in an honor duel! Shameful!
 jianghu-duel-beneath-notice = {CAPITALIZE(THE($target))} is First Under Heaven and won't accept challenges from anyone outside the top five of the Martial World Ranking.
 

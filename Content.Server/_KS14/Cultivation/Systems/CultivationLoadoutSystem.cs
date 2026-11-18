@@ -29,7 +29,7 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         "ActionCultivationTransmitLaw", "ActionCultivationForgetLaw", "ActionCultivationGatheringArray",
         "ActionCultivationBarrierArray", "ActionCultivationAlarmArray", "ActionCultivationBeastContract",
         "ActionCultivationSummonBeast", "ActionCultivationConcealment", "ActionJianghuDeclareRivalry",
-        "ActionJianghuSectTransmission", "ActionJianghuYield", "ActionBodyDisciple", "ActionBodyRemold", "ActionBodyBoneSetting",
+        "ActionJianghuSectTransmission", "ActionBodyDisciple", "ActionBodyRemold", "ActionBodyBoneSetting",
     };
 
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
