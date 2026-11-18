@@ -37,15 +37,6 @@ ks-grab-throw-hard-user = You throw {THE($victim)} really hard!
 ks-grab-throw-hard-target = {CAPITALIZE(THE($grabber))} throws you really hard!
 
 # A thrown victim slamming into someone, a table or a wall.
-ks-grab-thrown-into-others = {CAPITALIZE(THE($target))} slams into {THE($obstacle)}!
-ks-grab-thrown-into-user = {CAPITALIZE(THE($target))} slams into {THE($obstacle)}!
-ks-grab-thrown-into-target = You slam into {THE($obstacle)}!
-ks-grab-thrown-wall-others = {CAPITALIZE(THE($target))} slams into the wall and goes down!
-ks-grab-thrown-wall-user = {CAPITALIZE(THE($target))} slams into the wall and goes down!
-ks-grab-thrown-wall-target = You slam into the wall and go down!
-ks-grab-thrown-wall-resisted-others = {CAPITALIZE(THE($target))} bounces off the wall!
-ks-grab-thrown-wall-resisted-user = {CAPITALIZE(THE($target))} bounces off the wall!
-ks-grab-thrown-wall-resisted-target = You bounce off the wall!
 
 alerts-ks-grabbed-aggressive-name = [color=yellow]Grabbed[/color]
 alerts-ks-grabbed-aggressive-desc = Someone holds you in place. Click, or try to move, to break free.

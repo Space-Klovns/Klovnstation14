@@ -1,0 +1,9 @@
+ks-thrown-slam-into-others = {CAPITALIZE(THE($target))} slams into {THE($obstacle)}!
+ks-thrown-slam-into-user = {CAPITALIZE(THE($target))} slams into {THE($obstacle)}!
+ks-thrown-slam-into-target = You slam into {THE($obstacle)}!
+ks-thrown-slam-wall-others = {CAPITALIZE(THE($target))} slams into the wall and goes down!
+ks-thrown-slam-wall-user = {CAPITALIZE(THE($target))} slams into the wall and goes down!
+ks-thrown-slam-wall-target = You slam into the wall and go down!
+ks-thrown-slam-wall-resisted-others = {CAPITALIZE(THE($target))} bounces off the wall!
+ks-thrown-slam-wall-resisted-user = {CAPITALIZE(THE($target))} bounces off the wall!
+ks-thrown-slam-wall-resisted-target = You bounce off the wall!

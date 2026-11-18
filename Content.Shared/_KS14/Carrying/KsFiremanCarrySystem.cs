@@ -318,7 +318,9 @@ public sealed partial class KsFiremanCarrySystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnCarrierVirtualItemDeleted(EntityUid uid, KsCarryingComponent component, VirtualItemDeletedEvent args)
     {
-        if (args.BlockingEntity == component.Carried)
+        // Not while a state is applied: that takes the client's predicted hand item away only to put the server's
+        // in its place, and nobody has let go.
+        if (args.BlockingEntity == component.Carried && !_gameTiming.ApplyingState)
             StopCarrying(component.Carried);
     }
 

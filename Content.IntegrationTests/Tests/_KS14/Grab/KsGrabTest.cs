@@ -6,6 +6,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server.Gravity;
 using Content.Shared._KS14.Grab;
 using Content.Shared._KS14.Resist;
+using Content.Shared._KS14.Throwing;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Alert;
@@ -652,19 +653,19 @@ public sealed class KsGrabTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            var grabber = SEntMan.GetComponent<KsGrabberComponent>(grabberUid);
+            var slam = SProtoMan.Index(SEntMan.GetComponent<KsGrabberComponent>(grabberUid).ThrowSlam);
             var obstacle = SEntMan.GetComponent<KsShoveObstacleComponent>(obstacleUid);
-            Assert.That(obstacle.KnockdownTime, Is.GreaterThan(grabber.ThrowWallKnockdownTime + TimeSpan.FromSeconds(2)),
+            Assert.That(obstacle.KnockdownTime, Is.GreaterThan(slam.WallKnockdownTime + TimeSpan.FromSeconds(2)),
                 "This test needs the obstacle's knockdown to stand out from the wall's.");
 
             // Longer than the wall's knockdown could have left: it was the obstacle they slammed into.
             Assert.That(SEntMan.TryGetComponent<KnockedDownComponent>(victimUid, out var knockedDown) &&
-                        knockedDown.NextUpdate > throwTime + grabber.ThrowWallKnockdownTime + TimeSpan.FromSeconds(1),
+                        knockedDown.NextUpdate > throwTime + slam.WallKnockdownTime + TimeSpan.FromSeconds(1),
                 "The victim must slam into the one with the higher hit priority.");
 
             var damage = SEntMan.System<DamageableSystem>().GetAllDamage(victimUid).GetTotal() - damageBefore;
             // Hitting something at speed hurts a little by itself, so not exactly one lot, but well short of two.
-            var impact = grabber.ThrowImpactDamage!;
+            var impact = slam.ImpactDamage!;
             Assert.That(damage, Is.GreaterThanOrEqualTo(impact.GetTotal()).And.LessThan(impact.GetTotal() * 2),
                 "Only the first hit counts: one lot of impact damage.");
         });
@@ -700,7 +701,7 @@ public sealed class KsGrabTest : GameTest
             SelectGrabHand(grabberUid);
             var target = SEntMan.GetComponent<TransformComponent>(grabberUid).Coordinates.Offset(new Vector2(6f, 0f));
             Assert.That(SEntMan.System<PredictedHandsSystem>().ThrowHeldItem(grabberUid, target));
-            Assert.That(SEntMan.HasComponent<KsGrabThrownComponent>(victimUid));
+            Assert.That(SEntMan.HasComponent<KsThrownSlamComponent>(victimUid));
         });
 
         await RunSeconds(1.5);
@@ -714,9 +715,9 @@ public sealed class KsGrabTest : GameTest
             if (intoPerson)
                 Assert.That(SEntMan.HasComponent<KnockedDownComponent>(obstacleUid), "Whoever is hit must go down too.");
 
-            var grabber = SEntMan.GetComponent<KsGrabberComponent>(grabberUid);
-            var impact = grabber.ThrowImpactDamage!;
-            var collateral = grabber.ThrowCollateralDamage!;
+            var slam = SProtoMan.Index(SEntMan.GetComponent<KsGrabberComponent>(grabberUid).ThrowSlam);
+            var impact = slam.ImpactDamage!;
+            var collateral = slam.CollateralDamage!;
             var damageable = SEntMan.System<DamageableSystem>();
             Assert.That(damageable.GetAllDamage(victimUid).GetTotal(), Is.GreaterThanOrEqualTo(impact.GetTotal()),
                 "The impact must hurt the thrown victim.");
@@ -725,7 +726,12 @@ public sealed class KsGrabTest : GameTest
                 Assert.That(damageable.GetAllDamage(obstacleUid).GetTotal(), Is.GreaterThanOrEqualTo(collateral.GetTotal()),
                     "The impact must hurt whoever they slam into.");
             }
-            Assert.That(SEntMan.HasComponent<KsGrabThrownComponent>(victimUid), Is.False, "Only the first hit counts.");
+            Assert.That(SEntMan.HasComponent<KsThrownSlamComponent>(victimUid), Is.False, "Only the first hit counts.");
+
+            // Thrown twice as far as what they hit: the slam must have stopped them there, not let them fly on.
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
+            var past = transformSystem.GetWorldPosition(victimUid).X - transformSystem.GetWorldPosition(obstacleUid).X;
+            Assert.That(past, Is.LessThan(0.75f), "A slam must stop the thrown victim where they hit.");
         });
     }
 }

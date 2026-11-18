@@ -4,6 +4,7 @@ using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared._KS14.Resist;
+using Content.Shared._KS14.Throwing;
 using Content.Shared.ActionBlocker;
 using Content.Shared.CombatMode;
 using Content.Shared.Mobs.Systems;
@@ -68,6 +69,7 @@ public sealed partial class KsGrabSystem : EntitySystem
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedVirtualItemSystem _virtualItemSystem = default!;
     [Dependency] private ComplexShoveSystem _complexShoveSystem = default!;
+    [Dependency] private KsThrownSlamSystem _thrownSlamSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedCombatModeSystem _combatModeSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
@@ -598,82 +600,13 @@ public sealed partial class KsGrabSystem : EntitySystem
     #region Thrown victims
 
     /// <summary>
-    ///     Marks someone sent flying by <paramref name="thrower"/>, so whatever they slam into knocks them over.
+    ///     Marks someone sent flying by <paramref name="thrower"/>, so whatever they slam into knocks them over, as
+    ///         the thrower's <see cref="KsGrabberComponent.ThrowSlam"/> says (<see cref="KsThrownSlamSystem"/>).
     /// </summary>
     public void MarkThrown(EntityUid victim, EntityUid thrower)
     {
-        var thrown = EnsureComp<KsGrabThrownComponent>(victim);
-        thrown.Thrower = thrower;
-        Dirty(victim, thrown);
-    }
-
-    /// <summary>
-    ///     A victim thrown into someone, or into a wall or table, is knocked down by it as a shove would knock them down,
-    ///         and knocks over whoever they hit. How hard is the thrower's <see cref="KsGrabberComponent"/>'s to say.
-    /// </summary>
-    [SubscribeLocalEvent]
-    private void OnThrownHit(Entity<KsGrabThrownComponent> thrown, ref ThrowDoHitEvent args)
-    {
-        // Removed already, by an earlier hit this tick: a deferred removal leaves the component in place until the
-        // tick ends, and two things hit at once (a window and its grille) would both slam them.
-        if (thrown.Comp.LifeStage > ComponentLifeStage.Running)
-            return;
-
-        var thrower = thrown.Comp.Thrower;
-        if (args.Target == thrower || !TryComp<KsGrabberComponent>(thrower, out var grabber))
-            return;
-
-        // Caught by what they hit, as by a closet shutting on them: they're inside it, not slammed against it.
-        if (_containerSystem.IsEntityInContainer(thrown))
-        {
-            RemCompDeferred<KsGrabThrownComponent>(thrown);
-            return;
-        }
-
-        if (TryComp<KsShoveObstacleComponent>(args.Target, out var obstacle))
-        {
-            _complexShoveSystem.KnockIntoObstacle(thrower, thrown, (args.Target, obstacle), grabber.ThrowObstaclePopups);
-
-            // Someone in the way is hit as hard, if they can be hurt; a table isn't.
-            if (obstacle.CollateralKnockdownTime != null)
-                DealImpactDamage(args.Target, grabber.ThrowCollateralDamage, thrower);
-        }
-        else if (CompOrNull<PhysicsComponent>(args.Target)?.BodyType == BodyType.Static)
-        {
-            _complexShoveSystem.KnockIntoWall(thrower, thrown, grabber.ThrowWallKnockdownTime, grabber.ThrowWallSound,
-                grabber.ThrowWallPopups, grabber.ThrowWallResistedPopups);
-        }
-        else
-        {
-            return;
-        }
-
-        // Only the first thing they slam into counts.
-        RemCompDeferred<KsGrabThrownComponent>(thrown);
-        DealImpactDamage(thrown, grabber.ThrowImpactDamage, thrower);
-    }
-
-    /// <summary>
-    ///     Damage from slamming into something, dealt by the server like the strangle's, so health doesn't flicker.
-    /// </summary>
-    private void DealImpactDamage(EntityUid uid, DamageSpecifier? damage, EntityUid origin)
-    {
-        if (_netManager.IsClient || damage == null || damage.Empty)
-            return;
-
-        _damageableSystem.ChangeDamage(uid, damage, origin: origin);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnThrownLand(Entity<KsGrabThrownComponent> thrown, ref LandEvent args)
-    {
-        RemCompDeferred<KsGrabThrownComponent>(thrown);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnThrownStop(Entity<KsGrabThrownComponent> thrown, ref StopThrowEvent args)
-    {
-        RemCompDeferred<KsGrabThrownComponent>(thrown);
+        if (TryComp<KsGrabberComponent>(thrower, out var grabber))
+            _thrownSlamSystem.MarkThrown(victim, grabber.ThrowSlam, thrower);
     }
 
     #endregion

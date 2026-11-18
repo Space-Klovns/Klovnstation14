@@ -389,26 +389,43 @@ both bodies, because a shorter joint doesn't wake a sleeping body. `RequiredDist
 `BeforeThrowEvent` (raised by `PredictedHandsSystem.ThrowHeldItem` before it drops the thrown item) on the grabber:
 if the thrown item is the grab's virtual item and the stage `AllowsThrow`, the victim must be **down**. If they're
 standing, the throw is cancelled with `ks-grab-throw-need-down` (pin them first). Otherwise it swaps `ItemUid` to the
-victim, scales `ThrowSpeed`, and calls `MarkThrown` (adds `KsGrabThrownComponent`). The drop that follows deletes the virtual item synchronously, which ends
+victim, scales `ThrowSpeed`, and calls `MarkThrown` (adds `KsThrownSlamComponent`, below). The drop that follows deletes the virtual item synchronously, which ends
 the pull, so the victim flies free.
 
-The first `ThrowDoHitEvent` on a `KsGrabThrown` victim calls `ComplexShoveSystem.KnockIntoObstacle` for an obstacle
-(a person, a table) or `KnockIntoWall` for any static body. The marker goes on that hit, on `LandEvent` or on
-`StopThrowEvent`. Mobs don't collide with each other
-(`MobMask` lacks `MobLayer`), but a thrown entity gets the non-hard throwing fixture, which hits people's hard
-fixtures, so this works for people too.
+#### Slamming into things (`KsThrownSlamSystem`)
 
-What the slam does is data on the thrower's `KsGrabber`, so a thrower without one (deleted mid-flight, or a carrier
-that can't grab) leaves the victim to land as any thrown thing does:
-- `ThrowImpactDamage` to the thrown (walls and people) and `ThrowCollateralDamage` to a person hit (an obstacle with
-  `CollateralKnockdownTime`, so not a table). Both default to 10 Blunt and are dealt by the server only
-  (`DealImpactDamage`).
-- `ThrowWallKnockdownTime`, `ThrowWallSound`, `ThrowWallPopups` and `ThrowWallResistedPopups` for a wall.
-- `ThrowObstaclePopups`, shown instead of the obstacle's own.
+Nothing about the slam belongs to grabs. `Content.Shared/_KS14/Throwing` holds it, for anything that sends people
+flying:
+- `KsThrownSlamPrototype` (`ksThrownSlam`) is what a slam does: `ImpactDamage` to the thrown and `CollateralDamage`
+  to a person hit (an obstacle with `CollateralKnockdownTime`, so not a table), dealt by the server only;
+  `WallKnockdownTime`, `WallSound`, `WallPopups` and `WallResistedPopups` for a wall; `ObstaclePopups`, shown instead
+  of the obstacle's own; and `StopsMomentum`. `KsThrownSlam` is the one a grab uses, and a fair default.
+- `KsThrownSlamSystem.MarkThrown(thrown, slam, source)` adds `KsThrownSlamComponent` to someone just thrown. `source`
+  is whoever threw them, or null when nobody did (a blast): then the thrown gets the target's popup, everyone else
+  the others', and damage has no origin.
+
+To make something else slam people, throw them with `ThrowingSystem.TryThrow` and call `MarkThrown`; where the throw
+is predicted, call it on the client too. A grabber's `KsGrabber.ThrowSlam` names its prototype, and
+`KsGrabSystem.MarkThrown` passes it on, so a thrower without a `KsGrabber` leaves the victim to land as any thrown
+thing does.
+
+The first `ThrowDoHitEvent` on someone marked calls `ComplexShoveSystem.KnockIntoObstacle` for an obstacle (a
+person, a table) or `KnockIntoWall` for any static body. The marker goes on that hit, on `LandEvent` or on
+`StopThrowEvent`. Mobs don't collide with each other (`MobMask` lacks `MobLayer`), but a thrown entity gets the
+non-hard throwing fixture, which hits people's hard fixtures, so this works for people too. Being non-hard, that
+fixture stops nobody: without `StopsMomentum` someone thrown into a person slams into them and flies on. With it the
+slam zeroes their velocity, unless what they hit took them inside.
+
+**A state must not let go of a predicted grip.** An aggressive grip puts a virtual item in the grabber's hand, and
+on the grabber's client that item is a predicted entity. Every server state that arrives before the server has
+confirmed the grip takes it out of the hand again, which raises `VirtualItemDeletedEvent`, and stock
+`PullingSystem.OnVirtualItemDeleted` stopped the pull for it. The grip then came and went on the client every other
+tick, and a shove in an off tick was predicted as a plain shove while the server pinned. `PullingSystem` (a `KS14`
+edit) and `KsFiremanCarrySystem` now ignore that event while `IGameTiming.ApplyingState`.
 
 **Only the first hit counts, and which is first is decided.** Two things are often hit in the same tick: a window
 and the grille under it share a hitbox. Two rules keep that from being chance:
-- `KsGrabSystem.OnThrownHit` ignores a hit once the `KsGrabThrown` marker's removal is under way. The removal is
+- `KsThrownSlamSystem.OnHit` ignores a hit once the `KsThrownSlam` marker's removal is under way. The removal is
   deferred to the end of the tick, so without this a second hit in the same tick slammed them again: two popups, two
   lots of damage.
 - Every throw's hits are raised in order of `KsThrowHitPriorityComponent` on what was hit (default 0; `Window` has 1),
@@ -447,8 +464,8 @@ is passed as the closing `user`, so the server leaves them out of its own sound,
 - It closes the storage first, then inserts. An open `EntityStorage` reports that anything can be inserted and
   `Insert` only drops things beside it, so size, capacity and the storage's own whitelist can only be asked once it is
   shut. Something that doesn't fit is left outside the shut door.
-- `ThrowHitByEvent` is raised on the target before `ThrowDoHitEvent` on the thrown, so `KsGrabSystem.OnThrownHit`
-  sees a victim already in a container and drops the `KsGrabThrown` marker without a slam.
+- `ThrowHitByEvent` is raised on the target before `ThrowDoHitEvent` on the thrown, so `KsThrownSlamSystem.OnHit`
+  sees a victim already in a container and drops the `KsThrownSlam` marker without a slam.
 
 #### Adding a grab level
 

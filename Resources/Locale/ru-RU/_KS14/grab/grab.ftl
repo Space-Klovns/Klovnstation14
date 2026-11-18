@@ -37,15 +37,6 @@ ks-grab-throw-hard-user = Ты со всей силы швыряешь { THE($vi
 ks-grab-throw-hard-target = { CAPITALIZE(THE($grabber)) } со всей силы швыряет тебя!
 
 # Брошенный врезается в кого-то, в стол или в стену.
-ks-grab-thrown-into-others = { CAPITALIZE(THE($target)) } врезается в { THE($obstacle) }!
-ks-grab-thrown-into-user = { CAPITALIZE(THE($target)) } врезается в { THE($obstacle) }!
-ks-grab-thrown-into-target = Ты врезаешься в { THE($obstacle) }!
-ks-grab-thrown-wall-others = { CAPITALIZE(THE($target)) } врезается в стену и падает!
-ks-grab-thrown-wall-user = { CAPITALIZE(THE($target)) } врезается в стену и падает!
-ks-grab-thrown-wall-target = Ты врезаешься в стену и падаешь!
-ks-grab-thrown-wall-resisted-others = { CAPITALIZE(THE($target)) } отскакивает от стены!
-ks-grab-thrown-wall-resisted-user = { CAPITALIZE(THE($target)) } отскакивает от стены!
-ks-grab-thrown-wall-resisted-target = Ты отскакиваешь от стены!
 
 alerts-ks-grabbed-aggressive-name = [color=yellow]Схвачен[/color]
 alerts-ks-grabbed-aggressive-desc = Тебя крепко держат на месте. Нажми или попробуй идти, чтобы вырваться.
