@@ -17,6 +17,10 @@
     - KsBarbedWireCoil
   - type: StaticPrice
     price: 15
+  # Click a tile to unroll it there.
+  - type: KsPlaceOnTile
+    prototype: KsBarbedWire
+    doAfter: 1
   - type: GuideHelp
     guides:
     - KsFortifications

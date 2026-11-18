@@ -28,6 +28,11 @@
     thresholds: [ 2, 3 ]
   - type: StackPrice
     price: 5
+  # Click a tile to stack a wall there, from as many bags as the construction recipe takes.
+  - type: KsPlaceOnTile
+    prototype: KsSandbagWall
+    doAfter: 2
+    stackCost: 5
   - type: GuideHelp
     guides:
     - KsFortifications
