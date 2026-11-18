@@ -55,6 +55,9 @@ ks-fieldcommander-intel-strike = Field Operations. Incoming fire mission, danger
 
 ks-fieldcommander-asset-driller = My borg is coming for your servers, and nothing you own can stop it.
 ks-fieldcommander-intel-driller = Field Operations. A breaching borg is inbound. It goes straight for a server, so focus it down.
+ks-fieldcommander-asset-drone = Listen. Hear that buzzing? It's looking for you.
+ks-fieldcommander-intel-drone = Field Operations. Suicide drones inbound. They beep and flash red before they blow: get clear or shoot them down.
+ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } beeps faster and faster!
 
 ## Objectives and the uplink
 

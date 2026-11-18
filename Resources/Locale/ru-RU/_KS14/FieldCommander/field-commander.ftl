@@ -56,6 +56,9 @@ ks-fieldcommander-intel-strike = Полевое управление. Огнев
 
 ks-fieldcommander-asset-driller = Мой бор идёт за вашими серверами, и вам нечем его остановить.
 ks-fieldcommander-intel-driller = Полевое управление. Приближается бор-проходчик. Он идёт прямо к серверу — сосредоточьте огонь на нём.
+ks-fieldcommander-asset-drone = Слышите жужжание? Это за вами.
+ks-fieldcommander-intel-drone = Полевое управление. Приближаются дроны-камикадзе. Перед взрывом они пищат и вспыхивают красным: отходите или сбивайте их.
+ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } пищит всё чаще и чаще!
 
 ## Objectives and the uplink
 
