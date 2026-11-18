@@ -19,6 +19,7 @@ using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
+using Content.Shared.NPC.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -40,6 +41,7 @@ public sealed class KsCompanionTest : GameTest
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _owner = "KsTestCompanionOwner";
+    private readonly EntProtoId _enemy = "KsTestCompanionEnemy";
     private readonly ProtoId<KsPerkPrototype> _perk = "KsTestCompanionPerk";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
@@ -48,6 +50,11 @@ public sealed class KsCompanionTest : GameTest
     private const string Prototypes = @"
 - type: npcFaction
   id: KsTestCompanionSide
+
+- type: npcFaction
+  id: KsTestCompanionEnemySide
+  hostile:
+  - KsTestCompanionSide
 
 - type: scenarioFaction
   id: KsTestCompanionScenarioSide
@@ -112,6 +119,16 @@ public sealed class KsCompanionTest : GameTest
   - type: HTN
     rootTask:
       task: KsTestCompanionCompound
+  # One it came with mustn't make it one of the side's people either.
+  - type: ScenarioFactionMember
+    id: KsTestCompanionScenarioSide
+
+- type: entity
+  id: KsTestCompanionEnemy
+  components:
+  - type: NpcFactionMember
+    factions:
+    - KsTestCompanionEnemySide
 
 - type: entity
   id: KsTestCompanionRider
@@ -191,9 +208,8 @@ public sealed class KsCompanionTest : GameTest
             Assert.That(entMan.TryGetComponent<NpcFactionMemberComponent>(follower, out var followerFactions) &&
                         new HashSet<ProtoId<NpcFactionPrototype>>(followerFactions.Factions).SetEquals(entMan.GetComponent<NpcFactionMemberComponent>(ownerUid).Factions),
                 "the follower should take the owner's NPC factions");
-            Assert.That(entMan.GetComponentOrNull<ScenarioFactionMemberComponent>(follower)?.Id,
-                Is.EqualTo(entMan.GetComponent<ScenarioFactionMemberComponent>(ownerUid).Id),
-                "the follower should take the owner's scenario faction");
+            Assert.That(entMan.HasComponent<ScenarioFactionMemberComponent>(follower), Is.False,
+                "the follower should be no scenario faction's member, so no rule counts it as one of its side's people");
             Assert.That(entMan.HasComponent<KsFactionCollisionShooterComponent>(follower),
                 "the follower's shots should pass through the owner's side");
 
@@ -220,6 +236,31 @@ public sealed class KsCompanionTest : GameTest
         await server.WaitAssertion(() =>
             Assert.That(entMan.HasComponent<KsDissolveComponent>(Companion(ownerUid, Follower)!.Value), Is.False,
                 "a materialised follower should be whole"));
+    }
+
+    [Test]
+    public async Task CompanionsAreEnemiesOfTheOwnersEnemiesButNotOneOfItsSidesPeople()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var ownerUid = await SpawnOwnerWithPerk();
+
+        await server.WaitAssertion(() =>
+        {
+            var enemyUid = entMan.SpawnAtPosition(_enemy, entMan.GetComponent<TransformComponent>(ownerUid).Coordinates);
+            var hostiles = new HashSet<EntityUid>(server.System<NpcFactionSystem>().GetNearbyHostiles(enemyUid, 5f));
+
+            foreach (var index in new[] { Follower, Rider })
+            {
+                var companionUid = Companion(ownerUid, index)!.Value;
+                Assert.That(entMan.HasComponent<ScenarioFactionMemberComponent>(companionUid), Is.False,
+                    $"companion {index} should not be counted as one of the owner's side");
+            }
+
+            var followerUid = Companion(ownerUid, Follower)!.Value;
+            Assert.That(hostiles, Does.Contain(followerUid), "the owner's enemies should still fight its companion");
+            Assert.That(hostiles, Does.Contain(ownerUid), "control: the owner itself should be hostile to them");
+        });
     }
 
     [Test]

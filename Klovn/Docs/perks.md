@@ -106,8 +106,9 @@ state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamag
 
 - **Spawning**: on the component's map init (the perk being given) each entry is spawned at the owner and materialises
   (`KsDissolveSystem.Materialise`, the dissolve played backwards). It gets `KsCompanionComponent` (owner, index, mode,
-  offset; networked), the owner's NPC factions (replacing its own), the owner's `ScenarioFactionMember`, and
-  `KsFactionCollisionShooter`.
+  offset; networked), the owner's NPC factions (replacing its own) and `KsFactionCollisionShooter`. It never keeps a
+  `ScenarioFactionMember`: scenario rules count those as a side's people (Field Commander's defenders, wave budget,
+  round end), and a companion isn't one; enemies still fight it through its NPC factions.
 - **Follow**: the companion's HTN blackboard `FollowTarget` is the owner; give it an HTN that runs `FollowCompound`.
   `SetFollowOverride(companion, target)` sends it after something else for now, `null` back to the owner.
 - **Attached**: spawned parented to the owner at `offset`, and put back there whenever it is moved. Give it no hard

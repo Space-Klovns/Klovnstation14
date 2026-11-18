@@ -24,7 +24,7 @@ namespace Content.Server._KS14.Companions;
 
 /// <summary>
 ///     Spawns and keeps an owner's companions (<see cref="KsCompanionsComponent"/>): each materialises beside the
-///         owner (or on it, <see cref="KsCompanionMode.Attached"/>), takes the owner's NPC and scenario factions, and
+///         owner (or on it, <see cref="KsCompanionMode.Attached"/>), takes the owner's NPC factions (never a scenario one), and
 ///         its shots pass through the owner's side. One destroyed comes back after its entry's delay, with a popup to
 ///         the owner; all of them dissolve when the owner dies and come back when it is revived.
 /// </summary>
@@ -208,9 +208,13 @@ public sealed partial class KsCompanionSystem : EntitySystem
     }
 
     /// <summary>
-    ///     The companion takes the owner's side: its NPC factions, its scenario faction, and shots that pass through
-    ///         its own.
+    ///     The companion takes the owner's side: its NPC factions, so enemies fight it and friends' shots pass
+    ///         through it, and shots of its own that pass through friends.
     /// </summary>
+    /// <remarks>
+    ///     Never a scenario faction: that is what scenario rules count as a side's people (Field Commander's
+    ///         defenders, its wave budget and caps, a side wiped out at round end), and a companion isn't one.
+    /// </remarks>
     private void CopySides(EntityUid ownerUid, EntityUid companionUid)
     {
         if (_factionMemberQuery.TryComp(ownerUid, out var ownerFactionComponent))
@@ -221,18 +225,9 @@ public sealed partial class KsCompanionSystem : EntitySystem
                 new HashSet<ProtoId<NpcFactionPrototype>>(ownerFactionComponent.Factions));
         }
 
-        if (_scenarioMemberQuery.TryComp(ownerUid, out var ownerScenarioComponent))
-        {
-            if (_scenarioMemberQuery.TryComp(companionUid, out var companionScenarioComponent))
-            {
-                companionScenarioComponent.Id = ownerScenarioComponent.Id;
-                Dirty(companionUid, companionScenarioComponent);
-            }
-            else
-            {
-                AddComp(companionUid, new ScenarioFactionMemberComponent { Id = ownerScenarioComponent.Id });
-            }
-        }
+        // One its prototype came with would count it all the same.
+        if (_scenarioMemberQuery.HasComp(companionUid))
+            RemComp<ScenarioFactionMemberComponent>(companionUid);
 
         EnsureComp<KsFactionCollisionShooterComponent>(companionUid);
     }
