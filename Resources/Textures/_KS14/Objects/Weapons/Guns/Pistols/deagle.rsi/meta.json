@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/blob/master/icons/obj/weapons/guns/ballistic.dmi, https://github.com/tgstation/tgstation/blob/master/icons/mob/inhands/weapons/guns_lefthand.dmi, https://github.com/tgstation/tgstation/blob/master/icons/mob/inhands/weapons/guns_righthand.dmi. The deagle, deagle_bolt, deagle_bolt_locked and deagle_mag states were composited into whole-gun states for Klovnstation 14.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "base"
+    },
+    {
+      "name": "bolt-open"
+    },
+    {
+      "name": "mag-0"
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    }
+  ]
+}

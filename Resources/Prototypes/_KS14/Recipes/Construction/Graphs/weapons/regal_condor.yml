@@ -1,0 +1,68 @@
+# tgstation's /datum/crafting_recipe/deagle_prime and deagle_prime_mag. Both must be learned first, from
+#     KsBookRegalCondor. The tools and syndicate gear tgstation keeps in tool_paths are checked by the recipes'
+#     KsNearbyEntities condition and are not used up.
+
+- type: constructionGraph
+  id: KsRegalCondorGraph
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: regalCondor
+      steps:
+      - tag: KsDeagleBase
+        icon:
+          sprite: _KS14/Objects/Weapons/Guns/Pistols/deagle.rsi
+          state: icon
+        name: ks-construction-graph-tag-desert-eagle
+      - material: Gold
+        amount: 25
+      - material: Silver
+        amount: 25
+      - tag: DonkPocket
+        icon:
+          sprite: Objects/Consumable/Food/Baked/donkpocket.rsi
+          state: plain
+        name: ks-construction-graph-tag-donk-pocket
+      - material: Telecrystal
+        amount: 4
+      - prototype: ClothingHeadHatFancyCrown
+        icon:
+          sprite: Clothing/Head/Misc/fancycrown.rsi
+          state: icon
+        name: ks-construction-graph-prototype-fancy-crown
+      - prototype: ToolboxSyndicate
+        icon:
+          sprite: Objects/Tools/Toolboxes/toolbox_syn.rsi
+          state: icon
+        name: ks-construction-graph-prototype-syndicate-toolbox
+      - material: Steel
+        amount: 10
+        doAfter: 30
+  - node: regalCondor
+    entity: KsWeaponPistolRegalCondorEmpty
+
+- type: constructionGraph
+  id: KsRegalCondorMagazineGraph
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: magazine
+      steps:
+      - material: Steel
+        amount: 10
+      - material: Gold
+        amount: 10
+      - material: Silver
+        amount: 10
+      - material: Plasma
+        amount: 10
+      - tag: DonkPocket
+        icon:
+          sprite: Objects/Consumable/Food/Baked/donkpocket.rsi
+          state: plain
+        name: ks-construction-graph-tag-donk-pocket
+        doAfter: 5
+  - node: magazine
+    entity: KsMagazine50AEReaper
