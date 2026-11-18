@@ -26,6 +26,13 @@ public sealed partial class CultivationLoadoutComponent : Component
     [DataField, AutoNetworkedField]
     public int Slots = 5;
 
+    /// <summary>
+    ///     Actions that always stay on the bar without using a slot (Forge the Body, the Tribulation of Flesh). They're
+    ///         listed in the Techniques menu too, and picking one there puts it back on the bar if it's ever missing.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public List<EntityUid> Pinned = new();
+
     [DataField]
     public EntityUid? MenuAction;
 }

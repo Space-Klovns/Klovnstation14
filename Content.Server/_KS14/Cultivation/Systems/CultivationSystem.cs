@@ -574,8 +574,10 @@ public sealed partial class CultivationSystem : EntitySystem
         _cultivationSystem.SetBreakthrough(entity.Comp, 3 + 2 * (int)entity.Comp.Realm, readiness);
         _audioSystem.PlayPvs(ThunderSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-breakthrough-start", ("user", entity.Owner)), type: PopupType.Medium);
-        _noticeSystem.Notify(entity, Loc.GetString(readiness >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
-            ("readiness", readiness)), type: PopupType.Medium);
+        var effective = SharedCultivationSystem.EffectiveReadiness(readiness, entity.Comp.Realm);
+        _noticeSystem.Notify(entity, Loc.GetString(effective >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
+            ("readiness", effective), ("chance", (int)(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm) * 100))),
+            type: PopupType.Medium);
         return true;
     }
 
@@ -606,7 +608,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
         var readiness = entity.Comp.BreakthroughReadiness;
         _cultivationSystem.SetBreakthrough(entity.Comp, 0, 0);
-        if (_robustRandom.Prob(SharedCultivationSystem.BreakthroughChance(readiness)))
+        if (_robustRandom.Prob(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm)))
             BreakThrough(entity);
         else
             Deviate(entity);
@@ -775,12 +777,20 @@ public sealed partial class CultivationSystem : EntitySystem
 
     public bool TryLearnFromManual(EntityUid userUid, Entity<CultivationManualComponent> manualEntity)
     {
+        return TryLearnLaw(userUid, manualEntity.Comp.Law);
+    }
+
+    /// <summary>
+    ///     Take up a cultivation law, with its techniques, as a manual would teach it.
+    /// </summary>
+    public bool TryLearnLaw(EntityUid userUid, ProtoId<CultivationLawPrototype> lawId)
+    {
         if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent)
-            || !ProtoMan.TryIndex(manualEntity.Comp.Law, out var law))
+            || !ProtoMan.TryIndex(lawId, out var law))
             return false;
 
         var isRoot = cultivatorComponent.Laws.Count == 0;
-        if (!_cultivationSystem.TryLearnLaw((userUid, cultivatorComponent), manualEntity.Comp.Law))
+        if (!_cultivationSystem.TryLearnLaw((userUid, cultivatorComponent), lawId))
             return false;
 
         GrantTechniques((userUid, cultivatorComponent));

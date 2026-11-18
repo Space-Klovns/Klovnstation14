@@ -170,8 +170,7 @@
     sprite: Objects/Weapons/Melee/spear.rsi
   - type: MeleeWeapon
     range: 1.5
-    angle: 200
-    animationOffset: 1.3
+    angle: 100
     wideAnimationRotation: -135
     animation: KsWeaponArcRuyiThrust
     wideAnimation: KsWeaponArcRuyi

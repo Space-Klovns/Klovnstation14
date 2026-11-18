@@ -189,11 +189,11 @@
   components:
   # Steel on steel: real sparks where the sword qi bites.
   - type: Sprite
-    sprite: Effects/sparks.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sparks
+    - state: steel_sparks
       shader: unshaded
       color: "#e6f4ffff"
   - type: EffectVisuals
@@ -203,7 +203,7 @@
     energy: 1.5
     netsync: false
   - type: TimedDespawn
-    lifetime: 0.5
+    lifetime: 0.4
   - type: Tag
     tags:
     - HideContextMenu
@@ -253,13 +253,12 @@
   components:
   # Low real flames that linger and die down after the fire on the spot burns out.
   - type: Sprite
-    sprite: Effects/fire.rsi
+    sprite: _KS14/Cultivation/flames.rsi
     drawdepth: FloorObjects
     noRot: true
     layers:
-    - state: 1
+    - state: embers
       shader: unshaded
-      color: "#ffb07acc"
   - type: PointLight
     color: "#ff6a1c"
     radius: 1.6

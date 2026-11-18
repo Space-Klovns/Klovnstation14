@@ -465,6 +465,11 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.ForgeTarget = group;
     }
 
+    public EntityUid? GetTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto)
+    {
+        return bodyCultivator.Techniques.TryGetValue(actionProto, out var actionUid) ? actionUid : null;
+    }
+
     public void RecordTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto, EntityUid actionUid)
     {
         bodyCultivator.Techniques[actionProto] = actionUid;
@@ -624,6 +629,22 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnExamined(Entity<BodyCultivatorComponent> entity, ref ExaminedEvent args)
     {
+        // Looking yourself over: your stage, banked tempering and every power your body has unlocked.
+        if (args.Examiner == entity.Owner && entity.Comp.Committed)
+        {
+            args.PushMarkup(Loc.GetString("body-cultivation-self",
+                ("stage", entity.Comp.Stage > 0 ? Loc.GetString($"body-stage-{entity.Comp.Stage}") : Loc.GetString("body-stage-none")),
+                ("tempering", (int) entity.Comp.Tempering)));
+            foreach (var powerId in entity.Comp.Powers)
+            {
+                if (ProtoMan.TryIndex<BodyTemperingPowerPrototype>(powerId, out var power))
+                    args.PushMarkup(Loc.GetString("body-cultivation-self-power", ("power", Loc.GetString(power.Name)),
+                        ("description", Loc.GetString(power.Description))));
+            }
+
+            return;
+        }
+
         if (entity.Comp.Stage <= 0)
             return;
 

@@ -20,14 +20,7 @@
   blacklist:
     components:
     - AntagImmune
-  components:
-  - type: Cultivator
-    startingManuals:
-    - CultivationManualMetal
-    - CultivationManualWood
-    - CultivationManualWater
-    - CultivationManualFire
-    - CultivationManualEarth
+  # No path yet: they're handed a Fork in the Road and choose qi or the body themselves (WuxiaAscensionRuleSystem).
   mindRoles:
   - MindRoleKsCultivator
 
@@ -90,3 +83,36 @@
     interfaces:
       enum.PathChoiceUiKey.Key:
         type: PathChoiceBoundUserInterface
+
+# Wuxia: Ascension: everyone who takes a path is racing everyone else for the peak. The role names the path.
+- type: antag
+  id: KsAscensionQi
+  name: roles-antag-ks-ascension-qi-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-objective
+
+- type: antag
+  id: KsAscensionBody
+  name: roles-antag-ks-ascension-body-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-objective
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionQi
+  name: Ascension Qi Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionQi
+  - type: AscensionContenderRole
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionBody
+  name: Ascension Body Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionBody
+  - type: AscensionContenderRole

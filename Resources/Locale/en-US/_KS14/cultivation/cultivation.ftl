@@ -4,8 +4,8 @@ roles-antag-ks-cultivator-name = Cultivator
 roles-antag-ks-cultivator-objective = Walk the path of cultivation and rise through the realms. The jianghu does not forgive the weak.
 ks-cultivator-round-end-agent-name = cultivator
 ks-cultivator-role-greeting =
-    You have found the path. Qi stirs in your dantian.
-    Study the manual you carry to learn your Root Law, meditate to gather insight, and break through when you are ready.
+    You have found the path. Use the Fork in the Road you carry to walk the way of qi or the way of the body.
+    On the path of qi, find a manual to take up an element's law, meditate to gather insight, and break through when you are ready.
     Heavy blows bruise your meridians: rest them, or risk a qi deviation.
 
 ## Realms
@@ -82,8 +82,8 @@ cultivation-mountain-collapse = {CAPITALIZE(THE($user))} brings the mountain dow
 
 ## Breakthrough and heart demons
 
-cultivation-readiness-stable = Readiness {$readiness}: stable. Endure heaven's lightning and you will break through.
-cultivation-readiness-risky = Readiness {$readiness}: risky. Internal injuries weigh on you; rest at a qi source, fill your dantian or temper your Dao heart first.
+cultivation-readiness-stable = Readiness {$readiness}: certain. Endure heaven's lightning and you will break through.
+cultivation-readiness-risky = Readiness {$readiness}: a {$chance}% chance. Failing brings a qi deviation, and maybe a heart demon. Heaven tests each higher realm harder; raise your readiness first: fill your dantian, meditate at a qi source or a good site, temper your Dao heart, heal internal injuries.
 cultivation-lightning-strikes = Tribulation lightning crashes down on {THE($user)}!
 cultivation-lightning-grounded = A bolt of tribulation lightning is drawn into {THE($rod)}!
 heart-demon-name = heart demon of {$host}

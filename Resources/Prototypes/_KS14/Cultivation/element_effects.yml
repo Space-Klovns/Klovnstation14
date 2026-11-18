@@ -7,22 +7,21 @@
   name: water
   components:
   - type: Sprite
-    sprite: Effects/extinguisherSpray.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
-    noRot: false
+    noRot: true
     layers:
-    - state: extinguish
+    - state: splash
       shader: unshaded
-      color: "#8fd2ffff"
   - type: PointLight
     color: "#6fc0ff"
     radius: 1.5
     energy: 1.2
     netsync: false
   - type: LightFade
-    duration: 0.8
+    duration: 0.64
   - type: TimedDespawn
-    lifetime: 0.8
+    lifetime: 0.64
   - type: Tag
     tags:
     - HideContextMenu
@@ -33,15 +32,14 @@
   name: spray
   components:
   - type: Sprite
-    sprite: Effects/chempuff.rsi
-    drawdepth: Effects
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: FloorObjects
     noRot: true
     layers:
-    - state: chempuff
+    - state: ripple
       shader: unshaded
-      color: "#a8dcffff"
   - type: TimedDespawn
-    lifetime: 0.25
+    lifetime: 0.72
   - type: Tag
     tags:
     - HideContextMenu
@@ -92,20 +90,19 @@
   name: leaves
   components:
   - type: Sprite
-    sprite: Effects/chempuff.rsi
+    sprite: _KS14/Cultivation/nature.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: chempuff
+    - state: leaves
       shader: unshaded
-      color: "#5fcf5aff"
   - type: PointLight
     color: "#7fe07a"
     radius: 1
     energy: 0.8
     netsync: false
   - type: TimedDespawn
-    lifetime: 0.25
+    lifetime: 1.0
   - type: Tag
     tags:
     - HideContextMenu
@@ -116,15 +113,14 @@
   name: blossoms
   components:
   - type: Sprite
-    sprite: Effects/chempuff.rsi
+    sprite: _KS14/Cultivation/nature.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: chempuff
+    - state: petals
       shader: unshaded
-      color: "#ffb6d9ff"
   - type: TimedDespawn
-    lifetime: 0.25
+    lifetime: 1.0
   - type: Tag
     tags:
     - HideContextMenu
@@ -135,13 +131,12 @@
   name: pollen
   components:
   - type: Sprite
-    sprite: Effects/atmospherics.rsi
+    sprite: _KS14/Cultivation/nature.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: nitrous_oxide
+    - state: pollen
       shader: unshaded
-      color: "#c9f08aaa"
   - type: PointLight
     color: "#9be07a"
     radius: 2
@@ -161,11 +156,11 @@
   name: sparks
   components:
   - type: Sprite
-    sprite: Effects/sparks.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sparks
+    - state: steel_sparks
       shader: unshaded
       color: "#fff1c4ff"
   - type: PointLight
@@ -174,9 +169,34 @@
     energy: 2
     netsync: false
   - type: LightFade
-    duration: 0.5
+    duration: 0.4
   - type: TimedDespawn
-    lifetime: 0.5
+    lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaterSwirl
+  categories: [ HideSpawnMenu ]
+  name: water
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: water_swirl
+      shader: unshaded
+  - type: PointLight
+    color: "#6fc0ff"
+    radius: 1.5
+    energy: 1
+    netsync: false
+  - type: LightFade
+    duration: 0.8
+  - type: TimedDespawn
+    lifetime: 0.8
   - type: Tag
     tags:
     - HideContextMenu

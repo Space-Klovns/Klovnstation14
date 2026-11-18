@@ -36,6 +36,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId FlameSmallEffect = "KsFxFlameSmall";
     private static readonly EntProtoId WaterSprayEffect = "KsFxWaterSpray";
     private static readonly EntProtoId WaterPuffEffect = "KsFxWaterPuff";
+    private static readonly EntProtoId WaterSwirlEffect = "KsFxWaterSwirl";
     public static readonly EntProtoId MistWaterEffect = "KsFxMistWater";
     public static readonly EntProtoId MistBloodEffect = "KsFxMistBloodReal";
     private static readonly EntProtoId LeafPuffEffect = "KsFxLeafPuff";
@@ -128,6 +129,8 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
 
     private static readonly TimeSpan AuraInterval = TimeSpan.FromSeconds(0.25);
 
+    [Dependency] private Content.Shared.Standing.StandingStateSystem _standingStateSystem = default!;
+    [Dependency] private Content.Shared.Mobs.Systems.MobStateSystem _mobStateSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
@@ -221,6 +224,10 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
             foreach (var (ownerUid, component) in EntityManager.GetAllComponents(rule.Component))
             {
                 if (component.LifeStage > ComponentLifeStage.Running || rule.Active != null && !rule.Active(component))
+                    continue;
+
+                // Nobody's aura shows while they're down: lying across the floor it would only draw as bars over them.
+                if (_standingStateSystem.IsDown(ownerUid) || !_mobStateSystem.IsAlive(ownerUid) && HasComp<Content.Shared.Mobs.Components.MobStateComponent>(ownerUid))
                     continue;
 
                 var key = (ownerUid, ruleIndex);
@@ -433,6 +440,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
 
         var centre = _transformSystem.GetMapCoordinates(atUid);
         Spawn(MistWaterEffect, centre);
+        Spawn(WaterSwirlEffect, centre);
         for (var drop = 0; drop < count; drop++)
         {
             var direction = _robustRandom.NextAngle().ToVec();

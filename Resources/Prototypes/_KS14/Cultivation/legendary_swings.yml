@@ -98,11 +98,11 @@
   name: hit
   components:
   - type: Sprite
-    sprite: Effects/sparks.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sparks
+    - state: slash
       shader: unshaded
       color: "#9fc0ffff"
   - type: PointLight
@@ -111,9 +111,9 @@
     energy: 2
     netsync: false
   - type: LightFade
-    duration: 0.5
+    duration: 0.36
   - type: TimedDespawn
-    lifetime: 0.5
+    lifetime: 0.36
   - type: Tag
     tags:
     - HideContextMenu
@@ -124,11 +124,11 @@
   name: hit
   components:
   - type: Sprite
-    sprite: Effects/sparks.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sparks
+    - state: slash
       shader: unshaded
       color: "#ffa0aaff"
   - type: PointLight
@@ -137,9 +137,9 @@
     energy: 2
     netsync: false
   - type: LightFade
-    duration: 0.5
+    duration: 0.36
   - type: TimedDespawn
-    lifetime: 0.5
+    lifetime: 0.36
   - type: Tag
     tags:
     - HideContextMenu
@@ -150,11 +150,11 @@
   name: hit
   components:
   - type: Sprite
-    sprite: Effects/sparks.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: sparks
+    - state: slash
       shader: unshaded
       color: "#a8ffc8ff"
   - type: PointLight
@@ -163,9 +163,9 @@
     energy: 2
     netsync: false
   - type: LightFade
-    duration: 0.5
+    duration: 0.36
   - type: TimedDespawn
-    lifetime: 0.5
+    lifetime: 0.36
   - type: Tag
     tags:
     - HideContextMenu
@@ -176,11 +176,11 @@
   name: hit
   components:
   - type: Sprite
-    sprite: Effects/chempuff.rsi
+    sprite: _KS14/Cultivation/elements.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: chempuff
+    - state: glint
       shader: unshaded
       color: "#ffe07aff"
   - type: PointLight
@@ -189,9 +189,9 @@
     energy: 2
     netsync: false
   - type: LightFade
-    duration: 0.25
+    duration: 0.4
   - type: TimedDespawn
-    lifetime: 0.25
+    lifetime: 0.4
   - type: Tag
     tags:
     - HideContextMenu

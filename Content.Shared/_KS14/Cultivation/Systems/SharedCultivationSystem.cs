@@ -31,9 +31,19 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     /// <summary>
     ///     Chance a breakthrough succeeds at a given readiness: certain from 70, otherwise between 5% and 95%.
     /// </summary>
-    public static float BreakthroughChance(int readiness)
+    public static float BreakthroughChance(int readiness, CultivationRealm realm = CultivationRealm.QiCondensation)
     {
-        return readiness >= 70 ? 1f : (float)Math.Clamp(readiness, 5, 95) / 100f;
+        var effective = EffectiveReadiness(readiness, realm);
+        return effective >= 70 ? 1f : (float)Math.Clamp(effective, 5, 95) / 100f;
+    }
+
+    /// <summary>
+    ///     Heaven tests the higher realms harder: every realm already climbed takes 15 from readiness. Breaking out of
+    ///         Qi Condensation is certain at 70, out of Foundation at 85, out of Golden Core at 100.
+    /// </summary>
+    public static int EffectiveReadiness(int readiness, CultivationRealm realm)
+    {
+        return readiness - 15 * (int)realm;
     }
 
     /// <summary>

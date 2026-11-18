@@ -24,7 +24,7 @@ public sealed partial class WuxiaAscensionRuleComponent : Component
     ///     Extra cultivation speed for everyone, added to the insight and tempering multipliers.
     /// </summary>
     [DataField]
-    public float SpeedBonus = 1f;
+    public float SpeedBonus = 0.5f;
 }
 
 /// <summary>
@@ -42,3 +42,9 @@ public sealed partial class SupremeSovereignComponent : Component
 /// </summary>
 [RegisterComponent]
 public sealed partial class PathChoiceComponent : Component;
+
+/// <summary>
+///     Marks the mind role of someone racing for the peak in Wuxia: Ascension.
+/// </summary>
+[RegisterComponent]
+public sealed partial class AscensionContenderRoleComponent : Component;

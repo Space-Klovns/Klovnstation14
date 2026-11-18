@@ -1,8 +1,9 @@
 ## Admin right-click menus for cultivation
 
-verb-categories-cultivation-qi = Cultivation: Qi
-verb-categories-cultivation-body = Cultivation: Body
-verb-categories-cultivation-martial = Cultivation: Teach
+verb-categories-cultivation = Cultivation
+verb-categories-cultivation-qi = Qi
+verb-categories-cultivation-body = Body
+verb-categories-cultivation-martial = Teach
 
 cultivation-admin-awaken = Awaken as a cultivator
 cultivation-admin-break-through = Break through to the next realm

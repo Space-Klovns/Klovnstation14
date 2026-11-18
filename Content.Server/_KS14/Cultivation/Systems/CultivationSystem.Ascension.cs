@@ -72,7 +72,7 @@ public sealed partial class CultivationSystem
 
         var readiness = entity.Comp.BreakthroughReadiness;
         _cultivationSystem.SetBreakthrough(entity.Comp, 0, 0);
-        if (_robustRandom.Prob(SharedCultivationSystem.BreakthroughChance(readiness)))
+        if (_robustRandom.Prob(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm)))
             Ascend(entity);
         else
             FailAscension(entity);

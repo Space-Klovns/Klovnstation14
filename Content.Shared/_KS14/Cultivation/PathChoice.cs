@@ -14,6 +14,10 @@ public enum CultivationPathOption : byte
     Fire,
     Earth,
     Body,
+    /// <summary>
+    ///     The path of qi with no element yet: that comes from whichever manual they find.
+    /// </summary>
+    Qi,
 }
 
 [Serializable, NetSerializable]

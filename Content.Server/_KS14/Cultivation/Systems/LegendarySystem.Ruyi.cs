@@ -22,7 +22,6 @@ namespace Content.Server._KS14.Cultivation.Systems;
 public sealed partial class LegendarySystem
 {
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
-    [Dependency] private NPCRetaliationSystem _npcRetaliationSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private SharedItemSystem _itemSystem = default!;
@@ -199,6 +198,7 @@ public sealed partial class LegendarySystem
             var spot = new MapCoordinates(from.Position + _robustRandom.NextVector2(0.8f, 1.2f), from.MapId);
             var cloneUid = Spawn(entity.Comp.Clone, spot);
             _visualBodySystem.CopyAppearanceFrom(args.Performer, cloneUid);
+            DressLike(cloneUid, args.Performer);
             _metaDataSystem.SetEntityName(cloneUid, Name(args.Performer));
             _visualsSystem.Art(CultivationVisualsSystem.ArtMistSteam, spot);
 
@@ -206,8 +206,32 @@ public sealed partial class LegendarySystem
             if (TryComp<NpcFactionMemberComponent>(args.Performer, out var masterFactions) && masterFactions.Factions.Count > 0)
                 _npcFactionSystem.AddFactions(cloneUid, new HashSet<ProtoId<NpcFactionPrototype>>(masterFactions.Factions));
 
-            if (TryComp<NPCRetaliationComponent>(cloneUid, out var retaliationComponent))
-                _npcRetaliationSystem.TryRetaliate((cloneUid, retaliationComponent), args.Target);
+            // They share the wielder's factions, so ordinary crew count as friends and plain retaliation would refuse
+            //     them: mark the target hostile outright. The clones still never turn on their master.
+            _npcFactionSystem.AggroEntity(cloneUid, args.Target);
+        }
+    }
+
+    private static readonly string[] CloneSlots = { "jumpsuit", "outerClothing", "head", "shoes", "gloves", "mask", "eyes", "neck" };
+
+    /// <summary>
+    ///     A clone wears copies of whatever its master has on. The copies can't be taken off, and they vanish with it.
+    /// </summary>
+    private void DressLike(EntityUid cloneUid, EntityUid masterUid)
+    {
+        foreach (var slot in CloneSlots)
+        {
+            if (!_inventorySystem.TryGetSlotEntity(masterUid, slot, out var worn)
+                || MetaData(worn.Value).EntityPrototype?.ID is not { } prototype)
+                continue;
+
+            if (_inventorySystem.TryGetSlotEntity(cloneUid, slot, out var existing))
+                QueueDel(existing.Value);
+
+            var copyUid = Spawn(prototype, Transform(cloneUid).Coordinates);
+            EnsureComp<Content.Shared.Interaction.Components.UnremoveableComponent>(copyUid);
+            if (!_inventorySystem.TryEquip(cloneUid, copyUid, slot, silent: true, force: true))
+                QueueDel(copyUid);
         }
     }
 }

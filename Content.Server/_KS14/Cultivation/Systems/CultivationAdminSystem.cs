@@ -27,6 +27,11 @@ public sealed partial class CultivationAdminSystem : EntitySystem
     private static readonly VerbCategory BodyCategory = new("verb-categories-cultivation-body", null);
     private static readonly VerbCategory MartialCategory = new("verb-categories-cultivation-martial", null);
 
+    /// <summary>
+    ///     Every cultivation admin verb sits in this one tab, shown only on cultivators.
+    /// </summary>
+    private static readonly VerbCategory CultivationTab = new("verb-categories-cultivation", null);
+
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private BodyCultivationSystem _bodyCultivationSystem = default!;
     [Dependency] private CultivationSystem _cultivationSystem = default!;
@@ -43,7 +48,8 @@ public sealed partial class CultivationAdminSystem : EntitySystem
     {
         if (!TryComp<ActorComponent>(args.User, out var actorComponent)
             || !_adminManager.HasAdminFlag(actorComponent.PlayerSession, AdminFlags.Fun)
-            || !HasComp<MobStateComponent>(args.Target))
+            || !HasComp<MobStateComponent>(args.Target)
+            || !_cultivatorQuery.HasComp(args.Target) && !_bodyCultivatorQuery.HasComp(args.Target))
             return;
 
         var targetUid = args.Target;
@@ -54,12 +60,12 @@ public sealed partial class CultivationAdminSystem : EntitySystem
 
     private Verb MakeVerb(VerbCategory category, string text, Action act, int priority = 0)
     {
-        // Everything sits in the admin Debug menu, named by which part of cultivation it touches.
-        var label = $"{Loc.GetString(category.Text)}: {text}";
+        // Everything sits in its own Cultivation tab, labelled by which part of cultivation it touches.
+        var label = category == MartialCategory ? text : $"{Loc.GetString(category.Text)}: {text}";
         return new Verb
         {
             Text = label,
-            Category = VerbCategory.Debug,
+            Category = CultivationTab,
             Act = act,
             Priority = priority,
             Impact = LogImpact.Medium,

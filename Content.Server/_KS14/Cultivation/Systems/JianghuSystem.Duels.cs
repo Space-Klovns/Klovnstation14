@@ -24,7 +24,6 @@ namespace Content.Server._KS14.Cultivation.Systems;
 public sealed partial class JianghuSystem
 {
     public static readonly EntProtoId DuelAction = "ActionJianghuDuel";
-    private static readonly EntProtoId YieldAction = "ActionJianghuYield";
 
     private const string WagerOption = "wager";
     private const string NoWagerOption = "no-wager";
@@ -281,10 +280,7 @@ public sealed partial class JianghuSystem
             duelComponent.Opponent = opponentUid;
             duelComponent.EndsAt = endsAt;
             duelComponent.Ended = false;
-
-            EntityUid? yieldUid = null;
-            if (_actionsSystem.AddAction(fighterUid, ref yieldUid, YieldAction))
-                duelComponent.YieldAction = yieldUid;
+            // No yield button: walking away from the duel is how you concede.
         }
 
         _visualsSystem.Wave(oneUid, FxColour.Blood, big: true);
@@ -354,7 +350,7 @@ public sealed partial class JianghuSystem
             var resolvingEvent = new HonorDuelResolvingEvent(winner, loser, 5);
             RaiseLocalEvent(ref resolvingEvent);
             AdjustFace(winner, resolvingEvent.FaceGain, "jianghu-reason-won");
-            AdjustFace(loser, outcome == HonorDuelOutcome.Fled ? -5 : -2,
+            AdjustFace(loser, -2,
                 outcome == HonorDuelOutcome.Fled ? "jianghu-reason-fled" : "jianghu-reason-lost");
             TryDuelInsight(winner, 10f);
 
@@ -395,7 +391,6 @@ public sealed partial class JianghuSystem
         if (!TryComp<HonorDuelComponent>(fighterUid, out var duelComponent))
             return;
 
-        _actionsSystem.RemoveAction(fighterUid, duelComponent.YieldAction);
         RemCompDeferred<HonorDuelComponent>(fighterUid);
     }
 

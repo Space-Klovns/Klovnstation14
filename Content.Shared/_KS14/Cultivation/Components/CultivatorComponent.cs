@@ -62,7 +62,7 @@ public sealed partial class CultivatorComponent : Component
     ///         Nascent Soul, the last entry is what Ascension needs.
     /// </summary>
     [DataField]
-    public List<float> InsightByRealm = new() { 100f, 200f, 350f, 500f };
+    public List<float> InsightByRealm = new() { 300f, 700f, 1300f, 2200f };
 
     [DataField]
     public float QiRegenPerSecond = 1f;

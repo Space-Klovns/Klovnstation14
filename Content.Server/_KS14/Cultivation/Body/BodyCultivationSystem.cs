@@ -228,7 +228,31 @@ public sealed partial class BodyCultivationSystem : EntitySystem
                 _loadoutSystem.Learned(entity, actionUid.Value);
         }
 
+        EnsureCoreArts(entity);
         ScaleCooldowns(entity);
+    }
+
+    /// <summary>
+    ///     Forge the Body and the Tribulation of Flesh are what the whole path runs on: make sure they exist, are pinned
+    ///         to the bar and are listed in the Techniques menu.
+    /// </summary>
+    public void EnsureCoreArts(Entity<BodyCultivatorComponent> entity)
+    {
+        foreach (var core in new EntProtoId[] { "ActionBodyForge", "ActionBodyTribulation" })
+        {
+            var actionUid = _bodySystem.GetTechnique(entity.Comp, core) ?? EntityUid.Invalid;
+            if (!actionUid.IsValid() || TerminatingOrDeleted(actionUid))
+            {
+                EntityUid? added = null;
+                if (!_actionsSystem.AddAction(entity, ref added, core))
+                    continue;
+
+                actionUid = added.Value;
+                _bodySystem.RecordTechnique(entity.Comp, core, actionUid);
+            }
+
+            _loadoutSystem.Pin(entity, actionUid);
+        }
     }
 
     /// <summary>
@@ -571,6 +595,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         if (_bodyCultivatorQuery.TryComp(userUid, out var bodyComponent) && (bodyComponent.Committed || !manualEntity.Comp.Commits))
         {
+            // Already on the path: the book at least reminds them how to forge, putting the core arts back on the bar.
+            EnsureCoreArts((userUid, bodyComponent));
             _noticeSystem.Notify(userUid, Loc.GetString("body-manual-known"));
             return;
         }

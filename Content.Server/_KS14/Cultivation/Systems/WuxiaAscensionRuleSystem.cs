@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Server.Chat.Systems;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
@@ -31,12 +32,19 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
 {
     private static readonly EntProtoId PathChoicePrototype = "KsPathChoice";
 
+    private static readonly EntProtoId QiContenderRole = "MindRoleKsAscensionQi";
+    private static readonly EntProtoId BodyContenderRole = "MindRoleKsAscensionBody";
+
+    [Dependency] private Content.Shared.Mind.SharedMindSystem _mindSystem = default!;
+    [Dependency] private Content.Shared.Roles.SharedRoleSystem _roleSystem = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private CultivationSystem _cultivationSystem = default!;
+    [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
 
     public override void Initialize()
     {
@@ -77,14 +85,14 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
             GivePathChoice(args.Mob);
     }
 
-    private void GivePathChoice(EntityUid uid)
+    public void GivePathChoice(EntityUid uid)
     {
         if (HasComp<CultivatorComponent>(uid) || TryComp<BodyCultivatorComponent>(uid, out var body) && body.Committed)
             return;
 
         var scroll = Spawn(PathChoicePrototype, Transform(uid).Coordinates);
         _handsSystem.PickupOrDrop(uid, scroll, checkActionBlocker: false);
-        _noticeSystem.Notify(uid, Loc.GetString("ascension-path-given"), PopupType.Large, alsoToChat: true);
+        _noticeSystem.Notify(uid, Loc.GetString(Active() ? "ascension-path-given" : "cultivator-path-given"), PopupType.Large, alsoToChat: true);
     }
 
     #region The path choice
@@ -94,25 +102,52 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         Choose(args.Actor, entity, args.Option);
     }
 
+    private static readonly ProtoId<CultivationLawPrototype>[] ElementLaws = { "KsMetal", "KsWood", "KsWater", "KsFire", "KsEarth" };
+
     /// <summary>
-    ///     Take a road: the scroll becomes that path's book (a qi law of the chosen element, or the Body Molding Art),
-    ///         ready in hand to be read. Reading it is what sets them on the path, as in any wuxia round.
+    ///     Take a road, at once: the path of qi awakens them (their element comes from a manual they find); the path of the body
+    ///         commits them to the Body Molding Art, ready to forge. No book is needed. In Ascension they also become
+    ///         a contender for the peak.
     /// </summary>
-    public EntityUid? Choose(EntityUid user, EntityUid scroll, CultivationPathOption option)
+    public bool Choose(EntityUid user, EntityUid scroll, CultivationPathOption option)
     {
         if (TerminatingOrDeleted(scroll) || HasComp<CultivatorComponent>(user)
             || TryComp<BodyCultivatorComponent>(user, out var existing) && existing.Committed)
-            return null;
+            return false;
 
         var body = option == CultivationPathOption.Body;
-        var book = Spawn(body ? CultivationLootSystem.BodyMoldingArt : CultivationLootSystem.QiManuals[(int) option],
-            Transform(user).Coordinates);
+        if (body)
+        {
+            var bodyComponent = EnsureComp<BodyCultivatorComponent>(user);
+            _bodySystem.Commit((user, bodyComponent));
+            _noticeSystem.Notify(user, Loc.GetString("body-manual-committed"), PopupType.Large, alsoToChat: true);
+        }
+        else
+        {
+            // Qi awakens; the element is theirs to find, in whichever manual turns up. (An element picked explicitly,
+            //     as an admin might, is still taught.)
+            EnsureComp<CultivatorComponent>(user);
+            _noticeSystem.Notify(user, Loc.GetString("ascension-chose-qi"), PopupType.Large, alsoToChat: true);
+            if (option != CultivationPathOption.Qi)
+                _cultivationSystem.TryLearnLaw(user, ElementLaws[(int) option]);
+        }
+
+        // In Ascension, everyone racing for the peak is an antagonist to everyone else.
+        if (Active() && _mindSystem.TryGetMind(user, out var mindId, out _) && !_roleSystem.MindHasRole<AscensionContenderRoleComponent>(mindId))
+            _roleSystem.MindAddRole(mindId, body ? BodyContenderRole : QiContenderRole);
+
         QueueDel(scroll);
-        _handsSystem.PickupOrDrop(user, book, checkActionBlocker: false);
         _visualsSystem.Wave(user, body ? FxColour.Earth : FxColour.Qi, big: true);
-        _noticeSystem.Notify(user, Loc.GetString(body ? "ascension-chose-body" : "ascension-chose-qi", ("book", book)),
-            PopupType.Medium, alsoToChat: true);
-        return book;
+        return true;
+    }
+
+    /// <summary>
+    ///     A cultivator antagonist chooses their own path with a Fork in the Road, rather than being handed a manual.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnCultivatorAntagSelected(Entity<Content.Server._KS14.Cultivation.CultivatorRuleComponent> entity, ref Content.Server.Antag.AfterAntagEntitySelectedEvent args)
+    {
+        GivePathChoice(args.EntityUid);
     }
 
     #endregion

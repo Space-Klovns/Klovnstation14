@@ -152,6 +152,13 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         if (!TryGetEntity(args.Action, out var actionUid) || !entity.Comp.Learned.Contains(actionUid.Value))
             return;
 
+        // A pinned action can't be put away: picking it just makes sure it's on the bar.
+        if (TryGetEntity(args.Action, out var pinnedUid) && entity.Comp.Pinned.Contains(pinnedUid.Value))
+        {
+            Pin(entity, pinnedUid.Value);
+            return;
+        }
+
         Prune(entity);
         if (entity.Comp.Equipped.Remove(actionUid.Value))
         {
@@ -174,10 +181,30 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
     /// <summary>
     ///     Forget techniques whose actions are gone (a forgotten law takes its techniques with it).
     /// </summary>
+    /// <summary>
+    ///     Keep an action on someone's bar for good, outside the slots, and list it in their Techniques menu. Puts it
+    ///         back on the bar if it isn't there.
+    /// </summary>
+    public void Pin(EntityUid uid, EntityUid actionUid)
+    {
+        if (!HasComp<ActionsComponent>(uid))
+            return;
+
+        var loadout = EnsureLoadout(uid);
+        if (!loadout.Comp.Pinned.Contains(actionUid))
+            loadout.Comp.Pinned.Add(actionUid);
+
+        if (!TryComp<ActionComponent>(actionUid, out var action) || action.AttachedEntity != uid)
+            _actionsSystem.AddActionDirect(uid, actionUid);
+
+        Dirty(loadout);
+    }
+
     private void Prune(Entity<CultivationLoadoutComponent> entity)
     {
         var removed = entity.Comp.Learned.RemoveAll(uid => TerminatingOrDeleted(uid))
-                      + entity.Comp.Equipped.RemoveAll(uid => TerminatingOrDeleted(uid));
+                      + entity.Comp.Equipped.RemoveAll(uid => TerminatingOrDeleted(uid))
+                      + entity.Comp.Pinned.RemoveAll(uid => TerminatingOrDeleted(uid));
         if (removed > 0)
             Dirty(entity);
     }

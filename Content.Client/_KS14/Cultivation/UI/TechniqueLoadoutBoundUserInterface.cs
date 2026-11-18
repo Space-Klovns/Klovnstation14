@@ -31,6 +31,21 @@ public sealed class TechniqueLoadoutBoundUserInterface(EntityUid owner, Enum uiK
             return;
 
         var buttons = new List<RadialMenuOptionBase>();
+        // Always-ready actions first (Forge the Body, the Tribulation of Flesh): picking one puts it back on the bar.
+        foreach (var actionUid in loadout.Pinned)
+        {
+            if (!EntMan.TryGetComponent<ActionComponent>(actionUid, out var pinnedAction))
+                continue;
+
+            var pinnedMeta = EntMan.GetComponent<MetaDataComponent>(actionUid);
+            buttons.Add(new RadialMenuActionOption<NetEntity>(Toggle, EntMan.GetNetEntity(actionUid))
+            {
+                IconSpecifier = RadialMenuIconSpecifier.With(pinnedAction.Icon),
+                ToolTip = Loc.GetString("cultivation-loadout-pinned", ("technique", pinnedMeta.EntityName), ("description", pinnedMeta.EntityDescription)),
+                BackgroundColor = Palettes.Gold.Element.WithAlpha(128),
+            });
+        }
+
         foreach (var actionUid in loadout.Learned)
         {
             if (!EntMan.TryGetComponent<ActionComponent>(actionUid, out var action))

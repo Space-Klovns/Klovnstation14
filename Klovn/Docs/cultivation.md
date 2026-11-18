@@ -74,8 +74,8 @@ Examining yourself in a wuxia round shows your exact face, title and rank, and t
 | Complete a sect mission | +3 to every member |
 | Crowned Martial Champion | +10 |
 | Pardoned by a ruler | reset to 0 if negative, then +3 |
-| Lose an honor duel | -2 |
-| Flee a duel / interfere in one | -5 |
+| Lose an honor duel, or walk away from it | -2 |
+| Interfere in a duel | -5 |
 | Sect plaque destroyed | -2 to every member |
 | Betray a sworn sibling | -10 |
 
@@ -140,7 +140,7 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
 - **Nine Yin Manual / Wumu Yishu** (`InheritanceManualComponent`): one reader each learns the Nine Yin White Bone Claw or
   the Command of the Wumu Yishu (`WumuFormationSystem`: faster, half stamina damage).
 
-**Swings** (`legendary_swings.yml`, `LegendarySystem.Swings`): Ganjiang and Moye cut fast with blue and crimson arcs, Moye from the other side so the pair's cuts cross; the Green Dragon Crescent Blade sweeps a slow, wide 150° crescent of jade; the Ruyi Jingu Bang drives golden thrusts and whirls through 200°. Each leaves a slash of its colour on what it hits.
+**Swings** (`legendary_swings.yml`, `LegendarySystem.Swings`): Ganjiang and Moye cut fast with blue and crimson arcs, Moye from the other side so the pair's cuts cross; the Green Dragon Crescent Blade sweeps a slow, wide 150° crescent of jade; the Ruyi Jingu Bang drives golden thrusts and sweeps a 100° arc. Each leaves a slash of its colour on what it hits.
 
 ## Heirs
 
@@ -229,8 +229,8 @@ smells the path, gu worms, jiangshi, a planted palm and the stained hands that s
   prompt: a challenger holding something is first asked whether to wager it, then the one challenged can accept,
   accept wagering what they hold, or refuse (unanswered challenges lapse after 20 seconds). Stakes wait in a
   container on their owner. The duel ends when a fighter is down, stamina-critical or three quarters of the way to
-  critical condition, yields, flees past 12 tiles, vanishes, or three minutes pass (a draw: nobody gains anything and both keep
-  their stakes). The winner gains 5 face and every stake; the loser loses 2, or 5 for fleeing. Winner and
+  critical condition, walks away past 12 tiles, vanishes, or three minutes pass (a draw: nobody gains anything and both keep
+  their stakes). The winner gains 5 face and every stake; the loser loses 2 (walking away concedes; there's no yield button). Winner and
   cultivators watching gain insight, at most every two minutes (a draw gives nobody anything). A third party who damages a duelist is disgraced for
   ten minutes and loses 5 face. `HonorDuelResolvingEvent` lets anything raise the face a win is worth;
   `HonorDuelFinishedEvent` reports the result. The Exploding Heart Palm can't be used in a duel.

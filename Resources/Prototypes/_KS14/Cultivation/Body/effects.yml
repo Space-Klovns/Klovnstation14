@@ -67,11 +67,12 @@
   name: flame
   components:
   - type: Sprite
-    sprite: Effects/fire.rsi
+    sprite: _KS14/Cultivation/flames_big.rsi
     drawdepth: Effects
     noRot: true
+    offset: 0, 0.25
     layers:
-    - state: 3
+    - state: flame_big
       shader: unshaded
   - type: PointLight
     color: "#ff7a1e"
@@ -92,11 +93,11 @@
   name: flame
   components:
   - type: Sprite
-    sprite: Effects/fire.rsi
+    sprite: _KS14/Cultivation/flames.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: 1
+    - state: flame_small
       shader: unshaded
   - type: PointLight
     color: "#ff9a3a"
@@ -117,10 +118,10 @@
   name: flame
   components:
   - type: Sprite
-    sprite: Effects/fire.rsi
+    sprite: _KS14/Cultivation/flames.rsi
     drawdepth: Effects
     layers:
-    - state: 2
+    - state: flame
       shader: unshaded
   - type: PointLight
     color: "#ff8a2a"
