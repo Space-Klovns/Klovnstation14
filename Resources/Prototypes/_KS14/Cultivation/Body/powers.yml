@@ -327,7 +327,12 @@
   level: 1
   name: body-power-eyes-clear-eyes-name
   description: body-power-eyes-clear-eyes-desc
-  healthBonus: 3
+  components:
+  - type: PhosphorNightVision
+    action: ActionTogglePhosphorNightVision
+    phosphorColor: "#ffe9c0"
+    lightingColor: "#FFFFFF20"
+    amplification: 40
 
 - type: bodyTemperingPower
   id: KsBodyEyesUnblinkingEyes
@@ -344,8 +349,13 @@
   level: 3
   name: body-power-eyes-hunter-s-sight-name
   description: body-power-eyes-hunter-s-sight-desc
-  damageMultipliers:
-    Piercing: 0.95
+  replaceComponents: true
+  components:
+  - type: PhosphorNightVision
+    action: ActionTogglePhosphorNightVision
+    phosphorColor: "#fff6e6"
+    lightingColor: "#FFFFFF38"
+    amplification: 160
 
 - type: bodyTemperingPower
   id: KsBodyEyesHealerSEyes
@@ -638,6 +648,9 @@
   description: body-power-liver-iron-liver-desc
   damageMultipliers:
     Poison: 0.9
+  components:
+  - type: LightweightDrunk
+    boozeStrengthMultiplier: 0.5
 
 - type: bodyTemperingPower
   id: KsBodyLiverToxinFilter
@@ -672,6 +685,10 @@
   name: body-power-liver-sober-mind-name
   description: body-power-liver-sober-mind-desc
   staminaMultiplier: 0.95
+  replaceComponents: true
+  components:
+  - type: LightweightDrunk
+    boozeStrengthMultiplier: 0.1
 
 - type: bodyTemperingPower
   id: KsBodyLiverToxinEater

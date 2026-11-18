@@ -351,7 +351,7 @@ The sprites are hand-placed pixel art fitted to the human body parts.
 
 ## Tests
 
-`Content.IntegrationTests/Tests/_KS14/Cultivation` covers the qi core, the techniques, the martial arts and armor,
+`Content.IntegrationTests/Tests/_KS14/Cultivation` keeps a core set: the qi core, the body path, realm power and the
 the body path, the Demonic Path, the jianghu, sects, sworn brotherhood, fighting styles and weapons, and `CultivationLocaleTest` checks every cultivation locale key resolves
 The Dugu counter, Eternal Heart,
 concealment, breakthrough and Demonic Path tests (scripture gate, taint, step counting, unsealing) and the duel tests have been checked

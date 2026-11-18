@@ -178,6 +178,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         GrantStageArts(entity);
         ScaleCooldowns(entity);
+        _loadoutSystem.RefreshSlots(entity);
     }
 
     [SubscribeLocalEvent]
@@ -187,7 +188,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
         foreach (var power in args.NewlyUnlocked)
         {
-            EntityManager.AddComponents(entity, power.Components, removeExisting: false);
+            EntityManager.AddComponents(entity, power.Components, removeExisting: power.ReplaceComponents);
             _noticeSystem.Notify(entity, Loc.GetString("body-power-unlocked",
                 ("power", Loc.GetString(power.Name)), ("description", Loc.GetString(power.Description))), type: PopupType.Medium, alsoToChat: true);
         }

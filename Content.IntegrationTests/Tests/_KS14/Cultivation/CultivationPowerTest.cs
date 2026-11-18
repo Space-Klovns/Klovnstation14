@@ -1,3 +1,4 @@
+#nullable enable
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
@@ -194,8 +195,31 @@ public sealed class CultivationPowerTest : GameTest
             {
                 Assert.That(loadout.Learned, Has.Count.GreaterThan(loadout.Slots), "A stage 9 body didn't learn more arts than fit on the bar.");
                 Assert.That(loadout.Equipped, Has.Count.EqualTo(loadout.Slots), "The bar isn't filled to its slots.");
+                Assert.That(loadout.Slots, Is.EqualTo(7), "A Primordial Chaos Body can't ready seven techniques.");
                 Assert.That(bar, Is.EqualTo(loadout.Slots), "More techniques sit on the bar than there are slots.");
             }
+        });
+    }
+
+    [Test]
+    public async Task TestTemperedEyesSeeInTheDark()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var bodySystem = SEntMan.System<SharedBodyCultivationSystem>();
+            var uid = SEntMan.SpawnEntity("KsTestPowerBody", MapCoordinatesNullspace());
+            var body = SEntMan.GetComponent<BodyCultivatorComponent>(uid);
+            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 1);
+            bodySystem.Recalculate((uid, body));
+            Assert.That(SEntMan.TryGetComponent<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(uid, out var clear), Is.True,
+                "Clear Eyes gave no night vision.");
+            Assert.That(clear!.ActionEntity, Is.Not.Null, "There's no button to turn the night vision on.");
+            var weak = clear.Amplification;
+
+            bodySystem.SetLevel((uid, body), BodyGroup.Eyes, 3);
+            bodySystem.Recalculate((uid, body));
+            Assert.That(SEntMan.GetComponent<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(uid).Amplification, Is.GreaterThan(weak),
+                "Hunter's Sight didn't sharpen the night vision.");
         });
     }
 

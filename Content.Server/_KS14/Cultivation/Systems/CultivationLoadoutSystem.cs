@@ -1,3 +1,5 @@
+using Content.Shared._KS14.Cultivation;
+using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
@@ -43,7 +45,54 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         if (loadout.MenuAction == null || TerminatingOrDeleted(loadout.MenuAction))
             loadout.MenuAction = _actionsSystem.AddAction(uid, MenuAction);
 
+        loadout.Slots = SlotsFor(uid);
         return (uid, loadout);
+    }
+
+    /// <summary>
+    ///     How many techniques someone can keep ready: five, six at Golden Core or the sixth body stage, seven at Nascent
+    ///         Soul or the ninth. Whichever path is further along counts.
+    /// </summary>
+    public int SlotsFor(EntityUid uid)
+    {
+        var slots = 5;
+        if (TryComp<CultivatorComponent>(uid, out var cultivator))
+            slots = Math.Max(slots, cultivator.Realm switch
+            {
+                CultivationRealm.NascentSoul => 7,
+                CultivationRealm.GoldenCore => 6,
+                _ => 5,
+            });
+
+        if (TryComp<BodyCultivatorComponent>(uid, out var body))
+            slots = Math.Max(slots, body.Stage >= BodyCultivatorComponent.MaxStage ? 7 : body.Stage >= 6 ? 6 : 5);
+
+        return slots;
+    }
+
+    /// <summary>
+    ///     Their realm or stage changed: they may have room for more techniques now. Anything waiting fills the new room.
+    /// </summary>
+    public void RefreshSlots(EntityUid uid)
+    {
+        if (!TryComp<CultivationLoadoutComponent>(uid, out var loadout))
+            return;
+
+        Prune((uid, loadout));
+        loadout.Slots = SlotsFor(uid);
+        foreach (var actionUid in loadout.Learned)
+        {
+            if (loadout.Equipped.Count >= loadout.Slots)
+                break;
+
+            if (loadout.Equipped.Contains(actionUid))
+                continue;
+
+            _actionsSystem.AddActionDirect(uid, actionUid);
+            loadout.Equipped.Add(actionUid);
+        }
+
+        Dirty(uid, loadout);
     }
 
     private void OnLearned(Entity<ActionsComponent> entity, ref CultivationTechniqueLearnedEvent args)

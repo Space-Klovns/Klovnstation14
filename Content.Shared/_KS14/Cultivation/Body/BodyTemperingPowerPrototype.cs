@@ -98,4 +98,11 @@ public sealed partial class BodyTemperingPowerPrototype : IPrototype
 
     [DataField]
     public ComponentRegistry Components = new();
+
+    /// <summary>
+    ///     Whether this power's components replace ones an earlier power already gave (a stronger night vision, say)
+    ///         instead of leaving them as they are.
+    /// </summary>
+    [DataField]
+    public bool ReplaceComponents;
 }

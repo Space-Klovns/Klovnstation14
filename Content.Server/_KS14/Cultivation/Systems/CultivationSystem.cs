@@ -640,6 +640,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
         var newRealm = entity.Comp.Realm + 1;
         _cultivationSystem.SetRealm(entity.AsNullable(), newRealm);
+        _loadoutSystem.RefreshSlots(entity);
         _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-30));
 
         _audioSystem.PlayPvs(BreakthroughSound, entity);

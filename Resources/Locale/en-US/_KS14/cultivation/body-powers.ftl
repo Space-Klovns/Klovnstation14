@@ -109,13 +109,13 @@ body-power-legs-thousand-league-legs-name = Thousand-League Legs
 body-power-legs-thousand-league-legs-desc = Nothing slows you down, and you're faster still.
 
 body-power-eyes-clear-eyes-name = Clear Eyes
-body-power-eyes-clear-eyes-desc = Your eyes are hard to hurt: +3 health.
+body-power-eyes-clear-eyes-desc = You see in the dark. Toggle it with the night vision button.
 
 body-power-eyes-unblinking-eyes-name = Unblinking Eyes
 body-power-eyes-unblinking-eyes-desc = Flashes can't blind you.
 
 body-power-eyes-hunter-s-sight-name = Hunter's Sight
-body-power-eyes-hunter-s-sight-desc = You read movement well: 5% less piercing damage.
+body-power-eyes-hunter-s-sight-desc = True night vision: darkness hides nothing from you.
 
 body-power-eyes-healer-s-eyes-name = Healer's Eyes
 body-power-eyes-healer-s-eyes-desc = You see how hurt people are at a glance.
@@ -217,7 +217,7 @@ body-power-lungs-breathless-body-name = Breathless Body
 body-power-lungs-breathless-body-desc = You no longer suffocate.
 
 body-power-liver-iron-liver-name = Iron Liver
-body-power-liver-iron-liver-desc = 10% less poison damage.
+body-power-liver-iron-liver-desc = You hold your drink (alcohol hits you half as hard) and take 10% less poison damage.
 
 body-power-liver-toxin-filter-name = Toxin Filter
 body-power-liver-toxin-filter-desc = 25% less poison damage.
@@ -229,7 +229,7 @@ body-power-liver-purifier-name = Purifier
 body-power-liver-purifier-desc = Half poison damage.
 
 body-power-liver-sober-mind-name = Sober Mind
-body-power-liver-sober-mind-desc = 5% less stamina damage.
+body-power-liver-sober-mind-desc = Drink barely touches you, and you take 5% less stamina damage.
 
 body-power-liver-toxin-eater-name = Toxin Eater
 body-power-liver-toxin-eater-desc = Three quarters less poison damage.
