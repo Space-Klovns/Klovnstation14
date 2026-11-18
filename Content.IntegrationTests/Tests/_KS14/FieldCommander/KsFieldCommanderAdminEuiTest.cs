@@ -91,6 +91,10 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
       tags: [ infantry, elite ]
       guaranteedEveryWaves: 3
       guaranteedOnPhaseEnter: true
+      standOff: 12
+      killPoints: 40
+      giveOrders: false
+      announcement: ks-fieldcommander-asset-sniper
     - entity: KsTestFcAdminEuiUnit
       disabled: true
     - entity: KsTestFcAdminEuiUnit
@@ -244,8 +248,25 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
                 Assert.That(asset.Tags, Is.EquivalentTo(new[] { "pod", "objective" }), "tags, trimmed, in place of the old ones");
             });
 
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(
+                StandOff: 30f, KillPoints: 25, GiveOrders: true, HumanoidName: "ks-fieldcommander-unit-name",
+                Announcement: "", Intel: " ks-fieldcommander-intel-sniper ")));
+            Assert.Multiple(() =>
+            {
+                Assert.That(asset.StandOff, Is.EqualTo(30f), "stand-off");
+                Assert.That(asset.KillPoints, Is.EqualTo(25), "kill points");
+                Assert.That(asset.GiveOrders, Is.True, "orders");
+                Assert.That(asset.HumanoidName, Is.EqualTo(new Robust.Shared.Localization.LocId("ks-fieldcommander-unit-name")), "humanoid name");
+                Assert.That(asset.Announcement, Is.Null, "a blank announcement clears it");
+                Assert.That(asset.Intel, Is.EqualTo(new Robust.Shared.Localization.LocId("ks-fieldcommander-intel-sniper")), "intel, trimmed");
+            });
+
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(KillPoints: -1)));
+            Assert.That(asset.KillPoints, Is.Null, "negative kill points go back to the cost's share");
+
             // Fields left out stay as they are.
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(GuaranteedOnPhaseEnter: true)));
+            Assert.That(asset.StandOff, Is.EqualTo(30f), "a stand-off left out is kept");
             Assert.That(asset.GuaranteedOnPhaseEnter, Is.True);
             Assert.That(asset.Tags, Has.Count.EqualTo(2), "tags left out are kept");
             Assert.That(asset.GuaranteedEveryWaves, Is.EqualTo(4));
@@ -295,6 +316,7 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             var asset = component.Assets[0];
             var (entity, cost, weight) = (asset.Entity, asset.Cost, asset.Weight);
             var tags = asset.Tags.ToList();
+            var (standOff, announcement) = (asset.StandOff, asset.Announcement);
             var phase = component.Phases[0];
             var (start, interval, budget) = (phase.Start, phase.WaveInterval, phase.Budget);
             var assets = component.Assets.Count;
@@ -310,6 +332,13 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Weight: float.PositiveInfinity)));
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Delivery: 200)));
             Handle(new KsFieldCommanderAdminEditPhaseMessage(RuleNetEntity, 0, null, null, float.NegativeInfinity));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, StandOff: float.NaN)));
+
+            // Locale ids with no string, each refusing the whole edit.
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, Announcement: "ks-test-no-such-string")));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, Intel: "ks-test-no-such-string")));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, HumanoidName: "ks-test-no-such-string")));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, HumanoidName: " ")));
 
             // Bad tags, each refusing the whole edit, the cost with them.
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(Cost: 9f, Tags: ["ok", " "])));
@@ -343,6 +372,8 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
                 Assert.That(asset.Entity, Is.EqualTo(entity), "an unknown prototype was taken");
                 Assert.That(asset.Cost, Is.EqualTo(cost), "a bad cost was taken");
                 Assert.That(asset.Weight, Is.EqualTo(weight), "a bad weight was taken");
+                Assert.That(asset.StandOff, Is.EqualTo(standOff), "a bad stand-off was taken");
+                Assert.That(asset.Announcement, Is.EqualTo(announcement), "an unknown locale id was taken");
                 Assert.That(asset.Tags, Is.EquivalentTo(tags), "bad tags were taken");
                 Assert.That(asset.Delivery, Is.EqualTo(KsFieldCommanderDelivery.Pod), "an undefined delivery was taken");
                 Assert.That(phase.Start, Is.EqualTo(start), "a start out of order was taken");
@@ -364,6 +395,11 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(asset.GuaranteedEveryWaves, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedGuaranteedEveryWaves));
             Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(GuaranteedEveryWaves: -5)));
             Assert.That(asset.GuaranteedEveryWaves, Is.Zero);
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(StandOff: 1e30f, KillPoints: int.MaxValue)));
+            Assert.That(asset.StandOff, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedStandOff));
+            Assert.That(asset.KillPoints, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedKillPoints));
+            Handle(new KsFieldCommanderAdminEditAssetMessage(RuleNetEntity, 0, new KsFieldCommanderAdminAssetValues(StandOff: -3f)));
+            Assert.That(asset.StandOff, Is.Zero);
             Handle(new KsFieldCommanderAdminEditPhaseMessage(RuleNetEntity, 1, null, System.TimeSpan.MaxValue, 1e30f));
             Assert.That(component.Phases[1].WaveInterval, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedTime));
             Assert.That(component.Phases[1].Budget, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedBudget));
@@ -439,6 +475,12 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
                     Assert.That(data.GuaranteedEveryWaves, Is.EqualTo(asset.GuaranteedEveryWaves));
                     Assert.That(data.GuaranteedOnPhaseEnter, Is.EqualTo(asset.GuaranteedOnPhaseEnter));
                     Assert.That(data.Disabled, Is.EqualTo(asset.Disabled));
+                    Assert.That(data.StandOff, Is.EqualTo(asset.StandOff));
+                    Assert.That(data.KillPoints, Is.EqualTo(asset.KillPoints));
+                    Assert.That(data.GiveOrders, Is.EqualTo(asset.GiveOrders));
+                    Assert.That(data.HumanoidName, Is.EqualTo(asset.HumanoidName.Id));
+                    Assert.That(data.Announcement, Is.EqualTo(asset.Announcement?.Id));
+                    Assert.That(data.Intel, Is.EqualTo(asset.Intel?.Id));
                     Assert.That(data.Living, Is.Zero);
                 });
             }
@@ -447,6 +489,10 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(state.Assets[0].Tags, Is.Not.Empty);
             Assert.That(state.Assets[0].GuaranteedOnPhaseEnter, Is.True);
             Assert.That(state.Assets[1].Disabled, Is.True);
+            Assert.That(state.Assets[0].StandOff, Is.Not.Zero);
+            Assert.That(state.Assets[0].KillPoints, Is.Not.Null);
+            Assert.That(state.Assets[0].GiveOrders, Is.False);
+            Assert.That(state.Assets[0].Announcement, Is.Not.Null);
             Assert.That(state.MaxCost, Is.EqualTo(KsFieldCommanderRuleSystem.MaxEditedCost));
         });
 

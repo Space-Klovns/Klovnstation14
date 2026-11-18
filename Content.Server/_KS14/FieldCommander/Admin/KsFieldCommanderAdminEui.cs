@@ -69,6 +69,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
             MaxWeight = KsFieldCommanderRuleSystem.MaxEditedWeight,
             MaxCount = KsFieldCommanderRuleSystem.MaxEditedCount,
             MaxTime = KsFieldCommanderRuleSystem.MaxEditedTime,
+            MaxStandOff = KsFieldCommanderRuleSystem.MaxEditedStandOff,
             MaxQueuedPurchases = KsFieldCommanderRuleSystem.MaxQueuedPurchases,
             MaxAnnouncementLength = KsFieldCommanderRuleSystem.MaxQueuedAnnouncementLength,
         };
@@ -110,6 +111,12 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
                 GuaranteedEveryWaves = asset.GuaranteedEveryWaves,
                 GuaranteedOnPhaseEnter = asset.GuaranteedOnPhaseEnter,
                 Disabled = asset.Disabled,
+                StandOff = asset.StandOff,
+                KillPoints = asset.KillPoints,
+                GiveOrders = asset.GiveOrders,
+                HumanoidName = asset.HumanoidName,
+                Announcement = asset.Announcement,
+                Intel = asset.Intel,
                 Living = living.GetValueOrDefault(i),
             });
         }
@@ -197,10 +204,10 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
                 return _ruleSystem.TryEditPhase(commander, editPhase.Phase, editPhase.Start, editPhase.WaveInterval, editPhase.Budget);
 
             case KsFieldCommanderAdminEditAssetMessage editAsset:
-                return _ruleSystem.TryEditAsset(commander, editAsset.Asset, ToEdit(editAsset.Values), ToSchedule(editAsset.Values));
+                return _ruleSystem.TryEditAsset(commander, editAsset.Asset, ToEdit(editAsset.Values), ToSchedule(editAsset.Values), ToDetails(editAsset.Values));
 
             case KsFieldCommanderAdminAddAssetMessage addAsset:
-                return _ruleSystem.TryAddAsset(commander, ToEdit(addAsset.Values), ToSchedule(addAsset.Values)) >= 0;
+                return _ruleSystem.TryAddAsset(commander, ToEdit(addAsset.Values), ToSchedule(addAsset.Values), ToDetails(addAsset.Values)) >= 0;
 
             case KsFieldCommanderAdminSetAssetDisabledMessage setDisabled:
                 return _ruleSystem.TrySetAssetDisabled(commander, setDisabled.Asset, setDisabled.Disabled);
@@ -238,6 +245,11 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
         return new KsFieldCommanderAssetScheduleEdit(values.GuaranteedEveryWaves, values.GuaranteedOnPhaseEnter, values.Tags);
     }
 
+    private static KsFieldCommanderAssetDetailsEdit ToDetails(KsFieldCommanderAdminAssetValues values)
+    {
+        return new KsFieldCommanderAssetDetailsEdit(values.StandOff, values.KillPoints, values.GiveOrders, values.HumanoidName, values.Announcement, values.Intel);
+    }
+
     /// <summary>
     ///     What a message asks for, for the admin log: everything it carries, the announcement's text included.
     /// </summary>
@@ -264,7 +276,9 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
         return $"entity {values.Entity ?? "-"}, humanoid {values.Humanoid ?? "-"}, count {values.Count?.ToString() ?? "-"}, cost {values.Cost?.ToString() ?? "-"}, " +
                $"weight {values.Weight?.ToString() ?? "-"}, min phase {values.MinPhase?.ToString() ?? "-"}, max alive {values.MaxAlive?.ToString() ?? "-"}, " +
                $"delivery {values.Delivery?.ToString() ?? "-"}, guaranteed every {values.GuaranteedEveryWaves?.ToString() ?? "-"} waves, " +
-               $"on phase start {values.GuaranteedOnPhaseEnter?.ToString() ?? "-"}, tags {(values.Tags is { } tags ? "[" + string.Join(", ", tags) + "]" : "-")}";
+               $"on phase start {values.GuaranteedOnPhaseEnter?.ToString() ?? "-"}, tags {(values.Tags is { } tags ? "[" + string.Join(", ", tags) + "]" : "-")}, " +
+               $"stand-off {values.StandOff?.ToString() ?? "-"}, kill points {values.KillPoints?.ToString() ?? "-"}, orders {values.GiveOrders?.ToString() ?? "-"}, " +
+               $"name {values.HumanoidName ?? "-"}, announcement {values.Announcement ?? "-"}, intel {values.Intel ?? "-"}";
     }
 
     /// <summary>

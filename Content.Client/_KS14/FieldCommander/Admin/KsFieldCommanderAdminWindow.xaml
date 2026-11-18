@@ -2,7 +2,7 @@
     xmlns="https://spacestation14.io"
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
     Title="{Loc ks-fieldcommander-admin-title}"
-    SetSize="1250 620"
+    SetSize="1400 620"
     MinSize="760 420">
     <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
         <Label Name="NoRuleLabel" Text="{Loc ks-fieldcommander-admin-no-rule}" Visible="False" />
@@ -36,7 +36,7 @@
             <!-- Assets -->
             <BoxContainer Orientation="Vertical" SeparationOverride="6">
                 <ScrollContainer HScrollEnabled="True" VerticalExpand="True">
-                    <GridContainer Name="AssetsGrid" Columns="14" HSeparationOverride="4" VSeparationOverride="4" Margin="4" />
+                    <GridContainer Name="AssetsGrid" Columns="20" HSeparationOverride="4" VSeparationOverride="4" Margin="4" />
                 </ScrollContainer>
                 <BoxContainer Orientation="Horizontal" SeparationOverride="6" Margin="4">
                     <LineEdit Name="AddAssetEntity" MinWidth="260" PlaceHolder="{Loc ks-fieldcommander-admin-asset-add-placeholder}" />

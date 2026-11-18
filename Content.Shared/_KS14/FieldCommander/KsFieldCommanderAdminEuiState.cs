@@ -58,6 +58,18 @@ public sealed class KsFieldCommanderAdminAssetData
     public bool GuaranteedOnPhaseEnter;
     public bool Disabled;
 
+    public float StandOff;
+
+    /// <summary>
+    ///     Its own points for a kill, or null for the cost's share.
+    /// </summary>
+    public int? KillPoints;
+
+    public bool GiveOrders;
+    public string HumanoidName = string.Empty;
+    public string? Announcement;
+    public string? Intel;
+
     /// <summary>
     ///     How many units bought as this are alive now.
     /// </summary>
@@ -105,6 +117,7 @@ public sealed class KsFieldCommanderAdminEuiState : EuiStateBase
     public float MaxWeight;
     public int MaxCount;
     public int MaxAliveLimit;
+    public float MaxStandOff;
     public TimeSpan MaxTime;
     public int MaxQueuedPurchases;
     public int MaxAnnouncementLength;
@@ -185,7 +198,13 @@ public readonly record struct KsFieldCommanderAdminAssetValues(
     byte? Delivery = null,
     int? GuaranteedEveryWaves = null,
     bool? GuaranteedOnPhaseEnter = null,
-    List<string>? Tags = null);
+    List<string>? Tags = null,
+    float? StandOff = null,
+    int? KillPoints = null,
+    bool? GiveOrders = null,
+    string? HumanoidName = null,
+    string? Announcement = null,
+    string? Intel = null);
 
 [Serializable, NetSerializable]
 public sealed class KsFieldCommanderAdminEditAssetMessage(NetEntity rule, int asset, KsFieldCommanderAdminAssetValues values)

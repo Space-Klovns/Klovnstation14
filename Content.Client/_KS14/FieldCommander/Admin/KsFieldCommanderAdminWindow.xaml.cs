@@ -230,7 +230,7 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
 
         _assetRows.Clear();
         AssetsGrid.RemoveAllChildren();
-        foreach (var header in new[] { "index", "entity", "humanoid", "count", "cost", "weight", "min-phase", "max-alive", "delivery", "living", "tags", "every", "on-phase", "actions" })
+        foreach (var header in new[] { "index", "entity", "humanoid", "count", "cost", "weight", "min-phase", "max-alive", "delivery", "living", "tags", "every", "on-phase", "name", "stand-off", "kill-points", "orders", "announcement", "intel", "actions" })
             AssetsGrid.AddChild(Header($"ks-fieldcommander-admin-asset-header-{header}"));
     }
 
@@ -506,7 +506,15 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
         private readonly EditField _tags = new(130);
         private readonly EditField _every = new(45);
         private readonly CheckBox _onPhase = new() { HorizontalAlignment = HAlignment.Center };
+        private readonly EditField _humanoidName = new(200);
+        private readonly EditField _standOff = new(45);
+        private readonly EditField _killPoints = new(55);
+        private readonly CheckBox _giveOrders = new() { HorizontalAlignment = HAlignment.Center };
+        private readonly EditField _announcement = new(200);
+        private readonly EditField _intel = new(200);
         private readonly Button _toggle = new();
+        private bool _serverGiveOrders;
+        private bool _takeGiveOrders = true;
         private byte _serverDelivery;
         private bool _takeDelivery = true;
         private bool _serverOnPhase;
@@ -550,9 +558,18 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             grid.AddChild(_tags.Edit);
             grid.AddChild(_every.Edit);
             grid.AddChild(_onPhase);
+            grid.AddChild(_humanoidName.Edit);
+            grid.AddChild(_standOff.Edit);
+            grid.AddChild(_killPoints.Edit);
+            grid.AddChild(_giveOrders);
+            grid.AddChild(_announcement.Edit);
+            grid.AddChild(_intel.Edit);
             grid.AddChild(actions);
 
             _tags.Edit.PlaceHolder = Loc.GetString("ks-fieldcommander-admin-asset-tags-placeholder");
+            _killPoints.Edit.PlaceHolder = Loc.GetString("ks-fieldcommander-admin-asset-kill-points-placeholder");
+            _announcement.Edit.PlaceHolder = Loc.GetString("ks-fieldcommander-admin-asset-locid-placeholder");
+            _intel.Edit.PlaceHolder = Loc.GetString("ks-fieldcommander-admin-asset-locid-placeholder");
         }
 
         public void Update(KsFieldCommanderAdminAssetData asset, KsFieldCommanderAdminEuiState state)
@@ -581,6 +598,18 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             _serverOnPhase = asset.GuaranteedOnPhaseEnter;
             _takeOnPhase = false;
 
+            _humanoidName.SetServer(asset.HumanoidName);
+            _standOff.SetServer(Format(asset.StandOff));
+            _killPoints.SetServer(asset.KillPoints?.ToString() ?? string.Empty);
+            _announcement.SetServer(asset.Announcement ?? string.Empty);
+            _intel.SetServer(asset.Intel ?? string.Empty);
+
+            if (_takeGiveOrders || _giveOrders.Pressed == _serverGiveOrders)
+                _giveOrders.Pressed = asset.GiveOrders;
+
+            _serverGiveOrders = asset.GiveOrders;
+            _takeGiveOrders = false;
+
             _disabled = asset.Disabled;
             _toggle.Text = Loc.GetString(asset.Disabled ? "ks-fieldcommander-admin-asset-enable" : "ks-fieldcommander-admin-asset-disable");
             _indexLabel.FontColorOverride = asset.Disabled ? Color.Gray : null;
@@ -590,9 +619,26 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
         private void Apply()
         {
             int? count = null, minPhase = null, maxAlive = null, every = null;
-            float? cost = null, weight = null;
+            float? cost = null, weight = null, standOff = null;
 
-            if (!TryInt(_every, ref every) ||
+            // Blank is none of its own: the server clears it.
+            int? killPoints = null;
+            if (_killPoints.Edited)
+            {
+                var killPointsText = _killPoints.Text.Trim();
+                if (killPointsText.Length == 0)
+                    killPoints = -1;
+                else if (int.TryParse(killPointsText, out var parsedKillPoints) && parsedKillPoints >= 0)
+                    killPoints = parsedKillPoints;
+                else
+                {
+                    _window.ShowInvalid();
+                    return;
+                }
+            }
+
+            if (!TryFloat(_standOff, ref standOff) ||
+                !TryInt(_every, ref every) ||
                 !TryInt(_count, ref count) ||
                 !TryInt(_minPhase, ref minPhase) ||
                 !TryInt(_maxAlive, ref maxAlive) ||
@@ -619,12 +665,25 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
             byte? delivery = _delivery.SelectedId != _serverDelivery ? (byte)_delivery.SelectedId : null;
             bool? onPhase = _onPhase.Pressed != _serverOnPhase ? _onPhase.Pressed : null;
             var tags = _tags.Edited ? ParseTags(_tags.Text) : null;
+            bool? giveOrders = _giveOrders.Pressed != _serverGiveOrders ? _giveOrders.Pressed : null;
 
-            foreach (var field in new[] { _entity, _humanoid, _count, _cost, _weight, _minPhase, _maxAlive, _tags, _every })
+            // A name has to be something; an announcement or intel line left blank is cleared.
+            string? humanoidName = _humanoidName.Edited ? _humanoidName.Text.Trim() : null;
+            if (humanoidName is { Length: 0 })
+            {
+                _window.ShowInvalid();
+                return;
+            }
+
+            string? announcement = _announcement.Edited ? _announcement.Text.Trim() : null;
+            string? intel = _intel.Edited ? _intel.Text.Trim() : null;
+
+            foreach (var field in new[] { _entity, _humanoid, _count, _cost, _weight, _minPhase, _maxAlive, _tags, _every, _humanoidName, _standOff, _killPoints, _announcement, _intel })
                 field.Sent();
 
             _takeDelivery = true;
             _takeOnPhase = true;
+            _takeGiveOrders = true;
 
             var values = new KsFieldCommanderAdminAssetValues(
                 Entity: string.IsNullOrEmpty(entity) ? null : entity,
@@ -637,7 +696,13 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
                 Delivery: delivery,
                 GuaranteedEveryWaves: every,
                 GuaranteedOnPhaseEnter: onPhase,
-                Tags: tags);
+                Tags: tags,
+                StandOff: standOff,
+                KillPoints: killPoints,
+                GiveOrders: giveOrders,
+                HumanoidName: humanoidName,
+                Announcement: announcement,
+                Intel: intel);
 
             _window.Send(rule => new KsFieldCommanderAdminEditAssetMessage(rule, _index, values));
         }
