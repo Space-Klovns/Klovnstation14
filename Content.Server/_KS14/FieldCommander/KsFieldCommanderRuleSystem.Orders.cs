@@ -21,7 +21,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         {
             if (unitComponent.RuleUid != rule.Owner ||
                 !unitComponent.GiveOrders ||
-                !IsUnitAlive(unitUid))
+                !IsUnitAlive((unitUid, unitComponent)))
                 continue;
 
             // Sent somewhere else for being stuck (see .Stuck): it keeps that order until it gets somewhere, rather
@@ -36,12 +36,15 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Whether a unit still counts: one with no mob state (a borg, a drone) for as long as it exists, any other
-    ///         until it dies.
+    ///     Whether a unit still counts: one with no mob state (a borg, a drone) until it is destroyed, any other until
+    ///         it dies.
     /// </summary>
-    private bool IsUnitAlive(EntityUid unitUid)
+    private bool IsUnitAlive(Entity<KsFieldCommanderUnitComponent> unit)
     {
-        return !_mobStateQuery.TryComp(unitUid, out var mobStateComponent) ||
+        if (unit.Comp.Killed)
+            return false;
+
+        return !_mobStateQuery.TryComp(unit, out var mobStateComponent) ||
                mobStateComponent.CurrentState != MobState.Dead;
     }
 

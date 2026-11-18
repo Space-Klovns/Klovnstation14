@@ -26,6 +26,13 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     [ViewVariables]
     public bool GiveOrders = true;
 
+    /// <summary>
+    ///     Whether its kill has been counted and paid: by dying, or by being destroyed, whichever came first. A unit
+    ///         brought back to life is a new kill again.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool Killed;
+
     #region Stuck
 
     /// <summary>

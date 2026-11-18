@@ -62,7 +62,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent>();
         while (query.MoveNext(out var unitUid, out var unitComponent))
         {
-            if (unitComponent.RuleUid == rule.Owner && IsUnitAlive(unitUid))
+            if (unitComponent.RuleUid == rule.Owner && IsUnitAlive((unitUid, unitComponent)))
                 _stuckCheckUnits.Add((unitUid, unitComponent));
         }
 
@@ -357,7 +357,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         {
             if (unitComponent.RuleUid == ruleUid &&
                 unitComponent.StuckStage != KsFieldCommanderStuckStage.None &&
-                IsUnitAlive(unitUid))
+                IsUnitAlive((unitUid, unitComponent)))
                 count++;
         }
 
@@ -378,7 +378,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             // The dead are not checked, and lie where they fell.
             if (unitComponent.RuleUid == ruleUid &&
                 curTime - unitComponent.LastProgressTime >= minimum &&
-                IsUnitAlive(unitUid))
+                IsUnitAlive((unitUid, unitComponent)))
                 units.Add((unitUid, unitComponent));
         }
 

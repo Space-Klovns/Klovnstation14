@@ -15,7 +15,6 @@ using Content.Shared._KS14.Scenario.Components;
 using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Maps;
-using Content.Shared.Mobs;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
@@ -242,17 +241,6 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         if (phase.DeployUplink)
             DeployUplink(rule, phase, curTime);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnUnitMobStateChanged(Entity<KsFieldCommanderUnitComponent> entity, ref MobStateChangedEvent args)
-    {
-        if (args.NewMobState != MobState.Dead ||
-            !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
-            return;
-
-        ruleComponent.UnitsKilled++;
-        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity);
     }
 
     [SubscribeLocalEvent]

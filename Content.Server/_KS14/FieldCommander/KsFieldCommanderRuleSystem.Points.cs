@@ -253,8 +253,9 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///     Keeps count of who damaged a unit, for <see cref="RewardUnitKill"/> to split the kill by.
     /// </summary>
     // DamageChangedEvent is a by-value class event, so the engine can't give this an Entity<T>.
-    // Before the thresholds system, whose handler is what kills the unit: the last shot has to be counted by then.
-    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
+    // Before the thresholds and destructible systems, whose handlers are what kill or destroy the unit: the last shot
+    //      has to be counted by then.
+    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem), typeof(Content.Server.Destructible.DestructibleSystem)])]
     private void OnUnitDamageChanged(EntityUid unitUid, KsFieldCommanderUnitComponent unitComponent, DamageChangedEvent args)
     {
         // A unit being shot at is in a fight, not stuck (see .Stuck).
@@ -270,8 +271,9 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///         to work a teamkill out from. Healed back to full, the slate is wiped: old friendly fire isn't charged to
     ///         a later death.
     /// </summary>
-    // By-value class event again, and ordered like OnUnitDamageChanged.
-    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
+    // By-value class event again, and ordered like OnUnitDamageChanged, as every subscription of one system to one
+    //      event must be.
+    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem), typeof(Content.Server.Destructible.DestructibleSystem)])]
     private void OnDefenderDamageChanged(EntityUid defenderUid, ScenarioFactionMemberComponent factionMemberComponent, DamageChangedEvent args)
     {
         // Every hit on every member of every faction comes through here, so the cheap answers come first: only

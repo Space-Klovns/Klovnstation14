@@ -185,7 +185,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         while (query.MoveNext(out var unitUid, out var unitComponent))
         {
             if (unitComponent.RuleUid != ruleUid ||
-                !IsUnitAlive(unitUid))
+                !IsUnitAlive((unitUid, unitComponent)))
                 continue;
 
             count++;
