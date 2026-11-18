@@ -75,6 +75,20 @@
     sprite: _KS14/Interface/Perks/perks.rsi
     state: healing
   alert: KsPerkHealing
+  components:
+  - type: KsMetabolismRateAbility
+    rateMultiplier: 1.5
+  # The medical HUD, built in.
+  - type: ShowHealthBars
+    damageContainers:
+    - Biological
+  - type: ShowHealthIcons
+    damageContainers:
+    - Biological
+  # A rifle round (20) gives back 4.
+  - type: KsLifestealAbility
+    fraction: 0.2
+  - type: KsNoBleedingAbility
 
 - type: ksPerk
   id: KsPerkSupport
