@@ -111,9 +111,27 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
     /// </summary>
     public bool Choose(EntityUid user, EntityUid scroll, CultivationPathOption option)
     {
-        if (TerminatingOrDeleted(scroll) || HasComp<CultivatorComponent>(user)
+        if (TerminatingOrDeleted(scroll) || !ApplyPath(user, option))
+            return false;
+
+        QueueDel(scroll);
+        return true;
+    }
+
+    /// <summary>
+    ///     Set someone on a path directly, as the Fork in the Road would (admins use this). Any Fork they still hold goes.
+    /// </summary>
+    public bool ApplyPath(EntityUid user, CultivationPathOption option)
+    {
+        if (HasComp<CultivatorComponent>(user)
             || TryComp<BodyCultivatorComponent>(user, out var existing) && existing.Committed)
             return false;
+
+        foreach (var held in _handsSystem.EnumerateHeld(user))
+        {
+            if (HasComp<PathChoiceComponent>(held))
+                QueueDel(held);
+        }
 
         var body = option == CultivationPathOption.Body;
         if (body)
@@ -136,7 +154,6 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         if (Active() && _mindSystem.TryGetMind(user, out var mindId, out _) && !_roleSystem.MindHasRole<AscensionContenderRoleComponent>(mindId))
             _roleSystem.MindAddRole(mindId, body ? BodyContenderRole : QiContenderRole);
 
-        QueueDel(scroll);
         _visualsSystem.Wave(user, body ? FxColour.Earth : FxColour.Qi, big: true);
         return true;
     }

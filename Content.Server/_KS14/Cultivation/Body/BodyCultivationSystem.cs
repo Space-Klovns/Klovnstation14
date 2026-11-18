@@ -140,7 +140,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (currentTime >= entity.Comp.NextPassiveTempering)
         {
             _bodySystem.SetNextPassiveTempering(entity.Comp, currentTime + PassiveTemperingInterval);
-            _bodySystem.AddTempering(entity.AsNullable(), 1f);
+            // Counted as training, so the same company and gamemode bonuses that speed up fighting speed this up too.
+            _bodySystem.AddTempering(entity.AsNullable(), 1f, "living", PassiveTemperingInterval);
         }
 
         if (entity.Comp.RegenPerSecond > 0f)

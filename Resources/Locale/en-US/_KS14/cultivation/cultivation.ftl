@@ -20,7 +20,7 @@ cultivation-examine-aura = [color=#5cba96]The air around {OBJECT($target)} feels
 ## Alerts
 
 alerts-ks-qi-name = Qi
-alerts-ks-qi-desc = The qi gathered in your dantian. Techniques spend it; it slowly returns, faster in meditation or near a place where heaven and earth's qi pools.
+alerts-ks-qi-desc = The qi gathered in your dantian. Techniques spend it; it slowly returns, faster in meditation or near a place where heaven and earth's qi pools.  Examine yourself to see your realm and how much insight you need to break through.
 alerts-ks-internal-injury-name = Internal Injury
 alerts-ks-internal-injury-desc = Heavy blows have bruised your meridians. Qi returns slower, spending it may twist them further, and breakthroughs are far riskier. Meditate to heal.
 
@@ -92,3 +92,5 @@ heart-demon-shatters = The heart demon shatters like a broken mirror!
 heart-demon-defeated = You faced your own doubts and won. Your Dao heart is tempered: your next breakthrough will be steadier.
 heart-demon-not-yours = The demon is gone, but you weren't there to face it. Your doubts remain.
 heart-demon-returns = {CAPITALIZE(THE($host))}'s heart demon climbs back inside {OBJECT($host)}!
+cultivation-self = [color=#9fd4b8]Cultivation:[/color] {$realm}. Qi {$qi}/{$maxQi}. Insight {$insight}/{$required} to break through.
+cultivation-self-peak = [color=#9fd4b8]Cultivation:[/color] {$realm}, the peak. Qi {$qi}/{$maxQi}.

@@ -339,6 +339,17 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnExamined(Entity<CultivatorComponent> entity, ref ExaminedEvent args)
     {
+        // Looking yourself over: realm, qi, and how far you are from breaking through.
+        if (args.Examiner == entity.Owner)
+        {
+            var required = GetInsightRequired(entity.Comp);
+            args.PushMarkup(Loc.GetString(required == null ? "cultivation-self-peak" : "cultivation-self",
+                ("realm", Loc.GetString($"cultivation-realm-{entity.Comp.Realm}")),
+                ("qi", (int) entity.Comp.Qi), ("maxQi", (int) GetMaxQi(entity.Comp)),
+                ("insight", (int) entity.Comp.Insight), ("required", (int) (required ?? 0f))));
+            return;
+        }
+
         // Anyone can feel the pressure of a Golden Core; below that, or concealed, a cultivator passes for a mortal.
         if (entity.Comp.Realm < CultivationRealm.GoldenCore || HasComp<CultivationConcealedComponent>(entity))
             return;

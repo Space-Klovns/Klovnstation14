@@ -17,6 +17,7 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_forge }
   - type: InstantAction
     event: !type:BodyForgeActionEvent
+  - type: AlwaysOnBar
 
 - type: entity
   parent: BaseActionBodyArt
@@ -29,6 +30,7 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_tribulation }
   - type: InstantAction
     event: !type:BodyTribulationActionEvent
+  - type: AlwaysOnBar
 
 - type: entity
   parent: BaseActionBodyArt

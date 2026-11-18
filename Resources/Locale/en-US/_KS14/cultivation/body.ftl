@@ -100,6 +100,9 @@ body-art-vajra = Vajra Golden Body
 body-art-vajra-on = {CAPITALIZE(THE($user))}'s skin turns to temple gold!
 body-art-heaven-quake = Heaven-Shaking Quake
 body-art-primordial-roar = Primordial Roar
-body-cultivation-self = [color=#d8b46a]Body Molding Art:[/color] {$stage}, {$tempering} tempering banked. Your powers:
+body-cultivation-self = [color=#d8b46a]Body Molding Art:[/color] {$stage}, {$tempering} tempering banked, {$count} powers unlocked (see the button below).
 body-cultivation-self-power = • [bold]{$power}:[/bold] {$description}
 body-stage-none = not yet through the first stage
+body-powers-examine-header = [bold]Your body's powers[/bold]
+body-powers-examine-verb = Body powers
+body-powers-examine-verb-message = See every power your tempered body has unlocked.
