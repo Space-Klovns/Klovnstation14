@@ -72,6 +72,20 @@
       reinforcementPod: KsFieldCommanderReinforcementsHeavy
       deployUplink: true
       uplinkGuardBudget: 9
+  # Dead defenders come back together, as reinforcements, in the last 30 seconds before each wave.
+  - type: KsFieldCommanderRespawnWindow
+    window: 30
+
+# Ghost respawning for a field commander round, whatever the server's cvars say. Respawns are still held to the
+#     commander rule's respawn window.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderGhostRespawn
+  components:
+  - type: KsGhostRespawnOverrideRule
+    enabled: true
+    cooldown: 60
+    penalty: 30
 
 # The scenario rule for a field commander round: the commander's side never runs out of members, and holds an
 #     objective (its uplink) from the start, even before it lands.

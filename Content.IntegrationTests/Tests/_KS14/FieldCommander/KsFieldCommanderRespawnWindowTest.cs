@@ -1,0 +1,161 @@
+#nullable enable
+using System;
+using System.Threading.Tasks;
+using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Server._KS14.FieldCommander;
+using Content.Server.GameTicking;
+using Content.Shared._KS14.CCVar;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.Mind;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
+using NUnit.Framework;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.UnitTesting.Pool;
+using ClientGhostRespawnSystem = Content.Client._KS14.GhostRespawn.GhostRespawnSystem;
+using ServerGhostRespawnSystem = Content.Server._KS14.GhostRespawn.GhostRespawnSystem;
+
+namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
+
+/// <summary>
+///     A field commander rule with a respawn window lets dead defenders respawn only shortly before the next wave,
+///         and tells their ghosts when that is.
+/// </summary>
+[TestFixture]
+[TestOf(typeof(KsFieldCommanderRespawnWindowComponent))]
+public sealed class KsFieldCommanderRespawnWindowTest : GameTest
+{
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
+
+    // Ids that exist only in the test prototypes below.
+    private readonly EntProtoId _commanderRule = "KsTestFieldCommanderRespawnWindowRule";
+    private readonly EntProtoId _mob = "KsTestFieldCommanderRespawnWindowMob";
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsTestFieldCommanderRespawnWindowMob
+  components:
+  - type: MindContainer
+  - type: MobState
+
+- type: entity
+  parent: BaseGameRule
+  id: KsTestFieldCommanderRespawnWindowRule
+  components:
+  - type: KsFieldCommanderRule
+    uplinkPrototype: null
+    phases:
+    # The next wave well after the window.
+    - name: ks-fieldcommander-phase-probing
+      start: 0
+      waveInterval: 1000
+      firstWaveDelay: 600
+    # The next wave inside it.
+    - name: ks-fieldcommander-phase-pressure
+      start: 1
+      waveInterval: 1000
+      firstWaveDelay: 10
+    # The next wave just past it, so the window opens a moment later.
+    - name: ks-fieldcommander-phase-siege
+      start: 2
+      waveInterval: 1000
+      firstWaveDelay: 32
+  - type: KsFieldCommanderRespawnWindow
+    window: 30
+";
+
+    [Test]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnEnabled), true)]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnAlwaysStartTimer), false)]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnCooldownSeconds), 0f)]
+    public async Task RespawnIsAllowedOnlyInTheWindowBeforeTheNextWave()
+    {
+        var serverRespawn = SEntMan.System<ServerGhostRespawnSystem>();
+        var clientRespawn = CEntMan.System<ClientGhostRespawnSystem>();
+        var ruleSystem = SEntMan.System<KsFieldCommanderRuleSystem>();
+        var ticker = SEntMan.System<GameTicker>();
+
+        // A dead defender, waiting to respawn.
+        EntityUid mob = default;
+        await Server.WaitPost(() =>
+        {
+            mob = SEntMan.SpawnEntity(_mob, MapCoordinates.Nullspace);
+            var mobStateSystem = SEntMan.System<MobStateSystem>();
+            mobStateSystem.ChangeMobState(mob, MobState.Alive);
+            var mindSystem = SEntMan.System<SharedMindSystem>();
+            mindSystem.TransferTo(mindSystem.CreateMind(ServerSession!.UserId), mob);
+        });
+        await Pair.RunTicksSync(3);
+        await Server.WaitPost(() => SEntMan.System<MobStateSystem>().ChangeMobState(mob, MobState.Dead));
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() => Assert.That(serverRespawn.GetGate(ServerSession!), Is.Null, "precondition: nothing holds it back without the rule"));
+
+        EntityUid ruleUid = default;
+        await Server.WaitPost(() => Assert.That(ticker.StartGameRule(_commanderRule, out ruleUid), Is.True));
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            var gate = serverRespawn.GetGate(ServerSession!);
+            Assert.That(gate, Is.Not.Null, "no wave scheduled yet, so refused");
+            Assert.That(gate!.Value.OpensAt, Is.Null, "with no time to give");
+        });
+
+        TimeSpan windowOpens = default;
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var windowComponent = SEntMan.GetComponent<KsFieldCommanderRespawnWindowComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, SEntMan.GetComponent<GameRuleComponent>(ruleUid)), 0);
+            windowOpens = ruleComponent.NextWaveTime - windowComponent.Window;
+            Assert.That(SGameTiming.CurTime, Is.LessThan(windowOpens), "precondition: the next wave is past the window");
+        });
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() => Assert.That(serverRespawn.GetGate(ServerSession!)?.OpensAt, Is.EqualTo(windowOpens),
+            "refused until the window before the next wave opens"));
+        await Client.WaitAssertion(() => Assert.That(clientRespawn.LocalGate?.OpensAt, Is.EqualTo(windowOpens), "and the ghost is told when"));
+
+        await Client.WaitPost(() => clientRespawn.RequestRespawn());
+        await Pair.RunTicksSync(3);
+        await Server.WaitAssertion(() => Assert.That(serverRespawn.IsSessionPendingRespawn(ServerSession!), Is.True, "so asking does nothing"));
+
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var windowComponent = SEntMan.GetComponent<KsFieldCommanderRespawnWindowComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, SEntMan.GetComponent<GameRuleComponent>(ruleUid)), 1);
+            Assert.That(SGameTiming.CurTime, Is.GreaterThanOrEqualTo(ruleComponent.NextWaveTime - windowComponent.Window),
+                "precondition: the next wave is inside the window");
+        });
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() => Assert.That(serverRespawn.GetGate(ServerSession!), Is.Null, "allowed inside the window"));
+        await Client.WaitAssertion(() => Assert.That(clientRespawn.LocalGate, Is.Null, "and the ghost is told it opened"));
+
+        // Closed again, opening by itself shortly: nothing calls for a refresh then, the opening time is enough.
+        TimeSpan opensIn = default;
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var windowComponent = SEntMan.GetComponent<KsFieldCommanderRespawnWindowComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, SEntMan.GetComponent<GameRuleComponent>(ruleUid)), 2);
+            opensIn = ruleComponent.NextWaveTime - windowComponent.Window - SGameTiming.CurTime;
+            Assert.That(opensIn, Is.GreaterThan(TimeSpan.Zero), "precondition: the next wave is just past the window");
+        });
+        await Pair.RunTicksSync(3);
+        await Client.WaitAssertion(() => Assert.That(clientRespawn.LocalGate, Is.Not.Null, "precondition: closed again"));
+
+        var tickRate = (float)SGameTiming.TickRate;
+        await Pair.RunTicksSync((int)MathF.Ceiling(((float)opensIn.TotalSeconds + 1f) * tickRate));
+        await Client.WaitAssertion(() => Assert.That(clientRespawn.LocalGate, Is.Null, "the ghost is told when the window opens with time"));
+
+        await Server.WaitPost(() => ticker.EndGameRule(ruleUid));
+        await Pair.RunTicksSync(3);
+    }
+}
