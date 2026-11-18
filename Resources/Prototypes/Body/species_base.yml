@@ -94,6 +94,12 @@
     canDisarm: true
     disarmFailChance: 0 # KS14: shove rework
   - type: ComplexShove # KS14: shove rework
+  # KS14 start: shoving someone into a person knocks both over
+  - type: KsShoveObstacle
+    collateralKnockdownTime: 1.1
+    ignoredWhileDown: true
+    sound: /Audio/Effects/hit_kick.ogg
+  # KS14 end
   - type: MeleeWeapon
     soundHit:
       collection: Punch
@@ -135,6 +141,14 @@
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
   - type: Puller
+    needsHands: false # KS14: pulling takes no hand, an aggressive grab or tighter does
+  # KS14 start: tgstation grab levels
+  - type: KsGrabber
+  - type: KsGrabbable
+  - type: KsFiremanCarrier
+  - type: KsThrowMode
+  - type: KsExplosionThrown # explosions send them flying, into whatever is behind them
+  # KS14 end
   - type: Speech
     speechSounds: Alto
   - type: DamageForceSay

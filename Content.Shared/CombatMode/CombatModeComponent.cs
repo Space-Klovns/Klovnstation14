@@ -32,6 +32,14 @@ namespace Content.Shared.CombatMode
 
         #endregion
 
+        // KS14 start: tgstation's combat mode sounds, heard only by whoever toggles it, at the interface volume
+        [DataField]
+        public SoundSpecifier? KsEnableSound = new SoundPathSpecifier("/Audio/_KS14/Effects/CombatMode/ui_togglecombat.ogg");
+
+        [DataField]
+        public SoundSpecifier? KsDisableSound = new SoundPathSpecifier("/Audio/_KS14/Effects/CombatMode/ui_toggleoffcombat.ogg");
+        // KS14 end
+
         [DataField]
         public EntProtoId CombatToggleAction = "ActionCombatModeToggle";
 

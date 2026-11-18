@@ -13,6 +13,7 @@
   text: "/ServerInfo/Guidebook/NewPlayer/Controls/Controls.xml"
   children:
   - Radio
+  - KsGrabsAndShoves # KS14
 
 - type: guideEntry
   id: Radio

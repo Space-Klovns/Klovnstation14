@@ -18,7 +18,14 @@ public sealed partial class KeyBindTag : IMarkupTagHandler
             return "";
 
         if (!_inputManager.TryGetKeyBinding(keyBindName, out var binding))
+        {
+            // KS14 start: an unbound key shows the name it has in the controls options, not its internal function name
+            if (Loc.TryGetString($"ui-options-function-{CaseConversion.PascalToKebab(keyBindName)}", out var functionName))
+                return functionName;
+            // KS14 end
+
             return keyBindName;
+        }
 
         return binding.GetKeyString();
     }

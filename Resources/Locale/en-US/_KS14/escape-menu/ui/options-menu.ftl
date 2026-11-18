@@ -5,6 +5,7 @@ ks-ui-options-tgui-style = Use the tgui interface style
 ks-ui-options-lobby-adaptive-contrast = Dim bright lobby backgrounds behind the text
 ks-ui-options-slurfilter = Enable Slur Filter
 ks-ui-options-action-folders = Enable action folders
+ks-ui-options-combat-hud-buttons = Show the throw and resist buttons
 ks-ui-options-ambient-occlusion = Enable ambient occlusion
 ks-ui-options-ambient-occlusion-entities = Ambient occlusion on items and structures
 ks-ui-options-ambient-occlusion-entities-tooltip = Soft shadows under items, furniture and machines, not just walls. Turn off if it costs too much performance.

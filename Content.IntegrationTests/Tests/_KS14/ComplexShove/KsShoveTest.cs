@@ -1,15 +1,23 @@
 #nullable enable
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.ComplexShove;
 using Content.Shared._KS14.ShoveWeapon;
+using Content.Shared.Buckle;
+using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
 using Content.Server.Gravity;
+using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Gravity;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item.ItemToggle;
+using Content.Shared.Jittering;
 using Content.Shared.Movement.Components;
 using Content.Shared.StatusEffectNew;
 using Content.Shared.Stunnable;
@@ -28,8 +36,9 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.ComplexShove;
 
 /// <summary>
-///     Shoves through the real melee path (<see cref="SharedMeleeWeaponSystem.AttemptDisarmAttack"/>): a bare-handed
-///         shove, a wallshove, and a shove with a held shield, which must keep doing both.
+///     Shoves through the real melee path (<see cref="SharedMeleeWeaponSystem.AttemptDisarmAttack"/>), tgstation style:
+///         no stamina damage; a push and a stagger in the open; a knockdown against a wall, a table or another person;
+///         a paralysis, once, for someone already down. Held shields must keep doing all of it.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(ComplexShoveSystem))]
@@ -40,6 +49,11 @@ public sealed class KsShoveTest : GameTest
 
     private static readonly EntProtoId Shield = "RiotShield";
     private static readonly EntProtoId EnergyShield = "EnergyShield";
+    private static readonly EntProtoId Table = "Table";
+    private static readonly EntProtoId GlassTable = "TableGlass";
+    private static readonly EntProtoId Chair = "Chair";
+    private static readonly EntProtoId Item = "Wrench";
+    private static readonly EntProtoId Stagger = "KsStatusEffectStaggered";
 
     private readonly EntProtoId _human = "KsShoveTestHuman";
     private readonly EntProtoId _fumbler = "KsShoveTestFumbler";
@@ -82,14 +96,16 @@ public sealed class KsShoveTest : GameTest
 ";
 
     /// <summary>
-    ///     The shover stands at x 0.5, the target one tile east, and a wall, if any, a tile beyond the target: well
-    ///         inside <see cref="ComplexShoveComponent.WallshoveRange"/>.
+    ///     The shover stands at x 0.5, the target one tile east, and whatever they are shoved into a tile beyond the
+    ///         target.
     /// </summary>
-    private async Task<(EntityUid Shover, EntityUid Target)> SetUp(EntProtoId shoverPrototype, bool wall, EntProtoId? held = null)
+    private async Task<(EntityUid Shover, EntityUid Target, EntityUid? Behind)> SetUp(EntProtoId shoverPrototype,
+        EntProtoId? behind = null, EntProtoId? held = null)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid shoverUid = default;
         EntityUid targetUid = default;
+        EntityUid? behindUid = null;
 
         await Server.WaitPost(() =>
         {
@@ -105,8 +121,8 @@ public sealed class KsShoveTest : GameTest
 
             shoverUid = SEntMan.SpawnEntity(shoverPrototype, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             targetUid = SEntMan.SpawnEntity(_human, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
-            if (wall)
-                SEntMan.SpawnEntity(_wall, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+            if (behind is { } behindPrototype)
+                behindUid = SEntMan.SpawnEntity(behindPrototype, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
 
             SEntMan.System<SharedCombatModeSystem>().SetInCombatMode(shoverUid, true);
         });
@@ -117,7 +133,7 @@ public sealed class KsShoveTest : GameTest
         if (held is { } heldPrototype)
             await PickUp(shoverUid, heldPrototype);
 
-        return (shoverUid, targetUid);
+        return (shoverUid, targetUid, behindUid);
     }
 
     /// <summary>
@@ -175,122 +191,453 @@ public sealed class KsShoveTest : GameTest
 
     private float StaminaDamage(EntityUid uid) => SEntMan.GetComponent<StaminaComponent>(uid).StaminaDamage;
 
+    private bool IsKnockedDown(EntityUid uid) => SEntMan.HasComponent<KnockedDownComponent>(uid);
+
+    private bool IsStaggered(EntityUid uid)
+    {
+        return SEntMan.System<StatusEffectsSystem>().HasStatusEffect(uid, Stagger) &&
+               SEntMan.GetComponent<MovementSpeedModifierComponent>(uid).SprintSpeedModifier < 1f;
+    }
+
     /// <summary>
-    ///     A shove in the open is a basic shove: a little stamina damage and a push away from the shover. With a shield,
-    ///         the same, and the shield staggers them as well; bare hands don't.
+    ///     Seconds left of the target's knockdown.
+    /// </summary>
+    private double KnockdownLeft(EntityUid uid)
+    {
+        var timing = Server.ResolveDependency<IGameTiming>();
+        return (SEntMan.GetComponent<KnockedDownComponent>(uid).NextUpdate - timing.CurTime).TotalSeconds;
+    }
+
+    /// <summary>
+    ///     A shove in the open pushes the target away and staggers them, with bare hands or a shield, and does no
+    ///         stamina damage.
     /// </summary>
     [TestCase(false)]
     [TestCase(true)]
-    public async Task BasicShoveDrainsStaminaAndPushesAway(bool withShield)
+    public async Task FreeShovePushesAndStaggers(bool withShield)
     {
-        var (shoverUid, targetUid) = await SetUp(_human, wall: false, held: withShield ? Shield : (EntProtoId?)null);
+        var (shoverUid, targetUid, _) = await SetUp(_human, held: withShield ? Shield : (EntProtoId?)null);
 
         await Server.WaitAssertion(() =>
         {
-            var complexShove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
-            var stamina = SEntMan.GetComponent<StaminaComponent>(targetUid);
-            var expected = stamina.CritThreshold * complexShove.BasicShoveStaminaDamageFraction;
-
             Shove(shoverUid, targetUid);
 
             Assert.Multiple(() =>
             {
-                Assert.That(StaminaDamage(targetUid), Is.EqualTo(expected).Within(0.01f),
-                    "A shove in the open must deal the basic shove's stamina damage.");
+                Assert.That(StaminaDamage(targetUid), Is.Zero, "Shoves must do no stamina damage.");
                 var velocity = SEntMan.GetComponent<PhysicsComponent>(targetUid).LinearVelocity;
                 Assert.That(velocity.X, Is.GreaterThan(0f), $"The shove must push the target away from the shover, got {velocity}.");
-                Assert.That(SEntMan.HasComponent<KnockedDownComponent>(targetUid), Is.False, "A basic shove must not knock down.");
-                Assert.That(IsStaggered(shoverUid, targetUid), Is.EqualTo(withShield),
-                    withShield ? "A shield shove must stagger." : "A bare-handed shove must not stagger.");
+                Assert.That(IsKnockedDown(targetUid), Is.False, "A shove in the open must not knock down.");
+                Assert.That(IsStaggered(targetUid), "A shove in the open must stagger.");
             });
         });
     }
 
     /// <summary>
-    ///     A shove into a wall is a wallshove: much more stamina damage, and a knockdown once the target is worn down.
-    ///         A shield shove must still wallshove.
+    ///     A wall takes two shoves: the first only pushes and staggers the target, and the second, while they are
+    ///         staggered, knocks them down for the shover's blocked knockdown. With bare hands or a shield.
     /// </summary>
     [TestCase(false)]
     [TestCase(true)]
-    public async Task WallshoveDrainsMoreStaminaAndKnocksDown(bool withShield)
+    public async Task WallShoveKnocksDown(bool withShield)
     {
-        var (shoverUid, targetUid) = await SetUp(_human, wall: true, held: withShield ? Shield : (EntProtoId?)null);
-        var maxShoves = 0;
+        var (shoverUid, targetUid, _) = await SetUp(_human, behind: _wall, held: withShield ? Shield : (EntProtoId?)null);
 
         await Server.WaitAssertion(() =>
         {
-            var complexShove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
-            var stamina = SEntMan.GetComponent<StaminaComponent>(targetUid);
-            var expected = stamina.CritThreshold * complexShove.WallshoveStaminaDamageFraction;
-            Assert.That(expected, Is.GreaterThan(stamina.CritThreshold * complexShove.BasicShoveStaminaDamageFraction),
-                "This test needs a wallshove to hurt more than a basic shove.");
-
-            // The wallshove's own knockdown has to come before stamina crit, which knocks down by itself.
-            maxShoves = (int)MathF.Ceiling(stamina.CritThreshold / expected);
-            Assert.That(complexShove.WallshoveKnockdownStaminaDamageThreshold, Is.LessThan(stamina.CritThreshold),
-                "This test needs the wallshove knockdown to come before stamina crit.");
-
             Shove(shoverUid, targetUid);
 
             Assert.Multiple(() =>
             {
-                Assert.That(StaminaDamage(targetUid), Is.EqualTo(expected).Within(0.01f),
-                    "A shove into a wall must deal the wallshove's stamina damage.");
-                var velocity = SEntMan.GetComponent<PhysicsComponent>(targetUid).LinearVelocity;
-                Assert.That(velocity.X, Is.GreaterThan(0f), $"The wallshove must push the target into the wall, got {velocity}.");
+                Assert.That(IsKnockedDown(targetUid), Is.False, "The first shove into a wall must not knock down.");
+                Assert.That(IsStaggered(targetUid), "The first shove into a wall must stagger.");
+                Assert.That(SEntMan.HasComponent<JitteringComponent>(targetUid), "Someone staggered must visibly jitter.");
+                Assert.That(SEntMan.GetComponent<PhysicsComponent>(targetUid).LinearVelocity.Length(), Is.GreaterThan(0f),
+                    "A shove into a wall must still push.");
             });
         });
 
-        for (var shoves = 1; shoves < maxShoves; shoves++)
-        {
-            var knockedDown = false;
-            await Server.WaitPost(() => knockedDown = SEntMan.HasComponent<KnockedDownComponent>(targetUid));
-            if (knockedDown)
-                break;
-
-            await WaitForNextShove(shoverUid);
-            await Server.WaitPost(() => Shove(shoverUid, targetUid));
-        }
+        await WaitForNextShove(shoverUid);
 
         await Server.WaitAssertion(() =>
         {
-            var stamina = SEntMan.GetComponent<StaminaComponent>(targetUid);
-            Assert.That(SEntMan.HasComponent<KnockedDownComponent>(targetUid) && !stamina.Critical,
-                $"Wallshoves must knock the target down before stamina crit (stamina damage {stamina.StaminaDamage} of {stamina.CritThreshold}).");
+            Assert.That(IsStaggered(targetUid), "The stagger must outlast the wait between two shoves.");
+            Shove(shoverUid, targetUid);
+
+            var shove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
+            Assert.Multiple(() =>
+            {
+                Assert.That(StaminaDamage(targetUid), Is.Zero, "Shoves must do no stamina damage.");
+                Assert.That(IsKnockedDown(targetUid), "A shove into a wall must knock down.");
+                Assert.That(KnockdownLeft(targetUid), Is.EqualTo(shove.BlockedKnockdownTime.TotalSeconds).Within(0.1),
+                    "The knockdown must last the blocked knockdown time.");
+            });
         });
     }
 
     /// <summary>
-    ///     The control for the knockdown: the same number of shoves in the open never knocks down.
+    ///     Someone buckled to a seat is held there: a shove that would send them stumbling off does nothing.
     /// </summary>
     [Test]
-    public async Task BasicShovesNeverKnockDown()
+    public async Task BuckledTargetIsUnmoved()
     {
-        var (shoverUid, targetUid) = await SetUp(_human, wall: false);
-        var shoves = 0;
+        var (shoverUid, targetUid, _) = await SetUp(_human);
+        var startPosition = Vector2.Zero;
 
-        await Server.WaitPost(() =>
+        await Server.WaitAssertion(() =>
         {
-            var complexShove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
-            var stamina = SEntMan.GetComponent<StaminaComponent>(targetUid);
-            shoves = (int)MathF.Ceiling(complexShove.WallshoveKnockdownStaminaDamageThreshold / (stamina.CritThreshold * complexShove.WallshoveStaminaDamageFraction)) + 3;
+            var coordinates = SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates;
+            var chairUid = SEntMan.SpawnEntity(Chair, coordinates);
+            Assert.That(SEntMan.System<SharedBuckleSystem>().TryBuckle(targetUid, null, chairUid, popup: false),
+                "The target must be buckled for this to show anything.");
         });
 
-        for (var i = 0; i < shoves; i++)
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
         {
+            startPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(IsStaggered(targetUid), Is.False, "A shove must not stagger someone buckled.");
+        });
+
+        await Pair.RunTicksSync(15);
+
+        await Server.WaitAssertion(() =>
+        {
+            var moved = (SEntMan.System<SharedTransformSystem>().GetWorldPosition(targetUid) - startPosition).Length();
+            Assert.Multiple(() =>
+            {
+                Assert.That(moved, Is.LessThan(0.01f), "A shove must not move someone buckled.");
+                Assert.That(SEntMan.System<SharedBuckleSystem>().IsBuckled(targetUid), "A shove must leave them buckled.");
+                Assert.That(IsKnockedDown(targetUid), Is.False, "A shove must not knock down someone buckled.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A shove into a table puts the target on it and knocks them down.
+    /// </summary>
+    [Test]
+    public async Task TableShovePutsOnTable()
+    {
+        var (shoverUid, targetUid, tableUid) = await SetUp(_human, behind: Table);
+
+        await Server.WaitAssertion(() =>
+        {
+            Shove(shoverUid, targetUid);
+
+            var obstacle = SEntMan.GetComponent<KsShoveObstacleComponent>(tableUid!.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(IsKnockedDown(targetUid), "A shove into a table must knock down.");
+                Assert.That(KnockdownLeft(targetUid), Is.EqualTo(obstacle.KnockdownTime.TotalSeconds).Within(0.1));
+                Assert.That(SEntMan.GetComponent<ClimbingComponent>(targetUid).IsClimbing,
+                    "A shove into a table must put the target onto it.");
+                Assert.That(IsStaggered(targetUid), Is.False, "Knocking someone over must replace the stagger.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Slammed through a glass table, the target is stunned for the table's short stun, and stays knocked down
+    ///         for the shove's own knockdown after it has passed.
+    /// </summary>
+    [Test]
+    public async Task GlassTableSlamStunsBriefly()
+    {
+        var (shoverUid, targetUid, tableUid) = await SetUp(_human, behind: GlassTable);
+        var stunSeconds = 0f;
+        var knockdownSeconds = 0d;
+
+        await Server.WaitAssertion(() =>
+        {
+            stunSeconds = SEntMan.GetComponent<GlassTableComponent>(tableUid!.Value).KsPlacedStunTime;
+            knockdownSeconds = SEntMan.GetComponent<KsShoveObstacleComponent>(tableUid.Value).KnockdownTime.TotalSeconds;
+            Assert.That(knockdownSeconds, Is.GreaterThan(stunSeconds + 1), "This test needs the knockdown to outlast the stun.");
+
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), "A slam through a glass table must stun.");
+        });
+
+        var timing = Server.ResolveDependency<IGameTiming>();
+        await Pair.RunTicksSync((int)MathF.Ceiling((stunSeconds + 0.5f) * (float)timing.TickRate));
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), Is.False, "The stun must be over after the table's stun time.");
+                Assert.That(IsKnockedDown(targetUid), "The shove's knockdown must outlast the stun.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Someone lying where a shove put them can be shoved on, onto the next table: a second glass table shatters
+    ///         under them as the first did, and an ordinary one takes them from the one they lie on.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task DownedTargetIsShovedOntoTheNextTable(bool glass)
+    {
+        var tablePrototype = glass ? GlassTable : Table;
+        var (shoverUid, targetUid, firstTableUid) = await SetUp(_human, behind: tablePrototype);
+        EntityUid secondTableUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var firstCoordinates = SEntMan.GetComponent<TransformComponent>(firstTableUid!.Value).Coordinates;
+            secondTableUid = SEntMan.SpawnEntity(tablePrototype, firstCoordinates.Offset(new Vector2(1f, 0f)));
+        });
+
+        await Pair.RunTicksSync(5);
+        await Server.WaitPost(() => Shove(shoverUid, targetUid));
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(IsKnockedDown(targetUid), "The first shove must put the target down on the first table.");
+            Assert.That(SEntMan.Deleted(firstTableUid!.Value), Is.EqualTo(glass),
+                glass ? "A glass table must shatter under them." : "An ordinary table must hold them.");
+            Assert.That(SEntMan.Deleted(secondTableUid), Is.False, "The second table must not be touched by the first shove.");
+
+            // Step up behind them, as the shover would.
+            var targetCoordinates = SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates;
+            SEntMan.System<SharedTransformSystem>().SetCoordinates(shoverUid, targetCoordinates.Offset(new Vector2(-1f, 0f)));
+        });
+
+        await Pair.RunTicksSync(3);
+        await Server.WaitPost(() => Shove(shoverUid, targetUid));
+        await Pair.RunTicksSync(30);
+
+        await Server.WaitAssertion(() =>
+        {
+            if (glass)
+            {
+                Assert.That(SEntMan.Deleted(secondTableUid), "The second glass table must shatter under them too.");
+                return;
+            }
+
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
+            var toSecondTable = (transformSystem.GetWorldPosition(targetUid) - transformSystem.GetWorldPosition(secondTableUid)).Length();
+            Assert.Multiple(() =>
+            {
+                Assert.That(toSecondTable, Is.LessThan(0.3f), "The second shove must put them onto the second table.");
+                Assert.That(SEntMan.GetComponent<ClimbingComponent>(targetUid).IsClimbing, "They must be on the table, not under it.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A shove into another person knocks both over, the person behind for less time.
+    /// </summary>
+    [Test]
+    public async Task PersonBehindKnocksBothDown()
+    {
+        var (shoverUid, targetUid, behindUid) = await SetUp(_human, behind: _human);
+
+        await Server.WaitAssertion(() =>
+        {
+            Shove(shoverUid, targetUid);
+
+            var obstacle = SEntMan.GetComponent<KsShoveObstacleComponent>(behindUid!.Value);
+            Assert.That(obstacle.CollateralKnockdownTime, Is.Not.Null, "People must be knocked over when shoved into.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(IsKnockedDown(targetUid), "The shoved person must be knocked down.");
+                Assert.That(IsKnockedDown(behindUid.Value), "The person shoved into must be knocked down.");
+                Assert.That(KnockdownLeft(targetUid), Is.EqualTo(obstacle.KnockdownTime.TotalSeconds).Within(0.1));
+                Assert.That(KnockdownLeft(behindUid.Value), Is.EqualTo(obstacle.CollateralKnockdownTime!.Value.TotalSeconds).Within(0.1));
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A body on the floor isn't something to be shoved into: the shove carries over it as over open floor.
+    /// </summary>
+    [Test]
+    public async Task CorpseBehindIsShovedOver()
+    {
+        var (shoverUid, targetUid, corpseUid) = await SetUp(_human, behind: _human);
+
+        await Server.WaitAssertion(() =>
+        {
+            // Real damage, as forcing the state alone would be undone by the damage thresholds.
+            var damage = new DamageSpecifier { DamageDict = { ["Blunt"] = 300 } };
+            SEntMan.System<DamageableSystem>().ChangeDamage(corpseUid!.Value, damage, ignoreResistances: true);
+            Assert.That(SEntMan.System<MobStateSystem>().IsDead(corpseUid.Value), "This test needs a corpse.");
+        });
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            Shove(shoverUid, targetUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(IsKnockedDown(targetUid), Is.False, "A corpse behind must not knock the target over.");
+                Assert.That(IsStaggered(targetUid), "A shove over a corpse must push and stagger as in the open.");
+                Assert.That(IsKnockedDown(corpseUid!.Value), Is.False, "A corpse must not be knocked about by the shove.");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Shoving someone already down paralyzes them. Shoving them again, while paralyzed or after, until they stand
+    ///         up, neither paralyzes them again nor extends it.
+    /// </summary>
+    [Test]
+    public async Task DownedTargetIsParalyzedOnce()
+    {
+        var (shoverUid, targetUid, _) = await SetUp(_human);
+        var timing = Server.ResolveDependency<IGameTiming>();
+        TimeSpan? firstEnd = null;
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.System<SharedStunSystem>().TryKnockdown(targetUid, TimeSpan.FromSeconds(30), drop: false));
+            Shove(shoverUid, targetUid);
+
+            var shove = SEntMan.GetComponent<ComplexShoveComponent>(shoverUid);
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), "Shoving someone down must paralyze them.");
+            Assert.That(SEntMan.HasComponent<KsShoveParalyzedComponent>(targetUid));
+            Assert.That(SEntMan.System<StatusEffectsSystem>().TryGetTime(targetUid, SharedStunSystem.StunId, out var time));
+            firstEnd = time.EndEffectTime;
+            Assert.That(firstEnd!.Value - timing.CurTime, Is.EqualTo(shove.ChainParalyzeTime).Within(TimeSpan.FromSeconds(0.1)));
+        });
+
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            PutBackInReach(shoverUid, targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.System<StatusEffectsSystem>().TryGetTime(targetUid, SharedStunSystem.StunId, out var time));
+            Assert.That(time.EndEffectTime, Is.EqualTo(firstEnd), "A second shove must not extend the paralysis.");
+        });
+
+        // Once the paralysis is over but they are still down, it still can't be renewed.
+        var stunTicks = (int)Math.Ceiling(3.2 * timing.TickRate);
+        await Pair.RunTicksSync(stunTicks);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), Is.False, "The paralysis must have worn off.");
+            Assert.That(IsKnockedDown(targetUid), "This test needs the target still down.");
+            PutBackInReach(shoverUid, targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), Is.False,
+                "Someone paralyzed by a shove can't be paralyzed again before standing up.");
+        });
+    }
+
+    /// <summary>
+    ///     Someone down is kicked over by the first shove. The next makes them drop everything they hold, but only
+    ///         against a wall; after that they are only pushed. None of it staggers them, and none of it repeats before
+    ///         they stand up.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task DownedTargetIsKickedThenDisarmedOnceAgainstAWall(bool againstWall)
+    {
+        var (shoverUid, targetUid, _) = await SetUp(_human, behind: againstWall ? _wall : (EntProtoId?)null);
+        var items = new List<EntityUid>();
+
+        await Server.WaitAssertion(() =>
+        {
+            var hands = SEntMan.System<SharedHandsSystem>();
+            var coordinates = SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates;
+            foreach (var hand in hands.EnumerateHands(targetUid).ToList())
+            {
+                var itemUid = SEntMan.SpawnEntity(Item, coordinates);
+                Assert.That(hands.TryPickup(targetUid, itemUid, hand));
+                items.Add(itemUid);
+            }
+
+            Assert.That(items, Has.Count.GreaterThan(1), "This test needs the target holding something in every hand.");
+            Assert.That(SEntMan.System<SharedStunSystem>().TryKnockdown(targetUid, TimeSpan.FromSeconds(30), drop: false));
+
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.HasComponent<StunnedComponent>(targetUid), "The first shove must kick them over.");
+            Assert.That(items.All(item => hands.IsHolding(targetUid, item)), "The kick itself must not disarm.");
+            Assert.That(IsStaggered(targetUid), Is.False, "Someone down must not be staggered.");
+        });
+
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            var hands = SEntMan.System<SharedHandsSystem>();
+            PutBackInReach(shoverUid, targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(IsStaggered(targetUid), Is.False, "Someone down must not be staggered.");
+
+            if (!againstWall)
+            {
+                Assert.That(items.All(item => hands.IsHolding(targetUid, item)),
+                    "Only a shove against a wall can knock things out of their hands.");
+                return;
+            }
+
+            Assert.That(items.Any(item => hands.IsHolding(targetUid, item)), Is.False,
+                "The shove after the kick, against a wall, must make them drop everything they hold.");
+
+            // Pick one back up: the disarm must not happen twice.
+            Assert.That(hands.TryPickup(targetUid, items[0], checkActionBlocker: false));
+        });
+
+        if (!againstWall)
+            return;
+
+        await WaitForNextShove(shoverUid);
+
+        await Server.WaitAssertion(() =>
+        {
+            PutBackInReach(shoverUid, targetUid);
+            Shove(shoverUid, targetUid);
+            Assert.That(SEntMan.System<SharedHandsSystem>().IsHolding(targetUid, items[0]),
+                "Only one shove disarms them before they stand up.");
+            Assert.That(IsStaggered(targetUid), Is.False, "Someone down must not be staggered.");
+        });
+    }
+
+    /// <summary>
+    ///     Someone in stamina crit is only pushed: not kicked, not disarmed, not knocked into the wall behind them.
+    /// </summary>
+    [Test]
+    public async Task StaminaCritTargetIsOnlyPushed()
+    {
+        var (shoverUid, targetUid, _) = await SetUp(_human, behind: _wall);
+        EntityUid itemUid = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var hands = SEntMan.System<SharedHandsSystem>();
+            itemUid = SEntMan.SpawnEntity(Item, SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates);
+            Assert.That(hands.TryPickup(targetUid, itemUid));
+
+            var stamina = SEntMan.GetComponent<StaminaComponent>(targetUid);
+            SEntMan.System<SharedStaminaSystem>().TakeStaminaDamage(targetUid, stamina.CritThreshold * 2, stamina);
+            Assert.That(stamina.Critical, "This test needs the target in stamina crit.");
+            // Whatever stamina crit does to their hands isn't the shove's doing.
+            if (!hands.IsHolding(targetUid, itemUid))
+                Assert.That(hands.TryPickup(targetUid, itemUid, checkActionBlocker: false));
+        });
+
+        for (var i = 0; i < 2; i++)
+        {
+            await WaitForNextShove(shoverUid);
             await Server.WaitAssertion(() =>
             {
                 PutBackInReach(shoverUid, targetUid);
-                var before = StaminaDamage(targetUid);
                 Shove(shoverUid, targetUid);
-                Assert.That(StaminaDamage(targetUid), Is.GreaterThan(before), $"Basic shove {i + 1} must land.");
+                Assert.That(SEntMan.HasComponent<KsShoveParalyzedComponent>(targetUid), Is.False,
+                    "Someone in stamina crit must not be kicked over.");
+                Assert.That(SEntMan.System<SharedHandsSystem>().IsHolding(targetUid, itemUid),
+                    "Someone in stamina crit must not be disarmed by a shove.");
             });
-            await WaitForNextShove(shoverUid);
         }
-
-        await Server.WaitAssertion(() =>
-            Assert.That(SEntMan.HasComponent<KnockedDownComponent>(targetUid), Is.False,
-                $"{shoves} shoves in the open must not knock down."));
     }
 
     /// <summary>
@@ -299,12 +646,12 @@ public sealed class KsShoveTest : GameTest
     [Test]
     public async Task ShieldShoveNeverMisses()
     {
-        var (shoverUid, targetUid) = await SetUp(_fumbler, wall: false);
+        var (shoverUid, targetUid, _) = await SetUp(_fumbler);
 
         await Server.WaitAssertion(() =>
         {
             Shove(shoverUid, targetUid);
-            Assert.That(StaminaDamage(targetUid), Is.EqualTo(0f), "The fumbler's bare-handed shove must fail.");
+            Assert.That(IsStaggered(targetUid), Is.False, "The fumbler's bare-handed shove must fail.");
         });
 
         await PickUp(shoverUid, Shield);
@@ -312,8 +659,7 @@ public sealed class KsShoveTest : GameTest
         await Server.WaitAssertion(() =>
         {
             Shove(shoverUid, targetUid);
-            Assert.That(StaminaDamage(targetUid), Is.GreaterThan(0f), "A shield shove must never miss.");
-            Assert.That(IsStaggered(shoverUid, targetUid), "A shield shove must stagger.");
+            Assert.That(IsStaggered(targetUid), "A shield shove must never miss.");
         });
     }
 
@@ -323,7 +669,7 @@ public sealed class KsShoveTest : GameTest
     [Test]
     public async Task EnergyShieldShovesOnlyWhileOn()
     {
-        var (shoverUid, targetUid) = await SetUp(_human, wall: false);
+        var (shoverUid, targetUid, _) = await SetUp(_human);
         var energyShieldUid = await PickUp(shoverUid, EnergyShield);
 
         await Server.WaitAssertion(() =>
@@ -331,8 +677,7 @@ public sealed class KsShoveTest : GameTest
             Assert.That(SEntMan.System<ItemToggleSystem>().IsActivated(energyShieldUid), Is.False, "The energy shield must start off.");
 
             Shove(shoverUid, targetUid);
-            Assert.That(StaminaDamage(targetUid), Is.EqualTo(0f), "An energy shield that is off must not shove.");
-            Assert.That(IsStaggered(shoverUid, targetUid), Is.False, "An energy shield that is off must not stagger.");
+            Assert.That(IsStaggered(targetUid), Is.False, "An energy shield that is off must not shove.");
 
             Assert.That(SEntMan.System<ItemToggleSystem>().TryActivate(energyShieldUid, shoverUid));
         });
@@ -342,8 +687,7 @@ public sealed class KsShoveTest : GameTest
         await Server.WaitAssertion(() =>
         {
             Shove(shoverUid, targetUid);
-            Assert.That(StaminaDamage(targetUid), Is.GreaterThan(0f), "An energy shield that is on must shove.");
-            Assert.That(IsStaggered(shoverUid, targetUid), "An energy shield that is on must stagger.");
+            Assert.That(IsStaggered(targetUid), "An energy shield that is on must shove.");
         });
     }
 
@@ -353,7 +697,7 @@ public sealed class KsShoveTest : GameTest
     [Test]
     public async Task StaggerRefreshesInsteadOfStacking()
     {
-        var (shoverUid, targetUid) = await SetUp(_human, wall: false);
+        var (shoverUid, targetUid, _) = await SetUp(_human);
         var timing = Server.ResolveDependency<IGameTiming>();
         var shieldUid = await PickUp(shoverUid, Shield);
         var shoves = 0;
@@ -371,9 +715,8 @@ public sealed class KsShoveTest : GameTest
             await Server.WaitAssertion(() =>
             {
                 PutBackInReach(shoverUid, targetUid);
-                var before = StaminaDamage(targetUid);
                 Shove(shoverUid, targetUid);
-                Assert.That(StaminaDamage(targetUid), Is.GreaterThan(before), $"Shield shove {i + 1} must land.");
+                Assert.That(IsStaggered(targetUid), $"Shield shove {i + 1} must land.");
             });
             await WaitForNextShove(shoverUid);
         }
@@ -387,23 +730,5 @@ public sealed class KsShoveTest : GameTest
             Assert.That(time.EndEffectTime!.Value - timing.CurTime, Is.LessThanOrEqualTo(shoveWeapon.StaggerDuration),
                 $"{shoves} shoves must not stagger for longer than one.");
         });
-    }
-
-    /// <summary>
-    ///     Whether the target carries the stagger of what the shover holds, and is slowed by it.
-    /// </summary>
-    private bool IsStaggered(EntityUid shoverUid, EntityUid targetUid)
-    {
-        if (SEntMan.System<SharedHandsSystem>().GetActiveItem(shoverUid) is not { } heldUid ||
-            !SEntMan.TryGetComponent<KsShoveWeaponComponent>(heldUid, out var shoveWeapon))
-        {
-            // Bare hands: the shield's stagger must not be on them.
-            Assert.That(SProtoMan.Index(Shield).TryComp<KsShoveWeaponComponent>(out var shieldShoveWeapon, SEntMan.ComponentFactory));
-            return SEntMan.System<StatusEffectsSystem>().HasStatusEffect(targetUid, shieldShoveWeapon!.StaggerEffect);
-        }
-
-        var movementSpeed = SEntMan.GetComponent<MovementSpeedModifierComponent>(targetUid);
-        return SEntMan.System<StatusEffectsSystem>().HasStatusEffect(targetUid, shoveWeapon.StaggerEffect) &&
-               movementSpeed.SprintSpeedModifier < 1f;
     }
 }

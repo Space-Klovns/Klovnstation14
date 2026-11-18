@@ -32,6 +32,11 @@ public record struct DisarmedEvent(EntityUid Target, EntityUid Source, float Pus
     public bool Handled;
 
     /// <summary>
+    ///     KS14: the handler showed its own popups, so the disarm shouldn't show the generic ones.
+    /// </summary>
+    public bool KsPopupHandled;
+
+    /// <summary>
     ///     Probability to disarm in addition to shoving.
     /// </summary>
     public float DisarmProbability { get; init; } = 0.2f;

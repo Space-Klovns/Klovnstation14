@@ -26,6 +26,11 @@ namespace Content.Client.Jittering
 
         private void OnStartup(EntityUid uid, JitteringComponent jittering, ComponentStartup args)
         {
+            // KS14 start: a jitter put back in the frame it was taken off (prediction) carries on its animation
+            if (KsTryResume((uid, jittering)))
+                return;
+            // KS14 end
+
             if (!TryComp(uid, out SpriteComponent? sprite))
                 return;
 
@@ -37,6 +42,11 @@ namespace Content.Client.Jittering
 
         private void OnShutdown(EntityUid uid, JitteringComponent jittering, ComponentShutdown args)
         {
+            // KS14 start: stopped on the next frame instead, unless the jitter is back by then
+            if (KsTryDeferStop((uid, jittering)))
+                return;
+            // KS14 end
+
             if (TryComp(uid, out AnimationPlayerComponent? animationPlayer))
                 _animationPlayer.Stop(uid, animationPlayer, _jitterAnimationKey);
 

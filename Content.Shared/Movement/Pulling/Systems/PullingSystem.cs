@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Grab; // KS14
 using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
@@ -246,6 +247,12 @@ public sealed partial class PullingSystem : EntitySystem
 
     private void OnVirtualItemDeleted(EntityUid uid, PullerComponent component, VirtualItemDeletedEvent args)
     {
+        // KS14 start: a state being applied takes the client's predicted hand item away to put the server's in its
+        //      place. That is no one letting go, and stopping the pull for it undid a grip the client had predicted.
+        if (_timing.ApplyingState)
+            return;
+        // KS14 end
+
         // If client deletes the virtual hand then stop the pull.
         if (component.Pulling == null)
             return;
@@ -485,6 +492,13 @@ public sealed partial class PullingSystem : EntitySystem
 
         if (pullable.Comp.Puller == pullerUid)
         {
+            // KS14 start: let a grab tighten instead of letting go
+            var ksToggleAttempt = new KsPullToggleAttemptEvent(pullerUid, pullable);
+            RaiseLocalEvent(pullerUid, ref ksToggleAttempt);
+            if (ksToggleAttempt.Handled)
+                return true;
+            // KS14 end
+
             return TryStopPull(pullable, pullable.Comp);
         }
 

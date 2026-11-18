@@ -19,6 +19,7 @@ using Content.Shared.Inventory;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
+using Content.Shared.Movement.Pulling.Components; // KS14
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Physics;
@@ -270,6 +271,21 @@ namespace Content.Shared.Interaction
             //is this user trying to pull themself?
             if (userEntity.Value == uid)
                 return false;
+
+            // KS14 start: ctrl-clicking the floor outside combat mode lets go of whatever you pull
+            if (!uid.IsValid() ||
+                (!HasComp<PullableComponent>(uid) && TryComp(uid, out TransformComponent? ksClickedTransform) && ksClickedTransform.Anchored))
+            {
+                if (TryComp<PullerComponent>(userEntity, out var ksPuller) &&
+                    TryComp<PullableComponent>(ksPuller.Pulling, out var ksPulled) &&
+                    !(_combatQuery.TryComp(userEntity, out var ksCombatMode) && ksCombatMode.IsInCombatMode))
+                {
+                    _pullSystem.TryStopPull(ksPuller.Pulling.Value, ksPulled, userEntity);
+                }
+
+                return false;
+            }
+            // KS14 end
 
             if (Deleted(uid))
                 return false;

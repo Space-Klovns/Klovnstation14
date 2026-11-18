@@ -259,7 +259,7 @@ public sealed partial class PopupSystem : SharedPopupSystem
     private void OnPopupEntityEvent(PopupEntityEvent ev)
     {
         var instance = new PopupEntityEvent.PredictionInstance(ev.Message, ev.Type, ev.Tick, ev.Uid);
-        if (_predictionInstances.Remove(instance))
+        if (_predictionInstances.Remove(instance) || KsTryRemoveNearbyPrediction(ev) /* KS14: or one predicted a tick or two off */)
             return;
 
         var entity = GetEntity(ev.Uid);

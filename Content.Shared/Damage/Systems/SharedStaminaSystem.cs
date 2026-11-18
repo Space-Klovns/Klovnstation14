@@ -1,5 +1,4 @@
 using System.Linq;
-using Content.Shared._KS14.ComplexShove; // KS14
 using Content.Shared.Administration.Logs;
 using Content.Shared.Alert;
 using Content.Shared.CCVar;
@@ -45,7 +44,6 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
     [Dependency] private StatusEffectsSystem _status = default!;
     [Dependency] protected SharedStunSystem StunSystem = default!;
-    [Dependency] private ComplexShoveSystem _complexShoveSystem = default!; // KS14
 
     [Dependency] private EntityQuery<StaminaComponent> _stamQuery = default!;
 
@@ -66,7 +64,8 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         SubscribeLocalEvent<StaminaComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<StaminaComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<StaminaComponent, AfterAutoHandleStateEvent>(OnStamHandleState);
-        SubscribeLocalEvent<StaminaComponent, DisarmedEvent>(OnDisarmed);
+        // KS14: shoves do no stamina damage, ComplexShoveSystem knocks people over instead
+        // SubscribeLocalEvent<StaminaComponent, DisarmedEvent>(OnDisarmed);
         SubscribeLocalEvent<StaminaComponent, RejuvenateEvent>(OnRejuvenate);
 
         SubscribeLocalEvent<StaminaDamageOnEmbedComponent, EmbedEvent>(OnProjectileEmbed);
@@ -135,50 +134,23 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         Dirty(entity);
     }
 
-    private void OnDisarmed(EntityUid uid, StaminaComponent component, ref DisarmedEvent args)
-    {
-        // KS14: Dont care about being handled
-        // if (args.Handled)
-        //     return;
-
-        // KS14: added stamcrit shoving
-        // KS14 start
-        // if (component.Critical)
-        //     return;
-
-        if (TryComp<ComplexShoveComponent>(args.Source, out var sourceComplexShoveComponent) &&
-            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var shovedWorldPosition))
-        {
-            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), shovedWorldPosition.Value, deltaUnit.Value))
-            {
-                if (!args.Handled)
-                    args.PopupPrefix = "disarm-action-shove-collision-";
-
-                goto finishShove;
-            }
-            else if (_complexShoveSystem.TryBasicShove((args.Source, sourceComplexShoveComponent), (uid, component), deltaUnit.Value))
-            {
-                if (!args.Handled)
-                    args.PopupPrefix = "disarm-action-shove-";
-
-                goto finishShove;
-            }
-
-            // if nothing happened then just default to normal shove.
-        }
-
-        // KS14 end
-        var damage = args.PushProbability * component.CritThreshold;
-        TakeStaminaDamage(uid, damage, component, source: args.Source);
-
-        // KS14: Only apply popup if not handled
-        if (!args.Handled)
-            args.PopupPrefix = "disarm-action-shove-";
-
-    finishShove: // ks14 : added goto
-        args.IsStunned = component.Critical;
-        args.Handled = true;
-    }
+    // KS14: removed, shoves do no stamina damage (see the subscription above)
+    // private void OnDisarmed(EntityUid uid, StaminaComponent component, ref DisarmedEvent args)
+    // {
+    //     if (args.Handled)
+    //         return;
+    //
+    //     if (component.Critical)
+    //         return;
+    //
+    //     var damage = args.PushProbability * component.CritThreshold;
+    //     TakeStaminaDamage(uid, damage, component, source: args.Source);
+    //
+    //     args.PopupPrefix = "disarm-action-shove-";
+    //     args.IsStunned = component.Critical;
+    //
+    //     args.Handled = true;
+    // }
 
     private void OnMeleeHit(EntityUid uid, StaminaDamageOnHitComponent component, MeleeHitEvent args)
     {

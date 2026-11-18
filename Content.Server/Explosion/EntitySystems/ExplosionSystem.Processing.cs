@@ -518,6 +518,8 @@ public sealed partial class ExplosionSystem
                 throwForce,
                 predicted: false /* KS14: Unpredicted */);
         }
+
+        KsThrowMob((uid, xform), epicenter, throwForce); // KS14: mobs are no dynamic bodies, so the throw above passes them by
     }
 
     /// <summary>

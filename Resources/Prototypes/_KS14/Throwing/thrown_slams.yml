@@ -1,0 +1,31 @@
+# What happens to someone sent flying when they slam into something (KsThrownSlamSystem). Whatever throws people
+# picks one. See Klovn/Docs/grabs_and_shoves.md.
+
+# Thrown out of a grab or off someone's back. Also a fair default for anything else that throws people.
+- type: ksThrownSlam
+  id: KsThrownSlam
+  obstaclePopups:
+    user: ks-thrown-slam-into-user
+    target: ks-thrown-slam-into-target
+    others: ks-thrown-slam-into-others
+  wallKnockdownTime: 3
+  wallSound:
+    collection: MetalThud
+  wallPopups:
+    user: ks-thrown-slam-wall-user
+    target: ks-thrown-slam-wall-target
+    others: ks-thrown-slam-wall-others
+  wallDownedPopups:
+    user: ks-thrown-slam-wall-downed-user
+    target: ks-thrown-slam-wall-downed-target
+    others: ks-thrown-slam-wall-downed-others
+  wallResistedPopups:
+    user: ks-thrown-slam-wall-resisted-user
+    target: ks-thrown-slam-wall-resisted-target
+    others: ks-thrown-slam-wall-resisted-others
+  impactDamage:
+    types:
+      Blunt: 10
+  collateralDamage:
+    types:
+      Blunt: 10

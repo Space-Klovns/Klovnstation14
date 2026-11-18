@@ -13,3 +13,4 @@ guide-entry-ks-fluid-devices = Жидкостные устройства
 guide-entry-ks-refining = Нефтепереработка
 guide-entry-ks-refrigeration = Холодильная техника
 guide-entry-fortifications = Укрепления
+guide-entry-ks-grabs-and-shoves = Толчки и захваты

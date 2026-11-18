@@ -58,6 +58,15 @@
         variation: 0.08
         volume: -1
   # KS14 end
+  # KS14 start: someone thrown or shoved into an open closet lands inside, and it shuts on them. A shut one is
+  # something solid to be shoved into
+  - type: KsEntityStorageCatch
+  - type: KsShoveObstacle
+    priority: 5
+    takesWhoStandsInIt: true
+    sound:
+      collection: MetalThud
+  # KS14 end
   - type: ContainerContainer
     containers:
       entity_storage: !type:Container

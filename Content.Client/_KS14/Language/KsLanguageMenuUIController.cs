@@ -1,5 +1,5 @@
 using Content.Client.Gameplay;
-using Content.Shared.Input;
+using Content.Shared._KS14.Input;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface.Controllers;
 using Robust.Shared.Input.Binding;
@@ -14,7 +14,7 @@ public sealed partial class KsLanguageMenuUIController : UIController, IOnStateC
     public void OnStateEntered(GameplayState state)
     {
         CommandBinds.Builder
-            .Bind(ContentKeyFunctions.KsOpenLanguageMenu,
+            .Bind(KsKeyFunctions.OpenLanguageMenu,
                 InputCmdHandler.FromDelegate(_ => ToggleWindow()))
             .Register<KsLanguageMenuUIController>();
     }
