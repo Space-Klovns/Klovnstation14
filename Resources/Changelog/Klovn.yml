@@ -3068,3 +3068,11 @@ Entries:
         extinguishers put them out.
   id: 275
   time: '2026-11-17T20:04:05.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: Added the Desert Eagle and .50 AE ammunition.
+    - type: Add
+      message: Emagged cargo consoles can order some INTERESTING stuff.
+  id: 276
+  time: '2026-11-18T00:33:03.0000000+00:00'
