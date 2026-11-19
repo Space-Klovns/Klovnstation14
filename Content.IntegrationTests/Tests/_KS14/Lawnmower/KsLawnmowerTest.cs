@@ -154,7 +154,8 @@ public sealed class KsLawnmowerTest : MovementTest
             Assert.That(SEntMan.GetComponent<RelayInputMoverComponent>(SPlayer).RelayEntity, Is.EqualTo(mowerUid),
                 "The rider's input should drive the mower.");
 
-            Assert.That(buckleSystem.TryUnbuckle(SPlayer, SPlayer), Is.True);
+            // Unbuckle rather than TryUnbuckle: the buckle cooldown refuses getting straight back off.
+            buckleSystem.Unbuckle(SPlayer, SPlayer);
             Assert.That(SEntMan.GetComponent<VehicleComponent>(mowerUid).Operator, Is.Null);
         });
         await RunTicks(2);
@@ -164,6 +165,35 @@ public sealed class KsLawnmowerTest : MovementTest
             Assert.That(SEntMan.HasComponent<VehicleOperatorComponent>(SPlayer), Is.False);
             Assert.That(SEntMan.HasComponent<RelayInputMoverComponent>(SPlayer), Is.False,
                 "Getting off should hand the rider's input back to them.");
+        });
+    }
+
+    /// <summary>
+    ///     Off one mower and onto another in the same tick: the first one's operator component is still stored,
+    ///         pending removal, when the second one wants it.
+    /// </summary>
+    [Test]
+    public async Task SwitchingMowersInOneTickKeepsTheRiderDriving()
+    {
+        var origin = SEntMan.GetCoordinates(PlayerCoords);
+        var firstMowerUid = await SpawnEntity(Mower, origin);
+        var secondMowerUid = await SpawnEntity(Mower, origin);
+
+        await Server.WaitAssertion(() =>
+        {
+            var buckleSystem = Server.System<SharedBuckleSystem>();
+            Assert.That(buckleSystem.TryBuckle(SPlayer, SPlayer, firstMowerUid), Is.True);
+            buckleSystem.Unbuckle(SPlayer, SPlayer);
+            Assert.That(buckleSystem.TryBuckle(SPlayer, SPlayer, secondMowerUid), Is.True);
+        });
+        await RunTicks(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.GetComponent<VehicleComponent>(secondMowerUid).Operator, Is.EqualTo(SPlayer));
+            Assert.That(SEntMan.TryGetComponent<VehicleOperatorComponent>(SPlayer, out var operatorComponent), Is.True,
+                "The rider should still be an operator once the tick's removals are done.");
+            Assert.That(operatorComponent!.Vehicle, Is.EqualTo(secondMowerUid));
         });
     }
 

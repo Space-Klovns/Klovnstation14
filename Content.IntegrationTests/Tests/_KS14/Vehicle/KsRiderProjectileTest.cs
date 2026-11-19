@@ -50,6 +50,8 @@ public sealed class KsRiderProjectileTest : GameTest
         layer:
         - BulletImpassable
   - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
   - type: Strap
   - type: Vehicle
     transferDamage: false
@@ -99,18 +101,17 @@ public sealed class KsRiderProjectileTest : GameTest
     }
 
     [Test]
-    public async Task TestSomeoneElsesRoundStillHitsTheVehicle()
+    public async Task TestSomeoneElsesRoundHitsTheVehicle()
     {
         var entManager = Server.EntMan;
         var map = await Pair.CreateTestMap();
-        EntityUid gridUid = default, vehicleUid = default, riderUid = default, shooterUid = default;
+        EntityUid gridUid = default, vehicleUid = default, shooterUid = default;
 
         await Server.WaitPost(() =>
         {
             gridUid = MakeGrid(entManager, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid,
                 new Vector2i(-3, -8), new Vector2i(3, 3)).Owner;
             vehicleUid = SpawnAt(entManager, _vehicle, gridUid, 0, 0);
-            riderUid = SpawnAt(entManager, Rider, gridUid, 0, 0);
             shooterUid = SpawnAt(entManager, _shooter, gridUid, 0, -6);
         });
 
@@ -118,8 +119,6 @@ public sealed class KsRiderProjectileTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(entManager.System<SharedBuckleSystem>().TryBuckle(riderUid, riderUid, vehicleUid), Is.True);
-
             var bulletUid = entManager.SpawnAtPosition(Bullet, new EntityCoordinates(gridUid, new Vector2(0.5f, -3.5f)));
             entManager.System<GunSystem>().ShootProjectile(bulletUid, new Vector2(0f, 1f), Vector2.Zero, gunUid: null, user: shooterUid);
         });
@@ -128,7 +127,7 @@ public sealed class KsRiderProjectileTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            // The rider is buckled on top and never in the way: the vehicle is what the round meets.
+            // Empty, as a rider sitting on it would take the round first.
             Assert.That(IsDamaged(entManager, vehicleUid), Is.True,
                 "a round from anyone else should still hit the vehicle");
         });

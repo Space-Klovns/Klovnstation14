@@ -154,6 +154,10 @@ public sealed partial class VehicleSystem : EntitySystem
             return false;
 
         _operatorQuery.TryComp(operatorUid, out var vehicleOperator);
+        // KS14 start: one left this tick is shut down but still stored until the end of it, and reusing it loses it
+        if (vehicleOperator?.LifeStage > ComponentLifeStage.Running)
+            vehicleOperator = null;
+        // KS14 end
         if (vehicleOperator?.Vehicle is not null)
             return false;
 
@@ -165,7 +169,7 @@ public sealed partial class VehicleSystem : EntitySystem
 
         entity.Comp.Operator = operatorUid;
 
-        vehicleOperator ??= AddComp<VehicleOperatorComponent>(operatorUid);
+        vehicleOperator ??= EnsureComp<VehicleOperatorComponent>(operatorUid); // KS14: AddComp -> EnsureComp, which replaces one pending removal
         vehicleOperator.Vehicle = entity.Owner;
         Dirty(operatorUid, vehicleOperator);
 
