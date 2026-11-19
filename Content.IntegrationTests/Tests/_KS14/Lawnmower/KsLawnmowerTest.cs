@@ -16,6 +16,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Components;
 using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Standing;
+using Content.Shared.Vehicle.Components;
 using Content.Shared.VendingMachines;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -136,6 +137,33 @@ public sealed class KsLawnmowerTest : MovementTest
 
             Assert.That(inventory.TryUnequip(SPlayer, "jumpsuit", silent: true, force: true), Is.True);
             Assert.That(speed.CurrentSprintSpeed, Is.EqualTo(baseSpeed).Within(0.001f));
+        });
+    }
+
+    [Test]
+    public async Task RidingMakesTheRiderTheMowersOperator()
+    {
+        var origin = SEntMan.GetCoordinates(PlayerCoords);
+        var mowerUid = await SpawnEntity(Mower, origin);
+
+        await Server.WaitAssertion(() =>
+        {
+            var buckleSystem = Server.System<SharedBuckleSystem>();
+            Assert.That(buckleSystem.TryBuckle(SPlayer, SPlayer, mowerUid), Is.True);
+            Assert.That(SEntMan.GetComponent<VehicleComponent>(mowerUid).Operator, Is.EqualTo(SPlayer));
+            Assert.That(SEntMan.GetComponent<RelayInputMoverComponent>(SPlayer).RelayEntity, Is.EqualTo(mowerUid),
+                "The rider's input should drive the mower.");
+
+            Assert.That(buckleSystem.TryUnbuckle(SPlayer, SPlayer), Is.True);
+            Assert.That(SEntMan.GetComponent<VehicleComponent>(mowerUid).Operator, Is.Null);
+        });
+        await RunTicks(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.HasComponent<VehicleOperatorComponent>(SPlayer), Is.False);
+            Assert.That(SEntMan.HasComponent<RelayInputMoverComponent>(SPlayer), Is.False,
+                "Getting off should hand the rider's input back to them.");
         });
     }
 

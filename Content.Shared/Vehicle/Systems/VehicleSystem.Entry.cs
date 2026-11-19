@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.DoAfter;
 using Content.Shared.DragDrop;
 using Content.Shared.IdentityManagement;
@@ -114,7 +115,7 @@ public sealed partial class VehicleSystem
         if (HasOperator(vehicle.Owner) || CanOperate(vehicle.Owner, user))
             return true;
 
-        _popup.PopupEntity(Loc.GetString(vehicle.Comp.EntryDeniedPopup, ("vehicle", vehicle.Owner)),
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(vehicle.Comp.EntryDeniedPopup, ("vehicle", vehicle.Owner)),
             Identity.Entity(user, EntityManager));
         return false;
     }
@@ -145,7 +146,7 @@ public sealed partial class VehicleSystem
         if (!_doAfter.TryStartDoAfter(doAfterEventArgs))
             return;
 
-        _popup.PopupEntity(Loc.GetString(vehicle.Comp.OperatorRemovalPopup,
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(vehicle.Comp.OperatorRemovalPopup,
             ("vehicle", vehicle.Owner), ("user", Identity.Entity(user, EntityManager))),
             vehicle.Owner, PopupType.Large);
     }

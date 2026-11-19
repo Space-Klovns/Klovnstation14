@@ -74,6 +74,11 @@
     whitelist:
       components:
       - HumanoidProfile
+  - type: Vehicle
+    # The rider sits on top rather than inside: hits on the mower are the mower's.
+    transferDamage: false
+    canAttack: true
+  - type: StrapVehicle
   - type: KsLawnmower
   - type: KsLawnmowerBlades
     mowableTiles:

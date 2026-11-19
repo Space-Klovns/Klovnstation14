@@ -29,6 +29,7 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
     [Dependency] private SharedContainerSystem _container = default!;
     [Dependency] private ISharedAdminLogManager _log = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private Content.Shared.Vehicle.Systems.VehicleSystem _vehicleSystem = default!; // KS14
 
     [Dependency] private EntityQuery<HitscanBasicVisualsComponent> _visualsQuery = default!;
 
@@ -45,6 +46,10 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
         var mapCords = _transform.ToMapCoordinates(args.FromCoordinates);
         var ray = new CollisionRay(mapCords.Position, args.ShotDirection, (int)ent.Comp.CollisionMask);
         var rayCastResults = _physics.IntersectRay(mapCords.MapId, ray, ent.Comp.MaxDistance, shooter, false);
+        // KS14 start: an operator's shots pass through the vehicle they fire from
+        if (_vehicleSystem.GetOperatedVehicleOrNull(shooter) is { } ksShooterVehicleUid)
+            rayCastResults = System.Linq.Enumerable.Where(rayCastResults, hit => hit.HitEntity != ksShooterVehicleUid);
+        // KS14 end
 
         var target = args.Target;
         // If you are in a container, use the raycast result

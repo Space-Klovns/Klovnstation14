@@ -1,12 +1,13 @@
 using Content.Shared._KS14.PopupLocalization;
-using Content.Shared.Buckle.Components;
 using Content.Shared.Emag.Systems;
 using Content.Shared.Inventory;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Localizations;
-using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
+using Content.Shared.Vehicle;
+using Content.Shared.Vehicle.Components;
+using Content.Shared.Vehicle.Systems;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Lawnmower;
@@ -19,22 +20,18 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private VehicleSystem _vehicleSystem = default!;
 
+    [Dependency] private EntityQuery<VehicleComponent> _vehicleQuery = default!;
+
+    /// <summary>
+    ///     Driving itself is the vehicle system's (<see cref="StrapVehicleComponent"/>); a change of rider only changes
+    ///         whose shorts count.
+    /// </summary>
     [SubscribeLocalEvent]
-    private void OnStrapped(Entity<KsLawnmowerComponent> entity, ref StrappedEvent args)
+    private void OnOperatorSet(Entity<KsLawnmowerComponent> entity, ref VehicleOperatorSetEvent args)
     {
-        _moverController.SetRelay(args.Buckle.Owner, entity.Owner);
-        _movementSpeedSystem.RefreshMovementSpeedModifiers(entity.Owner);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnUnstrapped(Entity<KsLawnmowerComponent> entity, ref UnstrappedEvent args)
-    {
-        if (TryComp<RelayInputMoverComponent>(args.Buckle.Owner, out var relay) && relay.RelayEntity == entity.Owner)
-            RemComp(args.Buckle.Owner, relay);
-
         if (!TerminatingOrDeleted(entity.Owner))
             _movementSpeedSystem.RefreshMovementSpeedModifiers(entity.Owner);
     }
@@ -42,8 +39,9 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRefreshSpeed(Entity<KsLawnmowerComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
     {
-        if (!TryComp<MovementRelayTargetComponent>(entity.Owner, out var relayTargetComponent) ||
-            !_inventorySystem.TryGetContainerSlotEnumerator(relayTargetComponent.Source, out var slots))
+        if (!_vehicleQuery.TryComp(entity.Owner, out var vehicleComponent) ||
+            vehicleComponent.Operator is not { } riderUid ||
+            !_inventorySystem.TryGetContainerSlotEnumerator(riderUid, out var slots))
         {
             return;
         }
@@ -76,10 +74,10 @@ public sealed partial class SharedKsLawnmowerSystem : EntitySystem
     private void RefreshRiddenMower(Entity<KsGrillingShortsComponent> shorts, EntityUid riderUid, SlotFlags slot)
     {
         if ((slot & shorts.Comp.Slots) != 0 &&
-            TryComp<RelayInputMoverComponent>(riderUid, out var relay) &&
-            HasComp<KsLawnmowerComponent>(relay.RelayEntity))
+            _vehicleSystem.GetOperatedVehicleOrNull(riderUid) is { } mowerUid &&
+            HasComp<KsLawnmowerComponent>(mowerUid))
         {
-            _movementSpeedSystem.RefreshMovementSpeedModifiers(relay.RelayEntity);
+            _movementSpeedSystem.RefreshMovementSpeedModifiers(mowerUid);
         }
     }
 

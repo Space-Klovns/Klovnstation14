@@ -14,6 +14,7 @@ using Content.Shared.Popups;
 using Content.Shared.Standing;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
+using Content.Shared.Vehicle.Components;
 using Content.Shared.Zombies;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
@@ -51,11 +52,14 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        var query = EntityQueryEnumerator<KsLawnmowerBladesComponent, MovementRelayTargetComponent, InputMoverComponent, PhysicsComponent>();
-        while (query.MoveNext(out var uid, out var bladesComponent, out var relayComponent, out var moverComponent, out var physicsComponent))
+        var query = EntityQueryEnumerator<KsLawnmowerBladesComponent, VehicleComponent, InputMoverComponent, PhysicsComponent>();
+        while (query.MoveNext(out var uid, out var bladesComponent, out var vehicleComponent, out var moverComponent, out var physicsComponent))
         {
+            if (vehicleComponent.Operator is not { } riderUid)
+                continue;
+
             // A client only predicts the mower its own player rides.
-            if (_netManager.IsClient && relayComponent.Source != _playerManager.LocalEntity)
+            if (_netManager.IsClient && riderUid != _playerManager.LocalEntity)
                 continue;
 
             var entity = (uid, bladesComponent);
@@ -70,12 +74,12 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
 
             // A standing target can stop the mower in the same tick that the blades detect contact.
             var crushed = _emagSystem.CheckFlag(uid, EmagType.Interaction) &&
-                ProcessContacts(entity, relayComponent.Source, moverComponent.WishDir.Normalized());
+                ProcessContacts(entity, riderUid, moverComponent.WishDir.Normalized());
 
             if (crushed)
-                _audioSystem.PlayPredicted(bladesComponent.CrushSound, uid, relayComponent.Source);
+                _audioSystem.PlayPredicted(bladesComponent.CrushSound, uid, riderUid);
             else if (moving && _gameTiming.CurTime >= bladesComponent.NextDriveSound)
-                _audioSystem.PlayPredicted(bladesComponent.DriveSound, uid, relayComponent.Source);
+                _audioSystem.PlayPredicted(bladesComponent.DriveSound, uid, riderUid);
             else
                 continue;
 
