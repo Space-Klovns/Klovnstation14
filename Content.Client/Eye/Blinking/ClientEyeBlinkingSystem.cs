@@ -400,10 +400,16 @@ public sealed partial class ClientEyeBlinkingSystem : EyeBlinkingSystem
             ChangeEyesState(ent, false);
             ResetBlink(ent);
         }
-        else if (oldValue == BlinkStatus.Normal && !ent.Comp.Status.HasFlag(BlinkStatus.Dead))
+        else if (oldValue == BlinkStatus.Normal && (!ent.Comp.Status.HasFlag(BlinkStatus.Dead) || ent.Comp.KsCloseEyesOnDeath /* KS14: configurable */))
         {
             // Eyes need to close (unless we're dead!)
             ChangeEyesState(ent, true);
         }
+        // KS14 start: open-eyed death finishes any blink in progress, so no eyelid freezes shut
+        else if (oldValue == BlinkStatus.Normal)
+        {
+            ChangeEyesState(ent, false);
+        }
+        // KS14 end
     }
 }

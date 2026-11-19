@@ -88,6 +88,8 @@ public abstract partial class EyeBlinkingSystem : EntitySystem
         ent.Comp.BlinkSkinColorMultiplier = cloneEyes.BlinkSkinColorMultiplier;
         ent.Comp.BlinkEmoteId = [.. cloneEyes.BlinkEmoteId];
         ent.Comp.StatePrefix = cloneEyes.StatePrefix;
+        ent.Comp.KsHidingLayers = [.. cloneEyes.KsHidingLayers]; // KS14
+        ent.Comp.KsCloseEyesOnDeath = cloneEyes.KsCloseEyesOnDeath; // KS14
 
         Dirty(ent);
 
@@ -201,6 +203,8 @@ public abstract partial class EyeBlinkingSystem : EntitySystem
         cloneComp.BlinkSkinColorMultiplier = ent.Comp.BlinkSkinColorMultiplier;
         cloneComp.BlinkEmoteId = [.. ent.Comp.BlinkEmoteId];
         cloneComp.StatePrefix = ent.Comp.StatePrefix;
+        cloneComp.KsHidingLayers = [.. ent.Comp.KsHidingLayers]; // KS14
+        cloneComp.KsCloseEyesOnDeath = ent.Comp.KsCloseEyesOnDeath; // KS14
         AddComp(args.CloneUid, cloneComp, true);
         _blindable.UpdateIsBlind(args.CloneUid);
 

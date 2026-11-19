@@ -12,6 +12,8 @@ using Content.Shared.Eye.Blinding.Components;
 using Content.Shared.Eye.Blinking;
 using Content.Shared.Humanoid;
 using Content.Shared.Inventory;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Robust.Client.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -218,5 +220,74 @@ public sealed class KsEyeBlinkingTest : GameTest
                     "With periodic blinking off, the due blink was left due, so it fires the moment it is turned on.");
             }
         });
+    }
+
+    [Test]
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestEyesOnDeathFollowTheDatafield(bool closeOnDeath)
+    {
+        var (bodyUid, eyesUid) = await SpawnBlinkingMob();
+        var clientEyesUid = ToClientUid(eyesUid);
+
+        await Server.WaitPost(() =>
+        {
+            var blinkingComponent = SEntMan.GetComponent<EyeBlinkingComponent>(eyesUid);
+            blinkingComponent.KsCloseEyesOnDeath = closeOnDeath;
+            SEntMan.Dirty(eyesUid, blinkingComponent);
+        });
+        await RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+            Assert.That(CEntMan.GetComponent<EyeBlinkingComponent>(clientEyesUid).KsCloseEyesOnDeath, Is.EqualTo(closeOnDeath),
+                "precondition: the datafield reached the client"));
+
+        if (closeOnDeath)
+        {
+            // Die with the eyes open, so closing them is the datafield's doing and not a blink caught half-way.
+            await Client.WaitPost(() =>
+            {
+                var blinkingComponent = CEntMan.GetComponent<EyeBlinkingComponent>(clientEyesUid);
+                blinkingComponent.NextBlinkingTime = TimeSpan.MaxValue;
+            });
+
+            var allOpen = false;
+            for (var tick = 0; tick < 300 && !allOpen; tick++)
+            {
+                await RunTicksSync(1);
+                await Client.WaitPost(() =>
+                {
+                    var blinkingComponent = CEntMan.GetComponent<EyeBlinkingComponent>(clientEyesUid);
+                    allOpen = !blinkingComponent.BlinkInProgress && blinkingComponent.Eyelids.All(eyelid => !eyelid.IsClosed);
+                });
+            }
+            Assert.That(allOpen, Is.True, "precondition: the eyes are open and not blinking");
+        }
+        else
+        {
+            // Die mid-blink, with at least one eyelid shut, so an open-eyed death has a blink to finish. Blink does
+            //      nothing while one is still finishing, so keep asking until one starts and shuts an eyelid.
+            var anyShut = false;
+            for (var tick = 0; tick < 300 && !anyShut; tick++)
+            {
+                await Client.WaitPost(() =>
+                {
+                    var blinkingComponent = CEntMan.GetComponent<EyeBlinkingComponent>(clientEyesUid);
+                    CEntMan.System<ClientEyeBlinkingSystem>().Blink((clientEyesUid, blinkingComponent));
+                });
+                await RunTicksSync(1);
+                await Client.WaitPost(() => anyShut = CEntMan.GetComponent<EyeBlinkingComponent>(clientEyesUid).Eyelids.Any(eyelid => eyelid.IsClosed));
+            }
+            Assert.That(anyShut, Is.True, "precondition: an eyelid shut during the blink");
+        }
+
+        await Server.WaitPost(() => SEntMan.System<MobStateSystem>().ChangeMobState(bodyUid, MobState.Dead));
+        await RunTicksSync(10);
+
+        var visibility = await ClientEyelidVisibility(bodyUid, eyesUid);
+        if (closeOnDeath)
+            Assert.That(visibility, Is.Not.Empty.And.All.True, "The eyes stayed open on death with KsCloseEyesOnDeath set.");
+        else
+            Assert.That(visibility, Is.Not.Empty.And.All.False, "An eyelid froze shut on an open-eyed death.");
     }
 }
