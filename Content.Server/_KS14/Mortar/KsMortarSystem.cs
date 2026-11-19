@@ -227,18 +227,19 @@ public sealed partial class KsMortarSystem : EntitySystem
         var landing = new MapCoordinates(aim.Position + _robustRandom.NextVector2(mortar.Comp.Spread), aim.MapId);
 
         // Spawned where it lands, falling for the whole flight: its landing zone is marked from now until it lands.
-        var flight = mortar.Comp.TravelTime + mortar.Comp.IncomingTime;
+        var flight = mortar.Comp.FlightTime;
         var shellUid = EntityManager.CreateEntityUninitialized(mortar.Comp.Shell, landing);
         if (_supplyPodQuery.TryComp(shellUid, out var supplyPodComponent))
             _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
 
-        // The incoming clip ends as it lands, whichever one it is; one longer than the time left for it starts with the rest.
+        // The incoming clip ends as it lands, whichever one it is, over the end of the travel; one longer than the flight
+        //      starts with it.
         if (mortar.Comp.IncomingSound is { } incomingSound)
         {
             var shellComponent = EnsureComp<KsMortarShellComponent>(shellUid);
             shellComponent.IncomingSound = _audioSystem.ResolveSound(incomingSound);
             var length = _audioSystem.GetAudioLength(shellComponent.IncomingSound);
-            shellComponent.IncomingAt = now + flight - (length < mortar.Comp.IncomingTime ? length : mortar.Comp.IncomingTime);
+            shellComponent.IncomingAt = now + flight - (length < flight ? length : flight);
         }
 
         EntityManager.InitializeAndStartEntity(shellUid);

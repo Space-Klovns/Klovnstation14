@@ -17,6 +17,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
+using System;
 
 namespace Content.IntegrationTests.Tests._KS14.Mortar;
 
@@ -76,10 +77,11 @@ public sealed class KsMortarTest : GameTest
     clusterRadius: 3
     priorityWeight: 5
     spread: 0
-    idleTime: 4
-    travelTime: 0.5
-    incomingTime: 0.5
-    emptyTime: 0.5
+    idleTime: 6
+    flightTime: 2 # longer than any clip of KsMortarIncoming
+    incomingSound:
+      collection: KsMortarIncoming
+    emptyTime: 5
     abandonedFactions:
     - NanoTrasen
     abandonedPriority: 0.7
@@ -239,6 +241,13 @@ public sealed class KsMortarTest : GameTest
             Assert.That(mortar.Comp.Rounds, Is.EqualTo(3), "nothing refused should spend a round");
 
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True, "east, ten tiles");
+
+            // Its incoming clip, whichever was picked, ends as it lands.
+            var shellQuery = SEntMan.AllEntityQueryEnumerator<KsMortarShellComponent, ActiveSupplyPodComponent>();
+            Assert.That(shellQuery.MoveNext(out _, out var shellComponent, out var activePod), Is.True, "the shell should be on its way");
+            var clipLength = SEntMan.System<Robust.Server.Audio.AudioSystem>().GetAudioLength(shellComponent.IncomingSound!);
+            Assert.That((shellComponent.IncomingAt + clipLength - activePod.LaunchFinishTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                $"the incoming clip should end as the shell lands: at {shellComponent.IncomingAt}, {clipLength} long, lands {activePod.LaunchFinishTime}");
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(0), 10f), Is.False, "again before its cooldown");
             Assert.That(mortar.Comp.Rounds, Is.EqualTo(2));
             Assert.That(SEntMan.GetComponent<NpcFactionMemberComponent>(mortarUid).Factions,
@@ -248,8 +257,8 @@ public sealed class KsMortarTest : GameTest
         var (shell, flightTicks) = await WaitForShellTimed();
         Assert.That(Vector2.Distance(shell, new Vector2(10.5f, 0.5f)), Is.LessThan(0.05f), $"the shell should land ten tiles east: {shell}");
 
-        // Travel and incoming, a second in the test mortar: not the shell's own fall time.
-        Assert.That(flightTicks, Is.GreaterThanOrEqualTo(Ticks(1f) - 2), "the shell should be in the air for its travel and its incoming");
+        // The mortar's flight time, two seconds in the test mortar: not the shell's own fall time.
+        Assert.That(flightTicks, Is.GreaterThanOrEqualTo(Ticks(2f) - 2), "the shell should be in the air for the mortar's flight time");
 
         await Pair.RunTicksSync(Ticks(1.5f));
         await Server.WaitAssertion(() =>
@@ -342,8 +351,8 @@ public sealed class KsMortarTest : GameTest
         Assert.That(mortarUid, Is.Not.EqualTo(default(EntityUid)), "the crewman should have set its mortar up");
         await Server.WaitPost(() => SEntMan.DeleteEntity(targetUid));
 
-        // The test mortar idles out in four seconds: three times that, crewed.
-        await Pair.RunTicksSync(Ticks(12f));
+        // The test mortar idles out in six seconds: three times that, crewed.
+        await Pair.RunTicksSync(Ticks(18f));
         await Server.WaitAssertion(() =>
         {
             Assert.That(SEntMan.EntityExists(mortarUid) && !SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
@@ -364,16 +373,16 @@ public sealed class KsMortarTest : GameTest
                 Is.EquivalentTo(SEntMan.GetComponent<NpcFactionMemberComponent>(defenderUid).Factions),
                 "an abandoned mortar should belong to the side its crew was hostile to");
 
-            // Used two seconds in: its four seconds start again.
+            // Used two seconds in: its six seconds start again.
             var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True);
         });
 
-        await Pair.RunTicksSync(Ticks(3f));
+        await Pair.RunTicksSync(Ticks(4.5f));
         await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.False,
             "a mortar just used should have its idle time started again"));
 
-        await Pair.RunTicksSync(Ticks(2f));
+        await Pair.RunTicksSync(Ticks(2.5f));
         await Server.WaitAssertion(() => Assert.That(SEntMan.Deleted(mortarUid) || SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
             "an abandoned mortar nobody uses should dissolve"));
     }

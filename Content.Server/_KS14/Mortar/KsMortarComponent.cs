@@ -96,23 +96,17 @@ public sealed partial class KsMortarComponent : Component
     public SoundSpecifier? TravelSound;
 
     /// <summary>
-    ///     How long the shell is on its way before <see cref="IncomingTime"/> begins.
+    ///     How long after it is fired the shell lands, its landing zone marked all the while.
     /// </summary>
     [DataField]
-    public TimeSpan TravelTime = TimeSpan.FromSeconds(4);
+    public TimeSpan FlightTime = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    ///     Played where the shell is to land, timed to end as it lands. A collection: one is picked for each shell.
+    ///     Played where the shell is to land, starting as long before it lands as the clip picked lasts, so that it ends as it
+    ///         lands. A collection: one is picked for each shell.
     /// </summary>
     [DataField]
     public SoundSpecifier? IncomingSound;
-
-    /// <summary>
-    ///     The last part of the flight, which <see cref="IncomingSound"/> ends with: at least as long as its longest clip.
-    ///         The shell lands <see cref="TravelTime"/> plus this after it is fired, its landing zone marked all the while.
-    /// </summary>
-    [DataField]
-    public TimeSpan IncomingTime = TimeSpan.FromSeconds(3.2);
 
     /// <summary>
     ///     A shell going in, when someone fires it through its window.

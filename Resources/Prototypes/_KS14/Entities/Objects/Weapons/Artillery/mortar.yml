@@ -132,13 +132,12 @@
       path: /Audio/_KS14/Weapons/Mortar/gun_mortar_travel.ogg
       params:
         maxDistance: 20
-    travelTime: 4
     incomingSound:
       collection: KsMortarIncoming
       params:
         volume: 4
         maxDistance: 20
-    incomingTime: 3.2 # the longest of KsMortarIncoming, and a little over
+    flightTime: 5
     loadSound:
       path: /Audio/_KS14/Weapons/Mortar/mortarload.ogg
   - type: ActivatableUI
