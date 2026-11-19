@@ -2,7 +2,7 @@ light_mode unshaded;
 
 // One pass of the lobby menu's bloom: a separable Gaussian, 25 taps tapStep source pixels apart along direction. The first
 //      pass reads the UI as drawn over transparent black and keeps only its bright parts (threshold >= 0): each pixel's
-//      colour times its coverage, faded in over a soft knee by luminance, so dim text and dark panels add nothing. The
+//      premultiplied colour, faded in over a soft knee by luminance, so dim text and dark panels add nothing. The
 //      second pass (threshold < 0) just blurs. Taps outside the source count as black, so nothing smears in from an edge.
 // zTexture gives linear light; the sum is taken in linear light, which is how real glare adds up.
 
@@ -29,8 +29,11 @@ void fragment()
         highp vec3 colour = tap.rgb;
         if (threshold >= 0.0)
         {
+            // The scene target was cleared to transparent and drawn into with the default blend, so its colour is
+            //      already premultiplied by coverage: a half-covered glyph edge holds half its colour. Don't scale by alpha
+            //      again.
             highp float luminance = dot(colour, vec3(0.2126, 0.7152, 0.0722));
-            colour *= tap.a * smoothstep(threshold, threshold + knee, luminance);
+            colour *= smoothstep(threshold, threshold + knee, luminance);
         }
 
         sum += colour * weight * inside;

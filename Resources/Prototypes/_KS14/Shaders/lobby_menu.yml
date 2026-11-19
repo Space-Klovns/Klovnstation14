@@ -1,4 +1,4 @@
-# The lobby menu's bloom (KsTarkovBloomHost): a bright-pass Gaussian blur, then an additive composite under the UI.
+# The lobby menu's bloom (KsKharkivBloomHost): a bright-pass Gaussian blur, then an additive composite under the UI.
 - type: shader
   id: KsLobbyBloomBlur
   kind: source
@@ -9,7 +9,7 @@
   kind: source
   path: "/Textures/_KS14/Shaders/lobby_bloom_composite.swsl"
 
-# Lens glare over the main menu's backdrop (KsTarkovLightLeaks): streaks, flare lines and haze, added onto what is behind.
+# Lens glare over the main menu's backdrop (KsKharkivLightLeaks): streaks, flare lines and haze, added onto what is behind.
 - type: shader
   id: KsLobbyLightLeaks
   kind: source

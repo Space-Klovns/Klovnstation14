@@ -3,13 +3,13 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Prototypes;
 
-namespace Content.Client._KS14.Lobby.Tarkov;
+namespace Content.Client._KS14.Lobby.Kharkiv;
 
 /// <summary>
 ///     Draws the main menu's light leaks (lobby_light_leaks.swsl) over its own box: anamorphic streaks, flare lines and
 ///     haze, added onto whatever is behind. Put it between the backdrop and the UI. It ignores the mouse.
 /// </summary>
-public sealed partial class KsTarkovLightLeaks : Control
+public sealed partial class KsKharkivLightLeaks : Control
 {
     private static readonly ProtoId<ShaderPrototype> ShaderId = "KsLobbyLightLeaks";
 
@@ -17,7 +17,7 @@ public sealed partial class KsTarkovLightLeaks : Control
 
     private ShaderInstance? _shader;
 
-    public KsTarkovLightLeaks()
+    public KsKharkivLightLeaks()
     {
         IoCManager.InjectDependencies(this);
         MouseFilter = MouseFilterMode.Ignore;

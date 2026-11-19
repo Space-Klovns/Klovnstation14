@@ -15,15 +15,28 @@ public sealed partial class LobbyGui
     private static readonly Color KsFlashColor = Color.FromHex("#FFE9C4");
 
     /// <summary>
-    ///     Fills the banner's TIMER cell. <paramref name="caption"/> is unused by the main menu, which has a fixed TIMER
-    ///         caption; a null <paramref name="value"/> shows the idle dashes.
+    ///     Shows the countdown block. Null or empty arguments hide the matching label, and both empty hides the block.
     ///     Pass <paramref name="secondsLeft"/> while a live countdown runs: in the last <see cref="KsUrgentSeconds"/> the
-    ///         value shifts from the accent toward red and flashes on every second. Called every frame, so it animates.
+    ///         value shifts from amber toward red and flashes on every second. Called every frame, so it animates.
     /// </summary>
     public void KsSetCountdown(string? caption, string? value, double? secondsLeft = null)
     {
+        // The Kharkiv banner's TIMER has its own caption and always shows a value: dashes when there is none.
+        if (_ksLayout == KsLobbyLayout.Kharkiv)
+        {
+            StartTime.Text = caption ?? string.Empty;
+            StartTimeValue.Text = string.IsNullOrEmpty(value) ? Loc.GetString("ks-kharkiv-banner-timer-idle") : value;
+            StartTimeValue.Visible = true;
+            StartTimeValue.FontColorOverride = KsGetCountdownColor(secondsLeft);
+            return;
+        }
+
         StartTime.Text = caption ?? string.Empty;
-        StartTimeValue.Text = string.IsNullOrEmpty(value) ? Loc.GetString("ks-tarkov-banner-timer-idle") : value;
+        StartTime.Visible = !string.IsNullOrEmpty(caption);
+
+        StartTimeValue.Text = value ?? string.Empty;
+        StartTimeValue.Visible = !string.IsNullOrEmpty(value);
+
         StartTimeValue.FontColorOverride = KsGetCountdownColor(secondsLeft);
     }
 

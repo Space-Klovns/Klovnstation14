@@ -19,7 +19,7 @@ namespace Content.Client.Lobby.UI
         {
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
-            SetAnchorPreset(KsBloom /* KS14: MainContainer -> KsBloom, the glow host around the menu and the full-width bar */, LayoutPreset.Wide);
+            SetAnchorPreset(KsRoot /* KS14: MainContainer -> KsRoot, so the bottom bar is full width */, LayoutPreset.Wide);
             SetAnchorPreset(Background, LayoutPreset.Wide);
 
             // KS14: lobbyview start
@@ -29,8 +29,8 @@ namespace Content.Client.Lobby.UI
 
             KsSetCameraView(null);
             // KS14 end
-            // KS14 start: fade into the bar, backdrop grade
-            SetAnchorPreset(KsLightLeaks, LayoutPreset.Wide);
+            // KS14 start: translucent fades and lobby-only chat background
+            SetAnchorPreset(KsFadeLeft, LayoutPreset.Wide);
             SetAnchorPreset(KsFadeBottom, LayoutPreset.BottomWide);
             SetMarginTop(KsFadeBottom, -220);
             KsInitialiseContrast();
@@ -39,22 +39,19 @@ namespace Content.Client.Lobby.UI
 
             CallVoteButton.Text = Loc.GetString("ks-lobby-chip-vote"); // KS14: uppercase chip, VoteCallMenuButton sets its own text
             LobbySong.SetMarkup(Loc.GetString("lobby-state-song-no-song-text"));
-            KsSetReadyStatus(KsLobbyReadyStatus.NotReady);
-            KsSetCountdown(null, null);
-            BannerPlayers.Text = "0";
 
             LeaveButton.OnPressed += _ => _consoleHost.ExecuteCommand("disconnect");
             OptionsButton.OnPressed += _ => UserInterfaceManager.GetUIController<OptionsUIController>().ToggleWindow();
 
-            // Both the CHARACTER menu item and the CHARACTER tab ask for the same thing.
-            CharacterButton.OnPressed += _ => KsCharacterSetupRequested?.Invoke();
-            CharacterTab.OnPressed += _ => KsCharacterSetupRequested?.Invoke();
-        }
+            CollapseButton.OnPressed += _ => TogglePanel(false);
+            ExpandButton.OnPressed += _ => TogglePanel(true);
 
-        /// <summary>
-        ///     Raised when the player asks for character setup, from any of the buttons that lead there.
-        /// </summary>
-        public event Action? KsCharacterSetupRequested;
+            // KS14 start: both layouts, and every button that leads to character setup
+            SetAnchorPreset(KsKharkiv, LayoutPreset.Wide);
+            CharacterPreview.CharacterSetupButton.OnPressed += _ => KsRequestCharacterSetup();
+            KsInitialiseLayout();
+            // KS14 end
+        }
 
         // KS14: lobbyview
         public void KsSetCameraView(Robust.Shared.Graphics.IEye? eye)
@@ -77,16 +74,30 @@ namespace Content.Client.Lobby.UI
                 case LobbyGuiState.Default:
                     DefaultState.Visible = true;
                     RightSide.Visible = true;
-                    KsBloom.BloomEnabled = true; // KS14
+                    KsKharkiv.ShowSetup(false); // KS14
                     break;
                 case LobbyGuiState.CharacterSetup:
                     CharacterSetupState.Visible = true;
-                    KsBloom.BloomEnabled = false; // KS14: the editor is a form, not part of the menu's glowing chrome
+                    KsKharkiv.ShowSetup(true); // KS14
+
+                    var actualWidth = (float)UserInterfaceManager.RootControl.PixelWidth;
+                    var setupWidth = (float)LeftSide.PixelWidth;
+
+                    if (1 - (setupWidth / actualWidth) > 0.30)
+                    {
+                        RightSide.Visible = false;
+                    }
 
                     UserInterfaceManager.GetUIController<LobbyUIController>().ReloadCharacterSetup();
 
                     break;
             }
+        }
+
+        private void TogglePanel(bool value)
+        {
+            RightSide.Visible = value;
+            ExpandPanel.Visible = !value;
         }
 
         public enum LobbyGuiState : byte

@@ -16,6 +16,7 @@ uniform highp float scanlines;     // 0..1, depth of the scanline darkening
 uniform highp float subpixelMask;  // 0..1, depth of the RGB subpixel stripes
 uniform highp float staticAmount;  // linear light of the coloured static, per channel
 uniform highp float roll;          // 0..1, depth of the slow brightness band rolling down the screen
+uniform highp float rollSpeed;     // how fast the band rolls, radians of its wave per second
 uniform highp float curvature;     // barrel distortion: how far the corners are pushed out, as a fraction
 uniform highp float maskPitch;     // width of one RGB triad of the mask, in screen pixels
 
@@ -76,7 +77,7 @@ void fragment()
     col *= 1.0 - scanlines * strength * gap;
 
     // A broad band of light a little brighter than the rest, rolling slowly down the screen.
-    highp float band = sin((curved.y + 0.5) * 3.14159265 - TIME * 0.6);
+    highp float band = sin((curved.y + 0.5) * 3.14159265 - TIME * rollSpeed);
     col *= 1.0 + roll * strength * band * band * band * band;
 
     // Coloured static, new every frame-ish (24 a second), one value per channel.

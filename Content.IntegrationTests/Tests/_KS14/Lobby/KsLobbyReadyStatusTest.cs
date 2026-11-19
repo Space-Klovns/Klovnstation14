@@ -2,7 +2,10 @@ using System.Threading.Tasks;
 using Content.Client.Lobby;
 using Content.Client.Lobby.UI;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server.GameTicking;
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Lobby;
 using Robust.Client.State;
 using Robust.Shared.Console;
 using Robust.Shared.Localization;
@@ -10,7 +13,7 @@ using Robust.Shared.Localization;
 namespace Content.IntegrationTests.Tests._KS14.Lobby;
 
 /// <summary>
-///     The main menu's ready item keeps its title, ESCAPE FROM KLOVN, and the line under it follows the player through
+///     In the Kharkiv layout, the ready item keeps its title, ESCAPE FROM KLOVN, and the line under it follows the player through
 ///         NOT READY, JOIN and READY, staying centred under the title each time. A label whose text changes can be left
 ///         at its old width when the change lands while its parent is arranging (it happened at round start to the old
 ///         ready button), so this checks where the text is, not only what it says.
@@ -23,6 +26,9 @@ public sealed class KsLobbyReadyStatusTest : GameTest
     [Test]
     public async Task StatusFollowsTheRoundAndStaysCentred()
     {
+        await OverrideCVar(Side.Server, KsCCVars.LobbyLayout, KsLobbyLayouts.Kharkiv);
+        await Pair.RunTicksSync(5);
+
         await AssertState("ks-lobby-ready-not-ready");
 
         // Round start swaps NOT READY for JOIN.
@@ -43,11 +49,12 @@ public sealed class KsLobbyReadyStatusTest : GameTest
         {
             var localization = Client.Resolve<ILocalizationManager>();
             var lobby = ((LobbyState)Client.Resolve<IStateManager>().CurrentState).Lobby!;
-            var status = lobby.ReadyStatus;
+            Assert.That(lobby.KsLayout, Is.EqualTo(KsLobbyLayout.Kharkiv), "the server's layout reached the client");
+            var status = lobby.KsKharkiv.ReadyStatus;
             var title = lobby.ReadyButton;
 
             Assert.That(status.Text, Is.EqualTo(localization.GetString(expectedStatusLocId)), "the lobby reached this state");
-            Assert.That(title.Text, Is.EqualTo(localization.GetString("ks-tarkov-menu-escape")), "the title keeps its name");
+            Assert.That(title.Text, Is.EqualTo(localization.GetString("ks-kharkiv-menu-escape")), "the title keeps its name");
 
             // Where the text is drawn: the label is centred in its parent, so its box must have the text's own width
             //      and sit centred under the title.

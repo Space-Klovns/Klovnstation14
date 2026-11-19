@@ -5,8 +5,8 @@ namespace Content.Shared._KS14.CCVar;
 public sealed partial class KsCCVars
 {
     /// <summary>
-    ///     The screen effect on the lobby art (KsLobbyGrade: darkening, curvature, subpixel mask, static), so the bright
-    ///         menu reads over any art. Read by the lobby UI only. The name predates the main menu, which replaced dimming.
+    ///     The lobby art's backdrop effect, whichever layout shows: the tactical layout dims bright art under its text
+    ///         (KsLobbyContrast), the Kharkiv one puts its screen effect on it (KsLobbyGrade). Read by the lobby UI only.
     /// </summary>
     public static readonly CVarDef<bool> LobbyAdaptiveContrast =
         CVarDef.Create("klovn.lobby.adaptive_contrast", true, CVar.CLIENTONLY | CVar.ARCHIVE);
@@ -17,4 +17,13 @@ public sealed partial class KsCCVars
     /// </summary>
     public static readonly CVarDef<string> LobbyFont =
         CVarDef.Create("klovn.lobby.font", "jura", CVar.CLIENTONLY);
+
+    /// <summary>
+    ///     Which lobby layout every client shows: an id from <see cref="_KS14.Lobby.KsLobbyLayouts"/>. The default,
+    ///         <c>auto</c>, is the tactical layout except on clown holidays (<see cref="_KS14.Lobby.KsLobbyLayouts.IsKharkivSeason"/>,
+    ///         by each client's own date); the other ids force one. Unknown ids act as <c>auto</c>. Set by the server
+    ///         (admins: <c>lobbylayout</c>), not by players; clients switch live.
+    /// </summary>
+    public static readonly CVarDef<string> LobbyLayout =
+        CVarDef.Create("klovn.lobby.layout", Content.Shared._KS14.Lobby.KsLobbyLayouts.Auto, CVar.SERVER | CVar.REPLICATED);
 }

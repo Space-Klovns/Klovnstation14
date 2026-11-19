@@ -406,7 +406,7 @@ ever shrinks.
   `((LobbyState)Client.Resolve<IStateManager>().CurrentState).Lobby` is the live `LobbyGui`. The server side drives it:
   `Server.System<GameTicker>().StartRound()` / `RestartRound()`, and `toggleready True` through the client's
   `IConsoleHost` (pre-round only, so ready up after a restart, not after a round start). Template:
-  `KsLobbyReadyStatusTest`.
+  `KsLobbyReadyButtonAlignmentTest`.
 - **Probing layout:** record `Size`, `DesiredSize`, `IsMeasureValid` and `IsArrangeValid` up the parent chain once per
   `Pair.RunTicksSync(1)`, logging only lines that change. A control whose `DesiredSize` differs from its `Size` while
   both flags say valid is the stale-arrange trap above.
@@ -415,49 +415,17 @@ ever shrinks.
 
 ## The lobby
 
-The lobby is an "Escape from Klovn" main menu, a send-up of a shooter's main menu: wordmark, season banner, a centred
-column of large items, a bottom tab bar. All art is our own (`Tools/_KS14/lobby_tarkov_assets.py` regenerates it into
-`Resources/Textures/_KS14/Lobby/Tarkov/`). The previous translucent "tactical" layout is kept as `LobbyGui.xaml.tactical`
-(+ `LobbyGui.xaml.cs.tactical`), upstream's as `LobbyGui.xaml.old`; none are built.
+**Read `Klovn/Docs/lobby.md` before touching the lobby.** It has the two layouts (tactical, and the Kharkiv gag shown on
+clown holidays by the default `auto`), how the server switches them live (`klovn.lobby.layout`, admin command
+`lobbylayout`), every file, and each layout's structure, styles, shaders and tests. The rules that bite most:
 
-| Piece | File |
-| --- | --- |
-| Layout | `Content.Client/Lobby/UI/LobbyGui.xaml` (+ `.xaml.cs`, `.Klovn.Tarkov.cs` for the status/banner/version setters) |
-| Styles | `Content.Client/_KS14/Lobby/Tarkov/KsTarkovSheetlet.cs` (`KsTarkovStyleClasses`), registered after `KsLobbySheetlet` |
-| Bar tabs | `KsTarkovNavTab`: draws its own box and colours from its draw mode (`Active`, `Dim`, `Slot`), theme-proof |
-| Bloom | `KsTarkovBloomHost`, around everything above the art |
-| Glare | `KsTarkovLightLeaks` (`lobby_light_leaks.swsl`): flare lines, cold haze over the wordmark, warm bottom corners |
-| Backdrop | `LobbyGui.Klovn.Contrast.cs` puts `KsLobbyGrade` (`lobby_grade.swsl`) on `Background` |
-| Labels | `Resources/Locale/{en-US,ru-RU}/_KS14/lobby/tarkov.ftl` (+ the older `lobby.ftl` keys still used) |
-
-Layers, back to front: `Background` (or `KsViewportContainer` when a lobby-view eye exists), `KsFadeBottom`,
-`KsLightLeaks`, then `KsBloom` holding `KsRoot`: `KsContent` (`KsHiddenLegacy`, `DefaultState`, `CharacterSetupState`)
-over `KsBottomBar`.
-
-Wiring:
-- **Menu → real actions.** ESCAPE FROM KLOVN is `ReadyButton` (ready toggle, late join after start), CHARACTER and the
-  CHARACTER tab raise `LobbyGui.KsCharacterSetupRequested` (handled in `LobbyState`), TRADING is `ObserveButton`,
-  HIDEOUT is `ManifestButton`, EXIT is `LeaveButton`, the cog tab is `OptionsButton`. Other tabs are decoration.
-- **The ready item keeps its title.** `LobbyState` calls `KsSetReadyStatus` instead of writing `ReadyButton.Text`; the
-  `ReadyStatus` line under it says NOT READY / READY / JOIN (`KsLobbyReadyStatusTest`).
-- **Banner:** PLAYERS from `IPlayerManager.PlayerCount` (`KsSetPlayerCount`, only touches the label on change), TIMER is
-  `StartTimeValue`: the countdown through `KsSetCountdown` (urgency colours kept), then the round's elapsed time.
-- **`KsHiddenLegacy` (`Visible="False"`) keeps everything the menu doesn't show:** server name, chat (still exactly one
-  `ChatBox`), server info, AHelp, vote button, song/art credits, link banners, `CharacterPreview`, `RightSide`. Their
-  controllers keep working; move a control out of it to bring it back. `VoteContainer` stays visible, top right.
-- **Badges** above the bar are fixed decoration. Every bar column is `VerticalAlignment="Bottom"`, or a column with a
-  badge row pushes its tab down a few pixels.
-
-Effects:
-- **Bloom (`KsTarkovBloomHost`):** in `PreRenderChildren` it renders its children into a target, bright-passes and blurs
-  them (half and quarter resolution, two levels), adds the result to the screen, then the children draw sharp on top.
-  Off in character setup. The UI has no screen texture, so the second render of the children is the price.
-- **Additive passes use `blend_mode add;` in the `.swsl` header, output alpha 1.** A prototype's `blend_mode` is ignored
-  for source shaders (see the shaders skill); normal blending at alpha 1 covers what is behind, at alpha 0 adds nothing.
-- **Backdrop grade** (cvar `klovn.lobby.adaptive_contrast`, the KS14 option "Screen effect on the lobby background"):
-  exposure, desaturation, vignette, edge fringe, slight barrel curvature (zoomed to fill, no bezel), a staggered RGB slot mask
-  on the curved coordinates, slow brightness roll, faint coloured static. Off while the lobby-view camera shows.
-  `quadPixelSize` is set in `LobbyGui.Draw` only after a resize.
-- **Lobby art is server-picked** and sent in `TickerLobbyStatusEvent`; `forcedLobbyBackground` on a `gameMap` forces one.
-  The client only displays `ClientGameTicker.LobbyBackground`; never pick art client-side.
-- Fonts follow `klovn.lobby.font` (Jura by default); `KsTarkovSheetlet` reads it like `KsLobbySheetlet`.
+- **Two layouts, one screen.** `LobbyGui.xaml` is the tactical layout; the Kharkiv one is `KsKharkivLobbySkin`
+  (`_KS14/Lobby/Kharkiv/`). The controls both show (ready, observe, manifest, leave, countdown, vote popups, character
+  setup) are single instances moved between them by `LobbyGui.Klovn.Layout.cs`, never duplicated.
+- **Keep the names, and `Access="Public"`**, of everything `LobbyState`, `LobbyUIController`, `AHelpUIController` and
+  `KsLobbyViewSystem` touch. Grep `Lobby!.` and `Lobby.` before renaming anything.
+- **Exactly one `ChatBox`**, in the tactical layout.
+- **`LobbyState` doesn't know the layout.** Text that differs per layout goes through a `LobbyGui.KsSet...` method.
+- Tests: `--filter "FullyQualifiedName~Lobby|FullyQualifiedName~SandboxTest"`; a layout test drives the real screen
+  (`PoolSettings { Connected = true, InLobby = true }`) and forces its layout with `OverrideCVar(Side.Server, ...)`:
+  the default, `auto`, depends on the date.

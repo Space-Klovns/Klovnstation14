@@ -72,7 +72,7 @@ namespace Content.Client.Lobby
 
             // KS14 start: the build line, bottom left
             var buildVersion = _cfg.GetCVar(Robust.Shared.CVars.BuildVersion);
-            Lobby.KsSetVersionText(Loc.GetString("ks-tarkov-corner-version", ("build", string.IsNullOrEmpty(buildVersion) ? "dev" : buildVersion)));
+            Lobby.KsSetVersionText(Loc.GetString("ks-kharkiv-corner-version", ("build", string.IsNullOrEmpty(buildVersion) ? "dev" : buildVersion)));
             // KS14 end
 
             UpdateLobbyUi();
@@ -149,7 +149,7 @@ namespace Content.Client.Lobby
             if (_gameTicker.IsGameStarted)
             {
                 var roundTime = _gameTiming.CurTime.Subtract(_gameTicker.RoundStartTimeSpan);
-                Lobby!.KsSetRoundElapsed(roundTime); // KS14: StartTime.Text = string.Empty -> the banner's TIMER shows how long the round has run
+                Lobby!.KsSetRoundElapsed(roundTime); // KS14: StartTime.Text = string.Empty -> hides the countdown, or shows the round's length in the Kharkiv layout
                 Lobby!.KsSetPlayerCount(_playerManager.PlayerCount); // KS14: added
                 Lobby!.StationTime.Text = Loc.GetString("lobby-state-player-status-round-time", ("hours", roundTime.Hours), ("minutes", roundTime.Minutes));
                 return;
@@ -207,7 +207,7 @@ namespace Content.Client.Lobby
         {
             if (_gameTicker.IsGameStarted)
             {
-                Lobby!.KsSetReadyStatus(KsLobbyReadyStatus.Join); // KS14: ReadyButton.Text = lobby-state-ready-button-join-state, the title item keeps its name and the status sits under it
+                Lobby!.KsSetReadyStatus(KsLobbyReadyStatus.Join); // KS14: ReadyButton.Text = lobby-state-ready-button-join-state -> the layout shows it (button text, or a line under the Kharkiv title)
                 Lobby!.ReadyButton.ToggleMode = false;
                 Lobby!.ReadyButton.Pressed = false;
                 Lobby!.ObserveButton.Disabled = false;

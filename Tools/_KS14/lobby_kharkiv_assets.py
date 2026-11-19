@@ -3,9 +3,9 @@
 Generates the original art for the "Escape from Klovn" lobby: the glitched wordmark, the hex emblem and
 the navigation icons. Everything is drawn from primitives below; no third-party art is used.
 
-    python Tools/_KS14/lobby_tarkov_assets.py [--out DIR]
+    python Tools/_KS14/lobby_kharkiv_assets.py [--out DIR]
 
-Output defaults to Resources/Textures/_KS14/Lobby/Tarkov/.
+Output defaults to Resources/Textures/_KS14/Lobby/Kharkiv/.
 """
 import argparse
 import math
@@ -15,7 +15,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DEFAULT_OUT = os.path.join(REPO, "Resources", "Textures", "_KS14", "Lobby", "Tarkov")
+DEFAULT_OUT = os.path.join(REPO, "Resources", "Textures", "_KS14", "Lobby", "Kharkiv")
 
 # ---------------------------------------------------------------- wordmark glyphs
 # Each glyph is drawn on a 10 x 10 grid as polygons, so the letters can be stretched freely.

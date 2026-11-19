@@ -9,31 +9,31 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using static Content.Client.Stylesheets.StylesheetHelpers;
 
-namespace Content.Client._KS14.Lobby.Tarkov;
+namespace Content.Client._KS14.Lobby.Kharkiv;
 
 /// <summary>
-///     Class names used by the "Escape from Klovn" main menu. Registered in <see cref="KsTarkovSheetlet"/>.
+///     Class names used by the "Escape from Klovn" main menu. Registered in <see cref="KsKharkivSheetlet"/>.
 /// </summary>
-public static class KsTarkovStyleClasses
+public static class KsKharkivStyleClasses
 {
-    public const string MenuTitle = "KsTarkovMenuTitle";
-    public const string MenuItem = "KsTarkovMenuItem";
-    public const string Status = "KsTarkovStatus";
-    public const string BannerPanel = "KsTarkovBannerPanel";
-    public const string BannerCaption = "KsTarkovBannerCaption";
-    public const string BannerValue = "KsTarkovBannerValue";
-    public const string BannerDivider = "KsTarkovBannerDivider";
-    public const string NavLabel = "KsTarkovNavLabel";
-    public const string Bar = "KsTarkovBar";
-    public const string NewChip = "KsTarkovNewChip";
-    public const string ExpansionsTitle = "KsTarkovExpansionsTitle";
-    public const string Version = "KsTarkovVersion";
-    public const string ZoneLabel = "KsTarkovZoneLabel";
-    public const string SetupBackdrop = "KsTarkovSetupBackdrop";
-    public const string Badge = "KsTarkovBadge";
-    public const string BadgeGrey = "KsTarkovBadgeGrey";
-    public const string BadgeText = "KsTarkovBadgeText";
-    public const string CoinText = "KsTarkovCoinText";
+    public const string MenuTitle = "KsKharkivMenuTitle";
+    public const string MenuItem = "KsKharkivMenuItem";
+    public const string Status = "KsKharkivStatus";
+    public const string BannerPanel = "KsKharkivBannerPanel";
+    public const string BannerCaption = "KsKharkivBannerCaption";
+    public const string BannerValue = "KsKharkivBannerValue";
+    public const string BannerDivider = "KsKharkivBannerDivider";
+    public const string NavLabel = "KsKharkivNavLabel";
+    public const string Bar = "KsKharkivBar";
+    public const string NewChip = "KsKharkivNewChip";
+    public const string ExpansionsTitle = "KsKharkivExpansionsTitle";
+    public const string Version = "KsKharkivVersion";
+    public const string ZoneLabel = "KsKharkivZoneLabel";
+    public const string SetupBackdrop = "KsKharkivSetupBackdrop";
+    public const string Badge = "KsKharkivBadge";
+    public const string BadgeGrey = "KsKharkivBadgeGrey";
+    public const string BadgeText = "KsKharkivBadgeText";
+    public const string CoinText = "KsKharkivCoinText";
 }
 
 /// <summary>
@@ -41,7 +41,7 @@ public static class KsTarkovStyleClasses
 ///     theme sheetlets, whose textured <see cref="ContainerButton"/> and <see cref="PanelContainer"/> boxes it overrides
 ///     through higher selector specificity.
 /// </summary>
-public sealed class KsTarkovSheetlet : Sheetlet<PalettedStylesheet>
+public sealed class KsKharkivSheetlet : Sheetlet<PalettedStylesheet>
 {
     private static readonly Color TextColor = Color.FromHex("#ECECEC");
     private static readonly Color DimColor = Color.FromHex("#9A9A9A");
@@ -63,37 +63,37 @@ public sealed class KsTarkovSheetlet : Sheetlet<PalettedStylesheet>
         var title = ResCache.GetFont(regular, 44);
         var item = ResCache.GetFont(regular, 34);
 
-        AddMenuButtonRules(rules, KsTarkovStyleClasses.MenuTitle, title, 8, TextColor, pressedColor: ReadyColor);
-        AddMenuButtonRules(rules, KsTarkovStyleClasses.MenuItem, item, 4, TextColor, pressedColor: TextColor);
+        AddMenuButtonRules(rules, KsKharkivStyleClasses.MenuTitle, title, 8, TextColor, pressedColor: ReadyColor);
+        AddMenuButtonRules(rules, KsKharkivStyleClasses.MenuItem, item, 4, TextColor, pressedColor: TextColor);
 
         rules.AddRange([
-            E<Label>().Class(KsTarkovStyleClasses.Status).Font(ResCache.GetFont(regular, 15)).FontColor(DimColor),
+            E<Label>().Class(KsKharkivStyleClasses.Status).Font(ResCache.GetFont(regular, 15)).FontColor(DimColor),
 
             // The banner's art is drawn at its real size with a transparent margin for the halo: the box expands into
             //      that margin, and the patch margins keep the corner brackets sharp.
-            E<PanelContainer>().Class(KsTarkovStyleClasses.BannerPanel).Panel(BannerBox()),
-            E<Label>().Class(KsTarkovStyleClasses.BannerCaption).Font(ResCache.GetFont(regular, 13)).FontColor(BannerCaptionColor),
-            E<Label>().Class(KsTarkovStyleClasses.BannerValue).Font(ResCache.GetFont(bold, 21)).FontColor(Color.FromHex("#F2F6F4")),
-            E<PanelContainer>().Class(KsTarkovStyleClasses.BannerDivider).Panel(new StyleBoxFlat(Color.White.WithAlpha(0.16f))),
+            E<PanelContainer>().Class(KsKharkivStyleClasses.BannerPanel).Panel(BannerBox()),
+            E<Label>().Class(KsKharkivStyleClasses.BannerCaption).Font(ResCache.GetFont(regular, 13)).FontColor(BannerCaptionColor),
+            E<Label>().Class(KsKharkivStyleClasses.BannerValue).Font(ResCache.GetFont(bold, 21)).FontColor(Color.FromHex("#F2F6F4")),
+            E<PanelContainer>().Class(KsKharkivStyleClasses.BannerDivider).Panel(new StyleBoxFlat(Color.White.WithAlpha(0.16f))),
 
-            E<Label>().Class(KsTarkovStyleClasses.NavLabel).Font(ResCache.GetFont(regular, 15)),
+            E<Label>().Class(KsKharkivStyleClasses.NavLabel).Font(ResCache.GetFont(regular, 15)),
             // Edge to edge: the bleed covers the pixel a fractional UI scale can leave off the window's bottom.
-            E<PanelContainer>().Class(KsTarkovStyleClasses.Bar).Panel(new KsStyleBoxGradient(
+            E<PanelContainer>().Class(KsKharkivStyleClasses.Bar).Panel(new KsStyleBoxGradient(
                 Color.FromHex("#0E0E0E").WithAlpha(0.82f), Color.FromHex("#0E0E0E").WithAlpha(0.82f), KsGradientDirection.TopToBottom)
             {
                 Bleed = new Thickness(0f, 0f, 0f, 2f),
             }),
 
-            E<Label>().Class(KsTarkovStyleClasses.NewChip).Font(ResCache.GetFont(bold, 9)).FontColor(ReadyColor),
-            E<Label>().Class(KsTarkovStyleClasses.ExpansionsTitle).Font(ResCache.GetFont(regular, 24)).FontColor(AmberColor),
-            E<Label>().Class(KsTarkovStyleClasses.Version).Font(ResCache.GetFont(regular, 14)).FontColor(DimColor),
-            E<Label>().Class(KsTarkovStyleClasses.ZoneLabel).Font(ResCache.GetFont(regular, 24)).FontColor(Color.FromHex("#D8D8D8")),
+            E<Label>().Class(KsKharkivStyleClasses.NewChip).Font(ResCache.GetFont(bold, 9)).FontColor(ReadyColor),
+            E<Label>().Class(KsKharkivStyleClasses.ExpansionsTitle).Font(ResCache.GetFont(regular, 24)).FontColor(AmberColor),
+            E<Label>().Class(KsKharkivStyleClasses.Version).Font(ResCache.GetFont(regular, 14)).FontColor(DimColor),
+            E<Label>().Class(KsKharkivStyleClasses.ZoneLabel).Font(ResCache.GetFont(regular, 24)).FontColor(Color.FromHex("#D8D8D8")),
 
-            E<PanelContainer>().Class(KsTarkovStyleClasses.Badge).Panel(BadgeBox(Color.FromHex("#9BE52E"))),
-            E<PanelContainer>().Class(KsTarkovStyleClasses.BadgeGrey).Panel(BadgeBox(Color.FromHex("#C9C9BE"))),
-            E<Label>().Class(KsTarkovStyleClasses.BadgeText).Font(ResCache.GetFont(bold, 11)).FontColor(Color.FromHex("#101410")),
-            E<Label>().Class(KsTarkovStyleClasses.CoinText).Font(ResCache.GetFont(regular, 12)).FontColor(Color.FromHex("#C98A1C")),
-            E<PanelContainer>().Class(KsTarkovStyleClasses.SetupBackdrop).Panel(new StyleBoxFlat(Color.Black.WithAlpha(0.8f))),
+            E<PanelContainer>().Class(KsKharkivStyleClasses.Badge).Panel(BadgeBox(Color.FromHex("#9BE52E"))),
+            E<PanelContainer>().Class(KsKharkivStyleClasses.BadgeGrey).Panel(BadgeBox(Color.FromHex("#C9C9BE"))),
+            E<Label>().Class(KsKharkivStyleClasses.BadgeText).Font(ResCache.GetFont(bold, 11)).FontColor(Color.FromHex("#101410")),
+            E<Label>().Class(KsKharkivStyleClasses.CoinText).Font(ResCache.GetFont(regular, 12)).FontColor(Color.FromHex("#C98A1C")),
+            E<PanelContainer>().Class(KsKharkivStyleClasses.SetupBackdrop).Panel(new StyleBoxFlat(Color.Black.WithAlpha(0.8f))),
         ]);
 
         return rules.ToArray();
@@ -106,7 +106,7 @@ public sealed class KsTarkovSheetlet : Sheetlet<PalettedStylesheet>
     {
         var box = new StyleBoxTexture
         {
-            Texture = ResCache.GetTexture("/Textures/_KS14/Lobby/Tarkov/banner_panel.png"),
+            Texture = ResCache.GetTexture("/Textures/_KS14/Lobby/Kharkiv/banner_panel.png"),
             Mode = StyleBoxTexture.StretchMode.Stretch,
         };
         box.SetPatchMargin(StyleBox.Margin.All, BannerPad + 14f);

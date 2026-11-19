@@ -14,5 +14,6 @@
     subpixelMask: 0.35
     staticAmount: 0.012
     roll: 0.12
+    rollSpeed: 0.06
     curvature: 0.022
     maskPitch: 3.0

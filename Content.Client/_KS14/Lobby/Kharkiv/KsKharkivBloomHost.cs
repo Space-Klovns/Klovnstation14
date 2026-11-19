@@ -4,7 +4,7 @@ using Robust.Client.UserInterface;
 using Robust.Shared.Graphics;
 using Robust.Shared.Prototypes;
 
-namespace Content.Client._KS14.Lobby.Tarkov;
+namespace Content.Client._KS14.Lobby.Kharkiv;
 
 /// <summary>
 ///     Makes the bright parts of the controls inside it glow, as if the UI were emissive. Each frame, before its children
@@ -16,7 +16,7 @@ namespace Content.Client._KS14.Lobby.Tarkov;
 ///     Owns five render targets and five shader instances, made on first use and released when it leaves the tree. The UI
 ///     has no screen texture to sample, so drawing the children twice is the only way to get at what they look like.
 /// </remarks>
-public sealed partial class KsTarkovBloomHost : Control
+public sealed partial class KsKharkivBloomHost : Control
 {
     private static readonly ProtoId<ShaderPrototype> BlurShaderId = "KsLobbyBloomBlur";
     private static readonly ProtoId<ShaderPrototype> CompositeShaderId = "KsLobbyBloomComposite";
@@ -43,9 +43,27 @@ public sealed partial class KsTarkovBloomHost : Control
     private ShaderInstance? _compositeTightShader;
     private ShaderInstance? _compositeWideShader;
 
-    public KsTarkovBloomHost()
+    // The passes, made once: RenderInRenderTarget takes an Action, and a lambda per pass per frame allocates. They read
+    //      the handle and sizes of the frame being drawn from these fields.
+    private readonly Action _renderScenePass;
+    private readonly Action _tightHorizontalPass;
+    private readonly Action _tightVerticalPass;
+    private readonly Action _wideHorizontalPass;
+    private readonly Action _wideVerticalPass;
+    private IRenderHandle? _passHandle;
+
+    // What the uniforms were last set from, so they are only set again when one changes.
+    private (float Scale, float Threshold, float Knee, float Tight, float Wide, float TightIntensity, float WideIntensity, Color Tint)? _parameters;
+
+    public KsKharkivBloomHost()
     {
         IoCManager.InjectDependencies(this);
+
+        _renderScenePass = () => RenderChildren(_passHandle!, _sceneSize);
+        _tightHorizontalPass = () => Blit(_passHandle!, _scene!, _tightHorizontalShader!, _tight!.Size);
+        _tightVerticalPass = () => Blit(_passHandle!, _tightHorizontal!, _tightVerticalShader!, _tight!.Size);
+        _wideHorizontalPass = () => Blit(_passHandle!, _tight!, _wideHorizontalShader!, _wide!.Size);
+        _wideVerticalPass = () => Blit(_passHandle!, _wideHorizontal!, _wideVerticalShader!, _wide!.Size);
     }
 
     /// <summary>Whether the bloom is drawn at all.</summary>
@@ -63,9 +81,9 @@ public sealed partial class KsTarkovBloomHost : Control
     /// <summary>Spread of the wide haze, in virtual pixels.</summary>
     public float WideSigma { get; set; } = 16f;
 
-    public float TightIntensity { get; set; } = 0.3f;
+    public float TightIntensity { get; set; } = 0.276f;
 
-    public float WideIntensity { get; set; } = 0.18f;
+    public float WideIntensity { get; set; } = 0.161f;
 
     /// <summary>Colour the glow is multiplied by.</summary>
     public Color Tint { get; set; } = Color.FromHex("#FFF6EC");
@@ -86,14 +104,13 @@ public sealed partial class KsTarkovBloomHost : Control
         UpdateParameters();
 
         // The children as they will be drawn, over transparent black: empty pixels must add nothing.
-        handle.RenderInRenderTarget(_scene!, () => RenderChildren(handle, size), new Color(0f, 0f, 0f, 0f));
-
-        var half = _tight!.Size;
-        var quarter = _wide!.Size;
-        handle.RenderInRenderTarget(_tightHorizontal!, () => Blit(handle, _scene!, _tightHorizontalShader!, half), Color.Black);
-        handle.RenderInRenderTarget(_tight!, () => Blit(handle, _tightHorizontal!, _tightVerticalShader!, half), Color.Black);
-        handle.RenderInRenderTarget(_wideHorizontal!, () => Blit(handle, _tight!, _wideHorizontalShader!, quarter), Color.Black);
-        handle.RenderInRenderTarget(_wide!, () => Blit(handle, _wideHorizontal!, _wideVerticalShader!, quarter), Color.Black);
+        _passHandle = handle;
+        handle.RenderInRenderTarget(_scene!, _renderScenePass, new Color(0f, 0f, 0f, 0f));
+        handle.RenderInRenderTarget(_tightHorizontal!, _tightHorizontalPass, Color.Black);
+        handle.RenderInRenderTarget(_tight!, _tightVerticalPass, Color.Black);
+        handle.RenderInRenderTarget(_wideHorizontal!, _wideHorizontalPass, Color.Black);
+        handle.RenderInRenderTarget(_wide!, _wideVerticalPass, Color.Black);
+        _passHandle = null;
 
         // Add both levels over what is behind the host, under its children.
         var screen = handle.DrawingHandleScreen;
@@ -196,11 +213,16 @@ public sealed partial class KsTarkovBloomHost : Control
     }
 
     /// <summary>
-    ///     Every uniform of every instance is set each frame: an instance with one unset draws with whatever value the
-    ///     program last had. The tap step is in the source's texels, so it shrinks by how many screen pixels one covers.
+    ///     Every uniform of every instance is set, whenever any input changed: an instance with one unset draws with
+    ///     whatever value the program last had. The tap step is in the source's texels, so it shrinks by how many screen pixels one covers.
     /// </summary>
     private void UpdateParameters()
     {
+        var parameters = (UIScale, Threshold, Knee, TightSigma, WideSigma, TightIntensity, WideIntensity, Tint);
+        if (_parameters == parameters)
+            return;
+
+        _parameters = parameters;
         var tight = TightSigma * UIScale;
         var wide = WideSigma * UIScale;
 
@@ -224,6 +246,15 @@ public sealed partial class KsTarkovBloomHost : Control
         shader.SetParameter("sigmaTaps", SigmaTaps);
         shader.SetParameter("threshold", threshold);
         shader.SetParameter("knee", Knee);
+    }
+
+    /// <summary>
+    ///     Frees the offscreen targets, the largest as big as the host, while nothing will draw it (the layout is hidden).
+    ///     The next frame that draws makes them again.
+    /// </summary>
+    public void ReleaseTargets()
+    {
+        DisposeTargets();
     }
 
     private void DisposeTargets()
@@ -250,6 +281,7 @@ public sealed partial class KsTarkovBloomHost : Control
         _wideVerticalShader?.Dispose();
         _compositeTightShader?.Dispose();
         _compositeWideShader?.Dispose();
+        _parameters = null;
         _tightHorizontalShader = null;
         _tightVerticalShader = null;
         _wideHorizontalShader = null;

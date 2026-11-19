@@ -3,13 +3,13 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 
-namespace Content.Client._KS14.Lobby.Tarkov;
+namespace Content.Client._KS14.Lobby.Kharkiv;
 
 /// <summary>
 ///     One tab of the main menu's bottom bar: an icon and a label, drawn flat. It sets its own colours and box from its
 ///     draw mode, so it looks the same under every UI theme instead of waiting on a stylesheet rule that could lose to one.
 /// </summary>
-public sealed class KsTarkovNavTab : ContainerButton
+public sealed class KsKharkivNavTab : ContainerButton
 {
     private static readonly Color NormalColor = Color.FromHex("#D2D2D2");
     private static readonly Color HoverColor = Color.White;
@@ -35,7 +35,7 @@ public sealed class KsTarkovNavTab : ContainerButton
     /// <summary>How opaque an ordinary tab's block is: the bar and its tabs are a little see-through.</summary>
     private const float TranslucentAlpha = 0.8f;
 
-    public KsTarkovNavTab()
+    public KsKharkivNavTab()
     {
         var row = new BoxContainer
         {
@@ -55,7 +55,7 @@ public sealed class KsTarkovNavTab : ContainerButton
 
         _label = new Label
         {
-            StyleClasses = { KsTarkovStyleClasses.NavLabel },
+            StyleClasses = { KsKharkivStyleClasses.NavLabel },
             VerticalAlignment = VAlignment.Center,
             MouseFilter = MouseFilterMode.Ignore,
             Visible = false,
