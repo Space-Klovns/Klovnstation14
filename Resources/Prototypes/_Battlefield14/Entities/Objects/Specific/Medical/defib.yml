@@ -1,0 +1,82 @@
+- type: entity
+  id: DefibrillatorCompactBF
+  parent: DefibrillatorCompact
+  name: combat defibrillator
+  description: "Doubles as a self-defense weapon against war-crime inclined vagrants. Battery drains idly when on."
+  suffix: BF14
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/defibsmall.rsi
+    layers:
+      - state: icon
+      - state: screen
+        map: [ "enum.ToggleableVisuals.Layer" ]
+        visible: false
+        shader: unshaded
+      - state: ready
+        map: ["enum.PowerDeviceVisualLayers.Powered"]
+        shader: unshaded
+  - type: Defibrillator
+    zapHeal:
+      types:
+        Asphyxiation: -80
+        Blunt: -40
+        Slash: -40
+        Piercing: -40
+        Heat: -40
+        Shock: -20
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 12
+  - type: ItemToggleMeleeWeapon
+    activatedSoundOnHit:
+      path: /Audio/Items/Defib/defib_zap.ogg
+      params:
+        variation: 0.250
+    activatedSoundOnHitNoDamage:
+      path: /Audio/Items/Defib/defib_zap.ogg
+      params:
+        variation: 0.250
+        volume: -10
+    activatedDamage:
+      types:
+        Blunt: 12
+        Shock: 15
+
+- type: entity
+  id: DefibrillatorDisposable
+  parent: DefibrillatorCompact
+  name: disposable defibrillator
+  description: "A small defibrillator, with an integrated cell, only allowing two uses. Battery drains idly while on."
+  suffix: BF14
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/defibsyndi.rsi
+    layers:
+      - state: icon
+      - state: screen
+        map: [ "enum.ToggleableVisuals.Layer" ]
+        visible: false
+        shader: unshaded
+      - state: ready
+        map: ["enum.PowerDeviceVisualLayers.Powered"]
+        shader: unshaded
+  - type: Item
+    size: Normal
+  - type: Defibrillator
+    zapHeal:
+      types:
+        Asphyxiation: -40
+        Blunt: -5
+        Slash: -5
+        Piercing: -5
+        Heat: -5
+    doAfterDuration: 6
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: power-cell-slot-component-slot-name-default
+        startingItem: PowerCellSmall
+        disableEject: true
+        locked: true

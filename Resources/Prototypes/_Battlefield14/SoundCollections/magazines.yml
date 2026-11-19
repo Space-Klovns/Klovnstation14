@@ -1,0 +1,16 @@
+- type: soundCollection
+  id: BF_Magazine_Drop_Rifle
+  files:
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/rifle_magdrop.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/rifle_magdrop_1.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/rifle_magdrop_2.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/rifle_magdrop_3.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/rifle_magdrop_4.ogg"
+
+- type: soundCollection
+  id: BF_Magazine_Drop_SMG
+  files:
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/magdrop_smg.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/smg_pistol_magdrop_1.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/smg_pistol_magdrop_2.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/magazines/smg_pistol_magdrop_3.ogg"

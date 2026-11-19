@@ -1,0 +1,49 @@
+- type: entity
+  parent: BaseItem
+  id: BF14BaseMagazineRifle
+  abstract: true # BF14-BLU: a base, it has no sprite of its own
+  components:
+#  - type: EmitSoundOnDrop # these play when you insert them into guns, annoying
+#    sound:
+#      collection: BF_Magazine_Drop_Rifle
+#      params:
+#        volume: -3
+  - type: EmitSoundOnLand
+    sound:
+      collection: BF_Magazine_Drop_Rifle
+      params:
+        volume: -2
+
+- type: entity
+  parent: BaseItem
+  id: BaseMagazineSMG
+  abstract: true # BF14-BLU: a base, it has no sprite of its own
+  components:
+#  - type: EmitSoundOnDrop
+#    sound:
+#      collection: BF_Magazine_Drop_SMG
+#      params:
+#        volume: -3
+  - type: EmitSoundOnLand
+    sound:
+      collection: BF_Magazine_Drop_SMG
+      params:
+        volume: -2
+
+- type: entity
+  parent: BaseItem
+  id: BF14BaseMagazinePistol
+  abstract: true # BF14-BLU: a base, it has no sprite of its own
+  components:
+#  - type: EmitSoundOnDrop
+#    sound:
+#      path: "/Audio/_Battlefield14/Weapons/Guns/magazines/pistol_magdrop.ogg"
+#      params:
+#        volume: -5
+#        variation: 0.125
+  - type: EmitSoundOnLand
+    sound:
+      path: "/Audio/_Battlefield14/Weapons/Guns/magazines/pistol_magdrop.ogg"
+      params:
+        volume: -2
+        variation: 0.125

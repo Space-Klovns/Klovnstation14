@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from the public Certain Fury repository at https://github.com/CFury84/PublicScal-I-Am-Feeling-Certainly-Furious; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "base"
+    },
+    {
+      "name": "open"
+    },
+    {
+      "name": "closed"
+    },
+    {
+      "name": "overlay_ampuole"
+    },
+    {
+      "name": "overlay_ampuole_red"
+    },
+    {
+      "name": "overlay_stripe_blue"
+    },
+    {
+      "name": "overlay_stripe_lightblue"
+    },
+    {
+      "name": "overlay_stripe_green"
+    },
+    {
+      "name": "overlay_stripe_red"
+    },
+    {
+      "name": "overlay_stripe_maroon"
+    },
+    {
+      "name": "overlay_stripe_yellow"
+    },
+    {
+      "name": "overlay_stripe_lightyellow"
+    },
+    {
+      "name": "overlay_stripe_dirtyyellow"
+    },
+    {
+      "name": "overlay_stripe_grey"
+    },
+    {
+      "name": "overlay_stripe_white"
+    },
+    {
+      "name": "overlay_stripe_purple"
+    },
+    {
+      "name": "overlay_stripe_darkpurple"
+    },
+    {
+      "name": "overlay_pills_blue"
+    },
+    {
+      "name": "overlay_pills_lightblue"
+    },
+    {
+      "name": "overlay_pills_green"
+    },
+    {
+      "name": "overlay_pills_red"
+    },
+    {
+      "name": "overlay_pills_maroon"
+    },
+    {
+      "name": "overlay_pills_yellow"
+    },
+    {
+      "name": "overlay_pills_dirtyyellow"
+    },
+    {
+      "name": "overlay_pills_grey"
+    },
+    {
+      "name": "overlay_pills_black"
+    },
+    {
+      "name": "overlay_pills_purple"
+    },
+    {
+      "name": "overlay_pills_darkpurple"
+    }
+  ]
+}

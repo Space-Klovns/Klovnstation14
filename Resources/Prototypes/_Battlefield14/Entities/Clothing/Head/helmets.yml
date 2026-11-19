@@ -1,0 +1,371 @@
+- type: entity
+  parent: ClothingHeadHelmetBasic
+  id: ClothingHeadHatHelmetUS
+  name: american camo helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmet.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+        Heat: 0.9
+#      flatReductions:
+#        Blunt: 2
+#        Slash: 2
+#        Piercing: 2
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUSFAST
+  description: A high cut helmet used by special ops units and larpers.
+  name: FAST helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/fasthelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/fasthelmet.rsi
+  - type: ExplosionResistance
+    damageCoefficient: 0.95 # high cut
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUSFASTMandible
+  description: A high cut helmet used by special ops units and larpers. This one has a attached mandible cover that protects your ears and face from sharpnel.
+  name: FAST helmet (mandible)
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/fasthelmetmandible.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/fasthelmetmandible.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+        Heat: 0.9
+      flatReductions:
+        Blunt: 1
+        Slash: 1
+        Piercing: 0.5
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUSACH
+  name: ACH helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACH.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACH.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSACH
+  id: ClothingHeadHatHelmetUSACHWoodland
+  name: ACH helmet (MARPAT woodland)
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACHWoodland.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACHWoodland.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUSRiot
+  name: american camo riot helmet
+  description: This IS for catching shrap and rounds.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmetriot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmetriot.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+        Heat: 0.9
+      flatReductions:
+        Blunt: 1
+        Slash: 1
+        Piercing: 0.5
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSRiot
+  id: ClothingHeadHatHelmetUSRiotACH
+  name: ACH riot helmet
+  description: This IS for catching shrap and rounds.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACHRiot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ACHRiot.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUSUrban
+  name: M81 urban camo helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmeturban.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmeturban.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSRiot
+  id: ClothingHeadHatHelmetUSUrbanRiot
+  name: M81 urban camo helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmeturbanriot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ushelmeturbanriot.rsi
+
+- type: entity
+  parent: ClothingHeadHelmetBasic
+  id: ClothingHeadHatHelmetDEM92
+  name: M92 combat helmet (flecktarn)
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/dehelmetM92.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/dehelmetM92.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetRU
+  name: russian camo helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmet.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetRUEMR
+  name: russian camo helmet (EMR)
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/emrhelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/emrhelmet.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSRiot
+  id: ClothingHeadHatHelmetRUEMRRiot
+  name: russian camo riot helmet (EMR)
+  description: This IS for catching shrap and rounds.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/emrhelmetriot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/emrhelmetriot.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetRU
+  id: ClothingHeadHatHelmetRU6b47
+  name: 6b47 helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetRU6b47
+  id: ClothingHeadHatHelmetRU6b47Alt
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47alt.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47alt.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSRiot
+  id: ClothingHeadHatHelmetRU6b47Riot
+  name: 6b47 riot helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47Riot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47Riot.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetRU6b47Riot
+  id: ClothingHeadHatHelmetRU6b47RiotAlt
+  name: 6b47 riot helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47altRiot.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/6b47altRiot.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetRUSSh68
+  name: SSh-68 helmet
+  description: A very old SSh-68 helmet, commonly nicknamed "penis helmet" due to its shape.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmetssh68.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmetssh68.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetRUSSh68
+  id: ClothingHeadHatHelmetRUSSh68Track
+  name: SSh-68 helmet
+  description: A very old SSh-68 helmet, commonly nicknamed "penis helmet" due to its shape. This one has ben pained black with 2 white stripes.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmetssh68track.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/ruhelmetssh68track.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUSRiot
+  id: ClothingHeadHatHelmetRUAltyn
+  name: Rys-T helmet
+  description: Rated to stop shrapnel and pistol rounds, you didnt think it could stop rifle rounds like M855 did you?
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/rualtyn.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/rualtyn.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.85
+        Slash: 0.85
+        Piercing: 0.85
+        Heat: 0.9
+      flatReductions:
+        Blunt: 2
+        Slash: 1
+        Piercing: 1
+  - type: ExplosionResistance
+    damageCoefficient: 0.85
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+    - FacialHair
+  - type: ClothingSpeedModifier
+    walkModifier: 0.95
+    sprintModifier: 0.95
+  - type: HeldSpeedModifier
+
+- type: entity
+  parent: ClothingHeadHatHelmetRUAltyn
+  id: ClothingHeadHatHelmetRUAltynTrack
+  name: Rys-T helmet
+  description: Rated to stop shrapnel and pistol rounds, you didnt think it could stop rifle rounds like M855 did you? This one has ben painted with white stripes.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/rutrackaltyn.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/rutrackaltyn.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetUN
+  name: UN helmet
+  description: Youre more likey to die wearing this than if you just left it in the ditch you found it in.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/unhelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/unhelmet.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetSurplus
+  name: surplus helmet
+  description: A old surplus helmet, its origin is unknown.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/surplushelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/surplushelmet.rsi
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatHelmetHardhat
+  name: Hardhat
+  description: A plastic hardhat, no its not gonna protect you from anything unless its raining bricks.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/hardhat.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/hardhat.rsi
+  - type: Armor
+    modifiers:
+      flatReductions:
+        Blunt: 2
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetSecurityBF14
+  name: security helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetsec.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetsec.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetSecurityBF14
+  id: ClothingHeadHatHelmetCommand
+  name: command helmet
+  description: This isnt for catching shrap or rounds, its made to keep your grey matter from grossing out your buddies.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetcom.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetcom.rsi
+
+- type: entity
+  parent: ClothingHeadHatHelmetUS
+  id: ClothingHeadHatHelmetPilotBlack
+  name: pilot helmet
+  description: "Has enough protection to stop your head getting caved in after ejection and is equipped with an advanced IFF sensor suite and welding arc protection. Provides welding protection and sechud."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetpilotblack.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetpilotblack.rsi
+  - type: ShowJobIcons
+  - type: Tag
+    tags:
+    - HudSecurity
+  - type: EyeProtection # welding protection, not flash protection
+  - type: IdentityBlocker
+    coverage: EYES
+
+- type: entity
+  parent: ClothingHeadHatHelmetPilotBlack
+  id: ClothingHeadHatHelmetPilotNavyBlue
+  name: pilot helmet
+  description: "Has enough protection to stop your head getting caved in after ejection and is equipped with an advanced IFF sensor suite and welding arc protection. Provides welding protection and sechud."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetpilotnavyblue.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/helmetpilotnavyblue.rsi

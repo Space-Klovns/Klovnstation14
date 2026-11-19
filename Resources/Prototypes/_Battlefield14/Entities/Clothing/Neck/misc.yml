@@ -1,0 +1,24 @@
+- type: entity
+  parent: ClothingNeckBase
+  id: BF_ClothingNeckIFFYellow
+  name: IFF yellow strobe
+  description: Visible LED IFF kit that consists of helmet and shoulder strobes.
+  components:
+  - type: Item
+    size: Small
+  - type: Sprite
+    sprite: _NF/Clothing/Neck/Misc/mercenary_iff.rsi
+    layers:
+    - state: icon-off
+    - state: icon-on
+      color: "#cfcf00"
+      shader: unshaded
+  - type: Clothing
+    sprite: _NF/Clothing/Neck/Misc/mercenary_iff.rsi
+    clothingVisuals:
+      neck:
+      - state: equipped-NECK-off
+      - state: equipped-NECK-on
+        color: "#cfcf00"
+        shader: unshaded
+  - type: Appearance

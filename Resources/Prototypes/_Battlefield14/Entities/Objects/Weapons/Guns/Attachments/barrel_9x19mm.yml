@@ -1,0 +1,20 @@
+- type: entity
+  parent: BaseGunAttachmentSuppressor
+  id: GunAttachmentSuppressorPistol9x19mm
+  name: 9x19mm pistol suppressor
+  description: Supports weapons with threaded barrels that fire 9x19mm.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Pistols/M9.rsi
+    state: supp
+    offset: -0.25, -0.15
+  - type: ESGunSoundAttachment
+    sound:
+      collection: BF_M9Beretta_Gunshots_SUPP
+      params:
+        volume: -9
+        maxDistance: 7 # BF14-BLU: was Mono's range
+  - type: Tag
+    tags:
+    - MonoSuppressor
+    - BF14Pistol9x19mmSuppressor

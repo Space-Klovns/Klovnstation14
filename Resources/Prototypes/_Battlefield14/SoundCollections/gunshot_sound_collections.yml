@@ -1,0 +1,9 @@
+- type: soundCollection
+  id: BF_M9Beretta_Gunshots_SUPP # M9 Beretta - used for M9 Beretta SUPP.
+  files:
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-01.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-02.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-03.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-04.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-05.ogg"
+  - "/Audio/_Battlefield14/Weapons/Guns/Beretta/fire-sup-06.ogg"

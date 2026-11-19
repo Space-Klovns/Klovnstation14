@@ -1,0 +1,93 @@
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeBlue
+  name: IFF tape (blue)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeBlue.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeBlue.rsi
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeYellow
+  name: IFF tape (yellow)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeYellow.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeYellow.rsi
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeGreen
+  name: IFF tape (green)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeGreen.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeGreen.rsi
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeWhite
+  name: IFF tape (white)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtape.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtape.rsi
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeRed # TODO make these just recolour the white one later
+  name: IFF tape (red)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeRed.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeRed.rsi
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckIFFtapeStGeorge
+  name: IFF tape (St. George's ribbon)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeStGeorge.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeStGeorge.rsi
+    slots: [neck, HELMETCOVER]
+    clothingVisuals:
+      helmetcover:
+      - state: equipped-HELMETCOVER
+
+- type: entity
+  parent: [ClothingNeckBase , BaseFoldable]
+  id: ClothingNeckIFFtapeFSB
+  name: reversable IFF armband (FSB)
+  description: Prevents friendly fire as long as you have your colour-identification flash card.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeFSB.rsi
+#    layers:
+#    - state: icon
+#      map: [ "unfoldedLayer" ]
+#    - state: icon-flipped
+#      map: ["foldedLayer"]
+#      visible: false
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Neck/IFFtapeFSB.rsi
+  - type: Foldable
+    canFoldInsideContainer: true
+    unfoldVerbText: fold-flip-verb
+    foldVerbText: fold-flip-verb
+  - type: FoldableClothing
+    foldedEquippedPrefix: flipped
+    foldedHeldPrefix: flipped

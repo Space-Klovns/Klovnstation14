@@ -1,0 +1,254 @@
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitPlain
+  name: plain attire
+  description: Black pants, white shirt.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitGorka
+  name: reproduction Gorka-4 uniform
+  description: A Gorka-4, used by Russian Spetsnaz, mountain infantry and hunters. Reproduced with new materials for the modern larper.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/gorka.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/gorka.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitAfganVet1
+  name: M88 Afganka uniform
+  description: Afganka shirt and pants with a Telnyashka shirt underneath. Used to be common issue during the Soviet-Afghan War.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/ruvet1.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/ruvet1.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitAfganVet2
+  name: M88 Afganka uniform
+  description: Afganka pants with a Telnyashka shirt. Used to be common issue during the Soviet-Afghan War.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/ruvet2.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/ruvet2.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitTracksuitRed
+  name: red tracksuit
+  description: A red tracksuit. This is what a peasant gopnik wears.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/redtrack.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/redtrack.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitTracksuitBlue
+  name: blue tracksuit
+  description: A blue tracksuit. This is what a lesser gopnik wears.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/bluetrack.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/bluetrack.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitTracksuitBlack
+  name: black tracksuit
+  description: A black tracksuit. This is what a true gopnik wears.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/blacktrack.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/blacktrack.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitTracksuitYellow
+  name: boss tracksuit
+  description: A black tracksuit with a yellow tracksuit hoodie. This is what the king of gopniks wears.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/yellowtrack.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/yellowtrack.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitClerk
+  name: clerk attire
+  description: Blue jeans, white shirt, and a brown leather vest. Something the local koisk clerk would wear.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/clerk.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/clerk.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitDealer
+  name: dealer attire
+  description: Black pants, black hoodie just like what a drug dealer would wear.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/dealer.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/dealer.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitHunter
+  name: hunter attire
+  description: A cheap and crappy camo shirt with a pair of jeans.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/hunting.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/hunting.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitWorker
+  name: worker attire
+  description: Tough worker pants with a high viz strip.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/worker.rsi
+    layers:
+    - state: icon
+    - state: icon-unshaded
+      shader: unshaded
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/worker.rsi
+    clothingVisuals:
+      innerClothing:
+      - state: equipped-INNERCLOTHING
+      - state: equipped-INNERCLOTHING-unshaded
+        shader: unshaded
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitMechanic
+  name: mechanic jumpsuit
+  description: A simple onsie jumpsuit, this one is blue meaning its worn by mechanics.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/mechanic.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/mechanic.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitEngineer
+  name: engineer jumpsuit
+  description: A simple onsie jumpsuit, this one is red meaning its worn by engineer.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/engineer.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/engineer.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitPlainGraphicChud
+  name: graphic tee (chud)
+  description: CAUSE IM A CHUUD, IM AN INCEEEELLL.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+    clothingVisuals:
+      jumpsuit:
+      - state: equipped-INNERCLOTHING
+      - state: chud
+        sprite: _Battlefield14/Clothing/Uniforms/Overlays/textlarge.rsi
+        scale: 0.5, 0.5
+        offset: 0, 0.25
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitPlainGraphicHate
+  name: graphic tee (hate)
+  description: Annihilate everything that exists.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/plain.rsi
+    clothingVisuals:
+      jumpsuit:
+      - state: equipped-INNERCLOTHING
+      - state: hate
+        sprite: _Battlefield14/Clothing/Uniforms/Overlays/textlarge.rsi
+        scale: 0.5, 0.5
+        offset: 0, 0.25
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitTshirtJeansGrayGraphicZ
+  name: graphic tee (Z)
+  description: Support your troops with a shirt with a letter on it.
+  components:
+  - type: Sprite
+    sprite: Nyanotrasen/Clothing/Uniforms/Jumpsuit/tshirtjeansgray.rsi
+  - type: Clothing
+    sprite: Nyanotrasen/Clothing/Uniforms/Jumpsuit/tshirtjeansgray.rsi
+    clothingVisuals:
+      jumpsuit:
+      - state: equipped-INNERCLOTHING
+      - state: z
+        sprite: _Battlefield14/Clothing/Uniforms/Overlays/text.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitPatrioticUSA1
+  name: patriotic shirt
+  description: Worn by true patriots.
+  components:
+  - type: Sprite
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen1.rsi
+  - type: Clothing
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen1.rsi
+
+- type: entity
+  parent: ClothingUniformJumpsuitPatrioticUSA1
+  id: ClothingUniformJumpsuitPatrioticUSA2
+  components:
+  - type: Sprite
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen2.rsi
+  - type: Clothing
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen2.rsi
+
+- type: entity
+  parent: ClothingUniformJumpsuitPatrioticUSA1
+  id: ClothingUniformJumpsuitPatrioticUSA3
+  components:
+  - type: Sprite
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen3.rsi
+  - type: Clothing
+    sprite: _Civ14/Clothing/Uniforms/Jumpsuit/boomerwaffen3.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitSmiley
+  name: smiley shirt
+  description: ":)"
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/smiley.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/smiley.rsi

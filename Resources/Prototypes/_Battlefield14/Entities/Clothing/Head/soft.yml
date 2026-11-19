@@ -1,0 +1,15 @@
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatZsoft
+  name: Z cap
+  description: "It's a baseball hat with a white Z on the front."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Soft/zsoft.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Soft/zsoft.rsi
+    clothingVisuals:
+      head:
+      - state: equipped-HELMET
+        scale: 0.5, 0.5
+        offset: 0, 0.25 # -0.14, 0.25

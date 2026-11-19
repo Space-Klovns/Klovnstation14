@@ -1,0 +1,23 @@
+- type: entity
+  id: BaseBulletPistol
+  name: bullet
+  parent: BaseBullet
+  abstract: true
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/ballistic.rsi
+    layers:
+    - state: small
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 20
+  - type: KsProjectileFalloff # BF14-BLU: was ProjectileDamageFalloff
+    fullDamageRange: 6
+    minDamageRange: 9
+    minMultiplier: 0.7
+  - type: StaminaDamageOnCollide
+    damage: 5 # 20 hits to stun lol
+  - type: Ammo
+    muzzleFlash: MuzzleFlashEffectSmall

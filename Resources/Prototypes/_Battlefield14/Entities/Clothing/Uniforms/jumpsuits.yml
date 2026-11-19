@@ -1,0 +1,67 @@
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitCombatScavBoss
+  name: Scavenger boss uniform
+  description: Worn by the boss apart of the local scavenger gang.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/scavboss.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/scavboss.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitCombatScavGuard
+  name: Scavenger uniform
+  description: Worn by those apart of the local scavenger gang.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/scavguard.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/scavguard.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitUtilityCrewblack
+  name: black crew utility uniform
+  description: Used on spacecraft/stations with assigned missions.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/black_utility_crew.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/black_utility_crew.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitUtilityCrewblackSec
+  name: black security utility uniform
+  description: Used on spacecraft/stations with assigned missions.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/black_utility_sec.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/black_utility_sec.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitUSPD
+  name: american police uniform
+  description: Used by enforcers of the law across the United States.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/navycombat.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/navycombat.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitMilitaryColorWhiteTDM
+  description: unremovable identification suit
+  name: white goon uniform
+  suffix: Unremoveable
+  components:
+  - type: Unremoveable
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/whitegoon1.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Uniforms/Jumpsuit/whitegoon1.rsi

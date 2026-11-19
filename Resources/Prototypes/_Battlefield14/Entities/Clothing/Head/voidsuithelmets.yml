@@ -1,0 +1,92 @@
+- type: entity
+  parent: [ ClothingHeadHardsuitBase, ClothingHeadSuitWithLightBase ]
+  id: ClothingHeadHelmetVoidsuitAmericanCombatMarine
+  categories: [ HideSpawnMenu ]
+  name: Marine combat voidsuit helmet
+  description: "A combat voidsuit helmet with internal pressurization systems and an inbuilt tracker system for ballistics. Allows you to see job icons."
+  components:
+  - type: BreathMask
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/americancombatmarine.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/americancombatmarine.rsi
+  - type: PointLight
+    radius: 6
+    energy: 1
+    color: "#edf0ff"
+  - type: PressureProtection
+    highPressureMultiplier: 0.1
+    lowPressureMultiplier: 1000
+  - type: IdentityBlocker
+  - type: ShowJobIcons
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+        Heat: 0.9
+        Radiation: 0.9
+        Caustic: 0.9
+#      flatReductions:
+#        Blunt: 2
+#        Slash: 2
+#        Piercing: 2
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+
+- type: entity
+  parent: ClothingHeadHelmetVoidsuitAmericanCombatMarine
+  id: ClothingHeadHelmetVoidsuitGermanCombat
+  categories: [ HideSpawnMenu ]
+  name: German combat voidsuit helmet
+  description: "A combat voidsuit helmet with internal pressurization systems and an inbuilt tracker system for ballistics. Allows you to see job icons."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/germancombat.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/germancombat.rsi
+  - type: PointLight
+    radius: 6
+    energy: 1
+    color: "#f1ffed"
+
+- type: entity
+  parent: ClothingHeadHelmetVoidsuitAmericanCombatMarine
+  id: ClothingHeadHelmetVoidsuitRussianCombat
+  categories: [ HideSpawnMenu ]
+  name: Russian combat voidsuit helmet
+  description: "A combat voidsuit helmet with internal pressurization systems and an inbuilt tracker system for ballistics. Allows you to see job icons."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/russiancombat.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/russiancombat.rsi
+  - type: PointLight
+    radius: 6
+    energy: 1
+    color: "#ffffed"
+
+- type: entity
+  parent: ClothingHeadHelmetVoidsuitRussianCombat
+  id: ClothingHeadHelmetVoidsuitRussianCombatHeavy
+  categories: [ HideSpawnMenu ]
+  name: Russian heavy combat voidsuit helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/russiancombatheavy.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Voidsuithelmets/russiancombatheavy.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
+        Heat: 0.9
+        Radiation: 0.9
+        Caustic: 0.9
+      flatReductions:
+        Blunt: 1
+        Slash: 1
+        Piercing: 1

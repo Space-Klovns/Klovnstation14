@@ -1,0 +1,46 @@
+- type: explosion
+  id: HandGrenade
+  damagePerIntensity:
+    types:
+      Heat: 5
+      Blunt: 5
+      Piercing: 5
+  tileBreakChance: [0, 0.5, 1]
+  tileBreakIntensity: [0, 10, 30]
+  tileBreakRerollReduction: 20
+  lightColor: Orange
+  texturePath: /Textures/_RMC14/Effects/fog.rsi
+  fireStates: 1
+  sound:
+    collection: CivExplosionGrenade
+  smallSound: 
+     collection: CivExplosionGrenade
+  soundFar: 
+     collection: CivExplosionDistant
+  smallSoundFar: 
+     collection: CivExplosionDistantFar
+
+- type: explosion
+  id: Thermobaric
+  damagePerIntensity:
+    types:
+      Heat: 6
+      Blunt: 6
+      Asphyxiation: 5
+      Structural: 30
+  tileBreakChance: [ 0, 0.5, 1 ]
+  tileBreakIntensity: [ 0, 10, 30 ]
+  tileBreakRerollReduction: 10
+  intensityPerState: 20
+  lightColor: Orange
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 6
+  fireStacks: 1
+  sound:
+    collection: CivExplosionGrenade
+  smallSound:
+     collection: CivExplosionGrenade
+  soundFar:
+     collection: CivExplosionDistant
+  smallSoundFar:
+     collection: CivExplosionDistantFar

@@ -1,0 +1,91 @@
+- type: entity
+  name: pervitin
+  id: PervitinEmpty
+  suffix: empty
+  parent: [BaseStorageItem, RecyclableItemPlasticTiny]
+  description: Military-grade methamphetamine given to finnish soldiers during the Winter War. Highly addictive and dangerous, now issued to Warsaw Pact soldiers to enhance performance in the field.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    layers:
+      - map: [ base ]
+        state: pillcanisterthin
+  - type: Tag
+    tags:
+      - PillCanister
+  - type: Storage
+    grid:
+    - 0,0,1,2
+    quickInsert: true
+    areaInsert: true
+    areaInsertRadius: 1
+    storageInsertSound: /Audio/Effects/pill_insert.ogg
+    storageRemoveSound: /Audio/Effects/pill_remove.ogg
+    whitelist:
+      tags:
+      - Pill
+  - type: Appearance
+  - type: Dumpable
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_Goobstation/Items/handling/pillbottle_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_Goobstation/Items/handling/pillbottle_drop.ogg
+  - type: GenericVisualizer
+    visuals:
+      enum.StorageVisuals.Open:
+        base:
+          True: { state: pillcanisterthin_e }
+          False: { state: pillcanisterthin }
+
+- type: entity
+  parent: PervitinEmpty
+  id: Pervitin
+  suffix: Desoxyephedrine 5u, 6
+  components:
+  - type: StorageFill
+    contents:
+    - id: PillDesoxyephedrine
+      amount: 6
+
+- type: entity
+  name: pill bottle
+  id: BF14PillBottle
+  parent: PillCanister
+  components:
+  - type: Item
+    size: Small
+    sprite: _DV/Objects/Specific/Chemistry/pills_canister.rsi # DeltaV - Resprited some medical items
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi # BF14
+    layers:
+      - map: [ base ]
+        state: pillbottle
+  - type: Storage
+    grid:
+    - 0,0,4,2 # BF14
+    quickInsert: true
+    areaInsert: true
+    areaInsertRadius: 1
+    storageInsertSound: /Audio/Effects/pill_insert.ogg
+    storageRemoveSound: /Audio/Effects/pill_remove.ogg
+    whitelist:
+      tags:
+      - Pill
+  - type: Dumpable
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_Goobstation/Items/handling/pillbottle_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_Goobstation/Items/handling/pillbottle_drop.ogg
+  - type: GenericVisualizer
+    visuals:
+      enum.StorageVisuals.Open:
+        base:
+          True: { state: pillbottle_e }
+          False: { state: pillbottle }
+  - type: Appearance

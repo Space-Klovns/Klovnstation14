@@ -1,0 +1,12 @@
+- type: entity
+  id: BulletPistolBF357
+  name: bullet (.357 Magnum)
+  parent: BaseBulletPistol
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 35
+  - type: StaminaDamageOnCollide
+    damage: 10 # 10 hits to stun

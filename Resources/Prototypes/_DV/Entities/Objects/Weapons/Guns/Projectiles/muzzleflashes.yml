@@ -1,0 +1,13 @@
+- type: entity
+  parent: MuzzleFlashEffect
+  id: MuzzleFlashEffectSmall
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: BelowMobs
+    offset: 0.15, 0
+    layers:
+    - shader: unshaded
+      map: ["enum.EffectLayers.Unshaded"]
+      sprite: _Impstation/Objects/Weapons/Guns/Projectiles/muzzleflashes.rsi
+      state: kineticsmall

@@ -1,0 +1,31 @@
+- type: entity
+  id: Bullet43x30mmThermobaric
+  name: 43x30mm thermobaric grenade
+  parent: BaseBulletTrigger
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 80
+        Piercing: 50
+    deleteOnCollide: true
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Thermobaric
+    totalIntensity: 30
+    intensitySlope: 6
+    maxIntensity: 3
+    maxTileBreak: 0
+  - type: SpawnOnTrigger
+    proto: InstantEffectGravityWellThermobaric
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/ballistic.rsi
+    layers:
+    - state: grenade
+  - type: TimedDespawn
+    lifetime: 10
+  - type: PointLight
+    radius: 3
+    color: orange
+    energy: 0.5

@@ -1,0 +1,14 @@
+- type: entity
+  parent: EncryptionKey
+  id: EncryptionKeyWPS
+  name: Western private security communications encryption key
+  description: Hey we got a civilian uhh littering over in rnd over.
+  components:
+    - type: EncryptionKey
+      channels:
+        - Security
+      defaultChannel: Security
+    - type: Sprite
+      layers:
+        - state: crypt_silver
+        - state: nano_label

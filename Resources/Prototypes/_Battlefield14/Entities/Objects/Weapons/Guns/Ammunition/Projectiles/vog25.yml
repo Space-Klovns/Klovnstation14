@@ -1,0 +1,128 @@
+- type: entity
+  id: BulletVOG25Thermobaric
+  name: VG-40TB
+  parent: BaseBulletTrigger
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 15
+        Piercing: 40
+    deleteOnCollide: true
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Thermobaric
+    totalIntensity: 20
+    intensitySlope: 3
+    maxIntensity: 2
+    maxTileBreak: 0
+  - type: SpawnOnTrigger
+    proto: InstantEffectGravityWellThermobaric
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Ammunition/Casings/vog25.rsi
+    layers:
+    - state: vg40-spent
+  - type: TimedDespawn
+    lifetime: 10
+  - type: PointLight
+    radius: 3
+    color: orange
+    energy: 0.5
+
+- type: entity
+  id: ArtilleryMarkerVOG25Thermobaric
+  name: artillery strike VG-40TB 40mm thermobaric
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Ammunition/Casings/vog25.rsi
+    layers:
+    - state: vg40-spent
+  - type: TriggerOnSpawn
+  - type: DeleteOnTrigger
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Thermobaric
+    totalIntensity: 20
+    intensitySlope: 3
+    maxIntensity: 2
+    maxTileBreak: 0
+  - type: SpawnOnTrigger
+    proto: InstantEffectGravityWellThermobaric
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: Pellet12_gaugeFlare
+  id: BulletVOG25Illumination
+  name: VSG-25
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Ammunition/Casings/vog25.rsi
+    layers:
+    - state: flare-spent
+  - type: Projectile
+    damage:
+      types:
+        Structural: 15
+        Blunt: 40
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+#  parent: BaseBullet
+  id: ArtilleryMarkerVOG25Illumination
+  name: VSG-25
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Ammunition/Casings/vog25.rsi
+    layers:
+    - state: flare-spent
+  - type: IgnitionSource
+    ignited: true
+    temperature: 1000
+  - type: TimedDespawn
+    lifetime: 240
+  - type: AmbientSound
+    enabled: true
+    volume: 0
+    range: 7
+    sound:
+      path: /Audio/Items/Flare/flare_burn.ogg
+      params:
+        loop: true
+  - type: IgniteOnCollide
+    fireStacks: 1
+  - type: PointLight
+    enabled: true
+    color: "#FF8080"
+    radius: 15.0
+    energy: 9.0
+
+- type: entity
+  id: ArtilleryMarkerVOG25ParaFlare
+  name: artillery strike VG-40OP 40mm paraflare
+  components:
+  - type: Sprite
+    sprite: _WorldAblaze1968/Objects/Misc/ArtilleryImpact.rsi
+    state: flare
+  - type: IgnitionSource
+    ignited: true
+    temperature: 1000
+  - type: TimedDespawn
+    lifetime: 60
+  - type: EmitSoundOnSpawn
+    sound: /Audio/_RMC14/Items/fulton.ogg
+  - type: AmbientSound
+    enabled: true
+    volume: 0
+    range: 5
+    sound:
+      path: /Audio/Items/Flare/flare_burn.ogg
+      params:
+        loop: true
+  - type: IgniteOnCollide
+    fireStacks: 1
+  - type: PointLight
+    enabled: true
+    color: "#FF8080"
+    radius: 15.0
+    energy: 9.0

@@ -1,0 +1,5 @@
+- type: localizedDataset # BF14-BLU: was a dataset
+  id: names_smersh
+  values:
+    prefix: names-smersh-dataset-
+    count: 2

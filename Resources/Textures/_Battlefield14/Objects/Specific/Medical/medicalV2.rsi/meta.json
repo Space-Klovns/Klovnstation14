@@ -1,0 +1,118 @@
+{
+	"version": 1,
+	"license": "Custom",
+    "copyright": "Made by WillyBillyGilly for the Battlefield 14 project, inhands by JoeHammad, do not resicense, edit, or reuse without permission; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+	"size": {
+		"x": 32,
+		"y": 32
+	},
+	"states": [
+		{
+			"name": "gauze"
+		},
+		{
+			"name": "gauze_2"
+		},
+		{
+			"name": "gauze_3"
+		},
+		{
+			"name": "gauzepacket"
+		},
+		{
+			"name": "gauzepacketopen"
+		},
+		{
+			"name": "gauzepackettan"
+		},
+		{
+			"name": "gauzepacketopentan"
+		},
+		{
+			"name": "gauze-inhand-left",
+			"directions": 4
+		},
+		{
+			"name": "gauze-inhand-right",
+			"directions": 4
+		},
+		{
+			"name": "dressing"
+		},
+		{
+			"name": "dressing_2"
+		},
+		{
+			"name": "dressing_3"
+		},
+		{
+			"name": "dressingpacket"
+		},
+		{
+			"name": "dressingpacketopen"
+		},
+		{
+			"name": "dressingpackettan"
+		},
+		{
+			"name": "dressingpacketopentan"
+		},
+		{
+			"name": "dressing-inhand-left",
+			"directions": 4
+		},
+		{
+			"name": "dressing-inhand-right",
+			"directions": 4
+		},
+		{
+			"name": "ointment"
+		},
+		{
+			"name": "ointment_2"
+		},
+		{
+			"name": "ointment_3"
+		},
+		{
+			"name": "ointment_4"
+		},
+		{
+			"name": "ointment-inhand-left",
+			"directions": 4
+		},
+		{
+			"name": "ointment-inhand-right",
+			"directions": 4
+		},
+		{
+			"name": "esmarch"
+		},
+		{
+			"name": "esmarch-inhand-left",
+			"directions": 4
+		},
+		{
+			"name": "esmarch-inhand-right",
+			"directions": 4
+		},
+		{
+			"name": "pillcanister"
+		},
+		{
+			"name": "pillcanister_e"
+		},
+		{
+			"name": "pillcanisterthin"
+		},
+		{
+			"name": "pillcanisterthin_e"
+		},
+		{
+			"name": "pillbottle"
+		},
+		{
+			"name": "pillbottle_e"
+		}
+	]
+}

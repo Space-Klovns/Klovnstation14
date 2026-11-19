@@ -1,0 +1,23 @@
+- type: entity
+  parent: ClothingEyesHudMedical
+  id: ClothingEyesHudMedicalBF
+  name: medical hud
+  description: A heads-up display that scans the humanoids in view and provides accurate data about their health status.
+  suffix: BF14, Soldier only
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Eyes/Hud/med.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Eyes/Hud/med.rsi
+  - type: ShowHealthBars
+    damageContainers:
+    - Biological
+  - type: ShowHealthIcons
+    damageContainers:
+    - Biological
+  - type: ShowJobIcons
+  - type: Tag
+    tags:
+    - HudMedical
+    - HudSecurity
+  - type: SolutionScanner

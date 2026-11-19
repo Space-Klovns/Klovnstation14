@@ -1,0 +1,16 @@
+- type: entity
+  parent: RemoteSignaller
+  id: RemoteSignallerM57
+  name: M57 firing device
+  description: Click click BANG. Range 300 meters.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Devices/clacker.rsi
+    state: icon
+  - type: WirelessNetworkConnection
+    range: 300
+  - type: EmitSoundOnTrigger
+    sound:
+      path: /Audio/Items/pen_click.ogg
+  - type: StaticPrice
+    price: 30

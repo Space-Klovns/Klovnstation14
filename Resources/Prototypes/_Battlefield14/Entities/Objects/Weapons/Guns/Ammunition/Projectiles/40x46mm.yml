@@ -1,0 +1,120 @@
+- type: entity
+  id: Bullet40x46mmHE
+  name: 40x46mm HE grenade
+  parent: BaseBulletTrigger
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 50
+        Blunt: 40
+    deleteOnCollide: true
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: HandGrenade
+    totalIntensity: 20
+    intensitySlope: 3
+    maxIntensity: 2
+    maxTileBreak: 0
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/ballistic.rsi
+    layers:
+    - state: grenade
+  - type: TimedDespawn
+    lifetime: 10
+  - type: PointLight
+    radius: 3
+    color: orange
+    energy: 0.5
+
+- type: entity
+  id: Bullet40x46mmHEDPFragment
+  name: 40x46mm HEDP fragment
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 20
+        Slash: 10
+        Piercing: 10
+    deleteOnCollide: true
+  - type: StaminaDamageOnCollide
+    damage: 6 # ~17 hits to stun
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: shard
+  - type: TimedDespawn
+    lifetime: 2
+  - type: PointLight
+    radius: 1.5
+    color: orange
+    energy: 0.3
+
+- type: entity
+  id: Bullet40x46mmFragFragment
+  name: 40x46mm fragment
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 10
+        Slash: 10
+        Piercing: 10
+    deleteOnCollide: true
+  - type: StaminaDamageOnCollide
+    damage: 8 # ~12.5 hits to stun
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: shard
+  - type: TimedDespawn
+    lifetime: 2
+  - type: PointLight
+    radius: 1
+    color: orange
+    energy: 0.2
+
+- type: entity
+  id: Bullet40x46mmMPAPERS
+  name: MP-APERS projectile
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Structural: 8
+        Slash: 5
+        Piercing: 15
+  - type: StaminaDamageOnCollide
+    damage: 3 # ~34 hits to stun
+  - type: KsProjectileFalloff # BF14-BLU: was ProjectileDamageFalloff
+    fullDamageRange: 4
+    minDamageRange: 6
+    minMultiplier: 0.5
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/ballistic.rsi
+    layers:
+    - state: small
+  - type: TimedDespawn
+    lifetime: 1.5
+  - type: PointLight
+    radius: 0.8
+    color: orange
+    energy: 0.15
+
+- type: entity
+  id: 40x46mmMPAPERSSpread
+  categories: [ HideSpawnMenu ]
+  parent: Bullet40x46mmMPAPERS
+  components:
+  - type: ProjectileSpread
+    proto: Bullet40x46mmMPAPERS
+    count: 20
+    spread: 10

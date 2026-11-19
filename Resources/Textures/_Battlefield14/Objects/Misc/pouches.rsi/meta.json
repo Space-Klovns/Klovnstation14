@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from TGMC at icons/obj/clothing/pouches.dmi; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "survival"
+    },
+    {
+      "name": "utility"
+    },
+    {
+      "name": "medium_ammo_mag"
+    },
+    {
+      "name": "large_ammo_mag"
+    },
+    {
+      "name": "medium_drop"
+    },
+    {
+      "name": "large_drop"
+    },
+    {
+      "name": "medkit"
+    },
+    {
+      "name": "large_ammo_drum"
+    },
+    {
+      "name": "surgery"
+    },
+    {
+      "name": "small_firstaid"
+    },
+    {
+      "name": "firstaid"
+    },
+    {
+      "name": "firstaid_injector"
+    },
+    {
+      "name": "pistol_mag"
+    },
+    {
+      "name": "large_pistol_mag"
+    },
+    {
+      "name": "grenade"
+    },
+    {
+      "name": "flare"
+    }
+  ]
+}

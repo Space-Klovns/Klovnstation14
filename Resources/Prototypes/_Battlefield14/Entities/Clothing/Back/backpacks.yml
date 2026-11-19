@@ -1,0 +1,45 @@
+- type: entity
+  parent: ClothingBackpackSatchel
+  id: ClothingBackpackRucksackBlack
+  name: black rucksack
+  description: A combat-ready rucksack in fashionable tan.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Back/rucksackblack.rsi
+
+- type: entity
+  parent: ClothingBackpackSatchel
+  id: ClothingBackpackRucksackTan
+  name: tan rucksack
+  description: A combat-ready rucksack in fashionable black.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Back/rucksacktan.rsi
+
+- type: entity
+  parent: ClothingBackpackSatchel
+  id: ClothingBackpackButtpack
+  name: buttpack
+  description: A small rucksack.
+  components:
+  - type: Sprite
+    sprite: _Civ14/Clothing/Back/Backpacks/smallruck.rsi
+  - type: Storage
+    grid:
+    - 0,0,1,1
+    - 3,0,6,1
+    - 8,0,9,1
+
+- type: entity
+  parent: ClothingBackpackSatchel
+  id: ClothingBackpackButtpackSurplus
+  name: surplus buttpack
+  description: A pack on the butt for storing second-line gear.
+  components:
+  - type: Sprite
+    sprite: _Civ14/Clothing/Back/Backpacks/usbuttpack.rsi
+  - type: Storage
+    grid:
+    - 0,0,1,1
+    - 3,0,5,2
+    - 8,0,9,1

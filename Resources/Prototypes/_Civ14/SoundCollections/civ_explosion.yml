@@ -1,0 +1,20 @@
+- type: soundCollection
+  id: CivExplosionDistant
+  files:
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distant01.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distant02.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distant03.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distant04.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distant05.ogg
+
+- type: soundCollection
+  id: CivExplosionDistantFar
+  files:
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distantfar01.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/explo_distantfar02.ogg
+
+- type: soundCollection
+  id: CivExplosionGrenade
+  files:
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/hegrenade.ogg
+  - /Audio/_Civ14/Weapons/Explosives/Explosions/fraggrenade.ogg

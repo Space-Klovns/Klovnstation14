@@ -1,0 +1,28 @@
+# Cardboard
+- type: entity # Boxes
+  id: RecyclableItemCardboard
+  abstract: true
+  components:
+  - type: PhysicalComposition
+    materialComposition:
+      Cardboard: 100
+
+# Steel
+## Tiny
+- type: entity # Flares idk
+  id: RecyclableItemSteelTiny
+  abstract: true
+  components:
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 10
+
+# Plastic
+## Tiny
+- type: entity # Pill canisters, swabs, dice, capacitors etc.
+  id: RecyclableItemPlasticTiny
+  abstract: true
+  components:
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 10

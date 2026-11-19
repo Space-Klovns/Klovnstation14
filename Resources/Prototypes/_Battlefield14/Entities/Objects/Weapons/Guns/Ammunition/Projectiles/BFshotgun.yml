@@ -1,0 +1,25 @@
+- type: entity
+  id: PelletShotgunBF12GaugeBreaching
+  name: 12 gauge breaching pellet
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/ballistic.rsi
+    layers:
+    - state: small
+  - type: Projectile
+    damage:
+      types:
+        Blunt: 4
+        Slash: 4
+        Piercing: 4
+        Structural: 50
+  - type: KsProjectileFalloff # BF14-BLU: was ProjectileDamageFalloff
+    fullDamageRange: 3
+    minDamageRange: 4
+    minMultiplier: 0.75
+  - type: StaminaDamageOnCollide
+    damage: 10 # ~10 hits to stun
+  - type: TimedDespawn
+    lifetime: 0.2

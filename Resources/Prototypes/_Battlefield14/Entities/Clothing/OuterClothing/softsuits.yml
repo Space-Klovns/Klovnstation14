@@ -1,0 +1,49 @@
+- type: entity
+  parent: ClothingOuterEVASuitBase
+  id: ClothingOuterSoftsuitNASA
+  name: NASA softsuit
+  description: A simple extravehicular softsuit of American design, coloured in yellow for increased chance of detection and rescue.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/OuterClothing/Softsuits/spaceforce.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/OuterClothing/Softsuits/spaceforce.rsi
+  - type: Tag
+    tags:
+    - SuitEVA
+    - FitsInVoidsuitKit
+  - type: StaticPrice
+    price: 1500
+  - type: Item
+    size: Large
+    shape:
+    - 0,0,3,3
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  - type: HeldSpeedModifier
+
+- type: entity
+  parent: ClothingOuterEVASuitBase
+  id: ClothingOuterSoftsuitVKS
+  name: VKS softsuit
+  description: A softsuit Designed for the VKS, or Russian Aerospace Forces, in red for identification and rescue.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/OuterClothing/Softsuits/VKSsoftsuit.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/OuterClothing/Softsuits/VKSsoftsuit.rsi
+  - type: Tag
+    tags:
+    - SuitEVA
+    - FitsInVoidsuitKit
+  - type: StaticPrice
+    price: 1500
+  - type: Item
+    size: Large
+    shape:
+    - 0,0,3,3
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  - type: HeldSpeedModifier

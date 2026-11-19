@@ -1,0 +1,140 @@
+{
+  "version": 1,
+	"license": "Custom",
+  "copyright": "Made by WillyBillyGilly for the Battlefield 14 project, do not relicense, edit, or reuse without permission; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "base"
+    },
+    {
+      "name": "icon"
+    },
+    {
+      "name": "icon-blue"
+    },
+    {
+      "name": "icon-red"
+    },
+    {
+      "name": "icon-green"
+    },
+    {
+      "name": "icon-yellow"
+    },
+    {
+      "name": "icon-grey"
+    },
+    {
+      "name": "fill-1"
+    },
+    {
+      "name": "fill-2"
+    },
+    {
+      "name": "fill-3"
+    },
+    {
+      "name": "fill-4"
+    },
+    {
+      "name": "fill-5"
+    },
+    {
+      "name": "fill-6"
+    },
+    {
+      "name": "fill-blue-1"
+    },
+    {
+      "name": "fill-blue-2"
+    },
+    {
+      "name": "fill-blue-3"
+    },
+    {
+      "name": "fill-blue-4"
+    },
+    {
+      "name": "fill-blue-5"
+    },
+    {
+      "name": "fill-blue-6"
+    },
+    {
+      "name": "fill-red-1"
+    },
+    {
+      "name": "fill-red-2"
+    },
+    {
+      "name": "fill-red-3"
+    },
+    {
+      "name": "fill-red-4"
+    },
+    {
+      "name": "fill-red-5"
+    },
+    {
+      "name": "fill-red-6"
+    },
+    {
+      "name": "fill-green-1"
+    },
+    {
+      "name": "fill-green-2"
+    },
+    {
+      "name": "fill-green-3"
+    },
+    {
+      "name": "fill-green-4"
+    },
+    {
+      "name": "fill-green-5"
+    },
+    {
+      "name": "fill-green-6"
+    },
+    {
+      "name": "fill-yellow-1"
+    },
+    {
+      "name": "fill-yellow-2"
+    },
+    {
+      "name": "fill-yellow-3"
+    },
+    {
+      "name": "fill-yellow-4"
+    },
+    {
+      "name": "fill-yellow-5"
+    },
+    {
+      "name": "fill-yellow-6"
+    },
+    {
+      "name": "fill-grey-1"
+    },
+    {
+      "name": "fill-grey-2"
+    },
+    {
+      "name": "fill-grey-3"
+    },
+    {
+      "name": "fill-grey-4"
+    },
+    {
+      "name": "fill-grey-5"
+    },
+    {
+      "name": "fill-grey-6"
+    }
+  ]
+}

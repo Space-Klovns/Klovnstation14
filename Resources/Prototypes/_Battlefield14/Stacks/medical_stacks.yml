@@ -1,0 +1,34 @@
+- type: stack
+  id: BF14AdvancedTraumaKit
+  name: stack-bf14-advanced-trauma-kit
+  icon: {sprite: "_Battlefield14/Objects/Specific/Medical/medical.rsi", state: traumakit }
+  spawn: BF14AdvancedTraumaKit
+  maxCount: 15
+
+- type: stack
+  id: BF14AdvancedBurnKit
+  name: stack-bf14-advanced-burn-kit
+  icon: {sprite: "_Battlefield14/Objects/Specific/Medical/medical.rsi", state: burnkit}
+  spawn: BF14AdvancedBurnKit
+  maxCount: 15
+
+- type: stack
+  id: BF14Gauze
+  name: stack-bf14-gauze
+  icon: {sprite: "_Battlefield14/Objects/Specific/Medical/medicalV2.rsi", state: gauze_3 }
+  spawn: BF14Gauze
+  maxCount: 15
+
+- type: stack
+  id: BF14Dressing
+  name: stack-bf14-dressing
+  icon: {sprite: "_Battlefield14/Objects/Specific/Medical/medicalV2.rsi", state: dressing_3 }
+  spawn: BF14Dressing
+  maxCount: 15
+
+- type: stack
+  id: BF14Ointment
+  name: stack-bf14-ointment
+  icon: {sprite: "_Battlefield14/Objects/Specific/Medical/medicalV2.rsi", state: ointment_3 }
+  spawn: BF14Ointment
+  maxCount: 15

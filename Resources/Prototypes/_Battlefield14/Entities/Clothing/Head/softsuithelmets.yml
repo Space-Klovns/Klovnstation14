@@ -1,0 +1,39 @@
+- type: entity
+  parent: ClothingHeadEVAHelmetBase
+  id: ClothingHeadHelmetSoftsuitNasa
+  name: NASA softsuit helmet
+  description: An american softsuit helmet. Designed for EVA.
+  components:
+  - type: BreathMask
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Softsuithelmets/spaceforce.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Softsuithelmets/spaceforce.rsi
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+  - type: IdentityBlocker
+  - type: Tag
+    tags:
+      - FitsInVoidsuitKit
+
+- type: entity
+  parent: ClothingHeadEVAHelmetBase
+  id: ClothingHeadHelmetSoftsuitVKS
+  name: VKS softsuit helmet
+  description: The helmet for the VKS softsuit, has a hose running out the back to connect to an oxygen supply.
+  components:
+  - type: BreathMask
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Softsuithelmets/VKSsoftsuit.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Softsuithelmets/VKSsoftsuit.rsi
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+  - type: IdentityBlocker
+  - type: Tag
+    tags:
+      - FitsInVoidsuitKit

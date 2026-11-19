@@ -1,0 +1,275 @@
+- type: entity
+  name: advanced trauma kit
+  description: An advanced trauma kit for severe injuries.
+  parent: MedicatedSuture
+  id: BF14AdvancedTraumaKit
+  suffix: Full
+  components:
+  - type: Tag
+    tags:
+    - Brutepack
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medical.rsi
+    state: traumakit
+  - type: Item
+    size: Small
+    sprite: _Battlefield14/Objects/Specific/Medical/medical.rsi
+    heldPrefix: traumakit
+    storedRotation: 0
+  - type: Stack
+    stackType: BF14AdvancedTraumaKit
+    count: 15
+
+- type: entity
+  id: BF14AdvancedTraumaKit1
+  parent: BF14AdvancedTraumaKit
+  suffix: Single
+  components:
+  - type: Stack
+    stackType: BF14AdvancedTraumaKit
+    count: 1
+
+- type: entity
+  name: advanced burn kit
+  description: An advanced treatment kit for severe burns.
+  parent: RegenerativeMesh
+  id: BF14AdvancedBurnKit
+  suffix: Full
+  components:
+  - type: Tag
+    tags:
+    - Ointment
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medical.rsi
+    state: burnkit
+  - type: Item
+    size: Small
+    sprite: _Battlefield14/Objects/Specific/Medical/medical.rsi
+    heldPrefix: burnkit
+  - type: Stack
+    stackType: BF14AdvancedBurnKit
+    count: 15
+
+- type: entity
+  id: BF14AdvancedBurnKit1
+  parent: BF14AdvancedBurnKit
+  suffix: Single
+  components:
+  - type: Stack
+    stackType: BF14AdvancedBurnKit
+    count: 1
+
+- type: entity
+  name: gauze
+  description: Medical gauze for sealing cuts and punctures.
+  parent: Gauze
+  id: BF14Gauze
+  suffix: Full
+  components:
+  - type: Tag
+    tags:
+    - Gauze
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: gauze
+    layers:
+    - state: gauze_3
+      map: ["base"]
+  - type: Item
+    size: Small
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    heldPrefix: gauze
+    storedRotation: 0
+  - type: Stack
+    stackType: BF14Gauze
+    count: 15
+    baseLayer: base
+    layerStates:
+    - gauze
+    - gauze_2
+    - gauze_3
+  - type: Appearance
+
+- type: entity
+  name: wound dressing
+  description: A thin sterile pad for protecting wounds. Lightly heals the full spectrum of brute damage.
+  parent: Brutepack
+  id: BF14Dressing
+  suffix: Full
+  components:
+  - type: Tag
+    tags:
+    - Brutepack
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: dressing
+    layers:
+    - state: dressing_3
+      map: ["base"]
+  - type: Item
+    size: Small
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    heldPrefix: dressing
+    storedRotation: 0
+  - type: Stack
+    stackType: BF14Dressing
+    count: 15
+    baseLayer: base
+    layerStates:
+    - dressing
+    - dressing_2
+    - dressing_3
+  - type: Appearance
+
+- type: entity
+  name: ointment
+  description: Medical ointment for salving burns.
+  parent: Ointment
+  id: BF14Ointment
+  suffix: Full
+  components:
+  - type: Tag
+    tags:
+    - Ointment
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: ointment
+    layers:
+    - state: ointment_4
+      map: ["base"]
+  - type: Item
+    size: Small
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    heldPrefix: ointment
+    storedRotation: 0
+  - type: Stack
+    stackType: BF14Ointment
+    count: 15
+    baseLayer: base
+    layerStates:
+    - ointment
+    - ointment_2
+    - ointment_3
+    - ointment_4
+  - type: Appearance
+
+- type: entity
+  name: esmarch tourniquet
+  description: A soviet tourniquet, doesn't use a windlass.
+  parent: Tourniquet
+  id: BF14TourniquetEsmarch
+  components:
+  - type: Tag
+    tags:
+    - Tourniquet
+    - BF14TourniquetEsmarch
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: esmarch
+  - type: Item
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    heldPrefix: esmarch
+  - type: ESGunAttachment
+
+- type: entity
+  parent: BaseItem
+  id: BF14GauzePacket
+  name: gauze packet
+  description: A sealed packet of gauze for responsible storage. Tear open to use.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: gauzepacket
+  - type: SpawnItemsOnUse
+    items:
+    - id: BF14GauzePacketTrash
+    - id: BF14Gauze
+    sound:
+      path: /Audio/_Battlefield14/Weapons/Guns/misc/velcro_1.ogg
+      params:
+        variation: 0.125
+  - type: Tag
+    tags:
+    - Brutepack
+    - Gauze
+
+- type: entity
+  parent: BF14GauzePacket
+  id: BF14GauzePacketTan
+  components:
+  - type: Sprite
+    state: gauzepackettan
+  - type: SpawnItemsOnUse
+    items:
+    - id: BF14GauzePacketTanTrash
+    - id: BF14Gauze
+
+- type: entity
+  parent: BaseItem
+  id: BF14DressingPacket
+  name: wound dressing packet
+  description: A sealed wound dressing for responsible storage. Tear open to use.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: dressingpacket
+  - type: SpawnItemsOnUse
+    items:
+    - id: BF14DressingPacketTrash
+    - id: BF14Dressing
+    sound:
+      path: /Audio/_Battlefield14/Weapons/Guns/misc/velcro_1.ogg
+      params:
+        variation: 0.125
+  - type: Tag
+    tags:
+    - Brutepack
+    - Gauze
+
+- type: entity
+  parent: BF14DressingPacket
+  id: BF14DressingPacketTan
+  name: wound dressing packet
+  description: A sealed wound dressing for responsible storage. Tear open to use.
+  components:
+  - type: Sprite
+    state: dressingpackettan
+  - type: SpawnItemsOnUse
+    items:
+    - id: BF14DressingPacketTanTrash
+    - id: BF14Dressing
+
+- type: entity
+  parent: BaseItem
+  id: BF14GauzePacketTrash
+  name: used gauze packet
+  description: Someone got to this before you, hope you didn't need it.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: gauzepacketopen
+
+- type: entity
+  parent: BF14GauzePacketTrash
+  id: BF14GauzePacketTanTrash
+  name: used gauze packet
+  components:
+  - type: Sprite
+    state: gauzepacketopentan
+
+- type: entity
+  parent: BaseItem
+  id: BF14DressingPacketTrash
+  name: used dressing packet
+  description: Someone got to this before you, hope you didn't need it.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicalV2.rsi
+    state: dressingpacketopen
+
+- type: entity
+  parent: BF14DressingPacketTrash
+  id: BF14DressingPacketTanTrash
+  components:
+  - type: Sprite
+    state: dressingpacketopentan

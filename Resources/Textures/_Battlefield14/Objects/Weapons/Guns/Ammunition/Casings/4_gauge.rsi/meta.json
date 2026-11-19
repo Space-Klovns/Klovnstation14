@@ -1,0 +1,23 @@
+{
+    "version": 1,
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "license": "CC-BY-NC-SA-4.0",
+    "copyright": "Made by WillyBillyGilly, permission given for use in the Battlefield14 project. Do not re-use these sprites without permission from WillyBillyGilly. Modified by JoeHammad; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+    "states": [
+        {
+            "name": "icon"
+        },
+        {
+            "name": "nameplate"
+        },
+        {
+            "name": "base"
+        },
+        {
+            "name": "base-spent"
+        }
+    ]
+}

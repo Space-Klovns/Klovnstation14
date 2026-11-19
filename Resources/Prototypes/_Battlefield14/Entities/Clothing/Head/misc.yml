@@ -1,0 +1,101 @@
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadRussianHoodHazmatOZK
+  name: OZK hazmat hood
+  description: A OZK hazmat suit hood
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Misc/ozk.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Misc/ozk.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Heat: 0.95
+        Radiation: 0.5
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+    - HeadTop
+    - HeadSide
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadRussianHoodHazmatOZKArmored
+  name: OZK hazmat hood
+  description: A OZK hazmat suit hood with a added on helmet
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Misc/ozkarmored.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Misc/ozkarmored.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Heat: 0.95
+        Radiation: 0.5
+      flatReductions:
+        Blunt: 2
+        Slash: 2
+        Piercing: 2
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+    - HeadTop
+    - HeadSide
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatHoodHazmat
+  name: hazmat hood
+  description: A thick rubber hood with lead padding ment to stop radiation from cooking you.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/hazardhelmet.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/hazardhelmet.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Heat: 0.95
+        Radiation: 0.2
+  - type: IdentityBlocker
+  - type: BreathMask
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+    - HeadTop
+    - HeadSide
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatSkullcrusher
+  name: skullcrusher
+  description: a series of straps and a steel frame for mointing night vision devices
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Helmets/skullcrusher.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Helmets/skullcrusher.rsi
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatHeadbandNoGmo
+  name: no gmo headband
+  description: a black headband with white text reading 'NO GMO'
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Clothing/Head/Hats/nogmoheadband.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Clothing/Head/Hats/nogmoheadband.rsi
+    slots:
+    - HEAD
+    - HELMETATTACHMENT
+    clothingVisuals:
+      helmetattachment:
+      - state: equipped-HELMETATTACHMENT

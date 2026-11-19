@@ -1,0 +1,23 @@
+- type: entity
+  parent: BaseItem
+  id: BaseGunAttachmentSuppressor
+  name: suppressor
+  description: Makes a gunshot a bit more quiet.
+  suffix: Barrel Attachment
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Mono/Objects/Weapons/Guns/Attachments/Suppressors/multi_cal.rsi
+    state: multical_pistol
+  - type: Item
+    size: Small
+    storedRotation: -90
+  - type: ESGunAttachment
+  - type: ESGunSoundAttachment
+    sound:
+      path: /Audio/_Mono/Weapons/Guns/SmallArms/Gunshots/suppressed.ogg
+      params:
+        maxDistance: 8
+  - type: Tag
+    tags:
+    - MonoSuppressor

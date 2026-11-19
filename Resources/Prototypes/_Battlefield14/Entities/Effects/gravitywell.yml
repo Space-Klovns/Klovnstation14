@@ -1,0 +1,15 @@
+- type: entity
+  id: InstantEffectGravityWellThermobaric
+  suffix: Thermobaric Gravity Well
+  parent: AdminInstantEffectBase
+  components:
+  - type: GravityWell
+    maxRange: 5
+    baseRadialAcceleration: 15
+    baseTangentialAcceleration: 0
+    gravPulsePeriod: 0.01
+#  - type: SingularityDistortion
+#    intensity: 10
+#    falloffPower: 1.5
+  - type: TimedDespawn
+    lifetime: 0.5

@@ -1,0 +1,191 @@
+- type: entity
+  id: MedicationBoxBase
+  parent: [BaseStorageItem, RecyclableItemCardboard]
+  name: medication box
+  description: A small cardboard box holding some blister packets.
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_Goobstation/Items/handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_Goobstation/Items/handling/ammobox_drop.ogg
+  - type: EmitSoundOnLand
+    sound:
+      path: /Audio/_Goobstation/Items/handling/ammobox_drop.ogg
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,0,1
+#    whitelist:
+#      tags:
+#      - BlisterPack
+  - type: Item
+    size: Small
+  - type: Tag
+    tags:
+    - MedicationBox
+  - type: GenericVisualizer
+    visuals:
+      enum.StorageVisuals.Open:
+        base:
+          True: { state: open }
+          False: { state: closed }
+  - type: Appearance
+
+- type: entity
+  id: MedicationBoxPillsTricordrazine
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Tricordrazine
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_lightblue
+    - state: overlay_pills_lightblue
+  - type: Label
+    currentLabel: tricordrazine
+  - type: StorageFill
+    contents:
+    - id: BlisterPackTricordrazine
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsBicaridine
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Bicaridine
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_red
+    - state: overlay_pills_red
+  - type: Label
+    currentLabel: bicaridine
+  - type: StorageFill
+    contents:
+    - id: BlisterPackBicaridine
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsKelotane
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Kelotane
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_yellow
+    - state: overlay_pills_yellow
+  - type: Label
+    currentLabel: kelotane
+  - type: StorageFill
+    contents:
+    - id: BlisterPackKelotane
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsDylovene
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Dylovene
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_green
+    - state: overlay_pills_green
+  - type: Label
+    currentLabel: dylovene
+  - type: StorageFill
+    contents:
+    - id: BlisterPackDylovene
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsDexalin
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Dexalin
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_blue
+    - state: overlay_pills_blue
+  - type: Label
+    currentLabel: dexalin
+  - type: StorageFill
+    contents:
+    - id: BlisterPackDexalin
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsIron
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Iron
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_grey
+    - state: overlay_pills_grey
+  - type: Label
+    currentLabel: iron
+  - type: StorageFill
+    contents:
+    - id: BlisterPackIron
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsDermaline
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Dermaline
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_dirtyyellow
+    - state: overlay_pills_dirtyyellow
+  - type: Label
+    currentLabel: dermaline
+  - type: StorageFill
+    contents:
+    - id: BlisterPackDermaline
+      amount: 2
+
+- type: entity
+  id: MedicationBoxPillsHyronalin
+  parent: MedicationBoxBase
+  name: pill box
+  suffix: Hyronalin
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Specific/Medical/medicationbox.rsi
+    layers:
+    - state: base
+    - state: overlay_stripe_green
+    - state: overlay_pills_green
+  - type: Label
+    currentLabel: hyronalin
+  - type: StorageFill
+    contents:
+    - id: BlisterPackHyronalin
+      amount: 2

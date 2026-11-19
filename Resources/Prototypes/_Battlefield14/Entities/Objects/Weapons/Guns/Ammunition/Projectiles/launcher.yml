@@ -1,0 +1,100 @@
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: BaseBulletTrigger
+  id: BulletRocket83mmHEDM
+  name: 83mm HEDM projectile # High explosive dual mode, explodes on contact in a 3x3 area to blast open walls and such
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: frag
+  - type: Projectile
+    damage:
+      types:
+        Structural: 100
+        Blunt: 25
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: DemolitionCharge
+    totalIntensity: 200
+    intensitySlope: 25
+    maxIntensity: 100
+    maxTileBreak: 1
+  - type: StaminaDamageOnCollide
+    damage: 50
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: BaseBulletTrigger
+  id: BulletRocketM202FLASH
+  name: 66mm incendiary rocket
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: smallfrag
+  - type: Projectile
+    damage:
+      types:
+        Blunt: 30
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: FireBomb
+    totalIntensity: 25
+    intensitySlope: 5
+    maxIntensity: 2
+    maxTileBreak: 0
+  - type: StaminaDamageOnCollide
+    damage: 70 # It's a fucking rocket
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: BaseBulletTrigger
+  id: BulletRocketM72Thermobaric
+  name: 66mm incendiary rocket
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: frag
+  - type: Projectile
+    damage:
+      types:
+        Structural: 100
+        Blunt: 25
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Thermobaric
+    totalIntensity: 90
+    intensitySlope: 4
+    maxIntensity: 4
+    maxTileBreak: 0
+  - type: StaminaDamageOnCollide
+    damage: 50
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: BaseBulletTrigger
+  id: BulletRocketRPG26Thermobaric
+  name: 72.5mm thermobaric rocket
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Projectiles/rpg7.rsi
+    layers:
+    - state: thermobar
+  - type: Projectile
+    damage:
+      types:
+        Structural: 100
+        Blunt: 25
+  - type: SpawnOnTrigger
+    proto: InstantEffectGravityWellThermobaric
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Thermobaric
+    totalIntensity: 90
+    intensitySlope: 5
+    maxIntensity: 6
+    maxTileBreak: 0
+  - type: StaminaDamageOnCollide
+    damage: 50

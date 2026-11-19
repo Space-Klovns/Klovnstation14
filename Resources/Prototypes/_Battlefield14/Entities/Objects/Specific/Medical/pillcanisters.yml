@@ -1,0 +1,35 @@
+- type: entity
+  name: pill
+  suffix: Desoxyephedrine 5u
+  parent: Pill
+  id: PillDesoxyephedrine
+  components:
+  - type: Pill
+    pillType: 15
+  - type: Sprite
+    state: pill16
+  - type: Label
+    currentLabel: desoxyephedrine 5u 
+  - type: Solution # BF14-BLU: was SolutionContainerManager, as upstream pills now are
+    solution:
+      reagents:
+      - ReagentId: Desoxyephedrine
+        Quantity: 5
+
+- type: entity
+  name: pill
+  suffix: Ethylredoxrazine 10u
+  parent: Pill
+  id: PillEthylredoxrazine
+  components:
+  - type: Pill
+    pillType: 7
+  - type: Sprite
+    state: pill8
+  - type: Label
+    currentLabel: ethylredoxrazine 10u
+  - type: Solution # BF14-BLU: was SolutionContainerManager, as upstream pills now are
+    solution:
+      reagents:
+      - ReagentId: Ethylredoxrazine
+        Quantity: 10

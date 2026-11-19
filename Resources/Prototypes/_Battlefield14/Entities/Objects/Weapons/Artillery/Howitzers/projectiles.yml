@@ -1,0 +1,29 @@
+- type: entity
+  id: ArtilleryMarkerM777Flare
+  name: artillery strike M118 155mm illumination flare shell
+  components:
+  - type: Sprite
+    sprite: _WorldAblaze1968/Objects/Misc/ArtilleryImpact.rsi
+    state: flare
+  - type: IgnitionSource
+    ignited: true
+    temperature: 1000
+  - type: TimedDespawn
+    lifetime: 300
+  - type: EmitSoundOnSpawn
+    sound: /Audio/_RMC14/Items/fulton.ogg
+  - type: AmbientSound
+    enabled: true
+    volume: 0
+    range: 7
+    sound:
+      path: /Audio/Items/Flare/flare_burn.ogg
+      params:
+        loop: true
+  - type: IgniteOnCollide
+    fireStacks: 1
+  - type: PointLight
+    enabled: true
+    color: "#fffbc8"
+    radius: 15.0
+    energy: 8.0

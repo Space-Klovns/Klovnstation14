@@ -1,0 +1,162 @@
+- type: entity
+  id: BasePouch
+  parent: BaseStorageItem
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: utility
+  - type: Clothing
+    slots: WEBBING
+    quickEquip: false
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,3,3
+  - type: Storage
+    maxItemSize: Small
+    defaultStorageOrientation: Vertical
+    grid:
+    - 0,0,3,1
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: StaticPrice
+    price: 100
+
+- type: entity
+  id: PouchMags
+  parent: BasePouch
+  name: magazine pouch
+  description: A small pouch for holding magazines.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: medium_ammo_mag
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,3,3
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,1,1
+    whitelist:
+      tags:
+      - Magazine
+      - Cartridge
+    storageOpenSound:
+      collection: BF_Magpouch_Open
+      params:
+        volume: -1
+        variation: 0.125
+    storageCloseSound:
+      collection: BF_Magpouch_Open
+      params:
+        volume: -1
+        variation: 0.125
+    storageInsertSound:
+      collection: BF_Magpouch_Insert
+      params:
+        volume: -1
+        variation: 0.125
+    storageRemoveSound:
+      collection: BF_Magpouch_Remove
+      params:
+        volume: -1
+        variation: 0.125
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: StaticPrice
+    price: 100
+
+- type: entity
+  id: PouchMagsLarge
+  parent: PouchMags
+  name: large magazine pouch
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: large_ammo_mag
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,2,1
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: StaticPrice
+    price: 100
+
+- type: entity
+  id: PouchMagsPistol
+  parent: PouchMags
+  name: pistol magazine pouch
+  description: A small pouch for holding pistol-sized magazines.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: pistol_mag
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,2,1
+    whitelist:
+      tags:
+      - PistolMagazine
+      - Cartridge
+    blacklist:
+      tags:
+      - Grenade
+      - Cartridge40x46mmGrenade
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: StaticPrice
+    price: 100
+
+- type: entity
+  id: PouchMagsPistolLarge
+  parent: PouchMagsPistol
+  name: large pistol magazine pouch
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: large_pistol_mag
+  - type: Storage
+    maxItemSize: Small
+    grid:
+    - 0,0,4,1
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: StaticPrice
+    price: 100
+
+- type: entity
+  id: PouchFlares
+  parent: BasePouch
+  name: flare pouch
+  description: A convenient set of pouches for holding flares and glowsticks for on the go lighting solutions.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Misc/pouches.rsi
+    layers:
+      - state: utility
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,1,1
+  - type: Storage
+    maxItemSize: Tiny
+    grid:
+    - 0,0,4,1
+    whitelist:
+      tags:
+        - Flare

@@ -1,0 +1,153 @@
+- type: entity
+  name: M320
+  parent: WeaponFlareGun
+  id: WeaponGrenadeLauncherUSM320
+  description: "The United States replacement to the classic M203 that allows for loading of longer cartridges, which despite contract requirements is heavier than the M203. Takes 40x46mm grenades. Has a minimum arming distance of 5 tiles. This weapon can be stored on your auxillary suit storage slot."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M320.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+  - type: Item
+    size: Large
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M320.rsi
+    storedSprite:
+      sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M320.rsi
+      state: storage
+  - type: Clothing
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M320.rsi
+    slots:
+    - Belt
+    - suitStorage
+    - SUITSTORAGE2
+    clothingVisuals:
+      suitstorage2:
+      - state: equipped-BELT
+  - type: ItemSlots
+    slots:
+      gun_chamber:
+        name: Chamber
+        insertSound: /Audio/_Battlefield14/Weapons/Guns/M320/gl_insert.ogg
+        ejectSound: /Audio/_Battlefield14/Weapons/Guns/M320/gl_remove.ogg
+        priority: 1
+        whitelist:
+          tags:
+            - Cartridge40x46mmGrenade
+        whitelistFailPopup: gun-magazine-whitelist-fail
+  - type: Gun
+    fireRate: 1
+    projectileSpeed: 40
+    selectedMode: SemiAuto
+    availableModes:
+      - SemiAuto
+    soundGunshot:
+      path: /Audio/_Battlefield14/Weapons/Guns/M320/gl_fire.ogg
+      params:
+        volume: -2
+        variation: 0.125
+
+- type: entity
+  name: M320
+  parent: WeaponGrenadeLauncherUSM320
+  id: WeaponGrenadeLauncherUSM320Illumination
+  suffix: loaded, Flare
+  components:
+  - type: ItemSlots
+    slots:
+      gun_chamber:
+        startingItem: Cartridge40x46mmIllumination
+        insertSound: /Audio/_Battlefield14/Weapons/Guns/M320/gl_insert.ogg
+        ejectSound: /Audio/_Battlefield14/Weapons/Guns/M320/gl_remove.ogg
+        whitelist:
+          tags:
+            - Cartridge40x46mmGrenade
+        whitelistFailPopup: gun-magazine-whitelist-fail
+
+- type: entity
+  name: M79 (Embiggened)
+  parent: WeaponFlareGun
+  id: WeaponGrenadeLauncherUSM79Big
+  description: An M79 grenade launcher big enough to fire 120mm cartridges. It's reccomended to prop it up on a rock or something before firing.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M79big.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+    scale: 1.5, 1.5
+  - type: Item
+    size: Huge
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M79big.rsi
+  - type: Clothing
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/M79big.rsi
+  - type: ChamberMagazineAmmoProvider
+    autoCycle: false
+    boltClosed: false
+    canRack: false
+    soundBoltClosed: /Audio/Weapons/Guns/Cock/revolver_cock.ogg
+    soundBoltOpened: /Audio/Weapons/Guns/Cock/revolver_cock.ogg
+  - type: ItemSlots
+    slots:
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+            - Cartridge120mm
+  - type: Wieldable
+    unwieldOnUse: false
+  - type: Gun
+    fireRate: 1
+    projectileSpeed: 40
+    selectedMode: SemiAuto
+    availableModes:
+      - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
+  - type: GunRequiresWield
+
+- type: entity
+  name: GM-94
+  parent: BaseWeaponShotgun
+  id: WeaponGrenadeLauncherRUGM94
+  description: "An odd design, loaded from the top into a magazine tube, and then pumped, like a shotgun. Brings to mind the M90A from Halo™. Has a minimum arming distance of 5 tiles. Takes 43x30mm grenades."
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/GM94.rsi
+    layers:
+      - state: icon
+        map: ["enum.GunVisualLayers.Base"]
+  - type: Clothing
+    sprite: _Battlefield14/Objects/Weapons/Guns/GrenadeLaunchers/GM94.rsi
+    slots:
+    - Back
+    - suitStorage
+  - type: Wieldable
+    unwieldOnUse: false
+  - type: GunWieldBonus
+    minAngle: 0
+    maxAngle: 0
+  - type: Gun
+    minAngle: 4
+    maxAngle: 10
+    angleIncrease: 3
+    angleDecay: 1
+    fireRate: 1
+    selectedMode: SemiAuto
+    availableModes:
+      - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
+  - type: BallisticAmmoProvider
+    autoCycle: true
+    whitelist:
+      tags:
+        - Cartridge43x30mmGrenade
+    capacity: 3
+    proto: null
+    soundInsert:
+      collection: BF_M870_ShellIn
+      params:
+        volume: -2
+  - type: GunRequiresWield

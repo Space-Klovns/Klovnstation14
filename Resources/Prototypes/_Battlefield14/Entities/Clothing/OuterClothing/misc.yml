@@ -1,0 +1,10 @@
+- type: entity
+  parent: RemoteSignallerM57
+  id: RemoteSignallerBombVest
+  name: bomb vest detonator
+  description: It looks American, but its just what was in the box. Range 3 meters.
+  components:
+  - type: AutoLinkTransmitter
+    channel: BombVest
+  - type: WirelessNetworkConnection
+    range: 3
