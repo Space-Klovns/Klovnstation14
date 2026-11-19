@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made by JoeHammad; taken from Battlefield14 (https://github.com/PunishedJoe/Battlefield14) at d24a6e8c2f5d995e6bdd0a2571e406923e53f883",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "acog"
+    },
+    {
+      "name": "M68"
+    },
+    {
+      "name": "eotech"
+    },
+    {
+      "name": "okp7"
+    },
+    {
+      "name": "1p87"
+    },
+    {
+      "name": "svd"
+    }
+  ]
+}
