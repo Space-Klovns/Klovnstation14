@@ -74,10 +74,12 @@
     canCreateVacuum: false
   - type: DeleteOnTrigger
 
+# Limited-ammo immovable mortar that requires you to choose a bearing and distance to fire
+# TODO LCDC: 'gods-eye view' that shows you a little view of where the mortar is landing
 - type: entity
   id: KsMortar
   name: mortar
-  description: A light mortar, dug in where it stands. Whoever crews it picks the bearing and the distance.
+  description: A light mortar, dug in where it stands. Or sits, rather.
   categories: [ HideSpawnMenu ]
   save: false
   components:
