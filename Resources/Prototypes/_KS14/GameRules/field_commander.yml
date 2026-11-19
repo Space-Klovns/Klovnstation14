@@ -73,6 +73,7 @@
       deployUplink: true
       uplinkGuardBudget: 9
   # Dead defenders come back together, as reinforcements, in the last 30 seconds before each wave.
+  #     With no wave scheduled, they come back as soon as their own timer is up (openWhileNoWaveScheduled).
   - type: KsFieldCommanderRespawnWindow
     window: 30
 

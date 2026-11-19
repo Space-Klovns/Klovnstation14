@@ -31,7 +31,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     /// <summary>
     ///     Whether the respawn window before the next wave is open now; if not, <paramref name="opensAt"/> is when it
-    ///         will, or null if that can't be told.
+    ///         will, or null if that can't be told. With no wave scheduled, open only if
+    ///         <see cref="KsFieldCommanderRespawnWindowComponent.OpenWhileNoWaveScheduled"/>.
     /// </summary>
     private static bool IsRespawnWindowOpen(
         KsFieldCommanderRespawnWindowComponent windowComponent,
@@ -43,7 +44,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // A stopped clock (no wave scheduled, or a paused timeline) gives no time to wait for.
         if (ruleComponent.NextWaveTime == TimeSpan.MaxValue)
-            return false;
+            return windowComponent.OpenWhileNoWaveScheduled;
 
         var windowOpens = ruleComponent.NextWaveTime - windowComponent.Window;
         if (curTime >= windowOpens)

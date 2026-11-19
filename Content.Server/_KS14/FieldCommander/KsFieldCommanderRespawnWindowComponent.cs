@@ -7,7 +7,9 @@ namespace Content.Server._KS14.FieldCommander;
 ///         the window waits for the next.
 /// </summary>
 /// <remarks>
-///     A gate on <c>KsCanGhostRespawnEvent</c>; while no wave is scheduled, respawning is refused.
+///     A gate on <c>KsCanGhostRespawnEvent</c>. While no wave is scheduled (a phase that sends none) there is no
+///         window to wait for: <see cref="OpenWhileNoWaveScheduled"/> says whether respawning is then allowed or
+///         refused.
 /// </remarks>
 [RegisterComponent, Access(typeof(KsFieldCommanderRuleSystem))]
 public sealed partial class KsFieldCommanderRespawnWindowComponent : Component
@@ -17,6 +19,13 @@ public sealed partial class KsFieldCommanderRespawnWindowComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan Window = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    ///     Whether ghosts may respawn while no wave is scheduled, as soon as their own timer is up (its cooldown and
+    ///         penalty still apply). False refuses every respawn until a wave is scheduled again.
+    /// </summary>
+    [DataField]
+    public bool OpenWhileNoWaveScheduled = true;
 
     /// <summary>
     ///     Shown to a ghost that has to wait.

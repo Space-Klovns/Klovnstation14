@@ -22,7 +22,8 @@ namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
 
 /// <summary>
 ///     A field commander rule with a respawn window lets dead defenders respawn only shortly before the next wave,
-///         and tells their ghosts when that is.
+///         and tells their ghosts when that is. While no wave is scheduled it lets them respawn or refuses, as the
+///         window is set to.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsFieldCommanderRespawnWindowComponent))]
@@ -32,6 +33,7 @@ public sealed class KsFieldCommanderRespawnWindowTest : GameTest
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _commanderRule = "KsTestFieldCommanderRespawnWindowRule";
+    private readonly EntProtoId _closedCommanderRule = "KsTestFieldCommanderRespawnWindowClosedRule";
     private readonly EntProtoId _mob = "KsTestFieldCommanderRespawnWindowMob";
 
     [TestPrototypes]
@@ -64,16 +66,56 @@ public sealed class KsFieldCommanderRespawnWindowTest : GameTest
       start: 2
       waveInterval: 1000
       firstWaveDelay: 32
+    # No waves at all.
+    - name: ks-fieldcommander-phase-final
+      start: 3
+      waveInterval: 0
   - type: KsFieldCommanderRespawnWindow
     window: 30
+
+- type: entity
+  parent: KsTestFieldCommanderRespawnWindowRule
+  id: KsTestFieldCommanderRespawnWindowClosedRule
+  components:
+  - type: KsFieldCommanderRespawnWindow
+    openWhileNoWaveScheduled: false
 ";
+
+    /// <summary>
+    ///     Checks the dead defender's respawn with no wave scheduled: allowed if <paramref name="openWithoutWave"/>,
+    ///         else refused with no time to give; on the server, and in what its ghost was told.
+    /// </summary>
+    private async Task AssertNoWaveScheduled(ServerGhostRespawnSystem serverRespawn, ClientGhostRespawnSystem clientRespawn, bool openWithoutWave, string when)
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var gate = serverRespawn.GetGate(ServerSession!);
+            if (openWithoutWave)
+            {
+                Assert.That(gate, Is.Null, $"{when}: no wave scheduled, and the window allows that");
+                return;
+            }
+
+            Assert.That(gate, Is.Not.Null, $"{when}: no wave scheduled, so refused");
+            Assert.That(gate!.Value.OpensAt, Is.Null, $"{when}: with no time to give");
+        });
+
+        await Client.WaitAssertion(() =>
+        {
+            if (openWithoutWave)
+                Assert.That(clientRespawn.LocalGate, Is.Null, $"{when}: and the ghost is told it may respawn");
+            else
+                Assert.That(clientRespawn.LocalGate is { OpensAt: null }, Is.True, $"{when}: and the ghost is told it is refused, with no time to give");
+        });
+    }
 
     [Test]
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnEnabled), true)]
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnAlwaysStartTimer), false)]
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnCooldownSeconds), 0f)]
-    public async Task RespawnIsAllowedOnlyInTheWindowBeforeTheNextWave()
+    public async Task RespawnIsAllowedOnlyInTheWindowBeforeTheNextWave([Values] bool openWithoutWave)
     {
+        var commanderRule = openWithoutWave ? _commanderRule : _closedCommanderRule;
         var serverRespawn = SEntMan.System<ServerGhostRespawnSystem>();
         var clientRespawn = CEntMan.System<ClientGhostRespawnSystem>();
         var ruleSystem = SEntMan.System<KsFieldCommanderRuleSystem>();
@@ -96,15 +138,14 @@ public sealed class KsFieldCommanderRespawnWindowTest : GameTest
         await Server.WaitAssertion(() => Assert.That(serverRespawn.GetGate(ServerSession!), Is.Null, "precondition: nothing holds it back without the rule"));
 
         EntityUid ruleUid = default;
-        await Server.WaitPost(() => Assert.That(ticker.StartGameRule(_commanderRule, out ruleUid), Is.True));
+        await Server.WaitPost(() => Assert.That(ticker.StartGameRule(commanderRule, out ruleUid), Is.True));
         await Pair.RunTicksSync(3);
 
-        await Server.WaitAssertion(() =>
-        {
-            var gate = serverRespawn.GetGate(ServerSession!);
-            Assert.That(gate, Is.Not.Null, "no wave scheduled yet, so refused");
-            Assert.That(gate!.Value.OpensAt, Is.Null, "with no time to give");
-        });
+        await Server.WaitAssertion(() => Assert.That(
+            SEntMan.GetComponent<KsFieldCommanderRespawnWindowComponent>(ruleUid).OpenWhileNoWaveScheduled,
+            Is.EqualTo(openWithoutWave),
+            "precondition: the rule's window is set as this case needs"));
+        await AssertNoWaveScheduled(serverRespawn, clientRespawn, openWithoutWave, "before the first wave");
 
         TimeSpan windowOpens = default;
         await Server.WaitPost(() =>
@@ -124,6 +165,27 @@ public sealed class KsFieldCommanderRespawnWindowTest : GameTest
         await Client.WaitPost(() => clientRespawn.RequestRespawn());
         await Pair.RunTicksSync(3);
         await Server.WaitAssertion(() => Assert.That(serverRespawn.IsSessionPendingRespawn(ServerSession!), Is.True, "so asking does nothing"));
+
+        // Into a phase with no waves, and back to one with them: the ghost is told each time.
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, SEntMan.GetComponent<GameRuleComponent>(ruleUid)), 3);
+            Assert.That(ruleComponent.NextWaveTime, Is.EqualTo(TimeSpan.MaxValue), "precondition: no wave scheduled");
+        });
+        await Pair.RunTicksSync(3);
+        await AssertNoWaveScheduled(serverRespawn, clientRespawn, openWithoutWave, "in a phase with no waves");
+
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var windowComponent = SEntMan.GetComponent<KsFieldCommanderRespawnWindowComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, SEntMan.GetComponent<GameRuleComponent>(ruleUid)), 0);
+            windowOpens = ruleComponent.NextWaveTime - windowComponent.Window;
+        });
+        await Pair.RunTicksSync(3);
+        await Client.WaitAssertion(() => Assert.That(clientRespawn.LocalGate?.OpensAt, Is.EqualTo(windowOpens),
+            "a wave scheduled again: the ghost is told when the window before it opens"));
 
         await Server.WaitPost(() =>
         {
