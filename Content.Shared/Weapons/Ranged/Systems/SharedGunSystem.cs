@@ -165,8 +165,9 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         var inCombatMode = _combatMode.IsInCombatMode(user); // KS14: checked once the gun is known
 
-        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
-            user = mechPilot.Mech;
+        if (TryComp<Content.Shared.Vehicle.Components.VehicleOperatorComponent>(user.Value, out var vehicleOperator) && // KS14: MechPilot -> VehicleOperator
+            vehicleOperator.Vehicle is { } mechUid && HasComp<MechComponent>(mechUid))
+            user = mechUid;
 
         if (!TryGetGun(user.Value, out var userGun) ||
             HasComp<ItemComponent>(user))
@@ -203,8 +204,9 @@ public abstract partial class SharedGunSystem : EntitySystem
         if (user == null)
             return;
 
-        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
-            user = mechPilot.Mech;
+        if (TryComp<Content.Shared.Vehicle.Components.VehicleOperatorComponent>(user.Value, out var vehicleOperator) && // KS14: MechPilot -> VehicleOperator
+            vehicleOperator.Vehicle is { } mechUid && HasComp<MechComponent>(mechUid))
+            user = mechUid;
 
         if (!TryGetGun(user.Value, out var userGun))
             return;
