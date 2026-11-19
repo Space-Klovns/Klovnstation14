@@ -36,6 +36,7 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     private const string Sniper = "KsFcEliteOperativeSynArmedSniper";
     private const string Juggernaut = "KsFcOperativeSynArmedJuggernaut";
     private const string Breacher = "KsFcEliteOperativeSynArmedBreacher";
+    private const string MortarCrew = "KsFcOperativeSynArmedMortarCrew";
     private const string Tank = "KsFcMobTank";
     private const string FlamerTank = "KsFcMobTankFlamer";
 
@@ -59,7 +60,7 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     }
 
     [Test]
-    public async Task UnitsComeArmed([Values(Sniper, Juggernaut, Breacher)] string settings)
+    public async Task UnitsComeArmed([Values(Sniper, Juggernaut, Breacher, MortarCrew)] string settings)
     {
         if (await SpawnUnit(settings) is not { } unitUid)
         {

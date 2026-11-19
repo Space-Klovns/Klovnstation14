@@ -21,3 +21,6 @@ ent-KsWeaponLightMachineGunL6FieldCommander = L6 SAW
 ent-KsWeaponShotgunBulldogBreacher = Bulldog
     .desc = An automatic magazine-fed shotgun for close-quarters combat. Kicks like a mule on steroids. Uses .50 shotgun shells.
     .suffix = KS14, NPC, Field Commander, Breacher
+ent-KsFcMortar = mortar
+    .desc = A light mortar, dug in where it stands. Whoever crews it picks the bearing and the distance.
+    .suffix = Field Commander

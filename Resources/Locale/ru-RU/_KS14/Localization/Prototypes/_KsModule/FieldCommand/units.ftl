@@ -21,3 +21,7 @@ ent-KsWeaponLightMachineGunL6FieldCommander = L6 SAW
 ent-KsWeaponShotgunBulldogBreacher = Бульдог
     .desc = Автоматический магазинный дробовик для ведения ближнего боя. Бьёт как мул на стероидах. Использует патроны калибра .50 ружейный.
     .suffix = KS14, NPC, Полевой командир, Подрывник
+ent-KsFcMortar = миномёт
+    .desc = Лёгкий миномёт, вкопанный там, где стоит. Кто им управляет, тот и выбирает азимут и дальность.
+    .suffix = Полевой командир
+    .gender = male

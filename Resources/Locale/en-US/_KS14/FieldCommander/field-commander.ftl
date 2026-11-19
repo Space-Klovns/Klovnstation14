@@ -68,6 +68,8 @@ ks-fieldcommander-asset-tank = The final act deserves heavy armour. Say hello.
 ks-fieldcommander-intel-tank = Field Operations. Enemy tank inbound. Its cannon fires high-explosive shells, slowly: it beeps while it lines one up, so get out of sight when you hear it. The turret is welded to the hull, and destroying either kills it. Rockets.
 ks-fieldcommander-asset-tank-flamer = Cold out there? Let me warm you up.
 ks-fieldcommander-intel-tank-flamer = Field Operations. A flamer tank is inbound. It has to get close, and where it hits the ground keeps burning: keep your distance and don't stand in the fire.
+ks-fieldcommander-asset-mortar = Bunch up. Please. It saves me shells.
+ks-fieldcommander-intel-mortar = Field Operations. Enemy mortar team setting up about forty tiles out. A shell lands every twelve seconds or so, on whoever is bunched together or on a turret: when a marker shows on the ground or you hear one coming, get off it. Hunt the crew down, and the mortar is yours for what shells it has left.
 
 ## Objectives and the uplink
 

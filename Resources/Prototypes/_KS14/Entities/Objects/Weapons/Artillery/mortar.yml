@@ -1,0 +1,149 @@
+# A light mortar (KsMortarComponent): set up by its crewman (KsMortarCrewComponent) and never moved after, fired by the
+#     crewman or, once it has none, by anyone through its window. Its shells are supply pods, as the cruise missiles are
+#     (Objects/SupplyPod/supplypod.yml): spawned where they are to land, they fall for the whole of their flight with their landing zone
+#     marked on the ground the whole way, and go off as they land. Where one lands, its travel is heard, then one of
+#     KsMortarIncoming, ending as it lands.
+
+- type: soundCollection
+  id: KsMortarIncoming
+  files:
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming01.ogg
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming03.ogg
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming04.ogg
+
+- type: explosion
+  id: KsMortarShell
+  damagePerIntensity:
+    types:
+      Heat: 4
+      Blunt: 6
+      Piercing: 5
+      Structural: 10
+  tileBreakChance: [ 0 ]
+  tileBreakIntensity: [ 0 ]
+  lightColor: Orange
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 3
+  fireStacks: 1.5
+  temperature: 800
+  # Fortifications, turrets and people take it; the map's walls, windows and doors are left standing. Unlike the
+  #     anti-personnel rocket, structures are not spared: a shell is how sandbags and wire come apart.
+  ksSpared:
+    tags:
+    - Wall
+    - Window
+    components:
+    - Airtight
+    - Door
+  ksNotSpared:
+    components:
+    - ScenarioObjective
+
+- type: entity
+  parent: SupplyPod
+  id: KsMortarShell
+  name: mortar shell
+  description: Incoming!
+  categories: [ HideSpawnMenu ]
+  save: false
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Artillery/mortar.rsi
+    drawdepth: Effects
+    offset: 0,0
+    layers:
+    - state: shell
+  - type: SupplyPod
+    height: 30
+    fallDuration: 2s # the mortar sets it to the whole flight, and plays its sounds itself
+    fallSound: null
+    angularDeviation: 10
+    trailProto: KsSupplyPodTrail
+  - type: SupplyPodLandingZone
+    indicatorProto: KsSupplyPodLandingZone
+  - type: SupplyPodDrawDepth
+    transitDrawDepth: Effects
+    landedDrawDepth: Effects
+  - type: TriggerOnSupplyPodLanded
+  - type: ExplosionOnTrigger
+    explosionType: KsMortarShell
+    maxTileIntensity: 15
+    totalIntensity: 90
+    intensitySlope: 5
+    maxTileBreak: 0
+    canCreateVacuum: false
+  - type: DeleteOnTrigger
+
+- type: entity
+  id: KsMortar
+  name: mortar
+  description: A light mortar, dug in where it stands. Whoever crews it picks the bearing and the distance.
+  categories: [ HideSpawnMenu ]
+  save: false
+  components:
+  - type: Transform
+    anchored: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Artillery/mortar.rsi
+    drawdepth: SmallObjects
+    state: mortar
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures # stops bullets, not people: its crewman stands on it
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.3
+        density: 100
+        layer:
+        - BulletImpassable
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: KsMortar
+    shell: KsMortarShell
+    fireSound:
+      path: /Audio/_KS14/Weapons/Mortar/fire1.ogg
+      params:
+        volume: 4
+    farFireSound:
+      sound:
+        path: /Audio/_KS14/Weapons/Mortar/fire1.ogg
+        params:
+          volume: 6
+          pitch: 0.8
+      range: 15,150
+    travelSound:
+      path: /Audio/_KS14/Weapons/Mortar/gun_mortar_travel.ogg
+      params:
+        maxDistance: 20
+    travelTime: 4
+    incomingSound:
+      collection: KsMortarIncoming
+      params:
+        volume: 4
+        maxDistance: 20
+    incomingTime: 3.2 # the longest of KsMortarIncoming, and a little over
+    loadSound:
+      path: /Audio/_KS14/Weapons/Mortar/mortarload.ogg
+  - type: ActivatableUI
+    key: enum.KsMortarUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.KsMortarUiKey.Key:
+        type: KsMortarBoundUserInterface
