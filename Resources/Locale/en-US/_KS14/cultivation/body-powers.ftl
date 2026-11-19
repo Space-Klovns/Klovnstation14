@@ -112,7 +112,7 @@ body-power-eyes-clear-eyes-name = Clear Eyes
 body-power-eyes-clear-eyes-desc = Flashes can't blind you.
 
 body-power-eyes-unblinking-eyes-name = Night Eyes
-body-power-eyes-unblinking-eyes-desc = You see in the dark (on from the start; the Tempered Eyes button turns it off).
+body-power-eyes-unblinking-eyes-desc = You see in the dark.
 
 body-power-eyes-hunter-s-sight-name = Hunter's Sight
 body-power-eyes-hunter-s-sight-desc = True night vision: darkness hides nothing from you.
@@ -214,7 +214,7 @@ body-power-lungs-iron-lungs-name = Iron Lungs
 body-power-lungs-iron-lungs-desc = A tenth damage from suffocation.
 
 body-power-lungs-breathless-body-name = Breathless Body
-body-power-lungs-breathless-body-desc = You no longer suffocate.
+body-power-lungs-breathless-body-desc = You no longer need to breathe at all: no suffocating, no gasping, and no breathing in poison or smoke.
 
 body-power-liver-iron-liver-name = Iron Liver
 body-power-liver-iron-liver-desc = You hold your drink (alcohol hits you half as hard) and take 10% less poison damage.

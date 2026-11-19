@@ -48,3 +48,17 @@ public sealed partial class PathChoiceComponent : Component;
 /// </summary>
 [RegisterComponent]
 public sealed partial class AscensionContenderRoleComponent : Component;
+
+/// <summary>
+///     Where heaven will receive an Ascension contender for their last step to the peak: a named place on the station,
+///         chosen the first time they try.
+/// </summary>
+[RegisterComponent]
+public sealed partial class AscensionSiteComponent : Component
+{
+    [ViewVariables]
+    public EntityUid? Beacon;
+
+    [ViewVariables]
+    public string Name = string.Empty;
+}

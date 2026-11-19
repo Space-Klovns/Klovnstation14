@@ -112,4 +112,10 @@ public sealed partial class BodyTemperingPowerPrototype : IPrototype
     /// </summary>
     [DataField]
     public bool ReplaceComponents;
+
+    /// <summary>
+    ///     Names of components the power takes away when unlocked, e.g. Respirator, the need to breathe.
+    /// </summary>
+    [DataField]
+    public List<string> RemoveComponents = new();
 }

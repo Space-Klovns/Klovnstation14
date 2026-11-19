@@ -95,6 +95,7 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private HeartDemonSystem _heartDemonSystem = default!;
     [Dependency] private LightningSystem _lightningSystem = default!;
+    [Dependency] private WuxiaAscensionRuleSystem _ascensionRuleSystem = default!;
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private SharedCultivationSystem _cultivationSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
@@ -484,7 +485,16 @@ public sealed partial class CultivationSystem : EntitySystem
 
         var insightEvent = new CultivationInsightMultiplierEvent(insightMultiplier);
         RaiseLocalEvent(entity, ref insightEvent);
-        _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * insightEvent.Multiplier);
+        // At the peak of an Ascension round there's no insight left to gain; meditation only restores qi.
+        if (AtAscensionPeak(entity))
+        {
+            if (entity.Comp.Insight > 0f)
+                _cultivationSystem.ScaleInsight(entity.AsNullable(), 0f);
+        }
+        else
+        {
+            _cultivationSystem.AddInsight(entity.AsNullable(), entity.Comp.MeditateInsight * insightEvent.Multiplier);
+        }
         _cultivationSystem.AddQi(entity.AsNullable(), entity.Comp.MeditateQi * multiplier);
 
         if (_cultivationSystem.CountMeditation(entity.AsNullable()))
@@ -538,9 +548,10 @@ public sealed partial class CultivationSystem : EntitySystem
 
         args.Handled = true;
 
-        if (_cultivationSystem.GetInsightRequired(entity.Comp) is not { } required)
+        if (_cultivationSystem.GetInsightRequired(entity.Comp) is not { } required || AtAscensionPeak(entity))
         {
-            _noticeSystem.Notify(entity, Loc.GetString("cultivation-at-peak"));
+            _noticeSystem.Notify(entity, Loc.GetString(AtAscensionPeak(entity) ? "cultivation-at-peak-ascension" : "cultivation-at-peak"),
+                PopupType.Medium);
             return;
         }
 
@@ -561,12 +572,27 @@ public sealed partial class CultivationSystem : EntitySystem
     }
 
     /// <summary>
+    ///     In Wuxia: Ascension, Nascent Soul is the peak: there's no final ascension out of the round to work towards.
+    /// </summary>
+    public bool AtAscensionPeak(Entity<CultivatorComponent> entity)
+    {
+        return entity.Comp.Realm >= CultivationRealm.NascentSoul && _ascensionRuleSystem.Active();
+    }
+
+    /// <summary>
     ///     Begin enduring heaven's tribulation: three cycles, and two more for every realm already climbed.
     /// </summary>
     public bool StartBreakthrough(Entity<CultivatorComponent> entity)
     {
+        // In Ascension, a contender takes the last step only at the place heaven chose, for twice as long, with the whole
+        // station told where.
+        var lastStep = _ascensionRuleSystem.IsContenderFinalStep(entity, entity.Comp.Realm == CultivationRealm.GoldenCore);
+        if (lastStep && !_ascensionRuleSystem.CheckFinalSite(entity))
+            return false;
+
         var readiness = BreakthroughReadiness(entity);
-        var doAfterArgs = new DoAfterArgs(EntityManager, entity, entity.Comp.BreakthroughCycle, new CultivationBreakthroughDoAfterEvent(), entity)
+        var cycle = lastStep ? entity.Comp.BreakthroughCycle * WuxiaAscensionRuleSystem.FinalStepSlowdown : entity.Comp.BreakthroughCycle;
+        var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new CultivationBreakthroughDoAfterEvent(), entity)
         {
             BreakOnMove = true,
             NeedHand = false,
@@ -574,6 +600,9 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (!_doAfterSystem.TryStartDoAfter(doAfterArgs))
             return false;
+
+        if (lastStep)
+            _ascensionRuleSystem.AnnounceFinalStep(entity);
 
         _cultivationSystem.SetBreakthrough(entity.Comp, 3 + 2 * (int)entity.Comp.Realm, readiness);
         _audioSystem.PlayPvs(ThunderSound, entity);
@@ -629,7 +658,7 @@ public sealed partial class CultivationSystem : EntitySystem
     public static (float Chance, float Damage) BreakthroughLightning(CultivationRealm realm)
     {
         var tier = (int)realm;
-        return (0.3f + 0.1f * tier, 5f + 6f * tier);
+        return (0.3f + 0.15f * tier, 6f + 8f * tier);
     }
 
     private void CallLightning(Entity<CultivatorComponent> entity, bool final = false)

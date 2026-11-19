@@ -18,10 +18,10 @@ and injury alerts stay in step.
   cycle eases one stack of internal injury. A `CultivationQiSourceComponent` nearby multiplies both.
 - **Breakthrough** needs full insight and means enduring heaven's tribulation: `3 + 2 × realm` cycles of a
   do-after, each with a chance of tribulation lightning (lightning rods nearby take most of it). The storm grows with
-  the realm being left (`CultivationSystem.BreakthroughLightning`): 30/40/50% a cycle for 5/11/17 shock, and the last
+  the realm being left (`CultivationSystem.BreakthroughLightning`): 30/45/60% a cycle for 6/14/22 shock, and the last
   cycle of the step into Nascent Soul always strikes. Readiness
   (`CultivationSystem.BreakthroughReadiness`) is 50, minus 20 per injury, plus bonuses for a qi source, nearly full
-  qi and a tempered Dao heart; every realm already climbed takes 15 off, and 70 effective is certain. The odds and the
+  qi and a tempered Dao heart; every realm already climbed takes 20 off, and 70 effective is certain. The odds and the
   storm are told to the cultivator when it starts. Anything else can add to it through
   `CultivationBreakthroughReadinessEvent`. A failure (a qi deviation) halves insight, injures, and may tear loose a
   heart demon (`HeartDemonSystem`): kill it close by and the Dao heart is tempered, let it go and it costs more.
@@ -136,7 +136,7 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
 - **Xuanyuan Sword**: answers only to the Son of Heaven (`SonOfHeavenComponent`, given by the Mandate of Heaven);
   anyone else is burned picking it up.
 - **Green Dragon Crescent Blade**: wielded, reaches further; its blows follow the wielder's face in the jianghu.
-- **Seven-Star Sword**: each blow lights a star; with all seven, the Seven Stars cut down a line.
+- **Seven-Star Sword**: each blow lights a star and every lit star adds 2 to its blows. With three or more lit, release them: they fall one after another in the shape of the Northern Dipper around the target, each cutting for 15 (once per foe); with all seven, the last is a great star (25 in a 2-tile blast, knocks down, craters the floor).
 - **Linglong Pagoda**: thrown at someone, seals them inside for twenty seconds (a ward or the Golden Bell turns it).
 - **Universe Ring**: thrown, ricochets to two more people and flies home.
 - **Wind Fire Wheels**: shoes; much faster, no slipping, burning footprints, and the odd skid.
@@ -174,10 +174,10 @@ the Xuanyuan Sword answers to). Heads already aboard get theirs when the jianghu
 - Heaven's Fortune: a 5-10% chance a blow misses;
 - +10/+15 breakthrough and Tribulation readiness, and faster cultivation.
 
-All of these grow with the dynasty's age (15, 30 and 60 minutes).
+All of these grow with the dynasty's age (15, 30 and 60 minutes; twice as fast in Ascension), and each new tier adds a treasury charge.
 
 **Powers** are all in one **Imperial Court** button, a radial menu (`ImperialCourtBoundUserInterface`). Powers used on someone open a second ring of the people within nine tiles, and each power keeps its own cooldown. The powers: Imperial Decree (rallies their people; station-wide for the Son), Kneel!,
-Imperial Treasury (herbs, talismans, gold, a manual, sometimes a legendary), Imperial Pardon, Appoint Jinyiwei and
+Imperial Treasury (herbs, talismans, gold and a manual; from tier 1 a martial manual, from tier 2 a treasured armour, at tier 3 another martial manual; a legendary at 10% + 25% per tier), Imperial Pardon, Appoint Jinyiwei and
 Accept Fealty (both need the other player to accept). The Son also has Ennoble and Heaven's Punishment (three bolts).
 
 **Losing it:** the Mandate is withdrawn on death, after three minutes in cuffs, or after a minute with a demoted ID.
@@ -189,7 +189,7 @@ Nobles (+15%), Jinyiwei (+10%) and members of sects sworn to a ruler (+10%) cult
 
 ## Wuxia: Ascension
 
-A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn. Using it opens a radial menu (`PathChoiceBoundUserInterface`) with the path of qi, then one of the five elements, or the path of the body, each described on hover. The scroll becomes that path's book (the element's qi manual or the Body Molding Art), and reading it sets them on the path for life. Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, a quarter less damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events run as in the Wuxia preset, but richer: every element's manual is hidden in maintenance plus five more, seven different martial manuals, three sets of the body's arts, a demonic scripture, two shelves' worth in the library, three different legendaries, and heavenly treasures bloom about twice as often. No legendary ever turns up twice in a round, from loot, the Imperial Treasury or anywhere else.
+A second gamemode (`KsWuxiaAscension`, vote name "Wuxia: Ascension"). Everyone gets a Fork in the Road scroll at spawn. Using it opens a radial menu (`PathChoiceBoundUserInterface`) with the path of qi, then one of the five elements, or the path of the body, each described on hover. The scroll becomes that path's book (the element's qi manual or the Body Molding Art), and reading it sets them on the path for life. Cultivation runs faster for everyone. The first to reach Nascent Soul or the ninth body stage is proclaimed Supreme Sovereign: a station-wide announcement, a quarter less damage from every blow, and the shuttle comes in 10 minutes. The round-end screen names the winner. The world events run as in the Wuxia preset, but richer: every element's manual is hidden in maintenance plus five more, seven different martial manuals, three sets of the body's arts, a demonic scripture, two shelves' worth in the library, three different legendaries, and heavenly treasures bloom a little more often (every 12-16 minutes). The last step to the peak (Golden Core to Nascent Soul, stage 8 to 9) is different for contenders (anyone not bound to the court): the first try names a random place on the station (a nav-map beacon), they can only take the step within 2.5 tiles of it, each cycle takes twice as long, and the whole station is told who is attempting to ascend and where (`WuxiaAscensionRuleSystem.CheckFinalSite`). In Ascension Nascent Soul and the ninth stage are the peak: no more insight or tempering can be gained. Swords (the legendary blades, the sect jian and butterfly swords) are Large, so they don't fit in a backpack, and are carried on the belt, the back or a vest's storage slot; the Qiankun Pouch still holds them. Spirit herbs give 25 tempering. No legendary ever turns up twice in a round, from loot, the Imperial Treasury or anywhere else.
 
 ## The Demonic Path
 
@@ -316,10 +316,10 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   current stage. Each forging cycle pours 5 tempering and takes 5 seconds, or 2.5 in the wuxia gamemodes.
 - **Tribulation of Flesh:** once every part is past the stage, a repeating do-after cracks the bones for a while
   and then rolls readiness. Readiness is 50, +10 fed, +10 rested (exhaustion under 10), +10 in the Mountain stance,
-  +10 on a meditation mat, +5 secluded, −20 badly hurt; from stage 4 each stage takes 3 off, and the step into stage 9 takes 20
-  (`SharedBodyCultivationSystem.TribulationPenalty`); 70 effective always succeeds. From stage 5 heaven's lightning
-  falls during it too (`TribulationLightning`: 15% a cycle +5% per stage, 4 + 1.5 × stage shock), and the last cycle of
-  the step into stage 9 always strikes. A failure exhausts, knocks down and, from stage 4, hurts. Success raises the
+  +10 on a meditation mat, +5 secluded, −20 badly hurt; from stage 4 each stage takes 4 off, and the step into stage 9 takes 25
+  (`SharedBodyCultivationSystem.TribulationPenalty`); 70 effective always succeeds. From stage 4 heaven's lightning
+  falls during it too (`TribulationLightning`: 20% a cycle +6% per stage, 5 + 1.75 × stage shock), and the last cycle of
+  the step into stage 9 always strikes. Each cycle cracks the bones for 3 + stage/2. A failure exhausts, knocks down and, from stage 4, hurts. Success raises the
   stage, adds health and opens new arts (`BodyCultivationSystem.StageArts`).
 - **Mortals stop at Copper Skin.** The Copper Skin Primer starts anyone on the path; the Body Molding Art commits
   them to it, which closes the way of qi. Qi cultivators can read neither.

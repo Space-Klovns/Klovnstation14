@@ -90,7 +90,9 @@ public sealed partial class LegendarySystem
             }
             else if (TryComp<SevenStarSwordComponent>(entity, out var starComponent))
             {
-                if (!LegendaryHit(args.User, victimUid, 8f, TimeSpan.Zero, entity) || starComponent.Stars >= SevenStarSwordComponent.MaxStars)
+                // Every lit star sharpens the blade a little more.
+                if (!LegendaryHit(args.User, victimUid, 8f + StarBladeBonus * starComponent.Stars, TimeSpan.Zero, entity)
+                    || starComponent.Stars >= SevenStarSwordComponent.MaxStars)
                     continue;
 
                 starComponent.Stars++;
@@ -147,42 +149,103 @@ public sealed partial class LegendarySystem
 
     #region Seven-Star Sword
 
+    private const float StarBladeBonus = 2f;
+    private const float LesserStarDamage = 15f;
+    private const float LesserStarRadius = 1f;
+    private const float GreatStarDamage = 25f;
+    private const float GreatStarRadius = 2f;
+    private static readonly TimeSpan StarInterval = TimeSpan.FromSeconds(0.18);
+
+    /// <summary>
+    ///     The Northern Dipper around where the stars are called down, handle to bowl, in tiles. The seventh, at the end
+    ///         of the bowl, is the great star.
+    /// </summary>
+    private static readonly Vector2[] Dipper =
+    {
+        new(-3f, 1.2f), new(-2f, 0.7f), new(-1f, 0.3f), new(0f, 0f), new(0.3f, -1.2f), new(1.7f, -1.3f), new(2f, 0f),
+    };
+
+    /// <summary>
+    ///     Release the lit stars: from three up, each falls in turn along the Northern Dipper around the target. With
+    ///         all seven lit, the last is a great star that knocks everyone around it down.
+    /// </summary>
     [SubscribeLocalEvent]
     private void OnSevenStars(Entity<SevenStarSwordComponent> entity, ref SevenStarsActionEvent args)
     {
         if (args.Handled)
             return;
 
-        if (entity.Comp.Stars < SevenStarSwordComponent.MaxStars)
+        if (entity.Comp.Stars < SevenStarSwordComponent.MinStarsToRelease || entity.Comp.Falling.Count > 0)
         {
-            _noticeSystem.Notify(args.Performer, Loc.GetString("legendary-seven-star-unlit", ("stars", entity.Comp.Stars)));
+            _noticeSystem.Notify(args.Performer, Loc.GetString("legendary-seven-star-unlit", ("stars", entity.Comp.Stars),
+                ("needed", SevenStarSwordComponent.MinStarsToRelease)));
             return;
         }
 
-        var from = _transformSystem.GetMapCoordinates(args.Performer);
-        var direction = _transformSystem.ToMapCoordinates(args.Target).Position - from.Position;
-        if (direction.LengthSquared() < 0.01f)
-            return;
-
         args.Handled = true;
+        var target = _transformSystem.ToMapCoordinates(args.Target);
+        var stars = entity.Comp.Stars;
+        var now = _gameTiming.CurTime;
         entity.Comp.Stars = 0;
-        _pointLightSystem.SetEnergy(entity, 0f);
-        Shout(args.Performer, "legendary-seven-star-shout");
-        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, args.Performer);
-        direction = Vector2.Normalize(direction);
-        var hit = new HashSet<EntityUid>();
-        for (var step = 1; step <= SevenStarSwordComponent.MaxStars; step++)
+        entity.Comp.Wielder = args.Performer;
+        entity.Comp.Struck.Clear();
+        entity.Comp.Falling.Clear();
+        for (var i = 0; i < stars; i++)
         {
-            var point = new MapCoordinates(from.Position + direction * step, from.MapId);
-            _visualsSystem.Art(CultivationVisualsSystem.ArtGoldMotes, point);
-            _visualsSystem.WaveAt(point, FxColour.Gold);
-            _mobs.Clear();
-            _entityLookupSystem.GetEntitiesInRange(point, 0.6f, _mobs);
-            foreach (var victim in _mobs)
+            var great = i == SevenStarSwordComponent.MaxStars - 1;
+            entity.Comp.Falling.Add(new SevenStarStrike(now + StarInterval * (i + 1),
+                new MapCoordinates(target.Position + Dipper[i], target.MapId), great));
+        }
+
+        _pointLightSystem.SetEnergy(entity, 0f);
+        Shout(args.Performer, stars == SevenStarSwordComponent.MaxStars ? "legendary-seven-star-shout" : "legendary-seven-star-shout-partial");
+        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, args.Performer);
+        _visualsSystem.Wave(args.Performer, FxColour.Gold);
+    }
+
+    private void UpdateSevenStars(TimeSpan now)
+    {
+        var query = EntityQueryEnumerator<SevenStarSwordComponent>();
+        while (query.MoveNext(out var uid, out var sword))
+        {
+            while (sword.Falling.Count > 0 && sword.Falling[0].At <= now)
             {
-                if (hit.Add(victim.Owner))
-                    LegendaryHit(args.Performer, victim.Owner, 22f, TimeSpan.FromSeconds(1), entity);
+                var strike = sword.Falling[0];
+                sword.Falling.RemoveAt(0);
+                if (sword.Wielder is { } wielder && !TerminatingOrDeleted(wielder))
+                    StarFalls((uid, sword), wielder, strike);
             }
+        }
+    }
+
+    private void StarFalls(Entity<SevenStarSwordComponent> sword, EntityUid wielder, SevenStarStrike strike)
+    {
+        _visualsSystem.Art(CultivationVisualsSystem.ArtFallingStar, strike.Point);
+        _visualsSystem.WaveAt(strike.Point, FxColour.Gold, big: strike.Great);
+        _mobs.Clear();
+        _entityLookupSystem.GetEntitiesInRange(strike.Point, strike.Great ? GreatStarRadius : LesserStarRadius, _mobs);
+        foreach (var victim in _mobs)
+        {
+            if (strike.Great)
+            {
+                LegendaryHit(wielder, victim.Owner, GreatStarDamage, TimeSpan.FromSeconds(2), sword);
+                continue;
+            }
+
+            // A lesser star cuts each foe once per release, however close together they fall.
+            if (sword.Comp.Struck.Add(victim.Owner))
+                LegendaryHit(wielder, victim.Owner, LesserStarDamage, TimeSpan.FromSeconds(0.5), sword);
+        }
+
+        if (strike.Great)
+        {
+            _visualsSystem.Crater(strike.Point, 1);
+            _visualsSystem.Shockwave(strike.Point, strength: 1.5f);
+            _visualsSystem.Boom(CultivationVisualsSystem.ThunderclapSound, strike.Point, volume: 4f);
+        }
+        else
+        {
+            _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, strike.Point, -6f);
         }
     }
 

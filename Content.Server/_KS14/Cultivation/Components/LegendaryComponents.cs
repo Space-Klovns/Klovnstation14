@@ -370,7 +370,32 @@ public sealed partial class SevenStarSwordComponent : Component
     public int Stars;
 
     public const int MaxStars = 7;
+
+    /// <summary>
+    ///     The fewest lit stars that can be released.
+    /// </summary>
+    public const int MinStarsToRelease = 3;
+
+    /// <summary>
+    ///     Stars still falling from the last release, in order.
+    /// </summary>
+    [ViewVariables]
+    public List<SevenStarStrike> Falling = new();
+
+    /// <summary>
+    ///     Who has already been cut by one of the lesser stars of the current release.
+    /// </summary>
+    [ViewVariables]
+    public HashSet<EntityUid> Struck = new();
+
+    [ViewVariables]
+    public EntityUid? Wielder;
 }
+
+/// <summary>
+///     One star of a Seven Stars release: where and when it lands, and whether it's the great seventh star.
+/// </summary>
+public record struct SevenStarStrike(TimeSpan At, Robust.Shared.Map.MapCoordinates Point, bool Great);
 
 /// <summary>
 ///     The Linglong Pagoda: thrown at someone, it swells over them and seals them inside.

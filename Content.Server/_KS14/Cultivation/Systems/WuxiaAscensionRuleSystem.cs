@@ -20,6 +20,7 @@ using Content.Shared.Popups;
 using Content.Shared.Verbs;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 
 namespace Content.Server._KS14.Cultivation.Systems;
 
@@ -48,6 +49,20 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
     [Dependency] private Content.Shared.Roles.Jobs.SharedJobSystem _jobSystem = default!;
     [Dependency] private CultivationSystem _cultivationSystem = default!;
     [Dependency] private SharedBodyCultivationSystem _bodySystem = default!;
+    [Dependency] private Content.Server.Pinpointer.NavMapSystem _navMapSystem = default!;
+    [Dependency] private Content.Server.Station.Systems.StationSystem _stationSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private Robust.Shared.Random.IRobustRandom _robustRandom = default!;
+
+    /// <summary>
+    ///     How close to their site a contender has to be to take the last step.
+    /// </summary>
+    public const float FinalStepSiteRange = 2.5f;
+
+    /// <summary>
+    ///     Each cycle of a contender's last step to the peak takes this many times as long: slower, but no more lightning.
+    /// </summary>
+    public const double FinalStepSlowdown = 2.0;
 
     public override void Initialize()
     {
@@ -200,6 +215,79 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
         return _mindSystem.TryGetMind(uid, out var mindId, out _)
                && _jobSystem.MindTryGetJobId(mindId, out var jobId) && jobId is { } job && MandateSystem.IsHeadJob(job.Id);
     }
+
+    #region The last step
+
+    /// <summary>
+    ///     Whether this is an Ascension contender (not bound to the court) about to take their last step to the peak.
+    /// </summary>
+    public bool IsContenderFinalStep(EntityUid uid, bool lastStep)
+    {
+        return lastStep && Active() && !CourtBound(uid);
+    }
+
+    /// <summary>
+    ///     A contender may only take the last step at the place heaven chose for them. The first time they try, choose it
+    ///         and tell them; after that, tell them how far off they are.
+    /// </summary>
+    /// <returns>Whether they're where they need to be (or no place could be found, in which case anywhere will do).</returns>
+    public bool CheckFinalSite(EntityUid uid)
+    {
+        var site = EnsureComp<AscensionSiteComponent>(uid);
+        if (site.Beacon is not { } beacon || TerminatingOrDeleted(beacon))
+        {
+            if (!PickSite(uid, site))
+                return true;
+
+            _noticeSystem.Notify(uid, Loc.GetString("ascension-site-chosen", ("place", site.Name)), PopupType.Large, alsoToChat: true);
+            return false;
+        }
+
+        var here = _transformSystem.GetMapCoordinates(uid);
+        var there = _transformSystem.GetMapCoordinates(beacon);
+        if (here.MapId == there.MapId && (here.Position - there.Position).Length() <= FinalStepSiteRange)
+            return true;
+
+        _noticeSystem.Notify(uid, Loc.GetString("ascension-site-far", ("place", site.Name)), PopupType.Medium, alsoToChat: true);
+        return false;
+    }
+
+    /// <summary>
+    ///     Warn the whole station: someone is trying to ascend, and where.
+    /// </summary>
+    public void AnnounceFinalStep(EntityUid uid)
+    {
+        var place = TryComp<AscensionSiteComponent>(uid, out var site) ? site.Name : _navMapSystem.GetNearestBeaconString(uid, onlyName: true);
+        _noticeSystem.Proclaim(null, Loc.GetString("ascension-final-step-warning", ("user", uid), ("place", place)),
+            Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold);
+    }
+
+    private bool PickSite(EntityUid uid, AscensionSiteComponent site)
+    {
+        var station = _stationSystem.GetOwningStation(uid);
+        var candidates = new List<EntityUid>();
+        var query = EntityQueryEnumerator<Content.Shared.Pinpointer.NavMapBeaconComponent, TransformComponent>();
+        while (query.MoveNext(out var beaconUid, out var beacon, out var xform))
+        {
+            if (!beacon.Enabled || !xform.Anchored || xform.GridUid == null)
+                continue;
+
+            if (station != null && _stationSystem.GetOwningStation(beaconUid, xform) != station)
+                continue;
+
+            candidates.Add(beaconUid);
+        }
+
+        if (candidates.Count == 0)
+            return false;
+
+        var chosen = _robustRandom.Pick(candidates);
+        site.Beacon = chosen;
+        site.Name = _navMapSystem.GetNearestBeaconString(chosen, onlyName: true);
+        return true;
+    }
+
+    #endregion
 
     #region The peak
 

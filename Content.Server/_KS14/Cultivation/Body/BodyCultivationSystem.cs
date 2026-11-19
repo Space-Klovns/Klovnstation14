@@ -96,6 +96,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [Dependency] private CultivationSystem _cultivationSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
     [Dependency] private WuxiaWorldRuleSystem _wuxiaWorldSystem = default!;
+    [Dependency] private WuxiaAscensionRuleSystem _ascensionRuleSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -199,6 +200,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         foreach (var power in args.NewlyUnlocked)
         {
             EntityManager.AddComponents(entity, power.Components, removeExisting: power.ReplaceComponents);
+            foreach (var name in power.RemoveComponents)
+            {
+                if (EntityManager.ComponentFactory.TryGetRegistration(name, out var registration))
+                    RemComp(entity, registration.Type);
+            }
             // Tempered eyes see in the dark from the moment they open.
             if (TryComp<Content.Shared._Mono.Overlays.PhosphorNightVisionComponent>(entity, out var nightVision) && !nightVision.Enabled)
                 _nightVisionSystem.SetEnabled((entity, nightVision), true, entity);
@@ -466,6 +472,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return;
 
         args.Handled = true;
+        if (entity.Comp.Stage >= BodyCultivatorComponent.MaxStage)
+        {
+            _noticeSystem.Notify(entity, Loc.GetString("body-forge-peak"), PopupType.Medium);
+            return;
+        }
+
         if (_bodySystem.WeakestGroup(entity.Comp) is not { } group)
         {
             _noticeSystem.Notify(entity, Loc.GetString(_bodySystem.ReadyForTribulation(entity.Comp)
@@ -587,12 +599,20 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
     public bool StartTribulation(Entity<BodyCultivatorComponent> entity)
     {
+        // In Ascension, a contender takes the last step only at the place heaven chose, for twice as long, with the whole
+        // station told where.
+        var lastStep = _ascensionRuleSystem.IsContenderFinalStep(entity, entity.Comp.Stage == BodyCultivatorComponent.MaxStage - 1);
+        if (lastStep && !_ascensionRuleSystem.CheckFinalSite(entity))
+            return false;
+
         // Ten seconds plus two per stage, in cycles of bones breaking and resetting.
         var duration = 10 + 2 * entity.Comp.Stage;
         var cycles = Math.Max(1, (int)Math.Ceiling((double)duration / TribulationCycle.TotalSeconds));
+
         var readiness = TribulationReadiness(entity);
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, entity, TribulationCycle, new BodyTribulationDoAfterEvent(), entity)
+        var cycle = lastStep ? TribulationCycle * WuxiaAscensionRuleSystem.FinalStepSlowdown : TribulationCycle;
+        var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new BodyTribulationDoAfterEvent(), entity)
         {
             BreakOnMove = true,
             NeedHand = false,
@@ -602,6 +622,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return false;
 
         _bodySystem.SetTribulation(entity.Comp, cycles, readiness);
+        if (lastStep)
+            _ascensionRuleSystem.AnnounceFinalStep(entity);
         var chance = (int)(SharedBodyCultivationSystem.TribulationChance(readiness, entity.Comp.Stage) * 100);
         _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-start", ("user", entity.Owner)), type: PopupType.LargeCaution);
         _noticeSystem.Notify(entity, Loc.GetString("body-tribulation-odds",
@@ -627,7 +649,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         // Bones snap and knit back together.
-        _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", (float)(3 + entity.Comp.Stage)), ignoreResistances: true, interruptsDoAfters: false);
+        _damageableSystem.TryChangeDamage(entity.Owner, CultivationSystem.Damage("Blunt", 3f + 0.5f * entity.Comp.Stage), ignoreResistances: true, interruptsDoAfters: false);
         _staminaSystem.TakeStaminaDamage(entity, 6f);
         _audioSystem.PlayPvs(CrackSound, entity);
         _visualsSystem.Spark(entity, FxColour.Earth);

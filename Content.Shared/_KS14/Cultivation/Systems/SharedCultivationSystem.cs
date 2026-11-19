@@ -38,12 +38,12 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Heaven tests the higher realms harder: every realm already climbed takes 15 from readiness. Breaking out of
-    ///         Qi Condensation is certain at 70, out of Foundation at 85, out of Golden Core at 100.
+    ///     Heaven tests the higher realms harder: every realm already climbed takes 20 from readiness. Breaking out of
+    ///         Qi Condensation is certain at 70, out of Foundation at 90, out of Golden Core at 110.
     /// </summary>
     public static int EffectiveReadiness(int readiness, CultivationRealm realm)
     {
-        return readiness - 15 * (int)realm;
+        return readiness - 20 * (int)realm;
     }
 
     /// <summary>

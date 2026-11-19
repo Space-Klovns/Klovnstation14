@@ -284,19 +284,7 @@
   description: Roar with the voice of the first mountain. Everyone weaker than you within seven tiles is knocked flat and battered, and every window shatters. 30 exhaustion.
   components:
   - type: Action
-    useDelay: 60
+    useDelay: 180
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_roar }
   - type: InstantAction
     event: !type:BodyPrimordialRoarActionEvent
-
-# The tempered eyes' night vision, in the cultivation icon style.
-- type: entity
-  parent: ActionTogglePhosphorNightVision
-  id: ActionKsBodyNightEyes
-  name: Tempered Eyes
-  description: Your tempered eyes see in the dark. Toggle it off when the light is better without it.
-  components:
-  - type: Action
-    useDelay: 2
-    itemIconStyle: BigAction
-    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_night_eyes }

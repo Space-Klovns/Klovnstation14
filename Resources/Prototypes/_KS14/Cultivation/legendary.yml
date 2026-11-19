@@ -17,10 +17,19 @@
   name: Ganjiang
   description: A dark blue-black jian, the male sword of the legendary pair.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/legendary.rsi
     state: ganjiang
   - type: Item
+    size: Large
     sprite: Objects/Weapons/Melee/katana.rsi
   - type: MeleeWeapon
     attackRate: 1.25
@@ -90,6 +99,14 @@
   name: Heaven Reliant Sword
   description: A long, impossibly keen sword of pale jade-white steel. It cuts iron like mud.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/legendary.rsi
     state: heaven_reliant
@@ -122,6 +139,14 @@
   name: Dragon Slaying Saber
   description: A massive black dao with a golden dragon coiled along the blade. Every blow lands like a falling mountain.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/legendary.rsi
     state: dragon_saber
@@ -545,6 +570,14 @@
   name: Xuanyuan Sword
   description: A broad golden jian engraved with the sun, moon and stars on one face and mountains and rivers on the other. It is unbearably heavy with authority.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/legendary.rsi
     state: xuanyuan_sword
@@ -615,10 +648,19 @@
   name: Seven-Star Sword
   description: A dark jian inlaid with seven golden studs in the shape of the Northern Dipper. Each one glows a little brighter with every blow.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/legendary.rsi
     state: seven_star_sword
   - type: Item
+    size: Large
     sprite: Objects/Weapons/Melee/katana.rsi
   - type: MeleeWeapon
     damage:
@@ -709,7 +751,7 @@
   parent: BaseActionCultivation
   id: ActionKsSevenStars
   name: Seven Stars of the Northern Dipper
-  description: With all seven stars lit, release a river of starlight down a line seven tiles long.
+  description: Release the lit stars (three or more) to fall in the shape of the Northern Dipper where you aim. With all seven, the last is a great star that knocks everyone around it down.
   components:
   - type: Action
     useDelay: 2

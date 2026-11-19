@@ -75,6 +75,7 @@ public sealed partial class LegendarySystem : EntitySystem
         UpdatePagodas(now);
         UpdateRings(now);
         UpdateWheels();
+        UpdateSevenStars(now);
     }
 
     #region Legendary blows

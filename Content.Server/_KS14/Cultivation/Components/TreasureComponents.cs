@@ -38,7 +38,7 @@ public sealed partial class SpiritHerbComponent : Component
     public float Insight = 40f;
 
     [DataField]
-    public float Tempering = 80f;
+    public float Tempering = 25f;
 }
 
 /// <summary>

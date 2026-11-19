@@ -51,11 +51,19 @@
   name: butterfly sword
   description: A short, broad single-edged blade with a hand guard, made to be used in pairs. With one in each hand, each strikes faster.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: butterfly_sword
   - type: Item
-    size: Normal
+    size: Large
     sprite: Objects/Weapons/Melee/machete.rsi
   - type: MeleeWeapon
     damage:
@@ -121,11 +129,19 @@
   name: sect jian
   description: A straight double-edged sword with a tassel in a sect's colours. It feels right in a member's hand.
   components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: sect_jian
   - type: Item
-    size: Normal
+    size: Large
     sprite: Objects/Weapons/Melee/katana.rsi
   - type: MeleeWeapon
     damage:

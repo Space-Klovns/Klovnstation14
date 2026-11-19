@@ -34,9 +34,9 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
     private static readonly TimeSpan BloomMin = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan BloomMax = TimeSpan.FromMinutes(20);
     /// <summary>
-    ///     In Wuxia: Ascension heavenly treasures bloom about twice as often.
+    ///     In Wuxia: Ascension heavenly treasures bloom a little more often.
     /// </summary>
-    private const float AscensionBloomScale = 0.55f;
+    private const float AscensionBloomScale = 0.8f;
 
     private static readonly TimeSpan PetalInterval = TimeSpan.FromSeconds(3);
 

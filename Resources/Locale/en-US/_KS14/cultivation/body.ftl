@@ -49,6 +49,7 @@ body-power-unlocked = {$power}: {$description}
 body-forge-start = {CAPITALIZE(THE($user))} strains every muscle, forging {POSS-ADJ($user)} {$part}.
 body-forge-level = Your {$part} hardens to level {$level}.
 body-forge-no-tempering = You have no training banked to forge with. Fight, take hits, punch things, and keep living.
+body-forge-peak = You are a Primordial Chaos Body, the peak of the flesh. Every part of you is perfected; there is nothing left to temper.
 body-forge-all-capped = Every part of you is forged as far as your stage allows.
 body-forge-ready-for-tribulation = Every part of you is forged past your stage. You are ready for the Tribulation of Flesh.
 body-tribulation-not-ready = Every part of your body must be forged past your stage first.

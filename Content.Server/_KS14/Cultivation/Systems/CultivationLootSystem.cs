@@ -22,7 +22,7 @@ public sealed partial class CultivationLootSystem : EntitySystem
         "CultivationManualMetal", "CultivationManualWood", "CultivationManualWater", "CultivationManualFire", "CultivationManualEarth",
     };
 
-    private static readonly EntProtoId[] MartialManuals =
+    public static readonly EntProtoId[] MartialManuals =
     {
         "MartialManualDragonPalms", "MartialManualSixMeridians", "MartialManualNorthernDarkness", "MartialManualStarAbsorbing",
         "MartialManualGreatShift", "MartialManualNineYang", "MartialManualGoldenBell", "MartialManualGracefulSteps",
@@ -31,6 +31,15 @@ public sealed partial class CultivationLootSystem : EntitySystem
     };
 
     public static readonly EntProtoId BodyMoldingArt = "BodyManualMoldingArt";
+
+    /// <summary>
+    ///     The treasured armours of the jianghu, which only an old dynasty's treasury still keeps.
+    /// </summary>
+    public static readonly EntProtoId[] LegendaryArmours =
+    {
+        "ClothingOuterSoftHedgehogArmor", "ClothingOuterGoldenSilkVest", "ClothingOuterGoldenChainMail",
+        "ClothingHeadPhoenixWingCrown", "ClothingShoesCloudStepping",
+    };
     private static readonly EntProtoId BodyPrimer = "BodyManualCopperSkinPrimer";
     private static readonly EntProtoId DemonicScripture = "KsDemonicScripture";
     private static readonly EntProtoId AncestralRing = "KsAncestralRing";

@@ -170,6 +170,10 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         if (!_bodyCultivatorQuery.Resolve(entity, ref entity.Comp, logMissing: false))
             return 0f;
 
+        // A Primordial Chaos Body is the peak: every part is perfected and there's nothing left to temper.
+        if (entity.Comp.Stage >= BodyCultivatorComponent.MaxStage && amount > 0f)
+            return 0f;
+
         var currentTime = _gameTiming.CurTime;
         if (trainingSource != null)
         {
@@ -423,11 +427,12 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
 
     /// <summary>
     ///     Heaven tests the later stages of the flesh harder. Up to the fourth stage readiness is taken as it is; past it
-    ///         every stage takes 3 more, and the last step, into a Primordial Chaos Body, takes 20 in all.
+    ///         every stage takes 4 more, and the last step, into a Primordial Chaos Body, takes 25 in all: certain only with
+    ///         every preparation.
     /// </summary>
     public static int TribulationPenalty(int stage)
     {
-        return Math.Max(0, stage - 3) * 3 + (stage >= BodyCultivatorComponent.MaxStage - 1 ? 5 : 0);
+        return Math.Max(0, stage - 3) * 4 + (stage >= BodyCultivatorComponent.MaxStage - 1 ? 5 : 0);
     }
 
     /// <summary>
@@ -440,15 +445,15 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     }
 
     /// <summary>
-    ///     From the sixth stage the flesh draws heaven's eye too: lightning falls during the tribulation, more often and
+    ///     From the fifth stage the flesh draws heaven's eye too: lightning falls during the tribulation, more often and
     ///         harder each stage. The last cycle of the final step always strikes.
     /// </summary>
     public static (float Chance, float Damage) TribulationLightning(int stage)
     {
-        if (stage < 5)
+        if (stage < 4)
             return (0f, 0f);
 
-        return (0.15f + 0.05f * (stage - 5), 4f + 1.5f * stage);
+        return (0.2f + 0.06f * (stage - 4), 5f + 1.75f * stage);
     }
 
     /// <summary>

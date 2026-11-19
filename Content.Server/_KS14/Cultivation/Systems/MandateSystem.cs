@@ -55,6 +55,7 @@ public sealed partial class MandateSystem : EntitySystem
     private static readonly TimeSpan RestraintLimit = TimeSpan.FromMinutes(3);
     private static readonly TimeSpan DemotionLimit = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan[] DynastyTiers = { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(60) };
+    private const double AscensionDynastySpeed = 2.0;
     private static readonly TimeSpan RegicideWindow = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RegicideDuration = TimeSpan.FromMinutes(5);
     private static readonly EntProtoId JadeSealPrototype = "KsJadeSeal";
@@ -374,6 +375,9 @@ public sealed partial class MandateSystem : EntitySystem
     private void UpdateDynasty(Entity<MandateOfHeavenComponent> entity)
     {
         var held = _gameTiming.CurTime - entity.Comp.HeldSince;
+        // Ascension is a race: the dynasty rises (and the treasury refills) twice as fast.
+        if (_ascensionSystem.Active())
+            held *= AscensionDynastySpeed;
         var tier = DynastyTiers.Count(threshold => held >= threshold);
         if (tier <= entity.Comp.DynastyTier)
             return;
@@ -778,20 +782,31 @@ public sealed partial class MandateSystem : EntitySystem
         var here = _transformSystem.GetMapCoordinates(entity);
         var tier = entity.Comp.DynastyTier;
 
-        // Spirit herbs in place of SS13's pills, talismans, refining metals and a manual.
-        for (var i = 0; i < (entity.Comp.SonOfHeaven ? 3 : 2) + tier / 2; i++)
+        // A young dynasty's treasury is modest; an old one is a hoard. Spirit herbs, talismans and riches every time,
+        // then a manual, then martial arts, the jianghu's treasured armour and, more and more surely, a legendary.
+        for (var i = 0; i < (entity.Comp.SonOfHeaven ? 2 : 1) + tier / 2; i++)
             Spawn("KsSpiritHerb", here);
         for (var i = 0; i < 3 + tier; i++)
             Spawn("KsQiTalisman", here);
-        Spawn("IngotGold", here);
-        Spawn("MaterialDiamond1", here);
+        for (var i = 0; i <= tier; i++)
+        {
+            Spawn("IngotGold", here);
+            Spawn("MaterialDiamond1", here);
+        }
+
         Spawn(_robustRandom.Prob(0.5f) ? _robustRandom.Pick(CultivationLootSystem.QiManuals) : CultivationLootSystem.BodyMoldingArt, here);
+        if (tier >= 1)
+            Spawn(_robustRandom.Pick(CultivationLootSystem.MartialManuals), here);
+        if (tier >= 2)
+            Spawn(_robustRandom.Pick(CultivationLootSystem.LegendaryArmours), here);
+        if (tier >= 3)
+            Spawn(_robustRandom.Pick(CultivationLootSystem.MartialManuals), here);
 
         var artifactChance = entity.Comp.SonOfHeaven
-            ? (entity.Comp.TreasuryArtifactGiven ? 0.5f : tier >= 1 ? 1f : 0.3f)
-            : (tier >= 2 ? 0.25f : 0.05f);
+            ? (entity.Comp.TreasuryArtifactGiven ? 0.4f + 0.2f * tier : tier >= 1 ? 1f : 0.4f)
+            : 0.1f + 0.25f * tier;
         // Only a legendary not already in the round: once every one is out, the treasury has none left to give.
-        if (_robustRandom.Prob(artifactChance) && _lootSystem.SpawnLegendaryAt(here))
+        if (_robustRandom.Prob(Math.Min(1f, artifactChance)) && _lootSystem.SpawnLegendaryAt(here))
             entity.Comp.TreasuryArtifactGiven = true;
 
         _visualsSystem.Wave(entity, FxColour.Gold, big: true);

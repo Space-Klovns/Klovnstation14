@@ -353,7 +353,6 @@
   components:
   - type: PhosphorNightVision
     enabled: true
-    action: ActionKsBodyNightEyes
     phosphorColor: "#ffe9c0"
     lightingColor: "#FFFFFF20"
     amplification: 40
@@ -369,7 +368,6 @@
   components:
   - type: PhosphorNightVision
     enabled: true
-    action: ActionKsBodyNightEyes
     phosphorColor: "#fff6e6"
     lightingColor: "#FFFFFF38"
     amplification: 160
@@ -666,6 +664,9 @@
   description: body-power-lungs-breathless-body-desc
   damageMultipliers:
     Asphyxiation: 0
+  # A body that no longer needs air doesn't breathe at all: no gasping, and no breathing in poison.
+  removeComponents:
+  - Respirator
 
 - type: bodyTemperingPower
   id: KsBodyLiverIronLiver

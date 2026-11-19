@@ -15,6 +15,7 @@ using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Content.Shared.Tag;
+using Content.Shared.Item;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Melee;
 using Robust.Server.Audio;
@@ -352,6 +353,13 @@ public sealed partial class BodyArtSystem : EntitySystem
         }
 
         Crack(centre, radius, chance: 0.5f);
+        // Note what's already lying loose here, so only the debris this blow knocks free is flung away.
+        _debrisBefore.Clear();
+        _debris.Clear();
+        _entityLookupSystem.GetEntitiesInRange(centre, radius + DebrisMargin, _debris, flags: LookupFlags.Dynamic | LookupFlags.Sundries);
+        foreach (var item in _debris)
+            _debrisBefore.Add(item.Owner);
+
         _breakables.Clear();
         _entityLookupSystem.GetEntitiesInRange(centre, radius, _breakables, flags: LookupFlags.Static | LookupFlags.Dynamic);
         foreach (var breakableEntity in _breakables)
@@ -391,6 +399,46 @@ public sealed partial class BodyArtSystem : EntitySystem
                 && _robustRandom.Prob(0.5f))
                 _rubbleSystem.Rubble(_transformSystem.GetMapCoordinates(breakableEntity.Owner));
         }
+
+        FlingDebris(centre, radius, userUid);
+    }
+
+    private const float DebrisMargin = 1f;
+    private const int MaxDebrisFlung = 12;
+    private readonly HashSet<Entity<ItemComponent>> _debris = new();
+    private readonly HashSet<EntityUid> _debrisBefore = new();
+
+    /// <summary>
+    ///     Sheets, rods, shards and parts knocked loose by a blow scatter away from whoever struck it: a short toss, and
+    ///         only a handful per blow, so a wrecked room doesn't flood the server with flying scrap.
+    /// </summary>
+    private void FlingDebris(MapCoordinates centre, float radius, EntityUid userUid)
+    {
+        _debris.Clear();
+        _entityLookupSystem.GetEntitiesInRange(centre, radius + DebrisMargin, _debris, flags: LookupFlags.Dynamic | LookupFlags.Sundries);
+        var from = _transformSystem.GetMapCoordinates(userUid);
+        var flung = 0;
+        foreach (var item in _debris)
+        {
+            if (flung >= MaxDebrisFlung)
+                break;
+
+            if (_debrisBefore.Contains(item.Owner) || TerminatingOrDeleted(item.Owner) || Transform(item.Owner).Anchored)
+                continue;
+
+            var position = _transformSystem.GetMapCoordinates(item.Owner).Position;
+            var away = from.MapId == centre.MapId ? position - from.Position : position - centre.Position;
+            if (away.LengthSquared() < 0.01f)
+                away = _robustRandom.NextAngle().ToVec();
+
+            // Mostly away from the blow, scattered a little either side.
+            var direction = Vector2.Normalize(away);
+            direction = new Angle(_robustRandom.NextFloat(-0.5f, 0.5f)).RotateVec(direction);
+            _throwingSystem.TryThrow(item.Owner, direction * _robustRandom.NextFloat(1.5f, 3f), baseThrowSpeed: 6f, recoil: false);
+            flung++;
+        }
+
+        _debrisBefore.Clear();
     }
 
     /// <summary>

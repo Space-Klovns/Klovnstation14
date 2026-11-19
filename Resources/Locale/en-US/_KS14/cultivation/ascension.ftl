@@ -13,3 +13,6 @@ cultivator-path-given = You hold a Fork in the Road: use it in hand to walk the 
 roles-antag-ks-ascension-court-name = Court Enforcer
 roles-antag-ks-ascension-court-objective = You serve heaven's order: as a head of staff or a sworn guard you can't claim the peak yourself. Cultivate to grow strong, and stop anyone else from ascending.
 ascension-peak-court = You stand at the peak of cultivation, but you serve the court: heaven's order is yours to keep, not to seize. Your duty is still to stop anyone else from reaching it.
+ascension-site-chosen = Heaven will only receive your last step at one place: {$place}. Go there and try again, and know that the whole station will be told where you are.
+ascension-site-far = Heaven will only receive your last step at {$place}. You're not there.
+ascension-final-step-warning = {CAPITALIZE(THE($user))} is attempting to ascend at {$place}! Stop them before they reach the peak!

@@ -33,6 +33,7 @@ cultivation-injury-eased = The knot in your meridians loosens.
 cultivation-meditate-start = {CAPITALIZE(THE($user))} closes {POSS-ADJ($user)} eyes and begins to breathe slowly.
 cultivation-ready-to-break-through = Your insight is complete. You stand at the threshold of the next realm.
 cultivation-at-peak = There is no realm above yours left to reach.
+cultivation-at-peak-ascension = You stand at Nascent Soul, the peak. There is no insight left to gain; meditation only restores your qi.
 cultivation-not-ready = Your insight is not yet enough to break through ({$insight}/{$required}).
 cultivation-breakthrough-start = Qi howls into {THE($user)} as {SUBJECT($user)} {CONJUGATE-BE($user)} forcing open the next realm!
 cultivation-breakthrough-success = Heaven and earth answer: {THE($user)} {CONJUGATE-HAVE($user)} broken through to {$realm}!
