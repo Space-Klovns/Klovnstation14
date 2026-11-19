@@ -129,6 +129,8 @@ public sealed partial class DamageableSystem
         if (before.Cancelled)
             return damageDone;
 
+        damage = before.Damage; // BF14-BLU: a handler can hand back new damage, rather than change the caller's in place
+
         // Apply resistances
         if (!ignoreResistances)
         {
