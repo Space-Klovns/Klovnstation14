@@ -1,12 +1,15 @@
 light_mode unshaded;
 
 // A popup's contents, rendered once at full size into a transparent offscreen target (so premultiplied colour), drawn back
-//      scaled and faded at subpixel precision, as a browser transforms a rasterised element. The target holds premultiplied
-//      colour, so the fade must scale the colour too: the engine's own multiplication by MODULATE only scales the alpha of a
-//      premultiplied colour. The prototype blends this as premultiplied.
+//      scaled and faded at subpixel precision, as a browser transforms a rasterised element.
+//
+// The target holds premultiplied colour, but a source shader is blended normally (SrcAlpha, OneMinusSrcAlpha): its blend mode
+//      comes from this header alone, and the header has no premultiplied mode. So the colour is divided by its alpha here, and
+//      normal blending multiplies it back: colour * MODULATE * alpha + behind * (1 - alpha * MODULATE.a), which is exactly a
+//      premultiplied blend, faded by MODULATE. A pixel the contents left empty has alpha 0 and adds nothing.
 
 void fragment()
 {
     highp vec4 texel = zTexture(UV);
-    COLOR = vec4(texel.rgb * MODULATE.a, texel.a);
+    COLOR = vec4(texel.rgb / max(texel.a, 0.0001), texel.a);
 }

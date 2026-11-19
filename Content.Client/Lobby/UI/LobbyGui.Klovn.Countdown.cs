@@ -21,6 +21,16 @@ public sealed partial class LobbyGui
     /// </summary>
     public void KsSetCountdown(string? caption, string? value, double? secondsLeft = null)
     {
+        // The Kharkiv banner's TIMER has its own caption and always shows a value: dashes when there is none.
+        if (_ksLayout == KsLobbyLayout.Kharkiv)
+        {
+            StartTime.Text = caption ?? string.Empty;
+            StartTimeValue.Text = string.IsNullOrEmpty(value) ? Loc.GetString("ks-kharkiv-banner-timer-idle") : value;
+            StartTimeValue.Visible = true;
+            StartTimeValue.FontColorOverride = KsGetCountdownColor(secondsLeft);
+            return;
+        }
+
         StartTime.Text = caption ?? string.Empty;
         StartTime.Visible = !string.IsNullOrEmpty(caption);
 

@@ -415,102 +415,17 @@ ever shrinks.
 
 ## The lobby
 
-The upstream lobby was reworked into a translucent "tactical menu" layout. The upstream originals are kept as
-`LobbyGui.xaml.old` and `LobbyCharacterPreviewPanel.xaml.old`. Diff against them on upstream merges.
+**Read `Klovn/Docs/lobby.md` before touching the lobby.** It has the two layouts (tactical, and the Kharkiv gag shown on
+clown holidays by the default `auto`), how the server switches them live (`klovn.lobby.layout`, admin command
+`lobbylayout`), every file, and each layout's structure, styles, shaders and tests. The rules that bite most:
 
-| Piece | File |
-| --- | --- |
-| Layout | `Content.Client/Lobby/UI/LobbyGui.xaml` (+ `.xaml.cs`: fade anchoring, lobby chat override) |
-| Character block | `LobbyCharacterPreviewPanel.xaml`, `.Klovn.Info.cs` (`SetCharacterInfo`, `GetPreferredJobName`) |
-| Styles | `Content.Client/_KS14/Lobby/KsLobbySheetlet.cs`, `KsLobbyStyleClasses` |
-| Labels | `Resources/Locale/{en-US,ru-RU}/_KS14/lobby/lobby.ftl` |
-
-Layers, back to front:
-1. `Background` (TextureRect), or `KsViewportContainer`/`KsViewport` when a lobby-view eye exists (`KsLobbyViewSystem`
-   toggles the two).
-2. `KsFadeLeft` and `KsFadeBottom` gradient panels.
-3. `MainContainer`, which holds:
-   - `LeftSide`:
-     - `DefaultState`: the menu column (`ServerName`, `StationTime`, `StartTime`, `PlaytimeComment`, Ready / Observe /
-       Manifest / Options / Leave, `VoteContainer`), `CharacterPreview`, and a bottom strip (song, background,
-       `LinkBanner`, `DevInfoBanner`).
-     - `CharacterSetupState`.
-   - `RightSide`: AHelp, vote, `ServerInfo`, `Chat`, `CollapseButton`.
-4. `ExpandPanel`.
-
-Constraints:
-- **Keep the names, and `Access="Public"`**, of everything `LobbyState`, `LobbyUIController`, `AHelpUIController`,
-  `KsLobbyViewSystem` and `LobbyGui.xaml.cs` touch. Grep `Lobby!.` and `Lobby.` before renaming anything.
-- **Exactly one `ChatBox`.**
-- **`VoteContainer` outside `RightSide`.** `RightSide` collapses (`TogglePanel`) and hides in character setup
-  (`SwitchState`).
-- **`RightSide` width comes from a cvar** (`LobbyState`).
-- **Lobby chat translucency** is set only in `LobbyGui.xaml.cs`. `ChatUIController.SetChatWindowOpacity` skips the
-  lobby on purpose.
-- **Small buttons are chips.** `KsLobbyMenuButtonSmall` draws a faint white fill and outline so neighbours read as
-  separate. A `BoxContainer` carrying that class gets the 6px row gap from the sheetlet. Any other row of them sets
-  `SeparationOverride` (`KsLobbySheetlet.SmallButtonSeparation`) and `VerticalAlignment="Center"` on its buttons, or
-  in a row with a `MinHeight` the chips stretch to full height.
-- **AHelp turns red** through `StyleClass.Negative`, added by `AHelpUIController`. The sheetlet has a
-  `KsLobbyMenuButtonSmall` + `Negative` rule for it.
-
-Fonts, text and countdown:
-- **Lobby font is a cvar**, `klovn.lobby.font` (CLIENTONLY, not archived, default `jura`; ids in
-  `KsLobbySheetlet.FontFamilies`: jura, bender; unknown falls back to jura). The sheetlet reads it in `GetRules`
-  (`IoCManager.Resolve`, sheetlets have no injection). `KsLobbyFontUIController` rebuilds the Nanotrasen sheet on change
-  (`StylesheetManager.KsRebuildNanotrasen`) and reassigns `IUserInterfaceManager.Stylesheet`, so it switches live; try
-  `cvar klovn.lobby.font bender`. The KS14 options dropdown for it is commented out in `Ks14Tab.xaml(.cs)`. Windows holding `SheetSystem` are unaffected.
-  Regular for menu items, chips and subtitles, Bold for titles and the character name, Black 44 for the countdown
-  (families without a Black use Bold).
-- **Baron forces a font on every `RichTextLabel`.** Give lobby ones `StyleClasses="KsLobbyRichText"` (the lobby font at 13, dim
-  modulate). The sheetlet also has a direct-child rule, so a class on a parent (`ServerInfo`, whose label is built in
-  code) works. Don't class the Chat's own text.
-- **Chips are uppercase through `ks-lobby-chip-*` keys** (`lobby.ftl`), swapped into `LinkBanner`, `DevInfoBanner`,
-  `CharacterSetupGui.xaml`, `LobbyGui.xaml.cs` (Vote), and `ChangelogButton` (opt-in `KsUpperCase`, because the main
-  menu and escape menu share the class).
-- **Countdown is two labels**: `StartTime` (small caption, `KsLobbySubtitle`) over `StartTimeValue` (big amber),
-  driven only by `LobbyGui.KsSetCountdown(caption, value)`. Round started or ready-state refresh hides both; paused
-  shows the caption over `PAUSED`; "starting soon" and "right now" show the value alone.
-- Disabled menu buttons (Observe before the round) draw at about 28% alpha.
-- **Dimming**: inside the mask the art stays sharp (the lobby is never blurred), its luminance is eased down to `maxLuminance` 0.07 through a soft knee (starting at 60% of it, never brightening) and
-  desaturated 30%. While it is active `RightSide.PanelOverride` is a `StyleBoxEmpty`, so the right fade doesn't
-  stack into a stripe; it returns to null otherwise (`KsApplyContrastShader`).
-- `CharacterPreview` is right-aligned (`Margin="0 0 40 0"`) and vertically centred between two `VerticalExpand`
-  spacers, in the free space right of the menu column, so it follows `RightSide` collapsing.
-- **Menu item labels are left-aligned** (`AddButtonRules`, non-chip), overriding `ButtonSheetlet`'s centring. This
-  keeps the ready button's text still across NOT READY / READY / JOIN (see the stale-arrange trap in Layout).
-- **Countdown urgency:** in the last 20s `LobbyGui.KsSetCountdown(..., secondsLeft:)` shifts the value from amber to
-  `#FF5A3C` with a flash on each digit change (`LobbyGui.Klovn.Countdown.cs`). `LobbyState` passes `secondsLeft`,
-  null while paused.
-- **Lobby art is server-picked** and sent to every client in `TickerLobbyStatusEvent`, so everyone sees the same one.
-  A `gameMap` can force one with `forcedLobbyBackground`. A `lobbyBackground` with `randomlySelectable: false` appears
-  only through such a map (`GameTicker.Klovn.ForcedLobbyBackground.cs`). The client only displays
-  `ClientGameTicker.LobbyBackground`; never pick art client-side.
-
-Bottom bar:
-- `LobbyGui` is `KsRoot` (vertical, anchored Wide) holding `MainContainer` (expand) and `KsBottomBar`: a full-width
-  hairline, then a `KsLobbyBottomBar` panel (black, alpha 0.85) around the song/background labels and the
-  `LinkBanner`/`DevInfoBanner`. It stays visible in character setup. `KsFadeBottom` is kept: it softens the
-  transition above the bar.
-- `ChangelogButton` adds `StyleClass.Positive` for unread entries. `KsLobbySheetlet.AddPositiveRules` (direct and
-  parent-child forms, like Negative) gives a green label and a faint green box.
-- **Backdrop shader** (`LobbyGui.Klovn.Contrast.cs`, `KsLobbyContrast` = `_KS14/Shaders/lobby_contrast.swsl`): one
-  `InstanceUnique()` created in the constructor, on `Background.ShaderOverride` and `KsViewport.KsDrawShader` whenever
-  the cvar `klovn.lobby.adaptive_contrast` (CLIENTONLY, default on) is on, else null.
-  It caps the linear luminance (`maxLuminance` 0.07, about 7:1 against #E6E6E6) of bright pixels under up to four
-  padded regions (`KsMenuColumn`, `CharacterPreview`, `RightSide`, `CharacterSetupState`, only while visible in the
-  tree); dark pixels are untouched. It doesn't blur: the backdrop stays sharp, character setup included.
-  - Dimming applies to the lobby art only: `strength` is 0 while the lobby-view camera (`KsViewportContainer`) is
-    shown, since it shows the live game, and the shader is off then.
-  - Each region is fully dimmed inside and fades out over `feather` **screen pixels outside** its edge (64 × UI scale).
-    It uses a rounded box distance scaled by `quadPixelSize`, so corners fade radially and the feather isn't
-    stretched by the aspect ratio.
-  - Lobby art changes only between rounds. Nothing about it is computed per frame; the regions are just uniforms.
-  - Regions are in the shader's **UV2** (the quad: the whole `Background`, or the viewport's `KsGetDrawBox()`), not
-    the texture's UV, so no cover-aspect math and atlasing doesn't matter. Top-left origin; the shader flips v.
-    The pure mapping is `KsLobbyContrastMath.RegionToQuadSpace`.
-  - Rects are recomputed in `LobbyGui.Draw` only while `_contrastDirty`, set by `OnResized` of the gui, background,
-    viewport and region controls, `OnVisibilityChanged` of `DefaultState`/`CharacterSetupState`/`RightSide`,
-    `SwitchState` and `KsSetCameraView`. A pure position change with no resize would be missed.
-  - The cvar handler is held from `EnteredTree` to `ExitedTree` (and `Dispose`), per CLAUDE.md §6.
-  - Headless tests check the cvar and the math (`Tests/_KS14/Lobby`); the GLSL is only seen on a GPU client.
+- **Two layouts, one screen.** `LobbyGui.xaml` is the tactical layout; the Kharkiv one is `KsKharkivLobbySkin`
+  (`_KS14/Lobby/Kharkiv/`). The controls both show (ready, observe, manifest, leave, countdown, vote popups, character
+  setup) are single instances moved between them by `LobbyGui.Klovn.Layout.cs`, never duplicated.
+- **Keep the names, and `Access="Public"`**, of everything `LobbyState`, `LobbyUIController`, `AHelpUIController` and
+  `KsLobbyViewSystem` touch. Grep `Lobby!.` and `Lobby.` before renaming anything.
+- **Exactly one `ChatBox`**, in the tactical layout.
+- **`LobbyState` doesn't know the layout.** Text that differs per layout goes through a `LobbyGui.KsSet...` method.
+- Tests: `--filter "FullyQualifiedName~Lobby|FullyQualifiedName~SandboxTest"`; a layout test drives the real screen
+  (`PoolSettings { Connected = true, InLobby = true }`) and forces its layout with `OverrideCVar(Side.Server, ...)`:
+  the default, `auto`, depends on the date.
