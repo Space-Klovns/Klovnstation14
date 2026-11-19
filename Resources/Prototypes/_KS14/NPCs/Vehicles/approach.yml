@@ -1,0 +1,34 @@
+# Closes on Target (and TargetCoordinates), set by whatever task runs before it, until it is within ApproachRange and has
+#   it in sight, then holds there. Unlike a MoveTo with stopOnLineOfSight, which stops on sight within a fixed 10 tiles
+#   whatever its range, it stops where the range says: a flamer closes to where its flame reaches. Holding is branch 0, so
+#   a replan that finds it in range and in sight cuts the move short there. For something with a weapon of its own, a
+#   tank's turret, that does not care which way the hull faces.
+- type: htnCompound
+  id: KsVehicleApproachCompound
+  branches:
+  - preconditions:
+    - !type:TargetInRangePrecondition
+      targetKey: Target
+      rangeKey: ApproachRange
+    - !type:TargetInLOSPrecondition
+      targetKey: Target
+      rangeKey: ApproachRange
+      opaqueKey: false # a turret riding on it is Opaque, and IntersectRay counts a ray from inside its box as hitting it
+      ksStandingMobsBlock: false
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:SetFloatOperator
+        targetKey: ApproachHoldTime
+        amount: 1
+    - !type:HTNPrimitiveTask
+      operator: !type:WaitOperator
+        key: ApproachHoldTime
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MovementRange
+        shutdownState: TaskFinished

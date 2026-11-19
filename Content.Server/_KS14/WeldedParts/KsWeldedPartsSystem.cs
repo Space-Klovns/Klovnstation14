@@ -3,6 +3,8 @@ using Content.Shared.Destructible;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
+using Content.Shared.Projectiles;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 
@@ -22,8 +24,49 @@ public sealed partial class KsWeldedPartsSystem : EntitySystem
     [Dependency] private EntityQuery<KsWeldedPartComponent> _partQuery = default!;
     [Dependency] private EntityQuery<KsWeldedPartsComponent> _partsQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionQuery = default!;
+    [Dependency] private EntityQuery<ProjectileComponent> _projectileQuery = default!;
 
     private const string JointIdPrefix = "ks-welded-part-";
+
+    /// <summary>
+    ///     A round fired by one part of the whole passes through the rest of it: a turret's shell starts inside the hull it
+    ///         sits on, and the projectile only ignores the turret itself.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnRootPreventCollide(Entity<KsWeldedPartsComponent> entity, ref PreventCollideEvent args)
+    {
+        if (!args.Cancelled && IsShotFromWhole(entity.Owner, args.OtherEntity))
+            args.Cancelled = true;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnPartPreventCollide(Entity<KsWeldedPartComponent> entity, ref PreventCollideEvent args)
+    {
+        if (!args.Cancelled && IsShotFromWhole(entity.Comp.Root, args.OtherEntity))
+            args.Cancelled = true;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="projectileUid"/> was fired by <paramref name="rootUid"/> or one of its parts.
+    /// </summary>
+    private bool IsShotFromWhole(EntityUid rootUid, EntityUid projectileUid)
+    {
+        if (!_projectileQuery.TryComp(projectileUid, out var projectileComponent))
+            return false;
+
+        return IsOfWhole(rootUid, projectileComponent.Shooter) || IsOfWhole(rootUid, projectileComponent.Weapon);
+    }
+
+    private bool IsOfWhole(EntityUid rootUid, EntityUid? uid)
+    {
+        if (uid is not { } someUid)
+            return false;
+
+        if (someUid == rootUid)
+            return true;
+
+        return _partQuery.TryComp(someUid, out var partComponent) && partComponent.Root == rootUid;
+    }
 
     [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsWeldedPartsComponent> entity, ref MapInitEvent args)

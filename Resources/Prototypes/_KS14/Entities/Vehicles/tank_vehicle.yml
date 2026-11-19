@@ -118,14 +118,24 @@
       - !type:DoActsBehavior
         acts: ["Destruction"]
 
-  # Fixtures
+  # Fixtures: they replace the parents' whole, so the layer and mask are spelt out, or it collides with nothing and the
+  #   pathfinder, which plans by them, drives it through walls. Not Opaque: a turret riding on it looks out from inside it,
+  #   and IntersectRay, checking bounding boxes only, counts a ray starting inside one as hitting it. Under a tile in
+  #   radius, to get through a two-tile gap.
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeCircle
-          radius: 1.35
+          radius: 0.95
         density: 30
+        mask:
+        - LargeMobMask
+        layer:
+        - HighImpassable
+        - MidImpassable
+        - LowImpassable
+        - BulletImpassable
 
 ### Tank turret
 
@@ -174,6 +184,8 @@
   # Physics
   - type: Physics
     bodyType: KinematicController
+  # Something to see and shoot, and nothing more: the hull it rides on is what collides. On walls' layers it snagged on
+  #   every doorway the hull fit through, and held the hull back by the weld.
   - type: Fixtures
     fixtures:
       fix1:
@@ -182,7 +194,7 @@
           radius: 1.35
         density: 0
         layer:
-        - MachineLayer
+        - Opaque
         - BulletImpassable
 
   # Damage
