@@ -9,6 +9,6 @@
   source: "https://github.com/cmss13-devs/cmss13/blob/ffb422a67f9bf44cec61e72ef275e48fe769e952/sound/weapons/gun_mortar_travel.ogg"
 
 - files: ["new_artillery_incoming01.ogg", "new_artillery_incoming03.ogg", "new_artillery_incoming04.ogg"]
-  license: "AGPL-3.0-or-later"
-  copyright: "Original author unknown; taken from Civ13, whose repository is licensed under the GNU Affero General Public License v3.0 and states no separate licence for its sounds. Silence trimmed and converted to mono for Klovnstation 14."
+  license: "Custom"
+  copyright: "Licensed under AGPL-3.0-or-later. Original author unknown; taken from Civ13, whose repository is licensed under the GNU Affero General Public License v3.0 and states no separate licence for its sounds. Silence trimmed and converted to mono for Klovnstation 14."
   source: "https://github.com/Civ13/Civ13/tree/3a9108da5ec3cc05dcbaf71a01f7e60ca7ce4f6f/sound/weapons/WW2"
