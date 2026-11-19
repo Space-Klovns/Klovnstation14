@@ -15,9 +15,9 @@ public sealed class KsRallyZoneOverlay : Overlay
     /// <summary>
     ///     How thick the edge is drawn, in metres, and in how many circles.
     /// </summary>
-    private const float EdgeWidth = 0.08f;
+    private const float EdgeWidth = 0.16f;
 
-    private const int EdgeCircles = 4;
+    private const int EdgeCircles = 8;
 
     private readonly IEntityManager _entityManager;
     private readonly IGameTiming _gameTiming;
@@ -55,10 +55,11 @@ public sealed class KsRallyZoneOverlay : Overlay
                 var progress = total > 0 ? (float)Math.Clamp((curTime - zoneComponent.StartTime).TotalSeconds / total, 0, 1) : 1f;
 
                 // The edge pulses faster as the moment comes.
-                var pulse = 0.65f + 0.35f * MathF.Sin(progress * progress * 30f);
-                DrawEdge(handle, centre, zoneComponent.Radius, color.WithAlpha(0.9f * pulse));
-                handle.DrawCircle(centre, zoneComponent.Radius * progress, color.WithAlpha(0.18f));
-                DrawEdge(handle, centre, zoneComponent.Radius * progress, color.WithAlpha(0.5f));
+                var pulse = 0.8f + 0.2f * MathF.Sin(progress * progress * 30f);
+                DrawEdge(handle, centre, zoneComponent.Radius, color.WithAlpha(pulse));
+                handle.DrawCircle(centre, zoneComponent.Radius, color.WithAlpha(0.12f));
+                handle.DrawCircle(centre, zoneComponent.Radius * progress, color.WithAlpha(0.3f));
+                DrawEdge(handle, centre, zoneComponent.Radius * progress, color.WithAlpha(0.7f));
                 continue;
             }
 
@@ -66,7 +67,7 @@ public sealed class KsRallyZoneOverlay : Overlay
                 ? (float)Math.Clamp((curTime - zoneComponent.ActivateTime).TotalSeconds / zoneComponent.FadeDuration.TotalSeconds, 0, 1)
                 : 1f;
             var alpha = 1f - fade;
-            handle.DrawCircle(centre, zoneComponent.Radius, color.WithAlpha(0.45f * alpha));
+            handle.DrawCircle(centre, zoneComponent.Radius, color.WithAlpha(0.55f * alpha));
             DrawEdge(handle, centre, zoneComponent.Radius * (1f + 0.25f * fade), Color.White.WithAlpha(alpha));
         }
     }
