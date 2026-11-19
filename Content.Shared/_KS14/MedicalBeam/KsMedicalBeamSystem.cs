@@ -6,7 +6,6 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
-using Content.Shared.NPC.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
@@ -19,12 +18,14 @@ namespace Content.Shared._KS14.MedicalBeam;
 
 /// <summary>
 ///     Works <see cref="KsMedicalBeamGunComponent"/>. Firing never shoots: the attempt is cancelled on both sides, and
-///         the server locks the beam onto the friendly clicked, or lets it go if there is none. The server heals and checks range and sight; the beam
-///         is networked for the clients to draw.
+///         the server locks the beam onto the living mob clicked, friend or not, or lets it go if there is none. The
+///         server heals and checks range and sight; the beam is networked for the clients to draw. Two beams that
+///         cross both stop, and <see cref="KsMedicalBeamsCrossedEvent"/> sets off the explosion on the server.
 /// </summary>
 /// <remarks>
 ///     Ported from tgstation's <c>code/modules/projectiles/guns/special/medbeam.dm</c> at
-///         e6c9da8511c11d6bb696a306685885e972a079ca. Left out: crossing two beams explodes (<c>mid_los_check</c>).
+///         e6c9da8511c11d6bb696a306685885e972a079ca. Crossing is tested on the holder-to-target segments rather than
+///         tg's shared tiles. Left out: the mech-mounted version, and the explosion's flash (<c>flash_range = 8</c>).
 /// </remarks>
 public sealed partial class KsMedicalBeamSystem : EntitySystem
 {
@@ -33,7 +34,6 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
-    [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
@@ -69,20 +69,20 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Whether the beam can be on this target for this user: a living friendly, in range and in sight.
+    ///     Whether the beam can be on this target for this user: any living mob, friend or not (tg's <c>isliving</c>),
+    ///         in range and in sight.
     /// </summary>
     public bool CanBeam(Entity<KsMedicalBeamGunComponent> gun, EntityUid userUid, EntityUid targetUid)
     {
         return targetUid != userUid &&
                _mobStateQuery.TryComp(targetUid, out var mobStateComponent) &&
                mobStateComponent.CurrentState != MobState.Dead &&
-               _npcFactionSystem.IsEntityFriendly(userUid, targetUid) &&
                _examineSystem.InRangeUnOccluded(userUid, targetUid, gun.Comp.MaxRange);
     }
 
     /// <summary>
     ///     The mob clicked if the beam can go on it, and none if it can't: a click on a mob is never passed to one beside
-    ///         it. A click on no mob takes the nearest friendly close to it.
+    ///         it. A click on no mob takes the nearest mob it can beam close to it.
     /// </summary>
     private EntityUid? PickTarget(Entity<KsMedicalBeamGunComponent> gun, EntityUid userUid, GunComponent gunComponent)
     {
@@ -181,6 +181,11 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
 
             beamComponent.NextTick = curTime + beamComponent.TickInterval;
 
+            // Checked when it heals, as tg's los_check is (mid_los_check), so a beam swept across another for a moment
+            //     can get away with it.
+            if (TryCross(gun, userUid, targetUid))
+                continue;
+
             // The sparkle only on someone hurt, as tg's only shows while there is something to heal.
             if (beamComponent.HealEffect is { } healEffect && _damageableSystem.GetTotalDamage(targetUid) > FixedPoint2.Zero)
                 Spawn(healEffect, new EntityCoordinates(targetUid, Vector2.Zero));
@@ -188,6 +193,50 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
             foreach (var (group, amount) in beamComponent.Heal)
                 _damageableSystem.HealEvenly(targetUid, -amount, group, origin: userUid);
         }
+    }
+
+    /// <summary>
+    ///     Whether this beam crosses another, held by someone else; if so both stop, and the crossing is raised on this
+    ///         gun for the server to blow up.
+    /// </summary>
+    private bool TryCross(Entity<KsMedicalBeamGunComponent> gun, EntityUid userUid, EntityUid targetUid)
+    {
+        var userCoordinates = _transformSystem.GetMapCoordinates(userUid);
+        var targetCoordinates = _transformSystem.GetMapCoordinates(targetUid);
+        if (userCoordinates.MapId != targetCoordinates.MapId)
+            return false;
+
+        var otherQuery = EntityQueryEnumerator<KsMedicalBeamGunComponent>();
+        while (otherQuery.MoveNext(out var otherUid, out var otherComponent))
+        {
+            if (otherUid == gun.Owner ||
+                otherComponent.Target is not { } otherTargetUid ||
+                otherComponent.User is not { } otherUserUid ||
+                otherUserUid == userUid || // tg: beams from one origin never cross
+                TerminatingOrDeleted(otherTargetUid) ||
+                TerminatingOrDeleted(otherUserUid))
+                continue;
+
+            var otherUserCoordinates = _transformSystem.GetMapCoordinates(otherUserUid);
+            var otherTargetCoordinates = _transformSystem.GetMapCoordinates(otherTargetUid);
+            if (otherUserCoordinates.MapId != userCoordinates.MapId || otherTargetCoordinates.MapId != userCoordinates.MapId)
+                continue;
+
+            if (!KsMedicalBeamMath.TryGetCrossing(userCoordinates.Position, targetCoordinates.Position,
+                    otherUserCoordinates.Position, otherTargetCoordinates.Position,
+                    sharedTarget: otherTargetUid == targetUid, out var crossing))
+                continue;
+
+            var other = new Entity<KsMedicalBeamGunComponent>(otherUid, otherComponent);
+            Stop(gun, lost: true);
+            Stop(other, lost: true);
+
+            var ev = new KsMedicalBeamsCrossedEvent(otherUid, userUid, otherUserUid, new MapCoordinates(crossing, userCoordinates.MapId));
+            RaiseLocalEvent(gun, ref ev);
+            return true;
+        }
+
+        return false;
     }
 
     [SubscribeLocalEvent]

@@ -24,7 +24,8 @@
   - [bold]Lifesteal.[/bold] Damage you deal to an enemy heals you by 20% of it.
   - [bold]No bleeding.[/bold] Your wounds close as soon as they open.
   - [bold]Combat medibot.[/bold] Follows you and jabs hurt friends close by with a hypospray, epinephrine for anyone critical. It is flimsy; destroyed, it comes back after a minute.
-  - [bold]Medical beamgun.[/bold] Fire it at a friend within [protodata="KsMedicalBeamGun" comp="KsMedicalBeamGun" member="MaxRange" format="N0"/] metres to lock a healing beam onto them; cyan sparkles on them show each heal. The beam breaks the moment they leave range or sight. Fire it at anyone else, or at nothing, to let go.
+  - [bold]Medical beamgun.[/bold] Fire it at anyone living within [protodata="KsMedicalBeamGun" comp="KsMedicalBeamGun" member="MaxRange" format="N0"/] metres to lock a healing beam onto them; it heals friend and foe alike, so mind who you click. Cyan sparkles on them show each heal. The beam breaks the moment they leave range or sight. Fire it at nothing, or at the dead, to let go.
+  - [bold]Don't cross the streams.[/bold] If your beam crosses another medic's, both beams break and blow up where they cross, a blast that can crit anyone within a few metres. Beaming a medic who is beaming someone else counts too. Two beams on the same patient are safe, unless one runs along the other.
 
   <Box>
     <GuideEntityEmbed Entity="KsMobCompanionMedibot"/>

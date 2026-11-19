@@ -18,9 +18,10 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.MedicalBeam;
 
 /// <summary>
-///     The medical beam gun (<see cref="KsMedicalBeamSystem"/>), on a test gun: fired at a friendly it locks on and
-///         heals over time, without shooting; it won't lock onto an enemy; it breaks when range or sight is lost, and
-///         stops when put down; the clients are told where the beam is.
+///     The medical beam gun (<see cref="KsMedicalBeamSystem"/>), on a test gun: fired at a living mob, friend or not, it
+///         locks on and heals over time, without shooting; it breaks when range or sight is lost, and stops when put
+///         down; the clients are told where the beam is; two beams held by different medics that cross blow up and
+///         stop, and two that don't, don't.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsMedicalBeamSystem))]
@@ -34,6 +35,7 @@ public sealed class KsMedicalBeamTest : GameTest
     private readonly EntProtoId _gun = "KsTestMedicalBeamGun";
     private readonly EntProtoId _wall = "KsTestMedicalBeamWall";
     private readonly EntProtoId _sparkle = "KsTestMedicalBeamSparkle";
+    private readonly EntProtoId _crossingGun = "KsTestMedicalBeamCrossingGun";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
 
@@ -99,6 +101,20 @@ public sealed class KsMedicalBeamTest : GameTest
       Brute: 5
 
 - type: entity
+  parent: KsTestMedicalBeamGun
+  id: KsTestMedicalBeamCrossingGun
+  components:
+  - type: KsMedicalBeamGun
+    maxRange: 8
+    tickInterval: 0.5
+    heal:
+      Brute: 5
+    crossExplosion: Default
+    crossExplosionRadius: 2
+    crossExplosionSlope: 2
+    crossExplosionMaxIntensity: 4
+
+- type: entity
   id: KsTestMedicalBeamSparkle
 
 - type: entity
@@ -151,11 +167,13 @@ public sealed class KsMedicalBeamTest : GameTest
 
     private KsMedicalBeamGunComponent Beam(Scene scene) => Pair.Server.EntMan.GetComponent<KsMedicalBeamGunComponent>(scene.GunUid);
 
-    private bool Fire(Scene scene, EntityUid targetUid)
+    private bool Fire(Scene scene, EntityUid targetUid) => Fire(scene.MedicUid, scene.GunUid, targetUid);
+
+    private bool Fire(EntityUid medicUid, EntityUid gunUid, EntityUid targetUid)
     {
         var entMan = Pair.Server.EntMan;
-        var gun = new Entity<GunComponent>(scene.GunUid, entMan.GetComponent<GunComponent>(scene.GunUid));
-        return Pair.Server.System<SharedGunSystem>().AttemptShoot(scene.MedicUid, gun, entMan.GetComponent<TransformComponent>(targetUid).Coordinates, targetUid);
+        var gun = new Entity<GunComponent>(gunUid, entMan.GetComponent<GunComponent>(gunUid));
+        return Pair.Server.System<SharedGunSystem>().AttemptShoot(medicUid, gun, entMan.GetComponent<TransformComponent>(targetUid).Coordinates, targetUid);
     }
 
     /// <summary>
@@ -183,7 +201,7 @@ public sealed class KsMedicalBeamTest : GameTest
     }
 
     [Test]
-    public async Task BeamLocksOntoAFriendAndHealsOverTimeButNotOntoAnEnemy()
+    public async Task BeamLocksOntoAFriendAndHealsOverTime()
     {
         var server = Pair.Server;
         var client = Pair.Client;
@@ -196,10 +214,7 @@ public sealed class KsMedicalBeamTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(Fire(scene, scene.EnemyUid), Is.False, "the beam gun should never shoot");
-            Assert.That(beam.Target, Is.Null, "the beam should not lock onto an enemy");
-
-            Fire(scene, scene.FriendUid);
+            Assert.That(Fire(scene, scene.FriendUid), Is.False, "the beam gun should never shoot");
             Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "the beam should lock onto the friend");
             Assert.That(beam.User, Is.EqualTo(scene.MedicUid));
         });
@@ -220,6 +235,31 @@ public sealed class KsMedicalBeamTest : GameTest
             var heals = (friendBefore - Damage(scene.FriendUid)) / heal;
             Assert.That(heals, Is.InRange(1.95f, 3.05f), "the friend should heal each tick");
             Assert.That(heals, Is.EqualTo(MathF.Round(heals)).Within(0.05f), "each tick should heal the whole amount");
+        });
+    }
+
+    /// <summary>
+    ///     tg's beam takes any living mob: one of another faction is locked onto and healed like a friend.
+    /// </summary>
+    [Test]
+    public async Task BeamLocksOntoANonFriendlyMobAndHealsThem()
+    {
+        var server = Pair.Server;
+        var scene = await SetUp();
+        var beam = Beam(scene);
+
+        await server.WaitAssertion(() =>
+        {
+            Fire(scene, scene.EnemyUid);
+            Assert.That(beam.Target, Is.EqualTo(scene.EnemyUid), "the beam should lock onto a mob that isn't a friend");
+        });
+
+        var enemyBefore = Damage(scene.EnemyUid);
+        await Pair.RunTicksSync(Ticks((float)beam.TickInterval.TotalSeconds * 2f) + 2);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(beam.Target, Is.EqualTo(scene.EnemyUid), "the beam should stay on them");
+            Assert.That(Damage(scene.EnemyUid), Is.LessThan(enemyBefore), "the beam should heal a mob that isn't a friend");
         });
     }
 
@@ -298,11 +338,11 @@ public sealed class KsMedicalBeamTest : GameTest
     }
 
     /// <summary>
-    ///     Fired at the patient again the beam stays; at an enemy, or at nobody, it lets go. A click on an enemy is never
-    ///         passed on to a friend beside them.
+    ///     Fired at the patient again the beam stays; at a dead mob, or at nobody, it lets go. A click on a mob it can't
+    ///         beam is never passed on to one beside it that it can.
     /// </summary>
     [Test]
-    public async Task FiringAtNoValidFriendLetsGoAndAClickedMobIsNeverPassedOn()
+    public async Task FiringAtNoValidMobLetsGoAndAClickedMobIsNeverPassedOn()
     {
         var server = Pair.Server;
         var scene = await SetUp();
@@ -315,9 +355,11 @@ public sealed class KsMedicalBeamTest : GameTest
         await server.WaitPost(() => Fire(scene, scene.FriendUid));
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "firing at the patient again should keep the beam"));
 
+        // The enemy, dead.
+        await server.WaitPost(() => Hurt(scene.EnemyUid, 2000));
         await Pair.RunTicksSync(tick);
         await server.WaitPost(() => Fire(scene, scene.EnemyUid));
-        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "firing at an enemy should let go"));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "firing at a dead mob should let go"));
 
         await Pair.RunTicksSync(tick);
         await server.WaitPost(() => Fire(scene, scene.FriendUid));
@@ -325,7 +367,7 @@ public sealed class KsMedicalBeamTest : GameTest
         await server.WaitPost(() => FireAt(scene, new EntityCoordinates(scene.Map.Grid, -2.5f, -2.5f)));
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "firing at nobody should let go"));
 
-        // A friend right beside the enemy, well within the aim assist.
+        // A friend right beside the dead enemy, well within the aim assist.
         await server.WaitPost(() =>
         {
             var enemyPosition = transformSystem.GetWorldPosition(scene.EnemyUid);
@@ -333,11 +375,103 @@ public sealed class KsMedicalBeamTest : GameTest
         });
         await Pair.RunTicksSync(tick);
         await server.WaitPost(() => Fire(scene, scene.EnemyUid));
-        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "a click on an enemy should not lock onto the friend beside it"));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "a click on a dead mob should not lock onto the friend beside it"));
 
         // Control: the same click, on no mob, does find the friend.
         await Pair.RunTicksSync(tick);
         await server.WaitPost(() => FireAt(scene, server.EntMan.GetComponent<TransformComponent>(scene.EnemyUid).Coordinates));
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "a click on no mob should still find the friend close by"));
+    }
+
+    private sealed record Medic(EntityUid MedicUid, EntityUid GunUid, EntityUid PatientUid);
+
+    /// <summary>
+    ///     A medic holding a crossing gun at (<paramref name="medicX"/>, <paramref name="medicY"/>), and a hurt patient for
+    ///         them at (<paramref name="patientX"/>, <paramref name="patientY"/>), on the grid.
+    /// </summary>
+    private Medic SpawnMedic(TestMapData testMap, float medicX, float medicY, float patientX, float patientY)
+    {
+        var entMan = Pair.Server.EntMan;
+        var handsSystem = Pair.Server.System<SharedHandsSystem>();
+        var medicUid = entMan.SpawnAtPosition(_medic, new EntityCoordinates(testMap.Grid, medicX, medicY));
+        var gunUid = entMan.SpawnAtPosition(_crossingGun, new EntityCoordinates(testMap.Grid, medicX, medicY));
+        handsSystem.AddHand(medicUid, "hand", HandLocation.Middle);
+        Assert.That(handsSystem.TryPickupAnyHand(medicUid, gunUid, checkActionBlocker: false), "the medic should hold the gun");
+        var patientUid = entMan.SpawnAtPosition(_medic, new EntityCoordinates(testMap.Grid, patientX, patientY));
+        Hurt(patientUid, 50);
+        return new Medic(medicUid, gunUid, patientUid);
+    }
+
+    /// <summary>
+    ///     Two medics side by side, each beaming the patient diagonally across from them, so the beams make an X with a
+    ///         bystander standing where they cross; or, with <paramref name="cross"/> off, beaming the patient straight
+    ///         ahead, so the beams run side by side with the bystander between them.
+    /// </summary>
+    private async Task<(Medic First, Medic Second, EntityUid BystanderUid, float BystanderBefore)> SetUpTwoBeams(bool cross)
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        Medic first = default!;
+        Medic second = default!;
+        EntityUid bystanderUid = default;
+
+        await server.WaitPost(() =>
+        {
+            first = SpawnMedic(testMap, 0.5f, 0.5f, cross ? 4.5f : 0.5f, 4.5f);
+            second = SpawnMedic(testMap, 4.5f, 0.5f, cross ? 0.5f : 4.5f, 4.5f);
+            bystanderUid = server.EntMan.SpawnAtPosition(_enemy, new EntityCoordinates(testMap.Grid, 2.5f, 2.5f));
+        });
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Fire(first.MedicUid, first.GunUid, first.PatientUid);
+            Fire(second.MedicUid, second.GunUid, second.PatientUid);
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(first.GunUid).Target, Is.EqualTo(first.PatientUid));
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(second.GunUid).Target, Is.EqualTo(second.PatientUid));
+        });
+
+        return (first, second, bystanderUid, Damage(bystanderUid));
+    }
+
+    /// <summary>
+    ///     tg's <c>mid_los_check</c>: two beams held by different medics that cross blow up where they cross, and both
+    ///         stop.
+    /// </summary>
+    [Test]
+    public async Task CrossingBeamsExplodeAndBothStop()
+    {
+        var server = Pair.Server;
+        var (first, second, bystanderUid, bystanderBefore) = await SetUpTwoBeams(cross: true);
+        var tickInterval = (float)server.EntMan.GetComponent<KsMedicalBeamGunComponent>(first.GunUid).TickInterval.TotalSeconds;
+
+        // A heal tick finds the crossing; the explosion takes a few ticks more to land.
+        await Pair.RunTicksSync(Ticks(tickInterval * 2f + 1f));
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(first.GunUid).Target, Is.Null, "the first crossed beam should stop");
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(second.GunUid).Target, Is.Null, "the second crossed beam should stop");
+            Assert.That(Damage(bystanderUid), Is.GreaterThan(bystanderBefore), "crossed beams should explode where they cross");
+        });
+    }
+
+    /// <summary>
+    ///     The control: two beams side by side, held by different medics, never meet, so both stay on and nothing goes
+    ///         off.
+    /// </summary>
+    [Test]
+    public async Task BeamsThatDoNotCrossDoNotExplode()
+    {
+        var server = Pair.Server;
+        var (first, second, bystanderUid, bystanderBefore) = await SetUpTwoBeams(cross: false);
+        var tickInterval = (float)server.EntMan.GetComponent<KsMedicalBeamGunComponent>(first.GunUid).TickInterval.TotalSeconds;
+
+        await Pair.RunTicksSync(Ticks(tickInterval * 2f + 1f));
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(first.GunUid).Target, Is.EqualTo(first.PatientUid), "the first beam should stay on");
+            Assert.That(server.EntMan.GetComponent<KsMedicalBeamGunComponent>(second.GunUid).Target, Is.EqualTo(second.PatientUid), "the second beam should stay on");
+            Assert.That(Damage(bystanderUid), Is.EqualTo(bystanderBefore), "beams that don't cross should not explode");
+        });
     }
 }

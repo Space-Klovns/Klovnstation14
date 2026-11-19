@@ -5,7 +5,7 @@
   parent: BaseItem
   id: KsMedicalBeamGun
   name: medical beamgun
-  description: Locks a healing beam onto a friendly and knits their wounds while they stay in sight. Don't cross the streams.
+  description: Locks a healing beam onto anyone living, friend or foe, and knits their wounds while they stay in sight. Don't cross the streams, or both beams blow up.
   components:
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Medical/medical_beam_gun.rsi
@@ -29,3 +29,8 @@
       Burn: 4
       Toxin: 1
       Airloss: 1
+    # tg's mid_los_check: crossing another holder's beam sets off heavy impact to 3 tiles, light to 5.
+    crossExplosion: Default
+    crossExplosionRadius: 5.5
+    crossExplosionSlope: 3
+    crossExplosionMaxIntensity: 8
