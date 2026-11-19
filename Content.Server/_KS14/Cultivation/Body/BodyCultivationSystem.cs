@@ -37,7 +37,8 @@ namespace Content.Server._KS14.Cultivation.Body;
 public sealed partial class BodyCultivationSystem : EntitySystem
 {
     private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(1);
-    private static readonly TimeSpan PassiveTemperingInterval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan PassiveTemperingInterval = TimeSpan.FromMinutes(1);
+    private const float PassiveTempering = 6f;
     private static readonly TimeSpan ForgeCycle = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan TribulationCycle = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan EternalHeartDelay = TimeSpan.FromSeconds(5);
@@ -145,7 +146,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             _bodySystem.SetNextPassiveTempering(entity.Comp, currentTime + PassiveTemperingInterval);
             // Counted as training, so the same company and gamemode bonuses that speed up fighting speed this up too.
-            _bodySystem.AddTempering(entity.AsNullable(), 1f, "living", PassiveTemperingInterval);
+            _bodySystem.AddTempering(entity.AsNullable(), PassiveTempering, "living", PassiveTemperingInterval);
         }
 
         if (entity.Comp.RegenPerSecond > 0f)
@@ -277,18 +278,26 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
     #region Training
 
-    // How a body cultivator tempers themselves. No time gates on any of it except beating someone down: the pace comes
-    // from how fast you can actually swing and get hit. Roughly per minute of real effort: living 6, a steady fist fight
-    // ~90 (half that with a weapon), standing up to blows about as much, body arts a few each, punching walls ~15.
-    private const float FistHitTempering = 1.5f;
-    private const float WeaponHitTempering = 0.75f;
-    private const float StrikeTempering = 0.25f;
-    private const float BeatenPerDamage = 0.25f;
-    private const float BeatenMax = 8f;
-    private const float HardshipPerDamage = 0.1f;
-    private const float DefeatPlayerTempering = 20f;
+    // How a body cultivator tempers themselves. Each source pays a solid chunk and then rests for a few seconds, so
+    // training is about doing things, not clicking fast. Roughly per minute of effort, before the Ascension bonus:
+    // living 6, training on walls and rock ~48, a fist fight ~120 (half with a weapon), standing up to blows about as
+    // much, body arts a few each. Beating someone down is the big lesson, once per victim every ten minutes.
+    // Tuned so a casual body cultivator in Ascension reaches stage 9 about five minutes after a casual qi cultivator
+    // reaches Nascent Soul (~25-30 minutes), without needing a fight every few minutes on a quiet server.
+    private const float FistHitTempering = 8f;
+    private const float WeaponHitTempering = 4f;
+    private static readonly TimeSpan FightCooldown = TimeSpan.FromSeconds(4);
+    private const float StrikeTempering = 4f;
+    private static readonly TimeSpan StrikeCooldown = TimeSpan.FromSeconds(5);
+    private const float BeatenPerDamage = 1f;
+    private const float BeatenMax = 15f;
+    private static readonly TimeSpan BeatenCooldown = TimeSpan.FromSeconds(4);
+    private const float HardshipPerDamage = 0.4f;
+    private const float HardshipMax = 6f;
+    private static readonly TimeSpan HardshipCooldown = TimeSpan.FromSeconds(15);
+    private const float DefeatPlayerTempering = 25f;
     private const float DefeatCultivatorBonus = 10f;
-    private const float DefeatMobTempering = 4f;
+    private const float DefeatMobTempering = 5f;
     private static readonly TimeSpan DefeatCooldown = TimeSpan.FromMinutes(10);
 
     [SubscribeLocalEvent]
@@ -301,12 +310,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (args.Origin is { } origin && origin != entity.Owner)
         {
             // Standing up to someone's blows: the harder they land, the more they teach.
-            Train(entity, MathF.Min(total * BeatenPerDamage, BeatenMax), "beaten");
+            Train(entity, MathF.Min(total * BeatenPerDamage, BeatenMax), "beaten", BeatenCooldown);
         }
         else
         {
             // Fire, cold, falls and heaven's own lightning: hardship tempers too, if slowly.
-            Train(entity, total * HardshipPerDamage, "hardship");
+            Train(entity, MathF.Min(total * HardshipPerDamage, HardshipMax), "hardship", HardshipCooldown);
         }
     }
 
@@ -339,17 +348,17 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         if (fought)
-            Train(entity, fightAmount, "fight");
+            Train(entity, fightAmount, "fight", FightCooldown);
         else if (struck)
-            Train(entity, StrikeTempering, "strike");
+            Train(entity, StrikeTempering, "strike", StrikeCooldown);
     }
 
     /// <summary>
-    ///     Tempering from training: sped up by good company and the gamemode, never time-gated.
+    ///     Tempering from training: sped up by good company and the gamemode, then that source rests for a while.
     /// </summary>
-    private float Train(Entity<BodyCultivatorComponent> entity, float amount, string source)
+    private float Train(Entity<BodyCultivatorComponent> entity, float amount, string source, TimeSpan cooldown)
     {
-        return amount > 0f ? _bodySystem.AddTempering(entity.AsNullable(), amount, trainingSource: source, cooldown: TimeSpan.Zero) : 0f;
+        return amount > 0f ? _bodySystem.AddTempering(entity.AsNullable(), amount, trainingSource: source, cooldown: cooldown) : 0f;
     }
 
     /// <summary>
@@ -374,7 +383,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
                 amount += DefeatCultivatorBonus;
         }
 
-        var gained = Train((victorUid, victorComponent), amount, "defeat");
+        var gained = Train((victorUid, victorComponent), amount, "defeat", TimeSpan.Zero);
         if (gained > 0f)
             _noticeSystem.Notify(victorUid, Loc.GetString("body-tempering-defeat", ("amount", (int)MathF.Round(gained)), ("victim", args.Target)), type: PopupType.Medium);
     }

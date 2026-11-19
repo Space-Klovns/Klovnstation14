@@ -296,17 +296,20 @@ The arts and the novels they come from are listed in `martial_arts.yml`. Short-l
 The other road: the flesh itself is tempered instead of gathering qi. `BodyCultivatorComponent`, written only by
 `SharedBodyCultivationSystem`.
 
-- **Tempering** is earned from training, mostly from fighting, with no time gates except on beating someone down
-  (`BodyCultivationSystem`, Training region):
-  - every swing that lands on someone still standing: 1.5 with fists, 0.75 with a weapon (once per swing);
-  - taking blows from someone: 0.25 per point of damage, up to 8 a hit; fire, cold, falls and lightning 0.1 a point;
-  - using a body art: 15% of its exhaustion;
-  - punching walls, rock and machines: 0.25 a swing;
-  - living: 1 every 10 seconds;
-  - beating someone into crit or death: 20 for a player, 30 for a cultivator, 4 for an animal; each victim teaches
+- **Tempering** is earned from training. Each source pays a solid chunk and then rests for a few seconds, so it's
+  about doing things rather than clicking fast (`BodyCultivationSystem`, Training region):
+  - a swing that lands on someone still standing: 8 with fists, 4 with a weapon; then 4s;
+  - taking blows from someone: 1 per point of damage, up to 15; then 4s;
+  - fire, cold, falls and lightning: 0.4 per point of damage, up to 6; then 15s;
+  - training on walls, rock and machines: 4; then 5s;
+  - using a body art: 20% of its exhaustion; then 5s;
+  - living: 6 a minute;
+  - beating someone into crit or death: 25 for a player, 35 for a cultivator, 5 for an animal; each victim teaches
     this once every 10 minutes.
   All of it goes through `BodyTemperingMultiplierEvent` (sect and gamemode bonuses). Tempering banks up to
-  `TemperingCapFor(stage)`: enough to forge every part through the next two levels, never less than 120.
+  `TemperingCapFor(stage)`: enough to forge every part through the next two levels, never less than 120. The pace is
+  tuned so that in Ascension a casual body cultivator reaches stage 9 in about 25-30 minutes, about five minutes after
+  a casual qi cultivator reaches Nascent Soul (375/875/1625 insight, 2750 for Ascension).
 - **Forge the Body** pours tempering into the least tempered of ten body parts (head, chest, arms, legs, eyes,
   ears, heart, lungs, liver, stomach). Raising a part to level `n` costs `2 + n`. Parts can go one level past the
   current stage.
