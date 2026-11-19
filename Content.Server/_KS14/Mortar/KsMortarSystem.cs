@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Server._KS14.Dissolve;
+using Content.Server._KS14.KillCredit;
 using Content.Server._KS14.NPC.Targeting;
 using Content.Shared._KS14.FarSound;
 using Content.Shared._KS14.SupplyPod;
@@ -34,6 +35,7 @@ public sealed partial class KsMortarSystem : EntitySystem
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private FarSoundSystem _farSoundSystem = default!;
     [Dependency] private KsDissolveSystem _dissolveSystem = default!;
+    [Dependency] private KsKillCreditSystem _killCreditSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -205,7 +207,7 @@ public sealed partial class KsMortarSystem : EntitySystem
         var theta = bearing.Theta;
         var direction = new Vector2((float) Math.Sin(theta), (float) Math.Cos(theta));
         var origin = _transformSystem.GetMapCoordinates(mortar);
-        Launch(mortar, new MapCoordinates(origin.Position + direction * distance, origin.MapId), now);
+        Launch(mortar, new MapCoordinates(origin.Position + direction * distance, origin.MapId), userUid, now);
 
         // Whoever fires it is whose it is now.
         if (_factionQuery.TryComp(userUid, out var userFactions))
@@ -219,9 +221,11 @@ public sealed partial class KsMortarSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Spends a round on a shell landing within <see cref="KsMortarComponent.Spread"/> of <paramref name="aim"/>.
+    ///     Spends a round on a shell landing within <see cref="KsMortarComponent.Spread"/> of <paramref name="aim"/>, whose
+    ///         blast is <paramref name="firerUid"/>'s doing: the crewman's, or whoever fired an abandoned one. Landing names
+    ///         nobody, and the log, kill credit and the Field Commander's ledger went by the shell alone.
     /// </summary>
-    private void Launch(Entity<KsMortarComponent> mortar, MapCoordinates aim, TimeSpan now)
+    private void Launch(Entity<KsMortarComponent> mortar, MapCoordinates aim, EntityUid firerUid, TimeSpan now)
     {
         mortar.Comp.Rounds--;
         var landing = new MapCoordinates(aim.Position + _robustRandom.NextVector2(mortar.Comp.Spread), aim.MapId);
@@ -243,6 +247,7 @@ public sealed partial class KsMortarSystem : EntitySystem
         }
 
         EntityManager.InitializeAndStartEntity(shellUid);
+        _killCreditSystem.SetSender(shellUid, firerUid);
         _audioSystem.PlayPvs(mortar.Comp.TravelSound, Transform(shellUid).Coordinates);
 
         _audioSystem.PlayPvs(mortar.Comp.FireSound, mortar);
@@ -347,7 +352,7 @@ public sealed partial class KsMortarSystem : EntitySystem
             !TryPickTarget(mortar, (crewUid, crewFactions), mortar.Comp, out var targetPosition, out var mapId))
             return false;
 
-        Launch(mortar, new MapCoordinates(targetPosition, mapId), now);
+        Launch(mortar, new MapCoordinates(targetPosition, mapId), crewUid, now);
         return true;
     }
 
