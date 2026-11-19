@@ -296,8 +296,17 @@ The arts and the novels they come from are listed in `martial_arts.yml`. Short-l
 The other road: the flesh itself is tempered instead of gathering qi. `BodyCultivatorComponent`, written only by
 `SharedBodyCultivationSystem`.
 
-- **Tempering** is earned from training: being hit, punching people and things, and simply living. It banks up to
-  a cap.
+- **Tempering** is earned from training, mostly from fighting, with no time gates except on beating someone down
+  (`BodyCultivationSystem`, Training region):
+  - every swing that lands on someone still standing: 1.5 with fists, 0.75 with a weapon (once per swing);
+  - taking blows from someone: 0.25 per point of damage, up to 8 a hit; fire, cold, falls and lightning 0.1 a point;
+  - using a body art: 15% of its exhaustion;
+  - punching walls, rock and machines: 0.25 a swing;
+  - living: 1 every 10 seconds;
+  - beating someone into crit or death: 20 for a player, 30 for a cultivator, 4 for an animal; each victim teaches
+    this once every 10 minutes.
+  All of it goes through `BodyTemperingMultiplierEvent` (sect and gamemode bonuses). Tempering banks up to
+  `TemperingCapFor(stage)`: enough to forge every part through the next two levels, never less than 120.
 - **Forge the Body** pours tempering into the least tempered of ten body parts (head, chest, arms, legs, eyes,
   ears, heart, lungs, liver, stomach). Raising a part to level `n` costs `2 + n`. Parts can go one level past the
   current stage.

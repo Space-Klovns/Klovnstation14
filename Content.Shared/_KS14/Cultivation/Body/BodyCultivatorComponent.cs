@@ -119,6 +119,13 @@ public sealed partial class BodyCultivatorComponent : Component
     [DataField]
     public Dictionary<string, TimeSpan> TrainingCooldowns = new();
 
+    /// <summary>
+    ///     Who this body cultivator has beaten down lately, and when beating them teaches anything again.
+    ///         Server-side only, so friends can't farm each other.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, TimeSpan> RecentlyDefeated = new();
+
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextTick;
 

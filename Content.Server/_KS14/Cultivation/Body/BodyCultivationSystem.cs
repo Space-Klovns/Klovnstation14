@@ -19,9 +19,11 @@ using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Content.Shared.Tag;
 using Content.Shared.Throwing;
+using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Robust.Server.Audio;
 using Robust.Shared.Audio;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -275,12 +277,106 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
     #region Training
 
+    // How a body cultivator tempers themselves. No time gates on any of it except beating someone down: the pace comes
+    // from how fast you can actually swing and get hit. Roughly per minute of real effort: living 6, a steady fist fight
+    // ~90 (half that with a weapon), standing up to blows about as much, body arts a few each, punching walls ~15.
+    private const float FistHitTempering = 1.5f;
+    private const float WeaponHitTempering = 0.75f;
+    private const float StrikeTempering = 0.25f;
+    private const float BeatenPerDamage = 0.25f;
+    private const float BeatenMax = 8f;
+    private const float HardshipPerDamage = 0.1f;
+    private const float DefeatPlayerTempering = 20f;
+    private const float DefeatCultivatorBonus = 10f;
+    private const float DefeatMobTempering = 4f;
+    private static readonly TimeSpan DefeatCooldown = TimeSpan.FromMinutes(10);
+
     [SubscribeLocalEvent]
     private void OnDamaged(Entity<BodyCultivatorComponent> entity, ref DamageChangedEvent args)
     {
-        // Taking a beating is training too.
-        if (args.DamageIncreased && args.DamageDelta is { } delta && delta.GetTotal() >= 5)
-            _bodySystem.AddTempering(entity.AsNullable(), 5f, trainingSource: "beaten", cooldown: TimeSpan.FromSeconds(15));
+        if (!args.DamageIncreased || args.DamageDelta is not { } delta)
+            return;
+
+        var total = delta.GetTotal().Float();
+        if (args.Origin is { } origin && origin != entity.Owner)
+        {
+            // Standing up to someone's blows: the harder they land, the more they teach.
+            Train(entity, MathF.Min(total * BeatenPerDamage, BeatenMax), "beaten");
+        }
+        else
+        {
+            // Fire, cold, falls and heaven's own lightning: hardship tempers too, if slowly.
+            Train(entity, total * HardshipPerDamage, "hardship");
+        }
+    }
+
+    /// <summary>
+    ///     Fighting with a weapon trains the body too, at half the rate of bare fists.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnWeaponHit(Entity<MeleeWeaponComponent> weapon, ref MeleeHitEvent args)
+    {
+        if (args.Weapon == args.User || !args.IsHit || args.HitEntities.Count == 0
+            || !TryComp<BodyCultivatorComponent>(args.User, out var bodyComponent))
+            return;
+
+        TrainSwing((args.User, bodyComponent), args.HitEntities, WeaponHitTempering);
+    }
+
+    private void TrainSwing(Entity<BodyCultivatorComponent> entity, IReadOnlyList<EntityUid> hitEntities, float fightAmount)
+    {
+        var fought = false;
+        var struck = false;
+        foreach (var hitUid in hitEntities)
+        {
+            if (hitUid == entity.Owner)
+                continue;
+
+            if (_mobStateQuery.HasComp(hitUid))
+                fought |= _mobStateSystem.IsAlive(hitUid);
+            else
+                struck = true;
+        }
+
+        if (fought)
+            Train(entity, fightAmount, "fight");
+        else if (struck)
+            Train(entity, StrikeTempering, "strike");
+    }
+
+    /// <summary>
+    ///     Tempering from training: sped up by good company and the gamemode, never time-gated.
+    /// </summary>
+    private float Train(Entity<BodyCultivatorComponent> entity, float amount, string source)
+    {
+        return amount > 0f ? _bodySystem.AddTempering(entity.AsNullable(), amount, trainingSource: source, cooldown: TimeSpan.Zero) : 0f;
+    }
+
+    /// <summary>
+    ///     Beating someone down with your own body is the hardest lesson there is. Each victim only teaches it once
+    ///         every ten minutes; a player teaches far more than an animal, and a fellow cultivator more still.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnAnyMobStateChanged(MobStateChangedEvent args)
+    {
+        if (args.OldMobState != MobState.Alive || args.NewMobState == MobState.Alive
+            || args.Origin is not { } victorUid || victorUid == args.Target
+            || !TryComp<BodyCultivatorComponent>(victorUid, out var victorComponent))
+            return;
+
+        if (!_bodySystem.TryMarkDefeated(victorComponent, args.Target, _gameTiming.CurTime + DefeatCooldown))
+            return;
+        var amount = DefeatMobTempering;
+        if (HasComp<ActorComponent>(args.Target))
+        {
+            amount = DefeatPlayerTempering;
+            if (_cultivatorQuery.HasComp(args.Target) || TryComp<BodyCultivatorComponent>(args.Target, out var victimBody) && victimBody.Stage > 0)
+                amount += DefeatCultivatorBonus;
+        }
+
+        var gained = Train((victorUid, victorComponent), amount, "defeat");
+        if (gained > 0f)
+            _noticeSystem.Notify(victorUid, Loc.GetString("body-tempering-defeat", ("amount", (int)MathF.Round(gained)), ("victim", args.Target)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -296,6 +392,10 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         if (entity.Comp.PunchDamage > 0f)
             args.BonusDamage += CultivationSystem.Damage("Blunt", entity.Comp.PunchDamage);
 
+        // One swing teaches once, however many it catches. Only a fight teaches much: a body that's already down can't
+        // push back, and punching rock, walls and machinery is honest labour but a slow teacher.
+        TrainSwing(entity, args.HitEntities, FistHitTempering);
+
         foreach (var hitUid in args.HitEntities)
         {
             if (hitUid == entity.Owner)
@@ -303,12 +403,10 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
             if (_mobStateQuery.HasComp(hitUid))
             {
-                _bodySystem.AddTempering(entity.AsNullable(), 6f, trainingSource: "fight", cooldown: TimeSpan.FromSeconds(15));
                 ForgedStrike(entity, hitUid);
                 continue;
             }
 
-            _bodySystem.AddTempering(entity.AsNullable(), 4f, trainingSource: "strike", cooldown: TimeSpan.FromSeconds(15));
             if (entity.Comp.PunchStructuralDamage <= 0f)
                 continue;
 

@@ -97,6 +97,15 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         return bodyCultivator.Levels.GetValueOrDefault(group);
     }
 
+    /// <summary>
+    ///     How much tempering a body can bank: enough to raise every part through the next two levels, so a whole stage
+    ///         can be forged from what's held, and never less than 120.
+    /// </summary>
+    public static float TemperingCapFor(int stage)
+    {
+        return MathF.Max(120f, AllGroups.Length * (PartCost(stage + 1) + PartCost(stage + 2)));
+    }
+
     public static float StageHealthBonus(int stage)
     {
         var total = 0f;
@@ -354,6 +363,7 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
         bodyCultivator.HungerMultiplier = 1f;
         bodyCultivator.RegenPerSecond = 0f;
         bodyCultivator.HealthBonus = StageHealthBonus(bodyCultivator.Stage);
+        bodyCultivator.TemperingCap = TemperingCapFor(bodyCultivator.Stage);
         // Fists grow deadly fast: the arms' tempering, plus the square of the stage. A Bronze Skin punches a little
         //     harder than a mortal; a Primordial Chaos Body hits like a falling girder.
         var stage = (float)bodyCultivator.Stage;
@@ -449,6 +459,20 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     public static float StageStrength(int stage)
     {
         return stage >= BodyCultivatorComponent.MaxStage ? 1f : 0.55f + 0.03f * stage;
+    }
+
+    /// <summary>
+    ///     Note that this body cultivator beat a victim down, unless they already did so too recently to learn from it.
+    /// </summary>
+    /// <returns>Whether it teaches anything this time.</returns>
+    public bool TryMarkDefeated(BodyCultivatorComponent bodyCultivator, EntityUid victim, TimeSpan teachesAgain)
+    {
+        var now = _gameTiming.CurTime;
+        if (bodyCultivator.RecentlyDefeated.TryGetValue(victim, out var ready) && now < ready)
+            return false;
+
+        bodyCultivator.RecentlyDefeated[victim] = teachesAgain;
+        return true;
     }
 
     public void SetNextTick(BodyCultivatorComponent bodyCultivator, TimeSpan next)

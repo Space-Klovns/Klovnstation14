@@ -134,6 +134,8 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         _bodySystem.AddExhaustion(entity.AsNullable(), exhaustion);
         _visualsSystem.Cast(entity, colour);
+        // Practising an art pushes the body too.
+        _bodySystem.AddTempering(entity.AsNullable(), exhaustion * 0.15f, trainingSource: "practice", cooldown: TimeSpan.Zero);
         return true;
     }
 

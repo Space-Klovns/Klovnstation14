@@ -107,3 +107,4 @@ body-stage-none = not yet through the first stage
 body-powers-examine-header = [bold]Your body's powers[/bold]
 body-powers-examine-verb = Body powers
 body-powers-examine-verb-message = See every power your tempered body has unlocked.
+body-tempering-defeat = Beating {THE($victim)} down tempers your body: +{$amount} tempering.
