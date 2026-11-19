@@ -106,9 +106,16 @@ public sealed partial class KsMortarSystem : EntitySystem
 
         crew.Comp.StillSince ??= now;
         if (now - crew.Comp.StillSince < crew.Comp.SetUpTime ||
-            !_factionQuery.TryComp(crew, out var crewFactions) ||
-            !TryPickTarget(crew, (crew.Owner, crewFactions), mortarTemplate, out _, out _))
+            now < crew.Comp.NextTargetSearch ||
+            !_factionQuery.TryComp(crew, out var crewFactions))
             return;
+
+        // Nothing in range: looked for again in a while, not next tick.
+        if (!TryPickTarget(crew, (crew.Owner, crewFactions), mortarTemplate, out _, out _))
+        {
+            crew.Comp.NextTargetSearch = now + RetryDelay;
+            return;
+        }
 
         var mortarUid = Spawn(crew.Comp.Mortar, _transformSystem.GetMapCoordinates(crew));
         crew.Comp.Deployed = true;

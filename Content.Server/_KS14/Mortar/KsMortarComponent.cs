@@ -178,6 +178,13 @@ public sealed partial class KsMortarCrewComponent : Component
     public TimeSpan? StillSince;
 
     /// <summary>
+    ///     When it next looks for something to set up against, having found nothing: the search covers the mortar's whole
+    ///         range, too much to run every tick.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan NextTargetSearch;
+
+    /// <summary>
     ///     Whether it has set its mortar up. It only has the one.
     /// </summary>
     [ViewVariables]
