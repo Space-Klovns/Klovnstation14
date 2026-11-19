@@ -32,6 +32,8 @@ public sealed class KsFieldCommanderStuckTest : GameTest
     private readonly EntProtoId _rule = "KsTestFcStuckRule";
     private readonly EntProtoId _slowRule = "KsTestFcStuckSlowRule";
     private readonly EntProtoId _capRule = "KsTestFcStuckCapRule";
+    private readonly EntProtoId _nudgeRule = "KsTestFcStuckNudgeRule";
+    private readonly EntProtoId _forcedNudgeRule = "KsTestFcStuckForcedNudgeRule";
     private readonly EntProtoId _defender = "KsTestFcStuckDefender";
     private readonly EntProtoId _objective = "KsTestFcStuckObjective";
 
@@ -108,6 +110,21 @@ public sealed class KsFieldCommanderStuckTest : GameTest
     stuckReorderAfter: 100
     stuckNudgeAfter: 200
     stuckRelocateAfter: 300
+
+- type: entity
+  parent: KsTestFcStuckRule
+  id: KsTestFcStuckNudgeRule
+  components:
+  - type: KsFieldCommanderRule
+    stuckRelocateAfter: 1000
+    stuckNudgeInSightAfter: 1000
+
+- type: entity
+  parent: KsTestFcStuckNudgeRule
+  id: KsTestFcStuckForcedNudgeRule
+  components:
+  - type: KsFieldCommanderRule
+    stuckNudgeInSightAfter: 3
 
 - type: entity
   parent: KsTestFcStuckRule
@@ -330,6 +347,121 @@ public sealed class KsFieldCommanderStuckTest : GameTest
             Assert.That(unitComponent!.StuckStage, Is.EqualTo(KsFieldCommanderStuckStage.Relocate),
                 "it should still have been found stuck, all the way to the last step");
             Assert.That(GetUnits(ruleUid), Has.Count.EqualTo(1));
+        });
+    }
+
+    /// <summary>
+    ///     How far a unit stands from the middle of the box.
+    /// </summary>
+    private float DistanceFromBox(EntityUid unitUid)
+    {
+        var position = SEntMan.System<SharedTransformSystem>().GetMapCoordinates(unitUid).Position;
+        return Vector2.Distance(position, new Vector2(Box.X + 0.5f, Box.Y + 0.5f));
+    }
+
+    /// <summary>
+    ///     Runs the rule's checks until the unit has reached the nudge, up to well past its time.
+    /// </summary>
+    private async Task RunUntilNudge(EntityUid ruleUid, EntityUid unitUid)
+    {
+        var stepSeconds = 0f;
+        var maxSteps = 0;
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            stepSeconds = (float)ruleComponent.OrderInterval.TotalSeconds / 2f;
+            maxSteps = (int)MathF.Ceiling((float)((ruleComponent.StuckNudgeAfter + ruleComponent.OrderInterval * 6) / ruleComponent.OrderInterval)) * 2;
+        });
+
+        var reached = false;
+        for (var i = 0; i < maxSteps && !reached; i++)
+        {
+            await RunSeconds(stepSeconds);
+            await Server.WaitPost(() =>
+                reached = SEntMan.GetComponent<KsFieldCommanderUnitComponent>(unitUid).StuckStage >= KsFieldCommanderStuckStage.Nudge);
+        }
+
+        Assert.That(reached, Is.True, "the unit should have been found stuck as far as the nudge");
+    }
+
+    /// <summary>
+    ///     A unit in the open is nudged onto a tile beside it, but not while a defender can see it: then it stays
+    ///         where it is, and the nudge waits.
+    /// </summary>
+    [Test]
+    public async Task NudgeWaitsUntilNoDefenderSees([Values] bool seen)
+    {
+        var defenderPosition = seen
+            ? new Vector2(Box.X + DefenderOffset + 0.5f, Box.Y + 0.5f)
+            : new Vector2(18.5f, 18.5f);
+        var (_, ruleUid, unitUid) = await SetUp(_nudgeRule, defenderPosition);
+
+        await RunUntilNudge(ruleUid, unitUid);
+
+        // A few more checks, for a held-back nudge to have had every chance to happen.
+        var seconds = 0f;
+        await Server.WaitPost(() =>
+            seconds = (float)(SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).OrderInterval * 4).TotalSeconds);
+        await RunSeconds(seconds);
+
+        await Server.WaitAssertion(() =>
+        {
+            var unitComponent = SEntMan.GetComponent<KsFieldCommanderUnitComponent>(unitUid);
+            if (seen)
+            {
+                Assert.That(DistanceFromBox(unitUid), Is.LessThan(0.01f), "a unit a defender can see should not be nudged in front of them");
+                Assert.That(unitComponent.NudgeHeldSince, Is.Not.Null, "its nudge should be waiting");
+            }
+            else
+            {
+                Assert.That(DistanceFromBox(unitUid), Is.InRange(0.9f, 1.5f), "a unit nobody sees should be nudged onto a tile beside it");
+                Assert.That(unitComponent.NudgeHeldSince, Is.Null, "with nothing left waiting");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A nudge held back by a defender watching for longer than the rule allows is made in their sight anyway, and
+    ///         not before.
+    /// </summary>
+    [Test]
+    public async Task NudgeHeldBackTooLongHappensInSight()
+    {
+        var (_, ruleUid, unitUid) = await SetUp(_forcedNudgeRule, new Vector2(Box.X + DefenderOffset + 0.5f, Box.Y + 0.5f));
+
+        await RunUntilNudge(ruleUid, unitUid);
+
+        var stepSeconds = 0f;
+        var maxSteps = 0;
+        var cap = TimeSpan.Zero;
+        TimeSpan? heldSince = null;
+        await Server.WaitPost(() =>
+        {
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            cap = ruleComponent.StuckNudgeInSightAfter;
+            stepSeconds = (float)ruleComponent.OrderInterval.TotalSeconds / 2f;
+            maxSteps = (int)MathF.Ceiling((float)((cap + ruleComponent.OrderInterval * 6) / ruleComponent.OrderInterval)) * 2;
+            heldSince = SEntMan.GetComponent<KsFieldCommanderUnitComponent>(unitUid).NudgeHeldSince;
+        });
+
+        Assert.That(heldSince, Is.Not.Null, "the nudge should first have been held back, in sight");
+
+        var moved = false;
+        var movedAfter = TimeSpan.Zero;
+        for (var i = 0; i < maxSteps && !moved; i++)
+        {
+            await RunSeconds(stepSeconds);
+            await Server.WaitPost(() =>
+            {
+                moved = DistanceFromBox(unitUid) > 0.01f;
+                movedAfter = Server.Timing.CurTime - heldSince!.Value;
+            });
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(moved, Is.True, "a nudge held back past the cap should be made in sight");
+            Assert.That(movedAfter, Is.GreaterThanOrEqualTo(cap), "but not before the cap is up");
         });
     }
 

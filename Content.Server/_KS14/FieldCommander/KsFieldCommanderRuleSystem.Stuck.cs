@@ -49,6 +49,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         unitComponent.CheckedCoordinates = null;
         unitComponent.StuckStage = KsFieldCommanderStuckStage.None;
         unitComponent.StuckReason = KsFieldCommanderStuckReason.None;
+        unitComponent.NudgeHeldSince = null;
     }
 
     /// <summary>
@@ -124,6 +125,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             unitComponent.LastProgressTime = curTime;
             unitComponent.StuckStage = KsFieldCommanderStuckStage.None;
             unitComponent.StuckReason = KsFieldCommanderStuckReason.None;
+            unitComponent.NudgeHeldSince = null;
             return;
         }
 
@@ -141,9 +143,15 @@ public sealed partial class KsFieldCommanderRuleSystem
             reason = KsFieldCommanderStuckReason.NoPath;
         }
 
-        // Each step is taken once; only the last is tried again, for as long as a defender is watching.
+        // A nudge held back by a defender watching is still owed, whatever the clock says: stay at the step reached.
+        var nudgeHeld = unitComponent.NudgeHeldSince != null;
+        if (nudgeHeld && stage < unitComponent.StuckStage)
+            stage = unitComponent.StuckStage;
+
+        // Each step is taken once; a held-back nudge and the last step are tried again, for as long as a defender is
+        // watching.
         if (stage == KsFieldCommanderStuckStage.None ||
-            stage <= unitComponent.StuckStage && stage != KsFieldCommanderStuckStage.Relocate)
+            stage <= unitComponent.StuckStage && stage != KsFieldCommanderStuckStage.Relocate && !nudgeHeld)
             return;
 
         unitComponent.StuckStage = stage;
@@ -157,10 +165,12 @@ public sealed partial class KsFieldCommanderRuleSystem
                 ReorderStuckUnit(component, unit, battlefield, position, goal);
                 break;
             case KsFieldCommanderStuckStage.Nudge:
-                NudgeStuckUnit(unit, position, goal);
+                NudgeStuckUnit(component, unit, battlefield, position, goal);
                 break;
             case KsFieldCommanderStuckStage.Relocate:
-                RelocateStuckUnit(rule, unit, battlefield, position);
+                // Watched too long to be taken off the field: a nudge still owed can at least get it unstuck.
+                if (!RelocateStuckUnit(rule, unit, battlefield, position) && unitComponent.NudgeHeldSince != null)
+                    NudgeStuckUnit(component, unit, battlefield, position, goal);
                 break;
         }
     }
@@ -259,16 +269,32 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     /// <summary>
     ///     Throws a unit's steering away, which fails the move it was on and so has it plan again, and moves it onto
-    ///         the free tile beside it nearest where it was going.
+    ///         the free tile beside it nearest where it was going, where no defender can see it go. Seen, the move
+    ///         waits for a later check; held back longer than <see cref="KsFieldCommanderRuleComponent.StuckNudgeInSightAfter"/>,
+    ///         it is made in sight anyway.
     /// </summary>
-    private void NudgeStuckUnit(Entity<KsFieldCommanderUnitComponent> unit, MapCoordinates position, MapCoordinates goal)
+    private void NudgeStuckUnit(KsFieldCommanderRuleComponent component,
+        Entity<KsFieldCommanderUnitComponent> unit,
+        Battlefield battlefield,
+        MapCoordinates position,
+        MapCoordinates goal)
     {
-        _npcSteeringSystem.Unregister(unit);
+        var curTime = _gameTiming.CurTime;
+        var firstTry = unit.Comp.NudgeHeldSince == null;
+
+        // Nobody sees steering go: that much happens at once.
+        if (firstTry)
+            _npcSteeringSystem.Unregister(unit);
+
+        var forced = unit.Comp.NudgeHeldSince is { } heldSince &&
+                     curTime - heldSince >= component.StuckNudgeInSightAfter;
+        var seenHere = !forced && IsSeenByDefenders(component, position, battlefield.Defenders);
 
         EntityCoordinates? best = null;
         var bestDistance = float.MaxValue;
+        var anyFree = false;
 
-        for (var x = -1; x <= 1; x++)
+        for (var x = -1; x <= 1 && !seenHere; x++)
         {
             for (var y = -1; y <= 1; y++)
             {
@@ -279,8 +305,11 @@ public sealed partial class KsFieldCommanderRuleSystem
                 if (!TryGetFreeTile(candidate, out var tileCoordinates, out var tileMapCoordinates))
                     continue;
 
+                anyFree = true;
+
                 var candidateDistance = (tileMapCoordinates.Position - goal.Position).LengthSquared();
-                if (candidateDistance >= bestDistance)
+                if (candidateDistance >= bestDistance ||
+                    !forced && IsSeenByDefenders(component, tileMapCoordinates, battlefield.Defenders))
                     continue;
 
                 best = tileCoordinates;
@@ -289,8 +318,25 @@ public sealed partial class KsFieldCommanderRuleSystem
         }
 
         if (best is { } bestCoordinates)
+        {
             _transformSystem.SetCoordinates(unit, bestCoordinates);
+            if (forced)
+                Log.Info($"Field commander unit {ToPrettyString(unit)} was held back from a nudge for too long, and was moved in a defender's sight.");
+        }
+        else if (seenHere || anyFree)
+        {
+            // Somewhere to go, but a defender would see it: try again at the next check.
+            if (firstTry)
+            {
+                unit.Comp.NudgeHeldSince = curTime;
+                _npcSensorSystem.RequestReplan(unit);
+            }
 
+            Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but a defender would see it nudged, and stays for now.");
+            return;
+        }
+
+        unit.Comp.NudgeHeldSince = null;
         _npcSensorSystem.RequestReplan(unit);
     }
 
@@ -298,7 +344,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///     Out of every defender's sight, dissolves a unit away and sends one like it from where a wave on foot would
     ///         come from, or puts its cost back in the budget if there is nowhere. Seen, it waits for the next check.
     /// </summary>
-    private void RelocateStuckUnit(Entity<KsFieldCommanderRuleComponent> rule,
+    /// <returns>Whether it was taken off the field; false while a defender sees it.</returns>
+    private bool RelocateStuckUnit(Entity<KsFieldCommanderRuleComponent> rule,
         Entity<KsFieldCommanderUnitComponent> unit,
         Battlefield battlefield,
         MapCoordinates position)
@@ -307,7 +354,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         if (IsSeenByDefenders(component, position, battlefield.Defenders))
         {
             Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but in sight of a defender, and stays for now.");
-            return;
+            return false;
         }
 
         var assetIndex = unit.Comp.AssetIndex;
@@ -321,7 +368,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         _dissolveSystem.Dissolve(unit);
 
         if (assetIndex < 0 || assetIndex >= component.Assets.Count)
-            return;
+            return true;
 
         if (TryFindPlacement(component, battlefield,
                 component.MinSpawnDistance, component.MaxSpawnDistance,
@@ -338,12 +385,13 @@ public sealed partial class KsFieldCommanderRuleSystem
                 OrderUnit(component, replacement, battlefield);
 
             Log.Info($"Field commander unit {ToPrettyString(unit)} was sent again as {ToPrettyString(replacementUid)} at {_transformSystem.ToMapCoordinates(coordinates)}.");
-            return;
+            return true;
         }
 
         component.CarriedBudget += component.Assets[assetIndex].Cost;
         component.StuckUnitsRefunded++;
         Log.Info($"Field commander unit {ToPrettyString(unit)} had nowhere to be sent again; its cost went back in the budget.");
+        return true;
     }
 
     /// <summary>
