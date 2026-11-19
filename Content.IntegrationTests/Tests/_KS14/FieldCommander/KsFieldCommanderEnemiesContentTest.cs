@@ -4,6 +4,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Charges;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Server._KS14.WeldedParts;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Humanoid.Systems;
 using Content.Shared._KS14.NPC;
@@ -14,6 +15,7 @@ using Content.Shared.Weapons.Ranged.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 
@@ -21,7 +23,8 @@ namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
 
 /// <summary>
 ///     Content: the field commander's sniper, juggernaut and breachers (private module) come armed, the juggernaut cannot
-///         be stunned, and breachers shut out of a room blow the wall nearest the noise.
+///         be stunned, breachers shut out of a room blow the wall nearest the noise, and the tanks come with an armed turret
+///         welded on.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(RandomHumanoidSystem))]
@@ -33,6 +36,8 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     private const string Sniper = "KsFcEliteOperativeSynArmedSniper";
     private const string Juggernaut = "KsFcOperativeSynArmedJuggernaut";
     private const string Breacher = "KsFcEliteOperativeSynArmedBreacher";
+    private const string Tank = "KsFcMobTank";
+    private const string FlamerTank = "KsFcMobTankFlamer";
 
     private async Task<EntityUid?> SpawnUnit(string settings)
     {
@@ -162,6 +167,34 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
             Assert.That(site, Is.Not.Null,
                 $"breachers shut out of the room should blow their way in: {hunt?.Phase}, shut out {hunt?.ShutOut}, tried {hunt?.BlastTried}, sealed in {hunt?.SealedIn}");
             Assert.That(site!.Value.Tile.X, Is.EqualTo(7), "the wall by the noise, not the one in front of them");
+        });
+    }
+
+    [Test]
+    public async Task TanksComeWithAnArmedTurretWeldedOn([Values(Tank, FlamerTank)] string tank)
+    {
+        if (!SProtoMan.HasIndex<EntityPrototype>(tank))
+        {
+            Assert.Ignore("the tanks are in the private module");
+            return;
+        }
+
+        var map = await Pair.CreateTestMap();
+        EntityUid hullUid = default;
+        await Server.WaitPost(() =>
+        {
+            var gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid,
+                new Vector2i(-5, -5), new Vector2i(5, 5)).Owner;
+            hullUid = SEntMan.SpawnEntity(tank, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
+        });
+
+        await RunSeconds(1f);
+
+        await Server.WaitAssertion(() =>
+        {
+            var parts = SEntMan.System<KsWeldedPartsSystem>().GetParts(hullUid);
+            Assert.That(parts, Has.Count.EqualTo(1), $"{tank} should come with its turret");
+            Assert.That(SEntMan.HasComponent<GunComponent>(parts[0]), Is.True, "the turret should carry the gun");
         });
     }
 }
