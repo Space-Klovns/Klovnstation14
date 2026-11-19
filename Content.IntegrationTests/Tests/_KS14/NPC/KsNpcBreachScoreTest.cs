@@ -29,7 +29,8 @@ namespace Content.IntegrationTests.Tests._KS14.NPC;
 [TestOf(typeof(NpcSquadTacticsSystem))]
 public sealed class KsNpcBreachScoreTest : GameTest
 {
-    public override PoolSettings PoolSettings => PsDisconnected;
+    // Dirty: it leaves a squad mid-blast with tactics paused, which the next test on the pair should not inherit.
+    public override PoolSettings PoolSettings => new() { Connected = false, Dirty = true };
 
     // Ids that exist only in the test prototypes below.
     private const string ScoringMob = "KsBreachScoreTestMobScoring";
