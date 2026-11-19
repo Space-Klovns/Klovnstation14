@@ -35,26 +35,61 @@ public sealed partial class KsWeldedPartsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRootPreventCollide(Entity<KsWeldedPartsComponent> entity, ref PreventCollideEvent args)
     {
-        if (!args.Cancelled && IsShotFromWhole(entity.Owner, args.OtherEntity))
+        if (!args.Cancelled && IsShotPassingThrough(entity.Owner, args.OtherEntity))
             args.Cancelled = true;
     }
 
     [SubscribeLocalEvent]
     private void OnPartPreventCollide(Entity<KsWeldedPartComponent> entity, ref PreventCollideEvent args)
     {
-        if (!args.Cancelled && IsShotFromWhole(entity.Comp.Root, args.OtherEntity))
+        if (!args.Cancelled && IsShotPassingThrough(entity.Comp.Root, args.OtherEntity))
             args.Cancelled = true;
     }
 
     /// <summary>
-    ///     Whether <paramref name="projectileUid"/> was fired by <paramref name="rootUid"/> or one of its parts.
+    ///     Whether <paramref name="projectileUid"/> passes through the whole of <paramref name="rootUid"/>: fired by it or one
+    ///         of its parts, or by a welded whole friendly to it. Two tanks of one side shoot past each other, as their gun
+    ///         sights look past each other (<see cref="IsFriendlyWhole"/>); anything else firing hits them.
     /// </summary>
-    private bool IsShotFromWhole(EntityUid rootUid, EntityUid projectileUid)
+    private bool IsShotPassingThrough(EntityUid rootUid, EntityUid projectileUid)
     {
         if (!_projectileQuery.TryComp(projectileUid, out var projectileComponent))
             return false;
 
-        return IsOfWhole(rootUid, projectileComponent.Shooter) || IsOfWhole(rootUid, projectileComponent.Weapon);
+        foreach (var shooterUid in new[] { projectileComponent.Shooter, projectileComponent.Weapon })
+        {
+            if (shooterUid is { } uid && IsFriendlyWhole(uid, rootUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     The whole <paramref name="uid"/> is part of: its root, or itself if it is one. False for anything not welded.
+    /// </summary>
+    public bool TryGetWhole(EntityUid uid, out EntityUid rootUid)
+    {
+        if (_partsQuery.HasComp(uid))
+        {
+            rootUid = uid;
+            return true;
+        }
+
+        return TryGetRoot(uid, out rootUid);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="vehicleUid"/> belongs to a welded whole that <paramref name="shooterUid"/> is part of, or
+    ///         that <paramref name="shooterUid"/>, itself part of a welded whole, is friendly to: what a tank's gun sees and
+    ///         shoots past. Only welded wholes: a lone gun or a mob is not let through this way.
+    /// </summary>
+    public bool IsFriendlyWhole(EntityUid shooterUid, EntityUid vehicleUid)
+    {
+        if (!TryGetWhole(vehicleUid, out var vehicleRootUid) || !TryGetWhole(shooterUid, out var shooterRootUid))
+            return false;
+
+        return vehicleRootUid == shooterRootUid || _npcFactionSystem.IsEntityFriendly(shooterRootUid, vehicleRootUid);
     }
 
     /// <summary>

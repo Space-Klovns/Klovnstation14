@@ -1,5 +1,5 @@
 # Marks where something hostile is about to come down (cruise missiles, mortar shells), in place of the supply pod
-#     landing zone. Sized to the blast and drawn over mobs, doors and structures, unshaded so it reads in the dark; the
+#     landing zone. Sized to the blast and drawn over mobs, doors, structures and vehicles, unshaded so it reads in the dark; the
 #     client (KsStrikeWarningSystem) pulses it ever faster and closes the chevrons in on the rim as the impact nears.
 - type: entity
   id: KsStrikeWarning
@@ -10,7 +10,7 @@
   components:
   - type: Sprite
     sprite: /Textures/_KS14/Objects/SupplyPod/strike_warning.rsi
-    drawdepth: Overdoors
+    drawdepth: Gasses # over a tank's turret (Overdoors), under the shell coming down (Effects)
     layers:
     - state: area
       shader: unshaded

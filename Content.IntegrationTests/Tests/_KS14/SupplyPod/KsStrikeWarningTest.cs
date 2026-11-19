@@ -157,7 +157,7 @@ public sealed class KsStrikeWarningTest : GameTest
     }
 
     /// <summary>
-    ///     Content: every marker for something hostile landing is drawn over the mobs standing on it.
+    ///     Content: every marker for something hostile landing is drawn over the mobs and vehicles standing on it.
     /// </summary>
     [Test]
     public async Task HostileMarkersDrawAboveMobs()
@@ -181,6 +181,9 @@ public sealed class KsStrikeWarningTest : GameTest
                     $"{prototype.ID} has no sprite.");
                 Assert.That(spriteComponent.DrawDepth, Is.GreaterThan((int)DrawDepth.Mobs),
                     $"{prototype.ID} draws under mobs standing on it.");
+                // A tank's turret (VehicleTankTurret) draws at Overdoors, over its hull.
+                Assert.That(spriteComponent.DrawDepth, Is.GreaterThan((int)DrawDepth.Overdoors),
+                    $"{prototype.ID} draws under a tank's turret standing on it.");
             }
 
             Assert.That(markers, Is.GreaterThan(0), "No hostile strike markers found to check.");

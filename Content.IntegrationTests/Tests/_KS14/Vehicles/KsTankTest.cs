@@ -43,7 +43,10 @@ public sealed class KsTankTest : GameTest
     private readonly EntProtoId _armedHull = "KsTankTestArmedHull";
     private readonly EntProtoId _armedCloseHull = "KsTankTestArmedCloseHull";
     private readonly EntProtoId _screen = "KsTankTestScreen";
+    private readonly EntProtoId _friendlyTank = "KsTankTestFriendlyTank";
+    private readonly EntProtoId _hostileTank = "KsTankTestHostileTank";
     private static readonly EntProtoId Fire = "ChemicalFire";
+    private static readonly EntProtoId Bullet = "BulletMagnum";
 
     /// <summary>
     ///     The gun turret's own vision and reach (its blackboard below). Its hostiles stand beyond 10 tiles, which is where a
@@ -182,6 +185,27 @@ public sealed class KsTankTest : GameTest
         40
       ApproachRange: !type:Single
         2
+
+# Tanks that stand still and do not shoot: one of the gun tank's side, one of its hostiles'.
+- type: entity
+  parent: VehicleTankBody
+  id: KsTankTestFriendlyTank
+  components:
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: KsWeldedParts
+    parts:
+    - prototype: KsTankTestInertTurret
+      angularStiffness: 0.01
+
+- type: entity
+  parent: KsTankTestFriendlyTank
+  id: KsTankTestHostileTank
+  components:
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
 
 # Hides what is behind it and stops nothing: Opaque, and on no layer a body or a wall check collides with.
 - type: entity
@@ -732,5 +756,137 @@ public sealed class KsTankTest : GameTest
             $"the turret should take the hostile on near its vision of 16 (it did at {targetAt:0.0})");
         Assert.That(fireAt, Is.Not.Null.And.GreaterThan(10.5f),
             $"and fire beyond 10 tiles (it first fired at {fireAt:0.0})");
+    }
+
+    /// <summary>
+    ///     A tank of its own side in the line hides nothing and stops nothing: the rear tank locks on, fires, and its rounds
+    ///         reach the hostile through the front one, hurting neither of its parts.
+    /// </summary>
+    [Test]
+    public async Task RearTankFiresPastAFriendlyTank()
+    {
+        var (_, turretUid, gridUid, hostiles) = await SetUpGunTank(false, new Vector2(12f, 0f));
+        var hostileUid = hostiles[0];
+        EntityUid frontUid = default, frontTurretUid = default;
+        await Server.WaitPost(() => frontUid = SpawnOn(_friendlyTank, gridUid, new Vector2(6.5f, 0.5f)));
+        await Pair.RunTicksSync(2);
+        await Server.WaitPost(() => frontTurretUid = SEntMan.System<KsWeldedPartsSystem>().GetParts(frontUid)[0]);
+
+        var startAmmo = 0;
+        await Server.WaitPost(() => startAmmo = AmmoCount(SEntMan, turretUid));
+
+        var tickRate = TickRate();
+        var fired = false;
+        var hit = false;
+        for (var tick = 0; tick < (int)(30f * tickRate) && !hit; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                fired |= AmmoCount(SEntMan, turretUid) < startAmmo;
+                hit = TotalDamage(hostileUid) > 0f;
+            });
+        }
+
+        Assert.That(fired, Is.True, "the rear tank should lock on and fire past the friendly one");
+        Assert.That(hit, Is.True, "its rounds should reach the hostile");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(TotalDamage(frontUid), Is.Zero, "nor hit the friendly tank's hull");
+            Assert.That(TotalDamage(frontTurretUid), Is.Zero, "nor its turret");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile tank in the line still stops the rounds, and the hostile behind it goes unhurt; and a tank is hit by
+    ///         anything not fired from its own side's tanks.
+    /// </summary>
+    [Test]
+    public async Task HostileTanksStillStopRoundsAndTanksCanBeShot()
+    {
+        var (hullUid, turretUid, gridUid, hostiles) = await SetUpGunTank(false, new Vector2(12f, 0f));
+        var hostileUid = hostiles[0];
+        await Server.WaitPost(() => SpawnOn(_hostileTank, gridUid, new Vector2(6.5f, 0.5f)));
+
+        await Pair.RunTicksSync((int)(10f * TickRate()));
+        await Server.WaitAssertion(() =>
+            Assert.That(TotalDamage(hostileUid), Is.Zero, "a hostile tank in the line should still stop the rounds"));
+
+        // Fired by the hostile at the gun tank, from off to one side, clear of the other tank: it is hit.
+        await Server.WaitPost(() =>
+        {
+            var from = WorldPosition(hullUid) + new Vector2(0f, 5f);
+            var bulletUid = SEntMan.SpawnEntity(Bullet, new EntityCoordinates(gridUid, from));
+            var direction = Vector2.Normalize(WorldPosition(hullUid) - from);
+            SEntMan.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>()
+                .ShootProjectile(bulletUid, direction, Vector2.Zero, hostileUid, hostileUid, 30f);
+        });
+
+        var struck = false;
+        for (var tick = 0; tick < (int)(3f * TickRate()) && !struck; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() => struck = TotalDamage(hullUid) + TotalDamage(turretUid) > 0f);
+        }
+
+        Assert.That(struck, Is.True, "a round from anyone else should still hit the tank");
+    }
+
+    /// <summary>
+    ///     Two armed tanks of one side drive in one behind the other: the rear one, its gun seeing past the front one, holds
+    ///         near its own range and fires, rather than driving on round the front one into the hostile's face.
+    /// </summary>
+    [Test]
+    public async Task RearTankHoldsNearItsRangeBehindAFriendlyTank()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, rearUid = default, hostileUid = default;
+        var min = new Vector2i(-28, -8);
+        var max = new Vector2i(14, 8);
+        const float approachRange = 12f; // KsTankTestArmedHull's
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid, min, max).Owner;
+            GiveGravity(SEntMan, gridUid);
+        });
+
+        await WaitForNavmesh(Pair, gridUid, min, max);
+
+        await Server.WaitPost(() =>
+        {
+            hostileUid = SpawnAt(SEntMan, _hostile, gridUid, 10, 0);
+            SpawnAt(SEntMan, _armedHull, gridUid, -16, 0);
+            rearUid = SpawnAt(SEntMan, _armedHull, gridUid, -23, 0);
+        });
+
+        var turretUid = EntityUid.Invalid;
+        var startAmmo = 0;
+        var fired = false;
+        var closest = float.MaxValue;
+        var tickRate = TickRate();
+
+        for (var tick = 0; tick < (int)(45f * tickRate); tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                if (turretUid == EntityUid.Invalid)
+                {
+                    var parts = SEntMan.System<KsWeldedPartsSystem>().GetParts(rearUid);
+                    if (parts.Count == 0)
+                        return;
+                    turretUid = parts[0];
+                    startAmmo = AmmoCount(SEntMan, turretUid);
+                }
+
+                fired |= AmmoCount(SEntMan, turretUid) < startAmmo;
+                closest = MathF.Min(closest, (WorldPosition(hostileUid) - WorldPosition(rearUid)).Length());
+            });
+        }
+
+        Assert.That(fired, Is.True, "the rear tank should fire past the front one");
+        Assert.That(closest, Is.GreaterThanOrEqualTo(approachRange - 2f),
+            $"it should hold near its range of {approachRange}, not close in (it got to {closest:0.0})");
     }
 }
