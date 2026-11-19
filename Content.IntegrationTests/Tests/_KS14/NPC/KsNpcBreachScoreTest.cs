@@ -39,6 +39,7 @@ public sealed class KsNpcBreachScoreTest : GameTest
     private const string PlainMob = "KsBreachScoreTestMobPlain";
     private const string TimedCharge = "KsBreachScoreTestCharge";
     private const string SightedMob = "KsBreachScoreTestMobSighted";
+    private const string UnchargedMob = "KsBreachScoreTestMobUncharged";
 
     private static readonly Vector2i Noise = new(6, 2);
     private static readonly Vector2i BestWall = new(7, 2);
@@ -87,6 +88,21 @@ public sealed class KsNpcBreachScoreTest : GameTest
       breachRecentPenalty: 0
       breachSightPenalty: 50
 
+# Leads, with nothing to do with charges in its settings.
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsBreachScoreTestMobUncharged
+  components:
+  - type: Hands
+  - type: DoAfter
+  - type: NpcSquadMember
+    tactics:
+      planning: false
+      watchTime: 0s
+      huntStartAge: 0.5s
+      maxStageDistance: 40
+      planChargeMinPressure: 0
+
 - type: entity
   id: KsBreachScoreTestCharge
   components:
@@ -114,6 +130,18 @@ public sealed class KsNpcBreachScoreTest : GameTest
     {
         var site = await BlastSite(PlainMob, rememberBreachAtBestWall: false);
         Assert.That(site.Tile.X, Is.EqualTo(-1), "without the scoring, the wall right in front of the squad, as before");
+    }
+
+    /// <summary>
+    ///     Tactics go by the leader's settings, and the one carrying the charge is there to breach while the leader is not: the
+    ///         wall is still chosen the carrier's way. Breachers sent with an ordinary elite join its squad.
+    /// </summary>
+    [Test]
+    public async Task ACarrierThatScoresIsFollowedWhoeverLeads()
+    {
+        var site = await BlastSite(ScoringMob, rememberBreachAtBestWall: false, leaderMob: UnchargedMob);
+        Assert.That(site.Tile, Is.EqualTo(BestWall),
+            "a breacher in a squad led by one that does not breach should still blow the wall by the noise");
     }
 
     [Test]
@@ -146,7 +174,8 @@ public sealed class KsNpcBreachScoreTest : GameTest
     /// <summary>
     ///     Sets the scene up, hears the noise, and runs the tactics until the squad is blowing its way in.
     /// </summary>
-    private async Task<NpcChargeSite> BlastSite(string mob, bool rememberBreachAtBestWall, bool watcher = false)
+    /// <param name="leaderMob">What the first of the two is, and leads, spawned before the second: by default the same.</param>
+    private async Task<NpcChargeSite> BlastSite(string mob, bool rememberBreachAtBestWall, bool watcher = false, string? leaderMob = null)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -183,9 +212,14 @@ public sealed class KsNpcBreachScoreTest : GameTest
                 watcherUid = SpawnAt(entManager, NanoTrasenMob, gridUid, -10, 3);
             }
 
-            firstUid = SpawnAt(entManager, mob, gridUid, -3, 3);
-            secondUid = SpawnAt(entManager, mob, gridUid, -3, 2);
+            firstUid = SpawnAt(entManager, leaderMob ?? mob, gridUid, -3, 3);
         });
+
+        // The first one founds the squad, and so leads it.
+        if (leaderMob != null)
+            await Pair.RunTicksSync(60);
+
+        await server.WaitPost(() => secondUid = SpawnAt(entManager, mob, gridUid, -3, 2));
 
         await Pair.RunTicksSync(150);
 
@@ -195,6 +229,8 @@ public sealed class KsNpcBreachScoreTest : GameTest
         {
             Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(firstUid, out var squadEntity), "the two should form a squad");
             var squadUid = squadEntity!.Value.Owner;
+            if (leaderMob != null)
+                Assert.That(squadEntity.Value.Comp.Leader, Is.EqualTo(firstUid), "the test needs the first one leading");
 
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(secondUid, "hand-charge", HandLocation.Right);

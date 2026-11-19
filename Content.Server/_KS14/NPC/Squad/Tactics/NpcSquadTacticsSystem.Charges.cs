@@ -112,7 +112,7 @@ public sealed partial class NpcSquadTacticsSystem
     private bool TryStartBlast(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         // A plan's hunt never blasts on its own: the plan has its own charge steps, and nothing runs a blast on its hunt.
-        if (!settings.HuntCharges || hunt.AllowCharges || hunt.BlastTried || !AnyoneHasACharge())
+        if (hunt.AllowCharges || hunt.BlastTried || !(settings.HuntCharges ? AnyoneHasACharge() : AnyCarrierHuntsWithCharges()))
             return false;
 
         hunt.BlastTried = true;
@@ -231,6 +231,35 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether a member carries a charge and is one to blow its way in (<see cref="NpcSquadTacticsSettings.HuntCharges"/>)
+    ///         by its own settings. Squad tactics go by the leader's, and breachers sent with others join a squad an ordinary
+    ///         elite leads: going by the leader alone, they never blew anything for a hunt, and chose the nearest wall for a plan.
+    /// </summary>
+    private bool AnyCarrierHuntsWithCharges()
+    {
+        foreach (var memberUid in _members)
+        {
+            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) &&
+                squadMemberComponent.Tactics.HuntCharges &&
+                CarriesCharge(memberUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     The settings a wall for <paramref name="carrierUid"/>'s charge is chosen by: its own, if it is there to breach
+    ///         (<see cref="NpcSquadTacticsSettings.BreachScoring"/>), whoever leads; otherwise the squad's.
+    /// </summary>
+    private NpcSquadTacticsSettings GetBreachSettings(EntityUid carrierUid, NpcSquadTacticsSettings settings)
+    {
+        return _squadMemberQuery.TryComp(carrierUid, out var squadMemberComponent) && squadMemberComponent.Tactics.BreachScoring
+            ? squadMemberComponent.Tactics
+            : settings;
     }
 
     /// <summary>
@@ -481,14 +510,23 @@ public sealed partial class NpcSquadTacticsSystem
         var hunt = plan.Hunt!;
         var carrierUid = EntityUid.Invalid;
 
+        // One there to breach, if any carries a charge: the wall is chosen its way (GetBreachSettings).
         foreach (var memberUid in _members)
         {
             if (memberUid == plan.WatcherUid || !CarriesCharge(memberUid))
                 continue;
 
-            carrierUid = memberUid;
-            break;
+            if (!carrierUid.IsValid())
+                carrierUid = memberUid;
+
+            if (GetBreachSettings(memberUid, settings).BreachScoring)
+            {
+                carrierUid = memberUid;
+                break;
+            }
         }
+
+        var breachSettings = carrierUid.IsValid() ? GetBreachSettings(carrierUid, settings) : settings;
 
         // A hostile somewhere too big to be a room leaves the hunt with no grid of its own: the one they are all on does.
         if (!carrierUid.IsValid() ||
@@ -504,8 +542,8 @@ public sealed partial class NpcSquadTacticsSystem
         {
             FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
 
-            if (settings.BreachScoring)
-                OrderByBreachScore(plan, grid, settings);
+            if (breachSettings.BreachScoring)
+                OrderByBreachScore(plan, grid, breachSettings);
 
             if (TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var roomPick))
                 return roomPick;
@@ -516,8 +554,8 @@ public sealed partial class NpcSquadTacticsSystem
 
         FindBarrierCandidates(plan, carrierUid, grid, carrierTile, maxWalk);
 
-        if (settings.BreachScoring)
-            OrderByBreachScore(plan, grid, settings);
+        if (breachSettings.BreachScoring)
+            OrderByBreachScore(plan, grid, breachSettings);
 
         if (!TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var barrierPick))
             return null;

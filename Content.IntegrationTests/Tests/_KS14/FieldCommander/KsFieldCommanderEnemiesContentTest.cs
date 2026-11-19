@@ -1,4 +1,6 @@
 #nullable enable
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Charges;
@@ -36,6 +38,8 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     private const string Sniper = "KsFcEliteOperativeSynArmedSniper";
     private const string Juggernaut = "KsFcOperativeSynArmedJuggernaut";
     private const string Breacher = "KsFcEliteOperativeSynArmedBreacher";
+    private const string Escort = "KsFcEliteOperativeSynArmedEstoc";
+    private const string FieldWall = "KsFieldWallReinforced";
     private const string MortarCrew = "KsFcOperativeSynArmedMortarCrew";
     private const string Tank = "KsFcMobTank";
     private const string FlamerTank = "KsFcMobTankFlamer";
@@ -169,6 +173,107 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
                 $"breachers shut out of the room should blow their way in: {hunt?.Phase}, shut out {hunt?.ShutOut}, tried {hunt?.BlastTried}, sealed in {hunt?.SealedIn}");
             Assert.That(site!.Value.Tile.X, Is.EqualTo(7), "the wall by the noise, not the one in front of them");
         });
+    }
+
+    /// <summary>
+    ///     Two breachers come with an ordinary elite, which leads the squad they join, and are ordered, as the commander orders
+    ///         its units, to a spot inside a sealed room of the walls defenders build. They blow a wall and go through the hole to
+    ///         the spot. They used to stand at the hole: the spot counted as searched once seen from it. Before that they did not
+    ///         blow anything at all, going by the leader's settings, which have no charges in them.
+    /// </summary>
+    [Test]
+    public async Task BreachersGoThroughTheHoleToTheirOrder()
+    {
+        if (!SProtoMan.HasIndex<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype>(Breacher) ||
+            !SProtoMan.HasIndex<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype>(Escort))
+        {
+            Assert.Ignore("the breachers are in the private module");
+            return;
+        }
+
+        var map = await Pair.CreateTestMap();
+        var sensorSystem = SEntMan.System<Content.Server._KS14.NPC.Systems.NpcSensorSystem>();
+        var transformSystem = SEntMan.System<SharedTransformSystem>();
+        var humanoidSystem = SEntMan.System<RandomHumanoidSystem>();
+        EntityUid gridUid = default, escortUid = default;
+        var breacherUids = new EntityUid[2];
+        var wallUids = new List<EntityUid>();
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid,
+                new Vector2i(-14, -14), new Vector2i(14, 14)).Owner;
+            GiveGravity(SEntMan, gridUid);
+
+            var moles = new float[Atmospherics.AdjustedNumberOfGases];
+            moles[(int) Gas.Oxygen] = 21.824779f;
+            moles[(int) Gas.Nitrogen] = 82.10312f;
+            SEntMan.System<AtmosphereSystem>().SetMapAtmosphere(map.MapUid, false, new GasMixture(moles, Atmospherics.T20C));
+            SEntMan.RemoveComponent<Content.Shared.Atmos.Components.GridAtmosphereComponent>(gridUid);
+
+            for (var x = -1; x <= 7; x++)
+            {
+                for (var y = -1; y <= 6; y++)
+                {
+                    if (x is > -1 and < 7 && y is > -1 and < 6)
+                        continue;
+
+                    wallUids.Add(SpawnAt(SEntMan, FieldWall, gridUid, x, y));
+                }
+            }
+
+            escortUid = humanoidSystem.SpawnRandomHumanoid(Escort, new EntityCoordinates(gridUid, new Vector2(-8.5f, 3.5f)), "test");
+        });
+
+        // The escort first, so it is the one leading.
+        await RunSeconds(2f);
+
+        await Server.WaitPost(() =>
+        {
+            breacherUids[0] = humanoidSystem.SpawnRandomHumanoid(Breacher, new EntityCoordinates(gridUid, new Vector2(-6.5f, 3.5f)), "test");
+            breacherUids[1] = humanoidSystem.SpawnRandomHumanoid(Breacher, new EntityCoordinates(gridUid, new Vector2(-6.5f, 2.5f)), "test");
+        });
+
+        var target = new EntityCoordinates(gridUid, new Vector2(3.5f, 2.5f));
+        var squadSystem = SEntMan.System<NpcSquadSystem>();
+        var squadChecked = false;
+        var blown = false;
+        var reached = false;
+
+        // Orders every so often, as the commander gives them, until one of them gets there.
+        for (var second = 0; second < 120 && !reached; second++)
+        {
+            await Server.WaitPost(() =>
+            {
+                if (!squadChecked && squadSystem.TryGetSquad(breacherUids[0], out var squadEntity))
+                {
+                    squadChecked = true;
+                    Assert.That(squadEntity.Value.Comp.Leader, Is.EqualTo(escortUid), "the test needs the escort leading the breachers");
+                }
+
+                if (second % 20 == 0)
+                {
+                    foreach (var unitUid in breacherUids.Append(escortUid))
+                    {
+                        sensorSystem.AddEffect(unitUid, Content.Server._KS14.NPC.Systems.NpcSensorSystem.DisturbanceCoordinatesSensorKey, target);
+                    }
+                }
+
+                blown |= wallUids.Any(wallUid => !SEntMan.EntityExists(wallUid));
+
+                foreach (var breacherUid in breacherUids)
+                {
+                    reached |= SEntMan.GetComponent<TransformComponent>(breacherUid).Coordinates
+                        .TryDistance(SEntMan, transformSystem, target, out var distance) && distance < 2f;
+                }
+            });
+
+            await RunSeconds(1f);
+        }
+
+        Assert.That(squadChecked, "the breachers should join the escort's squad");
+        Assert.That(blown, "the breachers should blow a wall of the room their order is in");
+        Assert.That(reached, "and go through the hole to where they were sent, not stand at it");
     }
 
     [Test]
