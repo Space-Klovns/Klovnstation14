@@ -211,6 +211,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     {
         ledger.Comp.Damage.Clear();
         ledger.Comp.OtherDamage = 0f;
+        ledger.Comp.AttackerDamage = 0f;
         RemCompDeferred<KsFieldCommanderDamageLedgerComponent>(ledger.Owner);
     }
 
@@ -359,9 +360,39 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var ledgerComponent = EnsureComp<KsFieldCommanderDamageLedgerComponent>(targetUid);
         if (credited)
+        {
             ledgerComponent.Damage[recipient!.Value] = ledgerComponent.Damage.GetValueOrDefault(recipient.Value) + dealt;
-        else
-            ledgerComponent.OtherDamage += dealt;
+            return;
+        }
+
+        ledgerComponent.OtherDamage += dealt;
+        if (IsAttackerHit(ruleComponent, args.Origin))
+            ledgerComponent.AttackerDamage += dealt;
+    }
+
+    /// <summary>
+    ///     Whether damage dealt with this <paramref name="origin"/> was the commander's side's doing: anything on its
+    ///         faction, its units first of all, hitting directly, with a bullet it fired, with a gun it holds, or with an
+    ///         explosion it set off or sent (a mortar crewman's shell). To be asked as the damage lands. An attacker
+    ///         already gone, or a strike missile, which nothing sends, is not recognised.
+    /// </summary>
+    private bool IsAttackerHit(KsFieldCommanderRuleComponent component, EntityUid? origin)
+    {
+        if (_killCreditSystem.GetAttacker(origin) is not { } attackerUid || Deleted(attackerUid))
+            return false;
+
+        if (IsAttackerSide(component, attackerUid))
+            return true;
+
+        // A beam names the gun, not who holds it.
+        return _containerSystem.TryGetContainingContainer(attackerUid, out var container) &&
+               IsAttackerSide(component, container.Owner);
+    }
+
+    private bool IsAttackerSide(KsFieldCommanderRuleComponent component, EntityUid uid)
+    {
+        return _scenarioFactionMemberQuery.TryComp(uid, out var factionMemberComponent) &&
+               factionMemberComponent.Id == component.Faction;
     }
 
     private void RewardUnitKill(Entity<KsFieldCommanderRuleComponent> rule, Entity<KsFieldCommanderUnitComponent> unit)

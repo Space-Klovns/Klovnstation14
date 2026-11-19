@@ -1,3 +1,4 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared.Damage.Systems;
 using Content.Server._KS14.KillCredit;
@@ -17,6 +18,8 @@ using Content.Shared.GameTicking.Components;
 using Content.Shared.Maps;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
@@ -58,6 +61,15 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _healAttackerDamageOnly = value, invokeImmediately: true);
+    }
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {

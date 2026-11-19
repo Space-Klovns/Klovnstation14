@@ -19,4 +19,11 @@ public sealed partial class KsFieldCommanderDamageLedgerComponent : Component
     /// </summary>
     [ViewVariables]
     public float OtherDamage;
+
+    /// <summary>
+    ///     The part of <see cref="OtherDamage"/> the commander's side dealt (<see cref="KsFieldCommanderRuleSystem.IsAttackerHit"/>),
+    ///         as against the world's and the entity's own. What a medic is paid for healing, when only that pays.
+    /// </summary>
+    [ViewVariables]
+    public float AttackerDamage;
 }
