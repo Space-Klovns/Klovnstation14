@@ -1,6 +1,8 @@
+using System.Numerics;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
+using Content.Shared.FixedPoint;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -17,7 +19,7 @@ namespace Content.Shared._KS14.MedicalBeam;
 
 /// <summary>
 ///     Works <see cref="KsMedicalBeamGunComponent"/>. Firing never shoots: the attempt is cancelled on both sides, and
-///         the server locks the beam onto the friendly clicked. The server heals and checks range and sight; the beam
+///         the server locks the beam onto the friendly clicked, or lets it go if there is none. The server heals and checks range and sight; the beam
 ///         is networked for the clients to draw.
 /// </summary>
 /// <remarks>
@@ -51,7 +53,16 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
 
         var gunComponent = args.Used.Comp;
         var targetUid = PickTarget(gun, args.User, gunComponent);
-        if (targetUid == null || targetUid == gun.Comp.Target)
+
+        // Fired at no one it can beam: let go, quietly (tg's process_fire).
+        if (targetUid == null)
+        {
+            Stop(gun, lost: false);
+            return;
+        }
+
+        // At the one it is on already: it stays on.
+        if (targetUid == gun.Comp.Target)
             return;
 
         Start(gun, args.User, targetUid.Value);
@@ -70,12 +81,13 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
     }
 
     /// <summary>
-    ///     The mob clicked, or failing that the nearest friendly close to the click.
+    ///     The mob clicked if the beam can go on it, and none if it can't: a click on a mob is never passed to one beside
+    ///         it. A click on no mob takes the nearest friendly close to it.
     /// </summary>
     private EntityUid? PickTarget(Entity<KsMedicalBeamGunComponent> gun, EntityUid userUid, GunComponent gunComponent)
     {
-        if (gunComponent.Target is { } clickedUid && CanBeam(gun, userUid, clickedUid))
-            return clickedUid;
+        if (gunComponent.Target is { } clickedUid && _mobStateQuery.HasComp(clickedUid))
+            return CanBeam(gun, userUid, clickedUid) ? clickedUid : null;
 
         if (gunComponent.ShootCoordinates is not { } coordinates)
             return null;
@@ -168,6 +180,11 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
                 continue;
 
             beamComponent.NextTick = curTime + beamComponent.TickInterval;
+
+            // The sparkle only on someone hurt, as tg's only shows while there is something to heal.
+            if (beamComponent.HealEffect is { } healEffect && _damageableSystem.GetTotalDamage(targetUid) > FixedPoint2.Zero)
+                Spawn(healEffect, new EntityCoordinates(targetUid, Vector2.Zero));
+
             foreach (var (group, amount) in beamComponent.Heal)
                 _damageableSystem.HealEvenly(targetUid, -amount, group, origin: userUid);
         }

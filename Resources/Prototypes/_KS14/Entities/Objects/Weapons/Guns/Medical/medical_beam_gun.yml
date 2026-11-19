@@ -23,6 +23,7 @@
   - type: KsMedicalBeamGun
     maxRange: 8
     tickInterval: 1
+    healEffect: KsMedicalBeamHealSparkle
     heal:
       Brute: 4
       Burn: 4

@@ -33,6 +33,7 @@ public sealed class KsMedicalBeamTest : GameTest
     private readonly EntProtoId _enemy = "KsTestMedicalBeamEnemy";
     private readonly EntProtoId _gun = "KsTestMedicalBeamGun";
     private readonly EntProtoId _wall = "KsTestMedicalBeamWall";
+    private readonly EntProtoId _sparkle = "KsTestMedicalBeamSparkle";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
 
@@ -93,8 +94,12 @@ public sealed class KsMedicalBeamTest : GameTest
   - type: KsMedicalBeamGun
     maxRange: 5
     tickInterval: 0.5
+    healEffect: KsTestMedicalBeamSparkle
     heal:
       Brute: 5
+
+- type: entity
+  id: KsTestMedicalBeamSparkle
 
 - type: entity
   id: KsTestMedicalBeamWall
@@ -151,6 +156,30 @@ public sealed class KsMedicalBeamTest : GameTest
         var entMan = Pair.Server.EntMan;
         var gun = new Entity<GunComponent>(scene.GunUid, entMan.GetComponent<GunComponent>(scene.GunUid));
         return Pair.Server.System<SharedGunSystem>().AttemptShoot(scene.MedicUid, gun, entMan.GetComponent<TransformComponent>(targetUid).Coordinates, targetUid);
+    }
+
+    /// <summary>
+    ///     Fires at a spot, clicking no entity.
+    /// </summary>
+    private void FireAt(Scene scene, EntityCoordinates coordinates)
+    {
+        var entMan = Pair.Server.EntMan;
+        var gun = new Entity<GunComponent>(scene.GunUid, entMan.GetComponent<GunComponent>(scene.GunUid));
+        Pair.Server.System<SharedGunSystem>().AttemptShoot(scene.MedicUid, gun, coordinates);
+    }
+
+    private int Sparkles(EntityUid patientUid)
+    {
+        var entMan = Pair.Server.EntMan;
+        var count = 0;
+        var children = entMan.GetComponent<TransformComponent>(patientUid).ChildEnumerator;
+        while (children.MoveNext(out var childUid))
+        {
+            if (entMan.GetComponent<MetaDataComponent>(childUid).EntityPrototype?.ID == _sparkle.Id)
+                count++;
+        }
+
+        return count;
     }
 
     [Test]
@@ -234,5 +263,81 @@ public sealed class KsMedicalBeamTest : GameTest
         });
         await Pair.RunTicksSync(2);
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "the beam should stop when put down"));
+    }
+
+    /// <summary>
+    ///     Each heal tick on a hurt patient puts a sparkle on them, riding along; none once they are whole.
+    /// </summary>
+    [Test]
+    public async Task HealTickSparklesOnAHurtPatientOnly()
+    {
+        var server = Pair.Server;
+        var scene = await SetUp();
+        var beam = Beam(scene);
+
+        await server.WaitPost(() => Fire(scene, scene.FriendUid));
+        await Pair.RunTicksSync(Ticks((float)beam.TickInterval.TotalSeconds) + 2);
+        var sparkles = 0;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(beam.Target, Is.EqualTo(scene.FriendUid));
+            sparkles = Sparkles(scene.FriendUid);
+            Assert.That(sparkles, Is.GreaterThan(0), "a heal tick on a hurt patient should sparkle on them");
+
+            // Made whole.
+            Hurt(scene.FriendUid, -Damage(scene.FriendUid));
+            Assert.That(Damage(scene.FriendUid), Is.EqualTo(0f));
+        });
+
+        await Pair.RunTicksSync(Ticks((float)beam.TickInterval.TotalSeconds * 2f) + 2);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "the beam should stay on a whole patient");
+            Assert.That(Sparkles(scene.FriendUid), Is.EqualTo(sparkles), "a whole patient should not sparkle");
+        });
+    }
+
+    /// <summary>
+    ///     Fired at the patient again the beam stays; at an enemy, or at nobody, it lets go. A click on an enemy is never
+    ///         passed on to a friend beside them.
+    /// </summary>
+    [Test]
+    public async Task FiringAtNoValidFriendLetsGoAndAClickedMobIsNeverPassedOn()
+    {
+        var server = Pair.Server;
+        var scene = await SetUp();
+        var beam = Beam(scene);
+        var transformSystem = server.System<SharedTransformSystem>();
+        var tick = Ticks(0.2f);
+
+        await server.WaitPost(() => Fire(scene, scene.FriendUid));
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => Fire(scene, scene.FriendUid));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "firing at the patient again should keep the beam"));
+
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => Fire(scene, scene.EnemyUid));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "firing at an enemy should let go"));
+
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => Fire(scene, scene.FriendUid));
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => FireAt(scene, new EntityCoordinates(scene.Map.Grid, -2.5f, -2.5f)));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "firing at nobody should let go"));
+
+        // A friend right beside the enemy, well within the aim assist.
+        await server.WaitPost(() =>
+        {
+            var enemyPosition = transformSystem.GetWorldPosition(scene.EnemyUid);
+            transformSystem.SetWorldPosition(scene.FriendUid, enemyPosition + new System.Numerics.Vector2(beam.AimAssistRadius / 2f, 0f));
+        });
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => Fire(scene, scene.EnemyUid));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "a click on an enemy should not lock onto the friend beside it"));
+
+        // Control: the same click, on no mob, does find the friend.
+        await Pair.RunTicksSync(tick);
+        await server.WaitPost(() => FireAt(scene, server.EntMan.GetComponent<TransformComponent>(scene.EnemyUid).Coordinates));
+        await server.WaitAssertion(() => Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "a click on no mob should still find the friend close by"));
     }
 }

@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.MedicalBeam;
 /// <summary>
 ///     A medical beam gun, ported from tgstation's <c>/obj/item/gun/medbeam</c>: fired at a friendly mob it locks a
 ///         healing beam onto them, which heals every <see cref="TickInterval"/> and breaks, with a warning, once they
-///         are out of <see cref="MaxRange"/> or out of sight. It fires nothing.
+///         are out of <see cref="MaxRange"/> or out of sight. Fired at anything else it lets go. It fires nothing.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
 [Access(typeof(KsMedicalBeamSystem))]
@@ -36,7 +36,13 @@ public sealed partial class KsMedicalBeamGunComponent : Component
     public Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2> Heal = new();
 
     /// <summary>
-    ///     A click that misses every mob still takes the nearest friendly this close to it, in metres.
+    ///     Spawned on the patient, riding along with them, each tick that heals someone hurt (tg's cyan heal sparkle).
+    /// </summary>
+    [DataField]
+    public EntProtoId? HealEffect;
+
+    /// <summary>
+    ///     A click that hits no mob at all still takes the nearest friendly this close to it, in metres.
     /// </summary>
     [DataField]
     public float AimAssistRadius = 0.6f;
