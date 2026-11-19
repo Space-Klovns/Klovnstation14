@@ -245,9 +245,11 @@ public sealed class KsMortarTest : GameTest
             // Its incoming clip, whichever was picked, ends as it lands.
             var shellQuery = SEntMan.AllEntityQueryEnumerator<KsMortarShellComponent, ActiveSupplyPodComponent>();
             Assert.That(shellQuery.MoveNext(out _, out var shellComponent, out var activePod), Is.True, "the shell should be on its way");
-            var clipLength = SEntMan.System<Robust.Server.Audio.AudioSystem>().GetAudioLength(shellComponent.IncomingSound!);
-            Assert.That((shellComponent.IncomingAt + clipLength - activePod.LaunchFinishTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
-                $"the incoming clip should end as the shell lands: at {shellComponent.IncomingAt}, {clipLength} long, lands {activePod.LaunchFinishTime}");
+            var shell = shellComponent!;
+            var pod = activePod!;
+            var clipLength = SEntMan.System<Robust.Server.Audio.AudioSystem>().GetAudioLength(shell.IncomingSound!);
+            Assert.That((shell.IncomingAt + clipLength - pod.LaunchFinishTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                $"the incoming clip should end as the shell lands: at {shell.IncomingAt}, {clipLength} long, lands {pod.LaunchFinishTime}");
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(0), 10f), Is.False, "again before its cooldown");
             Assert.That(mortar.Comp.Rounds, Is.EqualTo(2));
             Assert.That(SEntMan.GetComponent<NpcFactionMemberComponent>(mortarUid).Factions,
