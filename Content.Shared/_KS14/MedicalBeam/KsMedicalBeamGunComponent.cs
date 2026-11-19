@@ -1,5 +1,6 @@
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Guidebook;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -19,7 +20,7 @@ public sealed partial class KsMedicalBeamGunComponent : Component
     /// <summary>
     ///     How far the beam reaches, in metres (tg: <c>max_range = 8</c> tiles).
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField, AutoNetworkedField, GuidebookData]
     public float MaxRange = 8f;
 
     /// <summary>
