@@ -1,8 +1,13 @@
+using Content.Shared._KS14.Perks.Support;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Actions;
+using Content.Shared.Blocking;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Inventory;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
+using Content.Shared.StatusEffectNew;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
@@ -73,9 +78,14 @@ public sealed partial class KsLivingShieldSystem : EntitySystem
         }
     }
 
-    // Soaks what it can. Not a pure handler, as BlockingSystem's isn't either: the shield wears down by what it takes.
-    //      Damage is applied on the server, so only the server counts it. A class event, so no Entity<T> handler (RA0054).
-    [SubscribeLocalEvent]
+    // Soaks what it can of what would really be dealt: after worn armour (the inventory relay), damage-modifying status
+    //     effects, a held blocking shield, a mark's vulnerability and the universal mob modifier have all had their say,
+    //     so it wears down only by what got past them. Unordered it ran before the armour and spent itself on the whole hit.
+    // Not pure, as a Modify handler should be, and it can't be split: DamageDealtEvent carries only the final amount and
+    //     can't change it, so how much the shield took is known only here. ChangeDamage raises DamageModifyEvent only
+    //     right before dealing the damage, and nothing raises it to ask.
+    // Damage is applied on the server, so only the server counts it. A class event, so no Entity<T> handler (RA0054).
+    [SubscribeLocalEvent(after: [typeof(InventorySystem), typeof(StatusEffectsSystem), typeof(BlockingSystem), typeof(KsMarkedTargetSystem), typeof(MobStateSystem)])]
     private void OnDamageModify(EntityUid uid, KsLivingShieldAbilityComponent component, DamageModifyEvent args)
     {
         if (_netManager.IsClient || !component.Raised)

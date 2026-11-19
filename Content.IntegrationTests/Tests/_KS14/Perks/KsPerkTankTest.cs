@@ -49,6 +49,8 @@ public sealed class KsPerkTankTest : GameTest
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _body = "KsTestPerkTankBody";
+    private readonly EntProtoId _armouredBody = "KsTestPerkTankArmouredBody";
+    private readonly EntProtoId _armour = "KsTestPerkTankArmour";
     private readonly EntProtoId _laserGun = "KsTestPerkTankLaserGun";
     private readonly EntProtoId _vendor = "KsTestPerkTankVendor";
     private readonly EntProtoId _vendorItem = "KsTestPerkTankVendorItem";
@@ -193,6 +195,28 @@ public sealed class KsPerkTankTest : GameTest
   - type: Speech
 
 - type: entity
+  parent: KsTestPerkTankBody
+  id: KsTestPerkTankArmouredBody
+  components:
+  - type: Sprite
+  - type: InventorySlots
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+
+- type: entity
+  id: KsTestPerkTankArmour
+  components:
+  - type: Item
+  - type: Clothing
+    slots:
+    - outerClothing
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+
+- type: entity
   parent: BasicHitscan
   id: KsTestPerkTankLaser
   categories: [ HideSpawnMenu ]
@@ -237,14 +261,14 @@ public sealed class KsPerkTankTest : GameTest
 
     private int Ticks(float seconds) => (int)MathF.Ceiling(seconds * (float)Pair.Server.ResolveDependency<IGameTiming>().TickRate);
 
-    private async Task<(TestMapData Map, EntityUid BodyUid)> SpawnBody(ProtoId<KsPerkPrototype>? perk, float x = 0.5f)
+    private async Task<(TestMapData Map, EntityUid BodyUid)> SpawnBody(ProtoId<KsPerkPrototype>? perk, float x = 0.5f, EntProtoId? body = null)
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
         EntityUid bodyUid = default;
         await server.WaitPost(() =>
         {
-            bodyUid = server.EntMan.SpawnAtPosition(_body, new EntityCoordinates(testMap.Grid, x, 0.5f));
+            bodyUid = server.EntMan.SpawnAtPosition(body ?? _body, new EntityCoordinates(testMap.Grid, x, 0.5f));
             if (perk is { } perkId)
                 Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(bodyUid, perkId), "the test perk should be given");
         });
@@ -351,6 +375,40 @@ public sealed class KsPerkTankTest : GameTest
 
             var action = GetAction(bodyUid);
             Assert.That(action.Comp.Cooldown?.End, Is.GreaterThan(server.ResolveDependency<IGameTiming>().CurTime), "breaking should start the cooldown");
+        });
+    }
+
+    [Test]
+    public async Task LivingShieldWearsDownByWhatGetsPastArmour()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var (testMap, bodyUid) = await SpawnBody(_shieldPerk, body: _armouredBody);
+        var shield = entMan.GetComponent<KsLivingShieldAbilityComponent>(bodyUid);
+
+        await server.WaitAssertion(() =>
+        {
+            var armourUid = entMan.SpawnAtPosition(_armour, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            Assert.That(server.System<Content.Shared.Inventory.InventorySystem>().TryEquip(bodyUid, armourUid, "outerClothing", silent: true, force: true),
+                "the armour should be put on");
+            PerformAction(bodyUid);
+            Assert.That(shield.Raised, "the action should raise the shield");
+        });
+        await Pair.RunTicksSync(1);
+
+        await server.WaitAssertion(() =>
+        {
+            var armour = entMan.GetComponent<Content.Shared.Armor.ArmorComponent>(entMan.GetComponent<Content.Shared.Inventory.InventoryComponent>(bodyUid)
+                .Containers.Single(container => container.ID == "outerClothing").ContainedEntity!.Value);
+            var coefficient = armour.Modifiers.Coefficients[Blunt];
+            Assert.That(coefficient, Is.LessThan(1f), "the test armour should stop some of the hit");
+
+            // A hit the shield can hold even unarmoured: it should spend only what the armour lets through.
+            var hit = shield.Capacity / 2f;
+            Hurt(bodyUid, hit);
+            Assert.That(server.System<DamageableSystem>().GetTotalDamage(bodyUid), Is.EqualTo(FixedPoint2.Zero), "the shield should soak what gets past the armour");
+            Assert.That(shield.Remaining, Is.EqualTo(shield.Capacity - hit * coefficient).Within(0.01f),
+                "the shield should wear down by what the armour let through, not by the whole hit");
         });
     }
 
