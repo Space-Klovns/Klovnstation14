@@ -21,6 +21,14 @@ public sealed partial class KsRallyZoneComponent : Component
     public Color Color = Color.FromHex("#ffcc33");
 
     /// <summary>
+    ///     From being put down to going off, for a zone nobody called (placed by hand): the countdown starts at map
+    ///         init, so it fills in and fades like a called one rather than going off and vanishing within two ticks. A
+    ///         call replaces it with the ability's own <see cref="KsRallyAbilityComponent.Delay"/>.
+    /// </summary>
+    [DataField]
+    public TimeSpan Delay = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>
     ///     How long it takes to fade once it has gone off.
     /// </summary>
     [DataField, AutoNetworkedField]

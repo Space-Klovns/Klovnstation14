@@ -32,6 +32,20 @@ public sealed partial class KsRallySystem : EntitySystem
 
     private readonly HashSet<Entity<MobStateComponent>> _inZone = new();
 
+    /// <summary>
+    ///     Starts the countdown of any zone, called or not. Without it a zone spawned by anything but
+    ///         <see cref="Call"/> has its activate time at zero, so it goes off on its first update and is deleted on the
+    ///         next, after the clients were told it exists but before they hear it is gone.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnZoneMapInit(Entity<KsRallyZoneComponent> zone, ref MapInitEvent args)
+    {
+        var curTime = _gameTiming.CurTime;
+        zone.Comp.StartTime = curTime;
+        zone.Comp.ActivateTime = curTime + zone.Comp.Delay;
+        Dirty(zone);
+    }
+
     [SubscribeLocalEvent]
     private void OnAction(Entity<KsRallyAbilityComponent> entity, ref KsRallyActionEvent args)
     {
