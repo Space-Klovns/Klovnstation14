@@ -222,10 +222,18 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public TimeSpan StuckReorderAfter = TimeSpan.FromSeconds(40);
 
     /// <summary>
-    ///     How long before its steering is thrown away and it is moved onto a free tile beside it.
+    ///     How long before its steering is thrown away and it is moved onto a free tile beside it, once no defender
+    ///         can see it or that tile.
     /// </summary>
     [DataField]
     public TimeSpan StuckNudgeAfter = TimeSpan.FromSeconds(80);
+
+    /// <summary>
+    ///     How long a nudge may be held back by a defender watching before the unit is moved in their sight anyway:
+    ///         left stuck for good is worse than being seen to jump a tile.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckNudgeInSightAfter = TimeSpan.FromMinutes(5);
 
     /// <summary>
     ///     How long before it is taken off the field and sent again from elsewhere, once no defender can see it.

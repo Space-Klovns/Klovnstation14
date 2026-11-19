@@ -90,6 +90,13 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     [ViewVariables(VVAccess.ReadOnly)]
     public KsFieldCommanderStuckReason StuckReason;
 
+    /// <summary>
+    ///     When its nudge was first held back because a defender could see it or where it would go; tried again at
+    ///         every check until it is done. Null when no nudge is waiting.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoPausedField]
+    public TimeSpan? NudgeHeldSince;
+
     #endregion
 }
 
@@ -109,7 +116,7 @@ public enum KsFieldCommanderStuckStage : byte
     Reorder,
 
     /// <summary>
-    ///     Its steering thrown away, and moved onto a free tile beside it.
+    ///     Its steering thrown away, and moved onto a free tile beside it out of the defenders' sight.
     /// </summary>
     Nudge,
 
