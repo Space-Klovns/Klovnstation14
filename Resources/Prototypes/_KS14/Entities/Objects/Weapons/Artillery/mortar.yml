@@ -60,7 +60,7 @@
     angularDeviation: 10
     trailProto: KsSupplyPodTrail
   - type: SupplyPodLandingZone
-    indicatorProto: KsSupplyPodLandingZone
+    indicatorProto: KsStrikeWarning
   - type: SupplyPodDrawDepth
     transitDrawDepth: Effects
     landedDrawDepth: Effects

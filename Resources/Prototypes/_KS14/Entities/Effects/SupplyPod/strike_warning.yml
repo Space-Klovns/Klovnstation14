@@ -1,0 +1,25 @@
+# Marks where something hostile is about to come down (cruise missiles, mortar shells), in place of the supply pod
+#     landing zone. Sized to the blast and drawn over mobs, doors and structures, unshaded so it reads in the dark; the
+#     client (KsStrikeWarningSystem) pulses it ever faster and closes the chevrons in on the rim as the impact nears.
+- type: entity
+  id: KsStrikeWarning
+  categories: [ HideSpawnMenu ]
+  name: strike warning
+  description: A flashing projection marking where something is about to hit. Get out of the circle.
+  save: false
+  components:
+  - type: Sprite
+    sprite: /Textures/_KS14/Objects/SupplyPod/strike_warning.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: area
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Area ]
+    - state: reticle
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Reticle ]
+    - state: chevrons
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Chevrons ]
+  - type: SupplyPodLandingZoneIndicator
+  - type: KsStrikeWarning
