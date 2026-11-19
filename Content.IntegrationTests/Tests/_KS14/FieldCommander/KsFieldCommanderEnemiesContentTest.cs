@@ -173,6 +173,9 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
                 $"breachers shut out of the room should blow their way in: {hunt?.Phase}, shut out {hunt?.ShutOut}, tried {hunt?.BlastTried}, sealed in {hunt?.SealedIn}");
             Assert.That(site!.Value.Tile.X, Is.EqualTo(7), "the wall by the noise, not the one in front of them");
         });
+
+        // Not left paused for whatever runs on this server next.
+        await Server.WaitPost(() => tacticsSystem.UpdatesPaused = false);
     }
 
     /// <summary>
@@ -201,6 +204,10 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
 
         await Server.WaitPost(() =>
         {
+            // Squad tactics are what blow the wall. A test before this one on this server may have paused them, and only a
+            //      round restart, which a pair reused clean never has, unpauses them.
+            SEntMan.System<NpcSquadTacticsSystem>().UpdatesPaused = false;
+
             gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid,
                 new Vector2i(-14, -14), new Vector2i(14, 14)).Owner;
             GiveGravity(SEntMan, gridUid);
