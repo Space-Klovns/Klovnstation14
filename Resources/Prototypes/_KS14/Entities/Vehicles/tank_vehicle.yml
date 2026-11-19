@@ -120,8 +120,9 @@
 
   # Fixtures: they replace the parents' whole, so the layer and mask are spelt out, or it collides with nothing and the
   #   pathfinder, which plans by them, drives it through walls. Not Opaque: a turret riding on it looks out from inside it,
-  #   and IntersectRay, checking bounding boxes only, counts a ray starting inside one as hitting it. Under a tile in
-  #   radius, to get through a two-tile gap.
+  #   and IntersectRay, checking bounding boxes only, counts a ray starting inside one as hitting it. Not HighImpassable
+  #   either: items collide with that, and every round its turret fired spawned one inside it and shoved it most of a
+  #   tile. Under a tile in radius, to get through a two-tile gap.
   - type: Fixtures
     fixtures:
       fix1:
@@ -132,7 +133,6 @@
         mask:
         - LargeMobMask
         layer:
-        - HighImpassable
         - MidImpassable
         - LowImpassable
         - BulletImpassable

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.WeldedParts;
+using Content.Server.NPC.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Movement.Components;
 using Content.Shared.Weapons.Ranged.Events;
@@ -39,6 +40,10 @@ public sealed class KsTankTest : GameTest
     private readonly EntProtoId _approachHull = "KsTankTestApproachHull";
     private readonly EntProtoId _gapHull = "KsTankTestGapHull";
     private readonly EntProtoId _hostile = "KsTankTestHostile";
+    private readonly EntProtoId _armedHull = "KsTankTestArmedHull";
+    private readonly EntProtoId _armedCloseHull = "KsTankTestArmedCloseHull";
+    private readonly EntProtoId _screen = "KsTankTestScreen";
+    private static readonly EntProtoId Fire = "ChemicalFire";
 
     /// <summary>
     ///     The gun turret's own vision and reach (its blackboard below). Its hostiles stand beyond 10 tiles, which is where a
@@ -177,6 +182,54 @@ public sealed class KsTankTest : GameTest
         40
       ApproachRange: !type:Single
         2
+
+# Hides what is behind it and stops nothing: Opaque, and on no layer a body or a wall check collides with.
+- type: entity
+  id: KsTankTestScreen
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.5,-0.5,0.5,0.5""
+        layer:
+        - Opaque
+
+- type: entity
+  parent: KsTankTestApproachHull
+  id: KsTankTestArmedHull
+  components:
+  - type: HTN
+    rootTask:
+      task: KsTankTestDriveCompound
+    blackboard:
+      VisionRadius: !type:Single
+        40
+      AggroVisionRadius: !type:Single
+        40
+      ApproachRange: !type:Single
+        12
+  - type: KsWeldedParts
+    parts:
+    - prototype: KsTankTestGunTurret
+      angularStiffness: 0.01
+
+- type: entity
+  parent: KsTankTestArmedHull
+  id: KsTankTestArmedCloseHull
+  components:
+  - type: HTN
+    rootTask:
+      task: KsTankTestDriveCompound
+    blackboard:
+      VisionRadius: !type:Single
+        40
+      AggroVisionRadius: !type:Single
+        40
+      ApproachRange: !type:Single
+        4
 ";
 
     private float TickRate()
@@ -472,5 +525,212 @@ public sealed class KsTankTest : GameTest
         Assert.That(deepest, Is.LessThan(0.05f), $"the hull should not enter a wall tile (it sank {deepest:0.00} in, at {deepestAt})");
         Assert.That(closest, Is.LessThanOrEqualTo(GapApproachRange),
             $"the hull should get through the gap to its hostile (it got no nearer than {closest:0.0})");
+    }
+
+    /// <summary>
+    ///     Its turret firing does not move the hull: every round put an item inside it, which shoved it most of a tile.
+    /// </summary>
+    [Test]
+    public async Task TurretFiringDoesNotShoveTheHull()
+    {
+        var (hullUid, turretUid, _, _) = await SetUpGunTank(false, new Vector2(8f, 0f));
+        var startAmmo = 0;
+        var start = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            startAmmo = AmmoCount(SEntMan, turretUid);
+            start = WorldPosition(hullUid);
+        });
+
+        var shots = 0;
+        var furthest = 0f;
+        var tickRate = TickRate();
+        for (var tick = 0; tick < (int)(30f * tickRate) && shots < 5; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                shots = startAmmo - AmmoCount(SEntMan, turretUid);
+                furthest = MathF.Max(furthest, (WorldPosition(hullUid) - start).Length());
+            });
+        }
+
+        Assert.That(shots, Is.GreaterThanOrEqualTo(5), "the turret should have fired");
+        Assert.That(furthest, Is.LessThan(0.1f), $"firing should not move the hull (it moved {furthest:0.00} tiles)");
+    }
+
+    /// <summary>
+    ///     A screen hides the hostile from the turret, not from the hull's own look for walls: the hull drives on through
+    ///         it, rather than holding where it, and not its gun, has the hostile in sight.
+    /// </summary>
+    [Test]
+    public async Task HullHoldsOnlyWhenItsGunSeesTheTarget()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, hullUid = default;
+        var min = new Vector2i(-16, -8);
+        var max = new Vector2i(12, 8);
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid, min, max).Owner;
+            GiveGravity(SEntMan, gridUid);
+            for (var y = min.Y; y <= max.Y; y++)
+                SpawnAt(SEntMan, _screen, gridUid, 0, y);
+        });
+
+        await WaitForNavmeshSettled(Pair, gridUid);
+
+        await Server.WaitPost(() =>
+        {
+            SpawnAt(SEntMan, _hostile, gridUid, 2, 0);
+            hullUid = SpawnAt(SEntMan, _armedCloseHull, gridUid, -12, 0);
+        });
+
+        var tickRate = TickRate();
+        var furthestX = float.MinValue;
+        for (var tick = 0; tick < (int)(40f * tickRate) && furthestX < 1f; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() => furthestX = MathF.Max(furthestX, WorldPosition(hullUid).X));
+        }
+
+        Assert.That(furthestX, Is.GreaterThanOrEqualTo(1f),
+            $"the hull should drive on past the screen its turret cannot see through (it got no further than x={furthestX:0.0})");
+    }
+
+    /// <summary>
+    ///     An armed hull, its turret firing, closes to its range and holds there, not stopping and starting nor drifting
+    ///         off, with fire burning on the ground about the hostile.
+    /// </summary>
+    [Test]
+    public async Task ArmedHullHoldsInRangeAmidFire()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, hullUid = default, hostileUid = default;
+        var min = new Vector2i(-14, -6);
+        var max = new Vector2i(14, 6);
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid, min, max).Owner;
+            GiveGravity(SEntMan, gridUid);
+        });
+
+        await WaitForNavmesh(Pair, gridUid, min, max);
+
+        await Server.WaitPost(() =>
+        {
+            hostileUid = SpawnAt(SEntMan, _hostile, gridUid, 10, 0);
+            hullUid = SpawnAt(SEntMan, _armedCloseHull, gridUid, -10, 0);
+        });
+
+        var tickRate = TickRate();
+        var fireTicks = (int)(2f * tickRate);
+        var holdTicks = (int)(20f * tickRate);
+        var walkSpeed = 0f;
+        await Server.WaitPost(() => walkSpeed = SEntMan.GetComponent<MovementSpeedModifierComponent>(hullUid).BaseWalkSpeed);
+        var inRangeAt = -1;
+        var furthestAfter = 0f;
+        var starts = 0;
+        var moving = false;
+
+        for (var tick = 0; tick < (int)(60f * tickRate) && (inRangeAt < 0 || tick < inRangeAt + holdTicks); tick++)
+        {
+            if (tick % fireTicks == 0)
+            {
+                await Server.WaitPost(() =>
+                {
+                    // Fire on the hostile's tile and the tiles before it, kept burning.
+                    for (var x = 6; x <= 10; x++)
+                    {
+                        for (var y = -1; y <= 1; y++)
+                            SpawnAt(SEntMan, Fire, gridUid, x, y);
+                    }
+                });
+            }
+
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                var distance = (WorldPosition(hostileUid) - WorldPosition(hullUid)).Length();
+                if (inRangeAt < 0 && distance <= ApproachRange)
+                    inRangeAt = tick;
+
+                if (inRangeAt < 0)
+                    return;
+
+                furthestAfter = MathF.Max(furthestAfter, distance);
+                var speed = SEntMan.GetComponent<PhysicsComponent>(hullUid).LinearVelocity.Length();
+                var nowMoving = speed > walkSpeed * 0.25f;
+                if (nowMoving && !moving)
+                    starts++;
+                moving = nowMoving;
+            });
+        }
+
+        Assert.That(inRangeAt, Is.GreaterThanOrEqualTo(0), $"the hull should close to {ApproachRange}");
+        Assert.That(furthestAfter, Is.LessThanOrEqualTo(ApproachRange + 1f),
+            $"once in range it should stay there (it went {furthestAfter:0.0} off)");
+        Assert.That(starts, Is.LessThanOrEqualTo(2), $"it should hold, not stop and start ({starts} starts in {holdTicks / tickRate:0} s)");
+    }
+
+    /// <summary>
+    ///     On open ground the turret takes the hostile on near its vision and fires near its reach while the hull drives in,
+    ///         not first at 10 tiles or less.
+    /// </summary>
+    [Test]
+    public async Task ArmedHullEngagesFromAfarOnOpenGround()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, hullUid = default, hostileUid = default;
+        var min = new Vector2i(-24, -6);
+        var max = new Vector2i(14, 6);
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, Server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid, min, max).Owner;
+            GiveGravity(SEntMan, gridUid);
+        });
+
+        await WaitForNavmesh(Pair, gridUid, min, max);
+
+        await Server.WaitPost(() =>
+        {
+            hostileUid = SpawnAt(SEntMan, _hostile, gridUid, 10, 0);
+            hullUid = SpawnAt(SEntMan, _armedHull, gridUid, -20, 0);
+        });
+
+        var turretUid = EntityUid.Invalid;
+        var startAmmo = 0;
+        float? targetAt = null, fireAt = null;
+        var tickRate = TickRate();
+
+        for (var tick = 0; tick < (int)(60f * tickRate) && fireAt == null; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                if (turretUid == EntityUid.Invalid)
+                {
+                    var parts = SEntMan.System<KsWeldedPartsSystem>().GetParts(hullUid);
+                    if (parts.Count == 0)
+                        return;
+                    turretUid = parts[0];
+                    startAmmo = AmmoCount(SEntMan, turretUid);
+                }
+
+                var distance = (WorldPosition(hostileUid) - WorldPosition(hullUid)).Length();
+                if (targetAt == null && SEntMan.HasComponent<NPCRangedCombatComponent>(turretUid))
+                    targetAt = distance;
+                if (fireAt == null && AmmoCount(SEntMan, turretUid) < startAmmo)
+                    fireAt = distance;
+            });
+        }
+
+        Assert.That(targetAt, Is.Not.Null.And.GreaterThan(TurretRangedRange - 1f),
+            $"the turret should take the hostile on near its vision of 16 (it did at {targetAt:0.0})");
+        Assert.That(fireAt, Is.Not.Null.And.GreaterThan(10.5f),
+            $"and fire beyond 10 tiles (it first fired at {fireAt:0.0})");
     }
 }

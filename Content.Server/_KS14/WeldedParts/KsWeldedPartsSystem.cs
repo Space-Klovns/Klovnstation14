@@ -57,7 +57,10 @@ public sealed partial class KsWeldedPartsSystem : EntitySystem
         return IsOfWhole(rootUid, projectileComponent.Shooter) || IsOfWhole(rootUid, projectileComponent.Weapon);
     }
 
-    private bool IsOfWhole(EntityUid rootUid, EntityUid? uid)
+    /// <summary>
+    ///     Whether <paramref name="uid"/> is <paramref name="rootUid"/> or one of the parts welded to it.
+    /// </summary>
+    public bool IsOfWhole(EntityUid rootUid, EntityUid? uid)
     {
         if (uid is not { } someUid)
             return false;
