@@ -78,7 +78,8 @@ public enum KsCompanionMode : byte
     Follow,
 
     /// <summary>
-    ///     Rides on the owner at <see cref="KsCompanionEntry.Offset"/>, parented to it and put back there if moved.
+    ///     Rides on the owner at <see cref="KsCompanionEntry.Offset"/>, parented to it with a static body that nothing
+    ///         can push, and put back there if anything else moves it.
     /// </summary>
     Attached,
 }

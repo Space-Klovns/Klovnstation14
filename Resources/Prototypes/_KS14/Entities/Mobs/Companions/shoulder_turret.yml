@@ -23,7 +23,7 @@
     layers:
     - state: turret
   # Hit by bullets and lasers, but never in the way of its owner or anyone else walking: nothing collides with it
-  #     but what is shot or thrown.
+  #     but what is shot or thrown. Made static once it is attached, so nothing pushes it off its owner's shoulder.
   - type: Physics
     bodyType: KinematicController
   - type: Fixtures

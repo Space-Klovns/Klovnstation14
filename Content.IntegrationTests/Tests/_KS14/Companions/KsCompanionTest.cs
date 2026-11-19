@@ -22,6 +22,8 @@ using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
@@ -130,9 +132,20 @@ public sealed class KsCompanionTest : GameTest
     factions:
     - KsTestCompanionEnemySide
 
+# A body as the shoulder turret's: pushable, and hit by what is shot.
 - type: entity
   id: KsTestCompanionRider
   components:
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.15
+        density: 10
+        layer:
+        - BulletImpassable
   - type: Damageable
 
 - type: ksPerk
@@ -225,10 +238,15 @@ public sealed class KsCompanionTest : GameTest
             Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid), "the rider should ride on the owner");
             Assert.That(riderTransform.LocalPosition, Is.EqualTo(offset), "the rider should sit at its offset");
 
-            // Knocked off its spot: put straight back.
+            // Moved off its spot by something other than physics: put back on the next update, not from the move.
             server.System<SharedTransformSystem>().SetCoordinates(riderUid.Value, new EntityCoordinates(ownerUid, new Vector2(3f, 3f)));
+        });
+        await Pair.RunTicksSync(1);
+        await server.WaitAssertion(() =>
+        {
+            var riderTransform = entMan.GetComponent<TransformComponent>(Companion(ownerUid, Rider)!.Value);
             Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid));
-            Assert.That(riderTransform.LocalPosition, Is.EqualTo(offset), "a moved rider should go back to its offset");
+            Assert.That(riderTransform.LocalPosition, Is.EqualTo(Entry(ownerUid, Rider).Offset), "a moved rider should go back to its offset");
         });
 
         // Whole once it has finished.
@@ -236,6 +254,45 @@ public sealed class KsCompanionTest : GameTest
         await server.WaitAssertion(() =>
             Assert.That(entMan.HasComponent<KsDissolveComponent>(Companion(ownerUid, Follower)!.Value), Is.False,
                 "a materialised follower should be whole"));
+    }
+
+    [Test]
+    public async Task AttachedCompanionStaysAtItsOffsetWhenItOrItsOwnerIsPushed()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var physicsSystem = server.System<SharedPhysicsSystem>();
+        var transformSystem = server.System<SharedTransformSystem>();
+        var ownerUid = await SpawnOwnerWithPerk();
+        var riderUid = Companion(ownerUid, Rider)!.Value;
+        var offset = Entry(ownerUid, Rider).Offset;
+        var riderPhysics = entMan.GetComponent<PhysicsComponent>(riderUid);
+        var ownerStart = Vector2.Zero;
+
+        await server.WaitPost(() =>
+        {
+            ownerStart = transformSystem.GetWorldPosition(ownerUid);
+            // The owner shoved hard (friction soon stops it), and the rider hit by a push that would throw it well clear.
+            physicsSystem.ApplyLinearImpulse(ownerUid, new Vector2(entMan.GetComponent<PhysicsComponent>(ownerUid).Mass * 5f, 0f));
+            physicsSystem.ApplyLinearImpulse(riderUid, new Vector2(0f, riderPhysics.Mass * 10f));
+        });
+
+        // Checked every tick, so a rider pushed off and put back later still shows.
+        for (var i = 0; i < Ticks(0.5f); i++)
+        {
+            await Pair.RunTicksSync(1);
+            await server.WaitAssertion(() =>
+            {
+                var riderTransform = entMan.GetComponent<TransformComponent>(riderUid);
+                Assert.That(riderPhysics.LinearVelocity, Is.EqualTo(Vector2.Zero), $"a push should not set the rider moving (tick {i})");
+                Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid), $"the rider should stay on the owner (tick {i})");
+                Assert.That(riderTransform.LocalPosition, Is.EqualTo(offset), $"the rider should stay at its offset (tick {i})");
+            });
+        }
+
+        await server.WaitAssertion(() =>
+            Assert.That((transformSystem.GetWorldPosition(ownerUid) - ownerStart).Length(), Is.GreaterThan(0.1f),
+                "control: the shoved owner should have moved, carrying the rider"));
     }
 
     [Test]

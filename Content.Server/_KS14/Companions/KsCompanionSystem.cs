@@ -17,6 +17,9 @@ using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Content.Shared.Popups;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -35,13 +38,27 @@ public sealed partial class KsCompanionSystem : EntitySystem
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NPCSystem _npcSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<KsCompanionComponent> _companionQuery = default!;
     [Dependency] private EntityQuery<KsCompanionsComponent> _companionsQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioMemberQuery = default!;
+
+    /// <summary>
+    ///     Attached companions moved off their spot since the last update, put back in <see cref="Update"/>: never from
+    ///         the <see cref="MoveEvent"/> that reports it, which the engine raises mid-operation.
+    /// </summary>
+    private readonly HashSet<EntityUid> _displacedCompanions = new();
+
+    /// <summary>
+    ///     <see cref="_displacedCompanions"/> taken out to be worked through, as putting one back raises the very
+    ///         <see cref="MoveEvent"/> that adds to the set.
+    /// </summary>
+    private readonly List<EntityUid> _returningCompanions = new();
 
     #region API
 
@@ -141,6 +158,8 @@ public sealed partial class KsCompanionSystem : EntitySystem
     {
         base.Update(frameTime);
 
+        ReturnDisplacedCompanions();
+
         var curTime = _gameTiming.CurTime;
         var query = EntityQueryEnumerator<KsCompanionsComponent>();
         while (query.MoveNext(out var uid, out var companionsComponent))
@@ -193,6 +212,11 @@ public sealed partial class KsCompanionSystem : EntitySystem
         companionComponent.Mode = entry.Mode;
         companionComponent.Offset = entry.Offset;
         Dirty(companionUid, companionComponent);
+
+        // Nothing can push it off its spot: not a shoved owner, an explosion, nor its own gun's recoil. It still
+        //     collides, so it is shot as before.
+        if (entry.Mode == KsCompanionMode.Attached && _physicsQuery.TryComp(companionUid, out var physicsComponent))
+            _physicsSystem.SetBodyType(companionUid, BodyType.Static, body: physicsComponent);
 
         CopySides(owner.Owner, companionUid);
         UpdateFollowTarget((companionUid, companionComponent));
@@ -316,22 +340,44 @@ public sealed partial class KsCompanionSystem : EntitySystem
     }
 
     /// <summary>
-    ///     An attached companion knocked off its spot is put straight back.
+    ///     An attached companion moved off its spot by something other than physics (a teleport, an admin) is put back
+    ///         on the next update.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnCompanionMove(Entity<KsCompanionComponent> companion, ref MoveEvent args)
     {
         if (companion.Comp.Mode != KsCompanionMode.Attached ||
             companion.Comp.Released ||
-            companion.Comp.OwnerUid is not { } ownerUid ||
-            TerminatingOrDeleted(ownerUid) ||
-            TerminatingOrDeleted(companion.Owner))
+            companion.Comp.OwnerUid is not { } ownerUid)
             return;
 
         if (args.NewPosition.EntityId == ownerUid && args.NewPosition.Position == companion.Comp.Offset)
             return;
 
-        _transformSystem.SetCoordinates(companion.Owner, new EntityCoordinates(ownerUid, companion.Comp.Offset));
+        _displacedCompanions.Add(companion.Owner);
+    }
+
+    private void ReturnDisplacedCompanions()
+    {
+        if (_displacedCompanions.Count == 0)
+            return;
+
+        _returningCompanions.AddRange(_displacedCompanions);
+        _displacedCompanions.Clear();
+
+        foreach (var companionUid in _returningCompanions)
+        {
+            if (!_companionQuery.TryComp(companionUid, out var companionComponent) ||
+                companionComponent.Released ||
+                companionComponent.OwnerUid is not { } ownerUid ||
+                TerminatingOrDeleted(ownerUid) ||
+                TerminatingOrDeleted(companionUid))
+                continue;
+
+            _transformSystem.SetCoordinates(companionUid, new EntityCoordinates(ownerUid, companionComponent.Offset));
+        }
+
+        _returningCompanions.Clear();
     }
 
     private void UpdateFollowTarget(Entity<KsCompanionComponent> companion)
