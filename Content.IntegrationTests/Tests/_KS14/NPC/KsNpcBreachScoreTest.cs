@@ -144,6 +144,76 @@ public sealed class KsNpcBreachScoreTest : GameTest
             "a breacher in a squad led by one that does not breach should still blow the wall by the noise");
     }
 
+    /// <summary>
+    ///     A squad that hears of the noise from much further off than any wall it could walk to with its charge is shut out of the
+    ///         room for now, and holds just outside it, where it can blow its way in the next time it hears of it. It used to hold
+    ///         where it stood, a long way off, with nothing else it could plan.
+    /// </summary>
+    [Test]
+    public async Task AFarSquadShutOutHoldsOutsideTheRoom()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var map = await Pair.CreateTestMap();
+
+        EntityUid gridUid = default, firstUid = default, secondUid = default;
+
+        await server.WaitPost(() =>
+        {
+            tacticsSystem.UpdatesPaused = true;
+            gridUid = MakeGrid(entManager, server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid,
+                new Vector2i(-130, -14), new Vector2i(14, 14)).Owner;
+
+            for (var x = -1; x <= 7; x++)
+            {
+                for (var y = -1; y <= 6; y++)
+                {
+                    if (x is > -1 and < 7 && y is > -1 and < 6)
+                        continue;
+
+                    SpawnAt(entManager, TestWall, gridUid, x, y);
+                }
+            }
+
+            // Far enough off that no wall of the room is within a charge's walk, nor any floor outside it within a stager's.
+            firstUid = SpawnAt(entManager, PlainMob, gridUid, -120, 3);
+            secondUid = SpawnAt(entManager, PlainMob, gridUid, -120, 2);
+        });
+
+        await Pair.RunTicksSync(150);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(firstUid, out var squadEntity), "the two should form a squad");
+            var squadUid = squadEntity!.Value.Owner;
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(secondUid, "hand-charge", HandLocation.Right);
+            var chargeUid = entManager.SpawnEntity(TimedCharge, entManager.GetComponent<TransformComponent>(secondUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(secondUid, chargeUid, "hand-charge"), "the test needs it holding the charge");
+
+            tacticsSystem.NoteDisturbance(firstUid, new EntityCoordinates(gridUid, new Vector2(Noise.X + 0.5f, Noise.Y + 0.5f)));
+            for (var i = 0; i < 5; i++)
+            {
+                tacticsSystem.UpdateNow();
+            }
+
+            var hunt = tacticsSystem.GetHunt(squadUid);
+            Assert.That(hunt is { Phase: NpcHuntPhase.Exhausted, ShutOut: true }, $"the test needs it shut out from that far off: {hunt?.Phase}");
+            Assert.That(hunt!.ShutOutCoordinates, Is.Not.Null, "it should be given somewhere to hold, not hold where it stands");
+
+            // Just outside the west wall, the side nearest them, not anywhere near where they are.
+            var spot = transformSystem.ToMapCoordinates(hunt.ShutOutCoordinates!.Value).Position;
+            var room = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, new Vector2(3.5f, 2.5f))).Position;
+            Assert.That(Vector2.Distance(spot, room), Is.LessThan(7f), $"it should hold just outside the room: {spot}");
+            Assert.That(entManager.System<NpcSquadTacticsSystem>().TryGetOrder(firstUid, out var order) && order.Kind == NpcOrderKind.HoldArea,
+                "and be sent there");
+            Assert.That(order.Coordinates, Is.EqualTo(hunt.ShutOutCoordinates.Value));
+        });
+    }
+
     [Test]
     public async Task ScoringKeepsAwayFromARecentBreach()
     {

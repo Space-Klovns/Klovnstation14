@@ -426,6 +426,51 @@ public sealed partial class NpcSquadTacticsSystem
         return false;
     }
 
+    /// <summary>
+    ///     Floor just outside the room, past one of its walls, nearest <paramref name="walkerUid"/> in a straight line: worked out
+    ///         from the room's side, so it does not matter how far off the walker is. For <see cref="TryFindNearestOutside"/> to
+    ///         fall back on, which only looks within a walk of the walker.
+    /// </summary>
+    private bool TryFindOutsideFromRoom(NpcHunt hunt, EntityUid walkerUid, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+
+        if (hunt.RoomTiles.Count == 0 || !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
+            return false;
+
+        var walkerPosition = _transformSystem.GetWorldPosition(walkerUid);
+        var worldMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
+        var bestDistance = float.MaxValue;
+        var found = false;
+
+        foreach (var roomTile in hunt.RoomTiles)
+        {
+            foreach (var offset in ChargeSiteOffsets)
+            {
+                var wallTile = roomTile + offset;
+                var outsideTile = wallTile + offset;
+
+                if (hunt.RoomTiles.Contains(wallTile) ||
+                    hunt.RoomTiles.Contains(outsideTile) ||
+                    GetWallOn(grid, outsideTile) != null ||
+                    !_mapSystem.TryGetTile(grid.Comp, outsideTile, out var gridTile) ||
+                    _turfSystem.IsSpace(gridTile))
+                    continue;
+
+                var outsidePosition = Vector2.Transform(_mapSystem.TileCenterToVector(grid, outsideTile), worldMatrix);
+                var distance = (outsidePosition - walkerPosition).LengthSquared();
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                coordinates = GetTileCoordinates(grid.Owner, outsideTile);
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
     private bool IsAnyMemberOn(Entity<MapGridComponent> grid, Vector2i tile)
     {
         foreach (var memberUid in _members)
