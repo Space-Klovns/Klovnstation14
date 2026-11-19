@@ -68,7 +68,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     {
         base.Initialize();
 
-        Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _healAttackerDamageOnly = value, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _medicalAttackerDamageOnly = value, invokeImmediately: true);
     }
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)

@@ -14,44 +14,40 @@ public sealed partial class KsFieldCommanderRuleSystem
     private const string HealReason = "ks-fieldcommander-points-heal";
 
     /// <summary>
-    ///     <see cref="KsCCVars.FieldCommanderHealAttackerDamageOnly"/>: whether healing pays only for the attackers' share
-    ///         of the damage (<see cref="GetAttackerShare"/>), rather than for everything but the defenders'.
+    ///     <see cref="KsCCVars.FieldCommanderHealAttackerDamageOnly"/>: whether healing and reviving pay only for the
+    ///         attackers' share of the damage, rather than for everything but the defenders' (<see cref="GetPaidShare"/>).
     /// </summary>
-    private bool _healAttackerDamageOnly;
+    private bool _medicalAttackerDamageOnly;
 
     /// <summary>
-    ///     How much of everything a defender took was <paramref name="userId"/>'s doing, 0 to 1.
+    ///     How much of undoing a defender's damage a medic is paid for, 0 to 1, from what their ledger or death record
+    ///         holds. Everything but the blamed defenders' share; or, with <paramref name="attackerDamageOnly"/>, only the
+    ///         attackers' share, so that a wound from barbed wire, a fall or a defender pays nothing.
     /// </summary>
-    public static float GetBlameShare(Dictionary<NetUserId, float> damage, float otherDamage, NetUserId userId)
+    /// <param name="defenderDamage">What each defender dealt them.</param>
+    /// <param name="otherDamage">Everything else they took, the attackers' damage included.</param>
+    /// <param name="attackerDamage">The part of <paramref name="otherDamage"/> the attackers dealt.</param>
+    /// <param name="blamedUserId">
+    ///     The one defender whose damage is taken off, the medic; null for every defender's. Unused with
+    ///         <paramref name="attackerDamageOnly"/>, where no defender's damage pays anyway.
+    /// </param>
+    public static float GetPaidShare(Dictionary<NetUserId, float> defenderDamage,
+        float otherDamage,
+        float attackerDamage,
+        NetUserId? blamedUserId,
+        bool attackerDamageOnly)
     {
-        var total = otherDamage;
-        foreach (var dealt in damage.Values)
-            total += dealt;
+        var allDefenderDamage = GetDefenderDamage(defenderDamage);
+        var total = allDefenderDamage + otherDamage;
+
+        if (attackerDamageOnly)
+            return total <= 0f ? 0f : Math.Clamp(attackerDamage / total, 0f, 1f);
 
         if (total <= 0f)
-            return 0f;
+            return 1f;
 
-        return Math.Clamp(damage.GetValueOrDefault(userId) / total, 0f, 1f);
-    }
-
-    /// <summary>
-    ///     How much of everything a defender took was any defender's doing, 0 to 1.
-    /// </summary>
-    public static float GetDefenderShare(KsFieldCommanderDamageLedgerComponent ledgerComponent)
-    {
-        var defenderDamage = GetDefenderDamage(ledgerComponent);
-        var total = defenderDamage + ledgerComponent.OtherDamage;
-        return total <= 0f ? 0f : Math.Clamp(defenderDamage / total, 0f, 1f);
-    }
-
-    /// <summary>
-    ///     How much of everything a defender took was the commander's side's doing, 0 to 1: not the defenders', the
-    ///         world's or their own.
-    /// </summary>
-    public static float GetAttackerShare(KsFieldCommanderDamageLedgerComponent ledgerComponent)
-    {
-        var total = GetDefenderDamage(ledgerComponent) + ledgerComponent.OtherDamage;
-        return total <= 0f ? 0f : Math.Clamp(ledgerComponent.AttackerDamage / total, 0f, 1f);
+        var blamed = blamedUserId is { } userId ? defenderDamage.GetValueOrDefault(userId) : allDefenderDamage;
+        return 1f - Math.Clamp(blamed / total, 0f, 1f);
     }
 
     /// <summary>
@@ -62,6 +58,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var recordComponent = EnsureComp<KsFieldCommanderDeathRecordComponent>(targetUid);
         recordComponent.Damage.Clear();
         recordComponent.OtherDamage = 0f;
+        recordComponent.AttackerDamage = 0f;
 
         if (ledgerComponent == null)
             return;
@@ -70,11 +67,12 @@ public sealed partial class KsFieldCommanderRuleSystem
             recordComponent.Damage[userId] = dealt;
 
         recordComponent.OtherDamage = ledgerComponent.OtherDamage;
+        recordComponent.AttackerDamage = ledgerComponent.AttackerDamage;
     }
 
     /// <summary>
     ///     Pays whoever brought a dead defender back (a defibrillator names its user), less their share of what killed
-    ///         them, once per <see cref="KsFieldCommanderRuleComponent.ReviveCooldown"/> for each defender. Nothing for
+    ///         them, or only for the attackers' share with <see cref="_medicalAttackerDamageOnly"/>, once per <see cref="KsFieldCommanderRuleComponent.ReviveCooldown"/> for each defender. Nothing for
     ///         bringing back oneself.
     /// </summary>
     private void RewardRevive(EntityUid targetUid, EntityUid? originUid)
@@ -98,8 +96,12 @@ public sealed partial class KsFieldCommanderRuleSystem
                 recordComponent.LastRevivePaidTime is { } paidTime && curTime - paidTime < ruleComponent.ReviveCooldown)
                 continue;
 
-            var share = GetBlameShare(recordComponent.Damage, recordComponent.OtherDamage, reviverUserId);
-            var points = (int)MathF.Round(ruleComponent.RevivePoints * (1f - share));
+            var paidShare = GetPaidShare(recordComponent.Damage,
+                recordComponent.OtherDamage,
+                recordComponent.AttackerDamage,
+                blamedUserId: reviverUserId,
+                attackerDamageOnly: _medicalAttackerDamageOnly);
+            var points = (int)MathF.Round(ruleComponent.RevivePoints * paidShare);
             recordComponent.LastRevivePaidTime = curTime;
 
             AddPoints((ruleUid, ruleComponent), session, points, ReviveReason, GetReasonName(targetUid));
@@ -108,7 +110,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     /// <summary>
     ///     Pays whoever healed a living defender for each point healed, less the defenders' share, anyone's, of the
-    ///         damage the defender has taken; or, with <see cref="_healAttackerDamageOnly"/>, times the attackers' share,
+    ///         damage the defender has taken; or, with <see cref="_medicalAttackerDamageOnly"/>, times the attackers' share,
     ///         so that a wound from barbed wire or a fall pays nothing. Nothing for healing oneself, or the dead.
     /// </summary>
     private void RewardHealing(EntityUid targetUid, DamageChangedEvent args, KsFieldCommanderDamageLedgerComponent? ledgerComponent)
@@ -134,11 +136,13 @@ public sealed partial class KsFieldCommanderRuleSystem
         // Every defender's share, not only the healer's: otherwise one shoots a defender and another heals them, and
         //      they take turns. Paying only for the attackers' share shuts out the world's too: a defender walks into
         //      barbed wire, and another heals them.
-        float paidShare;
-        if (_healAttackerDamageOnly)
-            paidShare = ledgerComponent == null ? 0f : GetAttackerShare(ledgerComponent);
-        else
-            paidShare = ledgerComponent == null ? 1f : 1f - GetDefenderShare(ledgerComponent);
+        var paidShare = ledgerComponent == null
+            ? GetPaidShare([], 0f, 0f, blamedUserId: null, attackerDamageOnly: _medicalAttackerDamageOnly)
+            : GetPaidShare(ledgerComponent.Damage,
+                ledgerComponent.OtherDamage,
+                ledgerComponent.AttackerDamage,
+                blamedUserId: null,
+                attackerDamageOnly: _medicalAttackerDamageOnly);
 
         var query = QueryActiveRules();
         while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))

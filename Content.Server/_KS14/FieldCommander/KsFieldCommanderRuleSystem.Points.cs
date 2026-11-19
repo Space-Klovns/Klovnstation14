@@ -232,8 +232,13 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     private static float GetDefenderDamage(KsFieldCommanderDamageLedgerComponent ledgerComponent)
     {
+        return GetDefenderDamage(ledgerComponent.Damage);
+    }
+
+    private static float GetDefenderDamage(Dictionary<NetUserId, float> defenderDamage)
+    {
         var total = 0f;
-        foreach (var damage in ledgerComponent.Damage.Values)
+        foreach (var damage in defenderDamage.Values)
         {
             total += damage;
         }

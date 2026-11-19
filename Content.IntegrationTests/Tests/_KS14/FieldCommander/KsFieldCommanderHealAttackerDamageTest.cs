@@ -6,6 +6,8 @@ using Content.Shared._KS14.CCVar;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -14,8 +16,9 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
 
 /// <summary>
-///     With <see cref="KsCCVars.FieldCommanderHealAttackerDamageOnly"/>, healing another defender pays only for the share
-///         of their wounds the commander's side dealt: not the world's (barbed wire, a fall), nor a defender's.
+///     With <see cref="KsCCVars.FieldCommanderHealAttackerDamageOnly"/>, healing or reviving another defender pays only
+///         for the share of their wounds the commander's side dealt: not the world's (barbed wire, a fall), nor a
+///         defender's. Off, both pay as they always did.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsFieldCommanderRuleSystem))]
@@ -39,7 +42,7 @@ public sealed class KsFieldCommanderHealAttackerDamageTest : GameTest
   - type: MobThresholds
     thresholds:
       0: Alive
-      1000: Dead
+      100: Dead
   - type: Damageable
     damageContainer: Biological
   - type: Injurable
@@ -62,6 +65,8 @@ public sealed class KsFieldCommanderHealAttackerDamageTest : GameTest
     faction: Syndicate
     defenderFaction: Nanotrasen
     healPointsPerDamage: 0.5
+    revivePoints: 40
+    reviveCooldown: 600
     phases:
     - name: ks-fieldcommander-phase-landfall
       start: 1000
@@ -182,6 +187,91 @@ public sealed class KsFieldCommanderHealAttackerDamageTest : GameTest
             Assert.That(expected, Is.GreaterThan(0), "precondition: the heal is worth something");
             Assert.That(GetPoints(ruleUid), Is.EqualTo(expected),
                 "healing should pay only the attackers' share of the patient's damage, not the world's or a defender's");
+        });
+    }
+
+    /// <summary>
+    ///     Kills the patient with <paramref name="kills"/>, each an amount and who dealt it, brings them back as the
+    ///         medic, and returns what the revive paid.
+    /// </summary>
+    private int KillAndRevive(EntityUid ruleUid, EntityUid medic, EntityUid patient, params (float Amount, EntityUid? Origin)[] kills)
+    {
+        var mobStateSystem = Pair.Server.System<MobStateSystem>();
+
+        foreach (var (amount, origin) in kills)
+            Damage(patient, amount, origin);
+
+        Assert.That(mobStateSystem.IsDead(patient), Is.True, "precondition: the patient died");
+        var afterDeath = GetPoints(ruleUid);
+        mobStateSystem.ChangeMobState(patient, MobState.Critical, origin: medic);
+        return GetPoints(ruleUid) - afterDeath;
+    }
+
+    /// <summary>
+    ///     A defender killed by the world, brought back by another: paid in full with the cvar off, as it always was,
+    ///         and not at all with it on.
+    /// </summary>
+    [Test]
+    public async Task ReviveAfterEnvironmentalDeathPaysOnlyWithTheCvarOff([Values] bool attackerDamageOnly)
+    {
+        var server = Pair.Server;
+        var (ruleUid, medic, patient, _) = await SetUp(attackerDamageOnly);
+
+        await server.WaitAssertion(() =>
+        {
+            var component = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var paid = KillAndRevive(ruleUid, medic, patient, (100f, null));
+
+            Assert.That(component.RevivePoints, Is.GreaterThan(0), "precondition: a revive is worth something");
+            if (attackerDamageOnly)
+                Assert.That(paid, Is.EqualTo(0), "reviving someone the world killed should pay nothing when only the attackers' damage pays");
+            else
+                Assert.That(paid, Is.EqualTo(component.RevivePoints), "with the cvar off, reviving someone the world killed should pay in full, as before");
+        });
+    }
+
+    /// <summary>
+    ///     A defender killed by the commander's side, brought back by another, pays in full with the cvar on.
+    /// </summary>
+    [Test]
+    public async Task ReviveAfterAttackerDeathPaysInFull()
+    {
+        var server = Pair.Server;
+        var (ruleUid, medic, patient, attacker) = await SetUp(attackerDamageOnly: true);
+
+        await server.WaitAssertion(() =>
+        {
+            var component = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var paid = KillAndRevive(ruleUid, medic, patient, (100f, attacker));
+
+            Assert.That(component.RevivePoints, Is.GreaterThan(0), "precondition: a revive is worth something");
+            Assert.That(paid, Is.EqualTo(component.RevivePoints), "reviving someone the attackers killed should pay in full");
+        });
+    }
+
+    /// <summary>
+    ///     A defender killed by the attackers, the world and another defender together, brought back with the cvar on:
+    ///         only the attackers' share pays.
+    /// </summary>
+    [Test]
+    public async Task ReviveAfterMixedDeathPaysItsAttackerShare()
+    {
+        var server = Pair.Server;
+        var (ruleUid, medic, patient, attacker) = await SetUp(attackerDamageOnly: true);
+        var otherSession = await server.AddDummySession();
+
+        await server.WaitAssertion(() =>
+        {
+            var component = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+
+            var shooterUid = server.EntMan.SpawnAtPosition(_defender, server.EntMan.GetComponent<TransformComponent>(patient).Coordinates);
+            server.PlayerMan.SetAttachedEntity(otherSession, shooterUid);
+
+            var paid = KillAndRevive(ruleUid, medic, patient, (25f, null), (25f, shooterUid), (50f, attacker));
+            var expected = (int)MathF.Round(component.RevivePoints * (50f / 100f));
+            Assert.That(expected, Is.GreaterThan(0), "precondition: a revive is worth something");
+            Assert.That(paid, Is.EqualTo(expected),
+                "reviving should pay only the attackers' share of what killed them, not the world's or a defender's");
         });
     }
 }

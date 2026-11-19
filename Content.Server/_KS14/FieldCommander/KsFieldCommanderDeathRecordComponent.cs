@@ -23,6 +23,13 @@ public sealed partial class KsFieldCommanderDeathRecordComponent : Component
     public float OtherDamage;
 
     /// <summary>
+    ///     The part of <see cref="OtherDamage"/> the commander's side dealt
+    ///         (<see cref="KsFieldCommanderDamageLedgerComponent.AttackerDamage"/>).
+    /// </summary>
+    [ViewVariables]
+    public float AttackerDamage;
+
+    /// <summary>
     ///     When a revive of them was last paid for, if ever.
     /// </summary>
     [ViewVariables, AutoPausedField]
