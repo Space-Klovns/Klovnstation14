@@ -38,7 +38,7 @@
     useDelay: 45
     icon:
       sprite: _KS14/Interface/Perks/perks.rsi
-      state: support
+      state: rally
   - type: InstantAction
     event: !type:KsRallyActionEvent
 
@@ -52,7 +52,7 @@
     useDelay: 20
     icon:
       sprite: _KS14/Interface/Perks/perks.rsi
-      state: support
+      state: mark_target
   - type: TargetAction
     range: 20
     checkCanAccess: false

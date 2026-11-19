@@ -11,7 +11,7 @@ while it holds the perk. Field Commander defenders pick one per round; the frame
 | Picker: `KsPerkChoiceComponent`, `SharedKsPerkChoiceSystem`, `KsPerkChosenEvent` | `Content.Shared/_KS14/Perks/` |
 | Picker window and BUI | `Content.Client/_KS14/Perks/UI/` |
 | Field Commander storage, `ks_fcperk` | `Content.Server/_KS14/FieldCommander/*Perks.cs`, `KsFieldCommanderPerkCommand.cs` |
-| Perks, alerts, icons | `Resources/Prototypes/_KS14/Perks/perks.yml`, `Resources/Prototypes/_KS14/Alerts/perks.yml`, `Resources/Textures/_KS14/Interface/Perks/perks.rsi` (placeholders) |
+| Perks, alerts, icons | `Resources/Prototypes/_KS14/Perks/perks.yml`, `Resources/Prototypes/_KS14/Alerts/perks.yml`, `Resources/Textures/_KS14/Interface/Perks/perks.rsi` |
 | Text | `Resources/Locale/{en-US,ru-RU}/_KS14/perks/perks.ftl` |
 | Tests | `Content.IntegrationTests/Tests/_KS14/Perks/` (`KsPerkTest`, `KsPerkDamageTest`, `KsPerkTankTest`, `KsPerkHealingTest`, `KsPerkSupportTest`), `Companions/`, `MedicalBeam/` |
 

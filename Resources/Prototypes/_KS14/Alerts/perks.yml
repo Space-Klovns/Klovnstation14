@@ -37,6 +37,6 @@
   id: KsRallied
   icons:
   - sprite: _KS14/Interface/Perks/perks.rsi
-    state: support
+    state: rallied
   name: ks-perk-support-rallied-alert-name
   description: ks-perk-support-rallied-alert-desc
