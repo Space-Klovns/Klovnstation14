@@ -36,6 +36,8 @@ namespace Content.IntegrationTests.Tests._KS14.Perks;
 [TestOf(typeof(KsCompanionSystem))]
 [TestOf(typeof(KsRallySystem))]
 [TestOf(typeof(KsRallyBuffSystem))]
+[TestOf(typeof(KsMarkTargetSystem))]
+[TestOf(typeof(KsMarkedTargetSystem))]
 public sealed class KsPerkSupportTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Dirty = true };
@@ -48,6 +50,7 @@ public sealed class KsPerkSupportTest : GameTest
     private readonly ProtoId<KsPerkPrototype> _ammoDropPerk = "KsTestPerkSupportAmmoDrop";
     private readonly ProtoId<KsPerkPrototype> _turretPerk = "KsTestPerkSupportShoulderTurret";
     private readonly ProtoId<KsPerkPrototype> _rallyPerk = "KsTestPerkSupportRally";
+    private readonly ProtoId<KsPerkPrototype> _markPerk = "KsTestPerkSupportMark";
 
     private static readonly ProtoId<DamageTypePrototype> Blunt = "Blunt";
 
@@ -194,6 +197,16 @@ public sealed class KsPerkSupportTest : GameTest
     zone: KsTestPerkSupportRallyZone
 
 - type: ksPerk
+  id: KsTestPerkSupportMark
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+  icon: { sprite: _KS14/Interface/Perks/perks.rsi, state: support }
+  components:
+  - type: KsMarkTargetAbility
+    duration: 1
+    damageTakenMultiplier: 1.5
+
+- type: ksPerk
   id: KsTestPerkSupportShoulderTurret
   name: ks-perk-support-name
   description: ks-perk-support-desc
@@ -287,10 +300,10 @@ public sealed class KsPerkSupportTest : GameTest
         return bodyUid;
     }
 
-    private void Hurt(EntityUid uid, float amount, EntityUid? origin)
+    private void Hurt(EntityUid uid, float amount, EntityUid? origin, bool ignoreResistances = true)
     {
         var damage = new DamageSpecifier(Pair.Server.ProtoMan.Index(Blunt), FixedPoint2.New(amount));
-        Pair.Server.System<DamageableSystem>().TryChangeDamage(uid, damage, ignoreResistances: true, origin: origin);
+        Pair.Server.System<DamageableSystem>().TryChangeDamage(uid, damage, ignoreResistances: ignoreResistances, origin: origin);
     }
 
     private List<EntityUid> Pickups()
@@ -569,6 +582,57 @@ public sealed class KsPerkSupportTest : GameTest
             Assert.That(entMan.HasComponent<KsRallyBuffComponent>(friendUid), Is.False, "the rally should wear off");
             Assert.That(FireRate(friendUid), Is.EqualTo(baseFireRate).Within(0.001f), "the gun should be back to its own rate");
             Assert.That(WalkModifier(friendUid), Is.EqualTo(1f).Within(0.001f), "the friend should be back to their own speed");
+        });
+    }
+
+    /// <summary>
+    ///     Only a living enemy can be marked. Marked, it takes more damage and the marker's side sees the mark; the foe's
+    ///         side doesn't. The mark fades after its time, and the damage is back to normal.
+    /// </summary>
+    [Test]
+    public async Task MarkedEnemyTakesMoreDamageAndIsSeenByTheMarkersSide()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var damageableSystem = server.System<DamageableSystem>();
+        var markedSystem = server.System<KsMarkedTargetSystem>();
+        KsMarkTargetAbilityComponent ability = default!;
+        EntityUid markerUid = default, foeUid = default;
+        const float hit = 10f;
+
+        await server.WaitAssertion(() =>
+        {
+            markerUid = SpawnBody(_body, testMap, 0.5f);
+            Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(markerUid, _markPerk), "the test perk should be given");
+            ability = entMan.GetComponent<KsMarkTargetAbilityComponent>(markerUid);
+            var friendUid = SpawnBody(_body, testMap, 1.5f);
+            foeUid = SpawnBody(_foe, testMap, 3.5f);
+            var otherFoeUid = SpawnBody(_foe, testMap, 4.5f);
+            var markSystem = server.System<KsMarkTargetSystem>();
+
+            Assert.That(markSystem.TryMark((markerUid, ability), friendUid), Is.False, "a friend should not be markable");
+            Assert.That(markSystem.TryMark((markerUid, ability), markerUid), Is.False, "the marker should not mark itself");
+            Assert.That(markSystem.TryMark((markerUid, ability), foeUid), "an enemy should be marked");
+
+            Hurt(foeUid, hit, origin: markerUid, ignoreResistances: false);
+            Hurt(otherFoeUid, hit, origin: markerUid, ignoreResistances: false);
+            Assert.That(damageableSystem.GetTotalDamage(foeUid), Is.EqualTo(FixedPoint2.New(hit * ability.DamageTakenMultiplier)), "the marked enemy should take more damage");
+            Assert.That(damageableSystem.GetTotalDamage(otherFoeUid), Is.EqualTo(FixedPoint2.New(hit)), "control: an unmarked enemy takes the hit as it is");
+
+            var marked = entMan.GetComponent<KsMarkedTargetComponent>(foeUid);
+            Assert.That(markedSystem.CanSeeMark(marked, markerUid), "the marker should see the mark");
+            Assert.That(markedSystem.CanSeeMark(marked, friendUid), "the marker's side should see the mark");
+            Assert.That(markedSystem.CanSeeMark(marked, otherFoeUid), Is.False, "the enemy's side should not see the mark");
+        });
+
+        await Pair.RunTicksSync(Ticks((float)ability.Duration.TotalSeconds + 0.2f));
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.HasComponent<KsMarkedTargetComponent>(foeUid), Is.False, "the mark should fade");
+            var before = damageableSystem.GetTotalDamage(foeUid);
+            Hurt(foeUid, hit, origin: markerUid, ignoreResistances: false);
+            Assert.That(damageableSystem.GetTotalDamage(foeUid) - before, Is.EqualTo(FixedPoint2.New(hit)), "an unmarked enemy takes the hit as it is");
         });
     }
 }

@@ -126,5 +126,9 @@
     damageMultiplier: 1.2
     zone: KsRallyZone
     alert: KsRallied
+  - type: KsMarkTargetAbility
+    duration: 8
+    damageTakenMultiplier: 1.2
   actions:
   - ActionKsRally
+  - ActionKsMarkTarget

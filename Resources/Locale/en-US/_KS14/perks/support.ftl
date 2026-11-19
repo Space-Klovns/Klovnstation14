@@ -5,3 +5,5 @@ ks-perk-support-rallied = Rallied! Faster, quicker on the trigger, hitting harde
 ks-perk-support-rally-ended = The rally wears off.
 ks-perk-support-rallied-alert-name = Rallied
 ks-perk-support-rallied-alert-desc = You move faster, fire faster and your shots hit harder until the rally wears off.
+ks-perk-support-mark-invalid = You can only mark a living enemy.
+ks-perk-support-marked = { CAPITALIZE(THE($target)) } is marked!

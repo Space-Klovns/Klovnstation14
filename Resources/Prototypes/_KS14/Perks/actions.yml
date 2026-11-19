@@ -41,3 +41,24 @@
       state: support
   - type: InstantAction
     event: !type:KsRallyActionEvent
+
+- type: entity
+  id: ActionKsMarkTarget
+  name: Mark Target
+  description: Mark an enemy for your side to see. It takes more damage from everything until the mark fades.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 20
+    icon:
+      sprite: _KS14/Interface/Perks/perks.rsi
+      state: support
+  - type: TargetAction
+    range: 20
+    checkCanAccess: false
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:KsMarkTargetActionEvent

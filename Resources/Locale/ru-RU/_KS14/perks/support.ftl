@@ -5,3 +5,5 @@ ks-perk-support-rallied = Воодушевление! Вы быстрее, ст�
 ks-perk-support-rally-ended = Воодушевление проходит.
 ks-perk-support-rallied-alert-name = Воодушевление
 ks-perk-support-rallied-alert-desc = Вы двигаетесь и стреляете быстрее, а ваши выстрелы бьют сильнее, пока не пройдёт воодушевление.
+ks-perk-support-mark-invalid = Отметить можно только живого врага.
+ks-perk-support-marked = { CAPITALIZE($target) }: цель отмечена!

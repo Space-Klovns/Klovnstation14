@@ -9,3 +9,7 @@ ent-ActionKsDrawFire = Draw Fire
 # Resources\Prototypes\_KS14\Perks\actions.yml
 ent-ActionKsRally = Rally
     .desc = Mark the ground around you. Moments later every friend inside moves, fires and hits harder for a while.
+
+# Resources\Prototypes\_KS14\Perks\actions.yml
+ent-ActionKsMarkTarget = Mark Target
+    .desc = Mark an enemy for your side to see. It takes more damage from everything until the mark fades.
