@@ -28,6 +28,7 @@
   id: KsBodyHeadIndomitableWill
   group: Head
   level: 4
+  major: true
   name: body-power-head-indomitable-will-name
   description: body-power-head-indomitable-will-desc
   components:
@@ -62,6 +63,7 @@
   id: KsBodyHeadBattleTrance
   group: Head
   level: 8
+  major: true
   name: body-power-head-battle-trance-name
   description: body-power-head-battle-trance-desc
   staminaMultiplier: 0.5
@@ -70,6 +72,7 @@
   id: KsBodyHeadPrimordialWill
   group: Head
   level: 9
+  major: true
   name: body-power-head-primordial-will-name
   description: body-power-head-primordial-will-desc
   healthBonus: 20
@@ -131,6 +134,7 @@
   id: KsBodyChestBatonproof
   group: Chest
   level: 6
+  major: true
   name: body-power-chest-batonproof-name
   description: body-power-chest-batonproof-desc
   damageMultipliers:
@@ -150,6 +154,7 @@
   id: KsBodyChestDiamondHide
   group: Chest
   level: 8
+  major: true
   name: body-power-chest-diamond-hide-name
   description: body-power-chest-diamond-hide-desc
   damageMultipliers:
@@ -164,6 +169,7 @@
   id: KsBodyChestNeverWounded
   group: Chest
   level: 9
+  major: true
   name: body-power-chest-never-wounded-name
   description: body-power-chest-never-wounded-desc
   damageMultipliers:
@@ -216,6 +222,7 @@
   id: KsBodyArmsTopplingBlows
   group: Arms
   level: 6
+  major: true
   name: body-power-arms-toppling-blows-name
   description: body-power-arms-toppling-blows-desc
   punchKnockdownChance: 0.15
@@ -224,6 +231,7 @@
   id: KsBodyArmsThunderFists
   group: Arms
   level: 7
+  major: true
   name: body-power-arms-thunder-fists-name
   description: body-power-arms-thunder-fists-desc
   punchThrowChance: 0.15
@@ -232,6 +240,7 @@
   id: KsBodyArmsBreakingFists
   group: Arms
   level: 8
+  major: true
   name: body-power-arms-breaking-fists-name
   description: body-power-arms-breaking-fists-desc
   punchStructuralDamage: 40
@@ -240,6 +249,7 @@
   id: KsBodyArmsMountainBreakingFists
   group: Arms
   level: 9
+  major: true
   name: body-power-arms-mountain-breaking-fists-name
   description: body-power-arms-mountain-breaking-fists-desc
   punchStructuralDamage: 80
@@ -308,6 +318,7 @@
   id: KsBodyLegsUnslippable
   group: Legs
   level: 8
+  major: true
   name: body-power-legs-unslippable-name
   description: body-power-legs-unslippable-desc
   components:
@@ -317,6 +328,7 @@
   id: KsBodyLegsThousandLeagueLegs
   group: Legs
   level: 9
+  major: true
   name: body-power-legs-thousand-league-legs-name
   description: body-power-legs-thousand-league-legs-desc
   speedMultiplier: 1.22
@@ -325,6 +337,7 @@
   id: KsBodyEyesClearEyes
   group: Eyes
   level: 3
+  major: true
   name: body-power-eyes-clear-eyes-name
   description: body-power-eyes-clear-eyes-desc
   components:
@@ -334,6 +347,7 @@
   id: KsBodyEyesUnblinkingEyes
   group: Eyes
   level: 6
+  major: true
   name: body-power-eyes-unblinking-eyes-name
   description: body-power-eyes-unblinking-eyes-desc
   components:
@@ -348,6 +362,7 @@
   id: KsBodyEyesHunterSSight
   group: Eyes
   level: 7
+  major: true
   name: body-power-eyes-hunter-s-sight-name
   description: body-power-eyes-hunter-s-sight-desc
   replaceComponents: true
@@ -363,6 +378,7 @@
   id: KsBodyEyesHealerSEyes
   group: Eyes
   level: 1
+  major: true
   name: body-power-eyes-healer-s-eyes-name
   description: body-power-eyes-healer-s-eyes-desc
   components:
@@ -383,6 +399,7 @@
   id: KsBodyEyesHeatSight
   group: Eyes
   level: 5
+  major: true
   name: body-power-eyes-heat-sight-name
   description: body-power-eyes-heat-sight-desc
   components:
@@ -460,6 +477,7 @@
   id: KsBodyEarsThunderproof
   group: Ears
   level: 6
+  major: true
   name: body-power-ears-thunderproof-name
   description: body-power-ears-thunderproof-desc
   components:
@@ -469,6 +487,7 @@
   id: KsBodyEarsInnerCompass
   group: Ears
   level: 7
+  major: true
   name: body-power-ears-inner-compass-name
   description: body-power-ears-inner-compass-desc
   components:
@@ -527,6 +546,7 @@
   id: KsBodyHeartCrimsonTide
   group: Heart
   level: 5
+  major: true
   name: body-power-heart-crimson-tide-name
   description: body-power-heart-crimson-tide-desc
   regenPerSecond: 0.15
@@ -552,6 +572,7 @@
   id: KsBodyHeartUndyingPulse
   group: Heart
   level: 8
+  major: true
   name: body-power-heart-undying-pulse-name
   description: body-power-heart-undying-pulse-desc
   regenPerSecond: 0.4
@@ -560,6 +581,7 @@
   id: KsBodyHeartEternalHeart
   group: Heart
   level: 9
+  major: true
   name: body-power-heart-eternal-heart-name
   description: body-power-heart-eternal-heart-desc
   eternalHeart: true
@@ -585,6 +607,7 @@
   id: KsBodyLungsCleanBreath
   group: Lungs
   level: 3
+  major: true
   name: body-power-lungs-clean-breath-name
   description: body-power-lungs-clean-breath-desc
   components:
@@ -594,6 +617,7 @@
   id: KsBodyLungsCrushingDepthLungs
   group: Lungs
   level: 4
+  major: true
   name: body-power-lungs-crushing-depth-lungs-name
   description: body-power-lungs-crushing-depth-lungs-desc
   components:
@@ -637,6 +661,7 @@
   id: KsBodyLungsBreathlessBody
   group: Lungs
   level: 9
+  major: true
   name: body-power-lungs-breathless-body-name
   description: body-power-lungs-breathless-body-desc
   damageMultipliers:
@@ -705,6 +730,7 @@
   id: KsBodyLiverRadiantBlood
   group: Liver
   level: 7
+  major: true
   name: body-power-liver-radiant-blood-name
   description: body-power-liver-radiant-blood-desc
   damageMultipliers:
@@ -722,6 +748,7 @@
   id: KsBodyLiverPoisonImmunity
   group: Liver
   level: 9
+  major: true
   name: body-power-liver-poison-immunity-name
   description: body-power-liver-poison-immunity-desc
   damageMultipliers:
@@ -795,6 +822,7 @@
   id: KsBodyStomachBigu
   group: Stomach
   level: 9
+  major: true
   name: body-power-stomach-bigu-name
   description: body-power-stomach-bigu-desc
   hungerMultiplier: 0

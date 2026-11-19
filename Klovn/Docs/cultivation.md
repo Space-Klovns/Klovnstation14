@@ -323,6 +323,10 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
 - **Mortals stop at Copper Skin.** The Copper Skin Primer starts anyone on the path; the Body Molding Art commits
   them to it, which closes the way of qi. Qi cultivators can read neither.
 - **Powers:** every part has nine `bodyTemperingPower` prototypes, one per level, in `Body/powers.yml`.
+  Powers marked `major: true` change how you play (new senses, immunities, new kinds of blow). A body cultivator
+  examining themselves gets a "Body powers" button that opens `BodyPowersWindow` (client only): each part with its
+  level, progress to the next, its powers as short names (major ones in bold gold, descriptions on hover) and the next
+  power greyed out.
   `SharedBodyCultivationSystem.Recalculate` combines everything unlocked into the component's modifiers. For
   damage, stamina and hunger the best (lowest) multiplier wins; for speed the best (highest); regeneration, health
   and punch bonuses add up. Health bonuses are applied by raising the critical and dead thresholds. Components a

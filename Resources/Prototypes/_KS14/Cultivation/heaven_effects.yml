@@ -132,7 +132,8 @@
     layers:
     - state: ascend_pillar
       shader: unshaded
-      offset: 0, 5
+      # Its base glow sits 16px above the canvas bottom; 4.6 tiles up puts it at a character's feet, not their middle.
+      offset: 0, 4.6
   - type: PointLight
     color: "#ffc24a"
     radius: 9

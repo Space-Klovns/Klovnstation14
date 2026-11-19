@@ -36,7 +36,6 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     private static readonly string[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
 
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private Content.Shared.Examine.ExamineSystemShared _examineSystem = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
@@ -706,28 +705,6 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     /// <summary>
     ///     A button in your own examine box that opens the list of every power your body has unlocked.
     /// </summary>
-    [SubscribeLocalEvent]
-    private void OnExamineVerbs(Entity<BodyCultivatorComponent> entity, ref GetVerbsEvent<ExamineVerb> args)
-    {
-        if (args.User != entity.Owner || !entity.Comp.Committed || entity.Comp.Powers.Count == 0)
-            return;
-
-        var message = new FormattedMessage();
-        message.AddMarkupOrThrow(Loc.GetString("body-powers-examine-header"));
-        foreach (var powerId in entity.Comp.Powers)
-        {
-            if (!ProtoMan.TryIndex<BodyTemperingPowerPrototype>(powerId, out var power))
-                continue;
-
-            message.PushNewline();
-            message.AddMarkupOrThrow(Loc.GetString("body-cultivation-self-power", ("power", Loc.GetString(power.Name)),
-                ("description", Loc.GetString(power.Description))));
-        }
-
-        _examineSystem.AddDetailedExamineVerb(args, entity.Comp, message, Loc.GetString("body-powers-examine-verb"),
-            "/Textures/Interface/VerbIcons/rejuvenate.svg.192dpi.png", Loc.GetString("body-powers-examine-verb-message"));
-    }
-
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<BodyCultivatorComponent> entity, ref ComponentShutdown args)
     {

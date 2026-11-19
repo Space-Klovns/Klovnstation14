@@ -43,6 +43,13 @@ public sealed partial class BodyTemperingPowerPrototype : IPrototype
     public LocId Description;
 
     /// <summary>
+    ///     A power that changes how you play (a new sense, an immunity, a new kind of blow) rather than a small number.
+    ///         The body powers window highlights these.
+    /// </summary>
+    [DataField]
+    public bool Major;
+
+    /// <summary>
     ///     Damage type -> multiplier on damage taken.
     /// </summary>
     [DataField]

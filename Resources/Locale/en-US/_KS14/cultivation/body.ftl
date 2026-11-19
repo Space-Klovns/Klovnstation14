@@ -101,10 +101,16 @@ body-art-vajra = Vajra Golden Body
 body-art-vajra-on = {CAPITALIZE(THE($user))}'s skin turns to temple gold!
 body-art-heaven-quake = Heaven-Shaking Quake
 body-art-primordial-roar = Primordial Roar
-body-cultivation-self = [color=#d8b46a]Body Molding Art:[/color] {$stage}, {$tempering} tempering banked, {$count} powers unlocked (see the button below).
-body-cultivation-self-power = • [bold]{$power}:[/bold] {$description}
+body-cultivation-self = [color=#d8b46a]Body Molding Art:[/color] {$stage}, {$tempering} tempering banked, {$count} powers unlocked (open "Body powers" below).
 body-stage-none = not yet through the first stage
-body-powers-examine-header = [bold]Your body's powers[/bold]
 body-powers-examine-verb = Body powers
 body-powers-examine-verb-message = See every power your tempered body has unlocked.
 body-tempering-defeat = Beating {THE($victim)} down tempers your body: +{$amount} tempering.
+body-powers-window-title = Your Tempered Body
+body-powers-window-header = [bold]Stage {$stage}: {$stageName}[/bold]   [color=#d8b46a]{$tempering} / {$cap} tempering banked[/color]
+body-powers-window-hint = Gold powers change how you fight. Hover a power to see what it does.
+body-powers-window-level = level {$level}/{$max}
+body-powers-window-progress = {$progress} / {$cost} towards the next level
+body-powers-window-capped = Can't go higher until your next Tribulation of Flesh.
+body-powers-window-perfected = perfected
+body-powers-window-next = next: {$power} (level {$level})
