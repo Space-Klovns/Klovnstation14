@@ -398,13 +398,11 @@ public abstract partial class SharedMechSystem : EntitySystem
         if (args.OldOperator is { } oldOperator)
         {
             RemoveUser(ent, oldOperator);
-            FreeHands(oldOperator, ent); // Trauma
         }
 
         if (args.NewOperator is { } newOperator)
         {
             SetupUser(ent, newOperator, ent);
-            BlockHands(newOperator, ent); // Trauma
         }
 
         UpdateAppearance(ent);
