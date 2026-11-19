@@ -504,6 +504,9 @@ public sealed partial class NpcSquadTacticsSystem
         {
             FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
 
+            if (settings.BreachScoring)
+                OrderByBreachScore(plan, grid, settings);
+
             if (TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var roomPick))
                 return roomPick;
         }
@@ -512,6 +515,9 @@ public sealed partial class NpcSquadTacticsSystem
             return null;
 
         FindBarrierCandidates(plan, carrierUid, grid, carrierTile, maxWalk);
+
+        if (settings.BreachScoring)
+            OrderByBreachScore(plan, grid, settings);
 
         if (!TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var barrierPick))
             return null;
@@ -969,6 +975,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             charge.Phase = NpcSquadChargePhase.Blasted;
             charge.BlastedAt = now;
+            RememberBreach(charge.Pick.Site, now);
             return true;
         }
 

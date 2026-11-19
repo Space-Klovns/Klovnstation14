@@ -62,6 +62,8 @@ ks-fieldcommander-asset-sniper = Keep your heads down. Or don't, and I'll take t
 ks-fieldcommander-intel-sniper = Field Operations. Enemy sniper deployed. Watch for a red laser: once it stops blinking, it fires. It shoots from far off and backs away if you rush it.
 ks-fieldcommander-asset-juggernaut = Hear those footsteps? Run. It won't help.
 ks-fieldcommander-intel-juggernaut = Field Operations. A juggernaut is inbound: a machine gun, the bulk to soak up magazine after magazine, and it can't be stunned or tripped. It's slow, so keep your distance and pour it on.
+ks-fieldcommander-asset-breacher = Walls? How quaint.
+ks-fieldcommander-intel-breacher = Field Operations. Breachers inbound, carrying wall charges. Wherever you hole up, they'll blow a way in close to you rather than use your door. Keep watch on your walls, and listen for the charge going on.
 
 ## Objectives and the uplink
 
