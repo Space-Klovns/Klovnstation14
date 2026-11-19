@@ -124,7 +124,7 @@ body-power-eyes-stone-reading-eyes-name = Stone-Reading Eyes
 body-power-eyes-stone-reading-eyes-desc = You see blows coming: 5% less brute damage.
 
 body-power-eyes-heat-sight-name = Heat Sight
-body-power-eyes-heat-sight-desc = You see the warmth of living things through walls.
+body-power-eyes-heat-sight-desc = The warmth of living things glows through walls, up to eight tiles away.
 
 body-power-eyes-judging-eyes-name = Judging Eyes
 body-power-eyes-judging-eyes-desc = You read a person's record at a glance.

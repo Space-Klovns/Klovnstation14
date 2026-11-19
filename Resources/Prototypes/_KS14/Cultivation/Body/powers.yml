@@ -398,12 +398,12 @@
 - type: bodyTemperingPower
   id: KsBodyEyesHeatSight
   group: Eyes
-  level: 5
+  level: 8
   major: true
   name: body-power-eyes-heat-sight-name
   description: body-power-eyes-heat-sight-desc
   components:
-  - type: ThermalSight
+  - type: KsHeatSight
 
 - type: bodyTemperingPower
   id: KsBodyEyesJudgingEyes
@@ -417,7 +417,7 @@
 - type: bodyTemperingPower
   id: KsBodyEyesDiamondEyes
   group: Eyes
-  level: 8
+  level: 5
   name: body-power-eyes-diamond-eyes-name
   description: body-power-eyes-diamond-eyes-desc
   components:

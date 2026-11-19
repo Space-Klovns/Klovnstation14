@@ -306,13 +306,14 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   - living: 6 a minute;
   - beating someone into crit or death: 25 for a player, 35 for a cultivator, 5 for an animal; each victim teaches
     this once every 10 minutes.
+  Every one of these is then scaled by `TrainingRate` (2/3), since forging is quick in the wuxia gamemodes.
   All of it goes through `BodyTemperingMultiplierEvent` (sect and gamemode bonuses). Tempering banks up to
   `TemperingCapFor(stage)`: enough to forge every part through the next two levels, never less than 120. The pace is
   tuned so that in Ascension a casual body cultivator reaches stage 9 in about 25-30 minutes, about five minutes after
   a casual qi cultivator reaches Nascent Soul (375/875/1625 insight, 2750 for Ascension).
 - **Forge the Body** pours tempering into the least tempered of ten body parts (head, chest, arms, legs, eyes,
   ears, heart, lungs, liver, stomach). Raising a part to level `n` costs `2 + n`. Parts can go one level past the
-  current stage.
+  current stage. Each forging cycle pours 5 tempering and takes 5 seconds, or 2.5 in the wuxia gamemodes.
 - **Tribulation of Flesh:** once every part is past the stage, a repeating do-after cracks the bones for a while
   and then rolls readiness. Readiness is 50, +10 fed, +10 rested (exhaustion under 10), +10 in the Mountain stance,
   +10 on a meditation mat, +5 secluded, −20 badly hurt; from stage 4 each stage takes 3 off, and the step into stage 9 takes 20
@@ -323,6 +324,9 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
 - **Mortals stop at Copper Skin.** The Copper Skin Primer starts anyone on the path; the Body Molding Art commits
   them to it, which closes the way of qi. Qi cultivators can read neither.
 - **Powers:** every part has nine `bodyTemperingPower` prototypes, one per level, in `Body/powers.yml`.
+  The eyes gain night vision at 6, true night vision at 7 and Heat Sight at 8 (`KsHeatSightComponent`: living
+  creatures out of sight within 8 tiles glow through walls, drawn by `KsHeatSightOverlay` above the line-of-sight
+  shadow).
   Powers marked `major: true` change how you play (new senses, immunities, new kinds of blow). A body cultivator
   examining themselves gets a "Body powers" button that opens `BodyPowersWindow` (client only): each part with its
   level, progress to the next, its powers as short names (major ones in bold gold, descriptions on hover) and the next

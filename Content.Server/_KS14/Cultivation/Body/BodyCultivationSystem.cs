@@ -95,6 +95,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationSystem _cultivationSystem = default!;
     [Dependency] private CultivationSiteSystem _siteSystem = default!;
+    [Dependency] private WuxiaWorldRuleSystem _wuxiaWorldSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -146,7 +147,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             _bodySystem.SetNextPassiveTempering(entity.Comp, currentTime + PassiveTemperingInterval);
             // Counted as training, so the same company and gamemode bonuses that speed up fighting speed this up too.
-            _bodySystem.AddTempering(entity.AsNullable(), PassiveTempering, "living", PassiveTemperingInterval);
+            _bodySystem.AddTempering(entity.AsNullable(), PassiveTempering * TrainingRate, "living", PassiveTemperingInterval);
         }
 
         if (entity.Comp.RegenPerSecond > 0f)
@@ -284,6 +285,12 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     // much, body arts a few each. Beating someone down is the big lesson, once per victim every ten minutes.
     // Tuned so a casual body cultivator in Ascension reaches stage 9 about five minutes after a casual qi cultivator
     // reaches Nascent Soul (~25-30 minutes), without needing a fight every few minutes on a quiet server.
+    /// <summary>
+    ///     Every training gain below is scaled by this. Forging is quick in the wuxia gamemodes, so earning is a third
+    ///         slower to keep the climb to stage 9 at about the same pace.
+    /// </summary>
+    public const float TrainingRate = 2f / 3f;
+
     private const float FistHitTempering = 8f;
     private const float WeaponHitTempering = 4f;
     private static readonly TimeSpan FightCooldown = TimeSpan.FromSeconds(4);
@@ -358,7 +365,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     /// </summary>
     private float Train(Entity<BodyCultivatorComponent> entity, float amount, string source, TimeSpan cooldown)
     {
-        return amount > 0f ? _bodySystem.AddTempering(entity.AsNullable(), amount, trainingSource: source, cooldown: cooldown) : 0f;
+        return amount > 0f ? _bodySystem.AddTempering(entity.AsNullable(), amount * TrainingRate, trainingSource: source, cooldown: cooldown) : 0f;
     }
 
     /// <summary>
@@ -479,7 +486,9 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
     private void StartForgeCycle(Entity<BodyCultivatorComponent> entity, BodyGroup group)
     {
-        var doAfterArgs = new DoAfterArgs(EntityManager, entity, ForgeCycle, new BodyForgeDoAfterEvent(), entity)
+        // In the wuxia gamemodes, where cultivation is the whole round, forging goes twice as fast.
+        var cycle = _wuxiaWorldSystem.WuxiaActive() ? ForgeCycle / 2 : ForgeCycle;
+        var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new BodyForgeDoAfterEvent(), entity)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
