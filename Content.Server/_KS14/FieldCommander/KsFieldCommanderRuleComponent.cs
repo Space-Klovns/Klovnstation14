@@ -332,8 +332,12 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public List<LocId> StrikeAnnouncements = [];
 
+    /// <summary>
+    ///     The warning that follows each strike, as intelligence does, but signed by the commander (<see cref="Sender"/>):
+    ///         the missiles are its, so the word of them is too.
+    /// </summary>
     [DataField]
-    public LocId? StrikeIntel = "ks-fieldcommander-intel-strike";
+    public LocId? StrikeWarning = "ks-fieldcommander-strike-warning";
 
     /// <summary>
     ///     The commander's gloat when a defender objective falls.
@@ -630,9 +634,11 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
 public readonly record struct KsFieldCommanderSafeZone(MapCoordinates Center, float Radius);
 
 /// <summary>
-///     An intelligence message, already formatted, to send at <paramref name="At"/>.
+///     An intelligence message, already formatted, to send at <paramref name="At"/>: signed by Field Operations
+///         (<see cref="KsFieldCommanderRuleComponent.IntelSender"/>), or, <paramref name="FromCommander"/>, by the commander
+///         (<see cref="KsFieldCommanderRuleComponent.Sender"/>) in its own colour.
 /// </summary>
-public readonly record struct KsFieldCommanderPendingIntel(TimeSpan At, string Message, bool Sound);
+public readonly record struct KsFieldCommanderPendingIntel(TimeSpan At, string Message, bool Sound, bool FromCommander = false);
 
 /// <summary>
 ///     One stage of the commander's timeline.

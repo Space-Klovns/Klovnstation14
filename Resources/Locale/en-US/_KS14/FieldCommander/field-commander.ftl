@@ -11,7 +11,8 @@ ks-fieldcommander-phase-pressure = Pressure
 ks-fieldcommander-phase-siege = Siege
 ks-fieldcommander-phase-final = Final Assault
 
-# The commander only taunts. Everything the defenders can act on comes from Field Operations, as intel.
+# The commander only taunts. Everything the defenders can act on comes from Field Operations, as intel, but for the
+#     commander's own warning of a strike (ks-fieldcommander-strike-warning).
 ks-fieldcommander-phase-landfall-announcement = Nanotrasen. I can see you from here, scrambling behind your little walls like insects. Dig in. It only makes the digging up easier.
 ks-fieldcommander-phase-probing-announcement = My hounds are off the leash. Let's hear how loud you scream.
 ks-fieldcommander-phase-pressure-announcement = Still breathing? That's a clerical error, and I am about to correct it.
@@ -51,7 +52,8 @@ ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: sensors read 
 ks-fieldcommander-strike-1 = Smile for the artillery.
 ks-fieldcommander-strike-2 = I see your little fort. So does my fire mission.
 ks-fieldcommander-strike-3 = Your walls will make fine shrapnel.
-ks-fieldcommander-intel-strike = Field Operations. Incoming fire mission, danger close! Get clear of your fortifications!
+# The one warning the commander gives itself: the missiles are its own, so the word of them comes signed by it.
+ks-fieldcommander-strike-warning = Fire mission inbound, danger close. Get clear of your fortifications, if your legs still work.
 
 ks-fieldcommander-asset-driller = My borg is coming for your servers, and nothing you own can stop it.
 ks-fieldcommander-intel-driller = Field Operations. A breaching borg is inbound. It goes straight for a server, so focus it down.
