@@ -9,7 +9,7 @@ ks-ui-options-ambient-occlusion-entities-tooltip = Мягкие тени под 
 ks-ui-options-emissive-bloom = Ореол свечения
 ks-ui-options-emissive-bloom-tooltip = Светящиеся экраны, лампы и вывески излучают мягкий ореол. Отключите, если это сильно снижает производительность.
 ks-ui-options-tgui-style = Использовать стиль интерфейса tgui
-ks-ui-options-lobby-adaptive-contrast = Затемнять яркий фон лобби под текстом
+ks-ui-options-lobby-adaptive-contrast = Эффект экрана на фоне лобби (затемнение, развёртка, изгиб)
 ks-ui-options-slurfilter = Включить фильтр «Slur»
 ks-ui-options-tab-ks = Klovnstation 14
 # Unused for now: the lobby font option is commented out in Ks14Tab.xaml(.cs) and may be re-added, so these stay.

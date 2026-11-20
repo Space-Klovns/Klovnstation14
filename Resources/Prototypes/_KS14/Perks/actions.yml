@@ -1,0 +1,64 @@
+# Actions the perks grant (perks.yml).
+
+- type: entity
+  id: ActionKsLivingShield
+  name: Living Shield
+  description: Raise a shield that soaks all damage until it breaks. You move slowly and can't fire while it's up.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon:
+      sprite: Objects/Weapons/Melee/shields.rsi
+      state: riot-icon
+    iconOn:
+      sprite: Objects/Weapons/Melee/shields.rsi
+      state: riot_bullet-icon
+  - type: InstantAction
+    event: !type:KsLivingShieldActionEvent
+
+- type: entity
+  id: ActionKsDrawFire
+  name: Draw Fire
+  description: Bellow a challenge that makes the enemy shoot at you rather than anyone else, for a while.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 40
+    icon: Interface/Actions/scream.png
+  - type: InstantAction
+    event: !type:KsDrawFireActionEvent
+
+- type: entity
+  id: ActionKsRally
+  name: Rally
+  description: Mark the ground around you. Moments later every friend inside moves, fires and hits harder for a while.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 45
+    icon:
+      sprite: _KS14/Interface/Perks/perks.rsi
+      state: rally
+  - type: InstantAction
+    event: !type:KsRallyActionEvent
+
+- type: entity
+  id: ActionKsMarkTarget
+  name: Mark Target
+  description: Mark an enemy for your side to see. It takes more damage from everything until the mark fades.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    useDelay: 20
+    icon:
+      sprite: _KS14/Interface/Perks/perks.rsi
+      state: mark_target
+  - type: TargetAction
+    range: 20
+    checkCanAccess: false
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:KsMarkTargetActionEvent

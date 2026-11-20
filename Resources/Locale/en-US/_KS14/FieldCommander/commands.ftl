@@ -30,3 +30,9 @@ cmd-ks_fcstatus-uplink-none = not landed
 cmd-ks_fcstatus-uplink-destroyed = taken out
 cmd-ks_fcstatus-uplink-active = bombardment in { $seconds }s
 cmd-ks_fcstatus-points = { $player }: { $points } points
+
+cmd-ks_fcperk-desc = Sets a field commander defender's perk for the round, and swaps it onto the body they are in now.
+cmd-ks_fcperk-help = ks_fcperk <player> <perk>
+cmd-ks_fcperk-hint-perk = <perk>
+cmd-ks_fcperk-unknown = There is no perk "{ $perk }".
+cmd-ks_fcperk-done = { $player }'s perk is now { $perk }.

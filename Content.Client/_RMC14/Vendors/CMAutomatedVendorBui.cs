@@ -194,7 +194,7 @@ public sealed partial class CMAutomatedVendorBui : BoundUserInterface
             {
                 var entry = section.Entries[entryIndex];
                 var uiEntry = (CMAutomatedVendorEntry)uiSection.Entries.GetChild(entryIndex);
-                var disabled = sectionDisabled || entry.Amount <= 0;
+                var disabled = sectionDisabled || entry.Amount <= 0 || !EntMan.System<SharedCMAutomatedVendorSystem>().KsMeetsEntryRequirements(_player.LocalEntity, entry) /* KS14: perk-gated entries */;
                 if (section.TakeAll is { } takeAllId)
                 {
                     var takeAll = user?.TakeAll;

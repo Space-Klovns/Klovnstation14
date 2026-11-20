@@ -115,7 +115,7 @@ public abstract partial class SharedPuddleSystem
         List<ProtoId<ReagentPrototype>> evaporatingReagents = [];
         foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
-            if (solProto.EvaporationSpeed > FixedPoint2.Zero)
+            if (KsGetEvaporationSpeed(solProto) /* KS14: was solProto.EvaporationSpeed, see KsGetEvaporationSpeed */ > FixedPoint2.Zero)
                 evaporatingReagents.Add(solProto.ID);
         }
         return evaporatingReagents.ToArray();
@@ -146,9 +146,10 @@ public abstract partial class SharedPuddleSystem
         Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> evaporatingSpeeds = [];
         foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
-            if (solProto.EvaporationSpeed > FixedPoint2.Zero && !KsEvaporatesThroughFluidmos(solProto) /* KS14: added */)
+            var evaporationSpeed = KsGetEvaporationSpeed(solProto); // KS14: a rule can set a minimum, see KsGetEvaporationSpeed
+            if (evaporationSpeed /* KS14: was solProto.EvaporationSpeed */ > FixedPoint2.Zero && !KsEvaporatesThroughFluidmos(solProto) /* KS14: added */)
             {
-                evaporatingSpeeds.Add(solProto.ID, solProto.EvaporationSpeed);
+                evaporatingSpeeds.Add(solProto.ID, evaporationSpeed /* KS14: was solProto.EvaporationSpeed */);
             }
         }
         return evaporatingSpeeds;

@@ -1,0 +1,4 @@
+- files: ["banner_panel.png", "emblem_hex.png", "emblem_pve.png", "icon_builds.png", "icon_cart.png", "icon_character.png", "icon_cog.png", "icon_coin.png", "icon_exclaim.png", "icon_expansions.png", "icon_flea.png", "icon_handbook.png", "icon_hideout.png", "icon_menu.png", "icon_messenger.png", "icon_player.png", "icon_plus.png", "icon_record.png", "icon_survey.png", "icon_warning.png", "lockup.png", "wordmark.png"]
+  license: "CC0-1.0"
+  copyright: "Drawn for Klovnstation 14 by Tools/_KS14/lobby_kharkiv_assets.py from original geometry; no third-party art."
+  source: "https://github.com/camish101/klovnstation14"

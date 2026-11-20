@@ -1,0 +1,51 @@
+# Companions (Content.Server/_KS14/Companions/): KsCompanionSystem keeps FollowTarget on the owner, or on a patient.
+
+- type: htnCompound
+  id: KsCompanionMedibotCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: FollowCompound
+
+# The shoulder turret: EnergyTurretCompound without the idle spin, which would whirl it about on its owner's shoulder.
+- type: htnCompound
+  id: KsShoulderTurretCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsTurretGunTargets
+    - !type:HTNPrimitiveTask
+      preconditions:
+      - !type:KeyExistsPrecondition
+        key: Target
+      - !type:TargetInRangePrecondition
+        targetKey: Target
+        rangeKey: RangedRange
+      - !type:TargetInLOSPrecondition
+        targetKey: Target
+        rangeKey: RangedRange
+        opaqueKey: true
+        ksStandingMobsBlock: false
+      operator: !type:GunOperator
+        targetKey: Target
+        opaqueKey: true
+        ksHoldFireWhenBlocked: true
+      services:
+      - !type:UtilityService
+        id: RangedService
+        proto: KsTurretGunTargets
+        key: Target
+  # Nothing to shoot: hold still a moment. A target turning up is a better plan, taken at the next replan.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:RandomOperator
+        targetKey: IdleTime
+        minKey: MinimumIdleTime
+        maxKey: MaximumIdleTime
+    - !type:HTNPrimitiveTask
+      operator: !type:WaitOperator
+        key: IdleTime
+      preconditions:
+      - !type:KeyExistsPrecondition
+        key: IdleTime

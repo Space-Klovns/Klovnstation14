@@ -37,11 +37,9 @@
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
   - type: Hands
-    hands:
+    startingHands: # KS14: hands -> startingHands, sortedHands dropped, per upstream#43545
       hand_right:
         location: Right
-    sortedHands:
-    - hand_right
   - type: ComplexInteraction
   - type: DeviceLinkSource
     ports:

@@ -1,0 +1,13 @@
+# The Field Commander game mode: its own section, at the top of the tree.
+
+- type: guideEntry
+  id: KsFieldCommander
+  name: guide-entry-ks-field-commander
+  text: "/ServerInfo/_KS14/Guidebook/FieldCommander/Overview.xml"
+  children:
+  - KsFieldCommanderPerks
+
+- type: guideEntry
+  id: KsFieldCommanderPerks
+  name: guide-entry-ks-field-commander-perks
+  text: "/ServerInfo/_KS14/Guidebook/FieldCommander/Perks.xml"
