@@ -7,6 +7,10 @@
   objectType: Structure
   placementMode: SnapgridCenter
   canBuildInImpassable: false
+  # Sandbags aren't Impassable (they can be climbed), so canBuildInImpassable alone lets wire be built into them.
+  conditions:
+  - !type:TileNotBlocked
+    filterMobs: true
 
 - type: construction
   id: KsSandbagWall
@@ -19,4 +23,6 @@
   canRotate: false
   canBuildInImpassable: false
   conditions:
+  # MobMask, not just Impassable: a sandbag wall is only half a wall, and one mustn't go up inside another.
   - !type:TileNotBlocked
+    filterMobs: true
