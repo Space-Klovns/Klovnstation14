@@ -1,0 +1,46 @@
+<Document>
+  # Field Commander
+  You are a Nanotrasen defender dug in on a hostile world. A Syndicate field commander throws wave after wave of troops at you, taunting you over the radio as it goes. Hold your objective, keep each other alive, and in the end find and destroy the commander's uplink before its bombardment lands.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsScenarioObjectiveNanotrasen"/>
+    <GuideEntityEmbed Entity="KsFieldCommanderShop"/>
+    <GuideEntityEmbed Entity="KsFieldCommandUplink"/>
+  </Box>
+
+  ## Phases and waves
+  The round runs through five phases: [bold]Landfall[/bold], [bold]Probing[/bold], [bold]Pressure[/bold], [bold]Siege[/bold] and the [bold]Final Assault[/bold]. Landfall is a short breather to get your bearings. From then on the commander sends a wave every few minutes, and each phase sends waves more often and bigger ones.
+
+  - [bold]Intel comes before each wave.[/bold] Nanotrasen Field Operations tells you how many hostiles are coming and from which direction. Face that way.
+  - [bold]Waves grow with your numbers.[/bold] Every living defender beyond the first makes waves a little bigger, and so does the commander's mood: a wave that kills nobody makes the next one larger, heavy losses make it smaller.
+  - [bold]There is a cap.[/bold] Only so many enemies can be alive at once, a few more for each living defender.
+  - [bold]Enemies come from far away[/bold], on foot from out of your sight or in drop pods, and never land inside your safe zones. They can still walk in.
+  - From Pressure on, each wave may come with a [color=red]missile strike[/color] on something you built or on one of you. Don't bunch up around fresh fortifications.
+
+  ## Objectives
+  Your side holds the [bold]nanotrasen objective[/bold]. Lose the last one and you lose the round; so does every defender dying. The commander gloats each time you lose one.
+
+  ## Requisition
+  Every enemy killed earns requisition points, split between the defenders by how much of its damage each of you dealt: the biggest share counts as the kill, the rest as assists. Points stay yours through death. Killing one of your own costs points, scaled by how much of their damage you dealt. Healing them back to full wipes the slate.
+
+  Spend points at the [bold]requisitions terminal[/bold]: grenades, seismic charges, rocket launchers, turret flatpacks, supply flares and flares that call in a squad of paramilitary support.
+
+  From Pressure on, every phase also drops a reinforcement pod with supplies inside one of your safe zones.
+
+  ## The fog
+  You can't go far. Past a certain distance from your base a freezing fog closes in: you are warned as you near its edge, and once outside you take cold damage that ignores armour and grows the further you go. Only the Final Assault lifts it, towards the uplink.
+
+  ## The uplink
+  In the Final Assault the commander deploys its [bold]field command uplink[/bold] far out in the field, guarded by troops who won't leave it. Field Operations tells you where it is and how long you have. When its timer runs out the bombardment lands and the round is lost; destroy it first and every living defender is paid a large bonus.
+
+  Win there, and a vote asks whether to [bold]hold the line[/bold]. If you stay, the waves keep coming, faster and bigger each time, until you are overrun.
+
+  ## Downed and dead
+  Every defender wears a [bold]distress beacon[/bold] on the neck. It strobes and beeps while you are down, fast when you are critical and slow when you are dead, so your squad can find you. Your points and your perk come with you to every new body.
+
+  ## Building
+  Sandbag walls and barbed wire slow the enemy down, and turrets come from flatpacks. See [textlink="Fortifications" link="KsFortifications"]. Nothing can be built inside a safe zone.
+
+  ## Perks
+  When you first join you pick one perk for the round: Damage, Tank, Healing or Support. See [textlink="Perks" link="KsFieldCommanderPerks"].
+</Document>

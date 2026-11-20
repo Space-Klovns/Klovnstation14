@@ -9,16 +9,15 @@
   kind: source
   path: "/Textures/_KS14/Shaders/backdrop_composite.swsl"
 
-# tgui's scrollable Tabs mask-image. The tabs are drawn into a transparent target, which is premultiplied.
+# tgui's scrollable Tabs mask-image. The tabs are drawn into a transparent target, which is premultiplied; the shader
+#      un-premultiplies, since a source shader's blend mode comes only from its .swsl header (no blend_mode here).
 - type: shader
   id: KsTguiTabsMask
   kind: source
   path: "/Textures/_KS14/Shaders/tgui_tabs_mask.swsl"
-  blend_mode: premultiplied
 
 # A popup's contents, rendered at full size and drawn scaled and faded at subpixel precision during its open and close.
 - type: shader
   id: KsTguiScaledRaster
   kind: source
   path: "/Textures/_KS14/Shaders/scaled_raster.swsl"
-  blend_mode: premultiplied

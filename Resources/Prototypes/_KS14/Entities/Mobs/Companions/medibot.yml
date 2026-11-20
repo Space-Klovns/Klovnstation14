@@ -1,0 +1,60 @@
+# The Healing perk's companion (KsCompanions in Resources/Prototypes/_KS14/Perks/perks.yml).
+
+- type: entity
+  parent: MobSiliconBase
+  id: KsMobCompanionMedibot
+  name: combat medibot
+  description: A stripped-down medibot that sticks to its medic and jabs hurt friendlies with a hypospray. Flimsy.
+  components:
+  - type: Sprite
+    sprite: Mobs/Silicon/Bots/medibot.rsi
+    state: medibot
+  # Two or three rifle rounds put it down.
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      40: Dead
+    stateAlertDict:
+      Alive: BorgHealth
+      Dead: BorgDead
+    showOverlays: false
+  # Nothing left behind: it is gone, and comes back on its own.
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 40
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  # Quick enough to keep up with a sprinting medic.
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 4
+    baseSprintSpeed: 5
+  - type: HTN
+    rootTask:
+      task: KsCompanionMedibotCompound
+    blackboard:
+      FollowRange: !type:Single
+        2.5
+      FollowCloseRange: !type:Single
+        1.2
+      NavInteract: !type:Bool
+        true
+  - type: KsCombatMedic
+    minDamage: 5
+    seekRange: 7
+    injectRange: 1.5
+    windup: 0.75
+    cooldown: 8
+    injection:
+      reagents:
+      - ReagentId: Tricordrazine
+        Quantity: 10
+    criticalInjection:
+      reagents:
+      - ReagentId: Epinephrine
+        Quantity: 10

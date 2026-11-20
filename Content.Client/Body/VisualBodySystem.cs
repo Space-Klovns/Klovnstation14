@@ -2,6 +2,7 @@ using System.Linq;
 using Content.Client.DisplacementMap;
 using Content.Shared.Body;
 using Content.Shared.CCVar;
+using Content.Shared.DisplacementMap;
 using Content.Shared.Humanoid.Markings;
 using Content.Shared.Humanoid;
 using Robust.Client.GameObjects;
@@ -65,6 +66,7 @@ public sealed partial class VisualBodySystem : SharedVisualBodySystem
         if (Comp<OrganComponent>(ent).Body is not { } body)
             return;
 
+        RemoveVisual(ent, body);
         ApplyVisual(ent, body);
     }
 
@@ -74,6 +76,21 @@ public sealed partial class VisualBodySystem : SharedVisualBodySystem
             return;
 
         _sprite.LayerSetData(target, index, ent.Comp.Data);
+
+        var displacement = ent.Comp.Displacement;
+        if (displacement != null && ProtoMan.Resolve(displacement, out var displacementProto))
+        {
+            _displacement.TryAddDisplacement(displacementProto.Displacement,
+                (target, Comp<SpriteComponent>(target)),
+                index,
+                ent.Comp.Layer,
+                out _);
+        }
+
+        if (displacement == null)
+        {
+            _displacement.EnsureDisplacementIsNotOnSprite((target, Comp<SpriteComponent>(target)), ent.Comp.Layer);
+        }
     }
 
     private void RemoveVisual(Entity<VisualOrganComponent> ent, EntityUid target)
@@ -82,6 +99,8 @@ public sealed partial class VisualBodySystem : SharedVisualBodySystem
             return;
 
         _sprite.LayerSetRsiState(target, index, RSI.StateId.Invalid);
+
+        _displacement.EnsureDisplacementIsNotOnSprite((target, Comp<SpriteComponent>(target)), ent.Comp.Layer);
     }
 
     private void OnMarkingsGotInserted(Entity<VisualOrganMarkingsComponent> ent, ref OrganGotInsertedEvent args)
@@ -113,9 +132,9 @@ public sealed partial class VisualBodySystem : SharedVisualBodySystem
         ApplyVisual(ent, body);
     }
 
-    protected override void SetOrganMarkings(Entity<VisualOrganMarkingsComponent> ent, Dictionary<HumanoidVisualLayers, List<Marking>> markings)
+    protected override void SetOrganMarkings(Entity<VisualOrganMarkingsComponent> ent, Dictionary<HumanoidVisualLayers, List<Marking>> markings, Dictionary<HumanoidVisualLayers, DisplacementData> displacement)
     {
-        base.SetOrganMarkings(ent, markings);
+        base.SetOrganMarkings(ent, markings, displacement);
 
         if (Comp<OrganComponent>(ent).Body is not { } body)
             return;
@@ -124,9 +143,9 @@ public sealed partial class VisualBodySystem : SharedVisualBodySystem
         ApplyMarkings(ent, body);
     }
 
-    protected override void SetOrganAppearance(Entity<VisualOrganComponent> ent, PrototypeLayerData data)
+    protected override void SetOrganAppearance(Entity<VisualOrganComponent> ent, PrototypeLayerData data, ProtoId<DisplacementDataPrototype>? displacement)
     {
-        base.SetOrganAppearance(ent, data);
+        base.SetOrganAppearance(ent, data, displacement);
 
         if (Comp<OrganComponent>(ent).Body is not { } body)
             return;

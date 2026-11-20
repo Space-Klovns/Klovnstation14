@@ -50,3 +50,9 @@ cmd-ks_fcpause-hint = [on|off]
 cmd-ks_fcpause-paused = Полевой командир приостановлен.
 cmd-ks_fcpause-resumed = Полевой командир продолжает.
 cmd-ks_fcstatus-paused = Пауза: его часы остановлены.
+
+cmd-ks_fcperk-desc = Устанавливает перк защитника в режиме полевого командира на весь раунд и меняет его на текущем теле игрока.
+cmd-ks_fcperk-help = ks_fcperk <игрок> <перк>
+cmd-ks_fcperk-hint-perk = <перк>
+cmd-ks_fcperk-unknown = Перка «{ $perk }» не существует.
+cmd-ks_fcperk-done = Перк игрока { $player } теперь — { $perk }.

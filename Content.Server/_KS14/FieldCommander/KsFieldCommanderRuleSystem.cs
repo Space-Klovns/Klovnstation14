@@ -36,7 +36,7 @@ namespace Content.Server._KS14.FieldCommander;
 ///     Split by concern: <c>.Waves</c> buys and sends units, <c>.Placement</c> finds where things go and keeps the
 ///         safe zones, <c>.Orders</c> and <c>.Strikes</c> are what the units and missiles are pointed at,
 ///         <c>.Uplink</c> the final objective, <c>.Announcements</c> both sides' transmissions, <c>.Fog</c> the play
-///         area, <c>.Points</c> the defenders' requisition points and <c>.Admin</c> the console API.
+///         area, <c>.Points</c> the defenders' requisition points, <c>.Perks</c> their perks and <c>.Admin</c> the console API.
 /// </remarks>
 public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldCommanderRuleComponent>
 {
@@ -92,7 +92,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     {
         base.ActiveTick(uid, component, gameRule, frameTime);
 
-        if (!component.Prepared && !TryPrepare(component))
+        if (!component.Prepared && !TryPrepare((uid, component)))
             return;
 
         // The commander's clock is stopped: nothing it schedules comes due, though its units fight on.
@@ -135,8 +135,9 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     ///         next tick, until the map with the defenders' objectives is there and a scenario rule is running to count
     ///         the commander's side.
     /// </summary>
-    private bool TryPrepare(KsFieldCommanderRuleComponent component)
+    private bool TryPrepare(Entity<KsFieldCommanderRuleComponent> rule)
     {
+        var component = rule.Comp;
         var objectiveUids = new List<EntityUid>();
         var objectiveQuery = EntityQueryEnumerator<ScenarioObjectiveComponent>();
         while (objectiveQuery.MoveNext(out var objectiveUid, out var objectiveComponent))
@@ -156,7 +157,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         FindSafeZones(component);
         ForbidBuildingInSafeZones(component);
-        PrepareExistingDefenders(component);
+        PrepareExistingDefenders(rule);
         RaiseFog(component);
         PrepareWaveStatus(component);
         component.Prepared = true;

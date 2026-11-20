@@ -31,6 +31,7 @@ namespace Content.Client.Lobby
         [Dependency] private IVoteManager _voteManager = default!;
         [Dependency] private ClientsidePlaytimeTrackingManager _playtimeTracking = default!;
         [Dependency] private IPrototypeManager _protoMan = default!;
+        [Dependency] private Robust.Client.Player.IPlayerManager _playerManager = default!; // KS14: the banner's player count
 
         private ClientGameTicker _gameTicker = default!;
         private ContentAudioSystem _contentAudioSystem = default!;
@@ -69,9 +70,14 @@ namespace Content.Client.Lobby
             var width = _cfg.GetCVar(CCVars.ServerLobbyRightPanelWidth);
             Lobby.RightSide.SetWidth = (float)width * 0.85f /* KS14: client-side 0.85 factor, thinner chat column */;
 
+            // KS14 start: the build line, bottom left
+            var buildVersion = _cfg.GetCVar(Robust.Shared.CVars.BuildVersion);
+            Lobby.KsSetVersionText(Loc.GetString("ks-kharkiv-corner-version", ("build", string.IsNullOrEmpty(buildVersion) ? "dev" : buildVersion)));
+            // KS14 end
+
             UpdateLobbyUi();
 
-            Lobby.CharacterPreview.CharacterSetupButton.OnPressed += OnSetupPressed;
+            Lobby.KsCharacterSetupRequested += OnSetupRequested; // KS14: CharacterPreview.CharacterSetupButton.OnPressed += OnSetupPressed -> the menu item and tab
             Lobby.ManifestButton.OnPressed += OnManifestPressed;
             Lobby.ReadyButton.OnPressed += OnReadyPressed;
             Lobby.ReadyButton.OnToggled += OnReadyToggled;
@@ -93,7 +99,7 @@ namespace Content.Client.Lobby
 
             _voteManager.ClearPopupContainer();
 
-            Lobby!.CharacterPreview.CharacterSetupButton.OnPressed -= OnSetupPressed;
+            Lobby!.KsCharacterSetupRequested -= OnSetupRequested; // KS14: CharacterPreview.CharacterSetupButton.OnPressed -= OnSetupPressed
             Lobby!.ManifestButton.OnPressed -= OnManifestPressed;
             Lobby!.ReadyButton.OnPressed -= OnReadyPressed;
             Lobby!.ReadyButton.OnToggled -= OnReadyToggled;
@@ -107,7 +113,7 @@ namespace Content.Client.Lobby
             Lobby?.SwitchState(state);
         }
 
-        private void OnSetupPressed(BaseButton.ButtonEventArgs args)
+        private void OnSetupRequested() // KS14: OnSetupPressed(BaseButton.ButtonEventArgs args) -> any button that leads to setup
         {
             SetReady(false);
             Lobby?.SwitchState(LobbyGui.LobbyGuiState.CharacterSetup);
@@ -142,13 +148,15 @@ namespace Content.Client.Lobby
         {
             if (_gameTicker.IsGameStarted)
             {
-                Lobby!.KsSetCountdown(null, null); // KS14: StartTime.Text = string.Empty -> hide the countdown block
                 var roundTime = _gameTiming.CurTime.Subtract(_gameTicker.RoundStartTimeSpan);
+                Lobby!.KsSetRoundElapsed(roundTime); // KS14: StartTime.Text = string.Empty -> hides the countdown, or shows the round's length in the Kharkiv layout
+                Lobby!.KsSetPlayerCount(_playerManager.PlayerCount); // KS14: added
                 Lobby!.StationTime.Text = Loc.GetString("lobby-state-player-status-round-time", ("hours", roundTime.Hours), ("minutes", roundTime.Minutes));
                 return;
             }
 
             Lobby!.StationTime.Text = Loc.GetString("lobby-state-player-status-round-not-started");
+            Lobby!.KsSetPlayerCount(_playerManager.PlayerCount); // KS14: added
             string text;
 
             if (_gameTicker.Paused)
@@ -199,7 +207,7 @@ namespace Content.Client.Lobby
         {
             if (_gameTicker.IsGameStarted)
             {
-                Lobby!.ReadyButton.Text = Loc.GetString("ks-lobby-ready-join") /* KS14: lobby-state-ready-button-join-state -> ks-lobby-ready-join */;
+                Lobby!.KsSetReadyStatus(KsLobbyReadyStatus.Join); // KS14: ReadyButton.Text = lobby-state-ready-button-join-state -> the layout shows it (button text, or a line under the Kharkiv title)
                 Lobby!.ReadyButton.ToggleMode = false;
                 Lobby!.ReadyButton.Pressed = false;
                 Lobby!.ObserveButton.Disabled = false;
@@ -209,7 +217,7 @@ namespace Content.Client.Lobby
             {
                 Lobby!.KsSetCountdown(null, null); // KS14: StartTime.Text = string.Empty -> hide the countdown block (FrameUpdate refills it)
                 Lobby!.ReadyButton.Pressed = _gameTicker.AreWeReady;
-                Lobby!.ReadyButton.Text = Loc.GetString(Lobby!.ReadyButton.Pressed ? "ks-lobby-ready-ready" /* KS14: lobby-state-player-status-ready -> ks-lobby-ready-ready */ : "ks-lobby-ready-not-ready" /* KS14: lobby-state-player-status-not-ready -> ks-lobby-ready-not-ready */);
+                Lobby!.KsSetReadyStatus(Lobby!.ReadyButton.Pressed ? KsLobbyReadyStatus.Ready : KsLobbyReadyStatus.NotReady); // KS14: ReadyButton.Text = lobby-state-player-status-ready / -not-ready
                 Lobby!.ReadyButton.ToggleMode = true;
                 Lobby!.ReadyButton.Disabled = false;
                 Lobby!.ObserveButton.Disabled = true;

@@ -1,0 +1,134 @@
+# Field Commander perks. Abilities are components (and status effects, actions or items) in these lists; see
+#     Klovn/Docs/perks.md.
+
+- type: ksPerk
+  id: KsPerkDamage
+  name: ks-perk-damage-name
+  description: ks-perk-damage-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: damage
+  alert: KsPerkDamage
+  components:
+  # At the cap a Lecter round (20) does 28: Field Commander elites (crit at 90) go down in 4 hits instead of 5, the
+  #     60-hp operatives still take 3, and a fully hit 25-round magazine averages +31%.
+  - type: KsDamageRampAbility
+    bonusPerHit: 0.04
+    maxBonus: 0.4
+  - type: KsMagazineAutoDropAbility
+  - type: KsCloseRangeBonusAbility
+    maxBonus: 0.25
+    fullBonusRange: 2
+    noBonusRange: 10
+  - type: KsRangeFalloffAbility
+    startRange: 10
+    endRange: 30
+    minMultiplier: 0.5
+  # 1 round of a 25-round magazine, 2 of a 30, 5 of a 100; the blast spares walls and structures
+  #     (KsAntiPersonnelRocket) and deals about 30 at its centre.
+  - type: KsExplosiveLastRoundsAbility
+    fraction: 0.05
+    minRounds: 1
+    explosionType: KsAntiPersonnelRocket
+    totalIntensity: 6
+    intensitySlope: 2
+    maxIntensity: 2
+
+- type: ksPerk
+  id: KsPerkTank
+  name: ks-perk-tank-name
+  description: ks-perk-tank-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: tank
+  alert: KsPerkTank
+  components:
+  - type: KsCritAutoInjectorAbility
+    cooldown: 180
+    cooldownAlert: KsPerkTank
+    injection:
+      reagents:
+      - ReagentId: Omnizine
+        Quantity: 10
+      - ReagentId: Epinephrine
+        Quantity: 10
+      - ReagentId: Klovnide
+        Quantity: 10
+  # 150 soaks seven or eight rifle rounds (20 each): time to cross open ground or pull a downed defender back.
+  - type: KsLivingShieldAbility
+    capacity: 150
+    walkModifier: 0.6
+    sprintModifier: 0.6
+    cooldown: 30
+  - type: KsDrawFireAbility
+    duration: 10
+    priority: 1
+  actions:
+  - ActionKsLivingShield
+  - ActionKsDrawFire
+
+- type: ksPerk
+  id: KsPerkHealing
+  name: ks-perk-healing-name
+  description: ks-perk-healing-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: healing
+  alert: KsPerkHealing
+  components:
+  - type: KsMetabolismRateAbility
+    rateMultiplier: 1.5
+  # The medical HUD, built in.
+  - type: ShowHealthBars
+    damageContainers:
+    - Biological
+  - type: ShowHealthIcons
+    damageContainers:
+    - Biological
+  # A rifle round (20) gives back 4.
+  - type: KsLifestealAbility
+    fraction: 0.2
+  - type: KsNoBleedingAbility
+  - type: KsCompanions
+    companions:
+    - prototype: KsMobCompanionMedibot
+      respawnDelay: 60
+  items:
+  - KsMedicalBeamGun
+
+- type: ksPerk
+  id: KsPerkSupport
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+  icon:
+    sprite: _KS14/Interface/Perks/perks.rsi
+    state: support
+  alert: KsPerkSupport
+  components:
+  # About one kill in five leaves a resupply for whoever needs it most.
+  - type: KsAmmoDropAbility
+    chance: 0.2
+    pickup: KsAmmoPickup
+  # Up by one shoulder, in the owner's frame, so it turns with them.
+  - type: KsCompanions
+    companions:
+    - prototype: KsMobCompanionShoulderTurret
+      mode: Attached
+      offset: -0.3, 0.25
+      respawnDelay: 45
+  # 1.5 s from the call to the rally: long enough to see the ring and step in.
+  - type: KsRallyAbility
+    radius: 3
+    delay: 1.5
+    duration: 12
+    speedMultiplier: 1.2
+    fireRateMultiplier: 1.25
+    damageMultiplier: 1.2
+    zone: KsRallyZone
+    alert: KsRallied
+  - type: KsMarkTargetAbility
+    duration: 8
+    damageTakenMultiplier: 1.2
+  actions:
+  - ActionKsRally
+  - ActionKsMarkTarget

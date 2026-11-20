@@ -1,0 +1,36 @@
+# Ported from tgstation's /obj/item/gun/medbeam (code/modules/projectiles/guns/special/medbeam.dm at
+#     e6c9da8511c11d6bb696a306685885e972a079ca); worked by KsMedicalBeamSystem. The Healing perk's item.
+
+- type: entity
+  parent: BaseItem
+  id: KsMedicalBeamGun
+  name: medical beamgun
+  description: Locks a healing beam onto anyone living, friend or foe, and knits their wounds while they stay in sight. Don't cross the streams, or both beams blow up.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Medical/medical_beam_gun.rsi
+    state: icon
+  - type: Item
+    size: Normal
+    sprite: _KS14/Objects/Weapons/Guns/Medical/medical_beam_gun.rsi
+  # Fires nothing: a click picks the target.
+  - type: Gun
+    fireRate: 2
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  # tg's on_beam_tick: 4 brute, 4 burn, 1 toxin and 1 oxygen a second, to 8 tiles.
+  - type: KsMedicalBeamGun
+    maxRange: 8
+    tickInterval: 1
+    healEffect: KsMedicalBeamHealSparkle
+    heal:
+      Brute: 4
+      Burn: 4
+      Toxin: 1
+      Airloss: 1
+    # tg's mid_los_check: crossing another holder's beam sets off heavy impact to 3 tiles, light to 5.
+    crossExplosion: Default
+    crossExplosionRadius: 5.5
+    crossExplosionSlope: 3
+    crossExplosionMaxIntensity: 8

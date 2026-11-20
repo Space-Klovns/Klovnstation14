@@ -50,3 +50,9 @@ cmd-ks_fcpause-hint = [on|off]
 cmd-ks_fcpause-paused = Field commander paused.
 cmd-ks_fcpause-resumed = Field commander resumed.
 cmd-ks_fcstatus-paused = Paused: its clock is stopped.
+
+cmd-ks_fcperk-desc = Sets a field commander defender's perk for the round, and swaps it onto the body they are in now.
+cmd-ks_fcperk-help = ks_fcperk <player> <perk>
+cmd-ks_fcperk-hint-perk = <perk>
+cmd-ks_fcperk-unknown = There is no perk "{ $perk }".
+cmd-ks_fcperk-done = { $player }'s perk is now { $perk }.

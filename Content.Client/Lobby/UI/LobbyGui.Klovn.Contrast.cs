@@ -9,7 +9,9 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Lobby.UI;
 
-// The lobby backdrop shader: dims bright art under the text regions (cvar). The backdrop is never blurred.
+// The lobby backdrop shader (cvar klovn.lobby.adaptive_contrast): in the tactical layout it dims bright art under the text
+//      regions, in the Kharkiv one it is the skin's screen grade. The backdrop is never blurred. Also holds the layout
+//      cvar's subscription, since both live exactly as long as the lobby is in the tree.
 public sealed partial class LobbyGui
 {
     private static readonly ProtoId<ShaderPrototype> KsContrastShaderId = "KsLobbyContrast";
@@ -62,6 +64,7 @@ public sealed partial class LobbyGui
         base.EnteredTree();
 
         KsSubscribeContrastCVar();
+        KsSubscribeLayoutCVar();
     }
 
     protected override void ExitedTree()
@@ -69,6 +72,7 @@ public sealed partial class LobbyGui
         base.ExitedTree();
 
         KsUnsubscribeContrastCVar();
+        KsUnsubscribeLayoutCVar();
     }
 
     private void KsSubscribeContrastCVar()
@@ -111,8 +115,11 @@ public sealed partial class LobbyGui
 
         // Only the lobby art is dimmed. The camera shows the live game, which the dimming would misrepresent, and
         //      lobby art changes only between rounds, so the regions are all that ever needs recomputing.
-        var contrast = _contrastEnabled && !KsViewportContainer.Visible;
-        var shader = contrast ? _contrastShader : null;
+        var enabled = _contrastEnabled && !KsViewportContainer.Visible;
+        var kharkiv = _ksLayout == KsLobbyLayout.Kharkiv;
+        var contrast = enabled && !kharkiv;
+        var grade = enabled && kharkiv;
+        var shader = contrast ? _contrastShader : grade ? KsKharkiv.BackdropShader : null;
         Background.ShaderOverride = shader;
         KsViewport.KsDrawShader = shader;
 
@@ -120,6 +127,7 @@ public sealed partial class LobbyGui
         RightSide.PanelOverride = contrast ? _noPanel : null;
 
         _contrastShader.SetParameter("strength", contrast ? 1f : 0f);
+        KsKharkiv.SetBackdropStrength(grade ? 1f : 0f);
         _contrastDirty = true;
     }
 
@@ -145,6 +153,7 @@ public sealed partial class LobbyGui
         }
 
         _contrastDirty = false;
+        KsKharkiv.SetBackdropSize(quadPixels.Size);
         _contrastShader.SetParameter("quadPixelSize", quadPixels.Size);
         _contrastShader.SetParameter("feather", KsFeatherPixels * UIScale);
         var padding = KsRegionPaddingPixels * UIScale;
@@ -176,6 +185,7 @@ public sealed partial class LobbyGui
         if (disposing)
         {
             KsUnsubscribeContrastCVar();
+            KsUnsubscribeLayoutCVar();
 
             Background.ShaderOverride = null;
             KsViewport.KsDrawShader = null;

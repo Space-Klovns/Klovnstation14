@@ -1,0 +1,86 @@
+# The Support perk's companion (KsCompanions, mode Attached, in Resources/Prototypes/_KS14/Perks/perks.yml).
+
+- type: entity
+  parent: BulletLaser
+  id: KsBulletShoulderTurretBolt
+  categories: [ HideSpawnMenu ]
+  name: energy bolt
+  components:
+  - type: Projectile
+    impactEffect: BulletImpactEffectOrangeDisabler
+    damage:
+      types:
+        Heat: 6
+
+- type: entity
+  id: KsMobCompanionShoulderTurret
+  name: shoulder turret
+  description: A little hovering turret that rides on its owner's shoulder and plinks at the enemy with energy bolts.
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/Companions/shoulder_turret.rsi
+    drawdepth: OverMobs
+    layers:
+    - state: turret
+  # Hit by bullets and lasers, but never in the way of its owner or anyone else walking: nothing collides with it
+  #     but what is shot or thrown. Made static once it is attached, so nothing pushes it off its owner's shoulder.
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.15
+        density: 10
+        layer:
+        - BulletImpassable
+  - type: GravityAffected
+  - type: MovementIgnoreGravity
+    weightless: true
+  - type: FloatingVisuals
+    canFloat: true
+    animationTime: 1.5
+    offset: 0,0.06
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
+  # Two or three rifle rounds put it down; it comes back on its own.
+  - type: MobState
+    allowedStates:
+    - Alive
+    - Dead
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      40: Dead
+    showOverlays: false
+  - type: CombatMode
+    toggleMouseRotator: false
+  - type: NoRotateOnInteract
+  - type: NoRotateOnMove
+  - type: Gun
+    fireRate: 2
+    projectileSpeed: 20
+    minAngle: 2
+    maxAngle: 6
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
+      params:
+        volume: -6
+  # Six bolts, and one back every four seconds.
+  - type: BasicEntityAmmoProvider
+    proto: KsBulletShoulderTurretBolt
+    capacity: 6
+  - type: RechargeBasicEntityAmmo
+    rechargeCooldown: 4
+  - type: HTN
+    rootTask:
+      task: KsShoulderTurretCompound
+    blackboard:
+      RotateSpeed: !type:Single
+        6.28
+      RangedRange: !type:Single
+        9
