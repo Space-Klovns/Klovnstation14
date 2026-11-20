@@ -211,6 +211,63 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
 
     #endregion
 
+    #region Stuck units
+
+    // Checked with the orders, every OrderInterval, so each of these is only as exact as that.
+
+    /// <summary>
+    ///     How long a unit may get no nearer where it is going before it is ordered elsewhere and told to plan again.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckReorderAfter = TimeSpan.FromSeconds(40);
+
+    /// <summary>
+    ///     How long before its steering is thrown away and it is moved onto a free tile beside it, once no defender
+    ///         can see it or that tile.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckNudgeAfter = TimeSpan.FromSeconds(80);
+
+    /// <summary>
+    ///     How long a nudge may be held back by a defender watching before the unit is moved in their sight anyway:
+    ///         left stuck for good is worse than being seen to jump a tile.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckNudgeInSightAfter = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    ///     How long before it is taken off the field and sent again from elsewhere, once no defender can see it.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckRelocateAfter = TimeSpan.FromSeconds(120);
+
+    /// <summary>
+    ///     How much nearer, in tiles, a unit has to come to count as getting somewhere.
+    /// </summary>
+    [DataField]
+    public float StuckProgressDistance = 2f;
+
+    /// <summary>
+    ///     Within this many tiles of where it is going a unit has got there, and is not stuck.
+    /// </summary>
+    [DataField]
+    public float StuckArrivedDistance = 3f;
+
+    /// <summary>
+    ///     A unit hurt this recently is in a fight, and not stuck.
+    /// </summary>
+    [DataField]
+    public TimeSpan StuckDamageGrace = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     A unit this close to a defender it can see is in a fight, and not stuck. Units that perceive for
+    ///         themselves are in one whenever they see a hostile they have reacted to, at any range.
+    /// </summary>
+    [DataField]
+    public float StuckContactRange = 10f;
+
+    #endregion
+
     #region Strikes
 
     /// <summary>
@@ -515,6 +572,18 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public int ObjectivesLost;
 
     /// <summary>
+    ///     Units taken off the field for being stuck and sent again from elsewhere.
+    /// </summary>
+    [ViewVariables]
+    public int StuckUnitsRelocated;
+
+    /// <summary>
+    ///     Units taken off the field for being stuck with nowhere to send them, their cost put back in the budget.
+    /// </summary>
+    [ViewVariables]
+    public int StuckUnitsRefunded;
+
+    /// <summary>
     ///     Whether the battlefield is set up, which waits for the map with the defenders' objectives:
     ///         <list type="bullet">
     ///             <item>their objectives' own timers are off (the commander decides how a round ends, so an objective
@@ -721,6 +790,13 @@ public sealed partial class KsFieldCommanderAsset
     /// </summary>
     [DataField]
     public bool GiveOrders = true;
+
+    /// <summary>
+    ///     How many tiles from its target the commander's orders keep this unit (<see cref="KsFieldCommanderRuleSystem.GetStandOffCoordinates"/>):
+    ///         a sniper's distance. Zero sends it at the target itself.
+    /// </summary>
+    [DataField]
+    public float StandOff;
 
     /// <summary>
     ///     The commander's taunt, sent once with each wave this is part of.

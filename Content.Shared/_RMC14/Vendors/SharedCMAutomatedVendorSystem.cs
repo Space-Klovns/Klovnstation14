@@ -192,6 +192,9 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         if (entry.Amount is <= 0)
             return;
 
+        if (!KsMeetsEntryRequirements(actor, entry)) // KS14: perk-gated entries
+            return;
+
         if (!ProtoMan.TryIndex(entry.Id, out var entity))
         {
             Log.Error($"Tried to vend non-existent entity: {entry.Id}");

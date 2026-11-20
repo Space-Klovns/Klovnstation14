@@ -1,7 +1,7 @@
 using Content.Client._KS14.Voice.UI;
 using Content.Client.Gameplay;
 using Content.Shared._KS14.Voice;
-using Content.Shared.Input;
+using Content.Shared._KS14.Input;
 using JetBrains.Annotations;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
@@ -36,7 +36,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
     public void OnStateEntered(GameplayState state)
     {
         CommandBinds.Builder
-            .Bind(ContentKeyFunctions.KsVoicePushToTalk,
+            .Bind(KsKeyFunctions.VoicePushToTalk,
                 InputCmdHandler.FromDelegate(
                     enabled: _ => OnPushToTalk(held: true),
                     disabled: _ => OnPushToTalk(held: false),
@@ -201,7 +201,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
         _window.SetKeybind(_voiceClientSystem.VoiceActivation
             ? Loc.GetString("ks-voice-window-voice-activation")
             : Loc.GetString("ks-voice-window-keybind",
-                ("key", _inputManager.GetKeyFunctionButtonString(ContentKeyFunctions.KsVoicePushToTalk))));
+                ("key", _inputManager.GetKeyFunctionButtonString(KsKeyFunctions.VoicePushToTalk))));
 
         if (_errorLocId != null)
             _window.SetStatus(Loc.GetString(_errorLocId));

@@ -5,6 +5,7 @@ using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Robust.Shared.Prototypes;
 
@@ -61,12 +62,16 @@ public sealed partial class CultivationDurabilitySystem : EntitySystem
         if (!_durabilityQuery.TryComp(uid, out var durability))
         {
             durability = AddComp<CultivationDurabilityComponent>(uid);
-            durability.BaseCritical = _mobThresholdSystem.TryGetThresholdForState(uid, MobState.Critical, out var critical)
-                ? critical.Value.Float()
-                : null;
-            durability.BaseDead = _mobThresholdSystem.TryGetThresholdForState(uid, MobState.Dead, out var dead)
-                ? dead.Value.Float()
-                : null;
+            // Something with no health thresholds at all (not a mob) has nothing to make tougher.
+            if (TryComp<MobThresholdsComponent>(uid, out var thresholds))
+            {
+                durability.BaseCritical = _mobThresholdSystem.TryGetThresholdForState(uid, MobState.Critical, out var critical, thresholds)
+                    ? critical.Value.Float()
+                    : null;
+                durability.BaseDead = _mobThresholdSystem.TryGetThresholdForState(uid, MobState.Dead, out var dead, thresholds)
+                    ? dead.Value.Float()
+                    : null;
+            }
         }
 
         return (durability.BaseCritical, durability.BaseDead);

@@ -34,6 +34,9 @@
                 <CheckBox Name="EmissiveBloomEnabled"
                           Text="{Loc 'ks-ui-options-emissive-bloom'}"
                           ToolTip="{Loc 'ks-ui-options-emissive-bloom-tooltip'}"/>
+                <!-- KS14: tgstation's throw and resist buttons beside the hotbar -->
+                <CheckBox Name="CombatHudButtonsEnabled"
+                          Text="{Loc 'ks-ui-options-combat-hud-buttons'}"/>
                 <CheckBox Name="ActionFoldersEnabled"
                           Text="{Loc 'ks-ui-options-action-folders'}"/>
                 <CheckBox Name="ActionLayoutPersistenceEnabled"

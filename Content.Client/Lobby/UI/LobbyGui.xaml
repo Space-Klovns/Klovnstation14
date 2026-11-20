@@ -1,4 +1,6 @@
-<!-- KS14: reworked into the tactical lobby layout; upstream original kept in LobbyGui.xaml.old -->
+<!-- KS14: reworked into the tactical lobby layout; upstream original kept in LobbyGui.xaml.old. The Kharkiv layout is a
+     separate control at the end (KsKharkiv), shown instead of KsFadeLeft, KsFadeBottom and KsRoot when the server picks
+     it; see Klovn/Docs/lobby.md. -->
 <lobbyUi:LobbyGui
     xmlns="https://spacestation14.io"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,7 +9,8 @@
     xmlns:lobbyUi="clr-namespace:Content.Client.Lobby.UI"
     xmlns:info="clr-namespace:Content.Client.Info"
     xmlns:viewport="clr-namespace:Content.Client.Viewport"
-    xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Chat.Widgets">
+    xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Chat.Widgets"
+    xmlns:kharkiv="clr-namespace:Content.Client._KS14.Lobby.Kharkiv">
     <!-- Background -->
     <TextureRect Access="Public"
                  VerticalExpand="True"
@@ -239,4 +242,6 @@
         </PanelContainer>
     </BoxContainer>
     </BoxContainer>
+    <!-- KS14: the Kharkiv layout, hidden unless the server picks it -->
+    <kharkiv:KsKharkivLobbySkin Name="KsKharkiv" Access="Public" Visible="False"/>
 </lobbyUi:LobbyGui>

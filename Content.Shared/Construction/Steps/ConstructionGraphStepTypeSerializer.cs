@@ -46,6 +46,12 @@ namespace Content.Shared.Construction.Steps
                 return typeof(PartAssemblyConstructionGraphStep);
             }
 
+            // KS14: steps matching an entity prototype
+            if (node.Has("prototype"))
+            {
+                return typeof(_KS14.Construction.Steps.KsPrototypeConstructionGraphStep);
+            }
+
             return null;
         }
 

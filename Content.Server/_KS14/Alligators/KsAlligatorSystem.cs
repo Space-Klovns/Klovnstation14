@@ -1,4 +1,3 @@
-using Content.Server.Chat.Managers;
 using Content.Shared._KS14.Alligators;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared._KS14.Klovnmed.Dismemberment;
@@ -8,7 +7,6 @@ using Content.Shared.Alert;
 using Content.Shared.Body;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
-using Content.Shared.Chat;
 using Content.Shared.Damage.Components;
 using Content.Shared.Destructible;
 using Content.Shared.Gravity;
@@ -22,9 +20,7 @@ using Content.Shared.Popups;
 using Content.Shared.Standing;
 using Content.Shared.Weapons.Melee.Events;
 using Robust.Shared.Containers;
-using Robust.Shared.Player;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Alligators;
 
@@ -39,7 +35,6 @@ public sealed partial class KsAlligatorSystem : EntitySystem
     [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
     [Dependency] private DismembermentSystem _dismembermentSystem = default!;
-    [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private InventorySystem _inventorySystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
@@ -58,7 +53,6 @@ public sealed partial class KsAlligatorSystem : EntitySystem
 
     private static readonly LocId DeathRollStartMessage = "ks-alligator-death-roll-start";
     private static readonly LocId DeathRollCompleteMessage = "ks-alligator-death-roll-complete";
-    private static readonly LocId ChatWrapMessage = "ks-alligator-chat-wrap-message";
 
     [SubscribeLocalEvent]
     private void OnMeleeHit(Entity<KsAlligatorComponent> alligator, ref MeleeHitEvent args)
@@ -126,19 +120,12 @@ public sealed partial class KsAlligatorSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Shows a message about the alligator and its victim above the victim, and in the chat of everyone nearby.
+    ///     Shows a message about the alligator and its victim above the victim, to everyone who can see them.
     /// </summary>
     private void Announce(LocId message, EntityUid alligatorUid, EntityUid victimUid)
     {
         _popupSystem.PopupEntity(KsPopupMessage.Create(message, ("alligator", alligatorUid), ("victim", victimUid)),
             victimUid, PopupType.LargeCaution);
-
-        // Chat text is formatted here, in the server's language, as every other chat message is.
-        var chatMessage = Loc.GetString(message, ("alligator", alligatorUid), ("victim", victimUid));
-        var wrappedMessage = Loc.GetString(ChatWrapMessage, ("message", FormattedMessage.EscapeText(chatMessage)));
-        // No source entity: the popup already marks the spot, and a source would add a speech bubble on top of it.
-        _chatManager.ChatMessageToManyFiltered(Filter.Pvs(victimUid, entityManager: EntityManager), ChatChannel.Emotes,
-            chatMessage, wrappedMessage, EntityUid.Invalid, hideChat: false, recordReplay: true, colorOverride: null);
     }
 
     public override void Update(float frameTime)

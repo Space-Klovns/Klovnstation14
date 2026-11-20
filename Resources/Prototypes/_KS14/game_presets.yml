@@ -53,8 +53,10 @@
   rules:
   - KsScenarioFieldCommander
   - KsFieldCommanderRule
+  - KsFieldCommanderGhostRespawn
   - KsFieldCommanderWeather
   - KsFieldCommanderLitterDespawn
+  - KsFieldCommanderBloodEvaporation
 
 # The wuxia gamemode: cultivators among the crew, cultivation manuals and a legendary artifact hidden about the station,
 # spirit herbs blooming and heaven's omens. Cultivation appears in no other mode unless an admin brings it in.

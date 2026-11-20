@@ -58,6 +58,15 @@ public sealed partial class NpcPlayDeadSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Lying there on purpose.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnGetDeliberateHold(Entity<NpcPlayDeadComponent> entity, ref NpcGetDeliberateHoldEvent args)
+    {
+        args.Holding |= entity.Comp.Playing;
+    }
+
+    /// <summary>
     ///     Runs one decision for <paramref name="uid"/> right now, whether one is due or not, awake or not. For tests.
     /// </summary>
     internal void UpdateNow(EntityUid uid)

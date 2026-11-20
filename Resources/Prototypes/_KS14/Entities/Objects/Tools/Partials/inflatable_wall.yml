@@ -1,0 +1,18 @@
+# Inflatables are built by clicking a tile, predicted, as sandbags and barbed wire are, instead of through upstream's
+#     server-only SpawnAfterInteract. Same prototype, do-after and one per use.
+
+- type: !PartialOnly entity
+  id: InflatableWallStack
+  components:
+  - !Remove type: SpawnAfterInteract
+  - type: KsPlaceOnTile
+    prototype: InflatableWall
+    doAfter: 1
+
+- type: !PartialOnly entity
+  id: InflatableDoorStack
+  components:
+  - !Remove type: SpawnAfterInteract
+  - type: KsPlaceOnTile
+    prototype: InflatableDoor
+    doAfter: 1

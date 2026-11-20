@@ -33,6 +33,7 @@ namespace Content.Server.Construction
         [Dependency] private EntityLookupSystem _lookupSystem = default!;
         [Dependency] private SharedTransformSystem _transformSystem = default!;
         [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+        [Dependency] private Content.Shared._KS14.LearnedRecipes.KsLearnedRecipesSystem _learnedRecipesSystem = default!; // KS14
 
         // --- WARNING! LEGACY CODE AHEAD! ---
         // This entire file contains the legacy code for initial construction.
@@ -49,7 +50,7 @@ namespace Content.Server.Construction
         }
 
         // LEGACY CODE. See warning at the top of the file!
-        private IEnumerable<EntityUid> EnumerateNearby(EntityUid user)
+        public /* KS14: was private, for KsNearbyEntitiesCondition */ IEnumerable<EntityUid> EnumerateNearby(EntityUid user)
         {
             foreach (var item in _handsSystem.EnumerateHeld(user))
             {
@@ -372,7 +373,8 @@ namespace Content.Server.Construction
                 return false;
             }
 
-            if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user))
+            if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user)
+                || !_learnedRecipesSystem.CanUse(user, constructionPrototype)) // KS14
             {
                 _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-cannot-start"), user, user);
                 return false;
@@ -391,7 +393,10 @@ namespace Content.Server.Construction
             foreach (var condition in constructionPrototype.Conditions)
             {
                 if (!condition.Condition(user, user.ToCoordinates(0, 0), Direction.South))
+                {
+                    _popup.PopupEntity(KsPopupMessage.Create("construction-system-cannot-start"), user, user); // KS14: upstream fails silently
                     return false;
+                }
             }
 
             if (pathFind == null)
@@ -457,7 +462,8 @@ namespace Content.Server.Construction
                 return;
             }
 
-            if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user))
+            if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user)
+                || !_learnedRecipesSystem.CanUse(user, constructionPrototype)) // KS14
             {
                 _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-cannot-start"), user, user);
                 return;

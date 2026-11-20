@@ -1,0 +1,20 @@
+# The medical beam gun's heal tick tell (KsMedicalBeamGun's healEffect): spawned on the patient, riding along.
+
+- type: entity
+  id: KsMedicalBeamHealSparkle
+  categories: [ HideSpawnMenu ]
+  name: heal sparkle
+  components:
+  - type: Sprite
+    sprite: _KS14/Effects/MedicalBeam/heal_sparkle.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: sparkle
+      shader: unshaded
+  - type: PointLight
+    radius: 1.2
+    energy: 0.8
+    color: "#6ef0ff"
+  - type: TimedDespawn
+    lifetime: 0.6

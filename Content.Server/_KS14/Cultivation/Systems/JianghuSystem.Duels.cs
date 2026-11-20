@@ -413,6 +413,13 @@ public sealed partial class JianghuSystem
     [SubscribeLocalEvent]
     private void OnDuelistTerminating(Entity<HonorDuelComponent> entity, ref EntityTerminatingEvent args)
     {
+        // With no opponent left to win it (or one already gone too), the duel just ends quietly.
+        if (!entity.Comp.Opponent.IsValid() || TerminatingOrDeleted(entity.Comp.Opponent))
+        {
+            entity.Comp.Ended = true;
+            return;
+        }
+
         FinishDuel(entity, entity.Comp.Opponent, winnerUid: entity.Comp.Opponent, outcome: HonorDuelOutcome.Vanished);
     }
 

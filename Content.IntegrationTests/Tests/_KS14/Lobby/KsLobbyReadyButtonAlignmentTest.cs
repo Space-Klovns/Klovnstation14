@@ -2,6 +2,9 @@ using System.Threading.Tasks;
 using Content.Client.Lobby;
 using Content.Client.Lobby.UI;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Lobby;
 using Content.Server.GameTicking;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
@@ -11,7 +14,7 @@ using Robust.Shared.Localization;
 namespace Content.IntegrationTests.Tests._KS14.Lobby;
 
 /// <summary>
-///     The ready button's text starts at the same place through NOT READY, JOIN and READY. The button's width can lag
+///     In the tactical layout, the ready button's text starts at the same place through NOT READY, JOIN and READY. The button's width can lag
 ///         a text change (the engine skips re-arranging a button whose label re-measures while the button itself is
 ///         arranging, which happens at round start), so a centred label shows its new text off-centre inside the old
 ///         width. This checks where the text is drawn, not only the alignment setting.
@@ -24,6 +27,10 @@ public sealed class KsLobbyReadyButtonAlignmentTest : GameTest
     [Test]
     public async Task ReadyButtonTextStaysPut()
     {
+        // A tactical-layout test: the default, auto, would show the Kharkiv layout on clown holidays.
+        await OverrideCVar(Side.Server, KsCCVars.LobbyLayout, KsLobbyLayouts.Tactical);
+        await Pair.RunTicksSync(5);
+
         var notReadyX = await GetTextLeftEdge("ks-lobby-ready-not-ready");
 
         // Round start swaps NOT READY for JOIN: the transition that left the width stale.

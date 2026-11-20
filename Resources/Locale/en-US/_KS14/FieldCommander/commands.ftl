@@ -30,3 +30,29 @@ cmd-ks_fcstatus-uplink-none = not landed
 cmd-ks_fcstatus-uplink-destroyed = taken out
 cmd-ks_fcstatus-uplink-active = bombardment in { $seconds }s
 cmd-ks_fcstatus-points = { $player }: { $points } points
+cmd-ks_fcstatus-stuck = Units stuck now { $stuck }. Sent again for being stuck { $relocated }, refunded { $refunded }.
+
+cmd-ks_fcstuck-desc = Lists every field commander unit that has got nowhere for a while, longest first, with what its steering and HTN are doing.
+cmd-ks_fcstuck-help = ks_fcstuck [seconds without progress, default 0]
+cmd-ks_fcstuck-hint = [seconds]
+cmd-ks_fcstuck-none = No unit has gone that long without getting anywhere.
+cmd-ks_fcstuck-count = { $count } units:
+
+ks-fieldcommander-stuck-unit = { $unit } at { $position }, going to { $goal } (best { $best }), no progress for { $seconds }s, stage { $stage } ({ $reason }). Steering: { $steering }. HTN: { $task }.
+ks-fieldcommander-stuck-steering = { $status }, { $failed } failed paths, { $path } nodes left, pathfinding { $pathfinding }, to { $target } within { $range }
+ks-fieldcommander-stuck-htn-disabled = disabled
+ks-fieldcommander-stuck-htn-none = no plan
+ks-fieldcommander-stuck-htn-plan = { $operator } (task { $index } of { $count }, branches { $branches })
+
+cmd-ks_fcpause-desc = Stops or restarts every running field commander's clock. Its units and the defenders fight on; no phase, wave, order or bombardment comes due while it is paused.
+cmd-ks_fcpause-help = ks_fcpause [on|off]
+cmd-ks_fcpause-hint = [on|off]
+cmd-ks_fcpause-paused = Field commander paused.
+cmd-ks_fcpause-resumed = Field commander resumed.
+cmd-ks_fcstatus-paused = Paused: its clock is stopped.
+
+cmd-ks_fcperk-desc = Sets a field commander defender's perk for the round, and swaps it onto the body they are in now.
+cmd-ks_fcperk-help = ks_fcperk <player> <perk>
+cmd-ks_fcperk-hint-perk = <perk>
+cmd-ks_fcperk-unknown = There is no perk "{ $perk }".
+cmd-ks_fcperk-done = { $player }'s perk is now { $perk }.

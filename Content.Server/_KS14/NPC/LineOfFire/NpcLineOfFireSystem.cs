@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Server._KS14.WeldedParts;
 using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Interaction;
@@ -58,6 +59,7 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     [Dependency] private InteractionSystem _interactionSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private KsWeldedPartsSystem _weldedPartsSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -107,7 +109,8 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
     /// <summary>
     ///     For a sight check by collision mask that no mob ends, standing or not: every mob is on the
-    ///         <see cref="CollisionGroup.Opaque"/> layer. Made once, not on every cast.
+    ///         <see cref="CollisionGroup.Opaque"/> layer. Nor does a welded vehicle (a tank), Opaque for the same reason.
+    ///         Made once, not on every cast.
     /// </summary>
     public SharedInteractionSystem.Ignored IsMob => _isMob;
 
@@ -125,7 +128,8 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     public SharedInteractionSystem.Ignored IsLyingMob { get; private set; } = default!;
 
     /// <summary>
-    ///     What <see cref="CanRoundReach"/>'s ray passes through: any mob, the shooter and the target. Made once, not on every
+    ///     What <see cref="CanRoundReach"/>'s ray passes through: any mob, the shooter and the target, and a welded vehicle
+    ///         friendly to the shooter, whose rounds pass through it (<c>KsWeldedPartsSystem</c>). Made once, not on every
     ///         cast; the two it reads are set just before each.
     /// </summary>
     private Func<EntityUid, bool> _isIgnoredByRound = default!;
@@ -142,9 +146,12 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     {
         base.Initialize();
 
-        _isIgnoredByRound = uid => uid == _roundShooterUid || uid == _roundTargetUid || _mobStateQuery.HasComp(uid);
+        // A friendly welded whole (a tank of its side) lets its rounds through: KsWeldedPartsSystem
+        _isIgnoredByRound = uid => uid == _roundShooterUid || uid == _roundTargetUid || _mobStateQuery.HasComp(uid) ||
+            _weldedPartsSystem.IsFriendlyWhole(_roundShooterUid, uid);
 
-        _isMob = uid => _mobStateQuery.HasComp(uid);
+        // A welded vehicle hides no more than a mob does: it is Opaque, to be hit by lasers, as mobs are
+        _isMob = uid => _mobStateQuery.HasComp(uid) || _weldedPartsSystem.TryGetWhole(uid, out _);
         _isMobPredicate = uid => _mobStateQuery.HasComp(uid);
         IsLyingMob = uid => _mobStateQuery.TryComp(uid, out var mobState) &&
             (mobState.CurrentState == MobState.Dead ||

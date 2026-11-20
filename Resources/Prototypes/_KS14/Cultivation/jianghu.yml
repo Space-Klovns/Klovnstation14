@@ -96,6 +96,9 @@
   name: bundle of incense
   description: Three sticks of sandalwood incense tied with red thread. Light it and offer it to someone to swear brotherhood.
   components:
+  - type: Construction
+    graph: KsSwornIncense
+    node: done
   - type: Item
     size: Tiny
   - type: Sprite

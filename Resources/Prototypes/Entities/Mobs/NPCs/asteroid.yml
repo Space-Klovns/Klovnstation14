@@ -31,6 +31,7 @@
   name: goliath
   description: A massive beast that uses long tentacles to ensnare its prey, threatening them is not advised under any conditions.
   components:
+  - type: KsMiningFauna # KS14: tgstation's MOB_MINING biotype, for bane weapons
   - type: Sprite
     sprite: Mobs/Aliens/Asteroid/goliath.rsi
     layers:
@@ -193,6 +194,7 @@
   name: hivelord
   description: A truly alien creature, it is a mass of unknown organic material, constantly fluctuating. When attacking, pieces of it split off and attack in tandem with the original.
   components:
+  - type: KsMiningFauna # KS14: tgstation's MOB_MINING biotype, for bane weapons
   - type: Sprite
     sprite: Mobs/Aliens/Asteroid/hivelord.rsi
     layers:
@@ -358,6 +360,7 @@
   name: basilisk
   description: A territorial beast, covered in a thick shell that absorbs energy. Its stare causes victims to freeze from the inside.
   components:
+  - type: KsMiningFauna # KS14: tgstation's MOB_MINING biotype, for bane weapons
   - type: Sprite
     sprite: Mobs/Aliens/Asteroid/basilisk.rsi
     layers:

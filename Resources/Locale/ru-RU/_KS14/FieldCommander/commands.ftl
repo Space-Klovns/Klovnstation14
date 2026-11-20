@@ -30,3 +30,29 @@ cmd-ks_fcstatus-uplink-none = не высажен
 cmd-ks_fcstatus-uplink-destroyed = уничтожен
 cmd-ks_fcstatus-uplink-active = удар через { $seconds } с
 cmd-ks_fcstatus-points = { $player }: { $points } очков
+cmd-ks_fcstatus-stuck = Застрявших бойцов сейчас: { $stuck }. Отправлено заново из-за застревания: { $relocated }, возвращено в бюджет: { $refunded }.
+
+cmd-ks_fcstuck-desc = Показывает каждого бойца полевого командира, который давно никуда не продвинулся, начиная с самых долгих, и что делают его рулёжка и HTN.
+cmd-ks_fcstuck-help = ks_fcstuck [секунд без продвижения, по умолчанию 0]
+cmd-ks_fcstuck-hint = [секунды]
+cmd-ks_fcstuck-none = Нет бойцов, которые так долго никуда не продвигались.
+cmd-ks_fcstuck-count = Бойцов: { $count }:
+
+ks-fieldcommander-stuck-unit = { $unit } в { $position }, идёт к { $goal } (ближе всего { $best }), без продвижения { $seconds } с, этап { $stage } ({ $reason }). Рулёжка: { $steering }. HTN: { $task }.
+ks-fieldcommander-stuck-steering = { $status }, неудачных путей { $failed }, узлов осталось { $path }, поиск пути { $pathfinding }, к { $target } в пределах { $range }
+ks-fieldcommander-stuck-htn-disabled = отключён
+ks-fieldcommander-stuck-htn-none = нет плана
+ks-fieldcommander-stuck-htn-plan = { $operator } (задача { $index } из { $count }, ветви { $branches })
+
+cmd-ks_fcpause-desc = Останавливает или снова запускает часы всех полевых командиров. Его бойцы и защитники продолжают сражаться; пока он на паузе, не наступают ни фазы, ни волны, ни приказы, ни бомбардировка.
+cmd-ks_fcpause-help = ks_fcpause [on|off]
+cmd-ks_fcpause-hint = [on|off]
+cmd-ks_fcpause-paused = Полевой командир приостановлен.
+cmd-ks_fcpause-resumed = Полевой командир продолжает.
+cmd-ks_fcstatus-paused = Пауза: его часы остановлены.
+
+cmd-ks_fcperk-desc = Устанавливает перк защитника в режиме полевого командира на весь раунд и меняет его на текущем теле игрока.
+cmd-ks_fcperk-help = ks_fcperk <игрок> <перк>
+cmd-ks_fcperk-hint-perk = <перк>
+cmd-ks_fcperk-unknown = Перка «{ $perk }» не существует.
+cmd-ks_fcperk-done = Перк игрока { $player } теперь — { $perk }.

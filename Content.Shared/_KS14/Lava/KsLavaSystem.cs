@@ -1,10 +1,14 @@
+using Content.Shared._KS14.Burning;
 using Content.Shared.Chat;
+using Content.Shared.Item;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.GameTicking;
 using Content.Shared.StepTrigger.Systems;
 using Content.Shared.Stunnable;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -25,6 +29,15 @@ public sealed partial class KsLavaSystem : EntitySystem
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
+    [Dependency] private KsItemBurningSystem _itemBurningSystem = default!;
+    [Dependency] private EntityQuery<ItemComponent> _itemQuery = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+
+    /// <summary>
+    ///     The lava fixture items touch. Defined on the <c>FloorLavaEntity</c> prototype.
+    /// </summary>
+    public const string ItemFixtureId = "ksItemFixture";
 
     /// <summary>
     ///     List of occupied lava tiles on each grid or whatever.
@@ -55,6 +68,26 @@ public sealed partial class KsLavaSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     Keeps mobs off the item fixture, as <see cref="Fluids.KsPuddleTouchSystem"/> does for puddles:
+    ///         <c>FlyingMobMask</c> is exactly <c>ItemMask</c>, so without this a flying mob would be burned by lava it
+    ///         flies over. Walking mobs still touch the lava through its other fixture.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnPreventCollide(Entity<KsLavaComponent> entity, ref PreventCollideEvent args)
+    {
+        // Cheapest test first: this is raised for every contact either of the lava's fixtures could make.
+        if (!args.OtherFixture.Hard || !_mobStateQuery.HasComp(args.OtherEntity))
+            return;
+
+        if (!_fixturesQuery.TryComp(entity.Owner, out var fixturesComponent) ||
+            !fixturesComponent.Fixtures.TryGetValue(ItemFixtureId, out var itemFixture) ||
+            !ReferenceEquals(itemFixture, args.OurFixture))
+            return;
+
+        args.Cancelled = true;
+    }
+
     [SubscribeLocalEvent]
     private void OnStepTriggerAttempt(Entity<KsLavaComponent> entity, ref StepTriggerAttemptEvent args)
     {
@@ -64,6 +97,16 @@ public sealed partial class KsLavaSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnStepTriggered(Entity<KsLavaComponent> entity, ref StepTriggeredOffEvent args)
     {
+        if (HasComp<KsLavaProofComponent>(args.Tripper))
+            return;
+
+        // Loose items don't sink, they catch fire and slowly burn away (tgstation's lava burn_stuff).
+        if (_itemQuery.HasComp(args.Tripper) && !_mobStateQuery.HasComp(args.Tripper))
+        {
+            _itemBurningSystem.Ignite(args.Tripper, initialDamage: entity.Comp.ItemIgniteDamage);
+            return;
+        }
+
         if (!_damageableSystem.TryChangeDamage(args.Tripper, entity.Comp.Damage, origin: entity.Owner))
             return;
 

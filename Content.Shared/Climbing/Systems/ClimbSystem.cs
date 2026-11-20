@@ -363,6 +363,11 @@ public sealed partial class ClimbSystem : VirtualController
             _physics.SetCollisionMask(uid, name, fixture, fixture.CollisionMask & ~ClimbingCollisionGroup, fixturesComp);
         }
 
+        // KS14 start: already on something, and climbing onto the next thing, as when shoved from table to table
+        if (fixturesComp.Fixtures.ContainsKey(ClimbingFixtureName))
+            return true;
+        // KS14 end
+
         if (!_fixtureSystem.TryCreateFixture(
                 uid,
                 new PhysShapeCircle(0.35f),
@@ -569,7 +574,9 @@ public sealed partial class ClimbSystem : VirtualController
 
         _damageableSystem.TryChangeDamage(args.Climber, component.ClimberDamage, origin: args.Climber);
         _damageableSystem.TryChangeDamage(uid, component.TableDamage, origin: args.Climber);
-        _stunSystem.TryUpdateParalyzeDuration(args.Climber, TimeSpan.FromSeconds(component.StunTime));
+        // KS14: someone put there by another is stunned for KsPlacedStunTime, was always component.StunTime
+        var ksStunTime = args.Instigator == args.Climber ? component.StunTime : component.KsPlacedStunTime;
+        _stunSystem.TryUpdateParalyzeDuration(args.Climber, TimeSpan.FromSeconds(ksStunTime));
 
         // Not shown to the user, since they already get a 'you climb on the glass table' popup
         _popupSystem.PopupEntity(

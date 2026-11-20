@@ -1,0 +1,48 @@
+# Books that teach crafting recipes, tgstation's /obj/item/book/granter/crafting_recipe.
+
+- type: entity
+  parent: BaseItem
+  id: KsBaseRecipeGranterBook
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+  - type: Item
+    size: Small
+  - type: Tag
+    tags:
+    - Book
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/book_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/book_drop.ogg
+
+- type: entity
+  parent: [ KsBaseRecipeGranterBook, BaseSyndicateContraband ]
+  id: KsBookRegalCondor
+  name: memoirs of a fallen agent
+  description: A battered journal. It seems like it is covered in donkpocket crumbs.
+  components:
+  - type: Sprite
+    layers:
+    - state: paper
+    - state: cover_old
+      color: "#5c3a24"
+    - state: icon_text
+      color: "#2a1a10"
+    - state: overlay_dirt
+  - type: KsRecipeGranter
+    recipes:
+    - KsRegalCondor
+    - KsRegalCondorMagazine
+    remarks:
+    - ks-recipe-granter-regal-condor-remark-1
+    - ks-recipe-granter-regal-condor-remark-2
+    - ks-recipe-granter-regal-condor-remark-3
+    - ks-recipe-granter-regal-condor-remark-4
+    - ks-recipe-granter-regal-condor-remark-5
+    - ks-recipe-granter-regal-condor-remark-6
+  - type: StaticPrice
+    price: 500

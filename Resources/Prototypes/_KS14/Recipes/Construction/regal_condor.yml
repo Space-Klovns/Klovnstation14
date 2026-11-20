@@ -1,0 +1,37 @@
+- type: construction
+  id: KsRegalCondor
+  graph: KsRegalCondorGraph
+  startNode: start
+  targetNode: regalCondor
+  category: construction-category-weapons
+  objectType: Item
+  ksMustBeLearned: true
+  conditions:
+  - !type:KsNearbyEntitiesCondition
+    entries:
+    - tool: Screwing
+    - prototypes: [ ClothingUniformJumpsuitOperative ]
+    - prototypes: [ ClothingMaskGasSyndicate ]
+    - whitelist:
+        components:
+        - Emag
+
+- type: construction
+  id: KsRegalCondorMagazine
+  graph: KsRegalCondorMagazineGraph
+  startNode: start
+  targetNode: magazine
+  category: construction-category-weapons
+  objectType: Item
+  ksMustBeLearned: true
+  conditions:
+  - !type:KsNearbyEntitiesCondition
+    entries:
+    - tool: Screwing
+    - tool: Welding
+    - prototypes: [ ClothingUniformJumpsuitOperative ]
+    - prototypes: [ ClothingMaskGasSyndicate ]
+    - whitelist:
+        components:
+        - Emag
+    - prototypes: [ KsWeaponPistolRegalCondor ]

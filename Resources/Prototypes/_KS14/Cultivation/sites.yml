@@ -88,6 +88,9 @@
   name: cultivation mat
   description: A round woven mat with the eight trigrams stitched around the edge. Supposedly it helps you focus.
   components:
+  - type: Construction
+    graph: KsCultivationMat
+    node: done
   - type: Transform
     anchored: true
   - type: Clickable
@@ -153,6 +156,9 @@
   name: guqin
   description: A long, low seven-string zither of lacquered paulownia wood. The sages said a gentleman is never without his qin.
   components:
+  - type: Construction
+    graph: KsGuqin
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/treasures.rsi
     state: guqin

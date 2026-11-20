@@ -7,6 +7,9 @@
   name: meteor hammer
   description: Two iron weights on a long rope, swung in whirling arcs. It reaches two tiles, and a good hit can drag the target towards you.
   components:
+  - type: Construction
+    graph: KsMeteorHammer
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: meteor_hammer
@@ -29,6 +32,9 @@
   name: rope dart
   description: A steel dart on a long cord. Click someone up to four tiles away to shoot it out and snap it back; it can tear what they're holding out of their hand.
   components:
+  - type: Construction
+    graph: KsRopeDart
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: rope_dart
@@ -51,6 +57,9 @@
   name: butterfly sword
   description: A short, broad single-edged blade with a hand guard, made to be used in pairs. With one in each hand, each strikes faster.
   components:
+  - type: Construction
+    graph: KsButterflySword
+    node: done
   - type: Clothing
     # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
     sprite: _KS14/Cultivation/sword_worn.rsi
@@ -79,6 +88,9 @@
   name: iron fan
   description: A folding fan with iron ribs and a razor edge. It slices up close, and cuts deeper thrown.
   components:
+  - type: Construction
+    graph: KsIronFan
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: iron_fan
@@ -102,6 +114,9 @@
   name: bamboo staff
   description: A long staff of dried bamboo. Wielded in both hands, a heavy swing can knock someone off their feet, but bamboo splits after enough of them.
   components:
+  - type: Construction
+    graph: KsBambooStaff
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: bamboo_staff
@@ -157,6 +172,9 @@
   name: plum blossom needle
   description: A slender steel needle for throwing. In a cultivator's hand it can find an acupoint from across the room.
   components:
+  - type: Construction
+    graph: KsPlumBlossomNeedle
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: needles
@@ -185,6 +203,9 @@
   name: willow-leaf flying dagger
   description: A slim, perfectly balanced throwing dagger. Cultivators throw them hard enough to bury them to the hilt.
   components:
+  - type: Construction
+    graph: KsFlyingDagger
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: flying_dagger
@@ -220,6 +241,9 @@
   name: smoke pellet
   description: A paper twist packed with powder. Throw it, or crush it in your hand, to vanish in a cloud of smoke.
   components:
+  - type: Construction
+    graph: KsSmokePellet
+    node: done
   - type: Sprite
     sprite: _KS14/Cultivation/items.rsi
     state: smoke_pellet

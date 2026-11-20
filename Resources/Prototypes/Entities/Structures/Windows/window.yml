@@ -8,6 +8,7 @@
     snap:
     - Window
   components:
+  - type: KsThrowHitPriority # KS14: something thrown at a window hits it before the grille under it
   - type: Stainable # KS14: stains
   - type: Anchorable
     flags:

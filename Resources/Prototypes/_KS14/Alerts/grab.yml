@@ -1,0 +1,42 @@
+# Shown to someone held tighter than a pull, in place of the pulled alert. Clicking one tries to break free.
+- type: alertCategory
+  id: KsGrabbed
+
+- type: alert
+  id: KsGrabbedAggressive
+  category: KsGrabbed
+  icons: [ /Textures/Interface/Alerts/Pull/pulled.png ]
+  clickEvent: !type:KsResistGrabAlertEvent
+  name: alerts-ks-grabbed-aggressive-name
+  description: alerts-ks-grabbed-aggressive-desc
+
+- type: alert
+  id: KsGrabbedNeck
+  category: KsGrabbed
+  icons: [ /Textures/Interface/Alerts/Pull/pulled.png ]
+  clickEvent: !type:KsResistGrabAlertEvent
+  name: alerts-ks-grabbed-neck-name
+  description: alerts-ks-grabbed-neck-desc
+
+- type: alert
+  id: KsGrabbedStrangle
+  category: KsGrabbed
+  icons: [ /Textures/Interface/Alerts/Pull/pulled.png ]
+  clickEvent: !type:KsResistGrabAlertEvent
+  name: alerts-ks-grabbed-strangle-name
+  description: alerts-ks-grabbed-strangle-desc
+
+# Fireman carry. The carrier clicks theirs to put the carried down; the carried clicks theirs to wriggle free.
+- type: alert
+  id: KsCarrying
+  icons: [ /Textures/Interface/Alerts/Pull/pulling.png ]
+  clickEvent: !type:KsStopCarryingAlertEvent
+  name: alerts-ks-carrying-name
+  description: alerts-ks-carrying-desc
+
+- type: alert
+  id: KsCarried
+  icons: [ /Textures/Interface/Alerts/Pull/pulled.png ]
+  clickEvent: !type:KsEscapeCarryAlertEvent
+  name: alerts-ks-carried-name
+  description: alerts-ks-carried-desc

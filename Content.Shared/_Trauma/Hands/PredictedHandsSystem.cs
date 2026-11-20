@@ -162,7 +162,7 @@ public sealed partial class PredictedHandsSystem : EntitySystem
             return false;
 
         hands.NextThrowTime = _timing.CurTime + hands.ThrowCooldown;
-        Dirty(player, hands);
+        DirtyField(player, hands, nameof(HandsComponent.NextThrowTime)); // KS14: was Dirty(player, hands); mark only the throw cooldown
 
         var direction = _transform.ToMapCoordinates(coordinates).Position - _transform.GetWorldPosition(player);
 

@@ -31,5 +31,13 @@ public sealed partial class GlassTableComponent : Component
     /// <summary>
     ///     How long should someone who climbs on this table be stunned for?
     /// </summary>
+    [DataField] // KS14: made a data field
     public float StunTime = 2.0f;
+
+    /// <summary>
+    ///     KS14: the stun for someone put on the table by somebody else, as by a shove or a throw: a short one, on top
+    ///         of the knockdown they get from that.
+    /// </summary>
+    [DataField]
+    public float KsPlacedStunTime = 1.0f;
 }

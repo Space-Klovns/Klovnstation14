@@ -35,6 +35,7 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     private System.Globalization.CultureInfo? _waveTextCulture;
     private int _waveTextWave;
     private int? _waveTextSecondsLeft;
+    private bool _waveTextPaused;
 
     public override void Shutdown()
     {
@@ -84,8 +85,10 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
             !_waveStatusQuery.TryComp(mapUid, out var statusComponent))
             return null;
 
-        // Null for no wave scheduled. Whole seconds: the line only changes when one of these does.
-        int? secondsLeft = statusComponent.NextWaveTime is { } nextWaveTime
+        // Null for no wave scheduled, or none counting down while the commander is paused. Whole seconds: the line
+        //      only changes when one of these does.
+        var paused = statusComponent.Paused;
+        int? secondsLeft = !paused && statusComponent.NextWaveTime is { } nextWaveTime
             ? (int)Math.Ceiling(Math.Max(0d, (nextWaveTime - _gameTiming.CurTime).TotalSeconds))
             : null;
 
@@ -94,18 +97,23 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
         if (_waveText != null &&
             _waveTextWave == statusComponent.Wave &&
             _waveTextSecondsLeft == secondsLeft &&
+            _waveTextPaused == paused &&
             ReferenceEquals(_waveTextCulture, culture))
             return _waveText;
 
         _waveTextCulture = culture;
         _waveTextWave = statusComponent.Wave;
         _waveTextSecondsLeft = secondsLeft;
-        _waveText = FormatWaveText(statusComponent.Wave, secondsLeft);
+        _waveTextPaused = paused;
+        _waveText = FormatWaveText(statusComponent.Wave, secondsLeft, paused);
         return _waveText;
     }
 
-    private string FormatWaveText(int wave, int? secondsLeft)
+    private string FormatWaveText(int wave, int? secondsLeft, bool paused)
     {
+        if (paused)
+            return Loc.GetString("ks-fieldcommander-wave-status-paused", ("wave", wave));
+
         if (secondsLeft is not { } seconds)
         {
             return wave > 0

@@ -5,7 +5,6 @@ ent-KsMobSpaceAlligator = космический аллигатор
 ks-alligator-death-roll-start = { CAPITALIZE($alligator) } вцепляется в ногу { $victim } и начинает вращаться!
 ks-alligator-death-roll-complete = { CAPITALIZE($alligator) } отрывает ногу { $victim }!
 ks-alligator-death-roll-held = Челюсти аллигатора сомкнулись на вашей ноге!
-ks-alligator-chat-wrap-message = [bold][color=red]{ $message }[/color][/bold]
 
 # KsAlligatorMigration
 ent-KsAlligatorMigration = Миграция аллигаторов

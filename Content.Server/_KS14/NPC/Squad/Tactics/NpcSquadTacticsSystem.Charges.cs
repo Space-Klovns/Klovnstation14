@@ -46,6 +46,12 @@ public sealed partial class NpcSquadTacticsSystem
     private const int MaxWallCandidates = 6;
 
     /// <summary>
+    ///     How many separate patches of floor outside a room, nearest first, <see cref="TryFindOutsideFromRoom"/> floods out from
+    ///         before it gives up.
+    /// </summary>
+    private const int MaxOutsideChecks = 16;
+
+    /// <summary>
     ///     How many tiles either side of what stands between them and a hostile they can see to look for a wall to blow.
     /// </summary>
     private const int BarrierWallReach = 2;
@@ -96,6 +102,8 @@ public sealed partial class NpcSquadTacticsSystem
     private static readonly Vector2i[] ChargeSiteOffsets = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     private readonly Dictionary<Vector2i, int> _floodSteps = new();
+    private readonly List<(float DistanceSquared, Vector2i Tile)> _outsideCandidates = new();
+    private readonly HashSet<Vector2i> _deadEndTiles = new();
     private readonly Dictionary<Vector2i, int> _farFloodSteps = new();
     private readonly List<(int Steps, Vector2i Room, Vector2i Wall, Vector2i Outside)> _wallCandidates = new();
 
@@ -112,7 +120,7 @@ public sealed partial class NpcSquadTacticsSystem
     private bool TryStartBlast(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         // A plan's hunt never blasts on its own: the plan has its own charge steps, and nothing runs a blast on its hunt.
-        if (!settings.HuntCharges || hunt.AllowCharges || hunt.BlastTried || !AnyoneHasACharge())
+        if (hunt.AllowCharges || hunt.BlastTried || !(settings.HuntCharges ? AnyoneHasACharge() : AnyCarrierHuntsWithCharges()))
             return false;
 
         hunt.BlastTried = true;
@@ -231,6 +239,35 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether a member carries a charge and is one to blow its way in (<see cref="NpcSquadTacticsSettings.HuntCharges"/>)
+    ///         by its own settings. Squad tactics go by the leader's, and breachers sent with others join a squad an ordinary
+    ///         elite leads: going by the leader alone, they never blew anything for a hunt, and chose the nearest wall for a plan.
+    /// </summary>
+    private bool AnyCarrierHuntsWithCharges()
+    {
+        foreach (var memberUid in _members)
+        {
+            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) &&
+                squadMemberComponent.Tactics.HuntCharges &&
+                CarriesCharge(memberUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     The settings a wall for <paramref name="carrierUid"/>'s charge is chosen by: its own, if it is there to breach
+    ///         (<see cref="NpcSquadTacticsSettings.BreachScoring"/>), whoever leads; otherwise the squad's.
+    /// </summary>
+    private NpcSquadTacticsSettings GetBreachSettings(EntityUid carrierUid, NpcSquadTacticsSettings settings)
+    {
+        return _squadMemberQuery.TryComp(carrierUid, out var squadMemberComponent) && squadMemberComponent.Tactics.BreachScoring
+            ? squadMemberComponent.Tactics
+            : settings;
     }
 
     /// <summary>
@@ -397,6 +434,88 @@ public sealed partial class NpcSquadTacticsSystem
         return false;
     }
 
+    /// <summary>
+    ///     Floor just outside the room, past one of its walls, nearest <paramref name="walkerUid"/> in a straight line of
+    ///         those that lead anywhere (<see cref="LeadsOutFrom"/>): worked out from the room's side, so it does not matter how
+    ///         far off the walker is. For <see cref="TryFindNearestOutside"/> to fall back on, which only looks within a walk of
+    ///         the walker, and finds a route to what it picks.
+    /// </summary>
+    private bool TryFindOutsideFromRoom(NpcHunt hunt, EntityUid walkerUid, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+
+        if (hunt.RoomTiles.Count == 0 || !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
+            return false;
+
+        var walkerPosition = _transformSystem.GetWorldPosition(walkerUid);
+        var worldMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
+
+        _outsideCandidates.Clear();
+        foreach (var roomTile in hunt.RoomTiles)
+        {
+            foreach (var offset in ChargeSiteOffsets)
+            {
+                var wallTile = roomTile + offset;
+                var outsideTile = wallTile + offset;
+
+                if (hunt.RoomTiles.Contains(wallTile) ||
+                    hunt.RoomTiles.Contains(outsideTile) ||
+                    GetWallOn(grid, outsideTile) != null ||
+                    !_mapSystem.TryGetTile(grid.Comp, outsideTile, out var gridTile) ||
+                    _turfSystem.IsSpace(gridTile))
+                    continue;
+
+                var outsidePosition = Vector2.Transform(_mapSystem.TileCenterToVector(grid, outsideTile), worldMatrix);
+                _outsideCandidates.Add(((outsidePosition - walkerPosition).LengthSquared(), outsideTile));
+            }
+        }
+
+        // Nearest first, and the first that is not a pocket walled in as the room is: nobody could get there to hold it.
+        _outsideCandidates.Sort((a, b) => a.DistanceSquared.CompareTo(b.DistanceSquared));
+
+        // A pocket found once is passed over for the rest of its tiles without flooding it again.
+        _deadEndTiles.Clear();
+        var floods = 0;
+        foreach (var (_, outsideTile) in _outsideCandidates)
+        {
+            if (_deadEndTiles.Contains(outsideTile))
+                continue;
+
+            if (++floods > MaxOutsideChecks)
+                break;
+
+            if (!LeadsOutFrom(walkerUid, grid, outsideTile))
+            {
+                _deadEndTiles.UnionWith(_floodSteps.Keys);
+                continue;
+            }
+
+            coordinates = GetTileCoordinates(grid.Owner, outsideTile);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether floor leads anywhere, as <see cref="TryPrepareSealedRoom"/> judges a room cut off, the other way round:
+    ///         walking out from it through every door, it gets to a member, or to more floor than <see cref="SealedRoomSteps"/>,
+    ///         which is somewhere too big to say and taken to lead somewhere. A pocket that runs out first leads nowhere.
+    /// </summary>
+    private bool LeadsOutFrom(EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i tile)
+    {
+        _floodSteps.Clear();
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, tile, SealedRoomSteps, _floodSteps, stopAtDoors: false);
+
+        foreach (var (floodTile, steps) in _floodSteps)
+        {
+            if (steps >= SealedRoomSteps || IsAnyMemberOn(grid, floodTile))
+                return true;
+        }
+
+        return false;
+    }
+
     private bool IsAnyMemberOn(Entity<MapGridComponent> grid, Vector2i tile)
     {
         foreach (var memberUid in _members)
@@ -481,14 +600,23 @@ public sealed partial class NpcSquadTacticsSystem
         var hunt = plan.Hunt!;
         var carrierUid = EntityUid.Invalid;
 
+        // One there to breach, if any carries a charge: the wall is chosen its way (GetBreachSettings).
         foreach (var memberUid in _members)
         {
             if (memberUid == plan.WatcherUid || !CarriesCharge(memberUid))
                 continue;
 
-            carrierUid = memberUid;
-            break;
+            if (!carrierUid.IsValid())
+                carrierUid = memberUid;
+
+            if (GetBreachSettings(memberUid, settings).BreachScoring)
+            {
+                carrierUid = memberUid;
+                break;
+            }
         }
+
+        var breachSettings = carrierUid.IsValid() ? GetBreachSettings(carrierUid, settings) : settings;
 
         // A hostile somewhere too big to be a room leaves the hunt with no grid of its own: the one they are all on does.
         if (!carrierUid.IsValid() ||
@@ -504,6 +632,9 @@ public sealed partial class NpcSquadTacticsSystem
         {
             FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
 
+            if (breachSettings.BreachScoring)
+                OrderByBreachScore(plan, grid, breachSettings);
+
             if (TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var roomPick))
                 return roomPick;
         }
@@ -512,6 +643,9 @@ public sealed partial class NpcSquadTacticsSystem
             return null;
 
         FindBarrierCandidates(plan, carrierUid, grid, carrierTile, maxWalk);
+
+        if (breachSettings.BreachScoring)
+            OrderByBreachScore(plan, grid, breachSettings);
 
         if (!TryPickWallCandidate(plan, grid, carrierUid, carrierTile, maxWalk, out var barrierPick))
             return null;
@@ -969,6 +1103,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             charge.Phase = NpcSquadChargePhase.Blasted;
             charge.BlastedAt = now;
+            RememberBreach(charge.Pick.Site, now);
             return true;
         }
 

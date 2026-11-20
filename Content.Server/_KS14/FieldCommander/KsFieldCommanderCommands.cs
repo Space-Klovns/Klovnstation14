@@ -175,3 +175,49 @@ public sealed partial class KsFieldCommanderStatusCommand : KsFieldCommanderComm
             shell.WriteLine(FieldCommanderRuleSystem.GetStatus(rule));
     }
 }
+
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderStuckCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcstuck";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        // ks_fcstuck [seconds]
+        if (args.Length > 1)
+        {
+            shell.WriteError(Loc.GetString("shell-wrong-arguments-number"));
+            return;
+        }
+
+        var seconds = 0f;
+        if (args.Length == 1 && (!float.TryParse(args[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out seconds) || !float.IsFinite(seconds)))
+        {
+            shell.WriteError(Loc.GetString("shell-argument-must-be-number"));
+            return;
+        }
+
+        var minimum = TimeSpan.FromSeconds(Math.Clamp(seconds, 0f, 86400f));
+
+        foreach (var rule in GetRules(shell))
+        {
+            var lines = FieldCommanderRuleSystem.DescribeStuckUnits(rule.Owner, minimum);
+            if (lines.Count == 0)
+            {
+                shell.WriteLine(Loc.GetString("cmd-ks_fcstuck-none"));
+                continue;
+            }
+
+            shell.WriteLine(Loc.GetString("cmd-ks_fcstuck-count", ("count", lines.Count)));
+            foreach (var line in lines)
+                shell.WriteLine(line);
+        }
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length == 1
+            ? CompletionResult.FromHint(Loc.GetString("cmd-ks_fcstuck-hint"))
+            : CompletionResult.Empty;
+    }
+}

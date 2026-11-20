@@ -1,0 +1,10 @@
+- type: entity
+  parent: CrateSyndicate
+  id: KsCrateNullEntry
+  name: NULL_ENTRY crate
+  description: A syndicate crate with a shipping label that is nothing but corrupted characters.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage:
+        id: KsBookRegalCondor

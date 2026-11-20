@@ -48,6 +48,9 @@ public abstract partial class SharedCombatModeSystem : EntitySystem
         SetInCombatMode(uid, !component.IsInCombatMode, component);
 
         var msg = component.IsInCombatMode ? "action-popup-combat-enabled" : "action-popup-combat-disabled";
+        // KS14: the client plays tgstation's toggle sound at the interface volume
+        var ksToggled = new Content.Shared._KS14.CombatMode.KsCombatModeToggledEvent(component.IsInCombatMode);
+        RaiseLocalEvent(args.Performer, ref ksToggled);
         _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(msg), args.Performer, args.Performer);
     }
 

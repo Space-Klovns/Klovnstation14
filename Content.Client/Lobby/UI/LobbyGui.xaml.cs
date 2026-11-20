@@ -45,6 +45,12 @@ namespace Content.Client.Lobby.UI
 
             CollapseButton.OnPressed += _ => TogglePanel(false);
             ExpandButton.OnPressed += _ => TogglePanel(true);
+
+            // KS14 start: both layouts, and every button that leads to character setup
+            SetAnchorPreset(KsKharkiv, LayoutPreset.Wide);
+            CharacterPreview.CharacterSetupButton.OnPressed += _ => KsRequestCharacterSetup();
+            KsInitialiseLayout();
+            // KS14 end
         }
 
         // KS14: lobbyview
@@ -68,9 +74,11 @@ namespace Content.Client.Lobby.UI
                 case LobbyGuiState.Default:
                     DefaultState.Visible = true;
                     RightSide.Visible = true;
+                    KsKharkiv.ShowSetup(false); // KS14
                     break;
                 case LobbyGuiState.CharacterSetup:
                     CharacterSetupState.Visible = true;
+                    KsKharkiv.ShowSetup(true); // KS14
 
                     var actualWidth = (float)UserInterfaceManager.RootControl.PixelWidth;
                     var setupWidth = (float)LeftSide.PixelWidth;

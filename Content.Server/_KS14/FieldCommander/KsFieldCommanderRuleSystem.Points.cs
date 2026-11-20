@@ -84,10 +84,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Readies a defender's body: their shots pass through their own side, and their points come with them.
+    ///     Readies a defender's body: their shots pass through their own side, and their points and perk come with them.
     /// </summary>
-    private void PrepareDefender(KsFieldCommanderRuleComponent component, EntityUid bodyUid, ICommonSession? session)
+    private void PrepareDefender(Entity<KsFieldCommanderRuleComponent> rule, EntityUid bodyUid, ICommonSession? session)
     {
+        var component = rule.Comp;
         EnsureComp<KsFactionCollisionShooterComponent>(bodyUid);
 
         // So the client knows who is a defender, and how to flash them as they go down.
@@ -101,21 +102,23 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             component.Defenders.Add(session.UserId);
             MirrorPoints(component, bodyUid, GetPoints(component, session.UserId));
+            ApplyOrRequestPerk(rule, bodyUid, session);
         }
     }
 
     /// <summary>
     ///     Readies the defenders who were already in the round before the rule was.
     /// </summary>
-    private void PrepareExistingDefenders(KsFieldCommanderRuleComponent component)
+    private void PrepareExistingDefenders(Entity<KsFieldCommanderRuleComponent> rule)
     {
+        var component = rule.Comp;
         var query = EntityQueryEnumerator<ScenarioFactionMemberComponent>();
         while (query.MoveNext(out var memberUid, out var factionMemberComponent))
         {
             if (factionMemberComponent.Id != component.DefenderFaction)
                 continue;
 
-            PrepareDefender(component, memberUid, CompOrNull<ActorComponent>(memberUid)?.PlayerSession);
+            PrepareDefender(rule, memberUid, CompOrNull<ActorComponent>(memberUid)?.PlayerSession);
         }
     }
 
@@ -123,10 +126,10 @@ public sealed partial class KsFieldCommanderRuleSystem
     private void OnPlayerSpawnComplete(PlayerSpawnCompleteEvent args)
     {
         var query = QueryActiveRules();
-        while (query.MoveNext(out _, out _, out var ruleComponent, out _))
+        while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))
         {
             if (IsDefender(ruleComponent, args.Mob))
-                PrepareDefender(ruleComponent, args.Mob, args.Player);
+                PrepareDefender((ruleUid, ruleComponent), args.Mob, args.Player);
         }
     }
 
@@ -145,25 +148,56 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Docks the defenders who killed one of their own. The penalty is scaled by how much of everything the
-    ///         victim took was their own side's doing (<see cref="GetTeamkillPenalty"/>), and split between those
-    ///         defenders by how much each dealt: the one who dealt the most is the teamkiller and the rest assisted.
-    ///         Kills of the commander's units are paid in <see cref="RewardUnitKill"/>.
+    ///     A defender's death and return: see <see cref="OnDefenderDied"/>, and <see cref="RewardRevive"/> for being
+    ///         brought back.
     /// </summary>
     // MobStateChangedEvent is a by-value class event, so this is a plain broadcast handler.
     [SubscribeLocalEvent]
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
-        if (args.NewMobState != MobState.Dead ||
-            !TryComp<KsFieldCommanderDamageLedgerComponent>(args.Target, out var ledgerComponent) ||
-            // A unit's ledger is paid and wiped by RewardUnitKill, whichever of the two handlers hears of the death first.
-            HasComp<KsFieldCommanderUnitComponent>(args.Target))
+        // A unit's ledger is paid and wiped by RewardUnitKill, whichever of the two handlers hears of the death first.
+        if (HasComp<KsFieldCommanderUnitComponent>(args.Target))
             return;
 
+        if (args.NewMobState == MobState.Dead)
+            OnDefenderDied(args.Target);
+        else if (args.OldMobState == MobState.Dead)
+        {
+            RewardRevive(args.Target, args.Origin);
+            RestoreLedger(args.Target);
+        }
+    }
+
+    /// <summary>
+    ///     Docks the defenders who killed one of their own. The penalty is scaled by how much of everything the
+    ///         victim took was their own side's doing (<see cref="GetTeamkillPenalty"/>), and split between those
+    ///         defenders by how much each dealt: the one who dealt the most is the teamkiller and the rest assisted.
+    ///         Kills of the commander's units are paid in <see cref="RewardUnitKill"/>. Who did it is kept on the body
+    ///         for whoever revives it (<see cref="KsFieldCommanderDeathRecordComponent"/>).
+    /// </summary>
+    private void OnDefenderDied(EntityUid targetUid)
+    {
+        TryComp<KsFieldCommanderDamageLedgerComponent>(targetUid, out var ledgerComponent);
+
+        var recorded = false;
         var query = QueryActiveRules();
         while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))
         {
-            if (!IsDefender(ruleComponent, args.Target))
+            if (!IsDefender(ruleComponent, targetUid))
+                continue;
+
+            if (!recorded)
+            {
+                RecordDeath(targetUid, ledgerComponent);
+                recorded = true;
+
+                // Whoever revives them is weighed against everything that killed them, but a teamkill already charged
+                //      at an earlier death is not charged again.
+                if (ledgerComponent != null)
+                    TakeOutSettledDamage(ledgerComponent);
+            }
+
+            if (ledgerComponent == null)
                 continue;
 
             var defenderDamage = GetDefenderDamage(ledgerComponent);
@@ -171,11 +205,28 @@ public sealed partial class KsFieldCommanderRuleSystem
                 continue;
 
             var penalty = GetTeamkillPenalty(ruleComponent, defenderDamage / (defenderDamage + ledgerComponent.OtherDamage));
-            PayShares((ruleUid, ruleComponent), ledgerComponent, penalty, TeamkillReason, TeamkillAssistReason, GetReasonName(args.Target));
+            PayShares((ruleUid, ruleComponent), ledgerComponent, penalty, TeamkillReason, TeamkillAssistReason, GetReasonName(targetUid));
         }
 
         // Paid out: whoever brings them back starts with a clean slate.
-        WipeLedger((args.Target, ledgerComponent));
+        if (ledgerComponent != null)
+            WipeLedger((targetUid, ledgerComponent));
+    }
+
+    private static void TakeOutSettledDamage(KsFieldCommanderDamageLedgerComponent ledgerComponent)
+    {
+        foreach (var (userId, settled) in ledgerComponent.SettledDamage)
+        {
+            if (!ledgerComponent.Damage.TryGetValue(userId, out var dealt))
+                continue;
+
+            if (dealt - settled > 0f)
+                ledgerComponent.Damage[userId] = dealt - settled;
+            else
+                ledgerComponent.Damage.Remove(userId);
+        }
+
+        ledgerComponent.SettledDamage.Clear();
     }
 
     /// <summary>
@@ -186,7 +237,9 @@ public sealed partial class KsFieldCommanderRuleSystem
     private void WipeLedger(Entity<KsFieldCommanderDamageLedgerComponent> ledger)
     {
         ledger.Comp.Damage.Clear();
+        ledger.Comp.SettledDamage.Clear();
         ledger.Comp.OtherDamage = 0f;
+        ledger.Comp.AttackerDamage = 0f;
         RemCompDeferred<KsFieldCommanderDamageLedgerComponent>(ledger.Owner);
     }
 
@@ -207,8 +260,13 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     private static float GetDefenderDamage(KsFieldCommanderDamageLedgerComponent ledgerComponent)
     {
+        return GetDefenderDamage(ledgerComponent.Damage);
+    }
+
+    private static float GetDefenderDamage(Dictionary<NetUserId, float> defenderDamage)
+    {
         var total = 0f;
-        foreach (var damage in ledgerComponent.Damage.Values)
+        foreach (var damage in defenderDamage.Values)
         {
             total += damage;
         }
@@ -253,10 +311,15 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///     Keeps count of who damaged a unit, for <see cref="RewardUnitKill"/> to split the kill by.
     /// </summary>
     // DamageChangedEvent is a by-value class event, so the engine can't give this an Entity<T>.
-    // Before the thresholds system, whose handler is what kills the unit: the last shot has to be counted by then.
-    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
+    // Before the thresholds and destructible systems, whose handlers are what kill or destroy the unit: the last shot
+    //      has to be counted by then.
+    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem), typeof(Content.Server.Destructible.DestructibleSystem)])]
     private void OnUnitDamageChanged(EntityUid unitUid, KsFieldCommanderUnitComponent unitComponent, DamageChangedEvent args)
     {
+        // A unit being shot at is in a fight, not stuck (see .Stuck).
+        if (args.DamageIncreased)
+            unitComponent.LastDamagedTime = _gameTiming.CurTime;
+
         if (TryComp<KsFieldCommanderRuleComponent>(unitComponent.RuleUid, out var ruleComponent))
             RecordDamage(unitUid, args, ruleComponent, recordOther: false);
     }
@@ -266,15 +329,22 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///         to work a teamkill out from. Healed back to full, the slate is wiped: old friendly fire isn't charged to
     ///         a later death.
     /// </summary>
-    // By-value class event again, and ordered like OnUnitDamageChanged.
-    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
+    // By-value class event again, and ordered like OnUnitDamageChanged, as every subscription of one system to one
+    //      event must be.
+    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem), typeof(Content.Server.Destructible.DestructibleSystem)])]
     private void OnDefenderDamageChanged(EntityUid defenderUid, ScenarioFactionMemberComponent factionMemberComponent, DamageChangedEvent args)
     {
         // Every hit on every member of every faction comes through here, so the cheap answers come first: only
         //      healing can leave them unhurt, and only a ledger can be wiped. GetAllDamage copies the whole dictionary.
         if (!args.DamageIncreased)
         {
-            if (TryComp<KsFieldCommanderDamageLedgerComponent>(defenderUid, out var healedLedgerComponent) &&
+            TryComp<KsFieldCommanderDamageLedgerComponent>(defenderUid, out var healedLedgerComponent);
+
+            // Paid from the ledger as it stands, before a full heal wipes it.
+            if (args.Origin != null)
+                RewardHealing(defenderUid, args, healedLedgerComponent);
+
+            if (healedLedgerComponent != null &&
                 !_damageableSystem.GetAllDamage((defenderUid, args.Damageable)).AnyPositive())
                 WipeLedger((defenderUid, healedLedgerComponent));
 
@@ -323,9 +393,39 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var ledgerComponent = EnsureComp<KsFieldCommanderDamageLedgerComponent>(targetUid);
         if (credited)
+        {
             ledgerComponent.Damage[recipient!.Value] = ledgerComponent.Damage.GetValueOrDefault(recipient.Value) + dealt;
-        else
-            ledgerComponent.OtherDamage += dealt;
+            return;
+        }
+
+        ledgerComponent.OtherDamage += dealt;
+        if (IsAttackerHit(ruleComponent, args.Origin))
+            ledgerComponent.AttackerDamage += dealt;
+    }
+
+    /// <summary>
+    ///     Whether damage dealt with this <paramref name="origin"/> was the commander's side's doing: anything on its
+    ///         faction, its units first of all, hitting directly, with a bullet it fired, with a gun it holds, or with an
+    ///         explosion it set off or sent (a mortar crewman's shell). To be asked as the damage lands. An attacker
+    ///         already gone, or a strike missile, which nothing sends, is not recognised.
+    /// </summary>
+    private bool IsAttackerHit(KsFieldCommanderRuleComponent component, EntityUid? origin)
+    {
+        if (_killCreditSystem.GetAttacker(origin) is not { } attackerUid || Deleted(attackerUid))
+            return false;
+
+        if (IsAttackerSide(component, attackerUid))
+            return true;
+
+        // A beam names the gun, not who holds it.
+        return _containerSystem.TryGetContainingContainer(attackerUid, out var container) &&
+               IsAttackerSide(component, container.Owner);
+    }
+
+    private bool IsAttackerSide(KsFieldCommanderRuleComponent component, EntityUid uid)
+    {
+        return _scenarioFactionMemberQuery.TryComp(uid, out var factionMemberComponent) &&
+               factionMemberComponent.Id == component.Faction;
     }
 
     private void RewardUnitKill(Entity<KsFieldCommanderRuleComponent> rule, Entity<KsFieldCommanderUnitComponent> unit)
