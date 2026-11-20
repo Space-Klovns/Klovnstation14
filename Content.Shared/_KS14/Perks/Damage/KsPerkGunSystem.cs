@@ -2,6 +2,7 @@ using Content.Shared._KS14.Weapons.Hitscan;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Projectiles;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Containers;
 
@@ -17,6 +18,9 @@ public sealed partial class KsPerkGunSystem : EntitySystem
     [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<BatteryAmmoProviderComponent> _batteryAmmoQuery = default!;
+    [Dependency] private EntityQuery<RechargeBasicEntityAmmoComponent> _rechargeBasicEntityAmmoQuery = default!;
+    [Dependency] private EntityQuery<BallisticAmmoSelfRefillerComponent> _ballisticSelfRefillerQuery = default!;
 
     /// <summary>
     ///     Where a gun's rounds come from: the magazine in its magazine slot, or the gun itself when it holds them
@@ -53,6 +57,23 @@ public sealed partial class KsPerkGunSystem : EntitySystem
 
         magazineUid = containedUid;
         return true;
+    }
+
+    /// <summary>
+    ///     Whether a gun, or the magazine in it, fills back up by itself (a battery, a recharging or self-refilling ammo
+    ///         provider): more rounds than at the last shot is then no sign of a reload.
+    /// </summary>
+    public bool RefillsItself(EntityUid gunUid)
+    {
+        return RefillsItselfDirectly(gunUid) ||
+               TryGetMagazine(gunUid, out var magazineUid) && RefillsItselfDirectly(magazineUid);
+    }
+
+    private bool RefillsItselfDirectly(EntityUid uid)
+    {
+        return _batteryAmmoQuery.HasComp(uid) ||
+               _rechargeBasicEntityAmmoQuery.HasComp(uid) ||
+               _ballisticSelfRefillerQuery.HasComp(uid);
     }
 
     /// <inheritdoc cref="SharedGunSystem.GetAmmoCount"/>

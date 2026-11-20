@@ -16,6 +16,7 @@ using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
 
 namespace Content.IntegrationTests.Tests._KS14.Perks;
@@ -42,6 +43,8 @@ public sealed class KsPerkDamageTest : GameTest
     private readonly EntProtoId _rifle = "KsTestPerkDmgRifle";
     private readonly EntProtoId _magazine = "KsTestPerkDmgMagazine";
     private readonly EntProtoId _laser = "KsTestPerkDmgLaserGun";
+    private readonly EntProtoId _rechargingLaser = "KsTestPerkDmgRechargingLaserGun";
+    private readonly EntProtoId _shotgun = "KsTestPerkDmgShotgun";
     private readonly EntProtoId _bullet = "KsTestPerkDmgBullet";
     private readonly ProtoId<KsPerkPrototype> _rampPerk = "KsTestPerkDmgRamp";
     private readonly ProtoId<KsPerkPrototype> _closePerk = "KsTestPerkDmgClose";
@@ -242,6 +245,51 @@ public sealed class KsPerkDamageTest : GameTest
   - type: BasicEntityAmmoProvider
     proto: KsTestPerkDmgLaser
     capacity: 5
+
+- type: entity
+  parent: KsTestPerkDmgLaserGun
+  id: KsTestPerkDmgRechargingLaserGun
+  components:
+  - type: RechargeBasicEntityAmmo
+    rechargeCooldown: 0.1
+    rechargeSound: null
+
+# A shell of several pellets, all flying straight.
+- type: entity
+  parent: KsTestPerkDmgBullet
+  id: KsTestPerkDmgPelletSpread
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ProjectileSpread
+    proto: KsTestPerkDmgBullet
+    count: 4
+    spread: 0
+
+- type: entity
+  id: KsTestPerkDmgShell
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: CartridgeAmmo
+    proto: KsTestPerkDmgPelletSpread
+    deleteOnSpawn: true
+
+- type: entity
+  parent: BaseItem
+  id: KsTestPerkDmgShotgun
+  components:
+  - type: Gun
+    fireRate: 100
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BallisticAmmoProvider
+    proto: KsTestPerkDmgShell
+    capacity: 6
+  - type: ContainerContainer
+    containers:
+      ballistic-ammo: !type:Container
 ";
 
     private sealed record Scene(TestMapData Map, EntityUid ShooterUid, EntityUid GunUid);
@@ -404,6 +452,94 @@ public sealed class KsPerkDamageTest : GameTest
 
         Assert.That(server.System<SharedGunSystem>().GetAmmoCount(scene.GunUid), Is.Zero, "the gun should be empty");
         Assert.That(ramp.Hits, Is.Zero, "running the gun dry should lose the ramp");
+    }
+
+    /// <summary>
+    ///     A shot of several pellets adds to the ramp once, however many of them land.
+    /// </summary>
+    [Test]
+    public async Task RampCountsAShotOnceHoweverManyPelletsLand()
+    {
+        var scene = await SetUp(_rampPerk, _shotgun);
+        var targetUid = await SpawnTarget(scene, 3.5f);
+        var ramp = Ramp(scene);
+        var target = new Vector2(3.5f, 0.5f);
+        Assert.That((int)MathF.Ceiling(ramp.MaxBonus / ramp.BonusPerHit), Is.GreaterThan(2), "the test ramp needs room for two shots");
+
+        var before = TotalDamage(targetUid);
+        var pellets = await Fire(scene, target);
+        Assert.That(pellets, Has.Count.GreaterThan(1), "the test shell should fire several pellets");
+        Assert.That(TotalDamage(targetUid) - before, Is.EqualTo(BulletDamage() * pellets.Count), "every pellet should have landed");
+        Assert.That(ramp.Hits, Is.EqualTo(1), "one shot should add to the ramp once, however many of its pellets land");
+
+        await Fire(scene, target);
+        Assert.That(ramp.Hits, Is.EqualTo(2), "the next shot should add once more");
+    }
+
+    /// <summary>
+    ///     A gun that charges back up by itself has more shots than at the last one without being reloaded: the ramp
+    ///         stays.
+    /// </summary>
+    [Test]
+    public async Task RampKeepsBuildingOnAGunThatRechargesItself()
+    {
+        var server = Pair.Server;
+        var gunSystem = server.System<SharedGunSystem>();
+        var scene = await SetUp(_rampPerk, _rechargingLaser);
+        var targetUid = await SpawnTarget(scene, 3.5f);
+        var ramp = Ramp(scene);
+        var target = new Vector2(3.5f, 0.5f);
+        var capacity = gunSystem.GetAmmoCapacity(scene.GunUid);
+
+        var before = TotalDamage(targetUid);
+        await Fire(scene, target);
+        var firstHit = TotalDamage(targetUid) - before;
+        Assert.That(ramp.Hits, Is.EqualTo(1), "the first beam should add to the ramp");
+
+        for (var i = 0; i < 600 && gunSystem.GetAmmoCount(scene.GunUid) < capacity; i++)
+            await Pair.RunTicksSync(1);
+        Assert.That(gunSystem.GetAmmoCount(scene.GunUid), Is.EqualTo(capacity), "the test gun should charge back to full");
+
+        before = TotalDamage(targetUid);
+        await Fire(scene, target);
+        Assert.That(TotalDamage(targetUid) - before, Is.EqualTo(Expected(firstHit, ramp, 1)), "a gun that recharged itself should keep its ramp");
+        Assert.That(ramp.Hits, Is.EqualTo(2), "and the beam after the recharge should add to it");
+    }
+
+    /// <summary>
+    ///     The perks' networked state never names a gun or magazine that is gone: generating it would log an error.
+    /// </summary>
+    [Test]
+    public async Task PerkStateSurvivesItsGunAndMagazineBeingDeleted()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var scene = await SetUp(_rampPerk, _rifle);
+        await server.WaitPost(() =>
+            Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(scene.ShooterUid, _explosivePerk), "the second test perk should be given"));
+        await Fire(scene, new Vector2(0.5f, 6f));
+
+        void GetStates()
+        {
+            entMan.GetComponentState(entMan.EventBus, entMan.GetComponent<KsDamageRampAbilityComponent>(scene.ShooterUid), null, GameTick.Zero);
+            entMan.GetComponentState(entMan.EventBus, entMan.GetComponent<KsExplosiveLastRoundsAbilityComponent>(scene.ShooterUid), null, GameTick.Zero);
+        }
+
+        // The magazine taken out and destroyed, the gun still held.
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.System<KsPerkGunSystem>().TryGetMagazine(scene.GunUid, out var magazineUid), "the gun should be loaded");
+            Assert.That(server.System<ItemSlotsSystem>().TryEject(scene.GunUid, SharedGunSystem.MagazineSlot, null, out _), "the magazine should come out");
+            entMan.DeleteEntity(magazineUid);
+        });
+        await Pair.RunTicksSync(1);
+        await server.WaitPost(GetStates);
+
+        // Then the gun, in the hand.
+        await server.WaitPost(() => entMan.DeleteEntity(scene.GunUid));
+        await Pair.RunTicksSync(1);
+        await server.WaitPost(GetStates);
+        await Pair.RunTicksSync(2);
     }
 
     [Test]

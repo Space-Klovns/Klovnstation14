@@ -546,6 +546,15 @@ public sealed class KsPerkSupportTest : GameTest
             Assert.That(entMan.GetComponent<GunComponent>(gunUid).FireRateModified, Is.EqualTo(baseFireRate).Within(0.001f), "a dropped gun should lose the rally");
             Assert.That(handsSystem.TryPickupAnyHand(friendUid, gunUid, checkActionBlocker: false));
             Assert.That(FireRate(friendUid), Is.EqualTo(baseFireRate * ability.FireRateMultiplier).Within(0.001f), "a gun picked up should be rallied");
+
+            // One put away on the body, not in a hand (a pocket, a holster), isn't being fired: it isn't rallied.
+            var containerSystem = server.System<SharedContainerSystem>();
+            var holsteredUid = entMan.SpawnAtPosition(_rifle, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            var holster = containerSystem.EnsureContainer<Container>(friendUid, "ks-test-holster");
+            Assert.That(containerSystem.Insert(holsteredUid, holster), "the spare gun should go in the holster");
+            server.System<SharedGunSystem>().RefreshModifiers(holsteredUid);
+            Assert.That(entMan.GetComponent<GunComponent>(holsteredUid).FireRateModified, Is.EqualTo(baseFireRate).Within(0.001f),
+                "a gun the rallied body has but doesn't hold in a hand should not be rallied");
         });
 
         // A shot hits harder, once the gun picked up is ready.
@@ -553,7 +562,11 @@ public sealed class KsPerkSupportTest : GameTest
         await server.WaitAssertion(() =>
         {
             var gunUid = server.System<SharedHandsSystem>().GetActiveItem(friendUid)!.Value;
-            var bullet = server.ProtoMan.Index<EntityPrototype>(entMan.GetComponent<BallisticAmmoProviderComponent>(Magazine(friendUid).Owner).Proto!.Value);
+            var cartridge = server.ProtoMan.Index<EntityPrototype>(entMan.GetComponent<BallisticAmmoProviderComponent>(Magazine(friendUid).Owner).Proto!.Value);
+            Assert.That(cartridge.TryGetComponent<CartridgeAmmoComponent>(out var cartridgeAmmo, entMan.ComponentFactory), "the magazine should hold cartridges");
+            Assert.That(server.ProtoMan.Index<EntityPrototype>(cartridgeAmmo!.Prototype)
+                .TryGetComponent<Content.Shared.Projectiles.ProjectileComponent>(out var bulletProjectile, entMan.ComponentFactory), "the cartridge should fire a bullet");
+            var bulletDamage = bulletProjectile!.Damage.GetTotal();
             var before = new HashSet<EntityUid>();
             var projectiles = entMan.EntityQueryEnumerator<Content.Shared.Projectiles.ProjectileComponent>();
             while (projectiles.MoveNext(out var projectileUid, out _))
@@ -569,7 +582,7 @@ public sealed class KsPerkSupportTest : GameTest
                     continue;
 
                 fired = true;
-                Assert.That(projectileComponent.Damage.GetTotal(), Is.EqualTo(FixedPoint2.New(5f * ability.DamageMultiplier)),
+                Assert.That(projectileComponent.Damage.GetTotal(), Is.EqualTo(bulletDamage * ability.DamageMultiplier),
                     "a rallied shot should hit harder");
             }
 

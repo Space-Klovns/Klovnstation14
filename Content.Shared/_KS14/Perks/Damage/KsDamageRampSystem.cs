@@ -10,7 +10,7 @@ using Robust.Shared.Network;
 namespace Content.Shared._KS14.Perks.Damage;
 
 /// <summary>
-///     Ramps a shooter's damage up with every hit on a living mob (<see cref="KsDamageRampAbilityComponent"/>).
+///     Ramps a shooter's damage up with every shot that hits a living mob (<see cref="KsDamageRampAbilityComponent"/>).
 ///         Bullets carry the bonus from when they were fired; a hitscan shot gets it as it lands. Hits are counted on
 ///         the server, which is the only side that knows they happened.
 /// </summary>
@@ -40,6 +40,7 @@ public sealed partial class KsDamageRampSystem : EntitySystem
         var countAfter = _perkGunSystem.GetAmmoCount(gunUid);
         var countBefore = countAfter + args.Ammo.Count;
         var hasSource = _perkGunSystem.TryGetAmmoSource(gunUid, out var sourceUid);
+        component.Shot++;
 
         if (component.Gun != gunUid)
         {
@@ -47,9 +48,10 @@ public sealed partial class KsDamageRampSystem : EntitySystem
             component.Gun = gunUid;
             component.AmmoSource = hasSource ? sourceUid : null;
         }
-        // No magazine in: the round in the chamber is still the old magazine's.
+        // No magazine in: the round in the chamber is still the old magazine's. More rounds than last time is a
+        //      reload, unless the gun fills back up by itself.
         else if (hasSource && component.AmmoSource != sourceUid ||
-                 countBefore > component.LastCount)
+                 countBefore > component.LastCount && !_perkGunSystem.RefillsItself(gunUid))
         {
             Reset(entity);
             component.AmmoSource = hasSource ? sourceUid : component.AmmoSource;
@@ -72,6 +74,7 @@ public sealed partial class KsDamageRampSystem : EntitySystem
             var shotComponent = EnsureComp<KsDamageRampShotComponent>(projectileUid);
             shotComponent.Shooter = entity.Owner;
             shotComponent.Generation = entity.Comp.Generation;
+            shotComponent.Shot = entity.Comp.Shot;
         }
 
         // Emptied: the ramp goes with the last round, after it has had its bonus.
@@ -90,14 +93,14 @@ public sealed partial class KsDamageRampSystem : EntitySystem
     private void OnHitscanHit(Entity<KsDamageRampAbilityComponent> entity, ref KsShooterHitscanHitEvent args)
     {
         if (args.Data.HitEntity is { } targetUid && entity.Comp.Gun == args.Data.Gun)
-            TryCountHit(entity, targetUid, entity.Comp.Generation);
+            TryCountHit(entity, targetUid, entity.Comp.Generation, entity.Comp.Shot);
     }
 
     [SubscribeLocalEvent]
     private void OnProjectileHit(Entity<KsDamageRampShotComponent> entity, ref ProjectileHitEvent args)
     {
         if (_rampQuery.TryComp(entity.Comp.Shooter, out var rampComponent))
-            TryCountHit((entity.Comp.Shooter, rampComponent), args.Target, entity.Comp.Generation);
+            TryCountHit((entity.Comp.Shooter, rampComponent), args.Target, entity.Comp.Generation, entity.Comp.Shot);
     }
 
     [SubscribeLocalEvent]
@@ -112,15 +115,18 @@ public sealed partial class KsDamageRampSystem : EntitySystem
         Dirty(entity);
     }
 
-    private void TryCountHit(Entity<KsDamageRampAbilityComponent> entity, EntityUid targetUid, int generation)
+    private void TryCountHit(Entity<KsDamageRampAbilityComponent> entity, EntityUid targetUid, int generation, int shot)
     {
-        // A hit is the server's to count: the client's copy of a bullet can hit what the server's misses.
+        // A hit is the server's to count: the client's copy of a bullet can hit what the server's misses. One shot
+        //      counts once, so a shotgun's pellets don't each add to the ramp.
         if (_netManager.IsClient ||
             generation != entity.Comp.Generation ||
+            shot == entity.Comp.CountedShot ||
             entity.Comp.Hits * entity.Comp.BonusPerHit >= entity.Comp.MaxBonus ||
             !_perkGunSystem.IsLivingMob(targetUid))
             return;
 
+        entity.Comp.CountedShot = shot;
         entity.Comp.Hits++;
         Dirty(entity);
 

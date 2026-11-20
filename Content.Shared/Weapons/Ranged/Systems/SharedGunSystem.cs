@@ -897,8 +897,10 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         RaiseLocalEvent(gun, ref ev);
 
-        // KS14 start: whoever holds the gun may modify it too (perk buffs); they refresh it as they gain or lose a say
-        if (Containers.TryGetContainingContainer(gun.Owner, out var ksHolderContainer))
+        // KS14 start: whoever holds the gun in a hand may modify it too (perk buffs); they refresh it as they gain or
+        //      lose a say. Only a hand: a gun in a pocket, a belt or a pneumatic cannon isn't being fired by its owner
+        if (Containers.TryGetContainingContainer(gun.Owner, out var ksHolderContainer) &&
+            _hands.IsHolding(ksHolderContainer.Owner, gun.Owner))
             RaiseLocalEvent(ksHolderContainer.Owner, ref ev);
         // KS14 end
 

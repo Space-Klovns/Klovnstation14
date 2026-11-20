@@ -44,10 +44,12 @@ public sealed partial class KsExplosiveLastRoundsAbilityComponent : Component
     [DataField, AutoNetworkedField]
     public SoundSpecifier? FireSound = new SoundPathSpecifier("/Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg");
 
-    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+    // Not networked, these two: only ever compared with the next shot's gun and magazine, on each side, and either can
+    //      be deleted while still remembered here, which the state would trip over.
+    [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? Gun;
 
-    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? AmmoSource;
 
     /// <summary>
