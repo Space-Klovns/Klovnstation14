@@ -76,14 +76,12 @@ public sealed partial class NpcSquadTacticsSystem
             _breachScores.Add((score, i));
         }
 
-        // The cheap part first. Only those that could still come out on top are worth a line of sight each: a sight penalty only
-        //      ever adds, so once one without it beats what is left with it, the rest stay where they are.
-        _breachScores.Sort(CompareBreachScores);
-
+        // Every one gets its line of sight, not only the best few: TryPickWallCandidate goes down the list past any that turn out
+        //      unsafe to blow or out of reach, however many, and one left unchecked there would come before every one checked and
+        //      seen. There are only as many as the room has walls within a walk, and this runs once per charge picked.
         if (_breachWatchers.Count > 0 && settings.BreachSightPenalty > 0f)
         {
-            var checkedCount = Math.Min(_breachScores.Count, MaxWallCandidates * 2);
-            for (var i = 0; i < checkedCount; i++)
+            for (var i = 0; i < _breachScores.Count; i++)
             {
                 var (score, index) = _breachScores[i];
                 var (_, _, wallTile, outsideTile) = _wallCandidates[index];
@@ -100,9 +98,9 @@ public sealed partial class NpcSquadTacticsSystem
                     break;
                 }
             }
-
-            _breachScores.Sort(CompareBreachScores);
         }
+
+        _breachScores.Sort(CompareBreachScores);
 
         _breachScratch.Clear();
         _breachScratch.AddRange(_wallCandidates);

@@ -130,8 +130,9 @@ public sealed class KsNpcTargetSelectionTest : GameTest
     }
 
     /// <summary>
-    ///     With two others of its side on the nearer hostile, an NPC takes the farther one; with only one other, it
-    ///         stays on the nearer, its own fighting of it not counted.
+    ///     With two others of its side ranked ahead of it on the nearer hostile, an NPC takes the farther one; with only
+    ///         one, it stays on the nearer, its own fighting of it not counted; and those ranked behind it never push it
+    ///         off the target it is on.
     /// </summary>
     [Test]
     public async Task CrowdedTargetsArePutBehindOthers()
@@ -141,11 +142,14 @@ public sealed class KsNpcTargetSelectionTest : GameTest
         await Server.WaitAssertion(() =>
         {
             var trackingSystem = SEntMan.System<NpcTargetTrackingSystem>();
+            // Spawned first, so ranked ahead of the owner.
+            var allyUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, 3);
+            var secondAllyUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, -3);
             var ownerUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, 0);
             var nearUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 2, 0);
             var farUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, -5, 0);
-            var allyUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, 3);
-            var secondAllyUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, -3);
+            var laterAllyUid = SpawnAt(SEntMan, LonerMob, gridUid, -1, 3);
+            var secondLaterAllyUid = SpawnAt(SEntMan, LonerMob, gridUid, -1, -3);
 
             SEntMan.EnsureComponent<NPCRangedCombatComponent>(ownerUid).Target = nearUid;
             SEntMan.EnsureComponent<NPCRangedCombatComponent>(allyUid).Target = nearUid;
@@ -155,13 +159,76 @@ public sealed class KsNpcTargetSelectionTest : GameTest
 
             SEntMan.EnsureComponent<NPCMeleeCombatComponent>(secondAllyUid).Target = nearUid;
             trackingSystem.UpdateNow();
-            Assert.That(Best(Scores(ownerUid, CrowdedQuery)), Is.EqualTo(farUid), "with two others on the nearer, the farther should be taken");
+            Assert.That(Best(Scores(ownerUid, CrowdedQuery)), Is.EqualTo(farUid), "with two others ahead of it on the nearer, the farther should be taken");
 
             SEntMan.RemoveComponent<NPCMeleeCombatComponent>(secondAllyUid);
             SEntMan.RemoveComponent<NPCRangedCombatComponent>(allyUid);
+            SEntMan.EnsureComponent<NPCRangedCombatComponent>(laterAllyUid).Target = nearUid;
+            SEntMan.EnsureComponent<NPCRangedCombatComponent>(secondLaterAllyUid).Target = nearUid;
             trackingSystem.UpdateNow();
-            Assert.That(trackingSystem.GetEngagingAllies(ownerUid, nearUid), Is.Zero, "the count should follow those who stopped");
-            Assert.That(SEntMan.HasComponent<NpcTargetedComponent>(farUid), Is.False, "a target nobody fights should carry no count");
+            Assert.That(Best(Scores(ownerUid, CrowdedQuery)), Is.EqualTo(nearUid), "those ranked behind it should not push it off its target");
+            Assert.That(Best(Scores(secondLaterAllyUid, CrowdedQuery)), Is.EqualTo(farUid), "the last ranked of three should move off");
+
+            SEntMan.RemoveComponent<NPCRangedCombatComponent>(laterAllyUid);
+            SEntMan.RemoveComponent<NPCRangedCombatComponent>(secondLaterAllyUid);
+            SEntMan.RemoveComponent<NPCRangedCombatComponent>(ownerUid);
+            trackingSystem.UpdateNow();
+            Assert.That(trackingSystem.GetEngagingAllies(allyUid, nearUid), Is.Zero, "the count should follow those who stopped");
+            Assert.That(SEntMan.HasComponent<NpcTargetedComponent>(nearUid), Is.False, "a target nobody fights should carry no count");
+            Assert.That(SEntMan.HasComponent<NpcTargetedComponent>(farUid), Is.False);
+        });
+    }
+
+    /// <summary>
+    ///     Four NPCs, two hostiles, picking their targets over and over in a changing order while the count is taken
+    ///         less often, as planning and the count really run: they split and stay split, rather than all leaving the
+    ///         nearer hostile for the farther together and all coming back.
+    /// </summary>
+    [Test]
+    public async Task ASquadSplitsOverTwoTargetsAndStaysSplit()
+    {
+        var gridUid = await MakeFloor();
+
+        await Server.WaitAssertion(() =>
+        {
+            var trackingSystem = SEntMan.System<NpcTargetTrackingSystem>();
+            var npcs = new List<EntityUid>();
+            for (var i = 0; i < 4; i++)
+                npcs.Add(SpawnAt(SEntMan, LonerMob, gridUid, 0, i - 2));
+
+            var nearUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 3, 0);
+            var farUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, -4, 0);
+
+            // Everyone starts on the nearer: what nobody spreading out would do.
+            foreach (var npcUid in npcs)
+                SEntMan.EnsureComponent<NPCRangedCombatComponent>(npcUid).Target = nearUid;
+
+            trackingSystem.UpdateNow();
+
+            const int rounds = 40;
+            var switchesLate = 0;
+            for (var round = 0; round < rounds; round++)
+            {
+                // A different order each round, as their plans fall on different ticks.
+                for (var i = 0; i < npcs.Count; i++)
+                {
+                    var npcUid = npcs[(i + round) % npcs.Count];
+                    var combatComponent = SEntMan.GetComponent<NPCRangedCombatComponent>(npcUid);
+                    var best = Best(Scores(npcUid, CrowdedQuery));
+                    if (best != combatComponent.Target && round >= rounds / 2)
+                        switchesLate++;
+
+                    combatComponent.Target = best;
+                }
+
+                // The count, less often than they plan.
+                if (round % 3 == 2)
+                    trackingSystem.UpdateNow();
+            }
+
+            var onNear = npcs.Count(npcUid => SEntMan.GetComponent<NPCRangedCombatComponent>(npcUid).Target == nearUid);
+            Assert.That(switchesLate, Is.Zero, "once split, nobody should keep switching targets");
+            Assert.That(onNear, Is.EqualTo(2), "with two allowed on a target, two should stay on the nearer and two take the farther");
         });
     }
 

@@ -5,7 +5,9 @@ namespace Content.Server._KS14.NPC.Targeting;
 
 /// <summary>
 ///     0 if at least <see cref="Max"/> NPCs of the owner's side, the owner aside, are already fighting the target, else
-///         1 (<see cref="NpcTargetTrackingSystem"/>, up to half a second old). With a <c>BoolCurve</c>'s
+///         1 (<see cref="NpcTargetTrackingSystem"/>, up to half a second old). On the owner's own target only those ranked
+///         ahead of it count (<see cref="NpcTargetTrackingSystem.GetEngagingAllies"/>), so too many on one target split
+///         off by rank and stay split, rather than all leaving it at once. With a <c>BoolCurve</c>'s
 ///         <c>lowScore</c> above 0, a crowded target is put behind the others rather than ruled out, so that a squad
 ///         spreads its fire over the hostiles it can see.
 /// </summary>
