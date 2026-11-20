@@ -70,6 +70,14 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         base.Initialize();
 
         Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _medicalAttackerDamageOnly = value, invokeImmediately: true);
+        InitializeRespawn();
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        ShutdownRespawn();
     }
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
