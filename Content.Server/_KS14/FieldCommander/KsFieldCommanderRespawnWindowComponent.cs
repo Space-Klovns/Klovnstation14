@@ -17,14 +17,17 @@ public sealed partial class KsFieldCommanderRespawnWindowComponent : Component
     /// <summary>
     ///     How long before each wave respawning opens.
     /// </summary>
-    [DataField]
+    /// <seealso cref="KsFieldCommanderRuleSystem.SetRespawnWindow"/>
+    // Read only in VV, whose path goes through the setter: a write past it would leave waiting ghosts told the old window.
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
     public TimeSpan Window = TimeSpan.FromSeconds(30);
 
     /// <summary>
     ///     Whether ghosts may respawn while no wave is scheduled, as soon as their own timer is up (its cooldown and
     ///         penalty still apply). False refuses every respawn until a wave is scheduled again.
     /// </summary>
-    [DataField]
+    /// <seealso cref="KsFieldCommanderRuleSystem.SetOpenWhileNoWaveScheduled"/>
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
     public bool OpenWhileNoWaveScheduled = true;
 
     /// <summary>
