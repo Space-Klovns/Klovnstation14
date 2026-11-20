@@ -30,6 +30,37 @@
     - ks-fieldcommander-strike-1
     - ks-fieldcommander-strike-2
     - ks-fieldcommander-strike-3
+    # One is picked for each wave, by weight. Tags are the assets' own (the private module's): infantry, elite, pod,
+    #     objective.
+    doctrines:
+    - name: ks-fieldcommander-doctrine-standard
+      weight: 4
+    - name: ks-fieldcommander-doctrine-swarm
+      weight: 2
+      minPhase: 1
+      tagWeights:
+        infantry: 3
+        elite: 0.5
+      intel: ks-fieldcommander-intel-doctrine-swarm
+    - name: ks-fieldcommander-doctrine-spearhead
+      weight: 1.5
+      minPhase: 2
+      tagWeights:
+        elite: 3
+        infantry: 0.5
+      intel: ks-fieldcommander-intel-doctrine-spearhead
+    - name: ks-fieldcommander-doctrine-airborne
+      weight: 1
+      minPhase: 2
+      tagWeights:
+        pod: 4
+      intel: ks-fieldcommander-intel-doctrine-airborne
+    # Spends little and saves the rest, for a heavier wave after.
+    - name: ks-fieldcommander-doctrine-hoard
+      weight: 1
+      minPhase: 2
+      budgetMultiplier: 0.4
+      intel: ks-fieldcommander-intel-doctrine-hoard
     phases:
     - name: ks-fieldcommander-phase-landfall
       start: 20 # after the defenders' own briefing (briefingDelay)

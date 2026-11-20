@@ -43,3 +43,10 @@ ks-fieldcommander-stuck-steering = { $status }, неудачных путей { 
 ks-fieldcommander-stuck-htn-disabled = отключён
 ks-fieldcommander-stuck-htn-none = нет плана
 ks-fieldcommander-stuck-htn-plan = { $operator } (задача { $index } из { $count }, ветви { $branches })
+
+cmd-ks_fcpause-desc = Останавливает или снова запускает часы всех полевых командиров. Его бойцы и защитники продолжают сражаться; пока он на паузе, не наступают ни фазы, ни волны, ни приказы, ни бомбардировка.
+cmd-ks_fcpause-help = ks_fcpause [on|off]
+cmd-ks_fcpause-hint = [on|off]
+cmd-ks_fcpause-paused = Полевой командир приостановлен.
+cmd-ks_fcpause-resumed = Полевой командир продолжает.
+cmd-ks_fcstatus-paused = Пауза: его часы остановлены.

@@ -43,3 +43,10 @@ ks-fieldcommander-stuck-steering = { $status }, { $failed } failed paths, { $pat
 ks-fieldcommander-stuck-htn-disabled = disabled
 ks-fieldcommander-stuck-htn-none = no plan
 ks-fieldcommander-stuck-htn-plan = { $operator } (task { $index } of { $count }, branches { $branches })
+
+cmd-ks_fcpause-desc = Stops or restarts every running field commander's clock. Its units and the defenders fight on; no phase, wave, order or bombardment comes due while it is paused.
+cmd-ks_fcpause-help = ks_fcpause [on|off]
+cmd-ks_fcpause-hint = [on|off]
+cmd-ks_fcpause-paused = Field commander paused.
+cmd-ks_fcpause-resumed = Field commander resumed.
+cmd-ks_fcstatus-paused = Paused: its clock is stopped.

@@ -239,7 +239,8 @@ public sealed partial class ExplosionSystem : SharedExplosionSystem
 
         var posFound = _transformSystem.TryGetMapOrGridCoordinates(uid, out var gridPos, pos);
 
-        QueueExplosion(mapPos, typeId, totalIntensity, slope, maxTileIntensity, uid, tileBreakScale, maxTileBreak, canCreateVacuum, addLog: false, ksUser: KsResolveUser(uid, user, out var ksRecipient) /* KS14: remember who set it off */, ksRecipient: ksRecipient /* KS14: and who is paid for it */);
+        user = KsResolveUser(uid, user, out var ksRecipient); // KS14: who really set it off, for the log too: a shell's shooter, not what it hit
+        QueueExplosion(mapPos, typeId, totalIntensity, slope, maxTileIntensity, uid, tileBreakScale, maxTileBreak, canCreateVacuum, addLog: false, ksUser: user /* KS14: remember who set it off */, ksRecipient: ksRecipient /* KS14: and who is paid for it */);
 
         if (!addLog)
             return;

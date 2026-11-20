@@ -56,6 +56,21 @@ ks-fieldcommander-intel-strike = Полевое управление. Огнев
 
 ks-fieldcommander-asset-driller = Мой бор идёт за вашими серверами, и вам нечем его остановить.
 ks-fieldcommander-intel-driller = Полевое управление. Приближается бор-проходчик. Он идёт прямо к серверу — сосредоточьте огонь на нём.
+ks-fieldcommander-asset-drone = Слышите жужжание? Это за вами.
+ks-fieldcommander-intel-drone = Полевое управление. Приближаются дроны-камикадзе. Перед взрывом они пищат и вспыхивают красным: отходите или сбивайте их.
+ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } пищит всё чаще и чаще!
+ks-fieldcommander-asset-sniper = Не высовывайтесь. Или высовывайтесь, и я сниму вам головы.
+ks-fieldcommander-intel-sniper = Полевое управление. Противник выставил снайпера. Следите за красным лазером: как только он перестанет мигать, последует выстрел. Снайпер бьёт издалека и отходит, если на него бросаются.
+ks-fieldcommander-asset-juggernaut = Слышите шаги? Бегите. Не поможет.
+ks-fieldcommander-intel-juggernaut = Полевое управление. Приближается джаггернаут: пулемёт, туша, которая выдержит магазин за магазином, и его не оглушить и не сбить с ног. Он медленный, так что держите дистанцию и заливайте его огнём.
+ks-fieldcommander-asset-breacher = Стены? Как мило.
+ks-fieldcommander-intel-breacher = Полевое управление. Приближаются подрывники с зарядами для стен. Где бы вы ни засели, они проделают проход рядом с вами, а не пойдут через дверь. Следите за стенами и слушайте, не ставят ли заряд.
+ks-fieldcommander-asset-tank = Финал заслуживает тяжёлой брони. Поздоровайтесь.
+ks-fieldcommander-intel-tank = Полевое управление. Приближается вражеский танк. Его пушка медленно стреляет фугасными снарядами: наводясь, он пищит, так что, услышав писк, уходите из виду. Башня приварена к корпусу, и уничтожение любой из частей добивает его. Ракеты.
+ks-fieldcommander-asset-tank-flamer = Холодно? Сейчас согрею.
+ks-fieldcommander-intel-tank-flamer = Полевое управление. Приближается огнемётный танк. Ему нужно подобраться близко, а там, куда он попадёт, земля продолжает гореть: держите дистанцию и не стойте в огне.
+ks-fieldcommander-asset-mortar = Соберитесь в кучку. Пожалуйста. Мины сэкономлю.
+ks-fieldcommander-intel-mortar = Полевое управление. Вражеский миномётный расчёт разворачивается примерно в сорока тайлах. Мина прилетает каждые секунд двенадцать — туда, где вы стоите кучей, или по турели: как увидите метку на земле или услышите свист, уходите с неё. Найдите расчёт — и миномёт ваш, со всеми оставшимися минами.
 
 ## Objectives and the uplink
 
@@ -122,3 +137,23 @@ ks-fieldcommander-endless-vote-no = Отступить
 ks-fieldcommander-intel-endless-vote = Полевое управление. Аплинк уничтожен, поле за вами. Голосуйте в течение { $seconds } с: отступить или окопаться и узнать, сколько вы продержитесь.
 ks-fieldcommander-endless = Думали, это всё? Всё, что у меня осталось, идёт за вами, и будет идти дальше.
 ks-fieldcommander-intel-endless = Полевое управление. Вы держите оборону. Каждая волна будет больше и раньше предыдущей. Держитесь сколько сможете.
+
+## Doctrines: how the commander spends a wave's budget
+
+ks-fieldcommander-doctrine-standard = Обычная
+ks-fieldcommander-doctrine-swarm = Рой
+ks-fieldcommander-doctrine-spearhead = Остриё
+ks-fieldcommander-doctrine-airborne = Десант
+ks-fieldcommander-doctrine-hoard = Накопление
+ks-fieldcommander-intel-doctrine-swarm = Полевое управление. Много лёгкой пехоты. Не прекращайте огонь и не дайте себя обойти.
+ks-fieldcommander-intel-doctrine-spearhead = Полевое управление. Эту волну ведут их лучшие. Держитесь и сосредоточьте огонь.
+ks-fieldcommander-intel-doctrine-airborne = Полевое управление. Вижу десантные капсулы. Следите за небом над вашими позициями.
+ks-fieldcommander-intel-doctrine-hoard = Полевое управление. Волна слабая. Они что-то копят — используйте время.
+
+ks-fieldcommander-wave-status-paused = { $wave ->
+    [0] Волны приостановлены
+   *[other] Волна { $wave } · пауза
+}
+
+ks-fieldcommander-points-revive = Реанимация: { $name }
+ks-fieldcommander-points-heal = Лечение: { $name }

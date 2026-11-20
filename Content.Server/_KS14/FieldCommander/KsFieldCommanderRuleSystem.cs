@@ -1,3 +1,4 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared.Damage.Systems;
 using Content.Server._KS14.KillCredit;
@@ -15,9 +16,10 @@ using Content.Shared._KS14.Scenario.Components;
 using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Maps;
-using Content.Shared.Mobs;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
@@ -59,6 +61,15 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _medicalAttackerDamageOnly = value, invokeImmediately: true);
+    }
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
@@ -82,6 +93,10 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         base.ActiveTick(uid, component, gameRule, frameTime);
 
         if (!component.Prepared && !TryPrepare(component))
+            return;
+
+        // The commander's clock is stopped: nothing it schedules comes due, though its units fight on.
+        if (component.PausedAt != null)
             return;
 
         var curTime = _gameTiming.CurTime;
@@ -149,11 +164,11 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     }
 
     /// <summary>
-    ///     How far along the timeline the rule is, counting any phase set by hand.
+    ///     How far along the timeline the rule is, counting any phase set by hand, and standing still while paused.
     /// </summary>
     private static TimeSpan GetElapsed(KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, TimeSpan curTime)
     {
-        return curTime - gameRule.ActivatedAt + component.TimeOffset;
+        return (component.PausedAt ?? curTime) - gameRule.ActivatedAt + component.TimeOffset;
     }
 
     /// <summary>
@@ -166,7 +181,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (phaseIndex < 0 || phaseIndex >= component.Phases.Count)
             return;
 
-        var curTime = _gameTiming.CurTime;
+        var curTime = GetCommanderTime(component);
         component.TimeOffset += component.Phases[phaseIndex].Start - GetElapsed(component, rule.Comp2, curTime);
         EnterPhase((rule.Owner, component), phaseIndex, curTime);
     }
@@ -179,7 +194,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, _gameTiming.CurTime));
+        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, GetCommanderTime(rule.Comp)));
         SendWave(rule, phase);
     }
 
@@ -189,7 +204,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     public void ForceUplink(Entity<KsFieldCommanderRuleComponent> rule)
     {
         var phase = TryGetPhase(rule.Comp, out var currentPhase) ? currentPhase : new KsFieldCommanderPhase();
-        DeployUplink(rule, phase, _gameTiming.CurTime);
+        DeployUplink(rule, phase, GetCommanderTime(rule.Comp));
     }
 
     private static bool TryGetPhase(KsFieldCommanderRuleComponent component, out KsFieldCommanderPhase phase)
@@ -225,6 +240,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     private void EnterPhase(Entity<KsFieldCommanderRuleComponent> rule, int phaseIndex, TimeSpan curTime)
     {
         rule.Comp.PhaseIndex = phaseIndex;
+        rule.Comp.PhaseWavesSent = 0;
         var phase = rule.Comp.Phases[phaseIndex];
 
         SetNextWave(rule.Comp, ScheduleWave(phase, curTime + phase.FirstWaveDelay));
@@ -242,17 +258,6 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         if (phase.DeployUplink)
             DeployUplink(rule, phase, curTime);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnUnitMobStateChanged(Entity<KsFieldCommanderUnitComponent> entity, ref MobStateChangedEvent args)
-    {
-        if (args.NewMobState != MobState.Dead ||
-            !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
-            return;
-
-        ruleComponent.UnitsKilled++;
-        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity);
     }
 
     [SubscribeLocalEvent]

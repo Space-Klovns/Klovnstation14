@@ -153,6 +153,18 @@ public sealed partial class KsKillCreditSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Makes <paramref name="explosiveUid"/>'s explosion <paramref name="senderUid"/>'s doing, whatever sets it off
+    ///         (<see cref="KsExplosiveSenderComponent"/>), and has it answer to whoever the sender answers to now.
+    /// </summary>
+    public void SetSender(EntityUid explosiveUid, EntityUid senderUid)
+    {
+        EnsureComp<KsExplosiveSenderComponent>(explosiveUid).SenderUid = senderUid;
+
+        if (GetRecipient(senderUid) is { } recipient)
+            SetOwner(explosiveUid, recipient);
+    }
+
+    /// <summary>
     ///     Makes <paramref name="uid"/> answer to a player from here on.
     /// </summary>
     public void SetOwner(EntityUid uid, NetUserId ownerUserId)

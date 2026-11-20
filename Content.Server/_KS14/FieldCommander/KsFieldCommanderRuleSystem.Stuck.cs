@@ -6,6 +6,7 @@ using Content.Server._KS14.SupplyPod.Passengers;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Buckle;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
@@ -21,7 +22,6 @@ public sealed partial class KsFieldCommanderRuleSystem
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private HTNSystem _htnSystem = default!;
     [Dependency] private SharedBuckleSystem _buckleSystem = default!;
-    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private EntityQuery<NPCSteeringComponent> _steeringQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
@@ -145,7 +145,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent>();
         while (query.MoveNext(out var unitUid, out var unitComponent))
         {
-            if (unitComponent.RuleUid == rule.Owner && IsUnitAlive(unitUid))
+            if (unitComponent.RuleUid == rule.Owner && IsUnitAlive((unitUid, unitComponent)))
                 _stuckCheckUnits.Add((unitUid, unitComponent));
         }
 
@@ -291,7 +291,8 @@ public sealed partial class KsFieldCommanderRuleSystem
             return true;
 
         if (HasComp<KsSupplyPodPassengerComponent>(unit) ||
-            _npcPerceptionSystem.InCombatContact(unit.Owner))
+            _npcPerceptionSystem.InCombatContact(unit.Owner) ||
+            IsWeldedGunEngaging(component, unit.Owner, curTime))
             return true;
 
         // Units with no perception of their own (a borg) are in a fight when a defender is close and in sight.
@@ -299,6 +300,27 @@ public sealed partial class KsFieldCommanderRuleSystem
         {
             if (IsWithin(defender, position, component.StuckContactRange) &&
                 _npcLineOfSightSystem.InLineOfSight(defender, position, component.StuckContactRange))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether a gun welded onto the unit (a tank's turret, the part that sees and shoots, where the hull is the unit) has
+    ///         a target in sight or fired within <see cref="KsFieldCommanderRuleComponent.StuckDamageGrace"/>: a tank holding
+    ///         where it fights from, whatever the distance, is doing its job.
+    /// </summary>
+    private bool IsWeldedGunEngaging(KsFieldCommanderRuleComponent component, EntityUid unitUid, TimeSpan curTime)
+    {
+        foreach (var partUid in _weldedPartsSystem.GetParts(unitUid))
+        {
+            if (TryComp<NPCRangedCombatComponent>(partUid, out var rangedCombatComponent) && rangedCombatComponent.TargetInLOS)
+                return true;
+
+            if (TryComp<GunComponent>(partUid, out var gunComponent) &&
+                gunComponent.NextFire > TimeSpan.Zero &&
+                gunComponent.NextFire > curTime - component.StuckDamageGrace)
                 return true;
         }
 
@@ -537,7 +559,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         {
             if (unitComponent.RuleUid == ruleUid &&
                 unitComponent.StuckStage != KsFieldCommanderStuckStage.None &&
-                IsUnitAlive(unitUid))
+                IsUnitAlive((unitUid, unitComponent)))
                 count++;
         }
 
@@ -558,7 +580,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             // The dead are not checked, and lie where they fell.
             if (unitComponent.RuleUid == ruleUid &&
                 curTime - unitComponent.LastProgressTime >= minimum &&
-                IsUnitAlive(unitUid))
+                IsUnitAlive((unitUid, unitComponent)))
                 units.Add((unitUid, unitComponent));
         }
 

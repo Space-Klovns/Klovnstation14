@@ -55,6 +55,21 @@ ks-fieldcommander-intel-strike = Field Operations. Incoming fire mission, danger
 
 ks-fieldcommander-asset-driller = My borg is coming for your servers, and nothing you own can stop it.
 ks-fieldcommander-intel-driller = Field Operations. A breaching borg is inbound. It goes straight for a server, so focus it down.
+ks-fieldcommander-asset-drone = Listen. Hear that buzzing? It's looking for you.
+ks-fieldcommander-intel-drone = Field Operations. Suicide drones inbound. They beep and flash red before they blow: get clear or shoot them down.
+ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } beeps faster and faster!
+ks-fieldcommander-asset-sniper = Keep your heads down. Or don't, and I'll take them off.
+ks-fieldcommander-intel-sniper = Field Operations. Enemy sniper deployed. Watch for a red laser: once it stops blinking, it fires. It shoots from far off and backs away if you rush it.
+ks-fieldcommander-asset-juggernaut = Hear those footsteps? Run. It won't help.
+ks-fieldcommander-intel-juggernaut = Field Operations. A juggernaut is inbound: a machine gun, the bulk to soak up magazine after magazine, and it can't be stunned or tripped. It's slow, so keep your distance and pour it on.
+ks-fieldcommander-asset-breacher = Walls? How quaint.
+ks-fieldcommander-intel-breacher = Field Operations. Breachers inbound, carrying wall charges. Wherever you hole up, they'll blow a way in close to you rather than use your door. Keep watch on your walls, and listen for the charge going on.
+ks-fieldcommander-asset-tank = The final act deserves heavy armour. Say hello.
+ks-fieldcommander-intel-tank = Field Operations. Enemy tank inbound. Its cannon fires high-explosive shells, slowly: it beeps while it lines one up, so get out of sight when you hear it. The turret is welded to the hull, and destroying either kills it. Rockets.
+ks-fieldcommander-asset-tank-flamer = Cold out there? Let me warm you up.
+ks-fieldcommander-intel-tank-flamer = Field Operations. A flamer tank is inbound. It has to get close, and where it hits the ground keeps burning: keep your distance and don't stand in the fire.
+ks-fieldcommander-asset-mortar = Bunch up. Please. It saves me shells.
+ks-fieldcommander-intel-mortar = Field Operations. Enemy mortar team setting up about forty tiles out. A shell lands every twelve seconds or so, on whoever is bunched together or on a turret: when a marker shows on the ground or you hear one coming, get off it. Hunt the crew down, and the mortar is yours for what shells it has left.
 
 ## Objectives and the uplink
 
@@ -124,3 +139,23 @@ ks-fieldcommander-endless-vote-no = Pull out
 ks-fieldcommander-intel-endless-vote = Field Operations. The uplink is down, the field is yours. Vote within { $seconds } seconds: pull out, or dig in and see how long you last.
 ks-fieldcommander-endless = You think that was all of it? Everything I have left is coming for you, and it will keep coming.
 ks-fieldcommander-intel-endless = Field Operations. You're holding the line. Every wave will be bigger and sooner than the last. Hold as long as you can.
+
+## Doctrines: how the commander spends a wave's budget
+
+ks-fieldcommander-doctrine-standard = Standard
+ks-fieldcommander-doctrine-swarm = Swarm
+ks-fieldcommander-doctrine-spearhead = Spearhead
+ks-fieldcommander-doctrine-airborne = Airborne
+ks-fieldcommander-doctrine-hoard = Hoard
+ks-fieldcommander-intel-doctrine-swarm = Field Operations. That's a lot of light infantry. Keep the fire up and don't let them flank.
+ks-fieldcommander-intel-doctrine-spearhead = Field Operations. Their best are leading this one. Hold fast and focus fire.
+ks-fieldcommander-intel-doctrine-airborne = Field Operations. Drop pods on scope. Watch the sky inside your lines.
+ks-fieldcommander-intel-doctrine-hoard = Field Operations. That wave is light. They're holding something back; use the time.
+
+ks-fieldcommander-wave-status-paused = { $wave ->
+    [0] Waves paused
+   *[other] Wave { $wave } · paused
+}
+
+ks-fieldcommander-points-revive = Revived: { $name }
+ks-fieldcommander-points-heal = Healed: { $name }

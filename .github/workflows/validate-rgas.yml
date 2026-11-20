@@ -21,5 +21,5 @@ jobs:
       with:
         schema: RobustToolbox/Schemas/rga.yml
         path_pattern: .*attributions.ya?ml$
-        validators_path: RobustToolbox/Schemas/rga_validators.py
+        validators_path: Tools/_KS14/Schemas/rga_validators.py # KS14: RobustToolbox/Schemas/rga_validators.py -> Tools/_KS14/Schemas/rga_validators.py, the engine's plus AGPL
         validators_requirements: RobustToolbox/Schemas/rga_requirements.txt

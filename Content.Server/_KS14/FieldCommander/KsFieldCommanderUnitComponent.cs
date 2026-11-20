@@ -27,6 +27,20 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     public bool GiveOrders = true;
 
     /// <summary>
+    ///     Whether it goes at its target like any other unit, whatever its asset's stand-off: a mortar crewman that has lost
+    ///         its mortar.
+    /// </summary>
+    [ViewVariables]
+    public bool IgnoreStandOff;
+
+    /// <summary>
+    ///     Whether its kill has been counted and paid: by dying, or by being destroyed, whichever came first. A unit
+    ///         brought back to life is a new kill again.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool Killed;
+
+    /// <summary>
     ///     Put somewhere to stay there, such as an uplink's guard: never taken off the field for being stuck, as where
     ///         it would be sent from is not where it belongs, and what it cost was never the waves' to have back.
     /// </summary>

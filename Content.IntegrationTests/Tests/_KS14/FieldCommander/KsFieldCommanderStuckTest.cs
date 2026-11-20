@@ -46,6 +46,7 @@ public sealed class KsFieldCommanderStuckTest : GameTest
     private readonly EntProtoId _forcedNudgeRule = "KsTestFcStuckForcedNudgeRule";
     private readonly EntProtoId _defender = "KsTestFcStuckDefender";
     private readonly EntProtoId _objective = "KsTestFcStuckObjective";
+    private readonly EntProtoId _tankRule = "KsTestFcStuckTankRule";
 
     private const int HalfExtent = 30;
 
@@ -135,6 +136,51 @@ public sealed class KsFieldCommanderStuckTest : GameTest
   components:
   - type: KsFieldCommanderRule
     stuckNudgeInSightAfter: 3
+
+# A tank: the hull is the unit, the turret welded on is what sees and shoots.
+- type: entity
+  parent: VehicleTankTurret
+  id: KsTestFcStuckTankTurret
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: KsTargetLockOn
+    lockOnTime: 0.5
+    loseLockGrace: 0.5
+    keepTargetUntilLost: true
+  - type: HTN
+    rootTask:
+      task: EnergyTurretCompound
+    blackboard:
+      RotateSpeed: !type:Single
+        6.28
+      RangedRange: !type:Single
+        14
+      VisionRadius: !type:Single
+        16
+      AggroVisionRadius: !type:Single
+        16
+
+- type: entity
+  parent: VehicleTankBody
+  id: KsTestFcStuckTank
+  components:
+  - type: NpcSensors
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: KsWeldedParts
+    parts:
+    - prototype: KsTestFcStuckTankTurret
+
+- type: entity
+  parent: KsTestFcStuckRule
+  id: KsTestFcStuckTankRule
+  components:
+  - type: KsFieldCommanderRule
+    assets:
+    - entity: KsTestFcStuckTank
+      cost: 1
 
 - type: entity
   parent: KsTestFcStuckRule
@@ -935,5 +981,64 @@ public sealed class KsFieldCommanderStuckTest : GameTest
             system.ForceWave(rule);
             Assert.That(GetUnits(ruleUid), Has.Count.EqualTo(cap), "units with no mob state should still count towards the cap");
         });
+    }
+
+    /// <summary>
+    ///     A tank whose turret is fighting, eight tiles from a hostile and so out of what counts as contact, gets nowhere
+    ///         and is never found stuck: it holds where it fights from. With nothing to shoot at, the same tank is.
+    /// </summary>
+    [Test]
+    public async Task TankWhoseTurretIsFightingIsNotStuck([Values] bool hostileInSight)
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid ruleUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            KsFieldCommanderTestHelpers.FillFloor(Server, testMap, HalfExtent);
+            SEntMan.SpawnAtPosition(_objective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            SEntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 0.5f, 2.5f));
+            ruleUid = KsFieldCommanderTestHelpers.StartRules(Server, _tankRule).CommanderUid;
+        });
+
+        await Pair.RunTicksSync(5);
+
+        EntityUid unitUid = default;
+        var seconds = 0f;
+        await Server.WaitPost(() =>
+        {
+            var system = SEntMan.System<KsFieldCommanderRuleSystem>();
+            var ruleComponent = SEntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            system.ForceWave((ruleUid, ruleComponent));
+            var units = GetUnits(ruleUid);
+            Assert.That(units, Has.Count.EqualTo(1), "the wave should have sent the tank");
+            unitUid = units[0];
+
+            // Out of contact range, in its turret's: a hostile of the turret's, or one of its own side.
+            Assert.That(ruleComponent.StuckContactRange, Is.LessThan(DefenderOffset));
+            var position = SEntMan.System<SharedTransformSystem>().GetMapCoordinates(unitUid).Position;
+            var toward = position.Length() > 0.1f ? -Vector2.Normalize(position) : Vector2.UnitX;
+            SEntMan.SpawnAtPosition(hostileInSight ? NanoTrasenMob : SyndicateMob,
+                new EntityCoordinates(testMap.Grid, position + toward * DefenderOffset));
+            seconds = (float)(ruleComponent.StuckRelocateAfter + ruleComponent.OrderInterval * 6).TotalSeconds;
+        });
+
+        var worst = KsFieldCommanderStuckStage.None;
+        var tickRate = (float)Server.Timing.TickRate;
+        for (var tick = 0; tick < (int)(seconds * tickRate); tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                if (SEntMan.TryGetComponent<KsFieldCommanderUnitComponent>(unitUid, out var unitComponent) &&
+                    unitComponent.StuckStage > worst)
+                    worst = unitComponent.StuckStage;
+            });
+        }
+
+        if (hostileInSight)
+            Assert.That(worst, Is.EqualTo(KsFieldCommanderStuckStage.None), "a tank whose turret is fighting should not be found stuck");
+        else
+            Assert.That(worst, Is.GreaterThanOrEqualTo(KsFieldCommanderStuckStage.Reorder), "control: with nothing to shoot, it should be");
     }
 }
