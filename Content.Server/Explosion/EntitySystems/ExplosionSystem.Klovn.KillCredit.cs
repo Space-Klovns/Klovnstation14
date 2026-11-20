@@ -44,6 +44,10 @@ public sealed partial class ExplosionSystem
             return shooterUid;
         }
 
+        // Sent on its way by someone, a mortar shell say, whatever trigger sets it off: whoever sent it, as for a shooter.
+        if (TryComp<KsExplosiveSenderComponent>(explosiveUid, out var senderComponent) && senderComponent.SenderUid is { } senderUid)
+            user = senderUid;
+
         // Whoever set it off, or failing that whoever the explosive itself answers to: a turret that blows itself up.
         recipient = (user is { } userUid ? _ksKillCreditSystem.GetRecipient(userUid) : null)
             ?? _ksKillCreditSystem.GetRecipient(explosiveUid);

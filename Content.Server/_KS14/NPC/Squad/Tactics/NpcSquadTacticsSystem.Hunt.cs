@@ -912,6 +912,13 @@ public sealed partial class NpcSquadTacticsSystem
         if (hunt.ShutOutCoordinates == null && TryFindNearestOutside(hunt, walkerUid, settings, out var coordinates, out _))
             hunt.ShutOutCoordinates = coordinates;
 
+        // Further off than that, the floor just outside the room's wall, worked out from the room's side. Without it they held where
+        //      they stood: a squad that landed a long way from a walled-in hostile, as the Field Commander's do, stood there, with
+        //      nothing else it could plan (the hold round a spot inside the room has no way there), until something sent it
+        //      elsewhere. Held there, it is near enough to blow its way in the next time it hears of it.
+        if (hunt.ShutOutCoordinates == null && TryFindOutsideFromRoom(hunt, walkerUid, out var outsideCoordinates))
+            hunt.ShutOutCoordinates = outsideCoordinates;
+
         if (hunt.ShutOutCoordinates is not { } spot)
             return;
 

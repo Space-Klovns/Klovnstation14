@@ -1,0 +1,21 @@
+# Resources\Prototypes\_KsModule\FieldCommand\tank.yml
+ent-KsBulletTankShellFieldCommander = tank shell
+    .desc = { "" }
+ent-KsCartridgeTankShellFieldCommander = tank shell
+    .desc = A high-explosive round with a fragmentation sleeve, made to clear men from cover without bringing the cover down.
+ent-KsBulletTankFlamerFieldCommander = burning fuel
+    .desc = { "" }
+ent-KsCartridgeTankFlamerFieldCommander = flamer fuel
+    .desc = A slug of sticky fuel that bursts into flame where it lands.
+ent-KsFcTankTurretCannon = tank turret
+    .desc = Look inside to check if it's loaded.
+    .suffix = NPC, Field Commander, Cannon
+ent-KsFcTankTurretFlamer = tank turret
+    .desc = Look inside to check if it's loaded.
+    .suffix = NPC, Field Commander, Flamer
+ent-KsFcMobTank = tank
+    .desc = A tracked hull with a heavy cannon on top. Its shells burst into shrapnel; it beeps while it lines one up.
+    .suffix = NPC, Field Commander, Cannon
+ent-KsFcMobTankFlamer = tank
+    .desc = A tracked hull with a flamer on top. Where it hits, the ground burns.
+    .suffix = NPC, Field Commander, Flamer

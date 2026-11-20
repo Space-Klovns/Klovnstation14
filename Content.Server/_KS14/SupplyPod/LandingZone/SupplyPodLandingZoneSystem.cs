@@ -44,6 +44,9 @@ public sealed partial class SupplyPodLandingZoneSystem : SharedSupplyPodLandingZ
 
         StartCountdown((indicatorUid, indicatorComponent), _gameTiming.CurTime, supplyPodComponent.FallDuration);
         entity.Comp.IndicatorEntity = indicatorUid;
+
+        var ev = new SupplyPodLandingZoneIndicatorSpawnedEvent(entity.Owner);
+        RaiseLocalEvent(indicatorUid, ref ev);
     }
 
     [SubscribeLocalEvent]

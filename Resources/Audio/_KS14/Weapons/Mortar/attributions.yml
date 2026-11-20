@@ -1,0 +1,14 @@
+- files: ["fire1.ogg", "mortarload.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Original author unknown; taken from Battlefield14, which gives no attribution for these files and states that most of its assets are licensed under CC-BY-SA 3.0 unless stated otherwise. Re-encoded as mono .ogg for Klovnstation 14."
+  source: "https://github.com/PunishedJoe/Battlefield14/tree/541cef2087655b1f6c3dc8bd5c8060a16d9eb427/Resources/Audio/_VXS14/Weapons/Guns/Artillery"
+
+- files: ["gun_mortar_travel.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from cmss13; silence trimmed and converted to mono for Klovnstation 14"
+  source: "https://github.com/cmss13-devs/cmss13/blob/ffb422a67f9bf44cec61e72ef275e48fe769e952/sound/weapons/gun_mortar_travel.ogg"
+
+- files: ["new_artillery_incoming01.ogg", "new_artillery_incoming03.ogg", "new_artillery_incoming04.ogg"]
+  license: "AGPL-3.0-or-later"
+  copyright: "Original author unknown; taken from Civ13, whose repository is licensed under the GNU Affero General Public License v3.0 and states no separate licence for its sounds. Silence trimmed and converted to mono for Klovnstation 14."
+  source: "https://github.com/Civ13/Civ13/tree/3a9108da5ec3cc05dcbaf71a01f7e60ca7ce4f6f/sound/weapons/WW2"

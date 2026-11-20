@@ -36,6 +36,11 @@ public sealed partial class SupplyPodLandingZoneSystem : SharedSupplyPodLandingZ
         if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
             return;
 
+        // Indicators drawn some other way (KsStrikeWarning) have no zone and slider to animate; without the shaders
+        // component they also stay out of the countdown below.
+        if (!_spriteSystem.LayerMapTryGet((entity.Owner, spriteComponent), SupplyPodLandingZoneLayers.Zone, out _, logMissing: false))
+            return;
+
         // One instance per layer: each carries its own pixel count, and the program's uniforms are shared.
         var shadersComponent = EnsureComp<SupplyPodLandingZoneShadersComponent>(entity.Owner);
         shadersComponent.ZoneShader = ProtoMan.Index(PixelSnapShaderId).InstanceUnique();

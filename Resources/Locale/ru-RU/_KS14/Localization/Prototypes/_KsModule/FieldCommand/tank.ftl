@@ -1,0 +1,23 @@
+# Resources\Prototypes\_KsModule\FieldCommand\tank.yml
+ent-KsBulletTankShellFieldCommander = танковый снаряд
+    .desc = { "" }
+ent-KsCartridgeTankShellFieldCommander = танковый снаряд
+    .desc = Осколочно-фугасный снаряд, сделанный, чтобы выбивать людей из укрытий, не обрушивая сами укрытия.
+ent-KsBulletTankFlamerFieldCommander = горящее топливо
+    .desc = { "" }
+ent-KsCartridgeTankFlamerFieldCommander = топливо огнемёта
+    .desc = Сгусток липкого топлива, вспыхивающий там, куда попадёт.
+ent-KsFcTankTurretCannon = танковая башня
+    .desc = Загляни внутрь и проверь, заряжена ли она.
+    .suffix = NPC, Полевой командир, Пушка
+ent-KsFcTankTurretFlamer = танковая башня
+    .desc = Загляни внутрь и проверь, заряжена ли она.
+    .suffix = NPC, Полевой командир, Огнемёт
+ent-KsFcMobTank = танк
+    .desc = Гусеничный корпус с тяжёлой пушкой. Его снаряды разлетаются шрапнелью; наводясь, он пищит.
+    .suffix = NPC, Полевой командир, Пушка
+    .gender = male
+ent-KsFcMobTankFlamer = танк
+    .desc = Гусеничный корпус с огнемётом. Там, куда он попадает, горит земля.
+    .suffix = NPC, Полевой командир, Огнемёт
+    .gender = male

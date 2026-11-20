@@ -66,6 +66,13 @@ public sealed partial class KsFieldCommanderRuleSystem
             !GameTicker.IsGameRuleActive(ruleUid))
             return;
 
+        // Votes run on real time; one that ends while the commander is paused waits for it (see .Pause).
+        if (component.PausedAt != null)
+        {
+            component.PausedEndlessVoteResult = carryOn;
+            return;
+        }
+
         component.EndlessVoteRunning = false;
 
         if (carryOn)
@@ -93,7 +100,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         component.Endless = true;
         component.EndlessWavesSent = 0;
         component.CarriedBudget = 0f;
-        SetNextWave(component, _gameTiming.CurTime + component.EndlessFirstWaveDelay);
+        SetNextWave(component, GetCommanderTime(component) + component.EndlessFirstWaveDelay);
 
         Transmit(component, component.EndlessAnnouncement, major: true, component.EndlessIntel);
     }

@@ -18,6 +18,15 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
         args.Cancelled = true;
     }
 
+    /// <summary>
+    ///     How long a pod takes to fall. Set before it starts falling - on a pod spawned uninitialised, as one starts falling at
+    ///         map init - for it to take effect.
+    /// </summary>
+    public void SetFallDuration(Entity<SupplyPodComponent> pod, TimeSpan duration)
+    {
+        pod.Comp.FallDuration = duration;
+    }
+
     protected virtual void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
     {
         RaiseLaunched(entity.Owner, entity.Comp.Ascending);

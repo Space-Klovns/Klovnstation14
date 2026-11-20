@@ -28,6 +28,12 @@ public sealed partial class NpcSquadTacticsSystem
     private const float SearchPointSpacing = 1.5f;
 
     /// <summary>
+    ///     How much further than <see cref="NpcSquadTacticsSystem.OrderRange"/> from a spot that has to be got to (a disturbance's,
+    ///         <see cref="IsDisturbanceSpot"/>) still counts as there: a member sent to it stops at the edge of the order's range.
+    /// </summary>
+    private const float SearchReachSlack = 0.5f;
+
+    /// <summary>
     ///     How far apart, in tiles, members sweeping the room try to keep the tiles they head for, so they spread out
     ///         rather than all walking to the same corner.
     /// </summary>
@@ -490,7 +496,7 @@ public sealed partial class NpcSquadTacticsSystem
             }
 
             if (!point.Cleared)
-                point.Cleared = IsSearched(point, settings);
+                point.Cleared = IsSearched(point, settings, mustReach: IsDisturbanceSpot(hunt, point));
 
             if (point.Cleared)
             {
@@ -578,9 +584,20 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     Whether any member has had a good look at <paramref name="point"/>.
+    ///     Whether <paramref name="point"/> is the spot of a disturbance: where something was heard, or where the squad was sent
+    ///         (a Field Commander's orders come as disturbances), with no hostile to be seen there. Seeing it from the doorway says
+    ///         nothing about what is there, and a squad that only looked at it ended its hunt at the door, or at a hole it had just
+    ///         blown, and was held there.
     /// </summary>
-    private bool IsSearched(NpcHuntSearchPoint point, NpcSquadTacticsSettings settings)
+    private static bool IsDisturbanceSpot(NpcHunt hunt, NpcHuntSearchPoint point)
+    {
+        return hunt.TargetUid == null && point.Kind is NpcSearchPointKind.Predicted or NpcSearchPointKind.LastKnown;
+    }
+
+    /// <summary>
+    ///     Whether any member has had a good look at <paramref name="point"/>, or with <paramref name="mustReach"/>, has got to it.
+    /// </summary>
+    private bool IsSearched(NpcHuntSearchPoint point, NpcSquadTacticsSettings settings, bool mustReach = false)
     {
         // No seeing into one: searched once a member has emptied it, or it is gone.
         if (point.Kind == NpcSearchPointKind.Disposal)
@@ -604,7 +621,12 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
-            if (SeesClearly(_transformSystem.GetMapCoordinates(memberUid), pointMapCoordinates, settings))
+            var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
+
+            if (mustReach
+                    ? memberMapCoordinates.MapId == pointMapCoordinates.MapId &&
+                      (pointMapCoordinates.Position - memberMapCoordinates.Position).Length() <= OrderRange + SearchReachSlack
+                    : SeesClearly(memberMapCoordinates, pointMapCoordinates, settings))
                 return true;
         }
 

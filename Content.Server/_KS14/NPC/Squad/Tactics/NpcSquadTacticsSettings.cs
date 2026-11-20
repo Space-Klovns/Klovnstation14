@@ -440,6 +440,55 @@ public sealed partial class NpcSquadTacticsSettings
     public bool PlanChargeBarrier = true;
 
     /// <summary>
+    ///     Whether a wall to blow is chosen by how good a way in it makes (<c>NpcSquadTacticsSystem.BreachScore.cs</c>) rather
+    ///         than by which is the shortest walk: the hole nearest where the hostile is believed to be, not beside a way in
+    ///         there already is or a hole blown lately, with the spot the charge is set off from out of the hostiles' sight.
+    ///         For squads that are there to breach; everyone else walks to the nearest wall.
+    /// </summary>
+    [DataField]
+    public bool BreachScoring;
+
+    /// <summary>
+    ///     What each tile between the far side of a wall and where the hostile is believed to be costs a wall, with
+    ///         <see cref="BreachScoring"/>.
+    /// </summary>
+    [DataField]
+    public float BreachTargetWeight = 1f;
+
+    /// <summary>
+    ///     What each step of the walk to a wall costs it, with <see cref="BreachScoring"/>.
+    /// </summary>
+    [DataField]
+    public float BreachWalkWeight = 0.2f;
+
+    /// <summary>
+    ///     What a wall within <see cref="BreachOpeningRange"/> tiles of a way in there already is costs, with
+    ///         <see cref="BreachScoring"/>: whoever is inside is watching that one.
+    /// </summary>
+    [DataField]
+    public float BreachOpeningPenalty = 10f;
+
+    /// <summary>
+    ///     What a wall within <see cref="BreachOpeningRange"/> tiles of where a charge went off in the last
+    ///         <see cref="BreachMemoryTime"/> costs, with <see cref="BreachScoring"/> (<see cref="NpcBreachMemoryComponent"/>).
+    /// </summary>
+    [DataField]
+    public float BreachRecentPenalty = 10f;
+
+    /// <summary>
+    ///     What a wall costs whose spot to set the charge off from a hostile can see, as far as the squad knows where they
+    ///         are, with <see cref="BreachScoring"/>.
+    /// </summary>
+    [DataField]
+    public float BreachSightPenalty = 8f;
+
+    [DataField]
+    public float BreachOpeningRange = 3f;
+
+    [DataField]
+    public TimeSpan BreachMemoryTime = TimeSpan.FromSeconds(90);
+
+    /// <summary>
     ///     How long a planter may go without getting any nearer its site, by the way it has to walk, before it is given up on.
     ///         Time busy with its hands (a door on the way, sticking the charge on) does not count, and nor does how long the way
     ///         is: nearer each time is bound to get there.

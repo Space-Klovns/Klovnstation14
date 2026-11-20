@@ -52,6 +52,10 @@ public sealed partial class KsFieldCommanderRuleSystem
             component.UplinkBombardmentTime = curTime + bombardmentIn;
         }
 
+        // Landed by an admin while paused: its countdown waits too.
+        if (IsPaused(component))
+            HoldUplinkCountdown(component);
+
         var uplinkMapCoordinates = _transformSystem.ToMapCoordinates(uplinkCoordinates);
         SpawnUplinkGuard(rule, phase, uplinkMapCoordinates);
         LiftFogTo(component, uplinkMapCoordinates);
@@ -106,11 +110,12 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     private void OnUplinkLost(Entity<KsFieldCommanderRuleComponent> rule)
     {
+        var curTime = GetCommanderTime(rule.Comp);
         if (rule.Comp.UplinkBombardmentTime is { } bombardmentTime &&
-            _gameTiming.CurTime >= bombardmentTime - UplinkLastedTolerance)
+            curTime >= bombardmentTime - UplinkLastedTolerance)
             return;
 
-        rule.Comp.UplinkDestroyedTime = _gameTiming.CurTime;
+        rule.Comp.UplinkDestroyedTime = curTime;
         RewardUplink(rule);
     }
 

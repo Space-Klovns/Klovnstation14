@@ -440,6 +440,28 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         _npcSensorSystem.RequestReplan(memberUid);
     }
 
+    /// <summary>
+    ///     Holding a spot on purpose: once there, a member told to watch from it, wait outside a room, force a door or hold
+    ///         the area stays put until the hunt moves it on. One that never got there is not holding anything.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnGetDeliberateHold(Entity<NpcOrderComponent> entity, ref NpcGetDeliberateHoldEvent args)
+    {
+        if (args.Holding ||
+            entity.Comp.Order is not { } order ||
+            order.Kind is not (NpcOrderKind.Watch or NpcOrderKind.Stage or NpcOrderKind.Breach or NpcOrderKind.HoldArea))
+            return;
+
+        args.Holding = order.Coordinates.TryDistance(EntityManager, _transformSystem, Transform(entity).Coordinates, out var distance) &&
+                       distance <= MathF.Max(order.Range, OrderRange) + HoldSlack;
+    }
+
+    /// <summary>
+    ///     How much further than an order's range a member can stand, in tiles, and still be holding its spot: pushed
+    ///         about by squadmates, or stopped just short.
+    /// </summary>
+    private const float HoldSlack = 1f;
+
     private void ClearOrder(Entity<NpcOrderComponent> entity)
     {
         if (entity.Comp.Order == null)
