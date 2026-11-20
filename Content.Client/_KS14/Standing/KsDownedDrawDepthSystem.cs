@@ -1,3 +1,4 @@
+using Content.Client.DamageState;
 using Content.Shared.Standing;
 using Robust.Client.GameObjects;
 using DrawDepth = Content.Shared.DrawDepth.DrawDepth;
@@ -25,7 +26,10 @@ public sealed partial class KsDownedDrawDepthSystem : EntitySystem
 
     [Dependency] private SpriteSystem _spriteSystem = default!;
 
-    [SubscribeLocalEvent]
+    // After the death visuals: reviving puts back the depth from before death in the same appearance change, which a
+    //     mob still lying down must then be lowered from. Before them, it would read DeadMobs, lower nothing, and be
+    //     left at its standing depth over the wire.
+    [SubscribeLocalEvent(after: [typeof(DamageStateVisualizerSystem)])]
     private void OnAppearanceChange(Entity<StandingStateComponent> entity, ref AppearanceChangeEvent args)
     {
         if (args.Sprite is not { } spriteComponent)

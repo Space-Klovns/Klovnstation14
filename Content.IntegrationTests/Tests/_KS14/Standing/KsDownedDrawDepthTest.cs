@@ -1,6 +1,7 @@
 #nullable enable
 using Content.Client._KS14.Standing;
 using Content.IntegrationTests.Fixtures;
+using Content.Shared.Mobs;
 using Content.Shared.Standing;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
@@ -21,6 +22,7 @@ public sealed class KsDownedDrawDepthTest : GameTest
 
     private readonly EntProtoId _mob = "KsDownedDrawDepthTestMob";
     private readonly EntProtoId _wire = "KsDownedDrawDepthTestWire";
+    private readonly EntProtoId _deadVisualsMob = "KsDownedDrawDepthTestDeadVisualsMob";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -31,6 +33,16 @@ public sealed class KsDownedDrawDepthTest : GameTest
     drawdepth: Mobs
   - type: Appearance
   - type: StandingState
+
+# Drawn at DeadMobs while dead, as every mob with death visuals is.
+- type: entity
+  parent: KsDownedDrawDepthTestMob
+  id: KsDownedDrawDepthTestDeadVisualsMob
+  components:
+  - type: DamageStateVisuals
+    states:
+      Alive: {}
+      Dead: {}
 
 # Lies on the floor under standing mobs, as barbed wire does.
 - type: entity
@@ -65,6 +77,37 @@ public sealed class KsDownedDrawDepthTest : GameTest
         await Pair.RunTicksSync(10);
         var (stoodDepth, _) = await ReadDepths(mobUid, wireUid);
         Assert.That(stoodDepth, Is.EqualTo(standingDepth), "standing up should put back the depth they had");
+    }
+
+    /// <summary>
+    ///     Dying drops a mob to DeadMobs, already below the downed depth, so lying down while dead lowers nothing; reviving
+    ///         puts the mob's standing depth back while it still lies there, and it must then be lowered again.
+    /// </summary>
+    [Test]
+    public async Task RevivedWhileLyingStaysUnderTheWire()
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid mobUid = default;
+        EntityUid wireUid = default;
+        await Server.WaitPost(() =>
+        {
+            wireUid = SSpawnAtPosition(_wire, testMap.GridCoords);
+            mobUid = SSpawnAtPosition(_deadVisualsMob, testMap.GridCoords);
+        });
+        await Pair.RunTicksSync(10);
+
+        var appearanceSystem = Server.System<SharedAppearanceSystem>();
+        await Server.WaitPost(() => appearanceSystem.SetData(mobUid, MobStateVisuals.State, MobState.Dead));
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitPost(() => Server.System<StandingStateSystem>().Down(mobUid, playSound: false, dropHeldItems: false, force: true));
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitPost(() => appearanceSystem.SetData(mobUid, MobStateVisuals.State, MobState.Alive));
+        await Pair.RunTicksSync(10);
+
+        var (revivedDepth, wireDepth) = await ReadDepths(mobUid, wireUid);
+        Assert.That(revivedDepth, Is.LessThan(wireDepth), "someone revived while lying in wire should still draw under it");
     }
 
     private async Task<(int Mob, int Wire)> ReadDepths(EntityUid serverMobUid, EntityUid serverWireUid)
