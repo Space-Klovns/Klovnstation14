@@ -1,0 +1,23 @@
+# The Support perk's kill drop (KsAmmoDropAbility in Resources/Prototypes/_KS14/Perks/perks.yml).
+
+- type: entity
+  id: KsAmmoPickup
+  name: ammo resupply
+  description: A glowing crate of rounds. Walk over it with a gun in hand to fill the magazine.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Perks/ammo_pickup.rsi
+    drawdepth: Items
+    layers:
+    - state: pickup
+      shader: unshaded
+    noRot: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: PointLight
+    radius: 1.5
+    energy: 1.2
+    color: "#ffe066"
+  - type: TimedDespawn
+    lifetime: 30
+  - type: KsAmmoPickup

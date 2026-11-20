@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/tree/e6c9da8511c11d6bb696a306685885e972a079ca/icons (icons/obj/chronos.dmi chronogun, icons/mob/inhands/weapons/guns_lefthand.dmi and guns_righthand.dmi chronogun)",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    }
+  ]
+}

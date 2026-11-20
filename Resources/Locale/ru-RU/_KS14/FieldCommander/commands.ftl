@@ -30,3 +30,9 @@ cmd-ks_fcstatus-uplink-none = не высажен
 cmd-ks_fcstatus-uplink-destroyed = уничтожен
 cmd-ks_fcstatus-uplink-active = удар через { $seconds } с
 cmd-ks_fcstatus-points = { $player }: { $points } очков
+
+cmd-ks_fcperk-desc = Устанавливает перк защитника в режиме полевого командира на весь раунд и меняет его на текущем теле игрока.
+cmd-ks_fcperk-help = ks_fcperk <игрок> <перк>
+cmd-ks_fcperk-hint-perk = <перк>
+cmd-ks_fcperk-unknown = Перка «{ $perk }» не существует.
+cmd-ks_fcperk-done = Перк игрока { $player } теперь — { $perk }.

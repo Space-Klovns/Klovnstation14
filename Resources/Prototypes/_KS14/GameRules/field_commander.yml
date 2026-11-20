@@ -19,6 +19,12 @@
     maxAlivePerDefender: 3
     pointsPerCost: 37.5 # requisition x1.5
     uplinkPoints: 300
+    # Each defender picks one, once per round.
+    perkOptions:
+    - KsPerkDamage
+    - KsPerkTank
+    - KsPerkHealing
+    - KsPerkSupport
     waveAnnouncements:
     - ks-fieldcommander-wave-1
     - ks-fieldcommander-wave-2

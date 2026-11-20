@@ -20,6 +20,12 @@ public sealed partial class KsDissolveVisualsComponent : Component
     public ShaderInstance? Shader;
 
     /// <summary>
+    ///     Which way the client is playing it, to notice the server turning it round.
+    /// </summary>
+    [ViewVariables]
+    public bool Reverse;
+
+    /// <summary>
     ///     Different for each entity, so neighbours dissolve in different blobs.
     /// </summary>
     [ViewVariables]
