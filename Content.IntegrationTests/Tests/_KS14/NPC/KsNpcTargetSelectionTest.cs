@@ -38,6 +38,8 @@ public sealed class KsNpcTargetSelectionTest : GameTest
     // The private module's operative target query, and the public defender turret: run only where both are present.
     private readonly ProtoId<UtilityQueryPrototype> _operativeGunTargets = "KsOperativeNearbyGunTargets";
     private readonly EntProtoId _defenderTurret = "KsWeaponTurretNanoTrasenDisposable";
+    private readonly EntProtoId _fieldCommanderTank = "KsFcMobTank";
+    private readonly ProtoId<UtilityQueryPrototype> _turretGunTargets = "KsTurretGunTargets";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -314,6 +316,49 @@ public sealed class KsNpcTargetSelectionTest : GameTest
             var with = Scores(ownerUid, query);
             Assert.That(with, Is.EquivalentTo(without), $"a priority should change nothing in {query}");
             Assert.That(nearUid, Is.Not.EqualTo(farUid));
+        });
+    }
+
+    /// <summary>
+    ///     Content: a Field Commander tank's turret, picking from the query its own HTN uses, goes for a target with a priority
+    ///         over a nearer one without, as the Field Commander's infantry do; on the shared turret query, which every other
+    ///         turret uses, it ranks them as though there were no priority. (A turret query only takes living targets, so a
+    ///         defender turret or a mortar, having no mob state, is never one of them.)
+    /// </summary>
+    [Test]
+    public async Task FieldCommanderTankTurretsWeighPriority()
+    {
+        if (!SProtoMan.HasIndex(_fieldCommanderTank))
+            Assert.Ignore("the Field Commander tanks are in the private _KsModule submodule, which is not present");
+
+        var gridUid = await MakeFloor();
+
+        await Server.WaitAssertion(() =>
+        {
+            var tankUid = SpawnAt(SEntMan, _fieldCommanderTank, gridUid, 0, 0);
+            var parts = SEntMan.System<Content.Server._KS14.WeldedParts.KsWeldedPartsSystem>().GetParts(tankUid);
+            Assert.That(parts, Has.Count.EqualTo(1), "precondition: the tank has its turret");
+            var turretPartUid = parts[0];
+
+            // The query the turret's own HTN picks its targets from.
+            var rootTask = SEntMan.GetComponent<Content.Server.NPC.HTN.HTNComponent>(turretPartUid).RootTask.Task;
+            var compound = SProtoMan.Index<Content.Server.NPC.HTN.HTNCompoundPrototype>(rootTask);
+            var picker = compound.Branches[0].Tasks.OfType<Content.Server.NPC.HTN.PrimitiveTasks.HTNPrimitiveTask>()
+                .Select(task => task.Operator).OfType<Content.Server.NPC.HTN.PrimitiveTasks.Operators.UtilityOperator>().First();
+
+            var nearUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 3, 0);
+            var priorityUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 0, 6);
+
+            var sharedWithout = Scores(turretPartUid, _turretGunTargets);
+            Assert.That(Best(sharedWithout), Is.EqualTo(nearUid), "precondition: without a priority the nearer is taken");
+
+            SEntMan.AddComponent<KsNpcTargetPriorityComponent>(priorityUid).Priority = 1f;
+            var scores = Scores(turretPartUid, picker.Prototype);
+            Assert.That(Best(scores), Is.EqualTo(priorityUid),
+                $"the target with a priority ({scores.GetValueOrDefault(priorityUid):0.000}) should be preferred to the nearer ({scores.GetValueOrDefault(nearUid):0.000})");
+
+            Assert.That(Scores(turretPartUid, _turretGunTargets), Is.EquivalentTo(sharedWithout),
+                "the shared turret query should rank them as it would with no priority anywhere");
         });
     }
 }
