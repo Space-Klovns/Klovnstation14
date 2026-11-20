@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Tests.Movement;
 using Content.Shared._KS14.Construction.TilePlacement;
+using Content.Shared.Interaction;
 using Content.Shared.Stacks;
 using Robust.Client.GameObjects;
 using Robust.Shared;
@@ -28,6 +29,7 @@ public sealed class KsPlaceOnTileTest : MovementTest
 {
     private readonly EntProtoId _bags = "KsPlaceOnTileTestBags";
     private readonly EntProtoId _coil = "KsPlaceOnTileTestCoil";
+    private readonly EntProtoId _table = "KsPlaceOnTileTestTable";
     private readonly EntProtoId _wall = "KsPlaceOnTileTestWall";
     private readonly EntProtoId _wire = "KsPlaceOnTileTestWire";
 
@@ -77,6 +79,27 @@ public sealed class KsPlaceOnTileTest : MovementTest
         mask:
         - FullTileMask
         hard: true
+
+# Takes what is put on it, and stands where a mob would bump into it, as a table does.
+- type: entity
+  id: KsPlaceOnTileTestTable
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.45,-0.45,0.45,0.45""
+        layer:
+        - TableLayer
+        mask:
+        - TableMask
+        hard: true
+  - type: PlaceableSurface
 
 - type: entity
   id: KsPlaceOnTileTestWire
@@ -275,6 +298,56 @@ public sealed class KsPlaceOnTileTest : MovementTest
         });
         Assert.That(await ShownLayers(built), Is.EquivalentTo(new[] { "postEast" }),
             "the new piece should be capped towards the old one to its east");
+    }
+
+    /// <summary>
+    ///     Clicking a table that can't be built under puts the stack on the table, as any item would be, instead of
+    ///         refusing the build: a build that can't start on a clicked entity leaves the click to it.
+    /// </summary>
+    [Test]
+    public async Task ClickedSurfaceTakesTheItemWhenTheBuildCantStart()
+    {
+        var table = await SpawnTarget(_table);
+        var bags = await PlaceInHands(_bags, 10);
+
+        await PressKey(EngineKeyFunctions.Use, coordinates: TargetCoords, cursorEntity: table);
+        await RunTicks(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(ActiveDoAfters.Any(), Is.False, "a tile under a table shouldn't start building");
+            Assert.That(HandSys.IsHolding(SPlayer, ToServer(bags)), Is.False, "the bags should be put on the table, not kept in hand");
+            Assert.That(MapSystem.TileIndicesFor(MapData.Grid, SEntMan.GetComponent<TransformComponent>(ToServer(bags)).Coordinates),
+                Is.EqualTo(TargetTile), "the bags should lie on the table's tile");
+            Assert.That(SEntMan.GetComponent<StackComponent>(ToServer(bags)).Count, Is.EqualTo(10), "nothing should be paid");
+        });
+    }
+
+    /// <summary>
+    ///     A click naming an entity in reach with a tile out of it, as a modified client can send, builds nothing: the
+    ///         reach to the entity says nothing about the tile.
+    /// </summary>
+    [Test]
+    public async Task OutOfReachTileIsRefusedWhenAnEntityInReachIsClicked()
+    {
+        var atFeet = await SpawnTarget(_coil, PlayerCoords);
+        await PlaceInHands(_bags, 10);
+
+        var playerCoordinates = SEntMan.GetCoordinates(PlayerCoords);
+        var farCoordinates = playerCoordinates.Offset(new Vector2(2, 0));
+        var farTile = MapSystem.TileIndicesFor(MapData.Grid, farCoordinates);
+        Assert.That(Transform.InRange(playerCoordinates, farCoordinates, SharedInteractionSystem.InteractionRange), Is.False,
+            "the test needs a tile out of reach");
+
+        await Server.WaitPost(() => InteractSys.UserInteraction(SPlayer, farCoordinates, ToServer(atFeet)));
+        await RunTicks(5);
+        if (ActiveDoAfters.Any())
+            await AwaitDoAfters();
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(ServerOnTile(_wall, farTile), Is.Empty, "a tile out of reach shouldn't be built on");
+        });
     }
 
     private async Task ClickTarget()

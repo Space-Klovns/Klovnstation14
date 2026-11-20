@@ -8,6 +8,7 @@ using Content.Shared.Maps;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.Stacks;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -25,7 +26,9 @@ public sealed partial class KsPlaceOnTileSystem : EntitySystem
 {
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private AnchorableSystem _anchorableSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedStackSystem _stackSystem = default!;
@@ -39,14 +42,28 @@ public sealed partial class KsPlaceOnTileSystem : EntitySystem
         if (args.Handled || !args.CanReach)
             return;
 
+        // An item clicked in a storage window or someone's hands: that's no place, and its coordinates name none.
+        if (args.Target is { } targetUid && _containerSystem.IsEntityOrParentInContainer(targetUid))
+            return;
+
         // Clicked off every grid, or on space: nothing to build on, and nothing to say.
         if (!TryGetPlacement(args.ClickLocation, out var grid, out _))
             return;
 
-        args.Handled = true;
+        // Something clicked on that this can't be built under (a table, a disposal unit) gets the normal interaction instead,
+        //     putting the item on or in it; only a bare tile is told why nothing happens.
+        var clickedTile = args.Target == null;
+
+        // CanReach measured the clicked entity, not the tile, whose coordinates the client sends on their own.
+        if (!InReach(args.User, args.ClickLocation, popup: clickedTile))
+            return;
 
         if (!HasEnough(entity))
         {
+            if (!clickedTile)
+                return;
+
+            args.Handled = true;
             _popupSystem.PopupCoordinates(KsPopupMessage.Create(entity.Comp.NotEnoughPopup, ("count", entity.Comp.StackCost)),
                 args.ClickLocation, args.User);
             return;
@@ -54,9 +71,15 @@ public sealed partial class KsPlaceOnTileSystem : EntitySystem
 
         if (!CanPlace(entity, args.ClickLocation))
         {
+            if (!clickedTile)
+                return;
+
+            args.Handled = true;
             _popupSystem.PopupCoordinates(KsPopupMessage.Create(entity.Comp.BlockedPopup), args.ClickLocation, args.User);
             return;
         }
+
+        args.Handled = true;
 
         if (entity.Comp.DoAfter <= TimeSpan.Zero)
         {
@@ -85,6 +108,11 @@ public sealed partial class KsPlaceOnTileSystem : EntitySystem
         args.Handled = true;
 
         var coordinates = GetCoordinates(args.Coordinates);
+
+        // Walked off or walled out since the click; also the only check a do-after event's coordinates get.
+        if (!InReach(args.User, coordinates, popup: true))
+            return;
+
         if (!HasEnough(entity))
         {
             _popupSystem.PopupCoordinates(KsPopupMessage.Create(entity.Comp.NotEnoughPopup, ("count", entity.Comp.StackCost)),
@@ -135,6 +163,27 @@ public sealed partial class KsPlaceOnTileSystem : EntitySystem
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="userUid"/> can reach the spot at <paramref name="coordinates"/> on the tile to build on.
+    ///         What's anchored on that tile is ignored: whether it's in the way is <see cref="CanPlace"/>'s question, and
+    ///         a wall there would otherwise read as out of reach rather than taken.
+    /// </summary>
+    private bool InReach(EntityUid userUid, EntityCoordinates coordinates, bool popup)
+    {
+        if (!TryGetPlacement(coordinates, out var grid, out var tileRef))
+            return false;
+
+        var onTile = new HashSet<EntityUid>();
+        var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid, grid.Comp, tileRef.GridIndices);
+        while (anchoredEnumerator.MoveNext(out var anchoredUid))
+        {
+            onTile.Add(anchoredUid.Value);
+        }
+
+        return _interactionSystem.InRangeUnobstructed(userUid, _transformSystem.ToMapCoordinates(coordinates),
+            predicate: onTile.Contains, popup: popup);
     }
 
     private bool TryGetPlacement(EntityCoordinates coordinates, out Entity<MapGridComponent> grid, out TileRef tileRef)
