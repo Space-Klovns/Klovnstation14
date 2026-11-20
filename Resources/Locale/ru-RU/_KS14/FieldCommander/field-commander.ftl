@@ -157,3 +157,13 @@ ks-fieldcommander-wave-status-paused = { $wave ->
 
 ks-fieldcommander-points-revive = Реанимация: { $name }
 ks-fieldcommander-points-heal = Лечение: { $name }
+
+## Концовка: проваливший задачу командир мобилизован и отправлен в бой сам.
+
+ks-fieldcommander-mobik-sender = Верховное командование «Синдиката»
+ks-fieldcommander-mobik-announcement = Верховное командование «Синдиката» на всех частотах. Полевой командир не сумел взять опорный пункт Nanotrasen. Он отстранён от командования и мобилизован с этой минуты: одна винтовка, без брони, без звания. Поздравляем с повышением до мобика, боец. Фронт там.
+ks-fieldcommander-intel-mobik = Полевое управление. Через { $seconds } с прибудет одна капсула с единственным призывником: их бывшим командиром. Избавьте его от мучений.
+ks-fieldcommander-intel-mobik-killed = Полевое управление. Мобик готов. Это был последний.
+ks-fieldcommander-mobik-name = бывший полевой командир
+ks-fieldcommander-points-mobik = Мобик убит
+ks-fieldcommander-roundend-mobik-killed = Отстранённый от командования и отправленный в бой мобиком, полевой командир тоже погиб.

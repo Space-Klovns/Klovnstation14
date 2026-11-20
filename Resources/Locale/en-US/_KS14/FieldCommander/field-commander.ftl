@@ -159,3 +159,13 @@ ks-fieldcommander-wave-status-paused = { $wave ->
 
 ks-fieldcommander-points-revive = Revived: { $name }
 ks-fieldcommander-points-heal = Healed: { $name }
+
+## The ending: the failed commander, mobilised and sent in himself.
+
+ks-fieldcommander-mobik-sender = Syndicate High Command
+ks-fieldcommander-mobik-announcement = Syndicate High Command to all frequencies. The Field Commander has failed to take the Nanotrasen stronghold. He is relieved of command and mobilised, effective immediately: one rifle, no armour, no rank. Congratulations on your promotion to mobik, soldier. The front is that way.
+ks-fieldcommander-intel-mobik = Field Operations. One pod inbound in about { $seconds } seconds, carrying a single conscript: their own former commander. Put him out of his misery.
+ks-fieldcommander-intel-mobik-killed = Field Operations. The mobik is down. That was the last of them.
+ks-fieldcommander-mobik-name = former field commander
+ks-fieldcommander-points-mobik = Mobik killed
+ks-fieldcommander-roundend-mobik-killed = Relieved of command and sent in as a mobik, the field commander was killed too.

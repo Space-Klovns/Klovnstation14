@@ -24,8 +24,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     {
         entity.Comp.IgnoreStandOff = true;
         entity.Comp.GiveOrders = !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent) ||
-                                 entity.Comp.AssetIndex >= ruleComponent.Assets.Count ||
-                                 ruleComponent.Assets[entity.Comp.AssetIndex].GiveOrders;
+                                 !TryGetUnitAsset(ruleComponent, entity.Comp, out var asset) ||
+                                 asset.GiveOrders;
     }
 
     #endregion

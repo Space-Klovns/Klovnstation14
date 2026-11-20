@@ -47,6 +47,9 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         ruleComponent.UnitsKilled++;
         RewardUnitKill((unit.Comp.RuleUid, ruleComponent), unit);
+
+        if (unit.Comp.Mobik)
+            OnMobikKilled((unit.Comp.RuleUid, ruleComponent), unit);
     }
 
     #endregion

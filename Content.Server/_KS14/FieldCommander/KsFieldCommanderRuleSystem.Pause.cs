@@ -75,6 +75,9 @@ public sealed partial class KsFieldCommanderRuleSystem
         if (component.UplinkDeployedTime is { } deployedTime && component.UplinkDestroyedTime == null)
             component.UplinkDeployedTime = deployedTime + delta;
 
+        if (component.MobikArrivalTime is { } mobikArrivalTime)
+            component.MobikArrivalTime = mobikArrivalTime + delta;
+
         for (var i = 0; i < component.PendingIntel.Count; i++)
         {
             var intel = component.PendingIntel[i];

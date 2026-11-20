@@ -25,6 +25,8 @@ ks-fieldcommander-admin-status-paused = { $paused ->
 ks-fieldcommander-admin-pause = Pause
 ks-fieldcommander-admin-unpause = Unpause
 ks-fieldcommander-admin-force-wave = Force wave
+ks-fieldcommander-admin-send-mobik = Send mobik
+ks-fieldcommander-admin-send-mobik-tooltip = Announces the failed commander and sends him in as a mobik now. This begins the round's ending: no more waves, and killing him ends the round.
 ks-fieldcommander-admin-refresh = Refresh
 ks-fieldcommander-admin-apply = Apply
 

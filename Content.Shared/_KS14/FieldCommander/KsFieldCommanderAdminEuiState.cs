@@ -164,6 +164,12 @@ public sealed class KsFieldCommanderAdminSetPausedMessage(NetEntity rule, bool p
 [Serializable, NetSerializable]
 public sealed class KsFieldCommanderAdminForceWaveMessage(NetEntity rule) : KsFieldCommanderAdminEuiMessage(rule);
 
+/// <summary>
+///     Announces the failed commander now and sends him in as a mobik, which begins the round's ending.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsFieldCommanderAdminSendMobikMessage(NetEntity rule) : KsFieldCommanderAdminEuiMessage(rule);
+
 [Serializable, NetSerializable]
 public sealed class KsFieldCommanderAdminSetPhaseMessage(NetEntity rule, int phase) : KsFieldCommanderAdminEuiMessage(rule)
 {

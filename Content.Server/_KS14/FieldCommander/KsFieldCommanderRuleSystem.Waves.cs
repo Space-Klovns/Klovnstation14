@@ -190,7 +190,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             count++;
 
-            if (aliveByAsset != null)
+            if (aliveByAsset != null && !unitComponent.Mobik)
                 aliveByAsset[unitComponent.AssetIndex] = aliveByAsset.GetValueOrDefault(unitComponent.AssetIndex) + 1;
         }
 
@@ -278,6 +278,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             // Nothing spent, and nothing saved up either: the budget carried in stays as it was.
             rule.Comp.DoctrineIndex = -1;
             leftover = rule.Comp.CarriedBudget;
+        }
+        // The ending: the commander has nothing left to buy with, only an admin's queued wave still goes (see .Mobik).
+        else if (IsMobikEnding(rule.Comp))
+        {
+            return;
         }
         else
         {
@@ -417,15 +422,10 @@ public sealed partial class KsFieldCommanderRuleSystem
             coordinates = footCoordinates;
         }
         // Nowhere out of sight to walk in from, or meant to come by air anyway.
-        else if (TryFindPlacement(component, battlefield,
-                     component.MinPodObjectiveDistance, component.MaxSpawnDistance,
-                     minObjectiveDistance: component.MinPodObjectiveDistance,
-                     minDefenderDistance: component.MinPodDefenderDistance,
-                     hidden: false,
-                     out var podCoordinates))
+        else if (TryLandPod(component, battlefield, out var podCoordinates, out var landedPodUid))
         {
             coordinates = podCoordinates;
-            podUid = SpawnAtPosition(component.PodPrototype, podCoordinates);
+            podUid = landedPodUid;
         }
         else
         {
@@ -435,6 +435,34 @@ public sealed partial class KsFieldCommanderRuleSystem
         arrivalSum += _transformSystem.ToMapCoordinates(coordinates).Position;
         arrivalCount++;
         return SpawnGroup(rule, group, coordinates, podUid);
+    }
+
+    /// <summary>
+    ///     Finds where a pod may land and spawns it there, for its passengers to board. False, with nothing spawned, if
+    ///         there is nowhere.
+    /// </summary>
+    private bool TryLandPod(KsFieldCommanderRuleComponent component, Battlefield battlefield, out EntityCoordinates coordinates, out EntityUid podUid)
+    {
+        podUid = default;
+        if (!TryFindPlacement(component, battlefield,
+                component.MinPodObjectiveDistance, component.MaxSpawnDistance,
+                minObjectiveDistance: component.MinPodObjectiveDistance,
+                minDefenderDistance: component.MinPodDefenderDistance,
+                hidden: false,
+                out coordinates))
+            return false;
+
+        podUid = SpawnAtPosition(component.PodPrototype, coordinates);
+        return true;
+    }
+
+    /// <summary>
+    ///     Puts a unit in a pod, or beside it if it will not go in.
+    /// </summary>
+    private void BoardPod(EntityUid unitUid, EntityUid podUid)
+    {
+        if (!_supplyPodPassengerSystem.TryBoard(unitUid, podUid))
+            Log.Warning($"{ToPrettyString(unitUid)} could not board {ToPrettyString(podUid)}, and arrives beside it.");
     }
 
     private int SpawnGroup(Entity<KsFieldCommanderRuleComponent> rule, List<int> group, EntityCoordinates coordinates, EntityUid? podUid)
@@ -451,8 +479,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
                 spawned++;
 
-                if (podUid is { } pod && !_supplyPodPassengerSystem.TryBoard(unitUid, pod))
-                    Log.Warning($"{ToPrettyString(unitUid)} could not board {ToPrettyString(pod)}, and arrives beside it.");
+                if (podUid is { } pod)
+                    BoardPod(unitUid, pod);
             }
         }
 
@@ -472,7 +500,21 @@ public sealed partial class KsFieldCommanderRuleSystem
         bool holdPosition = false,
         bool countSent = true)
     {
-        var asset = rule.Comp.Assets[assetIndex];
+        return SpawnAssetUnit(rule, rule.Comp.Assets[assetIndex], assetIndex, coordinates, mobik: false, holdPosition, countSent);
+    }
+
+    /// <summary>
+    ///     Spawns one unit of <paramref name="asset"/> on the commander's side: one of its assets, at
+    ///         <paramref name="assetIndex"/>, or else the <paramref name="mobik"/>.
+    /// </summary>
+    private EntityUid? SpawnAssetUnit(Entity<KsFieldCommanderRuleComponent> rule,
+        KsFieldCommanderAsset asset,
+        int assetIndex,
+        EntityCoordinates coordinates,
+        bool mobik,
+        bool holdPosition,
+        bool countSent)
+    {
         EntityUid unitUid;
 
         if (asset.Humanoid is { } humanoid)
@@ -490,6 +532,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var unitComponent = EnsureComp<KsFieldCommanderUnitComponent>(unitUid);
         unitComponent.RuleUid = rule.Owner;
         unitComponent.AssetIndex = assetIndex;
+        unitComponent.Mobik = mobik;
         unitComponent.GiveOrders = asset.GiveOrders && !holdPosition;
         unitComponent.HoldPosition = holdPosition;
         ResetStuck(unitComponent);
@@ -498,6 +541,24 @@ public sealed partial class KsFieldCommanderRuleSystem
             rule.Comp.UnitsSent++;
 
         return unitUid;
+    }
+
+    /// <summary>
+    ///     What a unit was sent as: one of the assets, or the mobik. False if its asset is gone, the list having been
+    ///         changed since.
+    /// </summary>
+    private static bool TryGetUnitAsset(KsFieldCommanderRuleComponent component,
+        KsFieldCommanderUnitComponent unitComponent,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out KsFieldCommanderAsset? asset)
+    {
+        if (unitComponent.Mobik)
+            asset = component.Mobik?.Unit;
+        else if (unitComponent.AssetIndex >= 0 && unitComponent.AssetIndex < component.Assets.Count)
+            asset = component.Assets[unitComponent.AssetIndex];
+        else
+            asset = null;
+
+        return asset != null;
     }
 
     #endregion

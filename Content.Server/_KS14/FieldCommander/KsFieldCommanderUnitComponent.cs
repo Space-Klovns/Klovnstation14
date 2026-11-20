@@ -21,6 +21,13 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     public int AssetIndex;
 
     /// <summary>
+    ///     Whether it is the failed commander himself (<see cref="KsFieldCommanderRuleComponent.Mobik"/>), sent as
+    ///         that rather than as one of the assets: <see cref="AssetIndex"/> means nothing then.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool Mobik;
+
+    /// <summary>
     ///     Whether the commander keeps pointing it at the defenders.
     /// </summary>
     [ViewVariables]

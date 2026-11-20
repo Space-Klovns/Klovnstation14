@@ -36,7 +36,8 @@ namespace Content.Server._KS14.FieldCommander;
 ///     Split by concern: <c>.Waves</c> buys and sends units, <c>.Placement</c> finds where things go and keeps the
 ///         safe zones, <c>.Orders</c> and <c>.Strikes</c> are what the units and missiles are pointed at,
 ///         <c>.Uplink</c> the final objective, <c>.Announcements</c> both sides' transmissions, <c>.Fog</c> the play
-///         area, <c>.Points</c> the defenders' requisition points and <c>.Admin</c> the console API.
+///         area, <c>.Points</c> the defenders' requisition points, <c>.Mobik</c> the ending and <c>.Admin</c> the
+///         console API.
 /// </remarks>
 public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldCommanderRuleComponent>
 {
@@ -112,14 +113,22 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         SendDueIntel(component, curTime);
 
-        while (component.PhaseIndex + 1 < component.Phases.Count &&
-               elapsed >= component.Phases[component.PhaseIndex + 1].Start)
+        // The ending has its own steps, and no more phases or waves of the commander's own (see .Mobik).
+        if (IsMobikEnding(component))
         {
-            EnterPhase((uid, component), component.PhaseIndex + 1, curTime);
+            UpdateMobik((uid, component), curTime);
         }
+        else
+        {
+            while (component.PhaseIndex + 1 < component.Phases.Count &&
+                   elapsed >= component.Phases[component.PhaseIndex + 1].Start)
+            {
+                EnterPhase((uid, component), component.PhaseIndex + 1, curTime);
+            }
 
-        if (curTime >= component.NextWaveTime)
-            ForceWave((uid, component));
+            if (curTime >= component.NextWaveTime)
+                ForceWave((uid, component));
+        }
 
         if (curTime >= component.NextOrderTime)
         {
@@ -285,7 +294,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
                 OnUplinkLost((ruleUid, ruleComponent));
 
                 // Only a win over the uplink leads on; one that lasted to call down its bombardment ends the round.
-                if (ruleComponent.UplinkDestroyedTime != null)
+                //      The failed commander comes first, if there is one; the vote then follows his death.
+                if (ruleComponent.UplinkDestroyedTime != null && !TryBeginMobik((ruleUid, ruleComponent)))
                     TryStartEndlessVote((ruleUid, ruleComponent));
                 continue;
             }
@@ -332,5 +342,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         {
             args.AddLine(Loc.GetString("ks-fieldcommander-roundend-uplink-bombarded"));
         }
+
+        if (component.MobikKilled)
+            args.AddLine(Loc.GetString("ks-fieldcommander-roundend-mobik-killed"));
     }
 }

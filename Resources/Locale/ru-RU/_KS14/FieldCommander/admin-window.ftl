@@ -25,6 +25,8 @@ ks-fieldcommander-admin-status-paused = { $paused ->
 ks-fieldcommander-admin-pause = Пауза
 ks-fieldcommander-admin-unpause = Продолжить
 ks-fieldcommander-admin-force-wave = Волна сейчас
+ks-fieldcommander-admin-send-mobik = Мобик сейчас
+ks-fieldcommander-admin-send-mobik-tooltip = Объявляет о провале командира и сразу отправляет его в бой мобиком. Это начало концовки раунда: волн больше не будет, а его смерть завершит раунд.
 ks-fieldcommander-admin-refresh = Обновить
 ks-fieldcommander-admin-apply = Применить
 

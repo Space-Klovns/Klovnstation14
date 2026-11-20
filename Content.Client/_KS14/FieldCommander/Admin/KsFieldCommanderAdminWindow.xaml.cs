@@ -55,6 +55,7 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
 
         PauseButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminSetPausedMessage(rule, !_paused));
         ForceWaveButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminForceWaveMessage(rule));
+        SendMobikButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminSendMobikMessage(rule));
         RefreshButton.OnPressed += _ => RequestRefresh();
         AddAssetButton.OnPressed += _ => AddAsset();
         AddWaveRowButton.OnPressed += _ => AddWaveRow();

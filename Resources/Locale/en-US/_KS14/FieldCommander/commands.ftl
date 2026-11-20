@@ -50,3 +50,8 @@ cmd-ks_fcpause-hint = [on|off]
 cmd-ks_fcpause-paused = Field commander paused.
 cmd-ks_fcpause-resumed = Field commander resumed.
 cmd-ks_fcstatus-paused = Paused: its clock is stopped.
+
+cmd-ks_fcmobik-desc = Announces the failed field commander and sends him in as a mobik now. This begins the round's ending: no more waves, and killing him ends the round.
+cmd-ks_fcmobik-help = ks_fcmobik
+cmd-ks_fcmobik-sent = Mobik announced; his pod follows after the delay.
+cmd-ks_fcmobik-refused = This field commander has no mobik, or he has already been sent.
