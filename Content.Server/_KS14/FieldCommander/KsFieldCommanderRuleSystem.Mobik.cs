@@ -116,6 +116,27 @@ public sealed partial class KsFieldCommanderRuleSystem
                 return;
 
             case KsFieldCommanderMobikStage.Killed:
+                if (component.Mobik is { Aftermath.Count: > 0 } mobik)
+                {
+                    component.MobikStage = KsFieldCommanderMobikStage.Aftermath;
+                    component.AftermathStepIndex = 0;
+                    component.NextAftermathTime = curTime + mobik.Aftermath[0].Delay;
+                    UpdateAftermath(rule, curTime);
+                    return;
+                }
+
+                FinishMobik(rule);
+                return;
+
+            case KsFieldCommanderMobikStage.Aftermath:
+                UpdateAftermath(rule, curTime);
+                return;
+
+            case KsFieldCommanderMobikStage.AftermathClear:
+                // Counted afresh each time, for the same reason as above.
+                if (CountLivingUnits(rule.Owner, null) > 0)
+                    return;
+
                 FinishMobik(rule);
                 return;
         }
@@ -184,11 +205,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     He is stuck where no defender can see him: sends him again from where a wave on foot would come from, if
-    ///         there is anywhere, and keeps him stuck where he is if not.
+    ///     A unit the ending sent is stuck where no defender can see it: sends it again, as what it was, from where a
+    ///         wave on foot would come from, if there is anywhere, and keeps it stuck where it is if not.
     /// </summary>
-    /// <returns>Whether he was taken off the field.</returns>
-    private bool RelocateMobik(Entity<KsFieldCommanderRuleComponent> rule,
+    /// <returns>Whether it was taken off the field.</returns>
+    private bool RelocateEndingUnit(Entity<KsFieldCommanderRuleComponent> rule,
         Entity<KsFieldCommanderUnitComponent> unit,
         Battlefield battlefield)
     {
@@ -202,21 +223,30 @@ public sealed partial class KsFieldCommanderRuleSystem
                 outsideFog: true))
             return false;
 
+        var wasMobik = unit.Comp.Mobik;
+        var step = unit.Comp.AftermathStep;
+        var group = unit.Comp.AftermathGroup;
+        var index = unit.Comp.AssetIndex;
         TakeOffField(unit);
 
-        if (SpawnMobik(rule, coordinates) is not { } replacementUid)
+        var replacement = wasMobik
+            ? SpawnMobik(rule, coordinates)
+            : SpawnAftermathUnit(rule, step, group, index, coordinates);
+
+        if (replacement is not { } replacementUid)
         {
-            // His asset spawns nothing any more: the round ends without him rather than waiting for him.
-            component.MobikUid = null;
+            // What it was spawns nothing any more: the round goes on without it rather than waiting for it.
+            if (wasMobik)
+                component.MobikUid = null;
             return true;
         }
 
         component.StuckUnitsRelocated++;
-        var replacement = new Entity<KsFieldCommanderUnitComponent>(replacementUid, Comp<KsFieldCommanderUnitComponent>(replacementUid));
-        if (replacement.Comp.GiveOrders)
-            OrderUnit(component, replacement, battlefield);
+        var replacementEntity = new Entity<KsFieldCommanderUnitComponent>(replacementUid, Comp<KsFieldCommanderUnitComponent>(replacementUid));
+        if (replacementEntity.Comp.GiveOrders)
+            OrderUnit(component, replacementEntity, battlefield);
 
-        Log.Info($"Field commander mobik {ToPrettyString(unit)} was sent again as {ToPrettyString(replacementUid)} at {_transformSystem.ToMapCoordinates(coordinates)}.");
+        Log.Info($"Field commander unit {ToPrettyString(unit)} was sent again as {ToPrettyString(replacementUid)} at {_transformSystem.ToMapCoordinates(coordinates)}.");
         return true;
     }
 
@@ -247,6 +277,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         component.MobikStage = KsFieldCommanderMobikStage.Done;
         component.MobikUid = null;
         component.MobikArrivalTime = null;
+        component.NextAftermathTime = null;
 
         if (TryStartEndlessVote(rule))
             return;

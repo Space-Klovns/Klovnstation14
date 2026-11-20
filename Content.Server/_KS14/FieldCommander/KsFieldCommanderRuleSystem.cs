@@ -87,6 +87,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         ClearFog(component);
         ClearWaveStatus(component);
         AllowBuildingInSafeZones(component);
+        RestoreAftermathLights(component);
     }
 
     protected override void ActiveTick(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, float frameTime)

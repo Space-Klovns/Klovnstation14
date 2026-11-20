@@ -37,6 +37,24 @@ public sealed partial class KsFieldCommanderRuleComponent
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     public bool MobikKilled;
+
+    /// <summary>
+    ///     The next of <see cref="KsFieldCommanderMobik.Aftermath"/> to take.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int AftermathStepIndex;
+
+    /// <summary>
+    ///     When it is due. On the commander's clock, so a pause holds it.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan? NextAftermathTime;
+
+    /// <summary>
+    ///     The lights the aftermath turned off, turned back on if the rule ends while the round goes on.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public List<EntityUid> AftermathLightsOff = [];
 }
 
 /// <summary>
@@ -87,6 +105,80 @@ public sealed partial class KsFieldCommanderMobik
     /// </summary>
     [DataField]
     public int BonusPoints = 300;
+
+    /// <summary>
+    ///     Steps taken in order once he is dead, each after its own delay, before the round may end. Units a step sends
+    ///         have to be dealt with too. Empty, and the round ends at his death.
+    /// </summary>
+    [DataField]
+    public List<KsFieldCommanderAftermathStep> Aftermath = [];
+}
+
+/// <summary>
+///     One step of <see cref="KsFieldCommanderMobik.Aftermath"/>: any of turning the lights out, an announcement, and
+///         groups of units sent in.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsFieldCommanderAftermathStep
+{
+    /// <summary>
+    ///     After the step before it, or after his death for the first.
+    /// </summary>
+    [DataField]
+    public TimeSpan Delay;
+
+    /// <summary>
+    ///     Turns off every powered light on the defenders' map that is on. Emergency lights and lights carried or worn
+    ///         are not powered lights, and stay on.
+    /// </summary>
+    [DataField]
+    public bool LightsOut;
+
+    [DataField]
+    public KsFieldCommanderAftermathAnnouncement? Announcement;
+
+    /// <summary>
+    ///     Each group arrives together on foot, out of the defenders' sight, with nothing said; the groups at bearings
+    ///         spread evenly around the defenders. They are the commander's units, ordered at the defenders.
+    /// </summary>
+    [DataField]
+    public List<KsFieldCommanderAftermathGroup> Groups = [];
+}
+
+/// <summary>
+///     An announcement on the defenders' intelligence channel, written into the prototype rather than a locale file.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsFieldCommanderAftermathAnnouncement
+{
+    /// <summary>
+    ///     The text by culture name (<c>en-US</c>): the server's culture's, or else the first. Formatted on the server,
+    ///         as every one of the commander's announcements is.
+    /// </summary>
+    [DataField(required: true)]
+    public Dictionary<string, string> Text = new();
+
+    /// <summary>
+    ///     Who it is signed by; the rule's <see cref="KsFieldCommanderRuleComponent.IntelSender"/> if unset.
+    /// </summary>
+    [DataField]
+    public LocId? Sender;
+
+    /// <summary>
+    ///     Whether the intelligence chirp plays under it.
+    /// </summary>
+    [DataField]
+    public bool Sound = true;
+}
+
+[DataDefinition]
+public sealed partial class KsFieldCommanderAftermathGroup
+{
+    /// <summary>
+    ///     What the group is made of: each unit as many times as its <see cref="KsFieldCommanderAsset.Count"/>.
+    /// </summary>
+    [DataField(required: true)]
+    public List<KsFieldCommanderAsset> Units = [];
 }
 
 public enum KsFieldCommanderMobikStage : byte
@@ -113,9 +205,19 @@ public enum KsFieldCommanderMobikStage : byte
     Arrived,
 
     /// <summary>
-    ///     Killed and paid for; the round ends, or the vote opens, on the commander's next tick.
+    ///     Killed and paid for; on the commander's next tick the aftermath begins, or the round ends, or the vote opens.
     /// </summary>
     Killed,
+
+    /// <summary>
+    ///     Taking the aftermath's steps.
+    /// </summary>
+    Aftermath,
+
+    /// <summary>
+    ///     Every step taken; waiting for whatever they sent to be dealt with.
+    /// </summary>
+    AftermathClear,
 
     /// <summary>
     ///     Over: never again this round, endless mode included.

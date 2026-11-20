@@ -190,7 +190,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             count++;
 
-            if (aliveByAsset != null && !unitComponent.Mobik)
+            if (aliveByAsset != null && !unitComponent.Mobik && unitComponent.AftermathStep < 0)
                 aliveByAsset[unitComponent.AssetIndex] = aliveByAsset.GetValueOrDefault(unitComponent.AssetIndex) + 1;
         }
 
@@ -553,6 +553,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     {
         if (unitComponent.Mobik)
             asset = component.Mobik?.Unit;
+        else if (unitComponent.AftermathStep >= 0)
+            asset = TryGetAftermathAsset(component, unitComponent.AftermathStep, unitComponent.AftermathGroup, unitComponent.AssetIndex);
         else if (unitComponent.AssetIndex >= 0 && unitComponent.AssetIndex < component.Assets.Count)
             asset = component.Assets[unitComponent.AssetIndex];
         else

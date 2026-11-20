@@ -510,9 +510,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             return false;
         }
 
-        // There is only one of him, and nothing to refund: he goes only where he can be sent again.
-        if (unit.Comp.Mobik)
-            return RelocateMobik(rule, unit, battlefield);
+        // Sent by the ending rather than bought: nothing to refund, so it goes only where it can be sent again.
+        if (unit.Comp.Mobik || unit.Comp.AftermathStep >= 0)
+            return RelocateEndingUnit(rule, unit, battlefield);
 
         var assetIndex = unit.Comp.AssetIndex;
         TakeOffField(unit);
