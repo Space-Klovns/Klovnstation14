@@ -1,6 +1,7 @@
 #nullable enable
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server.GameTicking;
 using Content.Shared._KS14.Fluids.Evaporation;
 using Content.Shared.Chemistry.Components;
@@ -10,6 +11,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
 using Content.Shared.Fluids.Components;
 using NUnit.Framework;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -100,6 +102,9 @@ public sealed class KsMinimumEvaporationRuleTest : GameTest
 
     private float ServerRate(ProtoId<ReagentPrototype> reagent)
         => (float)Pair.Server.System<ServerPuddleSystem>().KsGetEvaporationSpeed(Pair.Server.ProtoMan.Index(reagent));
+
+    private float ClientRate(ProtoId<ReagentPrototype> reagent)
+        => (float)Pair.Client.System<ClientPuddleSystem>().KsGetEvaporationSpeed(Pair.Client.ProtoMan.Index(reagent));
 
     [Test]
     public async Task ExistingPuddleEvaporatesOnlyWhileTheRuleRuns()
@@ -206,5 +211,71 @@ public sealed class KsMinimumEvaporationRuleTest : GameTest
         await client.WaitAssertion(() =>
             Assert.That(client.System<ClientPuddleSystem>().GetEvaporationSpeeds(PuddleSolution(client.EntMan, clientPuddleUid)), Is.Empty,
                 "The client kept the rule's rate after it ended."));
+    }
+
+    /// <summary>
+    ///     A rule lives in nullspace, which PVS sends to nobody, so only its global override gets it to a real client.
+    ///         Pooled pairs run with PVS off and send everything, so it is turned on here, the rule starts only once the
+    ///         client is in, and a plain nullspace entity spawned beside it must stay away.
+    /// </summary>
+    [Test]
+    public async Task RuleReachesTheClientWithPvsOn()
+    {
+        await OverrideCVar(Side.Server, CVars.NetPVS, true);
+        await Pair.RunTicksSync(5);
+
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var gameTicker = server.System<GameTicker>();
+
+        await client.WaitAssertion(() =>
+            Assert.That(ClientRate(_stillReagent), Is.Zero, "The client knows a rate before any rule started, so this proves nothing."));
+
+        var ruleNetEntity = NetEntity.Invalid;
+        var controlNetEntity = NetEntity.Invalid;
+        await server.WaitPost(() =>
+        {
+            Assert.That(gameTicker.StartGameRule(_lowRule, out var ruleUid));
+            ruleNetEntity = server.EntMan.GetNetEntity(ruleUid);
+            controlNetEntity = server.EntMan.GetNetEntity(server.EntMan.SpawnEntity(null, MapCoordinates.Nullspace));
+        });
+        await Pair.RunTicksSync(10);
+
+        await client.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(client.EntMan.TryGetEntity(controlNetEntity, out _), Is.False,
+                    "A plain nullspace entity reached the client, so PVS is not filtering and this proves nothing.");
+                Assert.That(client.EntMan.TryGetEntity(ruleNetEntity, out _), Is.True,
+                    "The rule entity never reached the client with PVS on.");
+                Assert.That(ClientRate(_stillReagent), Is.EqualTo(LowRate),
+                    "The client does not know the rule's rate with PVS on, so it cannot predict the evaporation.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Deleting an active rule, as round restart does, takes its rate off the client as well as the server.
+    /// </summary>
+    [Test]
+    public async Task ClientDropsTheRateOfADeletedRule()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var gameTicker = server.System<GameTicker>();
+
+        var ruleUid = EntityUid.Invalid;
+        await server.WaitPost(() => Assert.That(gameTicker.StartGameRule(_lowRule, out ruleUid)));
+        await Pair.RunTicksSync(5);
+
+        await client.WaitAssertion(() =>
+            Assert.That(ClientRate(_stillReagent), Is.EqualTo(LowRate), "The client never learnt the rule's rate, so this proves nothing."));
+
+        await server.WaitPost(() => server.EntMan.DeleteEntity(ruleUid));
+        await Pair.RunTicksSync(5);
+
+        await client.WaitAssertion(() =>
+            Assert.That(ClientRate(_stillReagent), Is.Zero, "The client kept the rate of a rule deleted while active."));
     }
 }

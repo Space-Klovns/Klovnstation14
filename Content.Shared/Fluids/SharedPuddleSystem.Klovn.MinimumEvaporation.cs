@@ -46,7 +46,9 @@ public abstract partial class SharedPuddleSystem
         var puddleEnumerator = AllEntityQuery<PuddleComponent>();
         while (puddleEnumerator.MoveNext(out var puddleUid, out var puddleComponent))
         {
-            // Going with its map, as at round restart: nothing to keep ticking.
+            // Going anyway: nothing to keep ticking. Round restart needs no check of its own, as a flush deletes every
+            // map, puddles and all, before the nullspace entities a rule lives among (EntityManager.FlushEntitiesInternal),
+            // and the client deletes in the server's order, so the sweep a deleted rule starts finds no puddles then.
             if (TerminatingOrDeleted(puddleUid) ||
                 !_solutionContainerSystem.ResolveSolution(puddleUid, puddleComponent.SolutionName, ref puddleComponent.Solution, out var solution))
                 continue;
