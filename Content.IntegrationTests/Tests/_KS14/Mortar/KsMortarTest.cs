@@ -388,4 +388,63 @@ public sealed class KsMortarTest : GameTest
         await Server.WaitAssertion(() => Assert.That(SEntMan.Deleted(mortarUid) || SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
             "an abandoned mortar nobody uses should dissolve"));
     }
+
+    /// <summary>
+    ///     A crewman only down, not dead, leaves its mortar for anyone to fire; whoever does takes it from the crewman for
+    ///         good, so that the crewman getting back up does not go on firing it, now on its new side's factions.
+    /// </summary>
+    [Test]
+    public async Task AMortarFiredWhileItsCrewIsDownIsNoLongerTheirs()
+    {
+        await SetUpMap();
+        EntityUid crewUid = default, defenderUid = default, targetUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        var mobStateSystem = SEntMan.System<MobStateSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            crewUid = SEntMan.SpawnEntity(_crew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            targetUid = SEntMan.SpawnEntity(_target, new EntityCoordinates(_map.Grid.Owner, 10.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+        });
+
+        EntityUid mortarUid = default;
+        for (var tick = 0; tick < Ticks(3f) && mortarUid == default; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() => mortarUid = FindMortar() ?? default);
+        }
+
+        Assert.That(mortarUid, Is.Not.EqualTo(default(EntityUid)), "the crewman should have set its mortar up");
+
+        await Server.WaitPost(() => mobStateSystem.ChangeMobState(crewUid, MobState.Critical));
+
+        // Past its crew interval, for it to be ready for whoever comes to it.
+        await Pair.RunTicksSync(Ticks(1f));
+
+        var rounds = 0;
+        await Server.WaitAssertion(() =>
+        {
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(180), 10f), Is.True,
+                "a defender should fire a mortar whose crewman is down");
+            rounds = mortar.Comp.Rounds;
+            Assert.That(rounds, Is.GreaterThan(0), "precondition: rounds left for the crewman to fire");
+
+            mobStateSystem.ChangeMobState(crewUid, MobState.Alive);
+        });
+
+        // Long past its crew interval, with a hostile of the crewman's in range.
+        await Pair.RunTicksSync(Ticks(3f));
+        await Server.WaitAssertion(() =>
+        {
+            var mortarComponent = SEntMan.GetComponent<KsMortarComponent>(mortarUid);
+            Assert.That(mortarComponent.CrewUid, Is.Null, "the crewman back on its feet should not have its mortar back");
+            Assert.That(SEntMan.GetComponent<KsMortarCrewComponent>(crewUid).MortarUid, Is.Null, "the crewman should know it lost it");
+            Assert.That(mortarComponent.Rounds, Is.EqualTo(rounds), "the crewman should not fire it again");
+            Assert.That(SEntMan.GetComponent<NpcFactionMemberComponent>(mortarUid).Factions,
+                Is.EquivalentTo(SEntMan.GetComponent<NpcFactionMemberComponent>(defenderUid).Factions), "it stays the defender's");
+            Assert.That(SEntMan.EntityExists(targetUid), Is.True);
+        });
+    }
 }

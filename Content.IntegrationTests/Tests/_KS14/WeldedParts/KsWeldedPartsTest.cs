@@ -12,6 +12,7 @@ using Content.Shared.GameTicking.Components;
 using Content.Shared.NPC.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Prototypes;
@@ -174,6 +175,64 @@ public sealed class KsWeldedPartsTest : GameTest
             var transformSystem = entMan.System<SharedTransformSystem>();
             var offset = transformSystem.GetWorldPosition(partUid) - transformSystem.GetWorldPosition(rootUid);
             Assert.That(offset.Y, Is.EqualTo(1f).Within(0.05f), "the part should sit at its offset");
+        });
+    }
+
+    /// <summary>
+    ///     On a turned grid the part still sits at its offset, turned with the owner: the offset is put on in the frame of
+    ///         the coordinates it is added to, the grid's, not the world's.
+    /// </summary>
+    [Test]
+    public async Task PartsSitAtTheirOffsetOnATurnedGrid()
+    {
+        var testMap = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var entMan = Server.EntMan;
+            var transformSystem = entMan.System<SharedTransformSystem>();
+            transformSystem.SetLocalRotation(testMap.Grid.Owner, Angle.FromDegrees(90));
+
+            var rootUid = entMan.SpawnAtPosition(_root, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            var parts = Server.System<KsWeldedPartsSystem>().GetParts(rootUid);
+            Assert.That(parts, Has.Count.EqualTo(1), "the part should have been spawned");
+
+            var offset = entMan.GetComponent<KsWeldedPartsComponent>(rootUid).Parts[0].Offset;
+            var expected = transformSystem.GetWorldRotation(rootUid).RotateVec(offset);
+            var actual = transformSystem.GetWorldPosition(parts[0]) - transformSystem.GetWorldPosition(rootUid);
+            Assert.That((actual - expected).Length(), Is.LessThan(0.01f),
+                $"the part should sit at its offset turned with its owner, {expected}, not at {actual}");
+        });
+    }
+
+    /// <summary>
+    ///     A map save leaves a built welded whole out, its parts and its owner alike, so that no part is left behind on its
+    ///         own and no owner welds a second set on when loaded; one not yet built, on a map not yet started, is saved.
+    /// </summary>
+    [Test]
+    public async Task BuiltWholesAreNotSaved()
+    {
+        var (rootUid, partUid) = await SpawnWelded();
+        var unbuiltMap = await Pair.CreateTestMap(initialized: false);
+
+        await Server.WaitAssertion(() =>
+        {
+            var entMan = Server.EntMan;
+            var mapLoaderSystem = entMan.System<Robust.Shared.EntitySerialization.Systems.MapLoaderSystem>();
+            var gridUid = entMan.GetComponent<TransformComponent>(rootUid).GridUid!.Value;
+            var writer = new System.IO.StringWriter();
+            Assert.That(mapLoaderSystem.TrySaveGrid(gridUid, writer), Is.True);
+
+            var saved = writer.ToString();
+            Assert.That(saved, Does.Not.Contain($"proto: {_part.Id}"), "a welded part should be left out of a save");
+            Assert.That(saved, Does.Not.Contain($"proto: {_root.Id}"), "and so should its owner, which would weld on another");
+            Assert.That(entMan.Deleted(partUid), Is.False);
+
+            var unbuiltUid = entMan.SpawnAtPosition(_root, new EntityCoordinates(unbuiltMap.Grid, 0.5f, 0.5f));
+            Assert.That(Server.System<KsWeldedPartsSystem>().GetParts(unbuiltUid), Is.Empty, "precondition: not built before its map starts");
+            writer = new System.IO.StringWriter();
+            Assert.That(mapLoaderSystem.TrySaveGrid(unbuiltMap.Grid.Owner, writer), Is.True);
+            Assert.That(writer.ToString(), Does.Contain($"proto: {_root.Id}"), "an owner not yet built should be saved, to build itself once loaded");
         });
     }
 

@@ -4,6 +4,7 @@ using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Content.Shared.Projectiles;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -21,12 +22,41 @@ public sealed partial class KsWeldedPartsSystem : EntitySystem
     [Dependency] private SharedDestructibleSystem _destructibleSystem = default!;
     [Dependency] private SharedJointSystem _jointSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private EntityQuery<KsWeldedPartComponent> _partQuery = default!;
     [Dependency] private EntityQuery<KsWeldedPartsComponent> _partsQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionQuery = default!;
     [Dependency] private EntityQuery<ProjectileComponent> _projectileQuery = default!;
 
     private const string JointIdPrefix = "ks-welded-part-";
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        _mapLoaderSystem.OnIsSerializable += OnIsSerializable;
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        _mapLoaderSystem.OnIsSerializable -= OnIsSerializable;
+    }
+
+    /// <summary>
+    ///     A welded whole is not saved once it is built: neither its parts, which an owner saved on its own would weld on again
+    ///         when loaded, and which an owner not saved would leave behind on their own, nor its owner, whose weld joints
+    ///         point at them. Not yet built (on a map not yet initialised, as when mapping), the owner is saved, and builds
+    ///         itself when the map starts. A part's prototype stays savable, for one placed by hand.
+    /// </summary>
+    private void OnIsSerializable(Entity<MetaDataComponent> entity, ref bool serializable)
+    {
+        if (!serializable)
+            return;
+
+        if (_partQuery.HasComp(entity.Owner) ||
+            _partsQuery.TryComp(entity.Owner, out var partsComponent) && partsComponent.Spawned.Count > 0)
+            serializable = false;
+    }
 
     /// <summary>
     ///     A round fired by one part of the whole passes through the rest of it: a turret's shell starts inside the hull it
@@ -112,10 +142,14 @@ public sealed partial class KsWeldedPartsSystem : EntitySystem
         var ownerTransform = Transform(entity);
         var rotation = _transformSystem.GetWorldRotation(ownerTransform);
 
+        // The owner's coordinates are its parent's (a grid's), so the offset turns with its rotation on that parent, not
+        //      in the world: a turned grid would otherwise turn it twice.
+        var localRotation = ownerTransform.LocalRotation;
+
         for (var i = 0; i < entity.Comp.Parts.Count; i++)
         {
             var part = entity.Comp.Parts[i];
-            var partUid = Spawn(part.Prototype, ownerTransform.Coordinates.Offset(rotation.RotateVec(part.Offset)));
+            var partUid = Spawn(part.Prototype, ownerTransform.Coordinates.Offset(localRotation.RotateVec(part.Offset)));
             _transformSystem.SetWorldRotation(partUid, rotation);
 
             EnsureComp<KsWeldedPartComponent>(partUid).Root = entity.Owner;

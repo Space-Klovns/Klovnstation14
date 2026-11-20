@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Tests._KS14.FieldCommander;
 using Content.Server.Explosion.EntitySystems;
@@ -36,19 +37,32 @@ public sealed class KsMortarShellExplosionTest : GameTest
 
         await Server.WaitPost(() =>
         {
-            KsFieldCommanderTestHelpers.FillFloor(Server, testMap, halfExtent: 30);
-            sandbagUid = SEntMan.SpawnEntity(SandbagWall, new EntityCoordinates(testMap.Grid.Owner, 2.5f, 0.5f));
-            turretUid = SEntMan.SpawnEntity(Turret, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 2.5f));
-            // Far from the turret, whose own destruction is a blast of another kind.
-            wallUid = SEntMan.SpawnEntity(StationWall, new EntityCoordinates(testMap.Grid.Owner, 21.5f, 0.5f));
+            var explosionSystem = SEntMan.System<ExplosionSystem>();
 
-            // As the shell sets it off, from its own prototype.
+            // As the shell sets it off, from its own prototype, and how far that reaches.
             SProtoMan.Index(MortarShell).TryGetComponent<Content.Shared.Trigger.Components.Effects.ExplosionOnTriggerComponent>(out var trigger, SEntMan.ComponentFactory);
             Assert.That(trigger, Is.Not.Null);
             Assert.That(trigger!.ExplosionType, Is.EqualTo(MortarShellExplosion), "the shell should go off as its own blast");
-            foreach (var x in new[] { 0.5f, 20.5f })
+            var radius = explosionSystem.IntensityToRadius(trigger.TotalIntensity, trigger.IntensitySlope, trigger.MaxTileIntensity);
+            Assert.That(radius, Is.GreaterThanOrEqualTo(1f), "the shell's blast should reach past its own tile");
+
+            // Well inside the blast; and the second blast, by the wall, far enough off that neither reaches the other's
+            //      targets, nor the turret's own blast, a blast of another kind, the wall.
+            var near = Math.Max(1, (int)MathF.Floor(radius / 2f));
+            var turretRadius = 0f;
+            if (SProtoMan.Index(Turret).TryGetComponent<Content.Shared.Explosion.Components.ExplosiveComponent>(out var turretExplosive, SEntMan.ComponentFactory))
+                turretRadius = explosionSystem.IntensityToRadius(turretExplosive.TotalIntensity, turretExplosive.IntensitySlope, turretExplosive.MaxIntensity);
+
+            var apart = (int)MathF.Ceiling(2f * radius + turretRadius) + near + 2;
+            KsFieldCommanderTestHelpers.FillFloor(Server, testMap, halfExtent: apart + near + 2);
+
+            sandbagUid = SEntMan.SpawnEntity(SandbagWall, new EntityCoordinates(testMap.Grid.Owner, near + 0.5f, 0.5f));
+            turretUid = SEntMan.SpawnEntity(Turret, new EntityCoordinates(testMap.Grid.Owner, 0.5f, near + 0.5f));
+            wallUid = SEntMan.SpawnEntity(StationWall, new EntityCoordinates(testMap.Grid.Owner, apart + near + 0.5f, 0.5f));
+
+            foreach (var x in new[] { 0.5f, apart + 0.5f })
             {
-                SEntMan.System<ExplosionSystem>().QueueExplosion(new MapCoordinates(new System.Numerics.Vector2(x, 0.5f), testMap.MapId),
+                explosionSystem.QueueExplosion(new MapCoordinates(new System.Numerics.Vector2(x, 0.5f), testMap.MapId),
                     MortarShellExplosion.Id, trigger.TotalIntensity, trigger.IntensitySlope, trigger.MaxTileIntensity, cause: null,
                     maxTileBreak: trigger.MaxTileBreak, canCreateVacuum: false);
             }

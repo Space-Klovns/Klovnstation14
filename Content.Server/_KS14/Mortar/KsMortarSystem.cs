@@ -149,7 +149,16 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsMortarComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.CrewUid is not { } crewUid || !_crewQuery.TryComp(crewUid, out var crewComponent) || TerminatingOrDeleted(crewUid))
+        if (entity.Comp.CrewUid is { } crewUid)
+            ReleaseCrew(entity, crewUid);
+    }
+
+    /// <summary>
+    ///     Tells a crewman its mortar is no longer its own.
+    /// </summary>
+    private void ReleaseCrew(Entity<KsMortarComponent> mortar, EntityUid crewUid)
+    {
+        if (!_crewQuery.TryComp(crewUid, out var crewComponent) || TerminatingOrDeleted(crewUid) || crewComponent.MortarUid != mortar.Owner)
             return;
 
         crewComponent.MortarUid = null;
@@ -207,6 +216,14 @@ public sealed partial class KsMortarSystem : EntitySystem
             !double.IsFinite(bearing.Theta) ||
             !float.IsFinite(distance))
             return false;
+
+        // A crewman only down, not dead, loses it to whoever fires it: it is theirs now, and never the crewman's again
+        //      when it gets back up, which would have it shelling its own side.
+        if (mortar.Comp.CrewUid is { } downedCrewUid)
+        {
+            Abandon(mortar);
+            ReleaseCrew(mortar, downedCrewUid);
+        }
 
         distance = Math.Clamp(distance, mortar.Comp.MinRange, mortar.Comp.MaxRange);
 
@@ -327,7 +344,8 @@ public sealed partial class KsMortarSystem : EntitySystem
         {
             if (mortarComponent.CrewUid is { } crewUid)
             {
-                if (now >= mortarComponent.NextFire)
+                // A crewman down leaves it be, ready for whoever comes to it: put off a second at a time, it never was.
+                if (now >= mortarComponent.NextFire && IsCrewAlive(crewUid))
                     mortarComponent.NextFire = TryCrewFire((uid, mortarComponent), crewUid, now) ? now + mortarComponent.Interval : now + RetryDelay;
 
                 continue;
