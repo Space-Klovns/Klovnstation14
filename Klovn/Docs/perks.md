@@ -72,7 +72,7 @@ If an ability needs to know about the perk rather than its component, subscribe 
 | Damage | Explosive last rounds | `KsExplosiveLastRoundsAbility` | The last `fraction` (at least `minRounds`) of a magazine that went in full explode on hit (server); tracer tinted and an extra fire sound. |
 | Tank | Crit auto-injector | `KsCritAutoInjectorAbility` | Injects `injection` on going critical; cooldown drawn over `cooldownAlert`. |
 | Tank | Living Shield | `KsLivingShieldAbility`, `ActionKsLivingShield` | Soaks damage up to `capacity` (server), slows, blocks firing; breaks loudly; `cooldown` starts when it goes down. |
-| Tank | Draw Fire | `KsDrawFireAbility`, `ActionKsDrawFire` | Sets the server's `KsNpcTargetPriorityComponent` for `duration`, read by `KsTargetPriorityCon` (wired into the public `NearbyGunTargets` and `NearbyMeleeTargets` by a partial); the previous priority is put back. |
+| Tank | Draw Fire | `KsDrawFireAbility`, `ActionKsDrawFire` | Sets the server's `KsNpcTargetPriorityComponent` for `duration`, read by `KsTargetPriorityCon`, which only the private Field Commander unit queries weigh (upstream's target queries are left alone); the previous priority is put back. |
 | Tank | Better armour | `ksRequiredPerk` on a `CMAutomatedVendor` entry | Checked where the vend is validated; greyed out in the window for anyone else. |
 | Healing | Faster metabolism | `KsMetabolismRateAbility` | Divides the metabolic interval multiplier (`GetMetabolicMultiplierEvent`) by `rateMultiplier`. |
 | Healing | Medical HUD | `ShowHealthBars`, `ShowHealthIcons` | The upstream HUD components, on the body. |

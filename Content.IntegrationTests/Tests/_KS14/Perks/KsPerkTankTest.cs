@@ -498,21 +498,4 @@ public sealed class KsPerkTankTest : GameTest
         await Pair.RunTicksSync(2);
         await server.WaitAssertion(() => Assert.That(CountVended(), Is.EqualTo(1), "the perk's holder should get the entry"));
     }
-
-    /// <summary>
-    ///     The partial (Prototypes/_KS14/NPCs/Targeting/Partials) adds the priority consideration to the public target
-    ///         queries and keeps what upstream gave them.
-    /// </summary>
-    [TestCase("NearbyGunTargets")]
-    [TestCase("NearbyMeleeTargets")]
-    public async Task PublicTargetQueriesWeighTargetPriority(string queryId)
-    {
-        await Pair.Server.WaitAssertion(() =>
-        {
-            var query = Pair.Server.ProtoMan.Index<Content.Server.NPC.Queries.UtilityQueryPrototype>(queryId);
-            Assert.That(query.Considerations.OfType<KsTargetPriorityCon>().Count(), Is.EqualTo(1), $"{queryId} should weigh target priority once");
-            Assert.That(query.Considerations.OfType<Content.Server.NPC.Queries.Considerations.TargetDistanceCon>(), Is.Not.Empty,
-                $"{queryId} should keep upstream's considerations");
-        });
-    }
 }
