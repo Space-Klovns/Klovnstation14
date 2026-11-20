@@ -193,6 +193,9 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
                 _ruleSystem.ForceWave(commander);
                 return true;
 
+            case KsFieldCommanderAdminSendMobikMessage:
+                return _ruleSystem.TrySendMobik(commander);
+
             case KsFieldCommanderAdminSetPhaseMessage setPhase:
                 if (setPhase.Phase < 0 || setPhase.Phase >= rule.Comp1.Phases.Count)
                     return false;
@@ -262,6 +265,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
         {
             KsFieldCommanderAdminSetPausedMessage setPaused => setPaused.Paused ? "paused it" : "unpaused it",
             KsFieldCommanderAdminForceWaveMessage => "forced a wave",
+            KsFieldCommanderAdminSendMobikMessage => "sent the mobik",
             KsFieldCommanderAdminSetPhaseMessage setPhase => $"moved it to phase {setPhase.Phase}",
             KsFieldCommanderAdminEditPhaseMessage editPhase =>
                 $"edited phase {editPhase.Phase}: start {editPhase.Start?.ToString() ?? "-"}, wave interval {editPhase.WaveInterval?.ToString() ?? "-"}, budget {editPhase.Budget?.ToString() ?? "-"}",

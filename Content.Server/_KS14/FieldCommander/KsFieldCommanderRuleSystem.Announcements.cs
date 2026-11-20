@@ -33,6 +33,21 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
+    ///     A warning from the commander itself, queued and sent as intelligence is, a few seconds after its taunt, with
+    ///         the intelligence chirp, but signed by the commander.
+    /// </summary>
+    private void QueueCommanderWarning(KsFieldCommanderRuleComponent component, LocId? warning)
+    {
+        if (warning is not { } warningId)
+            return;
+
+        component.PendingIntel.Add(new KsFieldCommanderPendingIntel(GetCommanderTime(component) + component.IntelDelay,
+            Loc.GetString(warningId),
+            Sound: true,
+            FromCommander: true));
+    }
+
+    /// <summary>
     ///     Sends whatever intelligence is due. The text was formatted when it was queued, from the state it describes.
     /// </summary>
     private void SendDueIntel(KsFieldCommanderRuleComponent component, TimeSpan curTime)
@@ -43,19 +58,19 @@ public sealed partial class KsFieldCommanderRuleSystem
             if (intel.At > curTime)
                 continue;
 
-            SendIntel(component, intel.Message, intel.Sound);
+            SendIntel(component, intel.Message, intel.Sound, intel.FromCommander);
             component.PendingIntel.RemoveAt(i);
             i--;
         }
     }
 
-    private void SendIntel(KsFieldCommanderRuleComponent component, string message, bool sound)
+    private void SendIntel(KsFieldCommanderRuleComponent component, string message, bool sound, bool fromCommander = false)
     {
         _chatSystem.DispatchGlobalAnnouncement(message,
-            Loc.GetString(component.IntelSender),
+            Loc.GetString(fromCommander ? component.Sender : component.IntelSender),
             playSound: sound,
             announcementSound: sound ? component.IntelSound : null,
-            colorOverride: component.IntelColor);
+            colorOverride: fromCommander ? component.AnnouncementColor : component.IntelColor);
     }
 
     private LocId? PickRandom(List<LocId> messageIds)

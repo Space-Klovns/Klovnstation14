@@ -24,9 +24,9 @@ using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
 
 /// <summary>
-///     Content: the field commander's sniper, juggernaut and breachers (private module) come armed, the juggernaut cannot
-///         be stunned, breachers shut out of a room blow the wall nearest the noise, and the tanks come with an armed turret
-///         welded on.
+///     Content: the field commander's sniper, juggernaut, breachers and mobik (private module) come armed, the live rule
+///         has its mobik, the juggernaut cannot be stunned, breachers shut out of a room blow the wall nearest the noise,
+///         and the tanks come with an armed turret welded on.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(RandomHumanoidSystem))]
@@ -43,6 +43,8 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     private const string MortarCrew = "KsFcOperativeSynArmedMortarCrew";
     private const string Tank = "KsFcMobTank";
     private const string FlamerTank = "KsFcMobTankFlamer";
+    private const string Mobik = "KsFcMobik";
+    private static readonly EntProtoId CommanderRule = "KsFieldCommanderRule";
 
     private async Task<EntityUid?> SpawnUnit(string settings)
     {
@@ -64,7 +66,7 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
     }
 
     [Test]
-    public async Task UnitsComeArmed([Values(Sniper, Juggernaut, Breacher, MortarCrew)] string settings)
+    public async Task UnitsComeArmed([Values(Sniper, Juggernaut, Breacher, MortarCrew, Mobik)] string settings)
     {
         if (await SpawnUnit(settings) is not { } unitUid)
         {
@@ -77,6 +79,27 @@ public sealed class KsFieldCommanderEnemiesContentTest : GameTest
             var heldUid = SEntMan.System<SharedHandsSystem>().GetActiveItem(unitUid);
             Assert.That(heldUid != null && SEntMan.HasComponent<GunComponent>(heldUid.Value), Is.True,
                 $"{settings} should spawn with a gun in hand");
+        });
+    }
+
+    /// <summary>
+    ///     The private module's partial gives the live rule its mobik, and the rule keeps its own public timeline.
+    /// </summary>
+    [Test]
+    public async Task TheLiveRuleHasItsMobik()
+    {
+        if (!SProtoMan.HasIndex<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype>(Mobik))
+        {
+            Assert.Ignore("the mobik is in the private module");
+            return;
+        }
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SProtoMan.Index(CommanderRule).TryComp<Content.Server._KS14.FieldCommander.KsFieldCommanderRuleComponent>(out var ruleComponent, SEntMan.ComponentFactory), Is.True);
+            Assert.That(ruleComponent!.Mobik?.Unit.Humanoid?.Id, Is.EqualTo(Mobik), "the partial should give the rule its mobik");
+            Assert.That(ruleComponent.Phases, Is.Not.Empty, "the public timeline should survive the partial");
+            Assert.That(ruleComponent.Assets, Is.Not.Empty, "and so should the partial's own assets");
         });
     }
 

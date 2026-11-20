@@ -510,14 +510,12 @@ public sealed partial class KsFieldCommanderRuleSystem
             return false;
         }
 
-        var assetIndex = unit.Comp.AssetIndex;
+        // Sent by the ending rather than bought: nothing to refund, so it goes only where it can be sent again.
+        if (unit.Comp.Mobik || unit.Comp.AftermathStep >= 0)
+            return RelocateEndingUnit(rule, unit, battlefield);
 
-        // No longer the commander's: it stops counting at once, and a kill during the dissolve pays nothing.
-        RemComp<KsFieldCommanderUnitComponent>(unit);
-        _npcSteeringSystem.Unregister(unit);
-        if (_htnQuery.TryComp(unit, out var htnComponent))
-            _htnSystem.SetHTNEnabled((unit, htnComponent), false);
-        _dissolveSystem.Dissolve(unit);
+        var assetIndex = unit.Comp.AssetIndex;
+        TakeOffField(unit);
 
         if (assetIndex < 0 || assetIndex >= component.Assets.Count)
             return true;
@@ -546,6 +544,19 @@ public sealed partial class KsFieldCommanderRuleSystem
         component.StuckUnitsRefunded++;
         Log.Info($"Field commander unit {ToPrettyString(unit)} had nowhere to be sent again; its cost went back in the budget.");
         return true;
+    }
+
+    /// <summary>
+    ///     Dissolves a unit away. No longer the commander's: it stops counting at once, and a kill during the dissolve
+    ///         pays nothing.
+    /// </summary>
+    private void TakeOffField(Entity<KsFieldCommanderUnitComponent> unit)
+    {
+        RemComp<KsFieldCommanderUnitComponent>(unit);
+        _npcSteeringSystem.Unregister(unit);
+        if (_htnQuery.TryComp(unit, out var htnComponent))
+            _htnSystem.SetHTNEnabled((unit, htnComponent), false);
+        _dissolveSystem.Dissolve(unit);
     }
 
     /// <summary>

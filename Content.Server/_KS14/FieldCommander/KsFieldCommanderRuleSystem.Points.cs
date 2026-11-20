@@ -26,6 +26,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     private const string TeamkillAssistReason = "ks-fieldcommander-points-teamkill-assist";
     private const string UplinkReason = "ks-fieldcommander-points-uplink";
     private const string AdminReason = "ks-fieldcommander-points-admin";
+    private const string MobikReason = "ks-fieldcommander-points-mobik";
 
     /// <summary>
     ///     A defender's points, or what they would start with if they have none yet.
@@ -430,11 +431,11 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     private void RewardUnitKill(Entity<KsFieldCommanderRuleComponent> rule, Entity<KsFieldCommanderUnitComponent> unit)
     {
-        if (unit.Comp.AssetIndex >= rule.Comp.Assets.Count || // the list was changed since it was bought
+        if (!TryGetUnitAsset(rule.Comp, unit.Comp, out var asset) || // the list was changed since it was bought
             !TryComp<KsFieldCommanderDamageLedgerComponent>(unit, out var ledgerComponent))
             return;
 
-        PayShares(rule, ledgerComponent, GetKillPoints(rule.Comp, rule.Comp.Assets[unit.Comp.AssetIndex]), KillReason, AssistReason, GetReasonName(unit));
+        PayShares(rule, ledgerComponent, GetKillPoints(rule.Comp, asset), KillReason, AssistReason, GetReasonName(unit));
 
         // Paid out: a unit brought back and killed again is a new kill.
         WipeLedger((unit.Owner, ledgerComponent));
@@ -490,7 +491,15 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// </summary>
     private void RewardUplink(Entity<KsFieldCommanderRuleComponent> rule)
     {
-        if (rule.Comp.UplinkPoints == 0)
+        RewardLivingDefenders(rule, rule.Comp.UplinkPoints, UplinkReason);
+    }
+
+    /// <summary>
+    ///     Pays every defender still standing <paramref name="points"/>, for <paramref name="reason"/>.
+    /// </summary>
+    private void RewardLivingDefenders(Entity<KsFieldCommanderRuleComponent> rule, int points, string reason)
+    {
+        if (points == 0)
             return;
 
         var query = EntityQueryEnumerator<ScenarioFactionMemberComponent, MobStateComponent, ActorComponent>();
@@ -499,7 +508,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             if (factionMemberComponent.Id != rule.Comp.DefenderFaction || mobStateComponent.CurrentState == MobState.Dead)
                 continue;
 
-            AddPoints(rule, actorComponent.PlayerSession, rule.Comp.UplinkPoints, UplinkReason);
+            AddPoints(rule, actorComponent.PlayerSession, points, reason);
         }
     }
 

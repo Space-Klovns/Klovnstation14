@@ -51,6 +51,11 @@ cmd-ks_fcpause-paused = Field commander paused.
 cmd-ks_fcpause-resumed = Field commander resumed.
 cmd-ks_fcstatus-paused = Paused: its clock is stopped.
 
+cmd-ks_fcmobik-desc = Announces the failed field commander and sends him in as a mobik now. This begins the round's ending: no more waves, and killing him ends the round.
+cmd-ks_fcmobik-help = ks_fcmobik
+cmd-ks_fcmobik-sent = Mobik announced; his pod follows after the delay.
+cmd-ks_fcmobik-refused = This field commander has no mobik, or he has already been sent.
+
 cmd-ks_fcperk-desc = Sets a field commander defender's perk for the round, and swaps it onto the body they are in now.
 cmd-ks_fcperk-help = ks_fcperk <player> <perk>
 cmd-ks_fcperk-hint-perk = <perk>

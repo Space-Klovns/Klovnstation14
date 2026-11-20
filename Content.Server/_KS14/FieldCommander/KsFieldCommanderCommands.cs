@@ -108,6 +108,26 @@ public sealed partial class KsFieldCommanderUplinkCommand : KsFieldCommanderComm
     }
 }
 
+/// <summary>
+///     Announces the failed commander and sends him in as a mobik now, which begins the round's ending.
+/// </summary>
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderMobikCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcmobik";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        foreach (var rule in GetRules(shell))
+        {
+            if (FieldCommanderRuleSystem.TrySendMobik((rule.Owner, rule.Comp1)))
+                shell.WriteLine(Loc.GetString("cmd-ks_fcmobik-sent"));
+            else
+                shell.WriteError(Loc.GetString("cmd-ks_fcmobik-refused"));
+        }
+    }
+}
+
 [AdminCommand(AdminFlags.Round)]
 public sealed partial class KsFieldCommanderPointsCommand : KsFieldCommanderCommandBase
 {

@@ -322,8 +322,8 @@ public sealed class KsNpcTargetSelectionTest : GameTest
     /// <summary>
     ///     Content: a Field Commander tank's turret, picking from the query its own HTN uses, goes for a target with a priority
     ///         over a nearer one without, as the Field Commander's infantry do; on the shared turret query, which every other
-    ///         turret uses, it ranks them as though there were no priority. (A turret query only takes living targets, so a
-    ///         defender turret or a mortar, having no mob state, is never one of them.)
+    ///         turret uses, it ranks them as though there were no priority. (Mobs both, as the shared query takes only the
+    ///         living; the tank's own taking defender turrets and mortars too is KsFieldCommanderTankTargetsTest.)
     /// </summary>
     [Test]
     public async Task FieldCommanderTankTurretsWeighPriority()

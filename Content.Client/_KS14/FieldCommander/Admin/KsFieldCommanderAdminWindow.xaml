@@ -23,6 +23,7 @@
                     <Label Name="PausedLabel" VerticalAlignment="Center" MinWidth="90" />
                     <Button Name="PauseButton" Text="{Loc ks-fieldcommander-admin-pause}" />
                     <Button Name="ForceWaveButton" Text="{Loc ks-fieldcommander-admin-force-wave}" />
+                    <Button Name="SendMobikButton" Text="{Loc ks-fieldcommander-admin-send-mobik}" ToolTip="{Loc ks-fieldcommander-admin-send-mobik-tooltip}" />
                     <Button Name="RefreshButton" Text="{Loc ks-fieldcommander-admin-refresh}" />
                     <Label Name="ResultLabel" VerticalAlignment="Center" HorizontalExpand="True" Margin="8 0 0 0" />
                 </BoxContainer>

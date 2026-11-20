@@ -40,7 +40,8 @@ public sealed partial class KsFieldCommanderRuleSystem
                 continue;
 
             SpawnAtPosition(component.StrikePrototype, strikeCoordinates);
-            Transmit(component, PickRandom(component.StrikeAnnouncements), major: false, component.StrikeIntel);
+            Transmit(component, PickRandom(component.StrikeAnnouncements), major: false, intel: null);
+            QueueCommanderWarning(component, component.StrikeWarning);
             return true;
         }
 

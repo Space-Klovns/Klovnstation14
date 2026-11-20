@@ -64,7 +64,7 @@ public sealed partial class KsFieldCommanderRuleSystem
              FindNearestOutsideSafeZones(component, unitCoordinates, battlefield.Objectives)) is not { } target)
             return;
 
-        var standOff = !unit.Comp.IgnoreStandOff && unit.Comp.AssetIndex < component.Assets.Count ? component.Assets[unit.Comp.AssetIndex].StandOff : 0f;
+        var standOff = !unit.Comp.IgnoreStandOff && TryGetUnitAsset(component, unit.Comp, out var asset) ? asset.StandOff : 0f;
         OrderUnitTo(unit, GetStandOffCoordinates(unitCoordinates, target, standOff));
     }
 

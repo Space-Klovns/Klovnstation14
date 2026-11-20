@@ -11,7 +11,8 @@ ks-fieldcommander-phase-pressure = Давление
 ks-fieldcommander-phase-siege = Осада
 ks-fieldcommander-phase-final = Последний штурм
 
-# Командир лишь язвит. Всё, на что могут отреагировать защитники, приходит от Полевого управления в виде разведданных.
+# Командир лишь язвит. Всё, на что могут отреагировать защитники, приходит от Полевого управления в виде разведданных,
+#     кроме предупреждения командира об ударе (ks-fieldcommander-strike-warning).
 ks-fieldcommander-phase-landfall-announcement = Nanotrasen. Я вижу вас отсюда: мечетесь за своими стенками, как насекомые. Окапывайтесь. Тем проще будет вас выкапывать.
 ks-fieldcommander-phase-probing-announcement = Мои псы спущены с поводка. Послушаем, как громко вы умеете кричать.
 ks-fieldcommander-phase-pressure-announcement = Ещё дышите? Это канцелярская ошибка, и я её сейчас исправлю.
@@ -52,7 +53,8 @@ ks-fieldcommander-intel-wave = Полевое управление. Волна {
 ks-fieldcommander-strike-1 = Улыбнитесь артиллерии.
 ks-fieldcommander-strike-2 = Я вижу вашу крепостишку. Мой огневой налёт тоже.
 ks-fieldcommander-strike-3 = Из ваших стен выйдет отличная шрапнель.
-ks-fieldcommander-intel-strike = Полевое управление. Огневой налёт, опасно близко! Отойдите от укреплений!
+# Единственное предупреждение, которое командир даёт сам: ракеты его, и весть о них подписана им.
+ks-fieldcommander-strike-warning = Огневой налёт на подходе, опасно близко. Отходите от своих укреплений, пока ноги ещё держат.
 
 ks-fieldcommander-asset-driller = Мой бор идёт за вашими серверами, и вам нечем его остановить.
 ks-fieldcommander-intel-driller = Полевое управление. Приближается бор-проходчик. Он идёт прямо к серверу — сосредоточьте огонь на нём.
@@ -157,3 +159,13 @@ ks-fieldcommander-wave-status-paused = { $wave ->
 
 ks-fieldcommander-points-revive = Реанимация: { $name }
 ks-fieldcommander-points-heal = Лечение: { $name }
+
+## Концовка: проваливший задачу командир мобилизован и отправлен в бой сам.
+
+ks-fieldcommander-mobik-sender = Верховное командование «Синдиката»
+ks-fieldcommander-mobik-announcement = Верховное командование «Синдиката» на всех частотах. Полевой командир не сумел взять опорный пункт Nanotrasen. Он отстранён от командования и мобилизован с этой минуты: одна винтовка, без брони, без звания. Поздравляем с повышением до мобика, боец. Фронт там.
+ks-fieldcommander-intel-mobik = Полевое управление. Через { $seconds } с прибудет одна капсула с единственным призывником: их бывшим командиром. Избавьте его от мучений.
+ks-fieldcommander-intel-mobik-killed = Полевое управление. Мобик готов. Это был последний.
+ks-fieldcommander-mobik-name = бывший полевой командир
+ks-fieldcommander-points-mobik = Мобик убит
+ks-fieldcommander-roundend-mobik-killed = Отстранённый от командования и отправленный в бой мобиком, полевой командир тоже погиб.

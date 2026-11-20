@@ -21,6 +21,27 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     public int AssetIndex;
 
     /// <summary>
+    ///     Whether it is the failed commander himself (<see cref="KsFieldCommanderRuleComponent.Mobik"/>), sent as
+    ///         that rather than as one of the assets: <see cref="AssetIndex"/> means nothing then.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool Mobik;
+
+    /// <summary>
+    ///     Index into <see cref="KsFieldCommanderMobik.Aftermath"/> of the step that sent it, or -1. With
+    ///         <see cref="AftermathGroup"/>, it says what it was sent as: <see cref="AssetIndex"/> is then its index in
+    ///         that group's units.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int AftermathStep = -1;
+
+    /// <summary>
+    ///     Index into that step's <see cref="KsFieldCommanderAftermathStep.Groups"/>.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int AftermathGroup;
+
+    /// <summary>
     ///     Whether the commander keeps pointing it at the defenders.
     /// </summary>
     [ViewVariables]
