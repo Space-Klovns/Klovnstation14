@@ -40,6 +40,13 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     [ViewVariables(VVAccess.ReadOnly)]
     public bool Killed;
 
+    /// <summary>
+    ///     Put somewhere to stay there, such as an uplink's guard: never taken off the field for being stuck, as where
+    ///         it would be sent from is not where it belongs, and what it cost was never the waves' to have back.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool HoldPosition;
+
     #region Stuck
 
     /// <summary>
@@ -96,6 +103,30 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly), AutoPausedField]
     public TimeSpan? NudgeHeldSince;
+
+    /// <summary>
+    ///     When its steering last gave up on finding a path, if it has since the last check. Kept here because the move
+    ///         that failed takes its steering away with it, long before the check comes round.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoPausedField]
+    public TimeSpan? NoPathAt;
+
+    /// <summary>
+    ///     Where its last move ended in range, and how far from there that range was: a unit told to get within six tiles
+    ///         of something has got there at six tiles, not at <see cref="KsFieldCommanderRuleComponent.StuckArrivedDistance"/>.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public MapCoordinates? ArrivedCoordinates;
+
+    /// <inheritdoc cref="ArrivedCoordinates"/>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public float ArrivedRange;
+
+    /// <summary>
+    ///     Whether the log already says it is being held back by a defender watching, so it is said once, not every check.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool HeldBackLogged;
 
     #endregion
 }

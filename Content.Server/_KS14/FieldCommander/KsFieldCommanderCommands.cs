@@ -191,7 +191,7 @@ public sealed partial class KsFieldCommanderStuckCommand : KsFieldCommanderComma
         }
 
         var seconds = 0f;
-        if (args.Length == 1 && (!float.TryParse(args[0], out seconds) || !float.IsFinite(seconds)))
+        if (args.Length == 1 && (!float.TryParse(args[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out seconds) || !float.IsFinite(seconds)))
         {
             shell.WriteError(Loc.GetString("shell-argument-must-be-number"));
             return;
