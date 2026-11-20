@@ -1,10 +1,13 @@
 using System.Linq;
 using Content.Server._KS14.Dissolve;
+using Content.Server._KS14.NPC;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.SupplyPod.Passengers;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
+using Content.Shared.Buckle;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.FieldCommander;
@@ -17,10 +20,24 @@ public sealed partial class KsFieldCommanderRuleSystem
     [Dependency] private NPCSteeringSystem _npcSteeringSystem = default!;
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private HTNSystem _htnSystem = default!;
+    [Dependency] private SharedBuckleSystem _buckleSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private EntityQuery<NPCSteeringComponent> _steeringQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
+    [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
 
     private readonly List<Entity<KsFieldCommanderUnitComponent>> _stuckCheckUnits = new();
+
+    /// <summary>
+    ///     Set while this system throws a unit's steering away itself, so that is not taken for its steering giving up.
+    /// </summary>
+    private bool _droppingSteering;
+
+    /// <summary>
+    ///     How much further than the range its last move ended in a unit may stand and still be there, in tiles: the
+    ///         range is measured to the edge of what it was going to, and squadmates push.
+    /// </summary>
+    private const float ArrivedRangeSlack = 1f;
 
     /// <summary>
     ///     Which recovery step a unit that has got nowhere for <paramref name="stuckFor"/> is due.
@@ -50,6 +67,71 @@ public sealed partial class KsFieldCommanderRuleSystem
         unitComponent.StuckStage = KsFieldCommanderStuckStage.None;
         unitComponent.StuckReason = KsFieldCommanderStuckReason.None;
         unitComponent.NudgeHeldSince = null;
+        unitComponent.NoPathAt = null;
+        unitComponent.HeldBackLogged = false;
+    }
+
+    /// <summary>
+    ///     Its steering is going, which is how a move that found no path ends (the move fails, and its shutdown throws the
+    ///         steering away): keep that for the next check, and where a move that got within range ended.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnSteeringRemove(Entity<NPCSteeringComponent> entity, ref ComponentRemove args)
+    {
+        if (_droppingSteering ||
+            !_unitQuery.TryComp(entity, out var unitComponent) ||
+            TerminatingOrDeleted(entity))
+            return;
+
+        var steeringComponent = entity.Comp;
+        if (steeringComponent.Status == SteeringStatus.NoPath ||
+            steeringComponent.FailedPathCount >= NPCSteeringComponent.FailedPathLimit)
+        {
+            unitComponent.NoPathAt = _gameTiming.CurTime;
+            return;
+        }
+
+        if (steeringComponent.Status == SteeringStatus.InRange && steeringComponent.Coordinates.IsValid(EntityManager))
+        {
+            unitComponent.ArrivedCoordinates = _transformSystem.ToMapCoordinates(steeringComponent.Coordinates);
+            unitComponent.ArrivedRange = steeringComponent.Range;
+        }
+    }
+
+    /// <summary>
+    ///     Throws a unit's steering away, without that counting as its steering giving up.
+    /// </summary>
+    private void DropSteering(EntityUid unitUid)
+    {
+        _droppingSteering = true;
+        try
+        {
+            _npcSteeringSystem.Unregister(unitUid);
+        }
+        finally
+        {
+            _droppingSteering = false;
+        }
+    }
+
+    /// <summary>
+    ///     How near <paramref name="goal"/> a unit has to be to have got there: the rule's distance, or further when the
+    ///         move it is on, or the one that took it there, only had to get within a longer range.
+    /// </summary>
+    private float GetArrivedDistance(KsFieldCommanderRuleComponent component,
+        KsFieldCommanderUnitComponent unitComponent,
+        NPCSteeringComponent? steeringComponent,
+        MapCoordinates goal)
+    {
+        var arrived = component.StuckArrivedDistance;
+
+        if (steeringComponent != null)
+            arrived = MathF.Max(arrived, steeringComponent.Range + ArrivedRangeSlack);
+        else if (unitComponent.ArrivedCoordinates is { } arrivedCoordinates &&
+                 IsWithin(arrivedCoordinates, goal, component.StuckProgressDistance))
+            arrived = MathF.Max(arrived, unitComponent.ArrivedRange + ArrivedRangeSlack);
+
+        return arrived;
     }
 
     /// <summary>
@@ -92,9 +174,10 @@ public sealed partial class KsFieldCommanderRuleSystem
         }
 
         var distance = goal.MapId == position.MapId ? (goal.Position - position.Position).Length() : float.MaxValue;
+        _steeringQuery.TryComp(unit, out var steeringComponent);
 
         // Got there: whatever it does there, it is not stuck.
-        if (distance <= component.StuckArrivedDistance)
+        if (distance <= GetArrivedDistance(component, unitComponent, steeringComponent, goal))
         {
             ResetStuck(unitComponent);
             unitComponent.GoalCoordinates = goal;
@@ -126,22 +209,35 @@ public sealed partial class KsFieldCommanderRuleSystem
             unitComponent.StuckStage = KsFieldCommanderStuckStage.None;
             unitComponent.StuckReason = KsFieldCommanderStuckReason.None;
             unitComponent.NudgeHeldSince = null;
+            unitComponent.NoPathAt = null;
+            unitComponent.HeldBackLogged = false;
             return;
         }
 
         var stage = GetStuckStage(component, curTime - unitComponent.LastProgressTime);
-        var reason = KsFieldCommanderStuckReason.NoProgress;
+        var reason = KsFieldCommanderStuckReason.NoPath;
 
-        // Steering that has given up on a path won't find one by waiting: on to the next step now.
-        if (_steeringQuery.TryComp(unit, out var steeringComponent) &&
-            (steeringComponent.Status == SteeringStatus.NoPath || steeringComponent.FailedPathCount >= NPCSteeringComponent.FailedPathLimit))
+        // Steering that has given up on a path won't find one by waiting: on to the next step now. Its move has
+        //      usually failed and taken the steering with it by now, so the failure kept since counts the same.
+        var noPath = unitComponent.NoPathAt != null ||
+                     steeringComponent != null &&
+                     (steeringComponent.Status == SteeringStatus.NoPath || steeringComponent.FailedPathCount >= NPCSteeringComponent.FailedPathLimit);
+        unitComponent.NoPathAt = null;
+
+        if (noPath)
         {
             var next = (KsFieldCommanderStuckStage)Math.Min((int)unitComponent.StuckStage + 1, (int)KsFieldCommanderStuckStage.Relocate);
             if (next > stage)
                 stage = next;
-
-            reason = KsFieldCommanderStuckReason.NoPath;
         }
+        else
+        {
+            reason = KsFieldCommanderStuckReason.NoProgress;
+        }
+
+        // Put somewhere to stay, it is never sent from somewhere else: a nudge is as far as it goes.
+        if (unitComponent.HoldPosition && stage > KsFieldCommanderStuckStage.Nudge)
+            stage = KsFieldCommanderStuckStage.Nudge;
 
         // A nudge held back by a defender watching is still owed, whatever the clock says: stay at the step reached.
         var nudgeHeld = unitComponent.NudgeHeldSince != null;
@@ -154,10 +250,12 @@ public sealed partial class KsFieldCommanderRuleSystem
             stage <= unitComponent.StuckStage && stage != KsFieldCommanderStuckStage.Relocate && !nudgeHeld)
             return;
 
+        // Said once per step: a step tried again while a defender watches says so only when that changes.
+        if (stage != unitComponent.StuckStage)
+            Log.Info($"Field commander unit stuck, {stage}: {DescribeStuckUnit(unit)}");
+
         unitComponent.StuckStage = stage;
         unitComponent.StuckReason = reason;
-
-        Log.Info($"Field commander unit stuck, {stage}: {DescribeStuckUnit(unit)}");
 
         switch (stage)
         {
@@ -176,7 +274,9 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Whether a unit has a reason to stand where it is: still in its pod, in a fight, or just hurt.
+    ///     Whether a unit has a reason to stand where it is: still in its pod, inside something or buckled in, in a
+    ///         fight, just hurt, or holding still on purpose. Never nudged or taken off the field from inside something,
+    ///         which would pull it out.
     /// </summary>
     private bool IsExcusedFromStuck(KsFieldCommanderRuleComponent component,
         Entity<KsFieldCommanderUnitComponent> unit,
@@ -185,6 +285,9 @@ public sealed partial class KsFieldCommanderRuleSystem
         TimeSpan curTime)
     {
         if (unit.Comp.LastDamagedTime is { } damagedTime && curTime - damagedTime < component.StuckDamageGrace)
+            return true;
+
+        if (IsHoldingStill(unit))
             return true;
 
         if (HasComp<KsSupplyPodPassengerComponent>(unit) ||
@@ -200,6 +303,20 @@ public sealed partial class KsFieldCommanderRuleSystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Inside something (a locker it hid in), buckled in, or holding still on purpose (playing dead, holding a spot on
+    ///         a hunt), as whatever system told it to stay says.
+    /// </summary>
+    private bool IsHoldingStill(EntityUid unitUid)
+    {
+        if (_containerSystem.IsEntityInContainer(unitUid) || _buckleSystem.IsBuckled(unitUid))
+            return true;
+
+        var holdEvent = new NpcGetDeliberateHoldEvent();
+        RaiseLocalEvent(unitUid, ref holdEvent);
+        return holdEvent.Holding;
     }
 
     /// <summary>
@@ -284,7 +401,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Nobody sees steering go: that much happens at once.
         if (firstTry)
-            _npcSteeringSystem.Unregister(unit);
+            DropSteering(unit);
 
         var forced = unit.Comp.NudgeHeldSince is { } heldSince &&
                      curTime - heldSince >= component.StuckNudgeInSightAfter;
@@ -303,6 +420,13 @@ public sealed partial class KsFieldCommanderRuleSystem
 
                 var candidate = new MapCoordinates(position.Position + new System.Numerics.Vector2(x, y), position.MapId);
                 if (!TryGetFreeTile(candidate, out var tileCoordinates, out var tileMapCoordinates))
+                    continue;
+
+                // Corner to corner only where it could squeeze past: with both tiles beside it blocked (a diagonal
+                //      line of sandbags), that tile is on the far side of what it is stuck behind.
+                if (x != 0 && y != 0 &&
+                    !TryGetFreeTile(new MapCoordinates(position.Position + new System.Numerics.Vector2(x, 0), position.MapId), out _, out _) &&
+                    !TryGetFreeTile(new MapCoordinates(position.Position + new System.Numerics.Vector2(0, y), position.MapId), out _, out _))
                     continue;
 
                 anyFree = true;
@@ -332,11 +456,15 @@ public sealed partial class KsFieldCommanderRuleSystem
                 _npcSensorSystem.RequestReplan(unit);
             }
 
-            Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but a defender would see it nudged, and stays for now.");
+            if (!unit.Comp.HeldBackLogged)
+                Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but a defender would see it nudged, and stays for now.");
+
+            unit.Comp.HeldBackLogged = true;
             return;
         }
 
         unit.Comp.NudgeHeldSince = null;
+        unit.Comp.HeldBackLogged = false;
         _npcSensorSystem.RequestReplan(unit);
     }
 
@@ -353,12 +481,14 @@ public sealed partial class KsFieldCommanderRuleSystem
         var component = rule.Comp;
         if (IsSeenByDefenders(component, position, battlefield.Defenders))
         {
-            Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but in sight of a defender, and stays for now.");
+            if (!unit.Comp.HeldBackLogged)
+                Log.Info($"Field commander unit {ToPrettyString(unit)} is stuck but in sight of a defender, and stays for now.");
+
+            unit.Comp.HeldBackLogged = true;
             return false;
         }
 
         var assetIndex = unit.Comp.AssetIndex;
-        var giveOrders = unit.Comp.GiveOrders;
 
         // No longer the commander's: it stops counting at once, and a kill during the dissolve pays nothing.
         RemComp<KsFieldCommanderUnitComponent>(unit);
@@ -377,7 +507,7 @@ public sealed partial class KsFieldCommanderRuleSystem
                 hidden: true,
                 out var coordinates,
                 outsideFog: true) &&
-            SpawnUnit(rule, assetIndex, coordinates, holdPosition: !giveOrders, countSent: false) is { } replacementUid)
+            SpawnUnit(rule, assetIndex, coordinates, countSent: false) is { } replacementUid)
         {
             component.StuckUnitsRelocated++;
             var replacement = new Entity<KsFieldCommanderUnitComponent>(replacementUid, Comp<KsFieldCommanderUnitComponent>(replacementUid));
@@ -388,7 +518,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             return true;
         }
 
-        component.CarriedBudget += component.Assets[assetIndex].Cost;
+        // One purchase brings Count of them for its Cost: this one's share is what comes back.
+        var asset = component.Assets[assetIndex];
+        component.CarriedBudget += asset.Cost / Math.Max(asset.Count, 1);
         component.StuckUnitsRefunded++;
         Log.Info($"Field commander unit {ToPrettyString(unit)} had nowhere to be sent again; its cost went back in the budget.");
         return true;

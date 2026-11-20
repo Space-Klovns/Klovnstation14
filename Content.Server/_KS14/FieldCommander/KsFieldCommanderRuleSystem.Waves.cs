@@ -451,6 +451,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         unitComponent.RuleUid = rule.Owner;
         unitComponent.AssetIndex = assetIndex;
         unitComponent.GiveOrders = asset.GiveOrders && !holdPosition;
+        unitComponent.HoldPosition = holdPosition;
         ResetStuck(unitComponent);
 
         if (countSent)
