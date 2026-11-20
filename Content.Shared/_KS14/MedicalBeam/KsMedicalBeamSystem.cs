@@ -65,6 +65,12 @@ public sealed partial class KsMedicalBeamSystem : EntitySystem
         if (targetUid == gun.Comp.Target)
             return;
 
+        // At another: only once the last one has had its moment (KsMedicalBeamGunComponent.RetargetCooldown).
+        var curTime = _gameTiming.CurTime;
+        if (curTime < gun.Comp.NextRetarget)
+            return;
+
+        gun.Comp.NextRetarget = curTime + gun.Comp.RetargetCooldown;
         Start(gun, args.User, targetUid.Value);
     }
 

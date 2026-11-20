@@ -48,6 +48,18 @@ public sealed partial class KsCombatMedicSystem : EntitySystem
         {
             var medic = new Entity<KsCombatMedicComponent>(uid, medicComponent);
 
+            // A patient deleted is let go at once, mid-windup too (the injection wasted, as on reaching it gone): a
+            //     companion must not be left following an entity that no longer exists.
+            if (medicComponent.Patient is { } currentPatientUid && TerminatingOrDeleted(currentPatientUid))
+            {
+                if (medicComponent.InjectAt != null)
+                    FinishInjection(medic, curTime);
+                else
+                    SetPatient(medic, null);
+
+                continue;
+            }
+
             if (medicComponent.InjectAt is { } injectAt)
             {
                 if (curTime >= injectAt)

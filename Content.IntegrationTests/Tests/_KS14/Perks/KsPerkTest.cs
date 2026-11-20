@@ -172,6 +172,64 @@ public sealed class KsPerkTest : GameTest
 ";
 
     /// <summary>
+    ///     A perk's items are for its holder using the body: they go when the holder dies or the player leaves for
+    ///         another body, so nothing is left lying about for anyone, and come back when the body is revived with
+    ///         its player in it, or the player returns. A body revived with nobody in it gets none.
+    /// </summary>
+    [Test]
+    public async Task PerkItemsGoWithDeathOrThePlayerAndComeBackWithThem()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var perkSystem = server.System<SharedKsPerkSystem>();
+        var mindSystem = server.System<Content.Server.Mind.MindSystem>();
+        var mobStateSystem = server.System<Content.Shared.Mobs.Systems.MobStateSystem>();
+        EntityUid bodyUid = default;
+        EntityUid otherBodyUid = default;
+        EntityUid mindUid = default;
+        EntityUid itemUid = default;
+
+        List<EntityUid> Items() => new(entMan.GetComponent<KsPerkHolderComponent>(bodyUid).Grants[_grantsPerk].Items);
+
+        await server.WaitPost(() =>
+        {
+            bodyUid = entMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            otherBodyUid = entMan.SpawnAtPosition(_body, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            mindUid = mindSystem.CreateMind(null).Owner;
+            mindSystem.TransferTo(mindUid, bodyUid);
+            Assert.That(perkSystem.TryAddPerk(bodyUid, _grantsPerk), "the test perk should be given");
+            itemUid = Items()[0];
+            mobStateSystem.ChangeMobState(bodyUid, Content.Shared.Mobs.MobState.Dead);
+        });
+        await Pair.RunTicksSync(2);
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(entMan.Deleted(itemUid), "the perk's item should go when its holder dies");
+            Assert.That(Items(), Is.Empty);
+            mobStateSystem.ChangeMobState(bodyUid, Content.Shared.Mobs.MobState.Alive);
+            Assert.That(Items(), Has.Count.EqualTo(1), "a body revived with its player in it should get the item back");
+            itemUid = Items()[0];
+
+            mindSystem.TransferTo(mindUid, otherBodyUid);
+        });
+        await Pair.RunTicksSync(2);
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(entMan.Deleted(itemUid), "the item should go when the player leaves the body for another");
+            mobStateSystem.ChangeMobState(bodyUid, Content.Shared.Mobs.MobState.Dead);
+            mobStateSystem.ChangeMobState(bodyUid, Content.Shared.Mobs.MobState.Alive);
+            Assert.That(Items(), Is.Empty, "a body revived with nobody in it should get no item");
+
+            mindSystem.TransferTo(mindUid, bodyUid);
+            Assert.That(Items(), Has.Count.EqualTo(1), "the item should come back when the player returns to the body");
+            Assert.That(perkSystem.HasPerk(bodyUid, _grantsPerk), "the perk itself stays all along");
+        });
+    }
+
+    /// <summary>
     ///     Everything a perk adds goes when it does, and what the body had before (a component, a timed status effect)
     ///         is left as it was.
     /// </summary>

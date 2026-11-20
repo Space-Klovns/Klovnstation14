@@ -1,8 +1,10 @@
 using Content.Server._KS14.KillCredit;
+using Content.Shared._KS14.MedicalBeam;
 using Content.Shared._KS14.Perks.Healing;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Systems;
@@ -24,7 +26,9 @@ public sealed partial class KsLifestealSystem : EntitySystem
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private EntityQuery<KsLifestealAbilityComponent> _lifestealQuery = default!;
+    [Dependency] private EntityQuery<KsMedicalBeamGunComponent> _beamQuery = default!;
 
     [SubscribeLocalEvent]
     private void OnDamageDealt(Entity<MobStateComponent> target, ref DamageDealtEvent args)
@@ -34,7 +38,8 @@ public sealed partial class KsLifestealSystem : EntitySystem
             target.Comp.CurrentState == MobState.Dead ||
             !TryGetHolder(_killCreditSystem.GetAttacker(args.Origin), out var holder) ||
             holder.Owner == target.Owner ||
-            _npcFactionSystem.IsEntityFriendly(holder.Owner, target.Owner))
+            _npcFactionSystem.IsEntityFriendly(holder.Owner, target.Owner) ||
+            IsBeaming(holder.Owner, target.Owner))
             return;
 
         var dealt = FixedPoint2.Zero;
@@ -58,6 +63,23 @@ public sealed partial class KsLifestealSystem : EntitySystem
 
         holder.Comp.NextPopup = curTime + holder.Comp.PopupInterval;
         _popupSystem.PopupEntity(KsPopupMessage.Create("ks-perk-healing-lifesteal"), holder.Owner, holder.Owner, PopupType.Small);
+    }
+
+    /// <summary>
+    ///     Whether the holder is healing the target with a medical beam right now: hurting a mob you heal yourself (a
+    ///         medigun on an enemy) mustn't heal you as well.
+    /// </summary>
+    private bool IsBeaming(EntityUid holderUid, EntityUid targetUid)
+    {
+        foreach (var heldUid in _handsSystem.EnumerateHeld(holderUid))
+        {
+            if (_beamQuery.TryComp(heldUid, out var beamComponent) &&
+                beamComponent.Target == targetUid &&
+                beamComponent.User == holderUid)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

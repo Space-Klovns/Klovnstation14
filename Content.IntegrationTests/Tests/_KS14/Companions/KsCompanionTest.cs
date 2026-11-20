@@ -4,6 +4,7 @@ using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Companions;
 using Content.Server._KS14.Dissolve;
+using Content.Server.Mind;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Shared._KS14.Companions;
@@ -17,9 +18,11 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
@@ -359,6 +362,17 @@ public sealed class KsCompanionTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     Puts a mind in the owner, as a player's body has.
+    /// </summary>
+    private EntityUid GiveMind(EntityUid ownerUid)
+    {
+        var mindSystem = Pair.Server.System<MindSystem>();
+        var mindUid = mindSystem.CreateMind(null).Owner;
+        mindSystem.TransferTo(mindUid, ownerUid);
+        return mindUid;
+    }
+
     [Test]
     public async Task CompanionsStayThroughCritGoOnDeathAndReturnOnRevive()
     {
@@ -371,6 +385,7 @@ public sealed class KsCompanionTest : GameTest
 
         await server.WaitAssertion(() =>
         {
+            GiveMind(ownerUid);
             firstUid = Companion(ownerUid, Follower)!.Value;
             Hurt(ownerUid, 60);
             Assert.That(mobState.CurrentState, Is.EqualTo(MobState.Critical));
@@ -395,6 +410,74 @@ public sealed class KsCompanionTest : GameTest
             Assert.That(Companion(ownerUid, Follower), Is.Not.Null, "the follower should return when the owner is revived");
             Assert.That(Companion(ownerUid, Rider), Is.Not.Null, "the rider should return when the owner is revived");
         });
+    }
+
+    /// <summary>
+    ///     A body its player left for another loses its companions, and doesn't get them back when revived; they come
+    ///         back when the player returns to it.
+    /// </summary>
+    [Test]
+    public async Task CompanionsGoWithThePlayerAndNotBackToABodyWithoutOne()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var ownerUid = await SpawnOwnerWithPerk();
+        var mindSystem = server.System<MindSystem>();
+        var mobStateSystem = server.System<MobStateSystem>();
+        EntityUid mindUid = default;
+        EntityUid otherBodyUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            mindUid = GiveMind(ownerUid);
+            Assert.That(Companion(ownerUid, Follower), Is.Not.Null, "the follower should be out");
+
+            // The player moves on to another body.
+            otherBodyUid = entMan.SpawnAtPosition(_enemy, entMan.GetComponent<TransformComponent>(ownerUid).Coordinates);
+            mindSystem.TransferTo(mindUid, otherBodyUid);
+            Assert.That(Companion(ownerUid, Follower), Is.Null, "the follower should go with the player leaving the body");
+            Assert.That(Companion(ownerUid, Rider), Is.Null, "the rider should go with the player leaving the body");
+
+            // The empty body dies and is revived.
+            mobStateSystem.ChangeMobState(ownerUid, MobState.Dead);
+            mobStateSystem.ChangeMobState(ownerUid, MobState.Alive);
+            Assert.That(Companion(ownerUid, Follower), Is.Null, "a body with no player should not get its companions back when revived");
+
+            // The player comes back to it.
+            mindSystem.TransferTo(mindUid, ownerUid);
+            Assert.That(Companion(ownerUid, Follower), Is.Not.Null, "the follower should come back with the player");
+            Assert.That(Companion(ownerUid, Rider), Is.Not.Null, "the rider should come back with the player");
+        });
+    }
+
+    /// <summary>
+    ///     A companion let go is picked up or put in something while it dissolves, which calls the dissolve off: it is
+    ///         deleted all the same.
+    /// </summary>
+    [Test]
+    public async Task ReleasedCompanionPutInAContainerIsStillGone()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var ownerUid = await SpawnOwnerWithPerk();
+        var entry = Entry(ownerUid, Follower);
+        EntityUid followerUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            followerUid = Companion(ownerUid, Follower)!.Value;
+            Hurt(ownerUid, 200);
+            Assert.That(server.System<KsDissolveSystem>().IsDissolving(followerUid), "the follower should dissolve with its owner dead");
+
+            var boxUid = entMan.SpawnAtPosition(null, entMan.GetComponent<TransformComponent>(ownerUid).Coordinates);
+            var containerSystem = server.System<SharedContainerSystem>();
+            Assert.That(containerSystem.Insert(followerUid, containerSystem.EnsureContainer<Container>(boxUid, "ks-test-box")),
+                "the dissolving follower should go in the box");
+        });
+
+        await Pair.RunTicksSync(Ticks((float)(entry.DissolveDuration + KsDissolveSystem.Linger).TotalSeconds + 0.5f));
+        await server.WaitAssertion(() =>
+            Assert.That(entMan.Deleted(followerUid), "a companion let go should end up gone, even put in a container"));
     }
 
     [Test]

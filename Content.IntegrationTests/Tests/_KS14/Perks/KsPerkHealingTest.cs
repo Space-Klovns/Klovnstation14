@@ -2,8 +2,13 @@
 using Content.Client.Overlays;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Perks.Healing;
+using Content.Shared._KS14.MedicalBeam;
 using Content.Shared._KS14.Perks;
 using Content.Shared._KS14.Perks.Healing;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Systems;
 using Content.Shared.Body.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
@@ -31,6 +36,7 @@ public sealed class KsPerkHealingTest : GameTest
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _body = "KsTestPerkHealingBody";
     private readonly EntProtoId _otherBody = "KsTestPerkHealingOtherBody";
+    private readonly EntProtoId _beamGun = "KsTestPerkHealingBeamGun";
     private readonly ProtoId<KsPerkPrototype> _metabolismPerk = "KsTestPerkHealingMetabolism";
     private readonly ProtoId<KsPerkPrototype> _hudPerk = "KsTestPerkHealingHud";
     private readonly ProtoId<KsPerkPrototype> _lifestealPerk = "KsTestPerkHealingLifesteal";
@@ -127,6 +133,20 @@ public sealed class KsPerkHealingTest : GameTest
   - type: NpcFactionMember
     factions:
     - KsTestPerkHealingSideB
+
+- type: entity
+  parent: BaseItem
+  id: KsTestPerkHealingBeamGun
+  components:
+  - type: Gun
+    fireRate: 10
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: KsMedicalBeamGun
+    maxRange: 5
+    heal:
+      Brute: 1
 ";
 
     private async Task<(TestMapData Map, EntityUid BodyUid)> SpawnBody(ProtoId<KsPerkPrototype>? perk)
@@ -227,6 +247,20 @@ public sealed class KsPerkHealingTest : GameTest
 
             damageableSystem.TryChangeDamage(enemyUid, Damage(Blunt, 40));
             Assert.That(TotalDamage(bodyUid), Is.EqualTo(afterEnemy).Within(0.01f), "someone else's damage should heal nothing");
+
+            // An enemy the holder is healing with a medical beam: hurting it heals the holder nothing.
+            var handsSystem = server.System<SharedHandsSystem>();
+            var gunUid = entMan.SpawnAtPosition(_beamGun, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            entMan.EnsureComponent<HandsComponent>(bodyUid);
+            handsSystem.AddHand(bodyUid, "hand", HandLocation.Middle);
+            Assert.That(handsSystem.TryPickupAnyHand(bodyUid, gunUid, checkActionBlocker: false), "the holder should take the beam gun");
+            server.System<SharedGunSystem>().AttemptShoot(bodyUid, (gunUid, entMan.GetComponent<GunComponent>(gunUid)),
+                entMan.GetComponent<TransformComponent>(enemyUid).Coordinates, enemyUid);
+            Assert.That(entMan.GetComponent<KsMedicalBeamGunComponent>(gunUid).Target, Is.EqualTo(enemyUid), "the beam should be on the enemy");
+
+            var beforeBeamed = TotalDamage(bodyUid);
+            damageableSystem.TryChangeDamage(enemyUid, Damage(Blunt, 40), origin: bodyUid);
+            Assert.That(TotalDamage(bodyUid), Is.EqualTo(beforeBeamed).Within(0.01f), "hurting a mob you are healing with a beam should heal you nothing");
         });
     }
 

@@ -103,4 +103,18 @@ public sealed partial class KsMedicalBeamGunComponent : Component
 
     [ViewVariables(VVAccess.ReadOnly), AutoPausedField]
     public TimeSpan NextTick;
+
+    /// <summary>
+    ///     The beam moves to another patient at most this often. Firing is cancelled before the gun's own fire rate
+    ///         counts it, so a held button swept across a crowd, or a client sending shots as fast as it likes, would
+    ///         otherwise restart it, with its sound and popup, every tick. Enforced on the server.
+    /// </summary>
+    [DataField]
+    public TimeSpan RetargetCooldown = TimeSpan.FromSeconds(0.5);
+
+    /// <summary>
+    ///     When the beam may next move to another patient. Server only.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoPausedField]
+    public TimeSpan NextRetarget;
 }

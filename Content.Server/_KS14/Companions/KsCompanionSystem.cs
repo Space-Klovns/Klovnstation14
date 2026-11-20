@@ -9,6 +9,8 @@ using Content.Shared._KS14.Companions;
 using Content.Shared._KS14.FactionCollision;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Scenario.Components;
+using Content.Shared.Mind;
+using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
@@ -16,6 +18,7 @@ using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Content.Shared.Popups;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -29,11 +32,13 @@ namespace Content.Server._KS14.Companions;
 ///     Spawns and keeps an owner's companions (<see cref="KsCompanionsComponent"/>): each materialises beside the
 ///         owner (or on it, <see cref="KsCompanionMode.Attached"/>), takes the owner's NPC factions (never a scenario one), and
 ///         its shots pass through the owner's side. One destroyed comes back after its entry's delay, with a popup to
-///         the owner; all of them dissolve when the owner dies and come back when it is revived.
+///         the owner; all of them dissolve when the owner dies, or its player leaves it, and come back when it is
+///         revived with its player in it, or the player returns. A companion let go always ends up gone.
 /// </summary>
 public sealed partial class KsCompanionSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedMindSystem _mindSystem = default!;
     [Dependency] private KsDissolveSystem _dissolveSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NPCSystem _npcSystem = default!;
@@ -147,11 +152,34 @@ public sealed partial class KsCompanionSystem : EntitySystem
             return;
         }
 
+        // Back only for a body someone is playing: one its player left for another stays without them.
         if (args.OldMobState == MobState.Dead)
         {
             component.RespawnTimes.Clear();
-            SpawnMissing(owner, returned: false);
+            if (_mindSystem.TryGetMind(uid, out _, out _))
+                SpawnMissing(owner, returned: false);
         }
+    }
+
+    // The owner's player left it for another body: its companions go with them, as on death. By-value events, so no
+    //     Entity<T> handlers (RA0054).
+    [SubscribeLocalEvent]
+    private void OnOwnerMindRemoved(EntityUid uid, KsCompanionsComponent component, MindRemovedMessage args)
+    {
+        // A body being deleted takes them with it (OnOwnerShutdown).
+        if (TerminatingOrDeleted(uid))
+            return;
+
+        component.RespawnTimes.Clear();
+        for (var i = 0; i < component.Spawned.Count; i++)
+            Release((uid, component), i);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnOwnerMindAdded(EntityUid uid, KsCompanionsComponent component, MindAddedMessage args)
+    {
+        if (!_mobStateSystem.IsDead(uid))
+            SpawnMissing((uid, component), returned: false);
     }
 
     public override void Update(float frameTime)
@@ -268,7 +296,7 @@ public sealed partial class KsCompanionSystem : EntitySystem
         Dissolve(companionUid, owner.Comp.Companions[index].DissolveDuration);
     }
 
-    private void Dissolve(EntityUid companionUid, TimeSpan duration)
+    private void Dissolve(EntityUid companionUid, TimeSpan? duration)
     {
         if (_companionQuery.TryComp(companionUid, out var companionComponent))
             companionComponent.Released = true;
@@ -293,11 +321,24 @@ public sealed partial class KsCompanionSystem : EntitySystem
 
         // Destroyed but left whole: its wreck dissolves.
         Destroyed((uid, component));
+        // Without its owner's entry, at the dissolve's own default length.
         if (component.OwnerUid is { } ownerUid && _companionsQuery.TryComp(ownerUid, out var companionsComponent) &&
             component.Index < companionsComponent.Companions.Count)
             Dissolve(uid, companionsComponent.Companions[component.Index].DissolveDuration);
         else
-            Dissolve(uid, TimeSpan.FromSeconds(1.5));
+            Dissolve(uid, duration: null);
+    }
+
+    /// <summary>
+    ///     A companion let go (dissolving after its owner's death, or its wreck) and then picked up or put in something
+    ///         has its dissolve called off by <see cref="KsDissolveSystem"/>, which would keep it forever: it is deleted
+    ///         instead.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnCompanionInserted(Entity<KsCompanionComponent> companion, ref EntGotInsertedIntoContainerMessage args)
+    {
+        if (companion.Comp.Released)
+            QueueDel(companion.Owner);
     }
 
     [SubscribeLocalEvent]

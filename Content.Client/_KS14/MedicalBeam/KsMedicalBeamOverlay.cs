@@ -14,14 +14,14 @@ namespace Content.Client._KS14.MedicalBeam;
 /// </summary>
 public sealed class KsMedicalBeamOverlay : Overlay
 {
-    private readonly IEntityManager _entityManager;
+    private readonly EntityManager _entityManager;
     private readonly IGameTiming _gameTiming;
     private readonly SpriteSystem _spriteSystem;
     private readonly SharedTransformSystem _transformSystem;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
-    public KsMedicalBeamOverlay(IEntityManager entityManager, IGameTiming gameTiming)
+    public KsMedicalBeamOverlay(EntityManager entityManager, IGameTiming gameTiming)
     {
         _entityManager = entityManager;
         _gameTiming = gameTiming;
@@ -35,7 +35,7 @@ public sealed class KsMedicalBeamOverlay : Overlay
         handle.SetTransform(Matrix3x2.Identity);
 
         var time = (float)_gameTiming.RealTime.TotalSeconds;
-        var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+        var transformQuery = _entityManager.TransformQuery;
         var query = _entityManager.EntityQueryEnumerator<KsMedicalBeamGunComponent>();
         while (query.MoveNext(out var beamComponent))
         {

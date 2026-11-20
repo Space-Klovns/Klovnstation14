@@ -1,6 +1,10 @@
 using Content.Shared.Actions;
 using Content.Shared.Alert;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Mind;
+using Content.Shared.Mind.Components;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.StatusEffectNew;
 using Content.Shared.StatusEffectNew.Components;
 using Robust.Shared.Network;
@@ -26,6 +30,8 @@ public abstract partial class SharedKsPerkSystem : EntitySystem
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private SharedMindSystem _mindSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
     [Dependency] private EntityQuery<KsPerkHolderComponent> _holderQuery = default!;
     [Dependency] private EntityQuery<StatusEffectComponent> _statusEffectQuery = default!;
@@ -228,6 +234,7 @@ public abstract partial class SharedKsPerkSystem : EntitySystem
 
     private void GrantItems(EntityUid bodyUid, KsPerkPrototype perkPrototype, KsPerkGrant grant)
     {
+        grant.ItemsWithdrawn = false;
         var coordinates = Transform(bodyUid).Coordinates;
         foreach (var item in perkPrototype.Items)
         {
@@ -243,6 +250,63 @@ public abstract partial class SharedKsPerkSystem : EntitySystem
         {
             if (!TerminatingOrDeleted(itemUid))
                 QueueDel(itemUid);
+        }
+
+        grant.Items.Clear();
+    }
+
+    // The items a perk gives are for its holder while they use the body: they go when the holder dies or leaves the
+    //      body for another, so a corpse or an abandoned body leaves no spare medigun for anyone, and the next body
+    //      gets its own. They come back if the body is revived with its player in it, or its player returns to it.
+    //      By-value events, so no Entity<T> handlers (RA0054).
+    [SubscribeLocalEvent]
+    private void OnHolderMobStateChanged(EntityUid uid, KsPerkHolderComponent component, MobStateChangedEvent args)
+    {
+        if (_netManager.IsClient)
+            return;
+
+        if (args.NewMobState == MobState.Dead)
+            WithdrawItems((uid, component));
+        else if (args.OldMobState == MobState.Dead && _mindSystem.TryGetMind(uid, out _, out _))
+            ReturnItems((uid, component));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHolderMindRemoved(EntityUid uid, KsPerkHolderComponent component, MindRemovedMessage args)
+    {
+        if (!_netManager.IsClient)
+            WithdrawItems((uid, component));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHolderMindAdded(EntityUid uid, KsPerkHolderComponent component, MindAddedMessage args)
+    {
+        if (!_netManager.IsClient && !_mobStateSystem.IsDead(uid))
+            ReturnItems((uid, component));
+    }
+
+    private void WithdrawItems(Entity<KsPerkHolderComponent> entity)
+    {
+        foreach (var grant in entity.Comp.Grants.Values)
+        {
+            if (grant.ItemsWithdrawn)
+                continue;
+
+            RevokeItems(grant);
+            grant.ItemsWithdrawn = true;
+        }
+    }
+
+    /// <summary>
+    ///     Gives back what <see cref="WithdrawItems"/> took; only that, so an item the holder lost some other way isn't
+    ///         made again.
+    /// </summary>
+    private void ReturnItems(Entity<KsPerkHolderComponent> entity)
+    {
+        foreach (var (perk, grant) in entity.Comp.Grants)
+        {
+            if (grant.ItemsWithdrawn && ProtoMan.TryIndex(perk, out var perkPrototype))
+                GrantItems(entity.Owner, perkPrototype, grant);
         }
     }
 

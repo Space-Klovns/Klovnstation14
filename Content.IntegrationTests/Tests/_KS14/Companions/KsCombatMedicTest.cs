@@ -197,6 +197,44 @@ public sealed class KsCombatMedicTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     A patient deleted while the medic readies its injector is let go at once, so a companion medic isn't left
+    ///         following an entity that is gone.
+    /// </summary>
+    [Test]
+    public async Task MedicLetsGoOfAPatientDeletedDuringTheWindup()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        EntityUid medicUid = default;
+        EntityUid friendUid = default;
+
+        await server.WaitPost(() =>
+        {
+            medicUid = entMan.SpawnAtPosition(_medic, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            friendUid = entMan.SpawnAtPosition(_friend, new EntityCoordinates(testMap.Grid, 1.5f, 0.5f));
+            Hurt(friendUid, 30);
+        });
+
+        var medic = entMan.GetComponent<KsCombatMedicComponent>(medicUid);
+        Assert.That(Ticks((float)medic.Windup.TotalSeconds), Is.GreaterThan(3), "the test medic's windup should span a few ticks");
+        await Pair.RunTicksSync(2);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(medic.Patient, Is.EqualTo(friendUid), "the medic should pick the hurt friend");
+            Assert.That(medic.InjectAt, Is.Not.Null, "the medic should be readying its injector");
+            entMan.DeleteEntity(friendUid);
+        });
+
+        await Pair.RunTicksSync(1);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(medic.Patient, Is.Null, "a deleted patient should be let go at once, not after the windup");
+            Assert.That(medic.InjectAt, Is.Null, "the injection should be called off");
+        });
+    }
+
     [Test]
     public async Task MedibotCompanionCanBeTargetedAndLeavesNothingWhenDestroyed()
     {

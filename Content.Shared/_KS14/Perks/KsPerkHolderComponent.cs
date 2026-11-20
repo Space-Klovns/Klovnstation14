@@ -18,9 +18,10 @@ public sealed partial class KsPerkHolderComponent : Component
     public List<ProtoId<KsPerkPrototype>> Perks = new();
 
     /// <summary>
-    ///     What each held perk added, so taking it away undoes exactly that. Server only.
+    ///     What each held perk added, so taking it away undoes exactly that. Server only. Read-only in VV: replacing a
+    ///         grant would leave what it gave on the body for good.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public Dictionary<ProtoId<KsPerkPrototype>, KsPerkGrant> Grants = new();
 }
 
@@ -45,10 +46,17 @@ public sealed class KsPerkGrant
     public readonly List<EntityUid> Actions = new();
 
     /// <summary>
-    ///     The items spawned.
+    ///     The items spawned, and not since taken back.
     /// </summary>
     [ViewVariables]
     public readonly List<EntityUid> Items = new();
+
+    /// <summary>
+    ///     Whether the items were taken back while the perk stays held (the holder died or left the body), to be given
+    ///         again if they come back to it.
+    /// </summary>
+    [ViewVariables]
+    public bool ItemsWithdrawn;
 }
 
 /// <summary>

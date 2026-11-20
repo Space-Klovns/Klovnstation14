@@ -4,10 +4,10 @@ namespace Content.Shared._KS14.Perks.Healing;
 
 /// <summary>
 ///     Heals the holder by <see cref="Fraction"/> of the damage they deal to living mobs that aren't on their side,
-///         by any means: guns held, bullets fired, blows struck. Worked out on the server
-///         (<c>KsLifestealSystem</c>).
+///         by any means: guns held, bullets fired, blows struck; not from one they are healing with a medical beam at
+///         the time. Worked out on the server (<c>KsLifestealSystem</c>).
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentPause]
 public sealed partial class KsLifestealAbilityComponent : Component
 {
     [DataField]
@@ -19,6 +19,6 @@ public sealed partial class KsLifestealAbilityComponent : Component
     [DataField]
     public TimeSpan PopupInterval = TimeSpan.FromSeconds(2);
 
-    [ViewVariables]
+    [ViewVariables, AutoPausedField]
     public TimeSpan NextPopup;
 }

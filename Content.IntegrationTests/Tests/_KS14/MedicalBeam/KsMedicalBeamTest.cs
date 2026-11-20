@@ -271,6 +271,8 @@ public sealed class KsMedicalBeamTest : GameTest
         var scene = await SetUp();
         var beam = Beam(scene);
         var transformSystem = server.System<SharedTransformSystem>();
+        // Each re-lock waits out the re-target cooldown.
+        var settle = Math.Max(2, Ticks((float)beam.RetargetCooldown.TotalSeconds) + 1);
 
         // Out of range.
         await server.WaitPost(() =>
@@ -279,7 +281,7 @@ public sealed class KsMedicalBeamTest : GameTest
             Assert.That(beam.Target, Is.EqualTo(scene.FriendUid));
             transformSystem.SetCoordinates(scene.FriendUid, new EntityCoordinates(scene.Map.Grid, beam.MaxRange + 2f, 0.5f));
         });
-        await Pair.RunTicksSync(2);
+        await Pair.RunTicksSync(settle);
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "the beam should break out of range"));
 
         // Out of sight.
@@ -290,7 +292,7 @@ public sealed class KsMedicalBeamTest : GameTest
             Assert.That(beam.Target, Is.EqualTo(scene.FriendUid));
             entMan.SpawnAtPosition(_wall, new EntityCoordinates(scene.Map.Grid, 2.5f, 0.5f));
         });
-        await Pair.RunTicksSync(2);
+        await Pair.RunTicksSync(settle);
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.Null, "the beam should break out of sight"));
 
         // Put down.
@@ -381,6 +383,35 @@ public sealed class KsMedicalBeamTest : GameTest
         await Pair.RunTicksSync(tick);
         await server.WaitPost(() => FireAt(scene, server.EntMan.GetComponent<TransformComponent>(scene.EnemyUid).Coordinates));
         await server.WaitAssertion(() => Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "a click on no mob should still find the friend close by"));
+    }
+
+    /// <summary>
+    ///     Firing never advances the gun's own fire rate, so moving the beam to another patient has a cooldown of its
+    ///         own: a held button swept across mobs, or a client sending shots, doesn't restart it every tick.
+    /// </summary>
+    [Test]
+    public async Task BeamMovesToAnotherPatientAtMostOncePerCooldown()
+    {
+        var server = Pair.Server;
+        var scene = await SetUp();
+        var beam = Beam(scene);
+        var cooldownTicks = Ticks((float)beam.RetargetCooldown.TotalSeconds);
+        Assert.That(cooldownTicks, Is.GreaterThan(2), "the gun's re-target cooldown should span a few ticks");
+
+        await server.WaitAssertion(() =>
+        {
+            Fire(scene, scene.FriendUid);
+            Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "the beam should lock onto the first patient");
+            Fire(scene, scene.EnemyUid);
+            Assert.That(beam.Target, Is.EqualTo(scene.FriendUid), "firing at another patient straight away should not move the beam");
+        });
+
+        await Pair.RunTicksSync(cooldownTicks + 1);
+        await server.WaitAssertion(() =>
+        {
+            Fire(scene, scene.EnemyUid);
+            Assert.That(beam.Target, Is.EqualTo(scene.EnemyUid), "once the cooldown is over the beam should move");
+        });
     }
 
     private sealed record Medic(EntityUid MedicUid, EntityUid GunUid, EntityUid PatientUid);
