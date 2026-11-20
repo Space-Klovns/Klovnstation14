@@ -8,10 +8,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     [Dependency] private GhostRespawnSystem _ghostRespawnSystem = default!;
     [Dependency] private IViewVariablesManager _viewVariablesManager = default!;
 
-    public override void Initialize()
+    /// <summary>
+    ///     Called from <see cref="Initialize"/>: a partial class has one override.
+    /// </summary>
+    private void InitializeRespawn()
     {
-        base.Initialize();
-
         // vvwrite on these goes through their setters, which tell waiting ghosts; the window itself can't write them.
         var handler = _viewVariablesManager.GetTypeHandler<KsFieldCommanderRespawnWindowComponent>();
         handler.AddPath(
@@ -32,10 +33,8 @@ public sealed partial class KsFieldCommanderRuleSystem
             });
     }
 
-    public override void Shutdown()
+    private void ShutdownRespawn()
     {
-        base.Shutdown();
-
         // The manager outlives this system, and its lambdas would keep it alive.
         var handler = _viewVariablesManager.GetTypeHandler<KsFieldCommanderRespawnWindowComponent>();
         handler.RemovePath(nameof(KsFieldCommanderRespawnWindowComponent.Window));
