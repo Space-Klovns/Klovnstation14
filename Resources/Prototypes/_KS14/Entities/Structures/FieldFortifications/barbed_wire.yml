@@ -17,6 +17,10 @@
     - KsBarbedWireCoil
   - type: StaticPrice
     price: 15
+  # Click a tile to unroll it there.
+  - type: KsPlaceOnTile
+    prototype: KsBarbedWire
+    doAfter: 1
   - type: GuideHelp
     guides:
     - KsFortifications
@@ -31,7 +35,8 @@
   components:
   - type: Sprite
     sprite: _KS14/Structures/barbed_wire.rsi
-    # Over puddles and anything dropped on it, still under the mobs caught in it.
+    # Over puddles and anything dropped on it, and over anyone lying in it (KsDownedDrawDepthSystem lowers them), still
+    #     under those standing in it.
     drawdepth: BelowMobs
     # KsLineSmooth shows whichever of these the neighbours call for, each turned to its own direction.
     layers:

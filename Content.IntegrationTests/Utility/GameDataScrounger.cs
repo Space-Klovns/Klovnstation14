@@ -172,6 +172,12 @@ public static partial class GameDataScrounger
             if (ignoreList.Contains(dir))
                 continue; // It's all abstract anyway.
 
+            // KS14 start: a Partials folder only changes prototypes defined elsewhere. Indexing a fragment would
+            //     overwrite its original's metadata by id, and "- !Remove type: X" puts the tag on the key, so x["type"] throws.
+            if (Path.GetFileName(dir) == Content.Shared._KS14.Entry.KsEntryPoint.PartialsFolderName)
+                continue;
+            // KS14 end
+
             explorationStack.AddRange(Directory.EnumerateDirectories(dir));
 
             foreach (var file in Directory.EnumerateFiles(dir, "*.yml"))
