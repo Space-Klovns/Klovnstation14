@@ -71,6 +71,27 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
+    ///     Gives a defender brought back their ledger as it stood at the death, from their death record, so that healing
+    ///         the wounds they came back with is paid by who dealt them, as before they died. The defenders' part is
+    ///         marked settled: it was charged as a teamkill at that death.
+    /// </summary>
+    private void RestoreLedger(EntityUid targetUid)
+    {
+        if (!TryComp<KsFieldCommanderDeathRecordComponent>(targetUid, out var recordComponent))
+            return;
+
+        var ledgerComponent = EnsureComp<KsFieldCommanderDamageLedgerComponent>(targetUid);
+        foreach (var (userId, dealt) in recordComponent.Damage)
+        {
+            ledgerComponent.Damage[userId] = ledgerComponent.Damage.GetValueOrDefault(userId) + dealt;
+            ledgerComponent.SettledDamage[userId] = ledgerComponent.SettledDamage.GetValueOrDefault(userId) + dealt;
+        }
+
+        ledgerComponent.OtherDamage += recordComponent.OtherDamage;
+        ledgerComponent.AttackerDamage += recordComponent.AttackerDamage;
+    }
+
+    /// <summary>
     ///     Pays whoever brought a dead defender back (a defibrillator names its user), less their share of what killed
     ///         them, or only for the attackers' share with <see cref="_medicalAttackerDamageOnly"/>, once per <see cref="KsFieldCommanderRuleComponent.ReviveCooldown"/> for each defender. Nothing for
     ///         bringing back oneself.

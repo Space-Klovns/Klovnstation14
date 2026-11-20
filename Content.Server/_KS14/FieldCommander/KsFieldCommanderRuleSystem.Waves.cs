@@ -270,9 +270,11 @@ public sealed partial class KsFieldCommanderRuleSystem
         float leftover;
 
         // A wave written out in advance comes in place of what the budget would buy, and costs nothing.
-        var queuedWave = rule.Comp.QueuedWaves.Count > 0 ? rule.Comp.QueuedWaves[0] : null;
-        if (TryTakeQueuedWave(rule.Comp, rule.Comp.HardMaxAlive - CountLivingUnits(rule.Owner, null), purchases, out var queuedAnnouncement))
+        string? queuedAnnouncement = null;
+        if (TryTakeQueuedWave(rule, rule.Comp.HardMaxAlive - CountLivingUnits(rule.Owner, null), purchases, out var queuedWave))
         {
+            queuedAnnouncement = string.IsNullOrWhiteSpace(queuedWave!.Announcement) ? null : queuedWave.Announcement;
+
             // Nothing spent, and nothing saved up either: the budget carried in stays as it was.
             rule.Comp.DoctrineIndex = -1;
             leftover = rule.Comp.CarriedBudget;
@@ -308,7 +310,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
-        rule.Comp.PhaseWavesSent++;
+
+        // A queued wave buys no guaranteed assets, so it leaves the phase's first ones to come with the next.
+        if (queuedWave == null)
+            rule.Comp.PhaseWavesSent++;
+
         if (rule.Comp.Endless)
             rule.Comp.EndlessWavesSent++;
 

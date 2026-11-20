@@ -29,6 +29,7 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
     private readonly EntProtoId _hoardRule = "KsTestFcPlanningHoardRule";
     private readonly EntProtoId _queueRule = "KsTestFcPlanningQueueRule";
     private readonly EntProtoId _defender = "KsTestFcPlanningDefender";
+    private readonly EntProtoId _unit = "KsTestFcPlanningUnit";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -148,6 +149,14 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
     # Never bought by the budget.
     - entity: KsTestFcPlanningUnit
       weight: 0
+    # 2: never bought, and more units than may ever be alive.
+    - entity: KsTestFcPlanningUnit
+      weight: 0
+      count: 31
+    # 3: never bought, and two of it are more than may be alive at once.
+    - entity: KsTestFcPlanningUnit
+      weight: 0
+      count: 16
 ";
 
     private async Task<EntityUid> SetUp(EntProtoId commanderRule)
@@ -315,6 +324,118 @@ public sealed class KsFieldCommanderWavePlanningTest : GameTest
             var next = SendWave(ruleUid, seen);
             Assert.That(next, Is.Not.Empty);
             Assert.That(next, Does.Not.Contain(1), "the wave after is the budget's again");
+        });
+    }
+
+    /// <summary>
+    ///     A queued wave that could never be sent is dropped rather than wait for good with every wave behind it; one
+    ///         that only has no room now waits, and the budget's wave goes in its place meanwhile.
+    /// </summary>
+    [Test]
+    public async Task QueuedWaveThatCanNeverGoIsDroppedAndOneWithNoRoomWaits()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_queueRule);
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var rule = GetRule(ruleUid);
+            system.SetPhase(rule, 0);
+            var entity = new Entity<KsFieldCommanderRuleComponent>(ruleUid, rule.Comp1);
+            var component = rule.Comp1;
+            Assert.That(component.Assets[2].Count, Is.GreaterThan(component.HardMaxAlive), "precondition: asset 2 can never be sent");
+            Assert.That(component.Assets[3].Count * 2, Is.GreaterThan(component.HardMaxAlive), "precondition: two of asset 3 never fit at once");
+            Assert.That(component.Assets[3].Count, Is.LessThanOrEqualTo(component.HardMaxAlive), "precondition: one of asset 3 fits");
+
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (2, 1) }, null), Is.True);
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (1, 1) }, null), Is.True);
+            Assert.That(system.TrySetAssetDisabled(entity, 1, true), Is.True, "disabled after it was queued");
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (3, 1) }, "first"), Is.True);
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (3, 1) }, "second"), Is.True);
+
+            var seen = new HashSet<EntityUid>();
+            var first = SendWave(ruleUid, seen);
+            Assert.That(first, Is.EqualTo(Enumerable.Repeat(3, component.Assets[3].Count)),
+                "the waves that could never go should be dropped, and the next sent in their place");
+            Assert.That(component.QueuedWaves.Select(wave => wave.Announcement), Is.EqualTo(new[] { "second" }));
+
+            var second = SendWave(ruleUid, seen);
+            Assert.That(second, Is.Not.Empty, "a queued wave with no room yet should let the budget's wave go");
+            Assert.That(second, Does.Not.Contain(3));
+            Assert.That(component.QueuedWaves.Select(wave => wave.Announcement), Is.EqualTo(new[] { "second" }),
+                "a queued wave with no room yet should wait at the front");
+
+            foreach (var unitUid in seen)
+                server.EntMan.DeleteEntity(unitUid);
+
+            var third = SendWave(ruleUid, seen);
+            Assert.That(third, Is.EqualTo(Enumerable.Repeat(3, component.Assets[3].Count)), "once there is room, the waiting wave goes");
+            Assert.That(component.QueuedWaves, Is.Empty);
+        });
+    }
+
+    /// <summary>
+    ///     A queued wave buys no guaranteed assets, so the phase's first ones come with the first wave of the budget's.
+    /// </summary>
+    [Test]
+    public async Task QueuedWaveLeavesThePhasesGuaranteedAssetsToTheNext()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_guaranteedRule);
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var rule = GetRule(ruleUid);
+            system.SetPhase(rule, 1);
+            Assert.That(system.TryQueueWave((ruleUid, rule.Comp1), new List<(int, int)> { (0, 1) }, null), Is.True);
+
+            var seen = new HashSet<EntityUid>();
+            Assert.That(SendWave(ruleUid, seen), Is.EqualTo(new[] { 0 }), "precondition: the queued wave goes first, as written");
+            Assert.That(SendWave(ruleUid, seen).Count(index => index == 2), Is.EqualTo(1),
+                "the phase's guaranteed asset should come with its first budget wave, after a queued one");
+        });
+    }
+
+    /// <summary>
+    ///     The queue, a queued wave's purchases and the assets a commander has are all capped, a wave sent now
+    ///         included, and an admin can take a wave out of the queue.
+    /// </summary>
+    [Test]
+    public async Task TheQueueAndWhatGoesInItKeepToTheirLimits()
+    {
+        var server = Pair.Server;
+        var ruleUid = await SetUp(_queueRule);
+
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var component = GetRule(ruleUid).Comp1;
+            var entity = new Entity<KsFieldCommanderRuleComponent>(ruleUid, component);
+
+            Assert.That(system.TryQueueWave(entity, Enumerable.Repeat((0, 1), KsFieldCommanderRuleSystem.MaxQueuedWaveEntries + 1).ToList(), null),
+                Is.False, "a wave listing too many purchases is refused");
+
+            for (var i = 0; i < KsFieldCommanderRuleSystem.MaxQueuedWaves; i++)
+                Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (0, 1) }, $"{i}"), Is.True);
+
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (0, 1) }, null), Is.False, "the queue is full");
+            Assert.That(system.TryQueueWave(entity, new List<(int, int)> { (0, 1) }, null, sendNow: true), Is.False,
+                "a wave sent now goes through the queue, and is refused when it is full too");
+            Assert.That(component.QueuedWaves, Has.Count.EqualTo(KsFieldCommanderRuleSystem.MaxQueuedWaves));
+
+            Assert.That(system.TryRemoveQueuedWave(entity, -1), Is.False);
+            Assert.That(system.TryRemoveQueuedWave(entity, component.QueuedWaves.Count), Is.False);
+            Assert.That(system.TryRemoveQueuedWave(entity, 1), Is.True);
+            Assert.That(component.QueuedWaves.Select(wave => wave.Announcement).Take(2), Is.EqualTo(new[] { "0", "2" }),
+                "only the wave asked for is taken out");
+
+            for (var i = 0; i < KsFieldCommanderRuleSystem.MaxAssets * 2 && system.TryAddAsset(entity, new KsFieldCommanderAssetEdit(Entity: _unit)) >= 0; i++)
+            {
+            }
+
+            Assert.That(component.Assets, Has.Count.EqualTo(KsFieldCommanderRuleSystem.MaxAssets), "assets are added only up to the cap");
         });
     }
 }

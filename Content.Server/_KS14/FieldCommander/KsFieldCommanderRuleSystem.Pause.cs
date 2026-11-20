@@ -81,12 +81,21 @@ public sealed partial class KsFieldCommanderRuleSystem
             component.PendingIntel[i] = intel with { At = intel.At + delta };
         }
 
-        // Stuck checks only run with the orders, so a pause is no time spent stuck.
+        // Stuck checks only run with the orders, so a pause is no time spent stuck: nor time a nudge was held back,
+        //      which would otherwise be made in sight the moment it resumes, nor time out of the damage grace.
         var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent>();
         while (query.MoveNext(out var unitComponent))
         {
-            if (unitComponent.RuleUid == rule.Owner)
-                unitComponent.LastProgressTime += delta;
+            if (unitComponent.RuleUid != rule.Owner)
+                continue;
+
+            unitComponent.LastProgressTime += delta;
+
+            if (unitComponent.NudgeHeldSince is { } heldSince)
+                unitComponent.NudgeHeldSince = heldSince + delta;
+
+            if (unitComponent.LastDamagedTime is { } damagedTime)
+                unitComponent.LastDamagedTime = damagedTime + delta;
         }
     }
 

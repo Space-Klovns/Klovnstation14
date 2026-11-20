@@ -82,6 +82,8 @@ public sealed class KsFieldCommanderPauseTest : GameTest
         TimeSpan Bombardment,
         TimeSpan Intel,
         TimeSpan UnitProgress,
+        TimeSpan? NudgeHeld,
+        TimeSpan? Damaged,
         TimeSpan TimeOffset);
 
     private static Timers Read(KsFieldCommanderRuleComponent component, KsFieldCommanderUnitComponent unitComponent)
@@ -91,6 +93,8 @@ public sealed class KsFieldCommanderPauseTest : GameTest
             component.UplinkBombardmentTime!.Value,
             component.PendingIntel.Min(intel => intel.At),
             unitComponent.LastProgressTime,
+            unitComponent.NudgeHeldSince,
+            unitComponent.LastDamagedTime,
             component.TimeOffset);
     }
 
@@ -134,6 +138,12 @@ public sealed class KsFieldCommanderPauseTest : GameTest
             var unitQuery = server.EntMan.AllEntityQueryEnumerator<KsFieldCommanderUnitComponent>();
             Assert.That(unitQuery.MoveNext(out unitUid, out var unitComponent), Is.True, "the wave should have sent a unit");
 
+            // A nudge held back and a hit just taken, staged as the stuck checks and the damage handler leave them:
+            //     both are the rule system's to write, so set here by reflection.
+            var now = server.Timing.CurTime;
+            typeof(KsFieldCommanderUnitComponent).GetField(nameof(KsFieldCommanderUnitComponent.NudgeHeldSince))!.SetValue(unitComponent, (TimeSpan?)now);
+            typeof(KsFieldCommanderUnitComponent).GetField(nameof(KsFieldCommanderUnitComponent.LastDamagedTime))!.SetValue(unitComponent, (TimeSpan?)now);
+
             before = Read(component, unitComponent!);
             pausedAt = server.Timing.CurTime;
             consoleHost.ExecuteCommand("ks_fcpause on");
@@ -174,6 +184,9 @@ public sealed class KsFieldCommanderPauseTest : GameTest
             Assert.That(after.Bombardment, Is.EqualTo(before.Bombardment + delta), "the uplink's bombardment");
             Assert.That(after.Intel, Is.EqualTo(before.Intel + delta), "pending intel");
             Assert.That(after.UnitProgress, Is.EqualTo(before.UnitProgress + delta), "a unit's stuck timer");
+            Assert.That(after.NudgeHeld, Is.EqualTo(before.NudgeHeld + delta),
+                "a held-back nudge's wait should not count the pause, or it is made in a defender's sight on resuming");
+            Assert.That(after.Damaged, Is.EqualTo(before.Damaged + delta), "a unit's damage grace");
             Assert.That(after.TimeOffset, Is.EqualTo(before.TimeOffset - delta), "the timeline");
             Assert.That(server.EntMan.HasComponent<Robust.Shared.Spawners.TimedDespawnComponent>(uplinkUid), Is.True,
                 "the uplink's countdown should be back");

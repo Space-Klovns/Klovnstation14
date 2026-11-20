@@ -92,4 +92,6 @@ ks-fieldcommander-admin-queue-empty = Nothing is queued.
 ks-fieldcommander-admin-queue-wave = { $position }. { $purchases }
 ks-fieldcommander-admin-queue-purchase = { $count } × #{ $index } { $name }
 ks-fieldcommander-admin-queue-announcement = "{ $text }"
+ks-fieldcommander-admin-queue-remove = Remove
+ks-fieldcommander-admin-queue-dropped = Field commander: a queued wave was dropped, as it could never be sent: every asset in it is disabled, or brings more than the cap of { $cap } units alive.
 ks-fieldcommander-admin-list-separator = ,{" "}

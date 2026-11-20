@@ -237,3 +237,12 @@ public sealed class KsFieldCommanderAdminQueueWaveMessage(NetEntity rule, List<K
     public string? Announcement = announcement;
     public bool SendNow = sendNow;
 }
+
+/// <summary>
+///     Takes the queued wave at this position out of the queue.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsFieldCommanderAdminRemoveQueuedWaveMessage(NetEntity rule, int index) : KsFieldCommanderAdminEuiMessage(rule)
+{
+    public int Index = index;
+}

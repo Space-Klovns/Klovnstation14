@@ -34,7 +34,8 @@ public sealed partial class KsFieldCommanderAsset
 public sealed partial class KsFieldCommanderRuleComponent
 {
     /// <summary>
-    ///     Waves sent since the current phase began, for <see cref="KsFieldCommanderAsset.GuaranteedOnPhaseEnter"/>.
+    ///     Budget waves sent since the current phase began, for <see cref="KsFieldCommanderAsset.GuaranteedOnPhaseEnter"/>:
+    ///         queued waves don't count, as they buy no guaranteed assets.
     /// </summary>
     [ViewVariables]
     public int PhaseWavesSent;

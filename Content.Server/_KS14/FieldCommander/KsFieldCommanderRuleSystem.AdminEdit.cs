@@ -17,6 +17,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     public const float MaxEditedCost = 1000f;
     public const float MaxEditedWeight = 1000f;
     public const int MaxEditedCount = 50;
+
+    /// <summary>
+    ///     The most assets a commander may have, added ones included: none is ever removed.
+    /// </summary>
+    public const int MaxAssets = 100;
     public static readonly TimeSpan MaxEditedTime = TimeSpan.FromHours(24);
 
     /// <summary>
@@ -109,11 +114,12 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     /// <summary>
     ///     Adds an asset, starting from the defaults and changed by <paramref name="edit"/>, which has to name what it
-    ///         sends. Returns its index, or -1, with nothing added, for an edit that would be refused.
+    ///         sends. Returns its index, or -1, with nothing added, for an edit that would be refused or a commander
+    ///         that already has <see cref="MaxAssets"/>.
     /// </summary>
     public int TryAddAsset(Entity<KsFieldCommanderRuleComponent> rule, KsFieldCommanderAssetEdit edit)
     {
-        if (edit.Entity == null && edit.Humanoid == null || !IsValidEdit(edit))
+        if (rule.Comp.Assets.Count >= MaxAssets || edit.Entity == null && edit.Humanoid == null || !IsValidEdit(edit))
             return -1;
 
         var asset = new KsFieldCommanderAsset();

@@ -208,6 +208,44 @@ public sealed class KsFieldCommanderHealAttackerDamageTest : GameTest
     }
 
     /// <summary>
+    ///     A defender killed half by another defender and half by the attackers, brought back, then healed: the heal is
+    ///         paid against what killed them, half of it either way, not against a ledger the death wiped (in full with
+    ///         the cvar off, nothing with it on). Killed again by the attackers, the old teamkill is not charged twice.
+    /// </summary>
+    [Test]
+    public async Task HealingAfterAReviveIsPaidAgainstWhatKilledThem([Values] bool attackerDamageOnly)
+    {
+        var server = Pair.Server;
+        var (ruleUid, medic, patient, attacker) = await SetUp(attackerDamageOnly);
+        var otherSession = await server.AddDummySession();
+
+        await server.WaitAssertion(() =>
+        {
+            var component = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
+
+            var shooterUid = server.EntMan.SpawnAtPosition(_defender, server.EntMan.GetComponent<TransformComponent>(patient).Coordinates);
+            server.PlayerMan.SetAttachedEntity(otherSession, shooterUid);
+
+            KillAndRevive(ruleUid, medic, patient, (50f, shooterUid), (50f, attacker));
+            var shooterAfterDeath = ruleSystem.GetPoints(component, otherSession.UserId);
+            Assert.That(shooterAfterDeath, Is.LessThan(0), "precondition: the first death was charged as a teamkill");
+
+            var before = GetPoints(ruleUid);
+            Damage(patient, -20f, originUid: medic);
+            var expected = (int)MathF.Floor(20f * component.HealPointsPerDamage * (50f / 100f));
+            Assert.That(expected, Is.GreaterThan(0), "precondition: the heal is worth something");
+            Assert.That(GetPoints(ruleUid) - before, Is.EqualTo(expected),
+                "healing after a revive should be paid against what killed them, as before the death");
+
+            Damage(patient, 40f, originUid: attacker);
+            Assert.That(server.System<MobStateSystem>().IsDead(patient), Is.True, "precondition: the patient died again");
+            Assert.That(ruleSystem.GetPoints(component, otherSession.UserId), Is.EqualTo(shooterAfterDeath),
+                "a teamkill charged at the first death should not be charged again at the next");
+        });
+    }
+
+    /// <summary>
     ///     A defender killed by the world, brought back by another: paid in full with the cvar off, as it always was,
     ///         and not at all with it on.
     /// </summary>

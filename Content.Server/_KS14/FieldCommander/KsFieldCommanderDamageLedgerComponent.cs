@@ -26,4 +26,12 @@ public sealed partial class KsFieldCommanderDamageLedgerComponent : Component
     /// </summary>
     [ViewVariables]
     public float AttackerDamage;
+
+    /// <summary>
+    ///     The part of <see cref="Damage"/> brought back from a death record at a revive
+    ///         (<see cref="KsFieldCommanderRuleSystem.RestoreLedger"/>): already charged as a teamkill at that death, so
+    ///         not charged again at the next, but still the defenders' doing for a medic healing it.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<NetUserId, float> SettledDamage = new();
 }

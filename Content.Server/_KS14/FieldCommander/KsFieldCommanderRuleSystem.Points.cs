@@ -159,7 +159,10 @@ public sealed partial class KsFieldCommanderRuleSystem
         if (args.NewMobState == MobState.Dead)
             OnDefenderDied(args.Target);
         else if (args.OldMobState == MobState.Dead)
+        {
             RewardRevive(args.Target, args.Origin);
+            RestoreLedger(args.Target);
+        }
     }
 
     /// <summary>
@@ -184,6 +187,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             {
                 RecordDeath(targetUid, ledgerComponent);
                 recorded = true;
+
+                // Whoever revives them is weighed against everything that killed them, but a teamkill already charged
+                //      at an earlier death is not charged again.
+                if (ledgerComponent != null)
+                    TakeOutSettledDamage(ledgerComponent);
             }
 
             if (ledgerComponent == null)
@@ -202,6 +210,22 @@ public sealed partial class KsFieldCommanderRuleSystem
             WipeLedger((targetUid, ledgerComponent));
     }
 
+    private static void TakeOutSettledDamage(KsFieldCommanderDamageLedgerComponent ledgerComponent)
+    {
+        foreach (var (userId, settled) in ledgerComponent.SettledDamage)
+        {
+            if (!ledgerComponent.Damage.TryGetValue(userId, out var dealt))
+                continue;
+
+            if (dealt - settled > 0f)
+                ledgerComponent.Damage[userId] = dealt - settled;
+            else
+                ledgerComponent.Damage.Remove(userId);
+        }
+
+        ledgerComponent.SettledDamage.Clear();
+    }
+
     /// <summary>
     ///     Empties a ledger and takes it off its entity. Emptied as well as taken off: a component removed this way is
     ///         still stored, and still found, until the tick ends, and a death later in the same tick must not be paid
@@ -210,6 +234,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     private void WipeLedger(Entity<KsFieldCommanderDamageLedgerComponent> ledger)
     {
         ledger.Comp.Damage.Clear();
+        ledger.Comp.SettledDamage.Clear();
         ledger.Comp.OtherDamage = 0f;
         ledger.Comp.AttackerDamage = 0f;
         RemCompDeferred<KsFieldCommanderDamageLedgerComponent>(ledger.Owner);

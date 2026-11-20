@@ -198,10 +198,19 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
                     ("index", purchase.Asset),
                     ("name", AssetName(purchase.Asset)))));
 
-            QueueList.AddChild(new Label
+            var index = i;
+            var remove = new Button { Text = Loc.GetString("ks-fieldcommander-admin-queue-remove") };
+            remove.OnPressed += _ => Send(rule => new KsFieldCommanderAdminRemoveQueuedWaveMessage(rule, index));
+
+            var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 6 };
+            row.AddChild(new Label
             {
                 Text = Loc.GetString("ks-fieldcommander-admin-queue-wave", ("position", i + 1), ("purchases", purchases)),
+                HorizontalExpand = true,
+                VerticalAlignment = VAlignment.Center,
             });
+            row.AddChild(remove);
+            QueueList.AddChild(row);
 
             if (wave.Announcement is { } announcement)
             {

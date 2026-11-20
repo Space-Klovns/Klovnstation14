@@ -92,4 +92,6 @@ ks-fieldcommander-admin-queue-empty = Очередь пуста.
 ks-fieldcommander-admin-queue-wave = { $position }. { $purchases }
 ks-fieldcommander-admin-queue-purchase = { $count } × №{ $index } { $name }
 ks-fieldcommander-admin-queue-announcement = «{ $text }»
+ks-fieldcommander-admin-queue-remove = Убрать
+ks-fieldcommander-admin-queue-dropped = Полевой командир: волна из очереди отброшена, её никогда не отправить: все её активы отключены или приводят больше юнитов, чем предел в { $cap } живых.
 ks-fieldcommander-admin-list-separator = ,{" "}

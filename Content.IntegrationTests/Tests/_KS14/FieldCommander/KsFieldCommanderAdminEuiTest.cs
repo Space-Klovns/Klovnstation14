@@ -300,6 +300,10 @@ public sealed class KsFieldCommanderAdminEuiTest : GameTest
             Assert.That(component.QueuedWaves[0].Announcement, Is.EqualTo("Now."), "a wave sent now goes ahead of the queue");
             Assert.That(component.NextWaveTime, Is.Not.EqualTo(nextWave), "a wave sent now is forced");
 
+            Handle(new KsFieldCommanderAdminRemoveQueuedWaveMessage(RuleNetEntity, 0));
+            Assert.That(component.QueuedWaves.Select(wave => wave.Announcement), Is.EqualTo(new[] { "Here they come." }),
+                "remove a queued wave");
+
             Handle(new KsFieldCommanderAdminSetPhaseMessage(RuleNetEntity, 1));
             Assert.That(component.PhaseIndex, Is.EqualTo(1), "set phase");
         });

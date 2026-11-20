@@ -222,6 +222,9 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
 
                 return _ruleSystem.TryQueueWave(commander, list, queueWave.Announcement, queueWave.SendNow);
 
+            case KsFieldCommanderAdminRemoveQueuedWaveMessage removeQueuedWave:
+                return _ruleSystem.TryRemoveQueuedWave(commander, removeQueuedWave.Index);
+
             default:
                 return false;
         }
@@ -267,6 +270,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
             KsFieldCommanderAdminSetAssetDisabledMessage setDisabled => $"{(setDisabled.Disabled ? "disabled" : "enabled")} asset {setDisabled.Asset}",
             KsFieldCommanderAdminQueueWaveMessage queueWave =>
                 $"{(queueWave.SendNow ? "sent a wave now" : "queued a wave")} of [{string.Join(", ", queueWave.Purchases?.Select(purchase => $"{purchase.Count}x asset {purchase.Asset}") ?? [])}] with announcement \"{queueWave.Announcement ?? "-"}\"",
+            KsFieldCommanderAdminRemoveQueuedWaveMessage removeQueuedWave => $"removed queued wave {removeQueuedWave.Index}",
             _ => message.GetType().Name,
         };
     }
