@@ -233,35 +233,87 @@ public sealed class KsNpcTargetSelectionTest : GameTest
     }
 
     /// <summary>
-    ///     Content: an operative picks a defender turret over a healthy defender just as far off, though the turret,
-    ///         having no health to speak of, used to score far below one.
+    ///     Content: a Field Commander operative, in a squad or on its own, picks a defender turret over a healthy defender
+    ///         just as far off, though the turret, having no health to speak of, used to score far below one. Another
+    ///         operative, on the same query, ranks them as though the turret had no priority at all.
     /// </summary>
-    [Test]
-    public async Task OperativesPreferDefenderTurrets()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task FieldCommanderOperativesPreferDefenderTurrets(bool squadded)
     {
         if (!SProtoMan.HasIndex(_operativeGunTargets))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
 
         var gridUid = await MakeFloor();
+        EntityUid ownerUid = default, otherUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            ownerUid = SpawnAt(SEntMan, squadded ? SyndicateMob : LonerMob, gridUid, 0, 0);
+            otherUid = SpawnAt(SEntMan, squadded ? SyndicateMob : LonerMob, gridUid, -1, -1);
+            SEntMan.EnsureComponent<Content.Server._KS14.FieldCommander.KsFieldCommanderUnitComponent>(ownerUid);
+        });
+
+        // For the two to form a squad, or not.
+        await Pair.RunTicksSync(150);
 
         await Server.WaitAssertion(() =>
         {
-            var ownerUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, 0);
+            var squadSystem = SEntMan.System<Content.Server._KS14.NPC.Squad.NpcSquadSystem>();
+            Assert.That(squadSystem.TryGetSquad(ownerUid, out _), Is.EqualTo(squadded), squadded ? "precondition: in a squad" : "precondition: on its own");
+
             var defenderUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 4, 0);
             var turretUid = SpawnAt(SEntMan, _defenderTurret, gridUid, 0, 4);
+            Assert.That(SEntMan.HasComponent<KsNpcTargetPriorityComponent>(turretUid), Is.True, "precondition: the turret has a priority");
 
             var perceptionSystem = SEntMan.System<NpcPerceptionSystem>();
             var now = Server.ResolveDependency<IGameTiming>().CurTime;
-            foreach (var targetUid in new[] { defenderUid, turretUid })
+            foreach (var viewerUid in new[] { ownerUid, otherUid })
             {
-                perceptionSystem.SetContact(ownerUid, targetUid, new NpcContact(NpcContactState.Visible,
-                    now, now, now, SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates, default, null, Reacted: true));
+                foreach (var targetUid in new[] { defenderUid, turretUid })
+                {
+                    perceptionSystem.SetContact(viewerUid, targetUid, new NpcContact(NpcContactState.Visible,
+                        now, now, now, SEntMan.GetComponent<TransformComponent>(targetUid).Coordinates, default, null, Reacted: true));
+                }
             }
 
             var scores = Scores(ownerUid, _operativeGunTargets);
             Assert.That(scores.Keys, Is.EquivalentTo(new[] { defenderUid, turretUid }), "both should be candidates");
             Assert.That(Best(scores), Is.EqualTo(turretUid),
                 $"the turret ({scores[turretUid]:0.000}) should be preferred to a healthy defender ({scores[defenderUid]:0.000})");
+
+            // The other is no Field Commander unit: the turret's priority changes nothing for it.
+            var withPriority = Scores(otherUid, _operativeGunTargets);
+            SEntMan.RemoveComponent<KsNpcTargetPriorityComponent>(turretUid);
+            var withoutPriority = Scores(otherUid, _operativeGunTargets);
+            Assert.That(withPriority, Is.EquivalentTo(withoutPriority),
+                "an operative that is no Field Commander unit should rank them as it would with no priority anywhere");
+        });
+    }
+
+    /// <summary>
+    ///     An NPC on upstream's own target query (carp, xenos, the Syndicate's turrets) scores a target with a priority
+    ///         exactly as one without: no priority reaches upstream's queries.
+    /// </summary>
+    [TestCase("NearbyGunTargets")]
+    [TestCase("NearbyMeleeTargets")]
+    public async Task UpstreamQueriesIgnorePriority(string query)
+    {
+        var gridUid = await MakeFloor();
+
+        await Server.WaitAssertion(() =>
+        {
+            var ownerUid = SpawnAt(SEntMan, LonerMob, gridUid, 0, 0);
+            var nearUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 2, 0);
+            var farUid = SpawnAt(SEntMan, NanoTrasenMob, gridUid, 0, 4);
+
+            var without = Scores(ownerUid, query);
+            Assert.That(without.Values.Any(score => score > 0f), Is.True, "precondition: the query scores something");
+
+            SEntMan.AddComponent<KsNpcTargetPriorityComponent>(farUid).Priority = 1f;
+            var with = Scores(ownerUid, query);
+            Assert.That(with, Is.EquivalentTo(without), $"a priority should change nothing in {query}");
+            Assert.That(nearUid, Is.Not.EqualTo(farUid));
         });
     }
 }
