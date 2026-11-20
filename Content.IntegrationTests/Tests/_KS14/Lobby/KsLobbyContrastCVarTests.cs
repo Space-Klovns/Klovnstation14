@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using Content.Client.Lobby.UI;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Shared._KS14.Lobby;
 using Content.Shared._KS14.CCVar;
 using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
@@ -19,6 +21,10 @@ public sealed class KsLobbyContrastCVarTests : GameTest
     [Test]
     public async Task CVarTogglesBackgroundShader()
     {
+        // Start in the tactical layout whatever the date: the default, auto, is Kharkiv on clown holidays.
+        await OverrideCVar(Side.Server, KsCCVars.LobbyLayout, KsLobbyLayouts.Tactical);
+        await Pair.RunTicksSync(5);
+
         var configurationManager = Client.Resolve<IConfigurationManager>();
         LobbyGui lobby = default!;
 
@@ -34,7 +40,21 @@ public sealed class KsLobbyContrastCVarTests : GameTest
             await Client.WaitAssertion(() =>
             {
                 Assert.That(lobby.Background.ShaderOverride, Is.Not.Null, "cvar on");
+                Assert.That(lobby.Background.ShaderOverride, Is.Not.SameAs(lobby.KsKharkiv.BackdropShader),
+                    "tactical: the dimming, not the grade");
                 Assert.That(lobby.KsViewport.KsDrawShader, Is.Not.Null, "cvar on, viewport");
+            });
+
+            // The Kharkiv layout puts its grade on the art instead, and the cvar takes it off the same way.
+            await Client.WaitPost(() => lobby.KsSetLayout(KsLobbyLayout.Kharkiv));
+            await Client.WaitAssertion(() => Assert.That(lobby.Background.ShaderOverride,
+                Is.SameAs(lobby.KsKharkiv.BackdropShader), "Kharkiv: the grade"));
+            await Client.WaitPost(() => configurationManager.SetCVar(KsCCVars.LobbyAdaptiveContrast, false));
+            await Client.WaitAssertion(() => Assert.That(lobby.Background.ShaderOverride, Is.Null, "Kharkiv, cvar off"));
+            await Client.WaitPost(() =>
+            {
+                configurationManager.SetCVar(KsCCVars.LobbyAdaptiveContrast, true);
+                lobby.KsSetLayout(KsLobbyLayout.Tactical);
             });
 
             await Client.WaitPost(() => configurationManager.SetCVar(KsCCVars.LobbyAdaptiveContrast, false));

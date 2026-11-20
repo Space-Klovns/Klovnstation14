@@ -13,3 +13,5 @@ guide-entry-ks-refining = Oil Refining
 guide-entry-ks-refrigeration = Refrigeration
 guide-entry-fortifications = Fortifications
 guide-entry-ks-grabs-and-shoves = Shoving and Grabbing
+guide-entry-ks-field-commander = Field Commander
+guide-entry-ks-field-commander-perks = Perks

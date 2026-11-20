@@ -85,10 +85,11 @@ public sealed partial class KsFieldCommanderRuleSystem
     }
 
     /// <summary>
-    ///     Readies a defender's body: their shots pass through their own side, and their points come with them.
+    ///     Readies a defender's body: their shots pass through their own side, and their points and perk come with them.
     /// </summary>
-    private void PrepareDefender(KsFieldCommanderRuleComponent component, EntityUid bodyUid, ICommonSession? session)
+    private void PrepareDefender(Entity<KsFieldCommanderRuleComponent> rule, EntityUid bodyUid, ICommonSession? session)
     {
+        var component = rule.Comp;
         EnsureComp<KsFactionCollisionShooterComponent>(bodyUid);
 
         // So the client knows who is a defender, and how to flash them as they go down.
@@ -102,21 +103,23 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             component.Defenders.Add(session.UserId);
             MirrorPoints(component, bodyUid, GetPoints(component, session.UserId));
+            ApplyOrRequestPerk(rule, bodyUid, session);
         }
     }
 
     /// <summary>
     ///     Readies the defenders who were already in the round before the rule was.
     /// </summary>
-    private void PrepareExistingDefenders(KsFieldCommanderRuleComponent component)
+    private void PrepareExistingDefenders(Entity<KsFieldCommanderRuleComponent> rule)
     {
+        var component = rule.Comp;
         var query = EntityQueryEnumerator<ScenarioFactionMemberComponent>();
         while (query.MoveNext(out var memberUid, out var factionMemberComponent))
         {
             if (factionMemberComponent.Id != component.DefenderFaction)
                 continue;
 
-            PrepareDefender(component, memberUid, CompOrNull<ActorComponent>(memberUid)?.PlayerSession);
+            PrepareDefender(rule, memberUid, CompOrNull<ActorComponent>(memberUid)?.PlayerSession);
         }
     }
 
@@ -124,10 +127,10 @@ public sealed partial class KsFieldCommanderRuleSystem
     private void OnPlayerSpawnComplete(PlayerSpawnCompleteEvent args)
     {
         var query = QueryActiveRules();
-        while (query.MoveNext(out _, out _, out var ruleComponent, out _))
+        while (query.MoveNext(out var ruleUid, out _, out var ruleComponent, out _))
         {
             if (IsDefender(ruleComponent, args.Mob))
-                PrepareDefender(ruleComponent, args.Mob, args.Player);
+                PrepareDefender((ruleUid, ruleComponent), args.Mob, args.Player);
         }
     }
 

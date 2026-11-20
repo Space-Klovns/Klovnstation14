@@ -1,0 +1,44 @@
+light_mode unshaded;
+
+// One pass of the lobby menu's bloom: a separable Gaussian, 25 taps tapStep source pixels apart along direction. The first
+//      pass reads the UI as drawn over transparent black and keeps only its bright parts (threshold >= 0): each pixel's
+//      premultiplied colour, faded in over a soft knee by luminance, so dim text and dark panels add nothing. The
+//      second pass (threshold < 0) just blurs. Taps outside the source count as black, so nothing smears in from an edge.
+// zTexture gives linear light; the sum is taken in linear light, which is how real glare adds up.
+
+uniform highp vec2 direction;
+uniform highp float tapStep;
+uniform highp float sigmaTaps;
+uniform highp float threshold;
+uniform highp float knee;
+
+void fragment()
+{
+    highp vec2 stepUv = direction * tapStep * TEXTURE_PIXEL_SIZE;
+    highp vec3 sum = vec3(0.0);
+    highp float total = 0.0;
+
+    for (int i = -12; i <= 12; i++)
+    {
+        highp float x = float(i);
+        highp float weight = exp(-0.5 * x * x / (sigmaTaps * sigmaTaps));
+        highp vec2 uv = UV + stepUv * x;
+        highp float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+
+        highp vec4 tap = zTexture(uv);
+        highp vec3 colour = tap.rgb;
+        if (threshold >= 0.0)
+        {
+            // The scene target was cleared to transparent and drawn into with the default blend, so its colour is
+            //      already premultiplied by coverage: a half-covered glyph edge holds half its colour. Don't scale by alpha
+            //      again.
+            highp float luminance = dot(colour, vec3(0.2126, 0.7152, 0.0722));
+            colour *= smoothstep(threshold, threshold + knee, luminance);
+        }
+
+        sum += colour * weight * inside;
+        total += weight;
+    }
+
+    COLOR = vec4(sum / total, 1.0);
+}

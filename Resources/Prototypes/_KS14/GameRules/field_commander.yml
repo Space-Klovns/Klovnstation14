@@ -19,6 +19,12 @@
     maxAlivePerDefender: 3
     pointsPerCost: 37.5 # requisition x1.5
     uplinkPoints: 300
+    # Each defender picks one, once per round.
+    perkOptions:
+    - KsPerkDamage
+    - KsPerkTank
+    - KsPerkHealing
+    - KsPerkSupport
     waveAnnouncements:
     - ks-fieldcommander-wave-1
     - ks-fieldcommander-wave-2
@@ -103,6 +109,21 @@
       reinforcementPod: KsFieldCommanderReinforcementsHeavy
       deployUplink: true
       uplinkGuardBudget: 9
+  # Dead defenders come back together, as reinforcements, in the last 30 seconds before each wave.
+  #     With no wave scheduled, they come back as soon as their own timer is up (openWhileNoWaveScheduled).
+  - type: KsFieldCommanderRespawnWindow
+    window: 30
+
+# Ghost respawning for a field commander round, whatever the server's cvars say. Respawns are still held to the
+#     commander rule's respawn window.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderGhostRespawn
+  components:
+  - type: KsGhostRespawnOverrideRule
+    enabled: true
+    cooldown: 60
+    penalty: 30
 
 # The scenario rule for a field commander round: the commander's side never runs out of members, and holds an
 #     objective (its uplink) from the start, even before it lands.
@@ -187,3 +208,19 @@
     casingDelay: 60
     itemDelay: 300
     bodyDelay: 300
+
+# Keeps blood from flooding the battlefield: it evaporates, a full puddle (50u) in about a minute
+#     (50u at 0.8u/s). Rates are units per second, as a reagent's evaporationSpeed; water's is 0.3.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderBloodEvaporation
+  components:
+  - type: KsMinimumEvaporationRule
+    minimumRates:
+      Blood: 0.8
+      InsectBlood: 0.8
+      CopperBlood: 0.8
+      AmmoniaBlood: 0.8
+      SulfurBlood: 0.8
+      ZombieBlood: 0.8
+      Slime: 0.8

@@ -1,0 +1,71 @@
+// Light leaks over the main menu's backdrop: the glare a dirty lens adds to footage, which comes from no visible light.
+// Drawn procedurally and added onto what is behind:
+//   - flare lines: a few hairline diagonal streaks of light, brightest in the middle of their length, with rainbow edges;
+//   - haze: a cold glow round the wordmark, and warm spills in the bottom corners, as if light were leaking in.
+// Everything is in screen pixels (quad size * UV2), so the shapes keep their proportions at any resolution, and scaled by
+// uiScale so they keep their size relative to the UI.
+light_mode unshaded;
+// Additive: "add" is (SrcAlpha, DstAlpha), so with an output alpha of 1 over the opaque screen it adds the colour onto what
+//      is behind. It must be set here: a source shader takes its blend mode from this header, and a prototype's
+//      blend_mode is ignored for it (the .swsl parser doesn't accept "premultiplied").
+blend_mode add;
+
+uniform highp vec2 quadPixelSize;
+uniform highp float uiScale;
+uniform highp float intensity;
+uniform highp vec2 hazeCentre; // fraction of the quad, top-left origin
+
+
+// A hairline of light along a direction, fading along its length, with each channel offset sideways for a rainbow edge.
+highp vec3 flareLine(highp vec2 p, highp vec2 centre, highp float angle, highp float halfLength, highp float width)
+{
+    highp vec2 along = vec2(cos(angle), sin(angle));
+    highp vec2 across = vec2(-along.y, along.x);
+    highp vec2 d = p - centre;
+    highp float t = dot(d, along) / halfLength;
+    highp float fade = exp(-t * t * 3.0);
+    highp float s = dot(d, across);
+    highp float r = exp(-pow((s - width * 1.6) / width, 2.0));
+    highp float g = exp(-pow(s / width, 2.0));
+    highp float b = exp(-pow((s + width * 1.6) / width, 2.0));
+    return vec3(r, g, b) * fade;
+}
+
+void fragment()
+{
+    highp vec2 size = quadPixelSize;
+    highp vec2 p = vec2(UV2.x, 1.0 - UV2.y) * size;
+    highp float u = max(uiScale, 0.5);
+    highp vec3 light = vec3(0.0);
+
+    highp float h = size.y;
+    highp float w = size.x;
+
+    // Flare lines: a few long diagonals through the upper half, slowly breathing.
+    highp float breathe = 0.75 + 0.25 * sin(TIME * 0.35);
+    highp vec3 lines = vec3(0.0);
+    lines += flareLine(p, vec2(w * 0.20, h * 0.25), radians(-24.0), w * 0.08, 1.4 * u) * 0.4;
+    lines += flareLine(p, vec2(w * 0.60, h * 0.30), radians(18.0), w * 0.2, 1.2 * u) * 0.22;
+    lines += flareLine(p, vec2(w * 0.82, h * 0.06), radians(-30.0), w * 0.1, 1.0 * u) * 0.18;
+    light += lines * breathe * vec3(0.85, 0.95, 1.0);
+
+    // Haze: a cold spill round the wordmark, wider than it, brightest just above it.
+    highp vec2 hc = hazeCentre * size;
+    highp vec2 hd = (p - hc) / (vec2(0.42, 0.22) * size);
+    light += vec3(0.22, 0.45, 0.52) * exp(-dot(hd, hd) * 1.4) * 0.22;
+    highp vec2 hd2 = (p - vec2(hc.x, 0.0)) / (vec2(0.6, 0.14) * size);
+    light += vec3(0.25, 0.45, 0.5) * exp(-dot(hd2, hd2)) * 0.12;
+
+    // Warm spills in the bottom corners, behind the expansions tile and the zone label: stretched sideways, with
+    //      faint horizontal banding, as light smeared across the lens.
+    highp float banding = 0.88 + 0.12 * sin(p.y / (9.0 * u) + sin(p.x / (140.0 * u)) * 2.0);
+    highp vec2 bl = (p - vec2(w * 0.06, h * 0.93)) / (vec2(0.11, 0.06) * size);
+    highp vec2 br = (p - vec2(w * 0.95, h * 0.93)) / (vec2(0.09, 0.055) * size);
+    light += vec3(0.85, 0.28, 0.06) * exp(-dot(bl, bl)) * banding * 0.27;
+    light += vec3(0.8, 0.1, 0.06) * exp(-dot(br, br)) * banding * 0.3;
+
+    // Faint flicker, as the glare of real footage never holds still.
+    highp float flicker = 0.92 + 0.08 * sin(TIME * 7.3) * sin(TIME * 2.1 + 1.3);
+
+    COLOR = vec4(light * intensity * flicker, 1.0);
+}

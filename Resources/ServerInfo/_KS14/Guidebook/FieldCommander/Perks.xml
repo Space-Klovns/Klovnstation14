@@ -1,0 +1,51 @@
+<Document>
+  # Perks
+  When you first join a [textlink="Field Commander" link="KsFieldCommander"] round, a wheel asks you to pick a perk. You can't close it without choosing, and the choice holds for the whole round: every new body you get has the same perk. Its icon sits with your alerts; hover it to read what it does. Abilities you trigger go on your action bar.
+
+  ## Damage
+  Hits harder and keeps the pressure on.
+  - [bold]Ramp.[/bold] Every hit on a living target adds 4% damage to your shots, up to +40%. Reloading, running dry, dropping or switching guns starts you over.
+  - [bold]Point blank.[/bold] Up to +25% damage within 2 metres, fading to nothing by 10 metres.
+  - [bold]Falloff.[/bold] Past 10 metres your shots weaken, down to half damage at 30 metres. Get close.
+  - [bold]Magazine drop.[/bold] An empty magazine falls out with a beep, ready for the next.
+  - [bold]Explosive last rounds.[/bold] The last 5% of a magazine that went in full (at least one round) explode on hit. Their tracers are tinted and they sound different, so you know they are coming.
+
+  ## Tank
+  Takes the punishment so the others don't have to.
+  - [bold]Auto-injector.[/bold] Going critical injects omnizine, epinephrine and klovnide, 10u each. It then needs 3 minutes to recharge; the perk's alert shows how long.
+  - [bold]Living Shield[/bold] (action). Raise a shield that soaks all damage until it has taken 150. You move at 60% speed and can't fire while it is up. It breaks loudly, and is ready again 30 seconds after it goes down.
+  - [bold]Draw Fire[/bold] (action). For 10 seconds enemies would rather shoot you than anyone else.
+  - [bold]Better armour.[/bold] The loadout vendor has a bulletproof vest only a Tank may take.
+
+  ## Healing
+  Keeps themselves and everyone around them on their feet.
+  - [bold]Fast metabolism.[/bold] Medicine works through you 1.5 times as fast.
+  - [bold]Medical HUD.[/bold] Health bars and status icons, built in.
+  - [bold]Lifesteal.[/bold] Damage you deal to an enemy heals you by 20% of it.
+  - [bold]No bleeding.[/bold] Your wounds close as soon as they open.
+  - [bold]Combat medibot.[/bold] Follows you and jabs hurt friends close by with a hypospray, epinephrine for anyone critical. It is flimsy; destroyed, it comes back after a minute.
+  - [bold]Medical beamgun.[/bold] Fire it at anyone living within [protodata="KsMedicalBeamGun" comp="KsMedicalBeamGun" member="MaxRange" format="N0"/] metres to lock a healing beam onto them; it heals friend and foe alike, so mind who you click. Cyan sparkles on them show each heal. The beam breaks the moment they leave range or sight. Fire it at nothing, or at the dead, to let go.
+  - [bold]Don't cross the streams.[/bold] If your beam crosses another medic's, both beams break and blow up where they cross, a blast that can crit anyone within a few metres. Beaming a medic who is beaming someone else counts too. Two beams on the same patient are safe, unless one runs along the other.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsMobCompanionMedibot"/>
+    <GuideEntityEmbed Entity="KsMedicalBeamGun"/>
+  </Box>
+
+  ## Support
+  Keeps the squad supplied and fighting harder together.
+  - [bold]Ammo drops.[/bold] One kill in five drops a glowing [bold]ammo resupply[/bold]. Any defender who walks over it with a gun in hand gets that gun's magazine filled with its own rounds, or its battery charged. With nothing to fill, it stays put. It fades after 30 seconds.
+  - [bold]Shoulder turret.[/bold] A little turret hovers by your shoulder and shoots enemies with energy bolts. It holds six and makes one more every four seconds. Enemies can shoot it down; it comes back after 45 seconds.
+  - [bold]Rally[/bold] (action). A ring marks the ground around you and fills in for 1.5 seconds. Then every defender inside, you included, is [bold]rallied[/bold] for 12 seconds: 20% faster on foot, 25% faster on the trigger and 20% harder hitting. A chime and a flash tell you it started, an alert counts it down, and a beep tells you it is over. Ready again after 45 seconds.
+  - [bold]Mark Target[/bold] (action). Mark an enemy up to 20 metres away. For 8 seconds it is outlined in red for your side and takes 20% more damage from everything. Ready again after 20 seconds.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsAmmoPickup"/>
+    <GuideEntityEmbed Entity="KsMobCompanionShoulderTurret"/>
+  </Box>
+
+  ## Tips
+  - [bold]Call the rally where the squad already is.[/bold] People have 1.5 seconds to step in, not much more.
+  - [bold]Mark what the turrets can't kill.[/bold] A marked target takes the extra damage from every gun, grenade and turret.
+  - [bold]Leave a resupply for whoever is running dry.[/bold] It refills whatever the taker is holding.
+</Document>

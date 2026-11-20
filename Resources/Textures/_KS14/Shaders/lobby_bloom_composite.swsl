@@ -1,0 +1,15 @@
+light_mode unshaded;
+// Additive: "add" is (SrcAlpha, DstAlpha), so with an output alpha of 1 over the opaque screen it adds the colour onto what
+//      is behind. It must be set here: a source shader takes its blend mode from this header, and a prototype's
+//      blend_mode is ignored for it (the .swsl parser doesn't accept "premultiplied").
+blend_mode add;
+
+// Adds a blurred bloom level onto what is already drawn, tinted and scaled.
+
+uniform highp float intensity;
+uniform highp vec3 tint;
+
+void fragment()
+{
+    COLOR = vec4(zTexture(UV).rgb * tint * intensity, 1.0);
+}

@@ -6,6 +6,11 @@ namespace Content.Shared._KS14.Dissolve;
 ///     Marks an entity that is dissolving away. The client dissolves its sprite for <see cref="Duration"/>; the server
 ///         deletes the entity a moment after it ends (<c>KsDissolveSystem.Dissolve</c>). Added at runtime, never in a
 ///         prototype. Taken off again, and the entity kept, if it is picked up or put in something first.
+///     <para>
+///         With <see cref="Reverse"/> it materialises instead (<c>KsDissolveSystem.Materialise</c>): the dissolve
+///             played backwards, from nothing to whole, after which the server takes the component off and the entity
+///             stays.
+///     </para>
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
 public sealed partial class KsDissolveComponent : Component
@@ -21,6 +26,12 @@ public sealed partial class KsDissolveComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public TimeSpan Duration = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>
+    ///     Played backwards: the entity materialises rather than dissolves, and is kept.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Reverse;
 
     /// <summary>
     ///     Server only: whether the dissolve put the despawn timer on the entity itself, and so takes it off again if

@@ -1,0 +1,89 @@
+// The main menu's backdrop grade: the lobby art is pulled down, cooled and desaturated, with a heavy vignette and a colour
+// fringe that grows toward the edges, then shown as if on a slightly curved screen: the picture bulges a little (barrel
+// distortion), zoomed just enough that it always fills the glass, under a staggered RGB slot mask that bends with it, with
+// a slow roll of brightness and very faint coloured static. Whatever the art is, it reads as a dim backdrop under the
+// bright menu. Nothing is blurred and the UI is not touched: this is on the background only.
+// zTexture() returns linear colour, so exposure and the vignette multiply light, as a camera would.
+light_mode unshaded;
+
+uniform highp float strength;      // 0..1, how much of the grade applies
+uniform highp vec2 quadPixelSize;  // the drawn quad in screen pixels, so the vignette is round, not stretched
+uniform highp float exposure;      // multiplier on the art's light
+uniform highp float desaturation;  // 0..1 toward the pixel's own grey
+uniform highp float vignette;      // 0..1, darkening at the corners
+uniform highp float fringe;        // colour separation at the edges, in texture UV
+uniform highp float scanlines;     // 0..1, depth of the scanline darkening
+uniform highp float subpixelMask;  // 0..1, depth of the RGB subpixel stripes
+uniform highp float staticAmount;  // linear light of the coloured static, per channel
+uniform highp float roll;          // 0..1, depth of the slow brightness band rolling down the screen
+uniform highp float rollSpeed;     // how fast the band rolls, radians of its wave per second
+uniform highp float curvature;     // barrel distortion: how far the corners are pushed out, as a fraction
+uniform highp float maskPitch;     // width of one RGB triad of the mask, in screen pixels
+
+highp float hash(highp vec2 p)
+{
+    p = fract(p * vec2(443.8975, 397.2973));
+    p += dot(p, p.yx + 19.19);
+    return fract((p.x + p.y) * p.x);
+}
+
+void fragment()
+{
+    highp vec2 p = vec2(UV2.x, 1.0 - UV2.y) - vec2(0.5);
+    highp float aspect = quadPixelSize.x / max(quadPixelSize.y, 1.0);
+    highp vec2 aspectScale = vec2(aspect, 1.0) / length(vec2(aspect, 1.0));
+    highp float radius = length(p * aspectScale) * 2.0;
+
+    // Curved glass: each point shows the picture from a little further out, more so toward the corners. The bulge is
+    //      largest at the corners, 1 + curvature there, so dividing by that keeps every point inside the picture: it is
+    //      zoomed slightly instead of leaving dark gaps at the edges. The texture UV moves with it, scaled by how fast UV
+    //      runs across the quad (constant, read off the derivatives), so it works whatever part of the art
+    //      KeepAspectCovered shows.
+    highp float bulge = curvature * strength;
+    highp vec2 curved = p * (1.0 + bulge * dot(p * aspectScale * 2.0, p * aspectScale * 2.0)) / (1.0 + bulge);
+    highp vec2 uvPerP = vec2(dFdx(UV.x) / dFdx(p.x), dFdy(UV.y) / dFdy(p.y));
+    highp vec2 uv = UV + (curved - p) * uvPerP;
+
+    // The part of the texture the quad shows, so the fringe's offset samples never reach past it.
+    highp vec2 uvCornerA = UV + (vec2(-0.5) - p) * uvPerP;
+    highp vec2 uvCornerB = UV + (vec2(0.5) - p) * uvPerP;
+    highp vec2 uvMin = min(uvCornerA, uvCornerB);
+    highp vec2 uvMax = max(uvCornerA, uvCornerB);
+
+    highp vec2 shift = curved * fringe * strength * radius;
+    highp vec4 centre = zTexture(uv);
+    highp vec3 col = vec3(zTexture(clamp(uv + shift, uvMin, uvMax)).r, centre.g, zTexture(clamp(uv - shift, uvMin, uvMax)).b);
+
+    highp float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    col = mix(col, vec3(lum), desaturation * strength);
+    col *= mix(vec3(1.0), vec3(0.86, 0.97, 1.0), strength); // a little cold
+    col *= mix(1.0, exposure, strength);
+    // A little more contrast in what is left: the art reads as a dim scene, not a grey wash.
+    col = mix(col, col * col * 4.0 / (1.0 + col * 3.0), 0.5 * strength);
+
+    highp float edge = smoothstep(0.25, 1.0, radius);
+    col *= 1.0 - vignette * strength * edge * edge;
+
+    // The mask, laid out on the curved glass so its rows and columns bow toward the edges. A slot mask: RGB stripes
+    //      maskPitch wide, broken into slots by dark gaps, with every other triad's slots staggered half a slot. Smooth
+    //      (cosine) weights rather than hard pixels, so it shimmers gently instead of aliasing into hard moire.
+    highp vec2 q = (curved + vec2(0.5)) * quadPixelSize / maskPitch;
+    highp float triad = floor(q.x);
+    highp float phase = fract(q.x) * 6.28318530718;
+    highp vec3 phosphor = 0.5 + 0.5 * cos(vec3(phase, phase - 2.0943951, phase - 4.1887902));
+    col *= mix(vec3(1.0), 0.45 + phosphor * 0.9, subpixelMask * strength);
+    highp float slot = q.y + mod(triad, 2.0) * 0.5;
+    highp float gap = pow(0.5 + 0.5 * cos(slot * 6.28318530718), 6.0);
+    col *= 1.0 - scanlines * strength * gap;
+
+    // A broad band of light a little brighter than the rest, rolling slowly down the screen.
+    highp float band = sin((curved.y + 0.5) * 3.14159265 - TIME * rollSpeed);
+    col *= 1.0 + roll * strength * band * band * band * band;
+
+    // Coloured static, new every frame-ish (24 a second), one value per channel.
+    highp vec2 cell = floor(FRAGCOORD.xy) + floor(TIME * 24.0) * vec2(37.0, 17.0);
+    highp vec3 noise = vec3(hash(cell), hash(cell + 71.3), hash(cell + 149.9)) - 0.5;
+    col = max(col + noise * staticAmount * strength, 0.0);
+
+    COLOR = vec4(col, centre.a);
+}

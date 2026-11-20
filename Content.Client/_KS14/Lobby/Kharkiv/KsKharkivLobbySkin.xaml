@@ -1,0 +1,218 @@
+<!-- The "Escape from Klovn" lobby layout (Kharkiv). LobbyGui shows it in place of its own tactical layout when the server
+     says so (klovn.lobby.layout), and moves the controls both layouts share in here. Each *Slot is an invisible marker:
+     the shared control goes in right after it, with the marker's alignment, margin and expand settings, so the tree is
+     the same as if the control were written here. See Klovn/Docs/lobby.md. -->
+<kharkiv:KsKharkivLobbySkin
+    xmlns="https://spacestation14.io"
+    xmlns:kharkiv="clr-namespace:Content.Client._KS14.Lobby.Kharkiv">
+    <!-- Fade into the bar; anchored in code. The art's own grade is the BackdropShader. -->
+    <PanelContainer Name="KsFadeBottom" StyleClasses="KsLobbyFadeBottom" MouseFilter="Ignore"/>
+
+    <!-- Lens glare over the art, under the UI -->
+    <kharkiv:KsKharkivLightLeaks Name="KsLightLeaks" Access="Public"/>
+
+    <!-- Everything above the art glows where it is bright -->
+    <kharkiv:KsKharkivBloomHost Name="KsBloom" Access="Public">
+    <!-- Vertical root: the menu above the full-width navigation bar -->
+    <BoxContainer Name="KsRoot" Orientation="Vertical" SeparationOverride="0">
+        <Control Name="KsContent" VerticalExpand="True" HorizontalExpand="True">
+
+            <!-- The main menu -->
+            <Control Name="MainMenu" Access="Public" VerticalExpand="True" HorizontalExpand="True">
+                <BoxContainer Orientation="Vertical" VerticalExpand="True" HorizontalExpand="True" SeparationOverride="0">
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.55"/>
+
+                    <!-- Wordmark -->
+                    <TextureRect Name="KsLogo"
+                                 Access="Public"
+                                 TexturePath="/Textures/_KS14/Lobby/Kharkiv/wordmark.png"
+                                 Stretch="KeepAspectCentered"
+                                 HorizontalAlignment="Center"
+                                 MaxSize="930 300"
+                                 MouseFilter="Ignore"/>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.5"/>
+
+                    <!-- Season banner: the box (with its halo, corners and glow) and the lockup are drawn art -->
+                    <PanelContainer Name="KsBanner" Access="Public" StyleClasses="KsKharkivBannerPanel" HorizontalAlignment="Center" SetSize="820 120">
+                        <BoxContainer Orientation="Horizontal" Margin="18 0 0 0" SeparationOverride="0">
+                            <TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/emblem_hex.png"
+                                         Stretch="KeepAspectCentered"
+                                         SetSize="72 72"
+                                         VerticalAlignment="Center"
+                                         Margin="0 0 14 0"/>
+                            <TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/lockup.png"
+                                         Stretch="KeepCentered"
+                                         SetSize="420 96"
+                                         VerticalAlignment="Center"
+                                         Margin="0 0 0 6"/>
+                            <Control HorizontalExpand="True"/>
+                            <BoxContainer Orientation="Vertical" VerticalAlignment="Center" MinWidth="110" SeparationOverride="4">
+                                <Label Text="{Loc 'ks-kharkiv-banner-players'}" StyleClasses="KsKharkivBannerCaption" HorizontalAlignment="Center"/>
+                                <Label Name="BannerPlayers" Access="Public" StyleClasses="KsKharkivBannerValue" HorizontalAlignment="Center"/>
+                            </BoxContainer>
+                            <PanelContainer StyleClasses="KsKharkivBannerDivider" MinWidth="1" VerticalAlignment="Stretch" Margin="0 30"/>
+                            <BoxContainer Orientation="Vertical" VerticalAlignment="Center" MinWidth="150" SeparationOverride="4">
+                                <Label Text="{Loc 'ks-kharkiv-banner-timer'}" StyleClasses="KsKharkivBannerCaption" HorizontalAlignment="Center"/>
+                                <!-- LobbyGui.StartTimeValue goes here -->
+                                <Control Name="TimerSlot" Access="Public" Visible="False" HorizontalAlignment="Center"/>
+                            </BoxContainer>
+                        </BoxContainer>
+                    </PanelContainer>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.55"/>
+
+                    <!-- The menu. The items are LobbyGui's own buttons, moved into the slots. -->
+                    <BoxContainer Name="KsMenuColumn"
+                                  Access="Public"
+                                  Orientation="Vertical"
+                                  HorizontalAlignment="Center"
+                                  SeparationOverride="14">
+                        <Control Name="ReadySlot" Access="Public" Visible="False" HorizontalAlignment="Center"/>
+                        <Label Name="ReadyStatus"
+                               Access="Public"
+                               StyleClasses="KsKharkivStatus"
+                               HorizontalAlignment="Center"
+                               Margin="0 -14 0 6"/>
+                        <Button Name="CharacterButton"
+                                Access="Public"
+                                Text="{Loc 'ks-kharkiv-menu-character'}"
+                                StyleClasses="KsKharkivMenuItem"
+                                HorizontalAlignment="Center"/>
+                        <Control Name="ObserveSlot" Access="Public" Visible="False" HorizontalAlignment="Center"/>
+                        <Control Name="ManifestSlot" Access="Public" Visible="False" HorizontalAlignment="Center"/>
+                        <Control Name="LeaveSlot" Access="Public" Visible="False" HorizontalAlignment="Center"/>
+                    </BoxContainer>
+
+                    <Control VerticalExpand="True" SizeFlagsStretchRatio="0.9"/>
+                </BoxContainer>
+
+                <!-- Bottom-left: expansions tile and build line. The negative bottom margin lets the build line sit just over
+                     the bar, in the badge row's height (no badge is that far left). -->
+                <BoxContainer Orientation="Vertical"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Bottom"
+                              Margin="14 0 0 -12"
+                              SeparationOverride="2">
+                    <BoxContainer Orientation="Horizontal" SeparationOverride="8" Margin="0 0 0 2">
+                        <TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/icon_expansions.png"
+                                     Stretch="KeepAspectCentered"
+                                     MinSize="34 34"
+                                     MaxSize="34 34"
+                                     ModulateSelfOverride="#F0A21E"
+                                     VerticalAlignment="Center"/>
+                        <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Center">
+                            <Label Text="{Loc 'ks-kharkiv-corner-new'}" StyleClasses="KsKharkivNewChip" HorizontalAlignment="Left"/>
+                            <Label Text="{Loc 'ks-kharkiv-corner-expansions'}" StyleClasses="KsKharkivExpansionsTitle" Margin="0 -4 0 -2"/>
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="5" Margin="12 0 0 0">
+                                <TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/icon_coin.png"
+                                             Stretch="KeepAspectCentered"
+                                             MinSize="12 12"
+                                             MaxSize="12 12"
+                                             ModulateSelfOverride="#C98A1C"
+                                             VerticalAlignment="Center"/>
+                                <Label Text="50" StyleClasses="KsKharkivCoinText" VerticalAlignment="Center"/>
+                            </BoxContainer>
+                        </BoxContainer>
+                    </BoxContainer>
+                    <Label Name="KsVersion" Access="Public" StyleClasses="KsKharkivVersion"/>
+                </BoxContainer>
+
+                <!-- LobbyGui.VoteContainer goes here: vote popups, top right -->
+                <Control Name="VoteSlot"
+                         Access="Public"
+                         Visible="False"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Top"
+                         Margin="0 16 16 0"/>
+
+                <!-- Bottom-right: zone label -->
+                <BoxContainer Orientation="Horizontal"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Bottom"
+                              Margin="0 0 16 24"
+                              SeparationOverride="10">
+                    <Label Text="{Loc 'ks-kharkiv-corner-zone'}" StyleClasses="KsKharkivZoneLabel" VerticalAlignment="Center"/>
+                    <TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/emblem_pve.png"
+                                 Stretch="KeepAspectCentered"
+                                 MinSize="32 32"
+                                 MaxSize="32 32"
+                                 VerticalAlignment="Center"/>
+                </BoxContainer>
+            </Control>
+
+            <!-- Character setup: LobbyGui.CharacterSetupState goes into the slot, over a dark backdrop -->
+            <Control Name="SetupView" Access="Public" Visible="False" VerticalExpand="True" HorizontalExpand="True">
+                <PanelContainer StyleClasses="KsKharkivSetupBackdrop" MouseFilter="Stop"/>
+                <Control Name="SetupSlot" Access="Public" Visible="False" VerticalExpand="True" HorizontalExpand="True"/>
+            </Control>
+        </Control>
+
+        <!-- Navigation bar: badges sit on the bar's top edge, the black strip is behind the tabs -->
+        <Control Name="KsBottomBar" MinHeight="48">
+            <PanelContainer StyleClasses="KsKharkivBar" VerticalAlignment="Bottom" SetHeight="34" MouseFilter="Stop"/>
+            <BoxContainer Orientation="Horizontal" VerticalAlignment="Bottom" Margin="4 0 4 0" SeparationOverride="10">
+                <!-- Left -->
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-main-menu'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_menu.png" Active="True"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsKharkivBadge"><Label Text="1" StyleClasses="KsKharkivBadgeText"/></PanelContainer></BoxContainer>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-hideout'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_hideout.png" Opaque="True"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <BoxContainer Orientation="Horizontal" SeparationOverride="4">
+                        <kharkiv:KsKharkivNavTab IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_player.png" Slot="True"/>
+                        <kharkiv:KsKharkivNavTab IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_plus.png" Dim="True" Slot="True"/>
+                        <kharkiv:KsKharkivNavTab IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_plus.png" Dim="True" Slot="True"/>
+                        <kharkiv:KsKharkivNavTab IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_plus.png" Dim="True" Slot="True"/>
+                        <kharkiv:KsKharkivNavTab IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_plus.png" Dim="True" Slot="True"/>
+                    </BoxContainer>
+                </BoxContainer>
+
+                <Control HorizontalExpand="True"/>
+
+                <!-- Right -->
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsKharkivBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/icon_exclaim.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <kharkiv:KsKharkivNavTab Name="CharacterTab" Access="Public" Text="{Loc 'ks-kharkiv-tab-character'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_character.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-traders'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_cart.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-flea'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_flea.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-builds'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_builds.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Left" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 0 2"><PanelContainer StyleClasses="KsKharkivBadge"><Label Text="10" StyleClasses="KsKharkivBadgeText"/></PanelContainer><PanelContainer StyleClasses="KsKharkivBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><Label Text="4" StyleClasses="KsKharkivBadgeText"/><TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/icon_record.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-handbook'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_handbook.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 6 2"><PanelContainer StyleClasses="KsKharkivBadgeGrey"><Label Text="14" StyleClasses="KsKharkivBadgeText"/></PanelContainer></BoxContainer>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-messenger'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_messenger.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-survey'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_survey.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <BoxContainer Orientation="Horizontal" SetHeight="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" SeparationOverride="3" Margin="0 0 30 2"><PanelContainer StyleClasses="KsKharkivBadge"><BoxContainer Orientation="Horizontal" SeparationOverride="2"><TextureRect TexturePath="/Textures/_KS14/Lobby/Kharkiv/icon_warning.png" Stretch="KeepAspectCentered" MinSize="11 11" MaxSize="11 11" ModulateSelfOverride="#101410" VerticalAlignment="Center"/></BoxContainer></PanelContainer></BoxContainer>
+                    <kharkiv:KsKharkivNavTab Text="{Loc 'ks-kharkiv-tab-expansions'}" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_expansions.png"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" SeparationOverride="0" VerticalAlignment="Bottom" Margin="0 0 0 3">
+                    <Control SetHeight="16"/>
+                    <kharkiv:KsKharkivNavTab Name="OptionsTab" Access="Public" IconPath="/Textures/_KS14/Lobby/Kharkiv/icon_cog.png"/>
+                </BoxContainer>
+            </BoxContainer>
+        </Control>
+    </BoxContainer>
+    </kharkiv:KsKharkivBloomHost>
+</kharkiv:KsKharkivLobbySkin>

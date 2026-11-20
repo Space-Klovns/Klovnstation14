@@ -91,6 +91,8 @@ public sealed partial class DamageVisualsSystem
             spriteEntity,
             spriteLayer,
             damageGroup == null ? layerState : $"{layerState}_{damageGroup}",
-            lastThreshold);
+            lastThreshold,
+            spriteLayerMapKey,
+            damageVisualsComponent.Displacement);
     }
 }

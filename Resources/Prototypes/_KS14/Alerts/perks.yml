@@ -1,0 +1,42 @@
+# One per perk, shown while it is held. The tooltip is the perk's own name and description.
+
+- type: alert
+  id: KsPerkDamage
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: damage
+  name: ks-perk-damage-name
+  description: ks-perk-damage-desc
+
+- type: alert
+  id: KsPerkTank
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: tank
+  name: ks-perk-tank-name
+  description: ks-perk-tank-desc
+
+- type: alert
+  id: KsPerkHealing
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: healing
+  name: ks-perk-healing-name
+  description: ks-perk-healing-desc
+
+- type: alert
+  id: KsPerkSupport
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: support
+  name: ks-perk-support-name
+  description: ks-perk-support-desc
+
+# Shown with the time left while rallied (KsRallyAbility).
+- type: alert
+  id: KsRallied
+  icons:
+  - sprite: _KS14/Interface/Perks/perks.rsi
+    state: rallied
+  name: ks-perk-support-rallied-alert-name
+  description: ks-perk-support-rallied-alert-desc

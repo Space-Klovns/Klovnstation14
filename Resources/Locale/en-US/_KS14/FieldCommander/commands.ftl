@@ -55,3 +55,9 @@ cmd-ks_fcmobik-desc = Announces the failed field commander and sends him in as a
 cmd-ks_fcmobik-help = ks_fcmobik
 cmd-ks_fcmobik-sent = Mobik announced; his pod follows after the delay.
 cmd-ks_fcmobik-refused = This field commander has no mobik, or he has already been sent.
+
+cmd-ks_fcperk-desc = Sets a field commander defender's perk for the round, and swaps it onto the body they are in now.
+cmd-ks_fcperk-help = ks_fcperk <player> <perk>
+cmd-ks_fcperk-hint-perk = <perk>
+cmd-ks_fcperk-unknown = There is no perk "{ $perk }".
+cmd-ks_fcperk-done = { $player }'s perk is now { $perk }.

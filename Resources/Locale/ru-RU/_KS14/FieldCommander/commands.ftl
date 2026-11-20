@@ -55,3 +55,9 @@ cmd-ks_fcmobik-desc = Объявляет о провале полевого ко
 cmd-ks_fcmobik-help = ks_fcmobik
 cmd-ks_fcmobik-sent = Мобик объявлен; его капсула прибудет после задержки.
 cmd-ks_fcmobik-refused = У этого полевого командира нет мобика, или он уже отправлен.
+
+cmd-ks_fcperk-desc = Устанавливает перк защитника в режиме полевого командира на весь раунд и меняет его на текущем теле игрока.
+cmd-ks_fcperk-help = ks_fcperk <игрок> <перк>
+cmd-ks_fcperk-hint-perk = <перк>
+cmd-ks_fcperk-unknown = Перка «{ $perk }» не существует.
+cmd-ks_fcperk-done = Перк игрока { $player } теперь — { $perk }.

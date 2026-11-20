@@ -1,0 +1,9 @@
+# The Support perk's Rally (KsRallyAbility in Resources/Prototypes/_KS14/Perks/perks.yml): the zone it marks, drawn
+#     by KsRallyZoneOverlay and deleted by KsRallySystem once it has faded.
+
+- type: entity
+  id: KsRallyZone
+  categories: [ HideSpawnMenu ]
+  name: rally point
+  components:
+  - type: KsRallyZone

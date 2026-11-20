@@ -202,12 +202,13 @@ public sealed partial class KsFieldCommanderRuleSystem
     #region Waves
 
     /// <summary>
-    ///     Schedules the next wave, and tells the HUD.
+    ///     Schedules the next wave, and tells the HUD and the ghosts waiting for its respawn window.
     /// </summary>
     private void SetNextWave(KsFieldCommanderRuleComponent component, TimeSpan time)
     {
         component.NextWaveTime = time;
         UpdateWaveStatus(component);
+        RefreshRespawnWindow();
     }
 
     /// <summary>
