@@ -34,7 +34,8 @@ namespace Content.Server._KS14.FieldCommander;
 ///     Split by concern: <c>.Waves</c> buys and sends units, <c>.Placement</c> finds where things go and keeps the
 ///         safe zones, <c>.Orders</c> and <c>.Strikes</c> are what the units and missiles are pointed at,
 ///         <c>.Uplink</c> the final objective, <c>.Announcements</c> both sides' transmissions, <c>.Fog</c> the play
-///         area, <c>.Points</c> the defenders' requisition points, <c>.Perks</c> their perks and <c>.Admin</c> the console API.
+///         area, <c>.Points</c> the defenders' requisition points, <c>.Perks</c> their perks, <c>.Respawn</c> when dead
+///         defenders may respawn and <c>.Admin</c> the console API.
 /// </remarks>
 public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldCommanderRuleComponent>
 {
@@ -65,6 +66,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         base.Started(uid, component, gameRule, args);
 
         component.NextOrderTime = _gameTiming.CurTime + component.OrderInterval;
+        RefreshRespawnWindow();
     }
 
     protected override void Ended(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleEndedEvent args)
@@ -75,6 +77,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         ClearFog(component);
         ClearWaveStatus(component);
         AllowBuildingInSafeZones(component);
+        RefreshRespawnWindow();
     }
 
     protected override void ActiveTick(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, float frameTime)

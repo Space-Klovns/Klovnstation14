@@ -1,4 +1,5 @@
 ﻿using Content.Client._KS14.GhostRespawn;
+using Content.Shared._KS14.GhostRespawn;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controllers;
 
@@ -20,13 +21,18 @@ public sealed partial class GhostUIController : IOnSystemChanged<GhostRespawnSys
         system.LocalEnabledUpdated -= OnLocalEnabledUpdated;
     }
 
+    /// <summary>
+    ///     Brings the button up to date with what the system last heard, gate included.
+    /// </summary>
     private void OnLocalRespawnTimeUpdated(TimeSpan? time)
+        => OnLocalRespawnTimeUpdated(time, _ghostRespawnSystem?.LocalGate);
+
+    private void OnLocalRespawnTimeUpdated(TimeSpan? time, GhostRespawnGate? gate)
     {
         if (Gui is not { } gui)
             return;
 
-        gui.AlertedForRespawn = false;
-        gui.RespawnTime = time;
+        gui.SetRespawnTime(time, gate);
     }
 
     private void OnLocalEnabledUpdated(bool enabled)
