@@ -229,6 +229,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         component.PathfindToken = null;
         RemComp<NPCSteeringComponent>(uid);
         RemComp<NpcBackgroundMoveComponent>(uid); // KS14
+        _ksNpcLadderSystem.Clear(uid); // KS14
         _npcDoorSystem.StopSteeringBreach(uid); // KS14: a door it was forcing on the way: the tool goes back now, not after whatever comes next has run with it in hand
     }
 
@@ -263,7 +264,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         Parallel.For(0, index, options, i =>
         {
             var (uid, steering, mover, xform) = npcs[i];
-            Steer(uid, steering, mover, xform, frameTime, curTime);
+            KsSteerByLadder/* KS14: Steer -> KsSteerByLadder, which is Steer unless its destination is on another map */(uid, steering, mover, xform, frameTime, curTime);
         });
 
         ActiveSteeringGauge.Set(_activeSteeringCount);
@@ -517,6 +518,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         }
 
         steering.PathfindToken = new CancellationTokenSource();
+        var ksDestination = steering.Coordinates; // KS14: what this path is to, which is not its destination for good when it is going by ladder; see KsSteerByLadder
 
         var flags = _pathfindingSystem.GetFlags(uid);
         var dangerVersion = _pathfindingSystem.TileDangerVersion; // KS14: see NoteDangerOnPath
@@ -524,7 +526,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         var result = await _pathfindingSystem.GetPathSafe(
             uid,
             xform.Coordinates,
-            steering.Coordinates,
+            ksDestination, // KS14: steering.Coordinates -> ksDestination
             steering.Range,
             steering.PathfindToken.Token,
             flags);
@@ -551,7 +553,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
             return;
         }
 
-        var targetPos = _transform.ToMapCoordinates(steering.Coordinates);
+        var targetPos = _transform.ToMapCoordinates(ksDestination); // KS14: steering.Coordinates -> ksDestination
         var ourPos = _transform.GetMapCoordinates(uid, xform: xform);
 
         // KS14 start: going round doors it could force, a way round that needs another door forced, or is far longer,

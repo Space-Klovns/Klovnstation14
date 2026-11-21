@@ -97,25 +97,35 @@ public sealed partial class KsLadderSystem : EntitySystem
             return;
 
         args.Handled = true;
+        TryStartClimb(entity, args.User);
+    }
+
+    /// <summary>
+    ///     Sends <paramref name="user"/> up or down the ladder: at once, or after
+    ///         <see cref="KsLadderComponent.UseDelay"/> of standing at it, as a DoAfter.
+    /// </summary>
+    /// <returns>Whether the climb was made or begun.</returns>
+    public bool TryStartClimb(Entity<KsLadderComponent> entity, EntityUid user)
+    {
         if (!TryGetDestination(entity, out _))
         {
-            ReportNoDestination(entity, args.User);
-            return;
+            ReportNoDestination(entity, user);
+            return false;
         }
 
         if (entity.Comp.UseDelay is not { } delay)
         {
-            Climb(entity, args.User);
-            return;
+            Climb(entity, user);
+            return true;
         }
 
-        var doAfter = new DoAfterArgs(EntityManager, args.User, delay, new KsLadderClimbDoAfterEvent(), entity, target: entity)
+        var doAfter = new DoAfterArgs(EntityManager, user, delay, new KsLadderClimbDoAfterEvent(), entity, target: entity)
         {
             BreakOnMove = true,
             BreakOnDamage = true,
             NeedHand = false,
         };
-        _doAfterSystem.TryStartDoAfter(doAfter);
+        return _doAfterSystem.TryStartDoAfter(doAfter);
     }
 
     [SubscribeLocalEvent]
