@@ -1,7 +1,7 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "cuburbager. Taken from Battlefield14 at https://github.com/PunishedJoe/Battlefield14/blob/541cef2087655b1f6c3dc8bd5c8060a16d9eb427/Resources/Textures/_VXS14/Structures/mortar.rsi",
+  "copyright": "cuburbager. Taken from Battlefield14 at https://github.com/PunishedJoe/Battlefield14/blob/541cef2087655b1f6c3dc8bd5c8060a16d9eb427/Resources/Textures/_VXS14/Structures/mortar.rsi. shell flipped nose-down for Klovnstation 14, as it is drawn falling",
   "size": {
     "x": 32,
     "y": 32

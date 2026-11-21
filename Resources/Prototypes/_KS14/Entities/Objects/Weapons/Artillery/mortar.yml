@@ -25,7 +25,7 @@
     drawdepth: Effects
     offset: 0,0
     layers:
-    - state: shell
+    - state: shell # nose-down in the art, as it is only ever seen falling
   - type: SupplyPod
     height: 30
     fallDuration: 2s # the mortar sets it to the whole flight, and its descent to the end of it, and plays its sounds itself
