@@ -8,7 +8,6 @@ using Content.Shared.Stunnable;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -16,8 +15,8 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Weapons;
 
 /// <summary>
-///     A clumsy shooter's gun blowing up in their face uses up the round it took, leaves nothing lying about on either
-///         side, and ends the shooting, rather than backfiring again on every shot a clenched trigger fires (#448).
+///     A clumsy shooter's gun blowing up in their face calls the whole shot off, leaving the gun untouched, and ends the
+///         shooting; and a clumsy holder never clenches a trigger, which would backfire on every shot it fires (#448).
 /// </summary>
 [TestOf(typeof(ClumsySystem))]
 public sealed class KsClumsyBackfireTest : InteractionTest
@@ -29,6 +28,7 @@ public sealed class KsClumsyBackfireTest : InteractionTest
     private const string BallisticGun = "KsTestBackfireBallisticGun";
     private const string BatteryGun = "KsTestBackfireBatteryGun";
     private const string FullAutoGun = "KsTestBackfireFullAutoGun";
+    private const string ClumsyProofGun = "KsTestBackfireClumsyProofGun";
 
     private const int Capacity = 10;
     private const float FireRate = 10f;
@@ -104,6 +104,17 @@ public sealed class KsClumsyBackfireTest : InteractionTest
     proto: KsTestBackfireBullet
     capacity: 10
     count: 10
+
+- type: entity
+  parent: KsTestBackfireFullAutoGun
+  id: KsTestBackfireClumsyProofGun
+  components:
+  - type: Gun
+    fireRate: 10
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    clumsyProof: true
 ";
 
     protected override async Task TearDown()
@@ -128,7 +139,7 @@ public sealed class KsClumsyBackfireTest : InteractionTest
     }
 
     [Test]
-    public async Task BallisticBackfireSpendsTheRound()
+    public async Task BallisticBackfireLeavesTheGunUntouched()
     {
         await MakeClumsy(1f);
         var gunUid = await HoldGun(BallisticGun);
@@ -138,27 +149,10 @@ public sealed class KsClumsyBackfireTest : InteractionTest
         await Server.WaitAssertion(() =>
         {
             var provider = SEntMan.GetComponent<BallisticAmmoProviderComponent>(gunUid);
-            Assert.That(provider.UnspawnedCount + provider.Entities.Count, Is.EqualTo(Capacity - 1), "The backfire took no round.");
-
-            var spent = 0;
-            var unspent = 0;
-            var query = SEntMan.AllEntityQueryEnumerator<CartridgeAmmoComponent, MetaDataComponent>();
-            while (query.MoveNext(out var uid, out var cartridge, out var metaData))
-            {
-                if (metaData.EntityPrototype?.ID != _cartridge.Id ||
-                    SEntMan.System<SharedContainerSystem>().IsEntityInContainer(uid))
-                    continue;
-
-                if (cartridge.Spent)
-                    spent++;
-                else
-                    unspent++;
-            }
-
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(unspent, Is.Zero, "The backfired round was dropped unspent, as if never used.");
-                Assert.That(spent, Is.EqualTo(1), "The backfired round's casing wasn't ejected.");
+                Assert.That(provider.UnspawnedCount + provider.Entities.Count, Is.EqualTo(Capacity), "The backfire took a round.");
+                Assert.That(Count(_cartridge), Is.Zero, "The backfire spawned or ejected a cartridge.");
                 Assert.That(Count(_bullet), Is.Zero, "A backfire fired a bullet.");
             }
         });
@@ -171,7 +165,7 @@ public sealed class KsClumsyBackfireTest : InteractionTest
     ///         shooter, here.
     /// </remarks>
     [Test]
-    public async Task BatteryBackfireLeavesNoProjectile()
+    public async Task BatteryBackfireLeavesTheGunUntouched()
     {
         await MakeClumsy(1f);
         var gunUid = await HoldGun(BatteryGun);
@@ -179,13 +173,14 @@ public sealed class KsClumsyBackfireTest : InteractionTest
 
         await Server.WaitAssertion(() =>
         {
-            Fire(gunUid);
+            var fired = TryFire(gunUid);
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(SEntMan.GetComponent<BatteryAmmoProviderComponent>(gunUid).Shots, Is.EqualTo(shotsBefore - 1),
-                    "The backfire didn't cost one shot's charge.");
-                Assert.That(Count(_bullet, includeQueuedForDeletion: false), Is.Zero, "The backfired bolt was left where it was spawned.");
+                Assert.That(fired, Is.False, "The shot went off.");
+                Assert.That(SEntMan.GetComponent<BatteryAmmoProviderComponent>(gunUid).Shots, Is.EqualTo(shotsBefore),
+                    "The backfire cost charge.");
+                Assert.That(Count(_bullet), Is.Zero, "The backfire spawned a bolt.");
             }
         });
         await RunTicks(5);
@@ -204,22 +199,24 @@ public sealed class KsClumsyBackfireTest : InteractionTest
         await MakeClumsy(1f);
         var gunUid = await HoldGun(FullAutoGun);
 
-        await Server.WaitPost(() => Fire(gunUid));
+        var fired = true;
+        await Server.WaitPost(() => fired = TryFire(gunUid));
         await RunSeconds(EmptySeconds);
 
         await Server.WaitAssertion(() =>
         {
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(fired, Is.False, "The shot went off.");
                 Assert.That(IsSpasming(gunUid), Is.False, "Going down to a backfire clenched the trigger.");
-                Assert.That(Ammo(gunUid), Is.EqualTo(Capacity - 1), "The gun backfired more than once.");
+                Assert.That(Ammo(gunUid), Is.EqualTo(Capacity), "The gun fired.");
                 Assert.That(IsHeld(gunUid), Is.False, "The backfire didn't knock the gun out of the shooter's hand.");
             }
         });
     }
 
     /// <summary>
-    ///     A shooter already down and clenching the trigger: the first backfire ends it.
+    ///     A shooter already down and clenching the trigger who turns clumsy: the first backfire ends it.
     /// </summary>
     [Test]
     public async Task BackfireEndsAClenchedTrigger()
@@ -245,10 +242,34 @@ public sealed class KsClumsyBackfireTest : InteractionTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(IsSpasming(gunUid), Is.False, "The clenched trigger outlasted a backfire.");
-                Assert.That(Ammo(gunUid), Is.EqualTo(ammoWhenClumsy - 1), "The clenched trigger backfired more than once, or never.");
+                Assert.That(Ammo(gunUid), Is.EqualTo(ammoWhenClumsy), "The clenched trigger fired while clumsy.");
                 Assert.That(IsHeld(gunUid), Is.False, "The backfire didn't knock the gun out of the shooter's hand.");
             }
         });
+    }
+
+    /// <summary>
+    ///     Someone whose clumsiness could blow the gun up never clenches its trigger, and anyone else still does. Made
+    ///         clumsy after the shot, as that shot would otherwise backfire before they went down.
+    /// </summary>
+    [TestCase(false, FullAutoGun, ExpectedResult = true)]
+    [TestCase(true, FullAutoGun, ExpectedResult = false)]
+    [TestCase(true, ClumsyProofGun, ExpectedResult = true)]
+    public async Task<bool> ClumsyHoldersDoNotClench(bool clumsy, string gunPrototype)
+    {
+        await SetSpasmChance(1f);
+        var gunUid = await HoldGun(gunPrototype);
+
+        await Server.WaitPost(() =>
+        {
+            Fire(gunUid);
+            if (clumsy)
+                SEntMan.EnsureComponent<ClumsyComponent>(SPlayer).ClumsyDefaultCheck = 1f;
+            SEntMan.System<SharedStunSystem>().TryUpdateParalyzeDuration(SPlayer, LongStun);
+        });
+        await RunTicks(1);
+
+        return IsSpasming(gunUid);
     }
 
     /// <summary>
@@ -298,22 +319,27 @@ public sealed class KsClumsyBackfireTest : InteractionTest
 
     private void Fire(EntityUid gunUid)
     {
-        var fired = SEntMan.System<SharedGunSystem>().AttemptShoot(
+        Assert.That(TryFire(gunUid), Is.True, "The test's shot didn't go off.");
+    }
+
+    private bool TryFire(EntityUid gunUid)
+    {
+        return SEntMan.System<SharedGunSystem>().AttemptShoot(
             SPlayer,
             (gunUid, SEntMan.GetComponent<GunComponent>(gunUid)),
             new EntityCoordinates(SPlayer, new Vector2(5f, 0f)));
-
-        Assert.That(fired, Is.True, "The test's shot didn't go off.");
     }
 
-    private int Count(EntProtoId prototype, bool includeQueuedForDeletion = true)
+    /// <summary>
+    ///     Every entity of <paramref name="prototype"/> on the server, including any queued for deletion.
+    /// </summary>
+    private int Count(EntProtoId prototype)
     {
         var count = 0;
         var query = SEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
-        while (query.MoveNext(out var uid, out var metaData))
+        while (query.MoveNext(out var metaData))
         {
-            if (metaData.EntityPrototype?.ID == prototype.Id &&
-                (includeQueuedForDeletion || !SEntMan.IsQueuedForDeletion(uid)))
+            if (metaData.EntityPrototype?.ID == prototype.Id)
                 count++;
         }
 
