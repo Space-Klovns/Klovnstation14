@@ -37,3 +37,7 @@ server_url = "ss14://game.klovnstation.org"
 [atmos]
 #disable deltap
 delta_pressure_damage = false
+
+[audio]
+# afaict this is the maximum number of the same sound that can be playing at once
+default_concurrent = 48
