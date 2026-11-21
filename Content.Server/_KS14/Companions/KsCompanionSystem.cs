@@ -46,6 +46,7 @@ public sealed partial class KsCompanionSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<KsCompanionComponent> _companionQuery = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private EntityQuery<KsCompanionsComponent> _companionsQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
@@ -411,6 +412,10 @@ public sealed partial class KsCompanionSystem : EntitySystem
 
     private void Hover(Entity<PhysicsComponent, TransformComponent> companion, EntityUid ownerUid, KsCompanionEntry entry, float frameTime)
     {
+        // Put in something (picked up, boxed): it stays there, rather than being pulled back out.
+        if (_containerSystem.IsEntityInContainer(companion.Owner))
+            return;
+
         var hoverCoordinates = _transformSystem.GetMoverCoordinates(ownerUid).Offset(entry.Offset);
         var hoverMapCoordinates = _transformSystem.ToMapCoordinates(hoverCoordinates);
         if (hoverMapCoordinates.MapId == MapId.Nullspace)
