@@ -567,7 +567,10 @@ public abstract partial class SharedGunSystem : EntitySystem
             var selfEvent = new SelfBeforeGunShotEvent(user.Value, gun, ammo);
             RaiseLocalEvent(user.Value, selfEvent);
             if (selfEvent.Cancelled)
+            {
+                KsUseUpCalledOffShot(gun, ammo, user, throwItems); // KS14: the ammo was already taken, so use it up rather than leave it lying about
                 return;
+            }
         }
 
         var fromMap = TransformSystem.ToMapCoordinates(fromCoordinates);
