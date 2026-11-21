@@ -7,6 +7,7 @@ using Content.Shared.Gravity;
 using Content.Shared.Light.Components;
 using Content.Shared.Parallax;
 using Content.Shared.StatusEffectNew;
+using Content.Shared.StatusEffectNew.Components;
 using Content.Shared.Weather;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
@@ -29,6 +30,8 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
     [Dependency] private WeatherSystem _weatherSystem = default!;
 
     [Dependency] private EntityQuery<KsZLevelEnvironmentFollowerComponent> _followerQuery = default!;
+
+    private readonly List<EntityUid> _followerUids = [];
 
     /// <summary>
     ///     Creates a new map directly above <paramref name="zLevelEntity"/> in its stack, with that map's environment.
@@ -64,6 +67,73 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
             if (followerComponent.Source == sourceMapUid)
                 followerUids.Add(followerUid);
         }
+    }
+
+    // Weather is a status effect on the map, so whatever changes it (a weather rule, the admin command) goes through
+    //      these, raised on the weather's effect entity with the map as Target. A follower's own changes come back
+    //      through them too; it follows no one and nothing follows it, so they stop there.
+
+    [SubscribeLocalEvent]
+    private void OnWeatherApplied(Entity<WeatherStatusEffectComponent> entity, ref StatusEffectAppliedEvent args)
+    {
+        MirrorWeather(entity.Owner, args.Target);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnWeatherEndTimeUpdated(Entity<WeatherStatusEffectComponent> entity, ref StatusEffectEndTimeUpdatedEvent args)
+    {
+        MirrorWeather(entity.Owner, args.Target);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnWeatherRemoved(Entity<WeatherStatusEffectComponent> entity, ref StatusEffectRemovedEvent args)
+    {
+        if (Prototype(entity.Owner) is not { } weatherPrototype || !CollectFollowers(args.Target))
+            return;
+
+        foreach (var followerUid in _followerUids)
+            _statusEffectsSystem.TryRemoveStatusEffect(followerUid, weatherPrototype.ID);
+    }
+
+    /// <summary>
+    ///     Puts the weather <paramref name="weatherUid"/> on every follower of <paramref name="mapUid"/>, ending when it
+    ///         ends there.
+    /// </summary>
+    private void MirrorWeather(EntityUid weatherUid, EntityUid mapUid)
+    {
+        if (Prototype(weatherUid) is not { } weatherPrototype ||
+            !TryComp<StatusEffectComponent>(weatherUid, out var statusEffectComponent) ||
+            !CollectFollowers(mapUid))
+            return;
+
+        var duration = RemainingDuration(statusEffectComponent);
+        foreach (var followerUid in _followerUids)
+            _weatherSystem.TryAddWeather(followerUid, weatherPrototype.ID, out _, duration: duration);
+    }
+
+    /// <summary>
+    ///     Fills <see cref="_followerUids"/> with <paramref name="mapUid"/>'s followers.
+    /// </summary>
+    /// <returns>Whether it has any.</returns>
+    private bool CollectFollowers(EntityUid mapUid)
+    {
+        // Before clearing: a follower is reached while the list is being walked, mirroring onto it.
+        if (_followerQuery.HasComp(mapUid))
+            return false;
+
+        _followerUids.Clear();
+        GetFollowers(mapUid, _followerUids);
+        return _followerUids.Count > 0;
+    }
+
+    private TimeSpan? RemainingDuration(StatusEffectComponent statusEffectComponent)
+    {
+        if (statusEffectComponent.EndEffectTime is not { } endTime)
+            return null;
+
+        // Never zero or less: that would read as "ends now" before the source's own weather has faded.
+        var remaining = endTime - _gameTiming.CurTime;
+        return remaining > TimeSpan.Zero ? remaining : TimeSpan.FromTicks(1);
     }
 
     /// <summary>

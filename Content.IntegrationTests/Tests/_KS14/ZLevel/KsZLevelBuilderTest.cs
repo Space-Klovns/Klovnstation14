@@ -258,6 +258,41 @@ public sealed class KsZLevelBuilderTest : GameTest
     }
 
     [Test]
+    public async Task WeatherSetDirectlyOnTheSourceReachesAndLeavesTheLevel()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var weatherSystem = server.System<WeatherSystem>();
+        var upperMapId = MapId.Nullspace;
+
+        await server.WaitPost(() =>
+        {
+            var userUid = SpawnUserOn(testMap.Grid, Vector2i.Zero);
+            var builderUid = server.EntMan.SpawnEntity(_builder, MapCoordinates.Nullspace);
+            Assert.That(server.System<KsZLevelBuilderSystem>().TryBuild(Builder(builderUid), userUid), Is.True);
+            upperMapId = server.EntMan.GetComponent<MapComponent>(AboveOf(testMap.MapUid)).MapId;
+            Assert.That(weatherSystem.HasWeather(upperMapId, _rain), Is.False, "no weather to start with");
+
+            // As the admin weather command does: no rule involved.
+            Assert.That(weatherSystem.TryAddWeather(testMap.MapUid, _rain, out _, duration: null), Is.True);
+        });
+        await Pair.RunTicksSync(3);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(weatherSystem.HasWeather(upperMapId, _rain), Is.True, "weather put straight on the source reaches the level");
+            Assert.That(weatherSystem.TryRemoveWeather(testMap.MapUid, _rain), Is.True);
+        });
+
+        await RunSeconds((float)Content.Shared.Weather.SharedWeatherSystem.ShutdownTime.TotalSeconds + 2f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(weatherSystem.HasWeather(testMap.MapId, _rain), Is.False);
+            Assert.That(weatherSystem.HasWeather(upperMapId, _rain), Is.False, "ending it on the source ends it on the level");
+        });
+    }
+
+    [Test]
     public async Task ThreeUsesStackThreeLevels()
     {
         var server = Pair.Server;
