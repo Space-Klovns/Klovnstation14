@@ -1,3 +1,4 @@
+using Content.Server._KS14.ZLevel.Environment;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Weather;
@@ -22,6 +23,9 @@ public sealed partial class KsDynamicWeatherRuleSystem : GameRuleSystem<KsDynami
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private WeatherSystem _weatherSystem = default!;
     [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private KsZLevelEnvironmentSystem _zLevelEnvironmentSystem = default!;
+
+    private readonly List<EntityUid> _followerUids = [];
 
     protected override void ActiveTick(EntityUid uid, KsDynamicWeatherRuleComponent component, GameRuleComponent gameRule, float frameTime)
     {
@@ -96,10 +100,24 @@ public sealed partial class KsDynamicWeatherRuleSystem : GameRuleSystem<KsDynami
     }
 
     /// <summary>
-    ///     Leaves exactly <paramref name="weathers"/> on the map: any other weather fades out, and each of these is put on,
-    ///         or kept, with no end of its own. The rule decides when it ends.
+    ///     Leaves exactly <paramref name="weathers"/> on the map, and on every map following its environment (z-levels
+    ///         built on top of it, see <see cref="KsZLevelEnvironmentSystem"/>).
     /// </summary>
     private void ApplyWeathers(EntityUid mapUid, List<EntProtoId> weathers)
+    {
+        ApplyWeathersToMap(mapUid, weathers);
+
+        _followerUids.Clear();
+        _zLevelEnvironmentSystem.GetFollowers(mapUid, _followerUids);
+        foreach (var followerUid in _followerUids)
+            ApplyWeathersToMap(followerUid, weathers);
+    }
+
+    /// <summary>
+    ///     Leaves exactly <paramref name="weathers"/> on one map: any other weather fades out, and each of these is put on,
+    ///         or kept, with no end of its own. The rule decides when it ends.
+    /// </summary>
+    private void ApplyWeathersToMap(EntityUid mapUid, List<EntProtoId> weathers)
     {
         if (_statusEffectsSystem.TryEffectsWithComp<WeatherStatusEffectComponent>(mapUid, out var current))
         {
