@@ -25,7 +25,7 @@ namespace Content.Server._KS14.Mortar;
 
 /// <summary>
 ///     Sets mortars up (<see cref="KsMortarCrewComponent"/>), fires them (<see cref="KsMortarComponent"/>), hands an abandoned one
-///         to whoever picks it up, and dissolves it once nobody does. The shell does the rest: it is a supply pod, which marks
+///         to whoever picks it up, and dissolves it once nobody does, if it is one that dissolves. The shell does the rest: it is a supply pod, which marks
 ///         where it lands for as long as it falls.
 /// </summary>
 public sealed partial class KsMortarSystem : EntitySystem
@@ -138,12 +138,24 @@ public sealed partial class KsMortarSystem : EntitySystem
     #region Mortar
 
     /// <summary>
-    ///     Nobody's until a crewman claims it, the same tick it sets it up: one put down any other way is abandoned from the start.
+    ///     Nobody's until a crewman claims it, the same tick it sets it up: one put down any other way is anyone's from the
+    ///         start, and, if it dissolves when abandoned, abandoned from the start.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsMortarComponent> entity, ref MapInitEvent args)
     {
-        entity.Comp.IdleEndsAt = _gameTiming.CurTime + (entity.Comp.Rounds > 0 ? entity.Comp.IdleTime : entity.Comp.EmptyTime);
+        StartIdle(entity);
+    }
+
+    /// <summary>
+    ///     Gives a mortar that dissolves when abandoned its idle time from now, or its short one once it has nothing left.
+    /// </summary>
+    private void StartIdle(Entity<KsMortarComponent> mortar)
+    {
+        if (!mortar.Comp.DissolveWhenAbandoned)
+            return;
+
+        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
     }
 
     [SubscribeLocalEvent]
@@ -304,14 +316,15 @@ public sealed partial class KsMortarSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Its crewman dead or gone: it belongs to nobody, which its old side is hostile to, and dissolves unless used.
+    ///     Its crewman dead or gone: it belongs to nobody, which its old side is hostile to, and, if it dissolves when
+    ///         abandoned, does so unless used.
     /// </summary>
     private void Abandon(Entity<KsMortarComponent> mortar)
     {
         mortar.Comp.CrewUid = null;
         SetFactions(mortar, mortar.Comp.AbandonedFactions);
         EnsureComp<KsNpcTargetPriorityComponent>(mortar).Priority = mortar.Comp.AbandonedPriority;
-        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
+        StartIdle(mortar);
     }
 
     /// <summary>
@@ -322,7 +335,7 @@ public sealed partial class KsMortarSystem : EntitySystem
         if (IsCrewed(mortar.Comp))
             return;
 
-        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
+        StartIdle(mortar);
     }
 
     private void SetFactions(EntityUid uid, HashSet<ProtoId<NpcFactionPrototype>> factions)

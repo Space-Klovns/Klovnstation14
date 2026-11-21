@@ -17,7 +17,8 @@ namespace Content.Server._KS14.Mortar;
 ///         <see cref="MinRange"/> and <see cref="MaxRange"/> most worth hitting: one more for each other hostile within
 ///         <see cref="ClusterRadius"/>, and a priority target (a turret, <c>KsNpcTargetPriority</c>) above the rest. Its crewman
 ///         dead or gone, the mortar is abandoned: it joins <see cref="AbandonedFactions"/>, which its old side is hostile to,
-///         becomes a priority target, and dissolves after <see cref="IdleTime"/> without anyone using it.
+///         becomes a priority target, and, with <see cref="DissolveWhenAbandoned"/>, dissolves after <see cref="IdleTime"/>
+///         without anyone using it. One put down with no crewman at all (by an admin, or on a map) is anyone's from the start.
 /// </remarks>
 [RegisterComponent, AutoGenerateComponentPause, Access(typeof(KsMortarSystem))]
 public sealed partial class KsMortarComponent : Component
@@ -139,7 +140,15 @@ public sealed partial class KsMortarComponent : Component
     public float AbandonedPriority = 0.9f;
 
     /// <summary>
-    ///     How long an abandoned mortar lasts with nobody using it. Firing it, or opening its window, starts this again.
+    ///     Whether it dissolves once nobody is using it (<see cref="IdleTime"/>, <see cref="EmptyTime"/>), as one left behind
+    ///         by an NPC crew should. Off, it stays until destroyed, as one put down by hand should.
+    /// </summary>
+    [DataField]
+    public bool DissolveWhenAbandoned;
+
+    /// <summary>
+    ///     How long an abandoned mortar lasts with nobody using it, with <see cref="DissolveWhenAbandoned"/>. Firing it, or
+    ///         opening its window, starts this again.
     /// </summary>
     [DataField]
     public TimeSpan IdleTime = TimeSpan.FromMinutes(3);
@@ -160,7 +169,8 @@ public sealed partial class KsMortarComponent : Component
     public TimeSpan NextFire;
 
     /// <summary>
-    ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed.
+    ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed, and for one that never
+    ///         dissolves.
     /// </summary>
     [DataField, AutoPausedField]
     public TimeSpan? IdleEndsAt;

@@ -11,6 +11,7 @@ using Content.Shared._KS14.SupplyPod.LandingZone;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Components;
+using Content.Shared.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -25,7 +26,8 @@ namespace Content.IntegrationTests.Tests._KS14.Mortar;
 ///     <see cref="KsMortarComponent"/> and <see cref="KsMortarCrewComponent"/>: a crewman sets its mortar up and fires it; a
 ///         shell is marked on the ground before it lands and lands on its marker, going for hostiles bunched together, or a
 ///         priority target over them; an abandoned mortar is anyone's to fire, within its range, cooldown and rounds, and
-///         dissolves once nobody uses it, which a crewed one never does.
+///         dissolves once nobody uses it if it is one that dissolves, which a crewed one never does; one put down with no
+///         crew is anyone's at once, and stays.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsMortarSystem))]
@@ -42,6 +44,7 @@ public sealed class KsMortarTest : GameTest
     private readonly EntProtoId _defender = "KsTestMortarDefender";
     private readonly EntProtoId _mortarLongDescent = "KsTestMortarLongDescent";
     private readonly EntProtoId _mortarShortDescent = "KsTestMortarShortDescent";
+    private readonly EntProtoId _dissolvingCrew = "KsTestMortarDissolvingCrew";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -116,6 +119,23 @@ public sealed class KsMortarTest : GameTest
     - Syndicate
   - type: KsMortarCrew
     mortar: KsTestMortar
+    setUpTime: 0.2
+
+# The same, its mortar going once nobody uses it.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarDissolving
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    dissolveWhenAbandoned: true
+
+- type: entity
+  parent: KsTestMortarCrew
+  id: KsTestMortarDissolvingCrew
+  components:
+  - type: KsMortarCrew
+    mortar: KsTestMortarDissolving
     setUpTime: 0.2
 
 - type: entity
@@ -470,7 +490,7 @@ public sealed class KsMortarTest : GameTest
 
         await Server.WaitPost(() =>
         {
-            crewUid = SEntMan.SpawnEntity(_crew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            crewUid = SEntMan.SpawnEntity(_dissolvingCrew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
             // Something to set up for; taken away once it has, so that it does not fire its rounds away.
             targetUid = SEntMan.SpawnEntity(_target, new EntityCoordinates(_map.Grid.Owner, 10.5f, 0.5f));
             defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
@@ -520,6 +540,66 @@ public sealed class KsMortarTest : GameTest
         await Pair.RunTicksSync(Ticks(2.5f));
         await Server.WaitAssertion(() => Assert.That(SEntMan.Deleted(mortarUid) || SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
             "an abandoned mortar nobody uses should dissolve"));
+    }
+
+    /// <summary>
+    ///     A mortar put down with no crew (by an admin, or on a map) is anyone's to fire at once, and stays however long
+    ///         nobody uses it, rounds left or none.
+    /// </summary>
+    [Test]
+    public async Task ACrewlessMortarIsAnyonesAndStays()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        var waitSeconds = 0f;
+
+        await Server.WaitAssertion(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortar, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            Assert.That(mortar.Comp.DissolveWhenAbandoned, Is.False, "precondition: a mortar left to its default");
+
+            var openAttempt = new ActivatableUIOpenAttemptEvent(defenderUid, silent: true);
+            SEntMan.EventBus.RaiseLocalEvent(mortarUid, openAttempt);
+            Assert.That(openAttempt.Cancelled, Is.False, "anyone should open a crewless mortar's window");
+            Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True, "anyone should fire a crewless mortar at once");
+            Assert.That(SEntMan.GetComponent<NpcFactionMemberComponent>(mortarUid).Factions,
+                Is.EquivalentTo(SEntMan.GetComponent<NpcFactionMemberComponent>(defenderUid).Factions), "whoever fires it is whose it is");
+
+            // Past both of the times it would have dissolved after, had it been one that does.
+            waitSeconds = (float) (mortar.Comp.IdleTime > mortar.Comp.EmptyTime ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime).TotalSeconds * 1.5f + 1f;
+        });
+
+        await WaitForShell();
+        await Pair.RunTicksSync(Ticks(waitSeconds));
+        await Server.WaitAssertion(() => Assert.That(SEntMan.EntityExists(mortarUid) && !SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
+            "a mortar put down with no crew should stay however long nobody uses it"));
+
+        // Fired dry, it stays all the same.
+        for (var shot = 0; shot < 100; shot++)
+        {
+            var rounds = 0;
+            await Server.WaitPost(() =>
+            {
+                var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+                system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f);
+                rounds = mortar.Comp.Rounds;
+            });
+
+            if (rounds <= 0)
+                break;
+
+            await Pair.RunTicksSync(Ticks(0.5f));
+        }
+
+        await Pair.RunTicksSync(Ticks(waitSeconds));
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.GetComponent<KsMortarComponent>(mortarUid).Rounds, Is.Zero, "precondition: fired dry");
+            Assert.That(!SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True, "a mortar put down with no crew should stay once empty");
+        });
     }
 
     /// <summary>
