@@ -65,11 +65,12 @@ public sealed partial class KsCCVars
     ///     Units per second a puddle or ice sheet loses in vacuum, on top of whatever boils or sublimes off it: in thin
     ///         enough air, either cools itself by boiling until it stalls, and would otherwise sit in a spaced room for
     ///         ever. What goes is that reagent's gas on the tile when it has one, or simply gone. Vacuum is air thinner than
-    ///         <see cref="AtmosPuddleVacuumPressure"/>, space included. 0 turns it off.
+    ///         <see cref="AtmosPuddleVacuumPressure"/>, space included. Fast, so a spaced room is clear within
+    ///         seconds rather than littered for minutes: a 30u pool lasts about 6 s. 0 turns it off.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPuddleVacuumDissipationRate =
-        CVarDef.Create("klovn.atmos.puddle_vacuum_dissipation_rate", 0.5f, CVar.SERVERONLY);
+        CVarDef.Create("klovn.atmos.puddle_vacuum_dissipation_rate", 5f, CVar.SERVERONLY);
 
     /// <summary>
     ///     Units per second a puddle or ice sheet loses where a map's own air reaches it: on a planet's surface, or on a
