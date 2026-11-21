@@ -55,12 +55,13 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     public const float SlipThresholdUnits = 2f;
 
     /// <summary>
-    ///     Volume, in units, at which a sheet is drawn fully opaque.
+    ///     Volume, in units, at which a sheet reaches <see cref="MaximumAlpha"/>.
     /// </summary>
     private const float OpaqueUnits = 30f;
 
-    private const float MinimumAlpha = 0.25f;
-    private const float MaximumAlpha = 0.85f;
+    // Ice is clear: even a thick sheet shows the floor through it, tinted by what froze.
+    private const float MinimumAlpha = 0.15f;
+    private const float MaximumAlpha = 0.55f;
 
     /// <summary>
     ///     Thermal conductance between a sheet and a puddle on the same tile, in W/K: high, as they are in contact.
