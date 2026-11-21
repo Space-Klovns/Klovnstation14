@@ -15,8 +15,8 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.ZLevel.Environment;
 
 /// <summary>
-///     Creates z-levels that carry the environment of another map: its air, gravity, lighting and day cycle, parallax and
-///         weather, and keeps a <see cref="KsZLevelEnvironmentFollowerComponent"/> on them so that whatever changes the
+///     Creates z-levels that carry the environment of another map: its air, gravity, sun shadows and weather, and
+///         keeps a <see cref="KsZLevelEnvironmentFollowerComponent"/> on them so that whatever changes the
 ///         source map later can find and change them too.
 /// </summary>
 public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
@@ -34,7 +34,14 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
     private readonly List<EntityUid> _followerUids = [];
 
     /// <summary>
-    ///     Creates a new map directly above <paramref name="zLevelEntity"/> in its stack, with that map's environment.
+    ///     The parallax of a level built above another: one with no layers. The id of a parallax prototype, which is
+    ///         a client-only type, so it can't be a typed id here.
+    /// </summary>
+    public const string NoParallax = "Blank";
+
+    /// <summary>
+    ///     Creates a new map directly above <paramref name="zLevelEntity"/> in its stack, with that map's environment
+    ///         but no parallax and no ambient light of its own.
     /// </summary>
     public EntityUid CreateZLevelAbove(Entity<KsZLevelComponent> zLevelEntity)
     {
@@ -42,7 +49,17 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
         var newZLevelComponent = EnsureComp<KsZLevelComponent>(newMapUid);
         _zLevelSystem.AddZLevelDirectlyAbove(zLevelEntity.AsNullable(), (newMapUid, newZLevelComponent));
 
-        CopyEnvironment(zLevelEntity.Owner, newMapUid);
+        // No ambient light of its own: the light maps of stacked levels are added together through the gaps
+        //      between them, so a second copy of the map's ambient light up here would fall onto the level below and
+        //      brighten it, and this level is already lit by what rises from that one.
+        CopyEnvironment(zLevelEntity.Owner, newMapUid, ambientLight: false);
+
+        // Whatever the map below has: a backdrop up here would paint over the levels seen beneath it. Removing the
+        //      component would not do, as a map without one is drawn with the default parallax, not with none.
+        var parallaxComponent = EnsureComp<ParallaxComponent>(newMapUid);
+        parallaxComponent.Parallax = NoParallax;
+        Dirty(newMapUid, parallaxComponent);
+
         return newMapUid;
     }
 
@@ -140,7 +157,11 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
     ///     Copies <paramref name="fromMapUid"/>'s environment onto <paramref name="toMapUid"/>, and has the latter follow
     ///         the former's source from now on.
     /// </summary>
-    public void CopyEnvironment(EntityUid fromMapUid, EntityUid toMapUid)
+    /// <param name="ambientLight">
+    ///     Whether the ambient light and the day cycle that drives it are copied too. Without them the map is left with
+    ///         none, for one that shares light with the map it copies (see <see cref="CreateZLevelAbove"/>).
+    /// </param>
+    public void CopyEnvironment(EntityUid fromMapUid, EntityUid toMapUid, bool ambientLight = true)
     {
         if (TryComp<MapAtmosphereComponent>(fromMapUid, out var atmosphereComponent))
             _atmosphereSystem.SetMapAtmosphere(toMapUid, atmosphereComponent.Space, atmosphereComponent.Mixture); // It clones a mutable one, and shares an immutable one.
@@ -150,12 +171,14 @@ public sealed partial class KsZLevelEnvironmentSystem : EntitySystem
         CopyIfPresent<SunShadowComponent>(fromMapUid, toMapUid);
         CopyIfPresent<SunShadowCycleComponent>(fromMapUid, toMapUid);
 
-        if (TryComp<MapLightComponent>(fromMapUid, out var mapLightComponent))
+        if (!ambientLight)
+            _mapSystem.SetAmbientLight(Comp<MapComponent>(toMapUid).MapId, Color.Black);
+        else if (TryComp<MapLightComponent>(fromMapUid, out var mapLightComponent))
             _mapSystem.SetAmbientLight(Comp<MapComponent>(toMapUid).MapId, mapLightComponent.AmbientLightColor);
 
         // After the light: the cycle reads its original colour from it. Added to an initialised map it rolls a random
         //      offset of its own, so it's set back to the source's, or the two would be at different times of day.
-        if (TryComp<LightCycleComponent>(fromMapUid, out var lightCycleComponent))
+        if (ambientLight && TryComp<LightCycleComponent>(fromMapUid, out var lightCycleComponent))
         {
             var copiedComponent = CopyComp(fromMapUid, toMapUid, lightCycleComponent);
             _lightCycleSystem.SetOffset((toMapUid, copiedComponent), lightCycleComponent.Offset);

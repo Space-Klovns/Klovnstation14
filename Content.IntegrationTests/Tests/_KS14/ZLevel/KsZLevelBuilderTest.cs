@@ -5,6 +5,7 @@ using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Weather;
 using Content.Server._KS14.ZLevel.Builder;
+using Content.Server._KS14.ZLevel.Environment;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.GameTicking;
 using Content.Server.Weather;
@@ -18,6 +19,8 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Light.Components;
 using Content.Shared.Light.EntitySystems;
 using Content.Shared.Maps;
+using Content.Shared.Parallax;
+using Content.Shared.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -209,6 +212,8 @@ public sealed class KsZLevelBuilderTest : GameTest
             mixture.AdjustMoles(Gas.Oxygen, 12f);
             server.System<AtmosphereSystem>().SetMapAtmosphere(mapUid, false, mixture);
             // Inherent, as a planet's is: a map's gravity is otherwise worked out from its generators, and it has none.
+            // A parallax of its own, which the level above must not take.
+            server.EntMan.EnsureComponent<ParallaxComponent>(mapUid);
             var gravity = server.EntMan.EnsureComponent<GravityComponent>(mapUid);
             gravity.Enabled = true;
             gravity.Inherent = true;
@@ -233,14 +238,24 @@ public sealed class KsZLevelBuilderTest : GameTest
         await server.WaitAssertion(() =>
         {
             var upperMapId = server.EntMan.GetComponent<MapComponent>(upperMapUid).MapId;
-            Assert.That(server.EntMan.GetComponent<MapLightComponent>(upperMapUid).AmbientLightColor, Is.EqualTo(ambientColour), "lighting");
+            Assert.That(server.EntMan.GetComponent<MapLightComponent>(testMap.MapUid).AmbientLightColor, Is.Not.EqualTo(Color.Black),
+                "the map below should have ambient light for the level above not to take");
+            Assert.That(server.EntMan.GetComponent<MapLightComponent>(upperMapUid).AmbientLightColor, Is.EqualTo(Color.Black),
+                "a built level should have no ambient light of its own: it would fall onto the level below, on top of that one's");
+            Assert.That(server.EntMan.HasComponent<LightCycleComponent>(upperMapUid), Is.False,
+                "nor a day cycle, which would set its ambient light again");
             var upperAtmosphere = server.EntMan.GetComponent<MapAtmosphereComponent>(upperMapUid);
             Assert.That(upperAtmosphere.Space, Is.False, "atmosphere");
             var upperMixture = upperAtmosphere.Mixture;
             Assert.That(upperMixture.GetMoles(Gas.Oxygen), Is.EqualTo(12f).Within(0.001f));
             Assert.That(upperMixture.Temperature, Is.EqualTo(250f).Within(0.001f));
             Assert.That(server.EntMan.GetComponent<GravityComponent>(upperMapUid).Enabled, Is.True, "gravity");
-            Assert.That(server.EntMan.GetComponent<LightCycleComponent>(upperMapUid).Offset, Is.EqualTo(lightCycleOffset), "the same time of day");
+            Assert.That(server.EntMan.GetComponent<ParallaxComponent>(testMap.MapUid).Parallax, Is.Not.EqualTo(KsZLevelEnvironmentSystem.NoParallax),
+                "the map below should have a parallax for the level above not to take");
+            Assert.That(server.EntMan.TryGetComponent<ParallaxComponent>(upperMapUid, out var upperParallaxComponent), Is.True,
+                "a built level needs a parallax component: without one it is drawn with the default parallax");
+            Assert.That(upperParallaxComponent!.Parallax, Is.EqualTo(KsZLevelEnvironmentSystem.NoParallax),
+                "a built level should have no parallax, whatever the map below has");
             Assert.That(weatherSystem.HasWeather(upperMapId, _snow), Is.True, "the weather at the time");
 
             Assert.That(ruleSystem.TrySetState((ruleUid, server.EntMan.GetComponent<KsDynamicWeatherRuleComponent>(ruleUid)), "Rainy"), Is.True);
@@ -330,6 +345,45 @@ public sealed class KsZLevelBuilderTest : GameTest
             var stack = new List<Entity<KsZLevelComponent>>();
             Assert.That(zLevelSystem.TryGetStack(testMap.MapUid, stack), Is.True);
             Assert.That(stack.Select(entity => entity.Owner), Is.EqualTo(levelUids), "three levels stacked in order on the first");
+        });
+    }
+
+    /// <summary>
+    ///     A use that is refused starts no delay: neither the one every handled use of an item starts, nor the one
+    ///         for making a level.
+    /// </summary>
+    [Test]
+    public async Task ARefusedUseStartsNoDelay()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var useDelaySystem = server.System<UseDelaySystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var userUid = SpawnUserOn(testMap.Grid, Vector2i.Zero);
+            var builderUid = server.EntMan.SpawnEntity(_builder, MapCoordinates.Nullspace);
+            var builder = Builder(builderUid);
+            var useDelayComponent = server.EntMan.GetComponent<UseDelayComponent>(builderUid);
+
+            // A ladder already stands here, so there is nothing to build: refused before any level is made.
+            server.EntMan.SpawnEntity(builder.Comp.LowerLadder, server.EntMan.GetComponent<TransformComponent>(userUid).Coordinates);
+
+            var refused = new UseInHandEvent(userUid);
+            server.EntMan.EventBus.RaiseLocalEvent(builderUid, refused);
+            Assert.That(refused.Handled, Is.True);
+            Assert.That(refused.ApplyDelay, Is.False, "a refused use should not start the item's use delay");
+            Assert.That(useDelaySystem.IsDelayed((builderUid, useDelayComponent), builder.Comp.LevelDelayId), Is.False,
+                "a refused use should not start the level delay");
+            Assert.That(server.System<KsZLevelSystem>().TryGetZLevelAbove(testMap.MapUid, out _), Is.False, "and it made no level");
+
+            // From a free tile it builds, and that does start them.
+            MoveUserTo(userUid, testMap.Grid, new Vector2i(2, 0));
+            var built = new UseInHandEvent(userUid);
+            server.EntMan.EventBus.RaiseLocalEvent(builderUid, built);
+            Assert.That(built.ApplyDelay, Is.True, "a use that builds starts the item's use delay as any use does");
+            Assert.That(useDelaySystem.IsDelayed((builderUid, useDelayComponent), builder.Comp.LevelDelayId), Is.True,
+                "making a level starts the level delay");
         });
     }
 

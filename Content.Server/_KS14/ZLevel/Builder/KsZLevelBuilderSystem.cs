@@ -52,7 +52,11 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
             return;
 
         args.Handled = true;
-        TryBuild((uid, component), args.User);
+
+        // A refused attempt built nothing, so it starts no delay either: not the item's own, which every handled use
+        //      would otherwise start, nor the level one, which TryBuild starts only once a level is made.
+        if (!TryBuild((uid, component), args.User))
+            args.ApplyDelay = false;
     }
 
     /// <summary>
