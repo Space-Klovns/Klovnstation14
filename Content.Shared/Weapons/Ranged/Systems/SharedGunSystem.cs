@@ -180,7 +180,14 @@ public abstract partial class SharedGunSystem : EntitySystem
         // KS14 ghetto mech port end
         // TODO: once mlgguns come out nuke this entire file and start from scratch
 
-        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        // KS14 start: where to shoot is the client's word, and a position's NaN arrives as sent (only float fields are
+        //      flushed): it went on into the shot's direction, the projectile's velocity and every lookup along the way.
+        var ksShootCoordinates = GetCoordinates(msg.Coordinates);
+        if (!TransformSystem.IsValid(ksShootCoordinates))
+            return;
+        // KS14 end
+
+        userGun.Comp.ShootCoordinates = ksShootCoordinates /* KS14: GetCoordinates(msg.Coordinates) -> checked above */;
         userGun.Comp.Target = GetEntity(msg.Target);
         // KS14 start: the projectiles of this shot are the sender's own prediction, kept by their client
         using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))

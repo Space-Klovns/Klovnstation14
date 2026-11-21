@@ -82,6 +82,13 @@ public sealed partial class KsHitscanLagCompensationSystem : EntitySystem
         if (lagSeconds <= 0f || args.MapId == MapId.Nullspace)
             return;
 
+        // The direction comes from where the shooter's client said it aimed. The shoot request refuses coordinates that
+        //      are not finite, and nothing is looked up along a ray that is not one whoever else raises this.
+        if (!float.IsFinite(args.Origin.X) || !float.IsFinite(args.Origin.Y) ||
+            !float.IsFinite(args.Direction.X) || !float.IsFinite(args.Direction.Y) ||
+            !float.IsFinite(args.MaxDistance) || args.MaxDistance <= 0f)
+            return;
+
         var results = args.Results;
 
         // A box along the whole ray, as wide as the fastest mob could have got from it in that time, hitbox included.
