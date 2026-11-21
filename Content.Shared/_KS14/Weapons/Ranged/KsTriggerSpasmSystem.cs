@@ -224,12 +224,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
             userCoordinates.Position + entity.Comp.AimAngle.ToVec() * AimDistance,
             userCoordinates.MapId);
 
+        // A backfire calls the shot off (false here) and has already stopped the spasm through
+        //      KsGunShootingInterruptedEvent; stopping it again on false is harmless.
         if (!_gunSystem.KsAttemptInvoluntaryShoot(userUid, gun, _transformSystem.ToCoordinates(userUid, targetCoordinates)))
             return false;
-
-        // The shot ended the spasm itself (a backfire), and it has stopped already.
-        if (entity.Comp.LifeStage > ComponentLifeStage.Running)
-            return true;
 
         var random = SharedRandomExtensions.PredictedRandom(_gameTiming, GetNetEntity(gun));
         var drift = Math.Max(

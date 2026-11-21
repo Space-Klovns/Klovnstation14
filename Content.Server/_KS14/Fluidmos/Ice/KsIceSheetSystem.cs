@@ -1,3 +1,4 @@
+using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server._KS14.TileEffects;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
@@ -41,6 +42,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
+    [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
 
     private static readonly EntProtoId IceSheetPrototype = "KsIceSheet";
 
@@ -314,6 +316,10 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
         if (iceHeat != 0f)
             _pendingHeat.Add((solutionEntity.Value, iceHeat));
+
+        // Nothing dissipates from under a foam blanket, as for the puddle beside it.
+        if (_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _))
+            return 0f;
 
         return _fluidDissipationSystem.GetRate(mixture);
     }
