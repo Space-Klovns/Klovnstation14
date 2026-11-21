@@ -43,11 +43,17 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private const string TestModifierSet = "KsGunHitPredictionTestModifierSet";
     private const string TestPassiveMob = "KsGunHitPredictionTestPassiveMob";
     private const string TestShield = "KsGunHitPredictionTestShield";
+    private const string TestLaser = "KsGunHitPredictionTestLaser";
+    private const string TestRay = "KsGunHitPredictionTestRay";
+    private const string TestBleeder = "KsGunHitPredictionTestBleeder";
+    private const string TestBleedSet = "KsGunHitPredictionTestBleedSet";
 
     private readonly EntProtoId _testTarget = TestTarget;
     private readonly EntProtoId _testArmouredTarget = TestArmouredTarget;
     private readonly EntProtoId _testPassiveMob = TestPassiveMob;
     private readonly EntProtoId _testShield = TestShield;
+    private readonly EntProtoId _testBleeder = TestBleeder;
+    private static readonly ProtoId<Content.Shared._KS14.Particles.KsParticlesPrototype> SplatterMist = "KsBloodSplatterMist";
     private static readonly EntProtoId BulletPistol = "BulletPistol";
     private static readonly ProtoId<DamageTypePrototype> PiercingDamage = "Piercing";
 
@@ -124,6 +130,65 @@ public sealed class KsGunHitPredictionTest : InteractionTest
   components:
   - type: Damageable
     damageModifierSet: {TestModifierSet}
+
+- type: entity
+  id: {TestRay}
+  components:
+  - type: HitscanAmmo
+  - type: HitscanBasicRaycast
+  - type: HitscanBasicDamage
+    damage:
+      types:
+        Piercing: 16
+
+- type: entity
+  id: {TestLaser}
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 2
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BasicEntityAmmoProvider
+    proto: {TestRay}
+    capacity: 10
+    count: 10
+
+- type: damageModifierSet
+  id: {TestBleedSet}
+  coefficients:
+    Piercing: 1
+
+- type: entity
+  id: {TestBleeder}
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        hard: true
+        layer:
+        - MobLayer
+        mask:
+        - MobMask
+  - type: Damageable
+  - type: Injurable
+  - type: SolutionContainerManager
+  - type: Bloodstream
+    damageBleedModifiers: {TestBleedSet}
+    bloodlossDamage:
+      types:
+        Bloodloss: 1
+    bloodlossHealDamage:
+      types:
+        Bloodloss: -1
 
 - type: entity
   id: {TestShield}
@@ -430,5 +495,67 @@ public sealed class KsGunHitPredictionTest : InteractionTest
             Assert.That(previewed.GetTotal(), Is.EqualTo(dealt.GetTotal()), "the preview is not what was dealt");
             Assert.That(damageableSystem.GetTotalDamage(shieldUid), Is.GreaterThan(FixedPoint2.Zero), "the shield takes nothing of a real hit either, so this proves nothing");
         });
+    }
+
+    /// <summary>
+    ///     What a hit on something that bleeds shows, the shooter's client shows at once, from its own prediction: a spray
+    ///         of its own (client-side), there before the server's damage is. For a bullet, whose kept copy deals no
+    ///         damage here, as for a hitscan shot, whose damage is predicted with the shot.
+    /// </summary>
+    [Test]
+    public async Task ShootersClientSpraysBloodBeforeTheServersDamageArrives([Values(TestGun, TestLaser)] string gun)
+    {
+        var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
+        await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4));
+
+        var gunNetEntity = await PlaceInHands(gun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+
+        var shooterPosition = Vector2.Zero;
+        var targetUid = EntityUid.Invalid;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            targetUid = SEntMan.SpawnEntity(_testBleeder, new MapCoordinates(shooterPosition + new Vector2(3f, 0f), MapData.MapId));
+        });
+        await RunTicks(5); // the target reaches the client
+
+        var aimCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, shooterPosition + new Vector2(40f, 0f)));
+        await Client.WaitPost(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new RequestShootEvent
+            {
+                Gun = gunNetEntity,
+                Coordinates = aimCoordinates,
+            });
+        });
+
+        int? sprayTick = null;
+        int? serverDamageTick = null;
+        for (var tick = 0; tick < 60 && (sprayTick == null || serverDamageTick == null); tick++)
+        {
+            await RunTicks(1);
+
+            if (serverDamageTick == null && await ServerDamage(targetUid) > FixedPoint2.Zero)
+                serverDamageTick = tick;
+
+            await Client.WaitPost(() =>
+            {
+                if (sprayTick != null)
+                    return;
+
+                var query = CEntMan.AllEntityQueryEnumerator<Content.Shared._KS14.Particles.KsParticlesComponent>();
+                while (query.MoveNext(out var uid, out var particlesComponent))
+                {
+                    if (particlesComponent.Prototype == SplatterMist && CEntMan.IsClientSide(uid))
+                        sprayTick = tick;
+                }
+            });
+        }
+
+        Assert.That(serverDamageTick, Is.Not.Null, "the server's shot never damaged the target, so this proves nothing");
+        Assert.That(sprayTick, Is.Not.Null, "the shooter's client never sprayed blood of its own for the hit");
+        Assert.That(sprayTick, Is.LessThanOrEqualTo(serverDamageTick), "the shooter's client sprayed its blood only after the server's hit");
     }
 }

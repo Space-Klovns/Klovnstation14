@@ -253,6 +253,13 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         {
             damage = _damageable.PreviewDamage((target, damageable), damageToDeal, ignoreResistances: comp.IgnoreResistances, origin: shooter);
             damaged = !damage.Empty;
+
+            // What the hit shows at once (its blood) plays off this, as it played off the damage when that was dealt here.
+            if (damaged)
+            {
+                var previewedEv = new _KS14.Damage.Events.KsPreviewedDamageEvent(damage, shooter);
+                RaiseLocalEvent(target, ref previewedEv);
+            }
         }
         else
         {
