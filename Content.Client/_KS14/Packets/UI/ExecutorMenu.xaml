@@ -19,6 +19,13 @@
                                 StyleIdentifier="executor">
                     <Label Name="DataLabel" VerticalAlignment="Top" StyleIdentifier="executor"></Label>
                 </PanelContainer>
+                <PanelContainer Name="Filter"
+                                SetSize="200, 50"
+                                VerticalAlignment="Bottom"
+                                Margin="5 0 0 0"
+                                StyleIdentifier="executor">
+                    <TextEdit Name="FilterText" VerticalAlignment="Top" SetSize="180, 50" StyleIdentifier="executor"></TextEdit>
+                </PanelContainer>
             </PanelContainer>
             <PanelContainer Name="CodeInput"
                             SetSize="700, 550"
