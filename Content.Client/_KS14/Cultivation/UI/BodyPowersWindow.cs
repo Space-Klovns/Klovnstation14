@@ -134,6 +134,7 @@ public sealed partial class BodyPowersWindow : FancyWindow
 
     private static string Capitalize(string text)
     {
-        return text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+        // Upper-case the first letter without joining a char to a string, which the client sandbox forbids.
+        return text.Length == 0 ? text : text[..1].ToUpperInvariant() + text[1..];
     }
 }

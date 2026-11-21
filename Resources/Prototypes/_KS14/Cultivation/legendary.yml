@@ -353,6 +353,10 @@
     size: Small
   - type: Storage
     maxItemSize: Huge
+    # Any item at all: a whole world in a small pouch is the point of it.
+    whitelist:
+      components:
+      - Item
     grid:
     - 0,0,15,9
   - type: UserInterface
