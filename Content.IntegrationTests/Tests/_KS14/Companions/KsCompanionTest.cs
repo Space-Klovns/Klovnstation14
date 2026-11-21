@@ -25,6 +25,7 @@ using Content.Shared.NPC.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -35,7 +36,7 @@ namespace Content.IntegrationTests.Tests._KS14.Companions;
 
 /// <summary>
 ///     Companions (<see cref="KsCompanionSystem"/>), given by a test perk: they take their owner's sides, follow it or
-///         ride on it, come back after being destroyed, stay through the owner's crit, go when it dies and return when
+///         hover by it, come back after being destroyed, stay through the owner's crit, go when it dies and return when
 ///         it is revived, and are deleted with the perk.
 /// </summary>
 [TestFixture]
@@ -135,7 +136,7 @@ public sealed class KsCompanionTest : GameTest
     factions:
     - KsTestCompanionEnemySide
 
-# A body as the shoulder turret's: pushable, and hit by what is shot.
+# A body as the shoulder turret's: hit by what is shot.
 - type: entity
   id: KsTestCompanionRider
   components:
@@ -164,8 +165,11 @@ public sealed class KsCompanionTest : GameTest
       materialiseDuration: 0.5
       dissolveDuration: 0.5
     - prototype: KsTestCompanionRider
-      mode: Attached
+      mode: Hover
       offset: 0.25, 0.4
+      hoverStiffness: 6
+      hoverMaxSpeed: 5
+      hoverSnapDistance: 3
       respawnDelay: 3
       materialiseDuration: 0.5
       dissolveDuration: 0.5
@@ -237,19 +241,10 @@ public sealed class KsCompanionTest : GameTest
             var riderUid = Companion(ownerUid, Rider);
             Assert.That(riderUid, Is.Not.Null, "the rider should be out");
             var riderTransform = entMan.GetComponent<TransformComponent>(riderUid!.Value);
-            var offset = Entry(ownerUid, Rider).Offset;
-            Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid), "the rider should ride on the owner");
-            Assert.That(riderTransform.LocalPosition, Is.EqualTo(offset), "the rider should sit at its offset");
-
-            // Moved off its spot by something other than physics: put back on the next update, not from the move.
-            server.System<SharedTransformSystem>().SetCoordinates(riderUid.Value, new EntityCoordinates(ownerUid, new Vector2(3f, 3f)));
-        });
-        await Pair.RunTicksSync(1);
-        await server.WaitAssertion(() =>
-        {
-            var riderTransform = entMan.GetComponent<TransformComponent>(Companion(ownerUid, Rider)!.Value);
-            Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid));
-            Assert.That(riderTransform.LocalPosition, Is.EqualTo(Entry(ownerUid, Rider).Offset), "a moved rider should go back to its offset");
+            Assert.That(riderTransform.ParentUid, Is.Not.EqualTo(ownerUid), "the rider should hover by the owner, not ride on it");
+            Assert.That(riderTransform.ParentUid, Is.EqualTo(entMan.GetComponent<TransformComponent>(ownerUid).ParentUid),
+                "the rider should hover beside the owner, on the same grid");
+            Assert.That(FromHoverPoint(ownerUid), Is.LessThan(HoverTolerance), "the rider should materialise at its hover point");
         });
 
         // Whole once it has finished.
@@ -259,43 +254,144 @@ public sealed class KsCompanionTest : GameTest
                 "a materialised follower should be whole"));
     }
 
+    /// <summary>
+    ///     How close to its hover point a settled rider is. Far below its offset, so a rider left at the owner's middle
+    ///         or swung round with it is well outside.
+    /// </summary>
+    private const float HoverTolerance = 0.05f;
+
+    /// <summary>
+    ///     How far the rider is from where it should hover: the owner's spot plus its offset, unturned by the owner (the
+    ///         test grid isn't rotated, so in world axes).
+    /// </summary>
+    private float FromHoverPoint(EntityUid ownerUid)
+    {
+        var transformSystem = Pair.Server.System<SharedTransformSystem>();
+        var riderMapCoordinates = transformSystem.GetMapCoordinates(Companion(ownerUid, Rider)!.Value);
+        var ownerMapCoordinates = transformSystem.GetMapCoordinates(ownerUid);
+        if (riderMapCoordinates.MapId != ownerMapCoordinates.MapId)
+            return float.PositiveInfinity;
+
+        return (ownerMapCoordinates.Position + Entry(ownerUid, Rider).Offset - riderMapCoordinates.Position).Length();
+    }
+
+    /// <summary>
+    ///     Runs ticks until the rider has settled at its hover point, up to a cap well past what its stiffness takes.
+    /// </summary>
+    private async Task<float> SettleRider(EntityUid ownerUid)
+    {
+        var entry = Entry(ownerUid, Rider);
+        var cap = Ticks(10f / entry.HoverStiffness + 1f);
+        var distance = float.PositiveInfinity;
+        for (var i = 0; i < cap; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await Pair.Server.WaitPost(() => distance = FromHoverPoint(ownerUid));
+            if (distance < HoverTolerance)
+                break;
+        }
+
+        return distance;
+    }
+
+    /// <summary>
+    ///     A hovering companion is beside its owner, not on it: the owner turning doesn't turn it nor swing it round,
+    ///         and a push doesn't move it.
+    /// </summary>
     [Test]
-    public async Task AttachedCompanionStaysAtItsOffsetWhenItOrItsOwnerIsPushed()
+    public async Task HoveringCompanionKeepsItsOwnFacingAndSpotWhenTheOwnerTurnsOrItIsPushed()
     {
         var server = Pair.Server;
         var entMan = server.EntMan;
-        var physicsSystem = server.System<SharedPhysicsSystem>();
         var transformSystem = server.System<SharedTransformSystem>();
         var ownerUid = await SpawnOwnerWithPerk();
         var riderUid = Companion(ownerUid, Rider)!.Value;
-        var offset = Entry(ownerUid, Rider).Offset;
-        var riderPhysics = entMan.GetComponent<PhysicsComponent>(riderUid);
-        var ownerStart = Vector2.Zero;
+        var riderRotation = Angle.Zero;
 
         await server.WaitPost(() =>
         {
-            ownerStart = transformSystem.GetWorldPosition(ownerUid);
-            // The owner shoved hard (friction soon stops it), and the rider hit by a push that would throw it well clear.
-            physicsSystem.ApplyLinearImpulse(ownerUid, new Vector2(entMan.GetComponent<PhysicsComponent>(ownerUid).Mass * 5f, 0f));
-            physicsSystem.ApplyLinearImpulse(riderUid, new Vector2(0f, riderPhysics.Mass * 10f));
+            riderRotation = transformSystem.GetWorldRotation(riderUid);
+            transformSystem.SetWorldRotation(ownerUid, transformSystem.GetWorldRotation(ownerUid) + Angle.FromDegrees(90));
+            // Hit by a push that would throw a body that could be pushed well clear.
+            var riderPhysics = entMan.GetComponent<PhysicsComponent>(riderUid);
+            server.System<SharedPhysicsSystem>().ApplyLinearImpulse(riderUid, new Vector2(0f, riderPhysics.Mass * 10f), body: riderPhysics);
         });
 
-        // Checked every tick, so a rider pushed off and put back later still shows.
+        // Checked every tick, so a rider moved off and brought back later still shows.
         for (var i = 0; i < Ticks(0.5f); i++)
         {
             await Pair.RunTicksSync(1);
             await server.WaitAssertion(() =>
             {
-                var riderTransform = entMan.GetComponent<TransformComponent>(riderUid);
-                Assert.That(riderPhysics.LinearVelocity, Is.EqualTo(Vector2.Zero), $"a push should not set the rider moving (tick {i})");
-                Assert.That(riderTransform.ParentUid, Is.EqualTo(ownerUid), $"the rider should stay on the owner (tick {i})");
-                Assert.That(riderTransform.LocalPosition, Is.EqualTo(offset), $"the rider should stay at its offset (tick {i})");
+                Assert.That(Angle.ShortestDistance(transformSystem.GetWorldRotation(riderUid), riderRotation).Degrees, Is.EqualTo(0).Within(0.01),
+                    $"the rider should not turn with its owner (tick {i})");
+                Assert.That(FromHoverPoint(ownerUid), Is.LessThan(HoverTolerance),
+                    $"the rider should stay at its hover point, unturned by the owner and unmoved by a push (tick {i})");
+            });
+        }
+    }
+
+    /// <summary>
+    ///     A hovering companion trails its walking owner, never jumping, and settles at its hover point when the owner
+    ///         stops; an owner teleported, or taken to another map, has it put there at once.
+    /// </summary>
+    [Test]
+    public async Task HoveringCompanionTrailsAWalkingOwnerAndIsPutBackByATeleport()
+    {
+        var server = Pair.Server;
+        var entMan = server.EntMan;
+        var transformSystem = server.System<SharedTransformSystem>();
+        var ownerUid = await SpawnOwnerWithPerk();
+        var riderUid = Companion(ownerUid, Rider)!.Value;
+        var entry = Entry(ownerUid, Rider);
+        var tickTime = (float)server.ResolveDependency<IGameTiming>().TickPeriod.TotalSeconds;
+
+        // Walked at half its top speed: it trails by speed / stiffness, which must stay inside the snap distance.
+        var walkSpeed = entry.HoverMaxSpeed * 0.5f;
+        Assert.That(walkSpeed / entry.HoverStiffness, Is.LessThan(entry.HoverSnapDistance * 0.5f),
+            "the test entry's rider should trail a walk well inside its snap distance");
+
+        var maxLag = 0f;
+        var maxStep = 0f;
+        var riderPosition = Vector2.Zero;
+        await server.WaitPost(() => riderPosition = transformSystem.GetWorldPosition(riderUid));
+        for (var i = 0; i < Ticks(1f); i++)
+        {
+            await server.WaitPost(() =>
+                transformSystem.SetWorldPosition(ownerUid, transformSystem.GetWorldPosition(ownerUid) + new Vector2(walkSpeed * tickTime, 0f)));
+            await Pair.RunTicksSync(1);
+            await server.WaitPost(() =>
+            {
+                var newPosition = transformSystem.GetWorldPosition(riderUid);
+                maxStep = MathF.Max(maxStep, (newPosition - riderPosition).Length());
+                riderPosition = newPosition;
+                maxLag = MathF.Max(maxLag, FromHoverPoint(ownerUid));
             });
         }
 
+        Assert.That(maxLag, Is.GreaterThan(HoverTolerance), "the rider should trail a walking owner, not be carried by it");
+        Assert.That(maxStep, Is.LessThanOrEqualTo(entry.HoverMaxSpeed * tickTime + 0.001f),
+            "the rider should fly after a walking owner, never faster than its top speed nor jumping");
+        Assert.That(await SettleRider(ownerUid), Is.LessThan(HoverTolerance), "the rider should settle at its hover point once the owner stops");
+
+        // Teleported further than the snap distance: put there on the next update.
+        await server.WaitPost(() =>
+            transformSystem.SetWorldPosition(ownerUid, transformSystem.GetWorldPosition(ownerUid) + new Vector2(0f, entry.HoverSnapDistance + 2f)));
+        await Pair.RunTicksSync(1);
         await server.WaitAssertion(() =>
-            Assert.That((transformSystem.GetWorldPosition(ownerUid) - ownerStart).Length(), Is.GreaterThan(0.1f),
-                "control: the shoved owner should have moved, carrying the rider"));
+            Assert.That(FromHoverPoint(ownerUid), Is.LessThan(HoverTolerance), "the rider should be put by an owner teleported away"));
+
+        // Taken to another map.
+        var otherMap = await Pair.CreateTestMap();
+        await server.WaitPost(() => transformSystem.SetCoordinates(ownerUid, new EntityCoordinates(otherMap.Grid, 0.5f, 0.5f)));
+        await Pair.RunTicksSync(1);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(transformSystem.GetMapId(riderUid), Is.EqualTo(otherMap.MapId), "the rider should go with an owner taken to another map");
+            Assert.That(FromHoverPoint(ownerUid), Is.LessThan(HoverTolerance), "the rider should be at its hover point on the new map");
+            Assert.That(entMan.GetComponent<TransformComponent>(riderUid).ParentUid, Is.Not.EqualTo(ownerUid),
+                "the rider should still not ride on the owner");
+        });
     }
 
     [Test]

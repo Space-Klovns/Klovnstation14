@@ -20,7 +20,6 @@ using Content.Shared.NPC.Systems;
 using Content.Shared.Popups;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -30,7 +29,7 @@ namespace Content.Server._KS14.Companions;
 
 /// <summary>
 ///     Spawns and keeps an owner's companions (<see cref="KsCompanionsComponent"/>): each materialises beside the
-///         owner (or on it, <see cref="KsCompanionMode.Attached"/>), takes the owner's NPC factions (never a scenario one), and
+///         owner (or hovering by it, <see cref="KsCompanionMode.Hover"/>), takes the owner's NPC factions (never a scenario one), and
 ///         its shots pass through the owner's side. One destroyed comes back after its entry's delay, with a popup to
 ///         the owner; all of them dissolve when the owner dies, or its player leaves it, and come back when it is
 ///         revived with its player in it, or the player returns. A companion let go always ends up gone.
@@ -50,20 +49,21 @@ public sealed partial class KsCompanionSystem : EntitySystem
     [Dependency] private EntityQuery<KsCompanionsComponent> _companionsQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
-    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioMemberQuery = default!;
 
     /// <summary>
-    ///     Attached companions moved off their spot since the last update, put back in <see cref="Update"/>: never from
-    ///         the <see cref="MoveEvent"/> that reports it, which the engine raises mid-operation.
+    ///     A hovering companion this close to its hover point stops there, rather than creeping at a vanishing speed.
     /// </summary>
-    private readonly HashSet<EntityUid> _displacedCompanions = new();
+    private const float HoverSettleDistance = 0.01f;
 
-    /// <summary>
-    ///     <see cref="_displacedCompanions"/> taken out to be worked through, as putting one back raises the very
-    ///         <see cref="MoveEvent"/> that adds to the set.
-    /// </summary>
-    private readonly List<EntityUid> _returningCompanions = new();
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        // Hovering companions are steered by setting their velocity before physics steps, so a push it took since
+        //     (a shove, an explosion, its own gun's recoil) is overwritten before it ever moves them.
+        UpdatesBefore.Add(typeof(SharedPhysicsSystem));
+    }
 
     #region API
 
@@ -93,7 +93,7 @@ public sealed partial class KsCompanionSystem : EntitySystem
 
     /// <summary>
     ///     Sends a following companion after something other than its owner for now (a patient), or back to its owner
-    ///         with null. Does nothing to an attached one.
+    ///         with null. Does nothing to a hovering one.
     /// </summary>
     public void SetFollowOverride(Entity<KsCompanionComponent?> companion, EntityUid? targetUid)
     {
@@ -186,7 +186,7 @@ public sealed partial class KsCompanionSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        ReturnDisplacedCompanions();
+        UpdateHovering(frameTime);
 
         var curTime = _gameTiming.CurTime;
         var query = EntityQueryEnumerator<KsCompanionsComponent>();
@@ -227,9 +227,10 @@ public sealed partial class KsCompanionSystem : EntitySystem
             return;
 
         var entry = owner.Comp.Companions[index];
-        var coordinates = entry.Mode == KsCompanionMode.Attached
-            ? new EntityCoordinates(owner.Owner, entry.Offset)
-            : _transformSystem.GetMoverCoordinates(owner.Owner);
+        // Beside the owner on its grid or map (out of a locker it is in), never on the owner itself.
+        var coordinates = _transformSystem.GetMoverCoordinates(owner.Owner);
+        if (entry.Mode == KsCompanionMode.Hover)
+            coordinates = coordinates.Offset(entry.Offset);
 
         var companionUid = Spawn(entry.Prototype, coordinates);
         owner.Comp.Spawned[index] = companionUid;
@@ -240,11 +241,6 @@ public sealed partial class KsCompanionSystem : EntitySystem
         companionComponent.Mode = entry.Mode;
         companionComponent.Offset = entry.Offset;
         Dirty(companionUid, companionComponent);
-
-        // Nothing can push it off its spot: not a shoved owner, an explosion, nor its own gun's recoil. It still
-        //     collides, so it is shot as before.
-        if (entry.Mode == KsCompanionMode.Attached && _physicsQuery.TryComp(companionUid, out var physicsComponent))
-            _physicsSystem.SetBodyType(companionUid, BodyType.Static, body: physicsComponent);
 
         CopySides(owner.Owner, companionUid);
         UpdateFollowTarget((companionUid, companionComponent));
@@ -300,6 +296,10 @@ public sealed partial class KsCompanionSystem : EntitySystem
     {
         if (_companionQuery.TryComp(companionUid, out var companionComponent))
             companionComponent.Released = true;
+
+        // A hovering one is no longer steered, and nothing slows a weightless body down: it stops where it is.
+        if (companionComponent?.Mode == KsCompanionMode.Hover)
+            _physicsSystem.SetLinearVelocity(companionUid, Vector2.Zero);
 
         // Nothing more from it while it fades.
         if (_htnQuery.TryComp(companionUid, out var htnComponent))
@@ -381,44 +381,67 @@ public sealed partial class KsCompanionSystem : EntitySystem
     }
 
     /// <summary>
-    ///     An attached companion moved off its spot by something other than physics (a teleport, an admin) is put back
-    ///         on the next update.
+    ///     Steers every hovering companion after its hover point: the owner's spot on its grid or map (followed into a
+    ///         locker or pod) plus the entry's offset, in that grid's frame, so the owner turning doesn't swing it round.
+    ///         It moves at <see cref="KsCompanionEntry.HoverStiffness"/> times the distance left, capped at
+    ///         <see cref="KsCompanionEntry.HoverMaxSpeed"/>, so it trails and settles; past
+    ///         <see cref="KsCompanionEntry.HoverSnapDistance"/>, or on another map, it is put there at once.
     /// </summary>
-    [SubscribeLocalEvent]
-    private void OnCompanionMove(Entity<KsCompanionComponent> companion, ref MoveEvent args)
+    /// <remarks>
+    ///     Its velocity is relative to its parent, so on the owner's grid that grid's own motion carries it for free.
+    ///         Over another parent (the owner just stepped onto a shuttle) the difference between the two frames'
+    ///         velocities is added, so a moving grid doesn't leave it behind.
+    /// </remarks>
+    private void UpdateHovering(float frameTime)
     {
-        if (companion.Comp.Mode != KsCompanionMode.Attached ||
-            companion.Comp.Released ||
-            companion.Comp.OwnerUid is not { } ownerUid)
-            return;
-
-        if (args.NewPosition.EntityId == ownerUid && args.NewPosition.Position == companion.Comp.Offset)
-            return;
-
-        _displacedCompanions.Add(companion.Owner);
-    }
-
-    private void ReturnDisplacedCompanions()
-    {
-        if (_displacedCompanions.Count == 0)
-            return;
-
-        _returningCompanions.AddRange(_displacedCompanions);
-        _displacedCompanions.Clear();
-
-        foreach (var companionUid in _returningCompanions)
+        var query = EntityQueryEnumerator<KsCompanionComponent, PhysicsComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var companionComponent, out var physicsComponent, out var transformComponent))
         {
-            if (!_companionQuery.TryComp(companionUid, out var companionComponent) ||
+            if (companionComponent.Mode != KsCompanionMode.Hover ||
                 companionComponent.Released ||
                 companionComponent.OwnerUid is not { } ownerUid ||
-                TerminatingOrDeleted(ownerUid) ||
-                TerminatingOrDeleted(companionUid))
+                !_companionsQuery.TryComp(ownerUid, out var companionsComponent) ||
+                companionComponent.Index >= companionsComponent.Companions.Count ||
+                TerminatingOrDeleted(ownerUid))
                 continue;
 
-            _transformSystem.SetCoordinates(companionUid, new EntityCoordinates(ownerUid, companionComponent.Offset));
+            Hover((uid, physicsComponent, transformComponent), ownerUid, companionsComponent.Companions[companionComponent.Index], frameTime);
+        }
+    }
+
+    private void Hover(Entity<PhysicsComponent, TransformComponent> companion, EntityUid ownerUid, KsCompanionEntry entry, float frameTime)
+    {
+        var hoverCoordinates = _transformSystem.GetMoverCoordinates(ownerUid).Offset(entry.Offset);
+        var hoverMapCoordinates = _transformSystem.ToMapCoordinates(hoverCoordinates);
+        if (hoverMapCoordinates.MapId == MapId.Nullspace)
+            return;
+
+        var companionMapCoordinates = _transformSystem.GetMapCoordinates(companion.Owner, companion.Comp2);
+        var toHover = hoverMapCoordinates.Position - companionMapCoordinates.Position;
+        var distance = toHover.Length();
+
+        if (companionMapCoordinates.MapId != hoverMapCoordinates.MapId || distance > entry.HoverSnapDistance)
+        {
+            _transformSystem.SetCoordinates(companion.Owner, hoverCoordinates);
+            _physicsSystem.SetLinearVelocity(companion.Owner, Vector2.Zero, body: companion.Comp1);
+            return;
         }
 
-        _returningCompanions.Clear();
+        var velocity = Vector2.Zero;
+        if (distance > HoverSettleDistance)
+        {
+            // Never so fast that it passes the point in one tick, whatever the stiffness.
+            var speed = MathF.Min(distance * entry.HoverStiffness, MathF.Min(entry.HoverMaxSpeed, distance / frameTime));
+            velocity = toHover * (speed / distance);
+        }
+
+        if (companion.Comp2.ParentUid != hoverCoordinates.EntityId)
+        {
+            velocity += _physicsSystem.GetMapLinearVelocity(hoverCoordinates) -
+                        _physicsSystem.GetMapLinearVelocity(companion.Comp2.Coordinates);
+        }
+
+        _physicsSystem.SetLinearVelocity(companion.Owner, velocity, body: companion.Comp1);
     }
 
     private void UpdateFollowTarget(Entity<KsCompanionComponent> companion)
