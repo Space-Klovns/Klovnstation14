@@ -34,7 +34,7 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
 {
     private const string Mob = "KsAmmoPickupPredictionTestMob";
     private const string Rifle = "KsAmmoPickupPredictionTestRifle";
-    private const string Pickup = "KsAmmoPickupPredictionTestPickup";
+    private const string PickupPrototype = "KsAmmoPickupPredictionTestPickup";
 
     protected override string PlayerPrototype => Mob;
 
@@ -57,7 +57,7 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
     - KsAmmoPickupPredictionTestSide
 
 - type: entity
-  id: {Pickup}
+  id: {PickupPrototype}
   components:
   - type: KsAmmoPickup
     radius: 0.6
@@ -136,7 +136,7 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
     /// </summary>
     private async Task<EntityUid> SpawnPickup(float tilesEast, ProtoId<NpcFactionPrototype>? faction = null)
     {
-        var pickupUid = await SpawnEntity(Pickup, SEntMan.GetCoordinates(PlayerCoords).Offset(new Vector2(tilesEast, 0f)));
+        var pickupUid = await SpawnEntity(PickupPrototype, SEntMan.GetCoordinates(PlayerCoords).Offset(new Vector2(tilesEast, 0f)));
         await Server.WaitPost(() =>
         {
             var factions = faction is { } id
@@ -292,7 +292,7 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
         // Empty-handed, on the player's own side's pickup.
         await DeleteHeldEntity();
         await Server.WaitPost(() => SEntMan.DeleteEntity(foesPickupUid));
-        var ownPickupUid = await SpawnEntity(Pickup, Transform.GetMoverCoordinates(SPlayer));
+        var ownPickupUid = await SpawnEntity(PickupPrototype, Transform.GetMoverCoordinates(SPlayer));
         await Server.WaitPost(() => SEntMan.System<KsAmmoPickupSystem>().SetFactions(
             (ownPickupUid, SEntMan.GetComponent<KsAmmoPickupComponent>(ownPickupUid)),
             SEntMan.GetComponent<NpcFactionMemberComponent>(SPlayer).Factions));
