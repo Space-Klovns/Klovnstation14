@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Shared._Trauma.Projectiles;
@@ -56,6 +57,7 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private static readonly ProtoId<Content.Shared._KS14.Particles.KsParticlesPrototype> SplatterMist = "KsBloodSplatterMist";
     private static readonly EntProtoId BulletPistol = "BulletPistol";
     private static readonly ProtoId<DamageTypePrototype> PiercingDamage = "Piercing";
+    private static readonly ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
 
     /// <summary>
     ///     How many spread shots are fired: enough that the spread has built up well past where it starts.
@@ -264,12 +266,13 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     }
 
     /// <summary>
-    ///     The shooter's client keeps its own copy of the bullet, which hits before the server's does. That hit plays its
-    ///         impact, and leaves the target's damage to the server: dealt by the kept copy, it was put back by the next
-    ///         state and dealt again by the server's hit.
+    ///     The shooter's client keeps its own copy of the bullet, which hits before the server's does. The client shows
+    ///         that hit's damage at once, as pending, and it stays put from then on: not taken back by the states that
+    ///         follow, and not counted twice when the server's hit arrives. Dealt by the kept copy as ordinary damage, it
+    ///         was put back by the next state and dealt again by the server's hit.
     /// </summary>
     [Test]
-    public async Task ShootersClientShowsOnlyDamageTheServerDealt()
+    public async Task ShootersClientShowsTheHitAtOnceAndItStaysPut()
     {
         // The client predicts well past the last server state, so every state reset re-predicts, as a real client does.
         var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
@@ -298,10 +301,86 @@ public sealed class KsGunHitPredictionTest : InteractionTest
             });
         });
 
-        var serverDamage = await AssertClientDamageFollowsTheServers(targetUid, ticks: 60);
+        var clientTargetUid = ToClient(targetUid);
+        var clientDamages = new List<FixedPoint2>();
+        var shownBeforeTheServerDealtIt = false;
+        var serverDamage = FixedPoint2.Zero;
+
+        // Well past the round trip, and past how long pending damage waits: nothing is left pending at the end.
+        var ticks = (int)(3f * (float)Server.ResolveDependency<IGameTiming>().TickRate);
+        for (var tick = 0; tick < ticks; tick++)
+        {
+            await RunTicks(1);
+
+            serverDamage = await ServerDamage(targetUid);
+            var clientDamage = await ClientDamage(clientTargetUid);
+
+            if (clientDamages.Count > 0)
+            {
+                Assert.That(clientDamage, Is.GreaterThanOrEqualTo(clientDamages[^1]),
+                    $"tick {tick}: the client's damage went back from {clientDamages[^1]} to {clientDamage}");
+            }
+
+            shownBeforeTheServerDealtIt |= clientDamage > FixedPoint2.Zero && serverDamage == FixedPoint2.Zero;
+            clientDamages.Add(clientDamage);
+        }
 
         Assert.That(serverDamage, Is.GreaterThan(FixedPoint2.Zero), "the server's bullet never damaged the target, so this proves nothing");
-        Assert.That(await ClientDamage(ToClient(targetUid)), Is.EqualTo(serverDamage), "the server's damage never reached the client");
+        Assert.That(shownBeforeTheServerDealtIt, "the client only showed the hit's damage once the server had dealt it");
+        Assert.That(clientDamages.Max(), Is.EqualTo(serverDamage), "the client showed more than the one hit: the server's was counted on top of its own");
+        Assert.That(clientDamages[^1], Is.EqualTo(serverDamage), "the client did not end on the server's damage");
+
+        var pendingAtTheEnd = FixedPoint2.Zero;
+        await Client.WaitPost(() => pendingAtTheEnd = CEntMan.System<DamageableSystem>().KsGetPendingDamage(clientTargetUid));
+        Assert.That(pendingAtTheEnd, Is.EqualTo(FixedPoint2.Zero), "damage is still pending on the client long after the server dealt it");
+    }
+
+    /// <summary>
+    ///     Damage a client predicted that the server never deals (its bullet missed there) is taken back off, once, after
+    ///         waiting for it; and the server's damage of another kind, meanwhile, is not mistaken for it.
+    /// </summary>
+    [Test]
+    public async Task PendingDamageTheServerNeverDealsIsTakenBackOnce()
+    {
+        var targetUid = EntityUid.Invalid;
+        await Server.WaitPost(() =>
+        {
+            var shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            targetUid = SEntMan.SpawnEntity(_testTarget, new MapCoordinates(shooterPosition + new Vector2(5f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var clientTargetUid = ToClient(targetUid);
+        var predicted = FixedPoint2.New(16);
+        var unrelated = FixedPoint2.New(1);
+
+        await Client.WaitPost(() =>
+            CEntMan.System<DamageableSystem>().KsAddPendingDamage(clientTargetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), predicted)));
+        Assert.That(await ClientDamage(clientTargetUid), Is.EqualTo(predicted), "the predicted damage did not show at once");
+
+        // Something else hurts it a little, in another type: not the hit that is pending.
+        await Server.WaitPost(() =>
+            SEntMan.System<DamageableSystem>().ChangeDamage(targetUid, new DamageSpecifier(ProtoMan.Index(BluntDamage), unrelated)));
+        await RunTicks(5);
+        Assert.That(await ClientDamage(clientTargetUid), Is.EqualTo(predicted + unrelated),
+            "the server's unrelated damage was taken for the pending hit, or did not arrive on top of it");
+
+        // It goes exactly once: down to the server's damage, and stays there.
+        var drops = 0;
+        var previous = predicted + unrelated;
+        var ticks = (int)(3f * (float)Server.ResolveDependency<IGameTiming>().TickRate);
+        for (var tick = 0; tick < ticks; tick++)
+        {
+            await RunTicks(1);
+            var clientDamage = await ClientDamage(clientTargetUid);
+            if (clientDamage < previous)
+                drops++;
+
+            previous = clientDamage;
+        }
+
+        Assert.That(previous, Is.EqualTo(unrelated), "damage the server never dealt is still shown on the client");
+        Assert.That(drops, Is.EqualTo(1), "the client's damage came down more than once");
     }
 
     /// <summary>

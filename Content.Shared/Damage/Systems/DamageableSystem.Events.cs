@@ -204,6 +204,7 @@ public sealed partial class DamageableSystem
 
         // Has the damage actually changed?
         var newDamage = state.Damage.Clone();
+        KsAddPendingToState(ent, state.Damage, newDamage); // KS14: a client's pending damage stays on top of the server's
         var delta = newDamage - ent.Comp.Damage;
         delta.TrimZeros();
 

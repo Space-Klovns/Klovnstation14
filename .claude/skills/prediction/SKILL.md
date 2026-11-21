@@ -83,7 +83,11 @@ A kept bullet's hit is the same: `PredictedProjectileSystem.DoHit` works out wha
 `DamageableSystem.PreviewDamage` (the steps of `ChangeDamage`, minus the write) for the impact and for going through,
 and raises `ProjectileHitEvent` with `KsPreviewOnly`, which a handler that changes the target (stamina) returns on.
 Dealt by the kept copy, damage was put back by the next state and dealt again by the server's hit: health flickered on
-every shot. A projectile the client does not predict at all (anyone else's, the hidden server copy of its own) hits
+every shot. What the shooter sees at once goes two other ways: the amount is shown as **pending damage**
+(`DamageableSystem.KsAddPendingDamage`, `KsPendingDamageComponent`), written into the component quietly (no event, not
+dirtied), put back on top of every state, dropped when a state's damage has gone up by about that much in the same
+types, and taken off once if the server never deals it; and what plays off a hit (blood) plays off
+`KsPreviewedDamageEvent`, since no `DamageChangedEvent` is raised for it. A projectile the client does not predict at all (anyone else's, the hidden server copy of its own) hits
 nothing on it, and `KsRayCollisionSystem` does not look ahead of it. `KsGunHitPredictionTest`.
 
 **The server takes a player's shot against where each mob was when their client fired**, by ping: bullets through
