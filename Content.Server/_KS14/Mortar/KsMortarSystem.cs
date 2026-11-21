@@ -161,6 +161,8 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsMortarComponent> entity, ref ComponentShutdown args)
     {
+        CloseAllSights(entity.Comp);
+
         if (entity.Comp.CrewUid is { } crewUid)
             ReleaseCrew(entity, crewUid);
     }
@@ -199,6 +201,9 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnUiOpened(Entity<KsMortarComponent> entity, ref BoundUIOpenedEvent args)
     {
+        if (args.UiKey.Equals(KsMortarUiKey.Key))
+            OpenSight(entity, args.Actor);
+
         RestartIdle(entity);
         UpdateUi(entity);
     }
@@ -389,7 +394,9 @@ public sealed partial class KsMortarSystem : EntitySystem
                 mortar.Comp.Spread,
                 mortar.Comp.NextFire,
                 mortar.Comp.ManualCooldown,
-                new List<Vector2>(mortar.Comp.Impacts)));
+                new List<Vector2>(mortar.Comp.Impacts),
+                mortar.Comp.SightRadius,
+                GetSightEyes(mortar.Comp)));
     }
 
     #endregion
@@ -417,6 +424,9 @@ public sealed partial class KsMortarSystem : EntitySystem
         var query = EntityQueryEnumerator<KsMortarComponent>();
         while (query.MoveNext(out var uid, out var mortarComponent))
         {
+            if (mortarComponent.Sights.Count > 0)
+                UpdateSights((uid, mortarComponent), now);
+
             if (mortarComponent.CrewUid is { } crewUid)
             {
                 // A crewman down leaves it be, ready for whoever comes to it: put off a second at a time, it never was.

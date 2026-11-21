@@ -29,3 +29,5 @@ ks-mortar-compass-4 = S
 ks-mortar-compass-5 = SW
 ks-mortar-compass-6 = W
 ks-mortar-compass-7 = NW
+ks-mortar-window-sight = Sight
+ks-mortar-window-sight-no-picture = No picture

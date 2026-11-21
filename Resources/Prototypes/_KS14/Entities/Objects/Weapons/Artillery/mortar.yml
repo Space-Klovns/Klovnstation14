@@ -78,8 +78,8 @@
 
 # Limited-ammo immovable mortar that requires you to choose a bearing and distance to fire. Put down on its own (by an
 #     admin, or on a map) it is anyone's to fire and stays until destroyed; dissolveWhenAbandoned makes one left behind by
-#     an NPC crew go once nobody uses it.
-# TODO LCDC: 'gods-eye view' that shows you a little view of where the mortar is landing
+#     an NPC crew go once nobody uses it. Its window has a sight: a little live view of where it is aimed
+#     (KsMortarSightEye, sightRadius tiles around the aim).
 - type: entity
   id: KsMortar
   name: mortar
@@ -142,6 +142,7 @@
         volume: 4
         maxDistance: 20
     flightTime: 5
+    sightRadius: 5
     loadSound:
       path: /Audio/_KS14/Weapons/Mortar/mortarload.ogg
   - type: ActivatableUI
@@ -150,3 +151,18 @@
     interfaces:
       enum.KsMortarUiKey.Key:
         type: KsMortarBoundUserInterface
+
+# The eye of a mortar's sight: spawned at the aim of each player with its window open, who is sent what is around it,
+#     and deleted when they close it (KsMortarSystem.Sight.cs). Stays on the map, never on a grid, so that nothing it
+#     passes over takes it with it.
+- type: entity
+  id: KsMortarSightEye
+  categories: [ HideSpawnMenu ]
+  name: mortar sight
+  description: Where a mortar is aimed, as seen through its sight.
+  save: false
+  components:
+  - type: Transform
+    gridTraversal: false
+  - type: Eye
+    drawFov: false

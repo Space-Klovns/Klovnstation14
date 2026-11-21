@@ -10,8 +10,8 @@ public enum KsMortarUiKey : byte
 }
 
 /// <summary>
-///     What the mortar's window shows: raw values, for the window to format. Sent when it opens, after every shot and when a
-///         shell lands.
+///     What the mortar's window shows: raw values, for the window to format. Sent when it opens, after every shot, when a
+///         shell lands and when someone opens or closes it.
 /// </summary>
 [Serializable, NetSerializable]
 public sealed class KsMortarBuiState(
@@ -21,7 +21,9 @@ public sealed class KsMortarBuiState(
     float spread,
     TimeSpan readyAt,
     TimeSpan reloadTime,
-    List<Vector2> impacts) : BoundUserInterfaceState
+    List<Vector2> impacts,
+    float sightRadius,
+    Dictionary<NetEntity, NetEntity> sightEyes) : BoundUserInterfaceState
 {
     public int Rounds = rounds;
     public float MinRange = minRange;
@@ -46,6 +48,16 @@ public sealed class KsMortarBuiState(
     ///     Where its last few shells landed, relative to the mortar, on the map's axes (+Y north), oldest first.
     /// </summary>
     public List<Vector2> Impacts = impacts;
+
+    /// <summary>
+    ///     How far around its aim its sight shows, in tiles; zero for a mortar with no sight.
+    /// </summary>
+    public float SightRadius = sightRadius;
+
+    /// <summary>
+    ///     The eye each user with the window open sees their aim through, keyed by that user.
+    /// </summary>
+    public Dictionary<NetEntity, NetEntity> SightEyes = sightEyes;
 }
 
 /// <summary>
@@ -55,6 +67,18 @@ public sealed class KsMortarBuiState(
 /// </summary>
 [Serializable, NetSerializable]
 public sealed class KsMortarFireMessage(Angle bearing, float distance) : BoundUserInterfaceMessage
+{
+    public Angle Bearing = bearing;
+    public float Distance = distance;
+}
+
+/// <summary>
+///     Where the sender is aiming, without firing: moves the eye of their sight there. As with
+///         <see cref="KsMortarFireMessage"/>, the server clamps the distance and refuses what is not a number, and it
+///         moves the eye only so often.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsMortarAimMessage(Angle bearing, float distance) : BoundUserInterfaceMessage
 {
     public Angle Bearing = bearing;
     public float Distance = distance;

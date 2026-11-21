@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Shared._KS14.FarSound;
 using Content.Shared.NPC.Prototypes;
 using Robust.Shared.Audio;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Mortar;
@@ -183,11 +184,56 @@ public sealed partial class KsMortarComponent : Component
     public List<Vector2> Impacts = new();
 
     /// <summary>
+    ///     How far around its aim, in tiles, the sight in its window shows. Zero gives it none: no eye, no picture.
+    /// </summary>
+    [DataField]
+    public float SightRadius;
+
+    /// <summary>
+    ///     The view-only eye spawned at the aim of each user with its window open, which they are sent what is around.
+    /// </summary>
+    [DataField]
+    public EntProtoId SightEye = "KsMortarSightEye";
+
+    /// <summary>
+    ///     How often, at most, a user's aim moves their sight's eye; an aim sent sooner waits for it.
+    /// </summary>
+    [DataField]
+    public TimeSpan SightMoveInterval = TimeSpan.FromSeconds(0.1);
+
+    /// <summary>
+    ///     The sight of each user with its window open, keyed by that user.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, KsMortarSight> Sights = new();
+
+    /// <summary>
     ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed, and for one that never
     ///         dissolves.
     /// </summary>
     [DataField, AutoPausedField]
     public TimeSpan? IdleEndsAt;
+}
+
+/// <summary>
+///     One user's sight through a mortar's window: the eye at their aim, which their session is subscribed to.
+/// </summary>
+public sealed class KsMortarSight(EntityUid eyeUid, ICommonSession session)
+{
+    [ViewVariables]
+    public EntityUid EyeUid = eyeUid;
+
+    [ViewVariables]
+    public ICommonSession Session = session;
+
+    /// <summary>
+    ///     Where they last aimed, from the mortar, while the eye has not been moved there yet.
+    /// </summary>
+    [ViewVariables]
+    public Vector2? PendingOffset;
+
+    [ViewVariables]
+    public TimeSpan NextMoveAt;
 }
 
 /// <summary>

@@ -2,12 +2,27 @@
     xmlns="https://spacestation14.io"
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
     xmlns:mortar="clr-namespace:Content.Client._KS14.Mortar"
+    xmlns:viewport="clr-namespace:Content.Client.Viewport"
+    xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
     Title="{Loc ks-mortar-window-title}"
     MinWidth="320"
     Resizable="False">
     <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6">
         <BoxContainer Orientation="Horizontal" SeparationOverride="8">
             <mortar:KsMortarAimControl Name="AimPlot" Access="Public" MinSize="240 240" />
+            <BoxContainer Name="SightBox" Access="Public" Orientation="Vertical" SeparationOverride="4" Visible="False">
+                <Label Text="{Loc ks-mortar-window-sight}" StyleClasses="LabelSubText" />
+                <Control MinSize="180 180" SetSize="180 180" RectClipContent="True">
+                    <PanelContainer MouseFilter="Ignore">
+                        <PanelContainer.PanelOverride>
+                            <gfx:StyleBoxFlat BackgroundColor="#000000" />
+                        </PanelContainer.PanelOverride>
+                    </PanelContainer>
+                    <Label Name="SightNoPicture" Text="{Loc ks-mortar-window-sight-no-picture}" HorizontalAlignment="Center" VerticalAlignment="Center" StyleClasses="LabelSubText" />
+                    <viewport:ScalingViewport Name="SightView" Access="Public" MouseFilter="Ignore" Visible="False" />
+                    <mortar:KsMortarSightReticle Name="SightReticle" />
+                </Control>
+            </BoxContainer>
         </BoxContainer>
         <Label Name="RangeLabel" StyleClasses="LabelSubText" />
         <GridContainer Columns="5" HSeparationOverride="4" VSeparationOverride="4">

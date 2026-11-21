@@ -9,14 +9,15 @@ flight with the ground under it marked, and going off as it lands.
 | --- | --- |
 | `KsMortarComponent`, `KsMortarCrewComponent`, `KsMortarShellComponent`, `KsMortarDeployedEvent` / `KsMortarLostEvent` | `Content.Server/_KS14/Mortar/KsMortarComponent.cs` |
 | `KsMortarSystem` (crew set-up and fire, manual fire, launch, abandoning, dissolving) | `Content.Server/_KS14/Mortar/KsMortarSystem.cs` |
+| The sight: eyes, view subscriptions, `KsMortarSight` | `Content.Server/_KS14/Mortar/KsMortarSystem.Sight.cs` |
 | Window: `KsMortarUiKey`, `KsMortarBuiState`, `KsMortarFireMessage`; `KsMortarAim` (bearing and distance to an offset and back) | `Content.Shared/_KS14/Mortar/KsMortarUi.cs`, `KsMortarAim.cs` |
-| `KsMortarWindow`, `KsMortarAimControl` (the plot), `KsMortarBoundUserInterface` | `Content.Client/_KS14/Mortar/` |
-| `KsMortar`, `KsMortarShell`, `KsMortarWarning`, `KsMortarIncoming` | `Resources/Prototypes/_KS14/Entities/Objects/Weapons/Artillery/mortar.yml` |
+| `KsMortarWindow`, `KsMortarAimControl` (the plot), `KsMortarSightReticle`, `KsMortarBoundUserInterface` | `Content.Client/_KS14/Mortar/` |
+| `KsMortar`, `KsMortarShell`, `KsMortarWarning`, `KsMortarIncoming`, `KsMortarSightEye` | `Resources/Prototypes/_KS14/Entities/Objects/Weapons/Artillery/mortar.yml` |
 | `KsMortarShellTrail` | `Resources/Prototypes/_KS14/Entities/Effects/SupplyPod/trail.yml` |
 | Art | `Resources/Textures/_KS14/Objects/Weapons/Artillery/mortar.rsi`, `mortar_warning.rsi` |
 | Sounds | `Resources/Audio/_KS14/Weapons/Mortar/` |
 | Field Commander hook | `Content.Server/_KS14/FieldCommander/KsFieldCommanderRuleSystem.Mortar.cs` |
-| Tests | `Content.IntegrationTests/Tests/_KS14/Mortar/` (`KsMortarWindowTest` for the window, headless), `Tests/_KS14/FieldCommander/KsFieldCommanderMortarCrewTest.cs`, `Tests/_KS14/SupplyPod/KsSupplyPodDescentTest.cs` |
+| Tests | `Content.IntegrationTests/Tests/_KS14/Mortar/` (`KsMortarWindowTest` for the window, headless; `KsMortarSightTest` for the sight, PVS on), `Tests/_KS14/FieldCommander/KsFieldCommanderMortarCrewTest.cs`, `Tests/_KS14/SupplyPod/KsSupplyPodDescentTest.cs` |
 
 ## Who fires it
 
@@ -44,6 +45,15 @@ flight with the ground under it marked, and going off as it lands.
   readout gives three figures and a compass point (`045° NE`).
 - **Fall of shot**: each shell carries `KsMortarFallOfShotComponent` (its mortar); on `SupplyPodLandedEvent` the mortar
   keeps where it landed, relative to itself, dropping the oldest past `maxImpacts`, and sends a new state.
+- **The sight**, beside the plot, with `sightRadius` above 0: a live view `sightRadius` tiles around the aim, the spread
+  ring drawn over it. Opening the window spawns a `sightEye` (`KsMortarSightEye`: an `Eye`, no FOV, parented to the map
+  with grid traversal off) for that user and subscribes their session to it (`ViewSubscriberSystem.AddViewSubscriber`,
+  as surveillance cameras do), its PVS scale cut to the sight; the state names each user's eye and the window binds a
+  `ScalingViewport` to that entity's `EyeComponent.Eye` once it has arrived. The window sends its aim
+  (`KsMortarAimMessage`, coalesced to one a tick); the server checks it is a number, clamps the distance, checks the
+  coordinates are valid and moves the eye at most every `sightMoveInterval`, keeping the latest aim until then. The
+  eye and subscription go on `BoundUIClosedEvent` (closing, the range check, the user going) and on the mortar
+  component's shutdown, per user.
 - The server still checks everything in `KsMortarFireMessage`: a number, clamped to the range, cooldown and rounds.
 
 ## Abandoned
@@ -76,6 +86,7 @@ Without it (the default), it stays until destroyed. A crewed mortar never times 
 | `clusterRadius`, `priorityWeight` | 3, 5 | Crew target scoring |
 | `spread` | 1.5 | Tiles a shell may land off its aim; drawn as a ring round the aim |
 | `maxImpacts` | 5 | How many of its last impacts its window plots; 0 for none |
+| `sightRadius`, `sightEye`, `sightMoveInterval` | 0 (5 on `KsMortar`), `KsMortarSightEye`, 0.1 s | Its window's sight: tiles shown around the aim (0 for none), the eye spawned, how often the eye may move |
 | `crewRange`, `maxCrewSpeed` | 2, 0.5 | How near and how still the crewman must be to fire |
 | `flightTime` | 5 s | From the shot to the landing |
 | `minDescentTime`, `maxDescentTime` | 1 s, 2 s | Bounds on how long the shell is seen falling |

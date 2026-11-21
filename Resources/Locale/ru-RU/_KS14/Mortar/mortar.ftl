@@ -31,3 +31,5 @@ ks-mortar-compass-4 = Ю
 ks-mortar-compass-5 = ЮЗ
 ks-mortar-compass-6 = З
 ks-mortar-compass-7 = СЗ
+ks-mortar-window-sight = Прицел
+ks-mortar-window-sight-no-picture = Нет изображения
