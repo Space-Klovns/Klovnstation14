@@ -57,6 +57,9 @@ public sealed partial class GunSystem
 
     protected override void UpdateAmmoCount(EntityUid uid, bool prediction = true)
     {
+        if (KsUpdateAmmoCountOutsideItself(uid, prediction)) // KS14: a server state is shown after the frame's ticks; a magazine's change on the gun holding it
+            return;
+
         // Don't use resolves because the method is shared and there's no compref and I'm trying to
         // share as much code as possible
         if (prediction && !Timing.IsFirstTimePredicted ||
