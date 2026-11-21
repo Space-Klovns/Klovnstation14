@@ -115,3 +115,26 @@ The mode does not run the mortar; it hands one to an NPC crewman and reacts to t
 
 Mortars bought by the commander opt in to `dissolveWhenAbandoned`, so one left behind clears itself up; a standalone
 `KsMortar` does not.
+
+## Long ranges
+
+The mortar is meant to work at ranges of 100 to 300 tiles by changing YAML alone (`minRange`, `maxRange`). Checked for
+that (tests: `KsMortarTest.ALongRangeShellLandsWhereAimed`, `ALongRangeCrewFindsItsTarget`,
+`KsMortarSightTest.TheSightWorksAtLongRange`, all at 100 to 300):
+
+- **Plot**: the band fills the plot whatever the ranges (see *The window*); range labels are written to one decimal, so
+  tiny ranges read too; the spread ring is at least 2 px.
+- **Aiming precision**: clicks pick a tenth of a degree (under a tile out to ~570 tiles), fields keep a hundredth,
+  bearing nudges shrink to about a tile across at the distance aimed at, and the cross and distance nudges move a tile.
+  Bearing to offset is done in doubles (`KsMortarAim.ToOffset`); float error at 300 tiles is around 1e-5 tiles.
+- **Impacts** are offsets from the mortar, so they keep their precision; `spread` is in tiles and unaffected.
+- **Nothing clamps to PVS or view range**: the shell is spawned where it lands, uninitialised, at map coordinates, so on
+  whatever grid is there or straight on the map in space; it falls and goes off with nobody near. Maps are loaded
+  whole and only whole maps pause (the mortar's with it), so there is no unloaded part to land in.
+  `SharedTransformSystem.IsValid` only checks the coordinates' entity exists and the numbers are finite.
+- **The sight** at 300 tiles: the eye is a view subscription, which PVS sends from wherever it is; its PVS scale follows
+  `sightRadius`, not the distance; the rate limit is per eye move, not per distance.
+- **Crew targeting**: up to 64 tiles it uses the faction lookup (`NpcFactionSystem.GetNearbyHostiles`); past that it
+  goes through every `NpcFactionMember` instead of a broadphase lookup over a 600-tile square every search.
+- **Sounds** are YAML: `farFireSound`'s range (15 to 150 on `KsMortar`) should be raised with the range if the launch is to
+  be heard where it lands; `travelSound` and `incomingSound` play where the shell lands and need no change.

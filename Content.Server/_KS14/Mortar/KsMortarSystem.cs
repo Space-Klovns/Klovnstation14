@@ -54,7 +54,14 @@ public sealed partial class KsMortarSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    ///     Past this range, hostiles are found by going through every faction member rather than by a lookup over the whole
+    ///         circle: at hundreds of tiles that lookup walks every entity on a good part of the map, each search.
+    /// </summary>
+    private const float LookupRangeLimit = 64f;
+
     private readonly List<(EntityUid Uid, Vector2 Position)> _candidates = new();
+    private readonly HashSet<EntityUid> _hostiles = new();
 
     #region Crew
 
@@ -481,7 +488,27 @@ public sealed partial class KsMortarSystem : EntitySystem
         var maxRangeSquared = settings.MaxRange * settings.MaxRange;
 
         _candidates.Clear();
-        foreach (var hostileUid in _npcFactionSystem.GetNearbyHostiles((factions.Owner, factions.Comp, null), settings.MaxRange))
+        _hostiles.Clear();
+        if (settings.MaxRange <= LookupRangeLimit)
+        {
+            _npcFactionSystem.GetNearbyHostiles((factions.Owner, factions.Comp, null), settings.MaxRange, _hostiles);
+        }
+        else
+        {
+            var memberQuery = EntityQueryEnumerator<NpcFactionMemberComponent, TransformComponent>();
+            while (memberQuery.MoveNext(out var memberUid, out _, out var memberTransform))
+            {
+                // Not in a container, on this map, and hostile; the range is checked below.
+                if (memberTransform.MapID != origin.MapId ||
+                    memberTransform.ParentUid != memberTransform.GridUid && memberTransform.ParentUid != memberTransform.MapUid ||
+                    !_npcFactionSystem.IsEntityHostile((factions.Owner, factions.Comp, null), memberUid))
+                    continue;
+
+                _hostiles.Add(memberUid);
+            }
+        }
+
+        foreach (var hostileUid in _hostiles)
         {
             if (_mobStateQuery.TryComp(hostileUid, out var hostileMobState) && _mobStateSystem.IsDead(hostileUid, hostileMobState))
                 continue;

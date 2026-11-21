@@ -37,6 +37,7 @@ public sealed class KsMortarSightTest : GameTest
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _mortar = "KsTestSightMortar";
     private readonly EntProtoId _blindMortar = "KsTestBlindMortar";
+    private readonly EntProtoId _longRangeMortar = "KsTestLongRangeSightMortar";
     private readonly EntProtoId _eye = "KsTestMortarSightEye";
     private readonly EntProtoId _marker = "KsTestMortarSightMarker";
 
@@ -69,6 +70,18 @@ public sealed class KsMortarSightTest : GameTest
     interfaces:
       enum.KsMortarUiKey.Key:
         type: KsMortarBoundUserInterface
+
+- type: entity
+  parent: KsTestSightMortar
+  id: KsTestLongRangeSightMortar
+  components:
+  - type: KsMortar
+    shell: KsTestMortarSightMarker
+    minRange: 100
+    maxRange: 300
+    sightRadius: 3
+    sightEye: KsTestMortarSightEye
+    sightMoveInterval: 0.5
 
 - type: entity
   parent: KsTestSightMortar
@@ -341,6 +354,48 @@ public sealed class KsMortarSightTest : GameTest
         var closed = await SpawnMarkers(aim, control);
         await Pair.RunTicksSync(20);
         await AssertArrived(closed.Near, false, "once the window is closed, nothing more by the aim should be sent");
+    }
+
+    /// <summary>
+    ///     At hundreds of tiles: the window's aim moves the eye there, and what is by it is sent while what is as far off the
+    ///         other way is not.
+    /// </summary>
+    [Test]
+    public async Task TheSightWorksAtLongRange()
+    {
+        await OverrideCVar(Side.Server, CVars.NetPVS, true);
+        await SetUp(_longRangeMortar);
+        await OpenWindow();
+        var eyeUid = await AssertSightOpen();
+
+        var maxRange = 0f;
+        var mortarPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            maxRange = MortarComponent.MaxRange;
+            mortarPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(_mortarUid);
+        });
+        Assert.That(maxRange, Is.GreaterThanOrEqualTo(100f), "precondition: a long-range mortar");
+
+        await Client.WaitPost(() =>
+        {
+            var window = ClientWindow()!;
+            window.BearingEdit.SetText("90", invokeEvent: true);
+            window.DistanceEdit.SetText(maxRange.ToString(), invokeEvent: true);
+        });
+        await Pair.RunTicksSync(Ticks(1f) + 5);
+
+        var aim = mortarPosition + new Vector2(maxRange, 0f);
+        await Server.WaitAssertion(() =>
+        {
+            var eyePosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(eyeUid);
+            Assert.That(Vector2.Distance(eyePosition, aim), Is.LessThan(0.05f), $"the eye should be {maxRange} tiles east: {eyePosition}");
+        });
+
+        var markers = await SpawnMarkers(aim, mortarPosition - new Vector2(maxRange, 0f));
+        await Pair.RunTicksSync(20);
+        await AssertArrived(markers.Near, true, "what is by an aim hundreds of tiles off should be sent");
+        await AssertArrived(markers.Far, false, "what is as far off the other way should not");
     }
 
     /// <summary>

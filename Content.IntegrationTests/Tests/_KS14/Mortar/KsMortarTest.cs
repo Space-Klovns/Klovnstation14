@@ -47,6 +47,8 @@ public sealed class KsMortarTest : GameTest
     private readonly EntProtoId _mortarShortDescent = "KsTestMortarShortDescent";
     private readonly EntProtoId _dissolvingCrew = "KsTestMortarDissolvingCrew";
     private readonly EntProtoId _mortarFallOfShot = "KsTestMortarFallOfShot";
+    private readonly EntProtoId _mortarLongRange = "KsTestMortarLongRange";
+    private readonly EntProtoId _longRangeCrew = "KsTestMortarLongRangeCrew";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -124,6 +126,25 @@ public sealed class KsMortarTest : GameTest
     interfaces:
       enum.KsMortarUiKey.Key:
         type: KsMortarBoundUserInterface
+
+# Hundreds of tiles: past any one view, off the grid it stands on.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarLongRange
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minRange: 100
+    maxRange: 300
+    spread: 1
+
+- type: entity
+  parent: KsTestMortarCrew
+  id: KsTestMortarLongRangeCrew
+  components:
+  - type: KsMortarCrew
+    mortar: KsTestMortarLongRange
+    setUpTime: 0.2
 
 - type: entity
   id: KsTestMortarCrew
@@ -343,6 +364,81 @@ public sealed class KsMortarTest : GameTest
             var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(180), 10f), Is.False, "with no rounds left");
         });
+    }
+
+    /// <summary>
+    ///     At hundreds of tiles, far past the grid it stands on and anyone's view: a shell aimed at the furthest of its range
+    ///         lands there, within its spread, and its fall of shot says so.
+    /// </summary>
+    [Test]
+    public async Task ALongRangeShellLandsWhereAimed()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        float maxRange = 0f, spread = 0f;
+        var bearing = Angle.FromDegrees(37);
+
+        await Server.WaitAssertion(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortarLongRange, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            maxRange = mortar.Comp.MaxRange;
+            spread = mortar.Comp.Spread;
+            Assert.That(maxRange, Is.GreaterThanOrEqualTo(100f), "precondition: a long-range mortar");
+            Assert.That(system.TryFireAt(mortar, defenderUid, bearing, maxRange), Is.True, "it should fire at its furthest");
+        });
+
+        var impact = await WaitForShell();
+        var aimed = new Vector2(0.5f, 0.5f) + new Vector2((float) Math.Sin(bearing.Theta), (float) Math.Cos(bearing.Theta)) * maxRange;
+        Assert.That(Vector2.Distance(impact, aimed), Is.LessThanOrEqualTo(spread + 0.05f),
+            $"a shell aimed {maxRange} tiles out should land within {spread} of {aimed}: {impact}");
+
+        await Server.WaitAssertion(() =>
+        {
+            var impacts = SEntMan.GetComponent<KsMortarComponent>(mortarUid).Impacts;
+            Assert.That(impacts, Has.Count.EqualTo(1));
+            Assert.That(Vector2.Distance(impacts[0], impact - new Vector2(0.5f, 0.5f)), Is.LessThan(0.05f), "its fall of shot should be where it landed");
+        });
+    }
+
+    /// <summary>
+    ///     A crewman with a long-range mortar finds a hostile hundreds of tiles off, and not the one inside its least range.
+    /// </summary>
+    [Test]
+    public async Task ALongRangeCrewFindsItsTarget()
+    {
+        await SetUpMap();
+        var far = Vector2.Zero;
+        var transformSystem = SEntMan.System<SharedTransformSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            Assert.That(SProtoMan.Index(_mortarLongRange).TryGetComponent<KsMortarComponent>(out var template, SEntMan.ComponentFactory));
+            far = new Vector2(0.5f, 0.5f + (template!.MinRange + template.MaxRange) / 2f);
+            SEntMan.SpawnEntity(_longRangeCrew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            SEntMan.SpawnEntity(_target, new MapCoordinates(far, _map.MapId));
+            SEntMan.SpawnEntity(_target, new EntityCoordinates(_map.Grid.Owner, 10.5f, 0.5f));
+        });
+
+        Vector2? impact = null;
+        for (var tick = 0; tick < Ticks(10f) && impact == null; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                var impactQuery = SEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (impactQuery.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID == _impact.Id)
+                        impact = transformSystem.GetWorldPosition(uid);
+                }
+            });
+        }
+
+        Assert.That(impact, Is.Not.Null, "the crewman should set up and fire at the hostile far off");
+        Assert.That(Vector2.Distance(impact!.Value, far), Is.LessThanOrEqualTo(1.05f), $"the shell should land on the hostile at {far}: {impact}");
     }
 
     /// <summary>
