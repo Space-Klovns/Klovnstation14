@@ -1,3 +1,4 @@
+using Content.Shared.Alert;
 using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Shared._KS14.Cultivation.Systems;
 using Robust.Shared.GameStates;
@@ -15,6 +16,18 @@ namespace Content.Shared._KS14.Cultivation.Components;
 [Access(typeof(SharedCultivationSystem))]
 public sealed partial class CultivatorComponent : Component
 {
+    /// <summary>
+    ///     The alert that shows how much qi is held.
+    /// </summary>
+    [DataField]
+    public ProtoId<AlertPrototype> QiAlert = "KsQi";
+
+    /// <summary>
+    ///     The alert that shows internal injuries, one severity step per stack.
+    /// </summary>
+    [DataField]
+    public ProtoId<AlertPrototype> InjuryAlert = "KsInternalInjury";
+
     /// <summary>
     ///     Qi currently held in the dantian. Techniques spend it.
     /// </summary>

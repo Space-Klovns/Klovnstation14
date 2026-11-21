@@ -96,7 +96,7 @@ public sealed partial class ForbiddenArtsSystem
         heartComponent.CalmCycles = 0;
         heartComponent.LastTile = _transformSystem.GetGridOrMapTilePosition(victimUid);
         Dirty(victimUid, heartComponent);
-        _alertsSystem.ShowAlert(victimUid, ExplodingHeartComponent.Alert);
+        _alertsSystem.ShowAlert(victimUid, heartComponent.Alert);
 
         EnsureComp<ExplodingHeartStainComponent>(striker).ExpiresAt = _gameTiming.CurTime + StainDuration;
 
@@ -212,7 +212,7 @@ public sealed partial class ForbiddenArtsSystem
     [SubscribeLocalEvent]
     private void OnHeartRemoved(Entity<ExplodingHeartComponent> entity, ref ComponentRemove args)
     {
-        _alertsSystem.ClearAlert(entity.Owner, ExplodingHeartComponent.Alert);
+        _alertsSystem.ClearAlert(entity.Owner, entity.Comp.Alert);
     }
 
     [SubscribeLocalEvent]

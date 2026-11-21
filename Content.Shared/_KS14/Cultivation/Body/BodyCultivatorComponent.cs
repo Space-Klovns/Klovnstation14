@@ -1,3 +1,4 @@
+using Content.Shared.Alert;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -15,6 +16,18 @@ namespace Content.Shared._KS14.Cultivation.Body;
 [Access(typeof(SharedBodyCultivationSystem))]
 public sealed partial class BodyCultivatorComponent : Component
 {
+    /// <summary>
+    ///     The alert that shows exhaustion from body arts.
+    /// </summary>
+    [DataField]
+    public ProtoId<AlertPrototype> ExhaustionAlert = "KsBodyExhaustion";
+
+    /// <summary>
+    ///     The alert that shows banked tempering.
+    /// </summary>
+    [DataField]
+    public ProtoId<AlertPrototype> TemperingAlert = "KsBodyTempering";
+
     public const int MaxStage = 9;
     public const int MortalStageCap = 1;
 

@@ -11,7 +11,11 @@ namespace Content.Shared._KS14.Cultivation.Components;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class ExplodingHeartComponent : Component
 {
-    public static readonly ProtoId<AlertPrototype> Alert = "KsExplodingHeart";
+    /// <summary>
+    ///     The alert that counts down the victim's steps.
+    /// </summary>
+    [DataField]
+    public ProtoId<AlertPrototype> Alert = "KsExplodingHeart";
 
     [DataField, AutoNetworkedField]
     public int StepsLeft = 5;

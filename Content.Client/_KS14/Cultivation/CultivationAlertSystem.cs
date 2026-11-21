@@ -14,7 +14,7 @@ public sealed partial class CultivationAlertSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnGetCounterAmount(Entity<CultivatorComponent> entity, ref GetGenericAlertCounterAmountEvent args)
     {
-        if (args.Handled || args.Alert.ID != SharedCultivationSystem.QiAlert)
+        if (args.Handled || args.Alert.ID != entity.Comp.QiAlert)
             return;
 
         args.Amount = (int)entity.Comp.Qi;
@@ -26,16 +26,16 @@ public sealed partial class CultivationAlertSystem : EntitySystem
         if (args.Handled)
             return;
 
-        if (args.Alert.ID == SharedBodyCultivationSystem.ExhaustionAlert)
+        if (args.Alert.ID == entity.Comp.ExhaustionAlert)
             args.Amount = (int)entity.Comp.Exhaustion;
-        else if (args.Alert.ID == SharedBodyCultivationSystem.TemperingAlert)
+        else if (args.Alert.ID == entity.Comp.TemperingAlert)
             args.Amount = (int)entity.Comp.Tempering;
     }
 
     [SubscribeLocalEvent]
     private void OnGetHeartCounterAmount(Entity<ExplodingHeartComponent> entity, ref GetGenericAlertCounterAmountEvent args)
     {
-        if (args.Handled || args.Alert.ID != ExplodingHeartComponent.Alert)
+        if (args.Handled || args.Alert.ID != entity.Comp.Alert)
             return;
 
         args.Amount = entity.Comp.StepsLeft;

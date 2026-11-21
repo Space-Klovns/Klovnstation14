@@ -12,8 +12,6 @@ namespace Content.Shared._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class SharedCultivationSystem : EntitySystem
 {
-    public static readonly ProtoId<AlertPrototype> QiAlert = "KsQi";
-    public static readonly ProtoId<AlertPrototype> InjuryAlert = "KsInternalInjury";
 
     [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
@@ -319,12 +317,12 @@ public sealed partial class SharedCultivationSystem : EntitySystem
 
     public void UpdateAlerts(Entity<CultivatorComponent> entity)
     {
-        _alertsSystem.ShowAlert(entity.Owner, QiAlert);
+        _alertsSystem.ShowAlert(entity.Owner, entity.Comp.QiAlert);
 
         if (entity.Comp.InternalInjury > 0)
-            _alertsSystem.ShowAlert(entity.Owner, InjuryAlert, severity: (short)entity.Comp.InternalInjury);
+            _alertsSystem.ShowAlert(entity.Owner, entity.Comp.InjuryAlert, severity: (short)entity.Comp.InternalInjury);
         else
-            _alertsSystem.ClearAlert(entity.Owner, InjuryAlert);
+            _alertsSystem.ClearAlert(entity.Owner, entity.Comp.InjuryAlert);
     }
 
     #endregion
@@ -332,8 +330,8 @@ public sealed partial class SharedCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<CultivatorComponent> entity, ref ComponentShutdown args)
     {
-        _alertsSystem.ClearAlert(entity.Owner, QiAlert);
-        _alertsSystem.ClearAlert(entity.Owner, InjuryAlert);
+        _alertsSystem.ClearAlert(entity.Owner, entity.Comp.QiAlert);
+        _alertsSystem.ClearAlert(entity.Owner, entity.Comp.InjuryAlert);
     }
 
     [SubscribeLocalEvent]

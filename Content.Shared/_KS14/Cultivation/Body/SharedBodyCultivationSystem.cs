@@ -18,8 +18,6 @@ namespace Content.Shared._KS14.Cultivation.Body;
 /// </summary>
 public sealed partial class SharedBodyCultivationSystem : EntitySystem
 {
-    public static readonly ProtoId<AlertPrototype> ExhaustionAlert = "KsBodyExhaustion";
-    public static readonly ProtoId<AlertPrototype> TemperingAlert = "KsBodyTempering";
 
     /// <summary>
     ///     Health added by reaching each stage (index 0 is Copper Skin), cumulative.
@@ -543,8 +541,8 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
 
     public void UpdateAlerts(Entity<BodyCultivatorComponent> entity)
     {
-        _alertsSystem.ShowAlert(entity.Owner, ExhaustionAlert);
-        _alertsSystem.ShowAlert(entity.Owner, TemperingAlert);
+        _alertsSystem.ShowAlert(entity.Owner, entity.Comp.ExhaustionAlert);
+        _alertsSystem.ShowAlert(entity.Owner, entity.Comp.TemperingAlert);
     }
 
     #endregion
@@ -713,8 +711,8 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<BodyCultivatorComponent> entity, ref ComponentShutdown args)
     {
-        _alertsSystem.ClearAlert(entity.Owner, ExhaustionAlert);
-        _alertsSystem.ClearAlert(entity.Owner, TemperingAlert);
+        _alertsSystem.ClearAlert(entity.Owner, entity.Comp.ExhaustionAlert);
+        _alertsSystem.ClearAlert(entity.Owner, entity.Comp.TemperingAlert);
     }
 
     #endregion
