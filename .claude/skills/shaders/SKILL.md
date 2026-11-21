@@ -50,7 +50,7 @@ preset raw;               //   blend_mode mix|add|subtract|multiply|none
                           //   preset raw               - use the raw wrapper instead of the default one
 
 uniform highp float speed;          // Settable from params: and from code.
-uniform highp float c = 0.3;        // Scalar initialisers work.
+uniform highp float c;              // No initialiser (= 0.3): GLSL ES refuses one. Defaults go in params:.
 varying highp vec2 myVarying;       // Passed from vertex() to fragment().
 
 highp float helper(highp float x) { return x * 2.0; }   // Ordinary functions are fine.
@@ -301,12 +301,39 @@ Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParamete
       scene (sharply, over pixel art), and rotating the pattern per pixel to hide that turns into visible grain. About
       24 taps on a golden-angle spiral, weighted towards the middle, is smooth (`_KS14/Shaders/visor_rain.swsl`).
 - [ ] Every float literal has a decimal point: `1.0`, not `1`. GLSL ES does not convert `int` to `float` for you.
+- [ ] It compiles in compatibility mode (below): no uniform initialisers, `texture2D` not `texture`, no array
+      constructors or `const` arrays, loops with constant bounds.
 - [ ] `highp` on anything that holds positions, UVs or `TIME`. `TIME` gets big, and at `mediump` it loses its
       fractional part.
 - [ ] Derivatives are behind `#ifdef HAS_DFDX` with a fallback.
 - [ ] Post-shaders are `light_mode unshaded` and allow for the 1.25x padding.
 - [ ] Every per-use uniform is set on every instance, or the shader has its own program.
 - [ ] Every `InstanceUnique()` is disposed.
+
+## Compatibility mode (GLES)
+
+`display.compat true` makes the client ask for a GLES3 context, then GLES2 (`GLContextWindow.SpecsToTry`); on Windows
+that is ANGLE over D3D11. Clyde then prefixes the source with `#version 300 es`, or `#version 100` plus
+`HAS_VARYING_ATTRIBUTE` on GLES2, instead of desktop `#version 140` (`Clyde._compileProgram`). Desktop GLSL accepts
+things GLSL ES refuses, and **every shader prototype compiles while prototypes load, so one bad `.swsl` crashes the
+client at startup** with `ShaderCompilationException` (the engine has no fallback for shader sources). What breaks:
+
+- **Uniform initialisers** (`uniform highp float c = 0.3;`): refused by both GLES versions. Put the default in the
+  prototype's `params:`; `Instance()` and `InstanceUnique()` carry it.
+- **`texture()`**: GLSL ES 1.0 only has `texture2D()`. Write `texture2D`; z-library `#define`s it to `texture` elsewhere.
+- **Array constructors and `const` arrays** (`float[9](...)`): not in GLSL ES 1.0. Compute the value from the loop
+  index instead (`bloom.swsl`).
+- **Implicit `int` to `float`** (`const highp float x = 2;`, `1 - smoothstep(...)`).
+- **Loops** need a constant bound (`for (int i = 0; i < 32; i++) { if (i >= count) break; ... }`), no `while`, no `%`
+  on ints, no bitwise ops.
+- **Derivatives** without `#ifdef HAS_DFDX` (GLES2 without `OES_standard_derivatives`).
+- **`pow(x, y)` with `x < 0`** compiles but is NaN on D3D-backed ANGLE: square by multiplying.
+
+To check, run the client with `--cvar display.compat=true` (GLES3 through ANGLE here) and, for `#version 100`,
+`--cvar display.angle=true --cvar display.angle_force_es2=true` (D3D feature level 9_3: also hits backend limits such as
+29 fragment uniform vectors, which `visor_rain.swsl` and several upstream shaders exceed). Reaching the main menu means
+every shader prototype compiled; the first failure is in the log as `Exception while loading resource ...
+ShaderSourceResource at '<path>'`, then the GL compiler's errors.
 
 ## Testing
 
