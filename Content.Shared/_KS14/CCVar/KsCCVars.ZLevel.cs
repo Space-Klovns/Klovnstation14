@@ -165,9 +165,9 @@ public sealed partial class KsCCVars
     ///     How many z-levels down a light is allowed to reach.
     /// </summary>
     /// <remarks>
-    ///     One by default because that is as far as a client is given anything to light:
-    ///         <see cref="ZLevelPvsUpdateInterval"/>'s system mirrors exactly one z-level below the viewer into
-    ///         their PVS, so a stand-in any deeper than that would be lighting an empty map.
+    ///     One by default because that is as far as a client is given anything to light by default:
+    ///         <see cref="ZLevelPvsLevelsBelow"/> z-levels below the viewer are sent to them, so a stand-in any
+    ///         deeper than that would be lighting an empty map.
     /// </remarks>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<int> ZLevelLightLeakLevels =
@@ -290,6 +290,19 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> ZLevelPvsSendAbove =
         CVarDef.Create("klovn.zlevel.pvs_send_above", true, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     How many z-levels below a player are sent to them.
+    /// </summary>
+    /// <remarks>
+    ///     The client draws every z-level under the viewer, however deep the stack, but a level that isn't sent is
+    ///         drawn with only what the client last knew of it: its floor, and nothing that moved since.
+    ///     Each one is a whole further z-level of entities per player, so this is the knob for a tall stack that
+    ///         looks empty a few floors down, and equally for a server short of bandwidth. 0 sends none.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<int> ZLevelPvsLevelsBelow =
+        CVarDef.Create("klovn.zlevel.pvs_levels_below", 1, CVar.SERVERONLY);
 
     /// <summary>
     ///     How often, in seconds, each player's z-level view subscriber is moved to track them.

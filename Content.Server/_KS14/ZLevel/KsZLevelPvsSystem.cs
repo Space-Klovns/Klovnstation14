@@ -21,6 +21,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     private TimeSpan _updateInterval = TimeSpan.FromSeconds(0.25d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
     private bool _sendAbove;
+    private int _levelsBelow = 1;
 
     public override void Initialize()
     {
@@ -34,6 +35,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         );
 
         Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsSendAbove, OnSendAboveChanged, true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsLevelsBelow, value => _levelsBelow = Math.Max(value, 0), true);
     }
 
     /// <summary>
@@ -86,7 +88,6 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     {
         var component = EntityManager.ComponentFactory.GetComponent<KsZLevelViewerComponent>();
         component.Session = args.Player;
-        component.Active = false;
         AddComp(args.Entity, component);
     }
 
@@ -101,7 +102,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     {
         // The subscriber may already be gone - its z-level deleted out from under it, say - and deleting a
         //      dead uid logs an error.
-        DeleteSubscriber(entity.Comp.ViewSubscriberUid);
+        RemoveBelowViewers(entity, keep: 0);
         DeleteSubscriber(entity.Comp.AboveViewSubscriberUid);
     }
 
@@ -119,29 +120,26 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         if (!TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
             return;
 
-        var slotUid = entity.Comp.Above
-            ? viewerComponent.AboveViewSubscriberUid
-            : viewerComponent.ViewSubscriberUid;
-
-        if (slotUid != entity.Owner)
-            return;
-
-        // Deleting the entity takes its subscriptions with it, so only unsubscribe while it is still alive.
-        if (!Terminating(entity.Owner))
-            _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
-
         // Clear the now-dangling reference rather than removing the viewer component. Update spawns a fresh
         //      subscriber next tick; removing the component instead would cost the player z-level visibility
         //      for the rest of the round, and would recurse straight back into OnViewerShutdown.
         if (entity.Comp.Above)
         {
+            if (viewerComponent.AboveViewSubscriberUid != entity.Owner)
+                return;
+
             viewerComponent.AboveActive = false;
             viewerComponent.AboveViewSubscriberUid = EntityUid.Invalid;
+        }
+        else if (!viewerComponent.BelowViewSubscriberUids.Remove(entity.Owner))
+        {
+            // Not one of the viewer's any more: taken off the list by whoever is deleting it.
             return;
         }
 
-        viewerComponent.Active = false;
-        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
+        // Deleting the entity takes its subscriptions with it, so only unsubscribe while it is still alive.
+        if (!Terminating(entity.Owner))
+            _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
     }
 
     public override void Update(float frameTime)
@@ -159,8 +157,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             // Off the stack entirely, so neither of them has anything to point at.
             if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity))
             {
-                if (viewerComponent.Active)
-                    RemoveActiveViewer((viewerUid, viewerComponent));
+                RemoveBelowViewers((viewerUid, viewerComponent), keep: 0);
 
                 if (viewerComponent.AboveActive)
                     RemoveAboveViewer((viewerUid, viewerComponent));
@@ -174,35 +171,50 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             //      of a stack has nothing under them and can still have a lit one over their head.
             UpdateAboveViewer((viewerUid, viewerComponent), zLevelEntity.Value, position);
 
-            // Asked through the navigation API rather than by walking Node.Previous here, because a viewer
-            //      riding a grid across a gap is standing on a map that is on no stack at all - so the walk
-            //      finds nothing below them and takes their subscriber away, and the floor they can plainly
-            //      see under their feet stops being transmitted for the whole of the ride. The API resolves
-            //      a gap to the z-level it is anchored to, which is exactly that floor.
-            // It null-checks Node internally too, the same way every other walk of the stack does: a z-level
-            //      removed from its stack keeps the field pointing at a node that no longer belongs to a
-            //      list, and one replicated before the rebuild has never been given one at all.
-            if (!_zLevelSystem.TryGetZLevelBelow(zLevelEntity.Value.Owner, out var belowZLevelEntity) ||
-                !TryComp<MapComponent>(belowZLevelEntity.Value.Owner, out var belowMapComponent))
-            {
-                if (viewerComponent.Active)
-                    RemoveActiveViewer((viewerUid, viewerComponent));
+            UpdateBelowViewers((viewerUid, viewerComponent), zLevelEntity.Value, position);
+        }
+    }
 
-                continue;
-            }
+    /// <summary>
+    ///     Keeps a subscriber under the viewer on each of the z-levels below that are sent to them, and none on
+    ///         any other.
+    /// </summary>
+    private void UpdateBelowViewers(
+        Entity<KsZLevelViewerComponent> entity,
+        Entity<KsZLevelComponent> zLevelEntity,
+        Vector2 position)
+    {
+        var subscriberUids = entity.Comp.BelowViewSubscriberUids;
+        var levels = 0;
+        var currentUid = zLevelEntity.Owner;
 
-            if (!viewerComponent.Active)
-                AddActiveViewer((viewerUid, viewerComponent), viewerComponent.Session);
+        // Asked through the navigation API rather than by walking Node.Previous here, because a viewer
+        //      riding a grid across a gap is standing on a map that is on no stack at all - so the walk
+        //      finds nothing below them and takes their subscribers away, and the floor they can plainly
+        //      see under their feet stops being transmitted for the whole of the ride. The API resolves
+        //      a gap to the z-level it is anchored to, which is exactly that floor.
+        // It null-checks Node internally too, the same way every other walk of the stack does: a z-level
+        //      removed from its stack keeps the field pointing at a node that no longer belongs to a
+        //      list, and one replicated before the rebuild has never been given one at all.
+        while (levels < _levelsBelow &&
+            _zLevelSystem.TryGetZLevelBelow(currentUid, out var belowZLevelEntity) &&
+            TryComp<MapComponent>(belowZLevelEntity.Value.Owner, out var belowMapComponent))
+        {
+            currentUid = belowZLevelEntity.Value.Owner;
 
-            if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid)
-                continue;
+            if (levels == subscriberUids.Count)
+                subscriberUids.Add(SpawnBelowSubscriber(entity));
 
             // lol
             _transformSystem.SetMapCoordinates(
-                viewerComponent.ViewSubscriberUid,
+                subscriberUids[levels],
                 new MapCoordinates(position, belowMapComponent.MapId)
             );
+
+            levels++;
         }
+
+        RemoveBelowViewers(entity, keep: levels);
     }
 
     /// <summary>
@@ -240,10 +252,8 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         );
     }
 
-    private void AddActiveViewer(Entity<KsZLevelViewerComponent?> entity, ICommonSession session)
+    private EntityUid SpawnBelowSubscriber(Entity<KsZLevelViewerComponent> entity)
     {
-        entity.Comp ??= EnsureComp<KsZLevelViewerComponent>(entity.Owner);
-
         var subscriberUid = Spawn(null);
         Transform(subscriberUid).GridTraversal = false; // You know exactly where this is from
 
@@ -252,24 +262,24 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         var subscriberComponent = EnsureComp<KsZLevelViewSubscriberComponent>(subscriberUid);
         subscriberComponent.ViewerUid = entity.Owner;
 
-        _viewSubscriberSystem.AddViewSubscriber(subscriberUid, session);
-
-        entity.Comp.Active = true;
-        entity.Comp.ViewSubscriberUid = subscriberUid;
+        _viewSubscriberSystem.AddViewSubscriber(subscriberUid, entity.Comp.Session);
+        return subscriberUid;
     }
 
-    private void RemoveActiveViewer(Entity<KsZLevelViewerComponent?> entity)
+    /// <summary>
+    ///     Deletes the viewer's subscribers below all but the nearest <paramref name="keep"/> levels.
+    /// </summary>
+    private void RemoveBelowViewers(Entity<KsZLevelViewerComponent> entity, int keep)
     {
-        if (!Resolve(entity, ref entity.Comp, logMissing: false))
-            return;
+        var subscriberUids = entity.Comp.BelowViewSubscriberUids;
 
-        entity.Comp.Active = false;
-
-        if (entity.Comp.ViewSubscriberUid != EntityUid.Invalid &&
-            !TerminatingOrDeleted(entity.Comp.ViewSubscriberUid))
-            Del(entity.Comp.ViewSubscriberUid);
-
-        entity.Comp.ViewSubscriberUid = EntityUid.Invalid;
+        // Off the list before it is deleted: its shutdown looks for it there, and what it finds is the viewer's.
+        for (var i = subscriberUids.Count - 1; i >= keep; i--)
+        {
+            var subscriberUid = subscriberUids[i];
+            subscriberUids.RemoveAt(i);
+            DeleteSubscriber(subscriberUid);
+        }
     }
 
     private void AddAboveViewer(Entity<KsZLevelViewerComponent> entity)
