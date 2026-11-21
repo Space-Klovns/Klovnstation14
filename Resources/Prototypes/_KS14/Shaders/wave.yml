@@ -6,3 +6,7 @@
   id: KsWaveDistortion
   kind: source
   path: "/Textures/_KS14/Shaders/wavedistortion.swsl"
+  params:
+    speed: 3.0
+    dis: 10.0
+    offset: 0.0

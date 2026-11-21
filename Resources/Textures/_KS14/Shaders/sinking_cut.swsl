@@ -10,8 +10,10 @@ light_mode unshaded;
 //      which cuts mobs standing in water, is exactly such an instance: it sets nothing and relies on the
 //      shader's own defaults. Sharing one program with it meant an entity that had finished sinking into
 //      lava, at alphaModifier 0, left every mob in water completely invisible.
-uniform highp float c = 0.3;
-uniform highp float alphaModifier = 0.2;
+// No initialisers: GLSL ES (compatibility mode) refuses them. The defaults (c 0.3, alphaModifier 0.2) are the
+//      KsSinkingCut prototype's params.
+uniform highp float c;
+uniform highp float alphaModifier;
 const bool below = true;
 
 void fragment()

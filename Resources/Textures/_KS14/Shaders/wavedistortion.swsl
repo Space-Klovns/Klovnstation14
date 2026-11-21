@@ -6,9 +6,10 @@ preset raw;
 varying highp vec2 Pos;
 varying highp vec4 VtxModulate;
 
-uniform highp float speed = 3.0;
-uniform highp float dis = 10.0;
-uniform highp float offset = 0.0;
+// No initialisers: GLSL ES (compatibility mode) refuses them. The defaults are the KsWaveDistortion prototype's params.
+uniform highp float speed;
+uniform highp float dis;
+uniform highp float offset;
 
 void fragment() {
     // Re-create base mvp

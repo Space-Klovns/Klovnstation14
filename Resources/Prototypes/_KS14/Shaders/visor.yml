@@ -2,3 +2,5 @@
   id: KsVisorRain
   kind: source
   path: "/Textures/_KS14/Shaders/visor_rain.swsl"
+  params:
+    lens_strength: 0.1
