@@ -1,10 +1,12 @@
 using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Buckle;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Popups;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Ladders;
 
@@ -16,6 +18,8 @@ namespace Content.Shared._KS14.Ladders;
 /// </remarks>
 public sealed partial class KsLadderSystem : EntitySystem
 {
+    [Dependency] private SharedBuckleSystem _buckleSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private PullingSystem _pullingSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
@@ -23,6 +27,7 @@ public sealed partial class KsLadderSystem : EntitySystem
     [Dependency] private EntityQuery<KsLadderComponent> _ladderQuery = default!;
 
     private const string NotLinkedMessage = "ks-ladder-not-linked";
+    private const string BuckledMessage = "ks-ladder-buckled";
 
     /// <summary>
     ///     Links two ladders to each other, unlinking whatever either was linked to before.
@@ -94,7 +99,7 @@ public sealed partial class KsLadderSystem : EntitySystem
         args.Handled = true;
         if (!TryGetDestination(entity, out _))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create(NotLinkedMessage), entity, args.User);
+            ReportNoDestination(entity, args.User);
             return;
         }
 
@@ -142,11 +147,34 @@ public sealed partial class KsLadderSystem : EntitySystem
         return _transformSystem.IsValid(destination);
     }
 
+    /// <summary>
+    ///     Says the ladder leads nowhere, unless only this client can't see where it leads.
+    /// </summary>
+    /// <remarks>
+    ///     With PVS, a client often hasn't been sent the far end (another map or level). Its networked
+    ///         <see cref="KsLadderComponent.Linked"/> then still holds a uid, reserved for that net entity but with
+    ///         nothing in it, so there is nothing to predict: the server moves the user and the client gets the result.
+    /// </remarks>
+    private void ReportNoDestination(Entity<KsLadderComponent> ladder, EntityUid user)
+    {
+        if (_netManager.IsClient && ladder.Comp.Linked != null)
+            return;
+
+        _popupSystem.PopupEntity(KsPopupMessage.Create(NotLinkedMessage), ladder, user);
+    }
+
     private void Climb(Entity<KsLadderComponent> ladder, EntityUid user)
     {
         if (!TryGetDestination(ladder, out var destination))
         {
-            _popupSystem.PopupEntity(KsPopupMessage.Create(NotLinkedMessage), ladder, user);
+            ReportNoDestination(ladder, user);
+            return;
+        }
+
+        // As a pull, a strap would be left behind: get off it first, or don't climb.
+        if (_buckleSystem.IsBuckled(user) && !_buckleSystem.TryUnbuckle(user, user, popup: false))
+        {
+            _popupSystem.PopupEntity(KsPopupMessage.Create(BuckledMessage), ladder, user);
             return;
         }
 

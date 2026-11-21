@@ -24,7 +24,8 @@ public sealed partial class KsLadderComponent : Component
 
     /// <summary>
     ///     Mapper link: at MapInit, an unlinked ladder links to the other unlinked ladder with the same key.
-    ///     Cleared once linked, so the saved <see cref="Linked"/> is what survives a save.
+    ///     Kept after linking: a save keeps <see cref="Linked"/> only when both ends are in the same file, so a
+    ///         ladder whose other end is on another map relinks by its key each time the maps are loaded.
     /// </summary>
     [DataField]
     public string? LinkKey;

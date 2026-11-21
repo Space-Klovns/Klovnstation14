@@ -4,6 +4,8 @@ using Content.IntegrationTests.Pair;
 using Content.Shared._KS14.Ladders;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
+using Content.Shared.Movement.Pulling.Components;
+using Content.Shared.Movement.Pulling.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -43,12 +45,25 @@ public sealed class KsLadderTest : GameTest
   name: test climber
   components:
   - type: DoAfter
+  - type: Puller
+    needsHands: false
+  - type: Physics
+    bodyType: KinematicController
+
+- type: entity
+  id: KsTestLadderCrate
+  name: test crate
+  components:
+  - type: Pullable
+  - type: Physics
+    bodyType: Dynamic
 ";
 
     private readonly EntProtoId _ladder = "KsTestLadder";
     private readonly EntProtoId _slowLadder = "KsTestLadderSlow";
     private readonly EntProtoId _keyedLadder = "KsTestLadderKeyed";
     private readonly EntProtoId _climber = "KsTestLadderClimber";
+    private readonly EntProtoId _crate = "KsTestLadderCrate";
 
     private void Use(EntityUid user, EntityUid ladder)
     {
@@ -138,6 +153,27 @@ public sealed class KsLadderTest : GameTest
             SEntMan.System<SharedMapSystem>().InitializeMap(map.MapId);
             Assert.That(SComp<KsLadderComponent>(first).Linked, Is.EqualTo(second));
             Assert.That(SComp<KsLadderComponent>(second).Linked, Is.EqualTo(first));
+        });
+    }
+
+    [Test]
+    public async Task PulledEntityComesAlongStillPulled()
+    {
+        var map = await Pair.CreateTestMap();
+        var farMap = await Pair.CreateTestMap();
+        await Server.WaitAssertion(() =>
+        {
+            var near = SSpawnAtPosition(_ladder, map.GridCoords);
+            var far = SSpawnAtPosition(_ladder, farMap.GridCoords.Offset(new Vector2(3, 0)));
+            SEntMan.System<KsLadderSystem>().Link(near, far);
+            var climber = SSpawnAtPosition(_climber, map.GridCoords);
+            var crate = SSpawnAtPosition(_crate, map.GridCoords.Offset(new Vector2(0.5f, 0)));
+            var pullingSystem = SEntMan.System<PullingSystem>();
+            Assert.That(pullingSystem.TryStartPull(climber, crate), Is.True, "precondition: the climber pulls the crate");
+
+            Use(climber, near);
+            Assert.That(MapPosition(crate).MapId, Is.EqualTo(MapPosition(far).MapId));
+            Assert.That(SComp<PullerComponent>(climber).Pulling, Is.EqualTo(crate), "still pulled after the climb");
         });
     }
 }
