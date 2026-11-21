@@ -56,6 +56,7 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
 {
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private Robust.Shared.Network.INetManager _netManager = default!;
     [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
@@ -155,6 +156,14 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<KsRayCollisionComponent, PhysicsComponent, FixturesComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var rayCollisionComponent, out var physicsComponent, out var fixturesComponent, out var transformComponent))
         {
+            // On a client, what it does not predict is where the server last said it was, and is the server's to collide:
+            //      looked ahead of here, someone else's round hit what this client thought was in its way.
+            if (_netManager.IsClient &&
+                !physicsComponent.Predict &&
+                !IsClientSide(uid) &&
+                !_predictedSpawnSystem.IsKeptLocally(uid))
+                continue;
+
             if (rePredicting)
             {
                 // A kept copy is not put back for this tick, and physics does not move it on it: nothing to look ahead of.

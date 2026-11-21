@@ -120,4 +120,57 @@ public sealed class KsBurstFirePredictionTest : InteractionTest
                 $"the client asked to shoot {requests} times for one click on a {ShotsPerBurst}-round burst");
         });
     }
+
+    /// <summary>
+    ///     The server goes on with a burst by itself when the client's request for its next shot is late. Those shots are
+    ///         the player's own prediction as much as the one they asked for: marked with them, so their client hides
+    ///         the server's round and shows its own, not both.
+    /// </summary>
+    [Test]
+    public async Task ShotsTheServerContinuesABurstWithAreThePlayersOwn()
+    {
+        var gunNetEntity = await PlaceInHands(TestBurstGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() => shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer));
+        var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, shooterPosition + new Vector2(40f, 0f)));
+
+        // The click, and nothing after it: every later shot of the burst is the server's doing.
+        await Client.WaitPost(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new RequestShootEvent
+            {
+                Gun = gunNetEntity,
+                Coordinates = targetCoordinates,
+            });
+        });
+
+        var serverBullets = new Dictionary<EntityUid, EntityUid?>();
+        for (var tick = 0; tick < 90; tick++)
+        {
+            await RunTicks(1);
+            await Server.WaitPost(() =>
+            {
+                var enumerator = SEntMan.AllEntityQueryEnumerator<ProjectileComponent>();
+                while (enumerator.MoveNext(out var uid, out var projectileComponent))
+                {
+                    if (projectileComponent.Shooter != SPlayer)
+                        continue;
+
+                    serverBullets[uid] = SEntMan.TryGetComponent<Content.Shared._KS14.PredictedSpawning.KsPredictedSpawnComponent>(uid, out var predictedSpawnComponent)
+                        ? predictedSpawnComponent.PredictingUser
+                        : null;
+                }
+            });
+        }
+
+        Assert.That(serverBullets, Has.Count.EqualTo(ShotsPerBurst), "the server did not go on to fire the whole burst, so this proves nothing");
+        foreach (var (bulletUid, predictingUser) in serverBullets)
+        {
+            Assert.That(predictingUser, Is.EqualTo(SPlayer),
+                $"a round of the player's burst ({bulletUid}) is not marked as their own prediction");
+        }
+    }
 }

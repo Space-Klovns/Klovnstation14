@@ -33,7 +33,14 @@ public sealed partial class GunSystem
             {
                 var parent = TransformSystem.GetParentUid(uid);
                 if (HasComp<DamageableComponent>(parent))
-                    AttemptShoot(parent, (uid, gun), gun.ShootCoordinates ?? new EntityCoordinates(uid, gun.DefaultDirection));
+                {
+                    // KS14 start: a player's burst is their own prediction whichever side fires the next shot of it. Their
+                    //      client asks for each, and when that request is late this fires it first: outside the scope its
+                    //      round was not hidden from them, and they saw it beside their own.
+                    using (_ksPredictedSpawnSystem.BeginUserPrediction(HasComp<Robust.Shared.Player.ActorComponent>(parent) ? (EntityUid?)parent : null))
+                        AttemptShoot(parent, (uid, gun), gun.ShootCoordinates ?? new EntityCoordinates(uid, gun.DefaultDirection));
+                    // KS14 end
+                }
                 else
                     AttemptShoot((uid, gun));
             }

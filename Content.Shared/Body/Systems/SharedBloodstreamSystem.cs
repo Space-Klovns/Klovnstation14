@@ -53,6 +53,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         SubscribeLocalEvent<BloodstreamComponent, ReactionAttemptEvent>(OnReactionAttempt);
         SubscribeLocalEvent<BloodstreamComponent, SolutionRelayEvent<ReactionAttemptEvent>>(OnReactionAttempt);
         SubscribeLocalEvent<BloodstreamComponent, DamageChangedEvent>(OnDamageChanged);
+        SubscribeLocalEvent<BloodstreamComponent, _KS14.Damage.Events.KsPreviewedDamageEvent>(KsOnPreviewedDamage); // KS14
         SubscribeLocalEvent<BloodstreamComponent, HealthBeingExaminedEvent>(OnHealthBeingExamined);
         SubscribeLocalEvent<BloodstreamComponent, GibbedBeforeDeletionEvent>(OnBeingGibbed);
         SubscribeLocalEvent<BloodstreamComponent, ApplyMetabolicMultiplierEvent>(OnApplyMetabolicMultiplier);
@@ -183,6 +184,23 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
 
         OnReactionAttempt(ent, ref args.Event);
     }
+
+    // KS14 start
+    /// <summary>
+    ///     A client's kept copy of its own shot hit this: it deals no damage here (the server's hit does), so no
+    ///         <see cref="DamageChangedEvent"/> sprays its blood. Sprayed from this instead, at once, and nothing else.
+    /// </summary>
+    private void KsOnPreviewedDamage(Entity<BloodstreamComponent> ent, ref _KS14.Damage.Events.KsPreviewedDamageEvent args)
+    {
+        if (args.Origin is not { } originUid || !ProtoMan.Resolve(ent.Comp.DamageBleedModifiers, out var modifiers))
+            return;
+
+        var damage = DamageSpecifier.GetPositive(args.Damage);
+        var bloodloss = DamageSpecifier.ApplyModifierSet(damage, modifiers);
+        if (!bloodloss.Empty)
+            _bloodSpraySystem.HandleBleedEffects(ent!, (float)bloodloss.GetTotal() * 2f, originUid, damage: (float)damage.GetTotal());
+    }
+    // KS14 end
 
     private void OnDamageChanged(Entity<BloodstreamComponent> ent, ref DamageChangedEvent args)
     {

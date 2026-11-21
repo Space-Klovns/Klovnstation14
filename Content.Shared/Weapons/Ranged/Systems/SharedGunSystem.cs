@@ -48,7 +48,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 {
     [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
     [Dependency] private _KS14.FarSound.FarSoundSystem _farsoundSystem = default!;// KS14
-    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
+    [Dependency] protected _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -180,7 +180,14 @@ public abstract partial class SharedGunSystem : EntitySystem
         // KS14 ghetto mech port end
         // TODO: once mlgguns come out nuke this entire file and start from scratch
 
-        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        // KS14 start: where to shoot is the client's word, and a position's NaN arrives as sent (only float fields are
+        //      flushed): it went on into the shot's direction, the projectile's velocity and every lookup along the way.
+        var ksShootCoordinates = GetCoordinates(msg.Coordinates);
+        if (!TransformSystem.IsValid(ksShootCoordinates))
+            return;
+        // KS14 end
+
+        userGun.Comp.ShootCoordinates = ksShootCoordinates /* KS14: GetCoordinates(msg.Coordinates) -> checked above */;
         userGun.Comp.Target = GetEntity(msg.Target);
         // KS14 start: the projectiles of this shot are the sender's own prediction, kept by their client
         using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))

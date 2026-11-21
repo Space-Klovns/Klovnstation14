@@ -78,6 +78,11 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
 
     public override void DoDisturbance(EntityCoordinates coordinates, float radius, EntityUid? source = null)
     {
+        // Nothing hears it: a gun with no gunshot sound disturbs over the sound's range, which is none. The lookup
+        //      asserts on a range that is not positive, so an NPC firing one stopped the server's tick in Debug.
+        if (radius <= 0f)
+            return;
+
         var entities = _lookupSystem.GetEntitiesInRange<NpcSensorsComponent>(coordinates, radius, flags: LookupFlags.Approximate | LookupFlags.Sundries | LookupFlags.Dynamic | LookupFlags.Uncontained);
         foreach (var entity in entities)
         {
