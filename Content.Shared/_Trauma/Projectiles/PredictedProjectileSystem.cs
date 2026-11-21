@@ -53,6 +53,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private _KS14.Impacts.KsImpactSurfaceSystem _ksImpactSurfaceSystem = default!; // KS14
     [Dependency] private _KS14.Damage.Pending.KsPendingDamageSystem _ksPendingDamageSystem = default!; // KS14
+    [Dependency] private _KS14.BloodSpray.BloodSpraySystem _ksBloodSpraySystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -263,12 +264,15 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
                     _ksPendingDamageSystem.Add(target, damage, shotId);
 
                 var previewedEv = new _KS14.Damage.Events.KsPreviewedDamageEvent(damage, shooter);
-                RaiseLocalEvent(target, ref previewedEv);
+                using (_ksBloodSpraySystem.BeginHit(_ksPredictedSpawnSystem.GetShotSeed(uid), kept: true))
+                    RaiseLocalEvent(target, ref previewedEv);
             }
         }
         else
         {
-            damaged = _damageable.TryChangeDamage((target, damageable), damageToDeal, out damage, comp.IgnoreResistances, origin: shooter);
+            // The blood this sprays is rolled from the shot, as its user's kept copy rolled it, not from this tick.
+            using (_ksBloodSpraySystem.BeginHit(_ksPredictedSpawnSystem.GetShotSeed(uid), kept: false))
+                damaged = _damageable.TryChangeDamage((target, damageable), damageToDeal, out damage, comp.IgnoreResistances, origin: shooter);
         }
         // KS14 end
 

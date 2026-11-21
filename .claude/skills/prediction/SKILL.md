@@ -84,12 +84,24 @@ A kept bullet's hit is the same: `PredictedProjectileSystem.DoHit` works out wha
 and raises `ProjectileHitEvent` with `KsPreviewOnly`, which a handler that changes the target (stamina) returns on.
 Dealt by the kept copy, damage was put back by the next state and dealt again by the server's hit: health flickered on
 every shot. What the shooter sees at once goes two other ways: the amount is shown as **pending damage**
-(`KsPendingDamageSystem`, `KsPendingDamageComponent`), kept beside the target's damage and never in it, so nothing that
-reads `DamageableComponent` (thresholds, mob states) acts on a hit the server may not make; what draws a health value
-reads `GetShownTotalDamage`. Each entry is one shot's (`KsKeptPredictedSpawnComponent.ShotId`), dropped when the
-server's `KsPredictedSpawnImpactEvent` for that shot and target arrives, which the engine hands over once the state of
-its tick (with the damage in it) is applied, and taken off once if it never does. And what plays off a hit (blood)
-plays off `KsPreviewedDamageEvent`, since no `DamageChangedEvent` is raised for it. A projectile the client does not predict at all (anyone else's, the hidden server copy of its own) hits
+(`KsPendingDamageSystem`, `KsPendingDamageComponent`), kept beside the target's damage and never in it, so no state has
+anything to put back. `DamageableSystem`'s getters (`GetTotalDamage`, `GetAllDamage`, `GetDamagePerGroup`) add it
+themselves, so whatever asks for an entity's damage shows it with no code of its own; not while a state is being
+applied, when what handles the server's damage (thresholds, mob states) must read the server's alone, or a mob is put
+down on this client by a hit the server never makes and stays down. Each entry is one shot's
+(`KsKeptPredictedSpawnComponent.ShotId`), dropped when the server's `KsPredictedSpawnImpactEvent` for that shot and
+target arrives, which the engine hands over once the state of its tick (with the damage in it) is applied, and taken
+off once if it never does. And what plays off a hit (blood) plays off `KsPreviewedDamageEvent`, since no
+`DamageChangedEvent` is raised for it.
+
+**A decal from a kept copy's hit is a kept decal**, not `TryAddDecal`: that writes into the networked
+`DecalChunkComponent`, which the next state puts back, and nothing runs a kept copy's hit again to write it again, so
+the stain showed for a tick, went, and came back with the server's. `SharedDecalSystem.KsAddKeptPredictedDecal` keeps it
+on the grid in a client-only component the overlay also draws, until a server decal of the same id and colour turns up
+close by, or it expires. **And what a kept copy's hit rolls is seeded by the shot, not the tick**
+(`KsSharedPredictedSpawnSystem.GetShotSeed`, `BloodSpraySystem.BeginHit`): the kept copy and the server's copy hit on
+different ticks, so a tick-seeded layout differs, and the stains changed when the server's arrived
+(`ShootersBloodStainsStayPutAndMatchTheServers`). A projectile the client does not predict at all (anyone else's, the hidden server copy of its own) hits
 nothing on it, and `KsRayCollisionSystem` does not look ahead of it. `KsGunHitPredictionTest`.
 
 **The server takes a player's shot against where each mob was when their client fired**, by ping: bullets through

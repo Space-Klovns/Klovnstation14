@@ -345,6 +345,8 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
     public override int? GetKeptShotId(EntityUid uid) => _keptQuery.TryComp(uid, out var keptComponent) ? keptComponent.ShotId : null;
 
+    public override int? GetShotSeed(EntityUid uid) => _keptQuery.TryComp(uid, out var keptComponent) ? (int)keptComponent.SpawnTick.Value : base.GetShotSeed(uid);
+
     /// <summary>
     ///     The last id given to a shot this client keeps a copy of (<see cref="KsKeptPredictedSpawnComponent.ShotId"/>).
     /// </summary>

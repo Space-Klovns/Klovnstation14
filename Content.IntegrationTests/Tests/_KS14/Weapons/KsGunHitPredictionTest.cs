@@ -745,4 +745,115 @@ public sealed class KsGunHitPredictionTest : InteractionTest
                 "the mob went down on the client for damage the server has not dealt");
         });
     }
+
+    /// <summary>
+    ///     The server's decals on a client, by where they are: those of every chunk, the client's own predicted ones left out.
+    /// </summary>
+    private List<Content.Shared.Decals.Decal> ClientServerDecals()
+    {
+        var decals = new List<Content.Shared.Decals.Decal>();
+        var query = CEntMan.AllEntityQueryEnumerator<Content.Shared.Decals.DecalChunkComponent>();
+        while (query.MoveNext(out var chunkComponent))
+        {
+            foreach (var (decalId, decal) in chunkComponent.Decals)
+            {
+                if (decalId < Content.Shared.Decals.DecalChunkComponent.MinPredictedDecalId)
+                    decals.Add(decal);
+            }
+        }
+
+        return decals;
+    }
+
+    /// <summary>
+    ///     The blood stains of a bullet's hit stay on the shooter's screen from the moment their own bullet hits: not gone
+    ///         with the next state until the server's arrive, never shown twice, and laid out as the server lays its own
+    ///         out, so nothing changes when those take their place. They were written into the networked decal chunk,
+    ///         which the next state wiped, and rolled from the tick, which is not the server's tick for the hit.
+    /// </summary>
+    [Test]
+    public async Task ShootersBloodStainsStayPutAndMatchTheServers()
+    {
+        var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
+        await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4));
+
+        var gunNetEntity = await PlaceInHands(TestGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+
+        // Floor under the target and behind it: a decal needs a tile.
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            var plating = new Tile(TileMan[Plating].TileId);
+            for (var tileX = -2; tileX <= 10; tileX++)
+            {
+                for (var tileY = -4; tileY <= 4; tileY++)
+                    MapSystem.SetTile(MapData.Grid, new Vector2i(tileX, tileY), plating);
+            }
+
+            SEntMan.SpawnEntity(_testBleeder, new MapCoordinates(shooterPosition + new Vector2(3f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var clientGridUid = ToClient(MapData.Grid.Owner);
+        var aimCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, shooterPosition + new Vector2(40f, 0f)));
+        await Client.WaitPost(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new RequestShootEvent
+            {
+                Gun = gunNetEntity,
+                Coordinates = aimCoordinates,
+            });
+        });
+
+        var decalSystem = CEntMan.System<Content.Client.Decals.DecalSystem>();
+        List<Content.Shared.Decals.Decal>? predicted = null;
+        var mostShown = 0;
+        var ticks = (int)(3f * (float)Server.ResolveDependency<IGameTiming>().TickRate);
+        for (var tick = 0; tick < ticks; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitAssertion(() =>
+            {
+                var kept = decalSystem.KsGetKeptDecals(clientGridUid).Select(keptDecal => keptDecal.Decal).ToList();
+                var shown = kept.Count + ClientServerDecals().Count;
+                mostShown = Math.Max(mostShown, shown);
+
+                if (predicted == null)
+                {
+                    if (kept.Count > 0)
+                        predicted = kept;
+
+                    return;
+                }
+
+                Assert.That(shown, Is.GreaterThanOrEqualTo(predicted.Count),
+                    $"tick {tick}: {predicted.Count} stains were predicted and {shown} are shown: some went before the server's came");
+            });
+        }
+
+        Assert.That(predicted, Is.Not.Null, "the shooter's client never kept a predicted blood stain");
+
+        await Client.WaitAssertion(() =>
+        {
+            var served = ClientServerDecals();
+            Assert.That(served, Is.Not.Empty, "the server's stains never reached the client, so this proves nothing");
+            Assert.That(decalSystem.KsGetKeptDecals(clientGridUid), Is.Empty, "predicted stains are still kept beside the server's own");
+            Assert.That(mostShown, Is.EqualTo(served.Count), "more stains were shown at once than the hit left: predicted and server's together");
+
+            // Laid out alike: each the same decal, colour and turn, and close by.
+            Assert.That(predicted!, Has.Count.EqualTo(served.Count), "the client predicted a different number of stains");
+            foreach (var predictedDecal in predicted!)
+            {
+                Assert.That(served.Any(servedDecal =>
+                        servedDecal.Id == predictedDecal.Id &&
+                        servedDecal.Color == predictedDecal.Color &&
+                        servedDecal.Angle.EqualsApprox(predictedDecal.Angle) &&
+                        Vector2.Distance(servedDecal.Coordinates, predictedDecal.Coordinates) < 0.5f),
+                    $"no stain of the server's matches the predicted {predictedDecal.Id} at {predictedDecal.Coordinates}");
+            }
+        });
+    }
 }

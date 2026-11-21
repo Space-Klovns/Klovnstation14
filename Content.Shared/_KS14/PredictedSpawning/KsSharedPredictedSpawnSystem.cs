@@ -150,6 +150,18 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     public virtual int? GetKeptShotId(EntityUid uid) => null;
 
     /// <summary>
+    ///     A number the server's copy of a user's shot and that user's kept copy of it share: the tick it was spawned on.
+    ///         Seeds what both roll for the shot's hit (its blood stains), which lands on a different tick on each. Null
+    ///         for a shot no client keeps a copy of, which nothing has to agree with.
+    /// </summary>
+    public virtual int? GetShotSeed(EntityUid uid)
+    {
+        return TryComp<KsPredictedSpawnComponent>(uid, out var predictedSpawnComponent) && predictedSpawnComponent.PredictingUser != null
+            ? (int)predictedSpawnComponent.SpawnTick.Value
+            : null;
+    }
+
+    /// <summary>
     ///     <c>PredictedQueueDel</c>, except that a client's kept copy deleted while a state is being applied goes at
     ///         the start of the next tick instead. Use it for anything that can be a kept copy and deletes itself
     ///         from a collision handler, as a projectile's hit does.

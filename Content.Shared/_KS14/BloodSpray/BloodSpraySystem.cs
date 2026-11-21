@@ -106,6 +106,55 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
     private readonly List<PredictedHitOrigin> _predictedHitOrigins = new();
 
+    /// <summary>
+    ///     What seeds the rolls of the blood sprayed inside the open <see cref="BeginHit"/>, in place of the tick.
+    /// </summary>
+    private int? _hitSeed;
+
+    /// <summary>
+    ///     Whether the blood sprayed inside the open <see cref="BeginHit"/> is for the hit of a client's kept copy of its
+    ///         own shot, which is never run again and must leave networked state alone.
+    /// </summary>
+    private bool _keptHit;
+
+    /// <summary>
+    ///     Opens a scope in which the blood a hit sprays is rolled from <paramref name="seed"/>, a number the client that
+    ///         predicts the hit and the server both have (a bullet's shot), rather than from the tick each of them
+    ///         happens to run it on.
+    /// </summary>
+    /// <param name="seed">Null rolls from the tick, as outside any scope.</param>
+    /// <param name="kept">Whether this is the hit of a client's kept copy of its own shot.</param>
+    public HitScope BeginHit(int? seed, bool kept)
+    {
+        var scope = new HitScope(this, _hitSeed, _keptHit);
+        _hitSeed = seed;
+        _keptHit = kept;
+        return scope;
+    }
+
+    /// <summary>
+    ///     Restores the scope before it when disposed. See <see cref="BeginHit"/>.
+    /// </summary>
+    public readonly struct HitScope : IDisposable
+    {
+        private readonly BloodSpraySystem _system;
+        private readonly int? _previousSeed;
+        private readonly bool _previousKept;
+
+        public HitScope(BloodSpraySystem system, int? previousSeed, bool previousKept)
+        {
+            _system = system;
+            _previousSeed = previousSeed;
+            _previousKept = previousKept;
+        }
+
+        public void Dispose()
+        {
+            _system._hitSeed = _previousSeed;
+            _system._keptHit = _previousKept;
+        }
+    }
+
     private static readonly SpriteSpecifier.Rsi[] Textures =
     {
         new(new ResPath("/Textures/Effects/crayondecals.rsi"), "splatter"),
@@ -155,8 +204,10 @@ public sealed partial class BloodSpraySystem : EntitySystem
         if (!_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
             return;
 
-        // TODO: fix occasional mispredict here
-        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager));
+        // The same rolls on the client that predicts the hit and on the server. By the tick, for what both run on the same
+        //      one (a predicted swing or hitscan shot). A bullet's hit lands on different ticks on each, and is seeded by
+        //      its shot instead (BeginHit), or the stains the shooter saw changed when the server's arrived.
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(_hitSeed ?? (int)_gameTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager));
 
         if (!TryResolveHitOrigin(entity.Owner, worldDeltaUnit, out var broadphaseUid, out var localPosition, out var localDeltaUnit))
             return;
@@ -210,17 +261,23 @@ public sealed partial class BloodSpraySystem : EntitySystem
                 break;
 
             accumulatedVariation += cachedVariations[intpower];
-            _decalSystem.TryAddDecal(
-                predictedRandom.Pick(DecalIds),
-                effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset + localDeltaUnit * power),
-                out _,
-                color: bloodColor,
-                rotation: predictedRandom.NextAngle(),
-                cleanable: true
-            );
+            var decalId = predictedRandom.Pick(DecalIds);
+            var decalCoordinates = effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset + localDeltaUnit * power);
+            var decalRotation = predictedRandom.NextAngle();
+
+            // A kept copy's hit is never run again, so a decal written into the networked chunk would be gone with the
+            //      next state: it is kept apart from it until the server's arrives.
+            if (_keptHit)
+                _decalSystem.KsAddKeptPredictedDecal(decalId, decalCoordinates, color: bloodColor, rotation: decalRotation, cleanable: true);
+            else
+                _decalSystem.TryAddDecal(decalId, decalCoordinates, out _, color: bloodColor, rotation: decalRotation, cleanable: true);
 
             power -= iterationDelta;
         }
+
+        // A stain is networked state on what it is on: a kept copy's hit leaves it to the server's.
+        if (_keptHit)
+            return;
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
             _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f), texture: predictedRandom.Pick(Textures));
