@@ -168,6 +168,14 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         if (comp.KsPassesUndamageable && !HasComp<DamageableComponent>(target))
             return;
 
+        // KS14 start: on a client, only what it predicts hits anything. Anyone else's shot, and the hidden server copy of
+        //      its own, is the server's to resolve: a hit made here dealt damage the next state put back, and the server's
+        //      hit dealt again (health flickered), and left the copy spent, which no state undoes.
+        var keptCopy = _ksPredictedSpawnSystem.IsKeptLocally(uid);
+        if (_net.IsClient && !keptCopy && !IsClientSide(uid) && !ourBody.Predict)
+            return;
+        // KS14 end
+
         // it's here so this check is only done once before possible hit
         var attemptEv = new ProjectileReflectAttemptEvent(uid, comp, false);
         RaiseLocalEvent(target, ref attemptEv);
@@ -180,7 +188,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         var shooter = comp.Shooter;
         // KS14 start: damage falloff by distance flown
         var falloffMultiplier = _ksProjectileFalloffSystem.GetMultiplier(uid, _transformSystem.GetMapCoordinates(uid));
-        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier * falloffMultiplier, target, shooter);
+        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier * falloffMultiplier, target, shooter, KsPreviewOnly: keptCopy);
         // KS14 end
         RaiseLocalEvent(uid, ref ev);
 
@@ -235,7 +243,24 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
         var deleted = Deleted(target);
 
-        if (_damageable.TryChangeDamage((target, damageable), !adjustedDamage.Empty ? adjustedDamage : ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter) && Exists(shooter)) //KS14
+        // KS14 start: a client's kept copy of its own shot works out what the hit would deal and deals none of it. Nothing
+        //      about a kept copy is re-predicted, so damage it dealt was put back by the next state and dealt again by the
+        //      server's hit: the target's health flickered. What follows (going through, the impact) uses the amount.
+        var damageToDeal = !adjustedDamage.Empty ? adjustedDamage : ev.Damage;
+        DamageSpecifier damage;
+        bool damaged;
+        if (keptCopy)
+        {
+            damage = _damageable.PreviewDamage((target, damageable), damageToDeal, ignoreResistances: comp.IgnoreResistances, origin: shooter);
+            damaged = !damage.Empty;
+        }
+        else
+        {
+            damaged = _damageable.TryChangeDamage((target, damageable), damageToDeal, out damage, comp.IgnoreResistances, origin: shooter);
+        }
+        // KS14 end
+
+        if (damaged /* KS14: _damageable.TryChangeDamage(...) -> either of the above */ && Exists(shooter)) //KS14
         {
             if (!deleted && _net.IsServer) // intentionally not predicting so you know if color flashes its 100% a hit
             {

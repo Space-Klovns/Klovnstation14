@@ -81,6 +81,11 @@ public abstract partial class SharedGunSystem
         var newTheta = MathHelper.Clamp(comp.CurrentAngle.Theta + comp.AngleIncreaseModified.Theta - comp.AngleDecayModified.Theta * timeSinceLastFire, comp.MinAngleModified.Theta, comp.MaxAngleModified.Theta);
         comp.CurrentAngle = new Angle(newTheta);
         comp.LastFire = curTime;
+        // KS14 start: neither was sent (field deltas send only what is dirtied), so every state put a client's spread
+        //      back to what it started at, and its predicted shots flew a narrower line than the server's
+        DirtyField(uid, comp, nameof(GunComponent.CurrentAngle));
+        DirtyField(uid, comp, nameof(GunComponent.LastFire));
+        // KS14 end
 
         // Convert it so angle can go either side.
         var random = GetRandom(uid).NextFloat(-0.5f, 0.5f);

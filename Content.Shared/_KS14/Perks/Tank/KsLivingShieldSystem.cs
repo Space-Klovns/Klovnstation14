@@ -83,12 +83,13 @@ public sealed partial class KsLivingShieldSystem : EntitySystem
     //     so it wears down only by what got past them. Unordered it ran before the armour and spent itself on the whole hit.
     // Not pure, as a Modify handler should be, and it can't be split: DamageDealtEvent carries only the final amount and
     //     can't change it, so how much the shield took is known only here. ChangeDamage raises DamageModifyEvent only
-    //     right before dealing the damage, and nothing raises it to ask.
+    //     right before dealing the damage. DamageableSystem.PreviewDamage raises it to ask, flagged: the amount is
+    //     changed as it would be, and the shield spends nothing.
     // Damage is applied on the server, so only the server counts it. A class event, so no Entity<T> handler (RA0054).
     [SubscribeLocalEvent(after: [typeof(InventorySystem), typeof(StatusEffectsSystem), typeof(BlockingSystem), typeof(KsMarkedTargetSystem), typeof(MobStateSystem)])]
     private void OnDamageModify(EntityUid uid, KsLivingShieldAbilityComponent component, DamageModifyEvent args)
     {
-        if (_netManager.IsClient || !component.Raised)
+        if (!component.Raised || _netManager.IsClient && !args.KsPreviewOnly)
             return;
 
         var total = (float)args.Damage.GetTotal();
@@ -96,8 +97,11 @@ public sealed partial class KsLivingShieldSystem : EntitySystem
             return;
 
         var absorbed = MathF.Min(total, component.Remaining);
-        component.Remaining -= absorbed;
         args.Damage *= (total - absorbed) / total;
+        if (args.KsPreviewOnly)
+            return;
+
+        component.Remaining -= absorbed;
         Dirty(uid, component);
 
         if (component.Remaining <= 0f)
