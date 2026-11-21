@@ -92,11 +92,14 @@ public sealed class KsAmmoCounterStateTest : InteractionTest
     ///     The count the client's counter control for <paramref name="clientGunUid"/> shows. <paramref name="rebuild"/>
     ///         builds it anew first, as the hands' item status panel does when the gun is picked up.
     /// </summary>
-    private int CounterShows(EntityUid clientGunUid, bool rebuild = false)
+    private int CounterShows(EntityUid clientGunUid, bool rebuild = false) => CounterShows(CEntMan, clientGunUid, rebuild);
+
+    /// <inheritdoc cref="CounterShows(EntityUid, bool)"/>
+    internal static int CounterShows(IEntityManager clientEntityManager, EntityUid clientGunUid, bool rebuild = false)
     {
-        var counterComponent = CEntMan.GetComponent<AmmoCounterComponent>(clientGunUid);
+        var counterComponent = clientEntityManager.GetComponent<AmmoCounterComponent>(clientGunUid);
         if (rebuild || counterComponent.Control == null)
-            CEntMan.EventBus.RaiseLocalEvent(clientGunUid, new ItemStatusCollectMessage(), broadcast: true);
+            clientEntityManager.EventBus.RaiseLocalEvent(clientGunUid, new ItemStatusCollectMessage(), broadcast: true);
 
         Assert.That(counterComponent.Control, Is.Not.Null, "the gun should have an ammo counter control");
         var bullets = Descendants(counterComponent.Control!).OfType<BaseBulletRenderer>().FirstOrDefault();

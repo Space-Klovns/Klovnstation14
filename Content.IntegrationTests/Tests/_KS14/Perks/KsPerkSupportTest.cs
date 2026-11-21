@@ -33,6 +33,7 @@ namespace Content.IntegrationTests.Tests._KS14.Perks;
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsAmmoDropSystem))]
+[TestOf(typeof(KsAmmoPickupSystem))]
 [TestOf(typeof(KsCompanionSystem))]
 [TestOf(typeof(KsRallySystem))]
 [TestOf(typeof(KsRallyBuffSystem))]
