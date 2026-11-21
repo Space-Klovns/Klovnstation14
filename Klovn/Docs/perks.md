@@ -80,8 +80,8 @@ If an ability needs to know about the perk rather than its component, subscribe 
 | Healing | No bleeding | `KsNoBleedingAbility` | Closes any bleed after damage opens it, and zeroes bleed ticks. |
 | Healing | Medibot | `KsCompanions` with `KsMobCompanionMedibot` | A companion (below); `KsCombatMedic` beeps for `windup`, then injects the worst hurt friendly in reach. |
 | Healing | Medigun | item `KsMedicalBeamGun`, `KsMedicalBeamGun` | Port of tg's medbeam: a cancelled shot locks a beam on any living mob, friend or foe, in range and sight, healing each `tickInterval`, with `healEffect` spawned on a hurt patient (riding on them); breaks at once with a popup and buzz when range or sight is lost. Fired at nothing it can beam it lets go quietly; a clicked mob is never passed on to aim assist (`aimAssistRadius` only helps a click on no mob). At each heal tick a beam that crosses another holder's (holder-to-target segments; same holder never, same patient only when one runs along the other, a beam onto a beaming medic does) stops both and the server sets off `crossExplosion` there (`KsMedicalBeamCrossingSystem`, logged with both holders). Drawn from the holder's centre by `KsMedicalBeamOverlay`. |
-| Support | Ammo drop | `KsAmmoDropAbility`, `KsAmmoPickup` | A kill by the holder (a held gun's, or a companion's, counts) drops `pickup` with `chance` (server). Any living mob sharing an NPC faction the dropper had, within `radius`, gets the active-hand gun's magazine (or own ballistic store) filled with its own rounds, or its battery recharged; nothing to fill and it stays. Despawns by `TimedDespawn`. |
-| Support | Shoulder turret | `KsCompanions` with `KsMobCompanionShoulderTurret`, mode `Attached` | Rides at `offset` on the owner, bobbing (`FloatingVisuals`, weightless). An NPC turret (`KsShoulderTurretCompound`: `EnergyTurretCompound` without the idle spin) with its own gun, energy bolts from `BasicEntityAmmoProvider` and `RechargeBasicEntityAmmo`, and no `KsTargetLockOn`. Its only hard fixture is on `BulletImpassable`, so shots and throws hit it and nothing walks into it; `Injurable` or it takes no damage. |
+| Support | Ammo drop | `KsAmmoDropAbility`, `KsAmmoPickup` | A kill by the holder (a held gun's, or a companion's, counts) drops `pickup` with `chance` (server). Any living mob sharing an NPC faction the dropper had, within `radius`, gets the active-hand gun's magazine (or own ballistic store) filled with its own rounds, or its battery recharged; nothing to fill and it stays. Taken in shared code (`KsAmmoPickupSystem`, a range poll every `checkInterval`, on ticks counted from the tick number so both sides poll together): the server for every mob, a player's client for that player alone, predicting the refill, counter, sound, popup and deletion. Despawns by `TimedDespawn`. |
+| Support | Shoulder turret | `KsCompanions` with `KsMobCompanionShoulderTurret`, mode `Hover` | Hovers at `offset` from the owner, trailing them as they move and bobbing (`FloatingVisuals`, weightless); it keeps its own facing. An NPC turret (`KsShoulderTurretCompound`: `EnergyTurretCompound` without the idle spin) with its own gun, energy bolts from `BasicEntityAmmoProvider` and `RechargeBasicEntityAmmo`, and no `KsTargetLockOn`. Its only hard fixture is on `BulletImpassable`, so shots and throws hit it and nothing walks into it; `Injurable` or it takes no damage. |
 | Support | Rally | `KsRallyAbility`, `ActionKsRally`, `KsRallyZone`, `KsRallyBuff` | The call spawns `zone` (a ring drawn by `KsRallyZoneOverlay`, filling in over `delay`) with a whistle; then every living mob within `radius` sharing an NPC faction with the caller (not companions) gets `KsRallyBuff` for `duration`: speed, fire rate (through the holder-side raise of `GunRefreshModifiersEvent` in `SharedGunSystem.RefreshModifiers`) and gun damage (projectiles at fire time, hitscan through `KsHitscanDamageModifyEvent`). Start: chime, flash, popup and the `KsRallied` alert counting down; end: popup and beep. Buff shared, zone and timing server. |
 | Support | Mark Target | `KsMarkTargetAbility`, `ActionKsMarkTarget`, `KsMarkedTarget` | A living mob not friendly to the holder gets `KsMarkedTarget` for `duration` (server): positive damage from anything times `damageTakenMultiplier` (`DamageModifyEvent`, so not `ignoreResistances` damage). Outlined in `outlineColor` (`KsMarkedTargetVisualsSystem`, its own post shader) for the marker and anyone sharing one of the marker's NPC factions. |
 
@@ -103,8 +103,11 @@ state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamag
 - type: KsCompanions
   companions:
   - prototype: KsMobCompanionMedibot
-    mode: Follow             # or Attached
-    offset: 0, 0             # Attached only: where on the owner, in its frame
+    mode: Follow             # or Hover
+    offset: 0, 0             # Hover only: where from the owner, in its grid's frame (not turned by the owner)
+    hoverStiffness: 8        # Hover only: per second; it moves at this times the distance left
+    hoverMaxSpeed: 10        # Hover only: metres per second at most
+    hoverSnapDistance: 4     # Hover only: further than this, or on another map, it is put there at once
     respawnDelay: 60
     materialiseDuration: 1.5
     dissolveDuration: 1.5
@@ -119,8 +122,15 @@ state through `SelfBeforeGunShotEvent`, and hitscan hits through `KsHitscanDamag
   round end), and a companion isn't one; enemies still fight it through its NPC factions.
 - **Follow**: the companion's HTN blackboard `FollowTarget` is the owner; give it an HTN that runs `FollowCompound`.
   `SetFollowOverride(companion, target)` sends it after something else for now, `null` back to the owner.
-- **Attached**: spawned parented to the owner at `offset`, and put back there whenever it is moved. Give it no hard
-  fixture on the owner's layers and no mover; it turns with the owner.
+- **Hover**: spawned at the owner's mover coordinates (its grid or map, out of any locker) plus `offset`, as a sibling
+  of the owner, never its child, so it keeps its own facing. Every server tick, before physics steps,
+  `KsCompanionSystem.UpdateHovering` sets its velocity to `(hover point - position) * hoverStiffness`, capped at
+  `hoverMaxSpeed` (and never past the point in one tick), so it trails a walking owner by about speed / stiffness and settles. Its velocity is relative to its parent,
+  so the owner's grid moving carries it; over a different parent the two frames' velocity difference is added. Further
+  than `hoverSnapDistance`, or on another map, it is put at the hover point at once. A released one (dissolving) is
+  stopped and no longer steered. As its velocity is overwritten each tick, pushes, explosions and recoil don't move it.
+  Give it a `KinematicController` body, not `Kinematic`: a kinematic body is never weightless (`SharedGravitySystem`),
+  which stops `FloatingVisuals` bobbing. Give it no hard fixture on the owner's layers and no mover.
 - **Destroyed** (dead, or deleted without being let go): a popup to the owner, the wreck dissolves, and it comes back
   after `respawnDelay`.
 - **Owner**: critical, nothing changes; dead, every companion dissolves and no timer runs; revived, they all come back.

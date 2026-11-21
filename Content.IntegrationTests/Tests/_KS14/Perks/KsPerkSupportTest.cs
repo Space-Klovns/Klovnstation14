@@ -33,6 +33,7 @@ namespace Content.IntegrationTests.Tests._KS14.Perks;
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsAmmoDropSystem))]
+[TestOf(typeof(KsAmmoPickupSystem))]
 [TestOf(typeof(KsCompanionSystem))]
 [TestOf(typeof(KsRallySystem))]
 [TestOf(typeof(KsRallyBuffSystem))]
@@ -215,7 +216,7 @@ public sealed class KsPerkSupportTest : GameTest
   - type: KsCompanions
     companions:
     - prototype: KsTestPerkSupportTurret
-      mode: Attached
+      mode: Hover
       offset: 0.7, 0.7
       respawnDelay: 60
       materialiseDuration: 0.1
@@ -417,7 +418,7 @@ public sealed class KsPerkSupportTest : GameTest
     }
 
     /// <summary>
-    ///     A turret riding on its owner's shoulder (an attached companion) still turns, fires and hits a foe, and is
+    ///     A turret hovering by its owner's shoulder (a hovering companion) still turns, fires and hits a foe, and is
     ///         hit by a foe's bullets itself.
     /// </summary>
     [Test]
@@ -437,7 +438,10 @@ public sealed class KsPerkSupportTest : GameTest
             Assert.That(server.System<SharedKsPerkSystem>().TryAddPerk(ownerUid, _turretPerk), "the test perk should be given");
             Assert.That(server.System<KsCompanionSystem>().TryGetCompanion(ownerUid, 0, out var companionUid), "the turret should be out");
             turretUid = companionUid!.Value;
-            Assert.That(entMan.GetComponent<TransformComponent>(turretUid).ParentUid, Is.EqualTo(ownerUid), "the turret should ride on its owner");
+            var turretTransform = entMan.GetComponent<TransformComponent>(turretUid);
+            Assert.That(turretTransform.ParentUid, Is.Not.EqualTo(ownerUid), "the turret should hover by its owner, not ride on it");
+            Assert.That(turretTransform.MapID, Is.EqualTo(entMan.GetComponent<TransformComponent>(ownerUid).MapID),
+                "the turret should hover beside its owner");
 
             foeUid = SpawnBody(_foe, testMap, 5.5f);
         });

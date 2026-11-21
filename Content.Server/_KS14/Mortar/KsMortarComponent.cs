@@ -1,6 +1,8 @@
+using System.Numerics;
 using Content.Shared._KS14.FarSound;
 using Content.Shared.NPC.Prototypes;
 using Robust.Shared.Audio;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Mortar;
@@ -17,7 +19,8 @@ namespace Content.Server._KS14.Mortar;
 ///         <see cref="MinRange"/> and <see cref="MaxRange"/> most worth hitting: one more for each other hostile within
 ///         <see cref="ClusterRadius"/>, and a priority target (a turret, <c>KsNpcTargetPriority</c>) above the rest. Its crewman
 ///         dead or gone, the mortar is abandoned: it joins <see cref="AbandonedFactions"/>, which its old side is hostile to,
-///         becomes a priority target, and dissolves after <see cref="IdleTime"/> without anyone using it.
+///         becomes a priority target, and, with <see cref="DissolveWhenAbandoned"/>, dissolves after <see cref="IdleTime"/>
+///         without anyone using it. One put down with no crewman at all (by an admin, or on a map) is anyone's from the start.
 /// </remarks>
 [RegisterComponent, AutoGenerateComponentPause, Access(typeof(KsMortarSystem))]
 public sealed partial class KsMortarComponent : Component
@@ -102,6 +105,18 @@ public sealed partial class KsMortarComponent : Component
     public TimeSpan FlightTime = TimeSpan.FromSeconds(5);
 
     /// <summary>
+    ///     The least and most of its flight the shell is seen falling for: as long as the incoming clip picked for it, kept
+    ///         between the two, and never longer than <see cref="FlightTime"/>. Before that it is nowhere to be seen, its
+    ///         landing zone marked all the same.
+    /// </summary>
+    [DataField]
+    public TimeSpan MinDescentTime = TimeSpan.FromSeconds(1);
+
+    /// <inheritdoc cref="MinDescentTime"/>
+    [DataField]
+    public TimeSpan MaxDescentTime = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     ///     Played where the shell is to land, starting as long before it lands as the clip picked lasts, so that it ends as it
     ///         lands. A collection: one is picked for each shell.
     /// </summary>
@@ -127,7 +142,15 @@ public sealed partial class KsMortarComponent : Component
     public float AbandonedPriority = 0.9f;
 
     /// <summary>
-    ///     How long an abandoned mortar lasts with nobody using it. Firing it, or opening its window, starts this again.
+    ///     Whether it dissolves once nobody is using it (<see cref="IdleTime"/>, <see cref="EmptyTime"/>), as one left behind
+    ///         by an NPC crew should. Off, it stays until destroyed, as one put down by hand should.
+    /// </summary>
+    [DataField]
+    public bool DissolveWhenAbandoned;
+
+    /// <summary>
+    ///     How long an abandoned mortar lasts with nobody using it, with <see cref="DissolveWhenAbandoned"/>. Firing it, or
+    ///         opening its window, starts this again.
     /// </summary>
     [DataField]
     public TimeSpan IdleTime = TimeSpan.FromMinutes(3);
@@ -148,10 +171,69 @@ public sealed partial class KsMortarComponent : Component
     public TimeSpan NextFire;
 
     /// <summary>
-    ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed.
+    ///     How many of its last impacts it keeps for its window to show (<see cref="Impacts"/>); zero keeps none.
+    /// </summary>
+    [DataField]
+    public int MaxImpacts = 5;
+
+    /// <summary>
+    ///     Where its last <see cref="MaxImpacts"/> shells landed, relative to it, on the map's axes, oldest first: the fall
+    ///         of shot its window plots.
+    /// </summary>
+    [ViewVariables]
+    public List<Vector2> Impacts = new();
+
+    /// <summary>
+    ///     How far around its aim, in tiles, the sight in its window shows. Zero gives it none: no eye, no picture.
+    /// </summary>
+    [DataField]
+    public float SightRadius;
+
+    /// <summary>
+    ///     The view-only eye spawned at the aim of each user with its window open, which they are sent what is around.
+    /// </summary>
+    [DataField]
+    public EntProtoId SightEye = "KsMortarSightEye";
+
+    /// <summary>
+    ///     How often, at most, a user's aim moves their sight's eye; an aim sent sooner waits for it.
+    /// </summary>
+    [DataField]
+    public TimeSpan SightMoveInterval = TimeSpan.FromSeconds(0.1);
+
+    /// <summary>
+    ///     The sight of each user with its window open, keyed by that user.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, KsMortarSight> Sights = new();
+
+    /// <summary>
+    ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed, and for one that never
+    ///         dissolves.
     /// </summary>
     [DataField, AutoPausedField]
     public TimeSpan? IdleEndsAt;
+}
+
+/// <summary>
+///     One user's sight through a mortar's window: the eye at their aim, which their session is subscribed to.
+/// </summary>
+public sealed class KsMortarSight(EntityUid eyeUid, ICommonSession session)
+{
+    [ViewVariables]
+    public EntityUid EyeUid = eyeUid;
+
+    [ViewVariables]
+    public ICommonSession Session = session;
+
+    /// <summary>
+    ///     Where they last aimed, from the mortar, while the eye has not been moved there yet.
+    /// </summary>
+    [ViewVariables]
+    public Vector2? PendingOffset;
+
+    [ViewVariables]
+    public TimeSpan NextMoveAt;
 }
 
 /// <summary>
@@ -217,4 +299,14 @@ public sealed partial class KsMortarShellComponent : Component
 
     [ViewVariables, AutoPausedField]
     public TimeSpan IncomingAt;
+}
+
+/// <summary>
+///     A mortar shell, for as long as it is on its way: which mortar fired it, for that mortar to record where it lands.
+/// </summary>
+[RegisterComponent, Access(typeof(KsMortarSystem))]
+public sealed partial class KsMortarFallOfShotComponent : Component
+{
+    [ViewVariables]
+    public EntityUid MortarUid;
 }

@@ -60,6 +60,17 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
 
         var ascending = entity.Comp.Ascending;
 
+        // A pod seen only for the end of its fall waits out of sight up where its fall starts, then falls over what is left.
+        //      Its trail keeps out of sight as long, by its reveal schedule and by following the pod, still up there.
+        var hiddenSeconds = 0f;
+        if (!ascending)
+        {
+            var descentStart = entity.Comp.LaunchFinishTime - SharedSupplyPodSystem.GetVisibleDescent(supplyPodComponent);
+            hiddenSeconds = Math.Clamp((float)(descentStart - _gameTiming.CurTime).TotalSeconds, 0f, countdownSeconds);
+        }
+
+        var fallSeconds = countdownSeconds - hiddenSeconds;
+
         TryComp<SpriteComponent>(entity, out var spriteComponent);
 
         // Read off the sprite only the first time. By the end of an ascent the animation has driven
@@ -80,14 +91,12 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
                         ComponentType = typeof(TransformComponent),
                         Property = nameof(TransformComponent.LocalPosition),
                         InterpolationMode = AnimationInterpolationMode.Linear,
-                        KeyFrames =
-                        {
+                        KeyFrames = WithHold(hiddenSeconds,
                             new AnimationTrackProperty.KeyFrame(ascending ? groundPosition : airPosition, 0f),
-                            new AnimationTrackProperty.KeyFrame(ascending ? airPosition : groundPosition, countdownSeconds, easing: null),
-                        }
+                            new AnimationTrackProperty.KeyFrame(ascending ? airPosition : groundPosition, fallSeconds, easing: null))
                     },
-                    // Falling pods fade in over the first half of their descent; rising ones fade
-                    // back out over the second half of their climb.
+                    // Falling pods fade in over the first half of their descent, once it is seen; rising ones
+                    // fade back out over the second half of their climb.
                     new AnimationTrackComponentProperty
                     {
                         ComponentType = typeof(SpriteComponent),
@@ -100,16 +109,31 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
                                 new AnimationTrackProperty.KeyFrame(originalColor, countdownSeconds * 0.5f, easing: null),
                                 new AnimationTrackProperty.KeyFrame(transparentColor, countdownSeconds * 0.5f, easing: null)
                             }
-                            : new()
-                            {
+                            : WithHold(hiddenSeconds,
                                 new AnimationTrackProperty.KeyFrame(transparentColor, 0f),
-                                new AnimationTrackProperty.KeyFrame(originalColor, countdownSeconds * 0.5f, easing: null)
-                            }
+                                new AnimationTrackProperty.KeyFrame(originalColor, fallSeconds * 0.5f, easing: null))
                     }
                 }
         };
 
         _animationPlayerSystem.Play(entity.Owner, arrivalAnimation, DescentAnimationKey);
+    }
+
+    /// <summary>
+    ///     <paramref name="start"/> held for <paramref name="holdSeconds"/>, then on to <paramref name="end"/>. No hold
+    ///         frame at all when there is nothing to hold, as a zero-length frame interpolates over nothing.
+    /// </summary>
+    private static List<AnimationTrackProperty.KeyFrame> WithHold(
+        float holdSeconds,
+        AnimationTrackProperty.KeyFrame start,
+        AnimationTrackProperty.KeyFrame end)
+    {
+        var keyFrames = new List<AnimationTrackProperty.KeyFrame> { start };
+        if (holdSeconds > 0f)
+            keyFrames.Add(new AnimationTrackProperty.KeyFrame(start.Value, holdSeconds, easing: null));
+
+        keyFrames.Add(end);
+        return keyFrames;
     }
 
     [SubscribeLocalEvent]

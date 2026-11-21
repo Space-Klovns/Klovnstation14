@@ -29,3 +29,11 @@
   - type: KsTrailFade
     alphaDuration: 8s
     blurDuration: 3.5s
+
+# A mortar shell's: the pod's smoke, half as wide.
+- type: entity
+  parent: KsSupplyPodTrail
+  id: KsMortarShellTrail
+  components:
+  - type: KsTrail
+    widthScale: 0.5

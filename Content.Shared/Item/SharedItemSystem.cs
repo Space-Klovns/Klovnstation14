@@ -270,4 +270,26 @@ public abstract partial class SharedItemSystem : EntitySystem
             }
         }
     }
+
+    // KS14: ported from upstream #44134, with the inherited ProtoMan and Factory for the _prototype and _compFactory it injects
+    /// <summary>
+    /// Sorts two protos by <see cref="ItemComponent"/> size, from smallest to largest.
+    /// </summary>
+    /// <param name="a">The first proto.</param>
+    /// <param name="b">The second proto.</param>
+    /// <returns> Less than 0 if a is smaller, greater than 0 if a is larger,
+    /// 0 if they are the same or either proto doesn't have an <see cref="ItemComponent"/>.</returns>
+    [PublicAPI]
+    public int CompareSize(EntProtoId a, EntProtoId b)
+    {
+        var protoA = ProtoMan.Index(a);
+        var protoB = ProtoMan.Index(b);
+        if (!protoA.TryComp<ItemComponent>(out var compA, Factory) ||
+            !protoB.TryComp<ItemComponent>(out var compB, Factory))
+        {
+            return 0;
+        }
+
+        return ProtoMan.Index(compA.Size).CompareTo(ProtoMan.Index(compB.Size));
+    }
 }

@@ -6,11 +6,13 @@ using Content.IntegrationTests.Tests._KS14.FieldCommander;
 using Content.Shared._KS14.Dissolve;
 using Content.Server._KS14.Mortar;
 using Content.Server._KS14.NPC.Targeting;
+using Content.Shared._KS14.Mortar;
 using Content.Shared._KS14.SupplyPod;
 using Content.Shared._KS14.SupplyPod.LandingZone;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Components;
+using Content.Shared.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -25,7 +27,8 @@ namespace Content.IntegrationTests.Tests._KS14.Mortar;
 ///     <see cref="KsMortarComponent"/> and <see cref="KsMortarCrewComponent"/>: a crewman sets its mortar up and fires it; a
 ///         shell is marked on the ground before it lands and lands on its marker, going for hostiles bunched together, or a
 ///         priority target over them; an abandoned mortar is anyone's to fire, within its range, cooldown and rounds, and
-///         dissolves once nobody uses it, which a crewed one never does.
+///         dissolves once nobody uses it if it is one that dissolves, which a crewed one never does; one put down with no
+///         crew is anyone's at once, and stays.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsMortarSystem))]
@@ -40,6 +43,12 @@ public sealed class KsMortarTest : GameTest
     private readonly EntProtoId _priorityTarget = "KsTestMortarPriorityTarget";
     private readonly EntProtoId _impact = "KsTestMortarImpact";
     private readonly EntProtoId _defender = "KsTestMortarDefender";
+    private readonly EntProtoId _mortarLongDescent = "KsTestMortarLongDescent";
+    private readonly EntProtoId _mortarShortDescent = "KsTestMortarShortDescent";
+    private readonly EntProtoId _dissolvingCrew = "KsTestMortarDissolvingCrew";
+    private readonly EntProtoId _mortarFallOfShot = "KsTestMortarFallOfShot";
+    private readonly EntProtoId _mortarLongRange = "KsTestMortarLongRange";
+    private readonly EntProtoId _longRangeCrew = "KsTestMortarLongRangeCrew";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -86,6 +95,57 @@ public sealed class KsMortarTest : GameTest
     - NanoTrasen
     abandonedPriority: 0.7
 
+# Bounds every clip of KsMortarIncoming is outside: below them, and above.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarLongDescent
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minDescentTime: 1.8
+    maxDescentTime: 1.9
+
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarShortDescent
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minDescentTime: 0.2
+    maxDescentTime: 0.5
+
+# The same, with its window, keeping its last two impacts.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarFallOfShot
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    maxImpacts: 2
+  - type: UserInterface
+    interfaces:
+      enum.KsMortarUiKey.Key:
+        type: KsMortarBoundUserInterface
+
+# Hundreds of tiles: past any one view, off the grid it stands on.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarLongRange
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minRange: 100
+    maxRange: 300
+    spread: 1
+
+- type: entity
+  parent: KsTestMortarCrew
+  id: KsTestMortarLongRangeCrew
+  components:
+  - type: KsMortarCrew
+    mortar: KsTestMortarLongRange
+    setUpTime: 0.2
+
 - type: entity
   id: KsTestMortarCrew
   components:
@@ -95,6 +155,23 @@ public sealed class KsMortarTest : GameTest
     - Syndicate
   - type: KsMortarCrew
     mortar: KsTestMortar
+    setUpTime: 0.2
+
+# The same, its mortar going once nobody uses it.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarDissolving
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    dissolveWhenAbandoned: true
+
+- type: entity
+  parent: KsTestMortarCrew
+  id: KsTestMortarDissolvingCrew
+  components:
+  - type: KsMortarCrew
+    mortar: KsTestMortarDissolving
     setUpTime: 0.2
 
 - type: entity
@@ -290,6 +367,253 @@ public sealed class KsMortarTest : GameTest
     }
 
     /// <summary>
+    ///     At hundreds of tiles, far past the grid it stands on and anyone's view: a shell aimed at the furthest of its range
+    ///         lands there, within its spread, and its fall of shot says so.
+    /// </summary>
+    [Test]
+    public async Task ALongRangeShellLandsWhereAimed()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        float maxRange = 0f, spread = 0f;
+        var bearing = Angle.FromDegrees(37);
+
+        await Server.WaitAssertion(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortarLongRange, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            maxRange = mortar.Comp.MaxRange;
+            spread = mortar.Comp.Spread;
+            Assert.That(maxRange, Is.GreaterThanOrEqualTo(100f), "precondition: a long-range mortar");
+            Assert.That(system.TryFireAt(mortar, defenderUid, bearing, maxRange), Is.True, "it should fire at its furthest");
+        });
+
+        var impact = await WaitForShell();
+        var aimed = new Vector2(0.5f, 0.5f) + new Vector2((float) Math.Sin(bearing.Theta), (float) Math.Cos(bearing.Theta)) * maxRange;
+        Assert.That(Vector2.Distance(impact, aimed), Is.LessThanOrEqualTo(spread + 0.05f),
+            $"a shell aimed {maxRange} tiles out should land within {spread} of {aimed}: {impact}");
+
+        await Server.WaitAssertion(() =>
+        {
+            var impacts = SEntMan.GetComponent<KsMortarComponent>(mortarUid).Impacts;
+            Assert.That(impacts, Has.Count.EqualTo(1));
+            Assert.That(Vector2.Distance(impacts[0], impact - new Vector2(0.5f, 0.5f)), Is.LessThan(0.05f), "its fall of shot should be where it landed");
+        });
+    }
+
+    /// <summary>
+    ///     A crewman with a long-range mortar finds a hostile hundreds of tiles off, and not the one inside its least range.
+    /// </summary>
+    [Test]
+    public async Task ALongRangeCrewFindsItsTarget()
+    {
+        await SetUpMap();
+        var far = Vector2.Zero;
+        var transformSystem = SEntMan.System<SharedTransformSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            Assert.That(SProtoMan.Index(_mortarLongRange).TryGetComponent<KsMortarComponent>(out var template, SEntMan.ComponentFactory));
+            far = new Vector2(0.5f, 0.5f + (template!.MinRange + template.MaxRange) / 2f);
+            SEntMan.SpawnEntity(_longRangeCrew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            SEntMan.SpawnEntity(_target, new MapCoordinates(far, _map.MapId));
+            SEntMan.SpawnEntity(_target, new EntityCoordinates(_map.Grid.Owner, 10.5f, 0.5f));
+        });
+
+        Vector2? impact = null;
+        for (var tick = 0; tick < Ticks(10f) && impact == null; tick++)
+        {
+            await Pair.RunTicksSync(1);
+            await Server.WaitPost(() =>
+            {
+                var impactQuery = SEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (impactQuery.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID == _impact.Id)
+                        impact = transformSystem.GetWorldPosition(uid);
+                }
+            });
+        }
+
+        Assert.That(impact, Is.Not.Null, "the crewman should set up and fire at the hostile far off");
+        Assert.That(Vector2.Distance(impact!.Value, far), Is.LessThanOrEqualTo(1.05f), $"the shell should land on the hostile at {far}: {impact}");
+    }
+
+    /// <summary>
+    ///     Where its shells land goes into its window's state, relative to the mortar, newest last; and it keeps only its last
+    ///         <see cref="KsMortarComponent.MaxImpacts"/> of them.
+    /// </summary>
+    [Test]
+    public async Task ItsWindowShowsWhereItsLastShellsLanded()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        var uiSystem = SEntMan.System<SharedUserInterfaceSystem>();
+        var maxImpacts = 0;
+
+        await Server.WaitPost(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortarFallOfShot, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortarComponent = SEntMan.GetComponent<KsMortarComponent>(mortarUid);
+            maxImpacts = mortarComponent.MaxImpacts;
+            Assert.That(maxImpacts, Is.GreaterThan(0), "precondition: a mortar that keeps its impacts");
+            Assert.That(mortarComponent.Rounds, Is.GreaterThan(maxImpacts), "precondition: rounds enough to go past the cap");
+            Assert.That(mortarComponent.Spread, Is.Zero, "precondition: shells that land where they are aimed");
+        });
+
+        // One more shot than it keeps, each somewhere else, within its range.
+        var expected = new List<Vector2>();
+        for (var shot = 0; shot <= maxImpacts; shot++)
+        {
+            var bearing = Angle.FromDegrees(90 * shot);
+            var distance = 0f;
+            await Server.WaitAssertion(() =>
+            {
+                var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+                distance = mortar.Comp.MinRange + shot + 1f;
+                Assert.That(distance, Is.LessThanOrEqualTo(mortar.Comp.MaxRange), "precondition: aimed within its range");
+                Assert.That(system.TryFireAt(mortar, defenderUid, bearing, distance), Is.True, $"shot {shot} should be fired");
+            });
+
+            expected.Add(new Vector2((float) Math.Sin(bearing.Theta), (float) Math.Cos(bearing.Theta)) * distance);
+            await WaitForShell();
+
+            await Server.WaitAssertion(() =>
+            {
+                Assert.That(uiSystem.TryGetUiState<KsMortarBuiState>(mortarUid, KsMortarUiKey.Key, out var state), Is.True,
+                    "the mortar's window should have a state");
+                var kept = Math.Min(expected.Count, maxImpacts);
+                Assert.That(state!.Impacts, Has.Count.EqualTo(kept), $"after {expected.Count} landings it should keep {kept}");
+                for (var i = 0; i < kept; i++)
+                {
+                    var wanted = expected[expected.Count - kept + i];
+                    Assert.That(Vector2.Distance(state.Impacts[i], wanted), Is.LessThan(0.05f),
+                        $"impact {i} should be {wanted} from the mortar, oldest first: {state.Impacts[i]}");
+                }
+            });
+
+            // Its cooldown, before the next.
+            await Pair.RunTicksSync(Ticks(1.5f));
+        }
+    }
+
+    /// <summary>
+    ///     A shell falls for the whole flight, but is seen falling only for as long as its incoming clip, kept to the
+    ///         mortar's bounds: within them (0), held up to the least (1) and down to the most (2).
+    /// </summary>
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task AShellIsSeenFallingForItsClipWithinItsBounds(int mortarIndex)
+    {
+        var mortarId = new[] { _mortar, _mortarLongDescent, _mortarShortDescent }[mortarIndex];
+        await SetUpMap();
+        var (_, shellUid, fireTime) = await SpawnAndFire(mortarId);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SProtoMan.Index(mortarId).TryGetComponent<KsMortarComponent>(out var mortarComponent, SEntMan.ComponentFactory));
+            var supplyPodComponent = SEntMan.GetComponent<SupplyPodComponent>(shellUid);
+            var activeComponent = SEntMan.GetComponent<ActiveSupplyPodComponent>(shellUid);
+            var shellComponent = SEntMan.GetComponent<KsMortarShellComponent>(shellUid);
+            var clip = SEntMan.System<Robust.Server.Audio.AudioSystem>().GetAudioLength(shellComponent.IncomingSound!);
+
+            var min = mortarComponent!.MinDescentTime.TotalSeconds;
+            var max = mortarComponent.MaxDescentTime.TotalSeconds;
+            var expected = Math.Min(Math.Clamp(clip.TotalSeconds, min, max), mortarComponent.FlightTime.TotalSeconds);
+
+            switch (mortarIndex)
+            {
+                case 1:
+                    Assert.That(clip.TotalSeconds, Is.LessThan(min), "precondition: a clip shorter than the least descent");
+                    break;
+                case 2:
+                    Assert.That(clip.TotalSeconds, Is.GreaterThan(max), "precondition: a clip longer than the most descent");
+                    break;
+                default:
+                    Assert.That(max, Is.LessThanOrEqualTo(mortarComponent.FlightTime.TotalSeconds), "precondition: bounds within the flight");
+                    break;
+            }
+
+            Assert.That(supplyPodComponent.DescentDuration, Is.Not.Null, "a mortar shell should be seen only for the end of its fall");
+            Assert.That(supplyPodComponent.DescentDuration!.Value.TotalSeconds, Is.EqualTo(expected).Within(1e-6),
+                $"the shell should be seen falling for its {clip} clip, kept between {min} and {max} seconds");
+            Assert.That((activeComponent.LaunchFinishTime - fireTime - mortarComponent.FlightTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                "the shell should still fall for the whole flight");
+            Assert.That((shellComponent.IncomingAt + clip - activeComponent.LaunchFinishTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                "the incoming clip should still end as the shell lands");
+        });
+    }
+
+    /// <summary>
+    ///     The ground under a shell is marked from the moment it is fired to when it lands, the part of its fall nobody sees
+    ///         included.
+    /// </summary>
+    [Test]
+    public async Task AShellIsMarkedFromTheMomentItIsFired()
+    {
+        await SetUpMap();
+        var (mortarUid, shellUid, fireTime) = await SpawnAndFire(_mortar, waitTicks: 0);
+
+        await Server.WaitAssertion(() =>
+        {
+            var indicatorUid = SEntMan.GetComponent<SupplyPodLandingZoneComponent>(shellUid).IndicatorEntity;
+            Assert.That(indicatorUid, Is.Not.Null, "the landing zone should be marked as the shell is fired");
+            var indicatorComponent = SEntMan.GetComponent<SupplyPodLandingZoneIndicatorComponent>(indicatorUid!.Value);
+            var flight = SEntMan.GetComponent<KsMortarComponent>(mortarUid).FlightTime;
+            Assert.That(indicatorComponent.StartTime, Is.EqualTo(fireTime), "the marker should count down from the shot");
+            Assert.That(indicatorComponent.Duration, Is.EqualTo(flight), "the marker should count down over the whole flight");
+            Assert.That(SEntMan.GetComponent<SupplyPodComponent>(shellUid).DescentDuration, Is.LessThan(flight),
+                "precondition: a shell unseen for part of its flight");
+        });
+    }
+
+    /// <summary>
+    ///     A shell on its way is its own thing: the mortar gone, it still lands.
+    /// </summary>
+    [Test]
+    public async Task AShellLandsAfterItsMortarIsGone()
+    {
+        await SetUpMap();
+        var (mortarUid, _, _) = await SpawnAndFire(_mortar, waitTicks: 0);
+        await Server.WaitPost(() => SEntMan.DeleteEntity(mortarUid));
+
+        var impact = await WaitForShell();
+        Assert.That(Vector2.Distance(impact, new Vector2(10.5f, 0.5f)), Is.LessThan(0.05f), $"the shell should land ten tiles east: {impact}");
+    }
+
+    /// <summary>
+    ///     Spawns <paramref name="mortarId"/> at the origin and fires it east, ten tiles; returns the shell and when it was fired.
+    /// </summary>
+    private async Task<(EntityUid Mortar, EntityUid Shell, TimeSpan FireTime)> SpawnAndFire(EntProtoId mortarId, int waitTicks = 1)
+    {
+        EntityUid mortarUid = default, shellUid = default;
+        var fireTime = TimeSpan.Zero;
+        var system = SEntMan.System<KsMortarSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(mortarId, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            var defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            fireTime = Server.ResolveDependency<IGameTiming>().CurTime;
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True, "the mortar should fire");
+
+            var shellQuery = SEntMan.AllEntityQueryEnumerator<KsMortarShellComponent>();
+            Assert.That(shellQuery.MoveNext(out shellUid, out _), Is.True, "the shell should be on its way");
+        });
+
+        if (waitTicks > 0)
+            await Pair.RunTicksSync(waitTicks);
+
+        return (mortarUid, shellUid, fireTime);
+    }
+
+    /// <summary>
     ///     Where the next shell lands.
     /// </summary>
     private async Task<Vector2> WaitForShell() => (await WaitForShellTimed()).Impact;
@@ -337,7 +661,7 @@ public sealed class KsMortarTest : GameTest
 
         await Server.WaitPost(() =>
         {
-            crewUid = SEntMan.SpawnEntity(_crew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            crewUid = SEntMan.SpawnEntity(_dissolvingCrew, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
             // Something to set up for; taken away once it has, so that it does not fire its rounds away.
             targetUid = SEntMan.SpawnEntity(_target, new EntityCoordinates(_map.Grid.Owner, 10.5f, 0.5f));
             defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
@@ -387,6 +711,66 @@ public sealed class KsMortarTest : GameTest
         await Pair.RunTicksSync(Ticks(2.5f));
         await Server.WaitAssertion(() => Assert.That(SEntMan.Deleted(mortarUid) || SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
             "an abandoned mortar nobody uses should dissolve"));
+    }
+
+    /// <summary>
+    ///     A mortar put down with no crew (by an admin, or on a map) is anyone's to fire at once, and stays however long
+    ///         nobody uses it, rounds left or none.
+    /// </summary>
+    [Test]
+    public async Task ACrewlessMortarIsAnyonesAndStays()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        var waitSeconds = 0f;
+
+        await Server.WaitAssertion(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortar, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            Assert.That(mortar.Comp.DissolveWhenAbandoned, Is.False, "precondition: a mortar left to its default");
+
+            var openAttempt = new ActivatableUIOpenAttemptEvent(defenderUid, silent: true);
+            SEntMan.EventBus.RaiseLocalEvent(mortarUid, openAttempt);
+            Assert.That(openAttempt.Cancelled, Is.False, "anyone should open a crewless mortar's window");
+            Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True, "anyone should fire a crewless mortar at once");
+            Assert.That(SEntMan.GetComponent<NpcFactionMemberComponent>(mortarUid).Factions,
+                Is.EquivalentTo(SEntMan.GetComponent<NpcFactionMemberComponent>(defenderUid).Factions), "whoever fires it is whose it is");
+
+            // Past both of the times it would have dissolved after, had it been one that does.
+            waitSeconds = (float) (mortar.Comp.IdleTime > mortar.Comp.EmptyTime ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime).TotalSeconds * 1.5f + 1f;
+        });
+
+        await WaitForShell();
+        await Pair.RunTicksSync(Ticks(waitSeconds));
+        await Server.WaitAssertion(() => Assert.That(SEntMan.EntityExists(mortarUid) && !SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True,
+            "a mortar put down with no crew should stay however long nobody uses it"));
+
+        // Fired dry, it stays all the same.
+        for (var shot = 0; shot < 100; shot++)
+        {
+            var rounds = 0;
+            await Server.WaitPost(() =>
+            {
+                var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+                system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f);
+                rounds = mortar.Comp.Rounds;
+            });
+
+            if (rounds <= 0)
+                break;
+
+            await Pair.RunTicksSync(Ticks(0.5f));
+        }
+
+        await Pair.RunTicksSync(Ticks(waitSeconds));
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.GetComponent<KsMortarComponent>(mortarUid).Rounds, Is.Zero, "precondition: fired dry");
+            Assert.That(!SEntMan.HasComponent<KsDissolveComponent>(mortarUid), Is.True, "a mortar put down with no crew should stay once empty");
+        });
     }
 
     /// <summary>

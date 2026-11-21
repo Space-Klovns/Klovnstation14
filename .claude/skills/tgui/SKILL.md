@@ -61,6 +61,7 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `NoticeBox` | `KsTguiNoticeBox` | `NoticeColor` (every tg colour name; Info/Success/Warning/Danger are blue/green/orange/red; black text on Yellow/White, white stripes on Black). `Spaced = true` adds tg's 6px margin-bottom (off by default, because boxes in a separated BoxContainer already have that gap) |
 | `Button` | `KsTguiButton` | `: Button`. `Icon`, `IconPosition`, `IconRotation`, `IconSpin`, `IconSize`, `IconColor`, `IconRegular`, `Color`, `Compact`, `Fluid`, `Circular`, `EllipsisText`, `VerticalAlignContent`, `Strikethrough`, `Selected`. Text is left aligned like tg (`LeftAligned = false` for `textAlign="center"`). The 2px right margin is dropped for fluid and last-child buttons, and the 2px bottom one in a horizontal box (tg's inline buttons share a baseline, so margin-bottom never shortens one); plain `Button`/`OptionButton` get only the right margin from the sheet. Transparent + selected is a clear button with green text (Button.Checkbox), not a green slab |
 | `Button.Checkbox` / `.Confirm` / `.Input` | `KsTguiCheckboxButton`, `KsTguiConfirmButton`, `KsTguiInputButton` | Subclasses of `KsTguiButton`; `Toggled`, `Confirmed` (blur = keyboard focus lost disarms), `Committed` |
+| 3x3 arrow pad (`LaunchpadConsole.tsx`'s `LaunchpadButtonPad`) | `KsTguiDirectionPad` | A `GridContainer` of `KsTguiButton`s, north up: `arrow-up`/`-down`/`-left`/`-right`, diagonals the straight ones at `IconRotation` 45 as tg, 6px apart under both themes (4px gap plus each button's 2px tgui margin; a hidden last child keeps all eight one size). `OnDirectionPressed` gives a `Vector2i` (X east, Y north; the middle is (0, 0)). `CentreText`/`CentreIcon` (empty: no middle button, its cell kept), `SetDirectionDisabled`, `SetAllDisabled`, `GetButton` for tests. Baron styles it through its button rules. Copied from tgstation e6c9da8511c11d6bb696a306685885e972a079ca. `KsTguiDirectionPadTest` |
 | `Button` on an item slot | `KsTguiItemSlotButton` | `: KsTguiButton`. `Filled`, `SlotId`. Eject while filled, Insert while empty, never disabled |
 | `Icon` | `KsTguiIcon`, `KsTguiIcons`, `KsTguiIconStack` | FA6 Solid glyphs, `Regular = true` for tg's `-o` names (`SquareO`, `CheckSquareO`), `Rotation`, `Spin` (2s/turn). Add a `const string` when one is missing |
 | `Tabs` | `KsTguiTabs`, `KsTguiTabItem` | Vertical too. `Count` is the badge. The Section-coloured strip, 6px bottom gap and in-Section -6px margins are as tg; the indicator grows from the middle over 200ms. Use this, not the engine `TabContainer`, in a ported window. `KsTguiTabItem.Attention` is tg's `textColor='yellow'` for a tab with something waiting (requests to answer, goods to collect): yellow text while unselected, yellow text and indicator while selected. Set it from the same count as the badge (`tab.Attention = pending > 0`), never a hardcoded `SelectedColor`; it wins over `SelectedColor`. Leave it off tabs whose badge is only a total or an unread counter (chat pages) |
@@ -388,6 +389,17 @@ ejectButton.Filled = state.OutputContainer is not null;
 
 // not this - an Eject nobody can press, so the player must go and use the item on the machine
 ejectButton.Disabled = state.OutputContainer is null;
+```
+
+**An eight-way pad** (tg's launchpad console). Each press gives the direction, X east and Y north:
+
+```xml
+<tg:KsTguiDirectionPad Name="NudgePad" VerticalAlignment="Bottom" ToolTip="{Loc 'ks-mortar-window-nudge-tooltip'}"/>
+```
+```csharp
+NudgePad.OnDirectionPressed += direction => Move(new Vector2(direction.X, direction.Y));
+NudgePad.CentreText = "R"; // optional middle button, raising (0, 0)
+NudgePad.SetDirectionDisabled(new Vector2i(0, 1), true);
 ```
 
 **Spacing comes from tgui's units.**

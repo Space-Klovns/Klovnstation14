@@ -4,7 +4,7 @@ using Robust.Shared.GameStates;
 namespace Content.Shared._KS14.Companions;
 
 /// <summary>
-///     On a companion: whose it is, and where it rides if it is attached. Added by the server's
+///     On a companion: whose it is, and where it hovers if it hovers. Added by the server's
 ///         <c>KsCompanionSystem</c> as it spawns one.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]

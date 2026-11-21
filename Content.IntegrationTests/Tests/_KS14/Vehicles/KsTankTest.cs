@@ -856,6 +856,10 @@ public sealed class KsTankTest : GameTest
         await Server.WaitPost(() =>
         {
             hostileUid = SpawnAt(SEntMan, _hostile, gridUid, 10, 0);
+            // Kept alive: the front tank reaches its range first and fires first, and once it has downed the hostile
+            //      neither tank has a target. The rear one locks on a second or three after it, so whether it got a round
+            //      off before that was a race the front one won about one run in twenty.
+            SEntMan.System<SharedGodmodeSystem>().EnableGodmode(hostileUid);
             SpawnAt(SEntMan, _armedHull, gridUid, -16, 0);
             rearUid = SpawnAt(SEntMan, _armedHull, gridUid, -23, 0);
         });
