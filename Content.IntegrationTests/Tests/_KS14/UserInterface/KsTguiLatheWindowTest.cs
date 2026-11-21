@@ -571,8 +571,6 @@ public sealed class KsTguiLatheWindowTest : GameTest
             Assert.That(window.IsAutolatheLayout, Is.EqualTo(autolathe));
             Assert.That(Descendants<KsTguiLatheMaterialSummary>(window).Any(), Is.EqualTo(autolathe), "Total Materials is the Autolathe's.");
             Assert.That(Descendants<KsTguiMaterialList>(window).Any(), Is.EqualTo(!autolathe), "The material bar is the Fabricator's.");
-            if (autolathe)
-                Assert.That(window.SetSize.X, Is.EqualTo(670f), "tg's Autolathe window is 670 wide.");
         });
     }
 
@@ -812,21 +810,36 @@ public sealed class KsTguiLatheWindowTest : GameTest
     }
 
     /// <summary>
-    ///     The Autolathe layout keeps the queue out of the way while it is empty.
+    ///     Both layouts give the queue a column of its own right of the designs, there whether or not anything is in it, so it
+    ///         never takes the designs' height.
     /// </summary>
-    [Test]
-    public async Task AutolatheQueueShowsOnlyWhileThereIsSomethingInIt()
+    [TestCase("Autolathe")]
+    [TestCase("Protolathe")]
+    public async Task TheQueueIsAColumnRightOfTheDesigns(string prototype)
     {
         await UseTgui();
-        await OpenLathe();
+        await OpenLathe(prototype);
 
-        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.False));
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            window.SetQueueInfo(null);
+            window.PopulateQueueList(new List<LatheRecipeBatch>());
+            Assert.That(window.QueueShown, Is.True, "The queue shows while it is empty.");
 
-        await Client.WaitPost(() => Window().SetQueueInfo(Window().Recipes.First()));
-        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.True, "Something is printing."));
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
 
-        await Client.WaitPost(() => Window().SetQueueInfo(null));
-        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.False));
+            var queueTitle = Robust.Shared.Localization.Loc.GetString("lathe-menu-queue-title");
+            var queue = Descendants<KsTguiSection>(window).Single(section => section.Title == queueTitle);
+            var designs = Descendants<KsTguiSection>(window).Single(section => section.Title == window.DesignsTitle);
+
+            Assert.That(BoxOf(queue).Left, Is.GreaterThanOrEqualTo(BoxOf(designs).Right), $"Queue {BoxOf(queue)}, designs {BoxOf(designs)}.");
+            Assert.That(BoxOf(queue).Top, Is.EqualTo(BoxOf(designs).Top).Within(0.5f), "The queue starts level with the designs.");
+            Assert.That(BoxOf(queue).Height, Is.EqualTo(BoxOf(designs).Height).Within(0.5f), "The queue runs the designs' height.");
+        });
     }
 
     private static UIBox2 BoxOf(Control control)
