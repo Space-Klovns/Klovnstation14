@@ -10,6 +10,7 @@ using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -95,10 +96,36 @@ public sealed partial class KsAmmoPickupSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     Whether <paramref name="takerUid"/> is on a side that may take it. A client only ever asks about its own player,
+    ///         and goes by what the server last said of them: NPC factions aren't sent to clients, which would otherwise
+    ///         judge by the factions of the mob's prototype and take a pickup the server then puts back.
+    /// </summary>
     private bool IsFriendly(KsAmmoPickupComponent pickupComponent, EntityUid takerUid)
     {
+        if (_netManager.IsClient)
+            return pickupComponent.LocalPlayerMayTake;
+
         return _factionMemberQuery.TryComp(takerUid, out var factionMemberComponent) &&
                pickupComponent.Factions.Overlaps(factionMemberComponent.Factions);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGetState(Entity<KsAmmoPickupComponent> entity, ref ComponentGetState args)
+    {
+        var mayTake = args.Player?.AttachedEntity is { } playerUid && IsFriendly(entity.Comp, playerUid);
+        args.State = new KsAmmoPickupComponentState(entity.Comp.Radius, entity.Comp.CheckInterval, mayTake);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnHandleState(Entity<KsAmmoPickupComponent> entity, ref ComponentHandleState args)
+    {
+        if (args.Current is not KsAmmoPickupComponentState state)
+            return;
+
+        entity.Comp.Radius = state.Radius;
+        entity.Comp.CheckInterval = state.CheckInterval;
+        entity.Comp.LocalPlayerMayTake = state.MayTake;
     }
 
     /// <summary>

@@ -9,6 +9,7 @@ using Content.IntegrationTests.Tests.Movement;
 using Content.Shared._KS14.Perks.Support;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
+using Content.Shared.NPC.Systems;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared;
@@ -173,19 +174,41 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
     public async Task WalkingOnItRefillsAtOnceOnTheClientAndTheServerAgrees()
     {
         // The client predicts well ahead of the last server state, so the take is re-predicted many times over.
+        //     The pooled client is handed on to other tests, so its own value is put back whatever happens here.
         var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
-        await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4));
+        var tickBiasBefore = 0;
+        await Client.WaitPost(() =>
+        {
+            tickBiasBefore = clientConfigurationManager.GetCVar(CVars.NetPredictTickBias);
+            clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4);
+        });
 
+        try
+        {
+            await WalkOntoAPickupAheadOfTheServer();
+        }
+        finally
+        {
+            await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, tickBiasBefore));
+        }
+    }
+
+    private async Task WalkOntoAPickupAheadOfTheServer()
+    {
         var (gunNetEntity, magazineUid, capacity) = await HoldAlmostEmptyRifle();
         var clientGunUid = ToClient(gunNetEntity);
         var pickupUid = await SpawnPickup(2f);
         var pickupNetEntity = SEntMan.GetNetEntity(pickupUid);
 
         string soundPath = default!;
+        LocId popupId = default;
         await Server.WaitPost(() =>
-            soundPath = ((SoundPathSpecifier)SEntMan.GetComponent<KsAmmoPickupComponent>(pickupUid).PickupSound!).Path.ToString());
-        var popupText = Client.ResolveDependency<ILocalizationManager>()
-            .GetString(SEntMan.GetComponent<KsAmmoPickupComponent>(pickupUid).PickupPopup);
+        {
+            var pickupComponent = SEntMan.GetComponent<KsAmmoPickupComponent>(pickupUid);
+            soundPath = ((SoundPathSpecifier)pickupComponent.PickupSound!).Path.ToString();
+            popupId = pickupComponent.PickupPopup;
+        });
+        var popupText = Client.ResolveDependency<ILocalizationManager>().GetString(popupId);
 
         await Client.WaitAssertion(() => Assert.That(KsAmmoCounterStateTest.CounterShows(CEntMan, clientGunUid), Is.EqualTo(1),
             "the counter should start at the one round left"));
@@ -200,6 +223,8 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
 
         var clientHeard = new Dictionary<EntityUid, KsDamagedSoundTest.HeardSound>();
         var serverHeard = new Dictionary<EntityUid, KsDamagedSoundTest.HeardSound>();
+        // Ticks are stepped one at a time with both sides in step, and the client predicts NetPredictTickBias ticks past
+        //     the server, so it takes the pickup that many steps before the server does, however slow the machine.
         var clientAheadOfServer = false;
         var serverTook = false;
         await SetMovementKey(DirectionFlag.East, BoundKeyState.Down);
@@ -256,6 +281,67 @@ public sealed class KsAmmoPickupPredictionTest : MovementTest
                 Assert.That(popups, Is.EqualTo(1), "the player should see one popup, not their client's and the server's");
             });
         });
+    }
+
+    /// <summary>
+    ///     The server has put the player on another side, which their client can't see (NPC factions aren't sent, so it
+    ///         still has those of the mob's prototype). Walking over their old side's pickup, the client goes by the server's
+    ///         word and predicts nothing: no refill, no take to be put back.
+    /// </summary>
+    [Test]
+    public async Task APlayerTheServerMovedToAnotherSideDoesNotPredictATake()
+    {
+        var (gunNetEntity, magazineUid, _) = await HoldAlmostEmptyRifle();
+        var clientGunUid = ToClient(gunNetEntity);
+
+        ProtoId<NpcFactionPrototype>[] oldSide = default!;
+        await Server.WaitPost(() =>
+        {
+            var factionSystem = SEntMan.System<NpcFactionSystem>();
+            oldSide = SEntMan.GetComponent<NpcFactionMemberComponent>(SPlayer).Factions.ToArray();
+            factionSystem.ClearFactions(SPlayer, dirty: false);
+            factionSystem.AddFaction(SPlayer, _foes);
+        });
+
+        var pickupUid = await SpawnEntity(PickupPrototype, SEntMan.GetCoordinates(PlayerCoords).Offset(new Vector2(1f, 0f)));
+        await Server.WaitPost(() => SEntMan.System<KsAmmoPickupSystem>().SetFactions(
+            (pickupUid, SEntMan.GetComponent<KsAmmoPickupComponent>(pickupUid)), oldSide));
+        await RunTicks(2);
+        var pickupNetEntity = SEntMan.GetNetEntity(pickupUid);
+
+        await Client.WaitAssertion(() => Assert.That(
+            CEntMan.GetComponent<NpcFactionMemberComponent>(CPlayer).Factions, Is.EquivalentTo(oldSide),
+            "precondition: the client should still think its player on the old side"));
+
+        // Checked every tick of the walk: a predicted take would show for a moment and be put back.
+        var clientEverTook = false;
+        await SetMovementKey(DirectionFlag.East, BoundKeyState.Down);
+        for (var tick = 0; tick < 60; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                var clientPickupUid = CEntMan.GetEntity(pickupNetEntity);
+                if (!CEntMan.EntityExists(clientPickupUid) ||
+                    CEntMan.IsQueuedForDeletion(clientPickupUid) ||
+                    CEntMan.GetComponent<TransformComponent>(clientPickupUid).MapID != MapId ||
+                    ClientRounds(magazineUid) != 1 ||
+                    KsAmmoCounterStateTest.CounterShows(CEntMan, clientGunUid) != 1)
+                    clientEverTook = true;
+            });
+        }
+
+        await SetMovementKey(DirectionFlag.East, BoundKeyState.Up);
+
+        await Server.WaitAssertion(() =>
+        {
+            var pickupPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(pickupUid);
+            var playerPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            Assert.That(playerPosition.X, Is.GreaterThan(pickupPosition.X), "precondition: the player should have walked over it");
+            Assert.That(ServerHas(pickupUid), "the old side's pickup should stay on the server");
+            Assert.That(ServerRounds(magazineUid), Is.EqualTo(1), "the old side's pickup should fill nothing on the server");
+        });
+        Assert.That(clientEverTook, Is.False, "the client should never predict a take the server refuses");
     }
 
     /// <summary>

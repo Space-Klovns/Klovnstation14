@@ -20,14 +20,15 @@ public sealed partial class GunSystem
 
     /// <summary>
     ///     The parts of <see cref="UpdateAmmoCount(EntityUid, bool)"/> upstream lacks. During state application the
-    ///         prediction gate drops every update (it isn't a first-time tick), so a change only the server made never
-    ///         reached the counter: <paramref name="uid"/> is queued instead, and true returned. The refresh waits for the
+    ///         prediction gate drops every update that asks for it (it isn't a first-time tick), so a change only the server
+    ///         made never reached the counter: <paramref name="uid"/> is queued instead, and true returned. One that asks
+    ///         for no gate is left to run at once, as it always did. The refresh waits for the
     ///         frame's ticks, as re-prediction may yet play the client's own unacknowledged changes over the state.
     ///         Otherwise the gun holding <paramref name="uid"/> (its magazine) is updated too, which has the counter.
     /// </summary>
     private bool KsUpdateAmmoCountOutsideItself(EntityUid uid, bool prediction)
     {
-        if (Timing.ApplyingState)
+        if (prediction && Timing.ApplyingState)
         {
             _ammoCountersToRefresh.Add(uid);
             return true;

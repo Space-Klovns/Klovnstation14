@@ -2,6 +2,7 @@ using Content.Shared.NPC.Prototypes;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Perks.Support;
 
@@ -12,11 +13,14 @@ namespace Content.Shared._KS14.Perks.Support;
 ///         left to <c>TimedDespawn</c> on the prototype. Taken in shared code (<see cref="KsAmmoPickupSystem"/>): by the
 ///         server for everyone, and predicted by a player's own client for that player.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent]
 [Access(typeof(KsAmmoPickupSystem))]
 public sealed partial class KsAmmoPickupComponent : Component
 {
-    [DataField, AutoNetworkedField]
+    // Each player is sent whether they themselves may take it (KsAmmoPickupComponentState).
+    public override bool SessionSpecific => true;
+
+    [DataField]
     public float Radius = 0.6f;
 
     /// <summary>
@@ -35,7 +39,29 @@ public sealed partial class KsAmmoPickupComponent : Component
     /// <summary>
     ///     The sides that may take it: the dropper's NPC factions when it was dropped.
     /// </summary>
+    /// <remarks>
+    ///     Not sent to clients, which don't know anyone's NPC factions but those of their prototype: see
+    ///         <see cref="LocalPlayerMayTake"/>.
+    /// </remarks>
     /// <seealso cref="KsAmmoPickupSystem.SetFactions"/>
-    [DataField, AutoNetworkedField]
+    [DataField]
     public HashSet<ProtoId<NpcFactionPrototype>> Factions = new();
+
+    /// <summary>
+    ///     On a client: whether the server counts this client's own player among <see cref="Factions"/>, as of the last
+    ///         state. What its predicted take goes by.
+    /// </summary>
+    [ViewVariables]
+    public bool LocalPlayerMayTake;
+}
+
+/// <summary>
+///     A pickup as one player is sent it: <paramref name="MayTake"/> is about that player.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsAmmoPickupComponentState(float radius, TimeSpan checkInterval, bool mayTake) : ComponentState
+{
+    public float Radius = radius;
+    public TimeSpan CheckInterval = checkInterval;
+    public bool MayTake = mayTake;
 }
