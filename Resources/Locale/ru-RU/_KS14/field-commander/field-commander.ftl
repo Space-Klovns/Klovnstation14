@@ -13,32 +13,32 @@ ks-fieldcommander-phase-final = Последний штурм
 
 # Командир лишь язвит. Всё, на что могут отреагировать защитники, приходит от Полевого управления в виде разведданных,
 #     кроме предупреждения командира об ударе (ks-fieldcommander-strike-warning).
-ks-fieldcommander-phase-landfall-announcement = Nanotrasen. Я вижу вас отсюда: мечетесь за своими стенками, как насекомые. Окапывайтесь. Тем проще будет вас выкапывать.
-ks-fieldcommander-phase-probing-announcement = Мои псы спущены с поводка. Послушаем, как громко вы умеете кричать.
-ks-fieldcommander-phase-pressure-announcement = Ещё дышите? Это канцелярская ошибка, и я её сейчас исправлю.
-ks-fieldcommander-phase-siege-announcement = Хватит игр. Каждая стена, что вы возвели, — гроб, и я закрываю крышки.
-ks-fieldcommander-phase-final-announcement = Пора заканчивать. Я сожгу ваш аванпост в стекло и спишу ваши имена в допустимые потери.
+ks-fieldcommander-phase-landfall-announcement = Аванпост Nanotrasen, говорит ваш новый сосед. Мы высадились, распаковываемся и скоро зайдём. Никуда не уходите.
+ks-fieldcommander-phase-probing-announcement = Отправляю к вам пару человек, посмотреть. Будьте вежливы.
+ks-fieldcommander-phase-pressure-announcement = Всё ещё там, я вижу.
+ks-fieldcommander-phase-siege-announcement = Я был терпелив.
+ks-fieldcommander-phase-final-announcement = Довольно.
 
-ks-fieldcommander-intel-phase-landfall = Говорит Полевое управление. Командный сигнал Синдиката в вашем секторе подтверждён, движения противника пока нет. Пользуйтесь затишьем: укрепляйтесь, прикройте серверы, ставьте турели.
-ks-fieldcommander-intel-phase-probing = Полевое управление. Ожидайте небольшие разведгруппы, в основном с пистолетами. Они прощупывают вашу оборону. Не преследуйте их в тумане.
-ks-fieldcommander-intel-phase-pressure = Полевое управление. Элитным отрядам и борам-проходчикам дан допуск, часть прибудет десантными капсулами. Боры идут прямо к серверам: уничтожайте их в первую очередь.
-ks-fieldcommander-intel-phase-siege = Полевое управление. Артиллерии Синдиката разрешён огонь по вашим укреплениям: ждите ударов по всему, что вы построили. Рассредоточьтесь и не давайте РЦД простаивать.
-ks-fieldcommander-intel-phase-final = Полевое управление. Последний штурм. Синдикат высаживает аплинк наведения для орбитального удара по вашей позиции. Как только мы его засечём — уничтожьте.
+ks-fieldcommander-intel-phase-landfall = Командный сигнал Синдиката в вашем секторе подтверждён. Движения пока нет. Укрепляйтесь.
+ks-fieldcommander-intel-phase-probing = К вам идут небольшие группы, вооружены легко. Не преследуйте их в тумане.
+ks-fieldcommander-intel-phase-pressure = Противник вводит элитные отряды и боргов-проходчиков, часть — десантными капсулами. Боргам нужны серверы.
+ks-fieldcommander-intel-phase-siege = Артиллерия Синдиката бьёт по укреплениям. Рассредоточьтесь.
+ks-fieldcommander-intel-phase-final = Последний штурм. Высаживается аплинк наведения для орбитального удара. Координаты сообщим. Уничтожьте его.
 
 ## Waves
 
-ks-fieldcommander-wave-1 = Вот и они. Постарайтесь не умирать слишком быстро, моим людям станет скучно.
-ks-fieldcommander-wave-2 = Ещё отряд, Nanotrasen. Людей у меня больше, чем у вас патронов.
-ks-fieldcommander-wave-3 = Свежее мясо в мясорубку. Ваше, не моё.
-ks-fieldcommander-wave-4 = Пригните головы. Мои люди в них и целятся.
-ks-fieldcommander-wave-5 = Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
-ks-fieldcommander-wave-6 = Держите строй, солдатики. Это последнее, что вы удержите.
+ks-fieldcommander-wave-1 = Они уже идут.
+ks-fieldcommander-wave-2 = Ещё.
+ks-fieldcommander-wave-3 = У меня таких много.
+ks-fieldcommander-wave-4 = Снова.
+ks-fieldcommander-wave-5 = Я могу так дольше, чем вы.
+ks-fieldcommander-wave-6 = Вы, должно быть, устали.
 
-ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: сенсоры фиксируют { $count } { $count ->
-    [one] противника
-    [few] противников
+ks-fieldcommander-intel-wave = Волна { $number }: { $count } { $count ->
+    [one] противник
+    [few] противника
    *[other] противников
-}, приближение с { $direction ->
+}, идут с { $direction ->
     [north] севера
     [northeast] северо-востока
     [east] востока
@@ -50,39 +50,39 @@ ks-fieldcommander-intel-wave = Полевое управление. Волна {
    *[other] периметра
 }.
 
-ks-fieldcommander-strike-1 = Улыбнитесь артиллерии.
-ks-fieldcommander-strike-2 = Я вижу вашу крепостишку. Мой огневой налёт тоже.
-ks-fieldcommander-strike-3 = Из ваших стен выйдет отличная шрапнель.
+ks-fieldcommander-strike-1 = Не двигайтесь.
+ks-fieldcommander-strike-2 = Славная крепость.
+ks-fieldcommander-strike-3 = Спасибо, что построили всё в одном месте.
 # Единственное предупреждение, которое командир даёт сам: ракеты его, и весть о них подписана им.
-ks-fieldcommander-strike-warning = Огневой налёт на подходе, опасно близко. Отходите от своих укреплений, пока ноги ещё держат.
+ks-fieldcommander-strike-warning = Я бы встал в другом месте.
 
-ks-fieldcommander-asset-driller = Мой бор идёт за вашими серверами, и вам нечем его остановить.
-ks-fieldcommander-intel-driller = Полевое управление. Приближается бор-проходчик. Он идёт прямо к серверу — сосредоточьте огонь на нём.
-ks-fieldcommander-asset-drone = Слышите жужжание? Это за вами.
-ks-fieldcommander-intel-drone = Полевое управление. Приближаются дроны-камикадзе. Перед взрывом они пищат и вспыхивают красным: отходите или сбивайте их.
+ks-fieldcommander-asset-driller = Говорят, вам дороги эти серверы.
+ks-fieldcommander-intel-driller = Приближается борг-проходчик, идёт к серверу.
+ks-fieldcommander-asset-drone = Слышите?
+ks-fieldcommander-intel-drone = Приближаются дроны-камикадзе. Перед взрывом пищат.
 ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } пищит всё чаще и чаще!
-ks-fieldcommander-asset-sniper = Не высовывайтесь. Или высовывайтесь, и я сниму вам головы.
-ks-fieldcommander-intel-sniper = Полевое управление. Противник выставил снайпера. Следите за красным лазером: как только он перестанет мигать, последует выстрел. Снайпер бьёт издалека и отходит, если на него бросаются.
-ks-fieldcommander-asset-juggernaut = Слышите шаги? Бегите. Не поможет.
-ks-fieldcommander-intel-juggernaut = Полевое управление. Приближается джаггернаут: пулемёт, туша, которая выдержит магазин за магазином, и его не оглушить и не сбить с ног. Он медленный, так что держите дистанцию и заливайте его огнём.
-ks-fieldcommander-asset-breacher = Стены? Как мило.
-ks-fieldcommander-intel-breacher = Полевое управление. Приближаются подрывники с зарядами для стен. Где бы вы ни засели, они проделают проход рядом с вами, а не пойдут через дверь. Следите за стенами и слушайте, не ставят ли заряд.
-ks-fieldcommander-asset-tank = Финал заслуживает тяжёлой брони. Поздоровайтесь.
-ks-fieldcommander-intel-tank = Полевое управление. Приближается вражеский танк. Его пушка медленно стреляет фугасными снарядами: наводясь, он пищит, так что, услышав писк, уходите из виду. Башня приварена к корпусу, и уничтожение любой из частей добивает его. Ракеты.
-ks-fieldcommander-asset-tank-flamer = Холодно? Сейчас согрею.
-ks-fieldcommander-intel-tank-flamer = Полевое управление. Приближается огнемётный танк. Ему нужно подобраться близко, а там, куда он попадёт, земля продолжает гореть: держите дистанцию и не стойте в огне.
-ks-fieldcommander-asset-mortar = Соберитесь в кучку. Пожалуйста. Мины сэкономлю.
-ks-fieldcommander-intel-mortar = Полевое управление. Вражеский миномётный расчёт разворачивается примерно в сорока тайлах. Мина прилетает каждые секунд двенадцать — туда, где вы стоите кучей, или по турели: как увидите метку на земле или услышите свист, уходите с неё. Найдите расчёт — и миномёт ваш, со всеми оставшимися минами.
+ks-fieldcommander-asset-sniper = Не высовывайтесь.
+ks-fieldcommander-intel-sniper = Снайпер за вашими позициями. Следите за красным лазером: выстрел — когда он перестаёт мигать.
+ks-fieldcommander-asset-juggernaut = Сначала вы его услышите.
+ks-fieldcommander-intel-juggernaut = Приближается джаггернаут. Тяжёлая броня, не оглушить и не сбить с ног. Медленный.
+ks-fieldcommander-asset-breacher = Двери — для гостей.
+ks-fieldcommander-intel-breacher = Приближаются подрывники с зарядами для стен. Следите за стенами.
+ks-fieldcommander-asset-tank = Кое-что я приберёг напоследок.
+ks-fieldcommander-intel-tank = Приближается танк, бьёт фугасными. Пищит, пока наводится. Уничтожьте башню или корпус. Ракеты.
+ks-fieldcommander-asset-tank-flamer = Холодно там?
+ks-fieldcommander-intel-tank-flamer = Приближается огнемётный танк. Не подпускайте его и не стойте в огне.
+ks-fieldcommander-asset-mortar = Стойте вместе, не расходитесь.
+ks-fieldcommander-intel-mortar = Миномётный расчёт разворачивается за вашими позициями. Смотрите под ноги. Захватите миномёт — он ваш.
 
 ## Objectives and the uplink
 
-ks-fieldcommander-objective-lost = Ещё один сервер мой. Чувствуете, как всё ускользает?
-ks-fieldcommander-intel-objective-lost = Полевое управление. Мы потеряли сервер. { $remaining ->
-    [one] Остался один. Удержите его любой ценой.
+ks-fieldcommander-objective-lost = Благодарю.
+ks-fieldcommander-intel-objective-lost = Сервер потерян. { $remaining ->
+    [one] Остался один.
    *[other] Осталось: { $remaining }.
 }
-ks-fieldcommander-uplink-deployed = Мой аплинк на земле. Молитесь, если Nanotrasen позволяет.
-ks-fieldcommander-intel-uplink = Полевое управление. Аплинк Синдиката засечён: { $distance } м { $direction ->
+ks-fieldcommander-uplink-deployed = Время пошло.
+ks-fieldcommander-intel-uplink = Аплинк найден: { $distance } м { $direction ->
     [north] к северу
     [northeast] к северо-востоку
     [east] к востоку
@@ -92,9 +92,9 @@ ks-fieldcommander-intel-uplink = Полевое управление. Аплин
     [west] к западу
     [northwest] к северо-западу
    *[other] за периметром
-} от аванпоста, под охраной. Удар примерно через { $minutes } мин. Взломайте или взорвите его до этого.
-ks-fieldcommander-intel-uplink-warning = Полевое управление. Аплинк зафиксировал координаты. Удар через { $minutes } мин. Уничтожьте его немедленно!
-ks-fieldcommander-intel-reinforcements = Полевое управление. К вашей позиции летит капсула снабжения. Заберите её раньше Синдиката.
+} от аванпоста, под охраной. Удар примерно через { $minutes } мин. Взломайте или уничтожьте его.
+ks-fieldcommander-intel-uplink-warning = Аплинк зафиксировал координаты. Удар через { $minutes } мин.
+ks-fieldcommander-intel-reinforcements = К вашей позиции летит капсула снабжения.
 
 ## Round end
 
@@ -106,7 +106,7 @@ ks-fieldcommander-roundend-uplink-bombarded = Аплинк продержалс�
 ## The defenders' briefing
 
 ks-fieldcommander-intel-sender = Полевое управление Nanotrasen
-ks-fieldcommander-briefing = Аванпост, говорит Полевое управление, приоритетная связь. Дальние сенсоры фиксируют высадку полевой командной группы Синдиката вокруг вашей позиции. В ближайшие минуты ожидайте разведку боем, за ней — полноценный штурм. Укрепляйтесь, удерживайте серверы, ни шагу назад. Не выходите за периметр: туман за ним смертелен. За каждое подтверждённое уничтожение вам начисляется кредит снабжения: тратьте его в терминале снабжения на боеприпасы и огневую поддержку. Конец связи.
+ks-fieldcommander-briefing = Аванпост, говорит Полевое управление. Вокруг вашей позиции высаживается полевая командная группа Синдиката. Укрепляйтесь и удерживайте серверы. Не выходите за периметр: туман смертелен. За подтверждённые уничтожения начисляется кредит снабжения, тратьте его в терминале снабжения. Конец связи.
 
 ## Points
 
@@ -136,9 +136,9 @@ ks-fieldcommander-endless-vote-title = Аплинк уничтожен. Держ
 ks-fieldcommander-endless-vote-initiator = Полевое управление
 ks-fieldcommander-endless-vote-yes = Держать оборону
 ks-fieldcommander-endless-vote-no = Отступить
-ks-fieldcommander-intel-endless-vote = Полевое управление. Аплинк уничтожен, поле за вами. Голосуйте в течение { $seconds } с: отступить или окопаться и узнать, сколько вы продержитесь.
-ks-fieldcommander-endless = Думали, это всё? Всё, что у меня осталось, идёт за вами, и будет идти дальше.
-ks-fieldcommander-intel-endless = Полевое управление. Вы держите оборону. Каждая волна будет больше и раньше предыдущей. Держитесь сколько сможете.
+ks-fieldcommander-intel-endless-vote = Аплинк уничтожен. { $seconds } с на голосование: отступить или остаться.
+ks-fieldcommander-endless = Я не ухожу. И вы тоже.
+ks-fieldcommander-intel-endless = Вы остаётесь. Каждая волна будет больше и раньше.
 
 ## Doctrines: how the commander spends a wave's budget
 
@@ -147,10 +147,10 @@ ks-fieldcommander-doctrine-swarm = Рой
 ks-fieldcommander-doctrine-spearhead = Остриё
 ks-fieldcommander-doctrine-airborne = Десант
 ks-fieldcommander-doctrine-hoard = Накопление
-ks-fieldcommander-intel-doctrine-swarm = Полевое управление. Много лёгкой пехоты. Не прекращайте огонь и не дайте себя обойти.
-ks-fieldcommander-intel-doctrine-spearhead = Полевое управление. Эту волну ведут их лучшие. Держитесь и сосредоточьте огонь.
-ks-fieldcommander-intel-doctrine-airborne = Полевое управление. Вижу десантные капсулы. Следите за небом над вашими позициями.
-ks-fieldcommander-intel-doctrine-hoard = Полевое управление. Волна слабая. Они что-то копят — используйте время.
+ks-fieldcommander-intel-doctrine-swarm = Лёгкая пехота, и её много. Следите за флангами.
+ks-fieldcommander-intel-doctrine-spearhead = Эту волну ведут их лучшие.
+ks-fieldcommander-intel-doctrine-airborne = Приближаются десантные капсулы. Следите за своими позициями изнутри.
+ks-fieldcommander-intel-doctrine-hoard = Волна небольшая. Они копят силы.
 
 ks-fieldcommander-wave-status-paused = { $wave ->
     [0] Волны приостановлены
@@ -163,9 +163,9 @@ ks-fieldcommander-points-heal = Лечение: { $name }
 ## Концовка: проваливший задачу командир мобилизован и отправлен в бой сам.
 
 ks-fieldcommander-mobik-sender = Верховное командование «Синдиката»
-ks-fieldcommander-mobik-announcement = Верховное командование «Синдиката» на всех частотах. Полевой командир не сумел взять опорный пункт Nanotrasen. Он отстранён от командования и мобилизован с этой минуты: одна винтовка, без брони, без звания. Поздравляем с повышением до мобика, боец. Фронт там.
-ks-fieldcommander-intel-mobik = Полевое управление. Через { $seconds } с прибудет одна капсула с единственным призывником: их бывшим командиром. Избавьте его от мучений.
-ks-fieldcommander-intel-mobik-killed = Полевое управление. Мобик готов. Это был последний.
+ks-fieldcommander-mobik-announcement = Полевой командир не сумел взять аванпост Nanotrasen. Он отстранён от командования и мобилизован с этой минуты: одна винтовка, без брони, без звания. Поздравляем с повышением до мобика, боец. Фронт там.
+ks-fieldcommander-intel-mobik = Одна капсула, прибытие примерно через { $seconds } с. На борту один призывник: их бывший командир.
+ks-fieldcommander-intel-mobik-killed = Мобик мёртв. Это был последний.
 ks-fieldcommander-mobik-name = бывший полевой командир
 ks-fieldcommander-points-mobik = Мобик убит
 ks-fieldcommander-roundend-mobik-killed = Отстранённый от командования и отправленный в бой мобиком, полевой командир тоже погиб.

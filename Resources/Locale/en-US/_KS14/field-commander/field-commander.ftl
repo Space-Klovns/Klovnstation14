@@ -13,31 +13,31 @@ ks-fieldcommander-phase-final = Final Assault
 
 # The commander only taunts. Everything the defenders can act on comes from Field Operations, as intel, but for the
 #     commander's own warning of a strike (ks-fieldcommander-strike-warning).
-ks-fieldcommander-phase-landfall-announcement = Nanotrasen. I can see you from here, scrambling behind your little walls like insects. Dig in. It only makes the digging up easier.
-ks-fieldcommander-phase-probing-announcement = My hounds are off the leash. Let's hear how loud you scream.
-ks-fieldcommander-phase-pressure-announcement = Still breathing? That's a clerical error, and I am about to correct it.
-ks-fieldcommander-phase-siege-announcement = I'm done playing with you. Every wall you raised is a coffin, and I am closing the lids.
-ks-fieldcommander-phase-final-announcement = This ends now. I will burn your outpost to glass and file your names under acceptable losses.
+ks-fieldcommander-phase-landfall-announcement = Nanotrasen outpost, this is your new neighbour. We've landed, we're unpacking, and we'll be over shortly. Don't go anywhere.
+ks-fieldcommander-phase-probing-announcement = Sending a few men over to have a look at you. Be polite.
+ks-fieldcommander-phase-pressure-announcement = Still there, I see.
+ks-fieldcommander-phase-siege-announcement = I've been patient.
+ks-fieldcommander-phase-final-announcement = That's enough.
 
-ks-fieldcommander-intel-phase-landfall = Field Operations here. A Syndicate command signal is confirmed in your sector, with no hostile movement yet. Use the quiet: fortify, cover the servers, and get turrets up.
-ks-fieldcommander-intel-phase-probing = Field Operations. Expect small probing teams, mostly pistols. They're testing your lines. Don't chase them out into the fog.
-ks-fieldcommander-intel-phase-pressure = Field Operations. Elite squads and breaching cyborgs are cleared to deploy, some of them by drop pod. The borgs go straight for the servers, so kill them first.
-ks-fieldcommander-intel-phase-siege = Field Operations. Syndicate artillery is now cleared to fire on your fortifications, so expect strikes on anything you've built. Spread out, and keep the RCDs busy.
-ks-fieldcommander-intel-phase-final = Field Operations. This is the final assault. The Syndicate is landing a targeting uplink for an orbital strike on your position. Once we have a fix on it, take it down.
+ks-fieldcommander-intel-phase-landfall = Syndicate command signal confirmed in your sector. No movement yet. Fortify.
+ks-fieldcommander-intel-phase-probing = Small teams heading your way, lightly armed. Don't follow them into the fog.
+ks-fieldcommander-intel-phase-pressure = Elite squads and breaching cyborgs deploying, some by drop pod. The cyborgs want the servers.
+ks-fieldcommander-intel-phase-siege = Syndicate artillery is firing on fortifications. Spread out.
+ks-fieldcommander-intel-phase-final = Final assault. A targeting uplink is landing for an orbital strike. Location to follow. Destroy it.
 
 ## Waves
 
-ks-fieldcommander-wave-1 = Here they come. Try not to die too quickly, it bores my men.
-ks-fieldcommander-wave-2 = Another squad, Nanotrasen. I have more of them than you have bullets.
-ks-fieldcommander-wave-3 = Fresh meat for the grinder. Yours, not mine.
-ks-fieldcommander-wave-4 = Keep your heads down. My men are aiming for them.
-ks-fieldcommander-wave-5 = Every one you kill, I replace. Every one I kill, you don't.
-ks-fieldcommander-wave-6 = Hold the line, little soldiers. It's the last thing you'll ever hold.
+ks-fieldcommander-wave-1 = They're on their way.
+ks-fieldcommander-wave-2 = More.
+ks-fieldcommander-wave-3 = I have plenty of these.
+ks-fieldcommander-wave-4 = Again.
+ks-fieldcommander-wave-5 = I can keep this up longer than you can.
+ks-fieldcommander-wave-6 = You must be getting tired.
 
-ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: sensors read { $count } { $count ->
+ks-fieldcommander-intel-wave = Wave { $number }: { $count } { $count ->
     [one] hostile
    *[other] hostiles
-} inbound from the { $direction ->
+} coming from the { $direction ->
     [north] north
     [northeast] north-east
     [east] east
@@ -49,39 +49,39 @@ ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: sensors read 
    *[other] perimeter
 }.
 
-ks-fieldcommander-strike-1 = Smile for the artillery.
-ks-fieldcommander-strike-2 = I see your little fort. So does my fire mission.
-ks-fieldcommander-strike-3 = Your walls will make fine shrapnel.
+ks-fieldcommander-strike-1 = Hold still.
+ks-fieldcommander-strike-2 = Nice fort.
+ks-fieldcommander-strike-3 = Thanks for building it all in one place.
 # The one warning the commander gives itself: the missiles are its own, so the word of them comes signed by it.
-ks-fieldcommander-strike-warning = Fire mission inbound, danger close. Get clear of your fortifications, if your legs still work.
+ks-fieldcommander-strike-warning = I'd stand somewhere else.
 
-ks-fieldcommander-asset-driller = My borg is coming for your servers, and nothing you own can stop it.
-ks-fieldcommander-intel-driller = Field Operations. A breaching borg is inbound. It goes straight for a server, so focus it down.
-ks-fieldcommander-asset-drone = Listen. Hear that buzzing? It's looking for you.
-ks-fieldcommander-intel-drone = Field Operations. Suicide drones inbound. They beep and flash red before they blow: get clear or shoot them down.
+ks-fieldcommander-asset-driller = I'm told you're fond of those servers.
+ks-fieldcommander-intel-driller = Breaching cyborg inbound, heading for a server.
+ks-fieldcommander-asset-drone = Hear that?
+ks-fieldcommander-intel-drone = Suicide drones inbound. They beep before they blow.
 ks-fieldcommander-drone-armed = { CAPITALIZE(THE($device)) } beeps faster and faster!
-ks-fieldcommander-asset-sniper = Keep your heads down. Or don't, and I'll take them off.
-ks-fieldcommander-intel-sniper = Field Operations. Enemy sniper deployed. Watch for a red laser: once it stops blinking, it fires. It shoots from far off and backs away if you rush it.
-ks-fieldcommander-asset-juggernaut = Hear those footsteps? Run. It won't help.
-ks-fieldcommander-intel-juggernaut = Field Operations. A juggernaut is inbound: a machine gun, the bulk to soak up magazine after magazine, and it can't be stunned or tripped. It's slow, so keep your distance and pour it on.
-ks-fieldcommander-asset-breacher = Walls? How quaint.
-ks-fieldcommander-intel-breacher = Field Operations. Breachers inbound, carrying wall charges. Wherever you hole up, they'll blow a way in close to you rather than use your door. Keep watch on your walls, and listen for the charge going on.
-ks-fieldcommander-asset-tank = The final act deserves heavy armour. Say hello.
-ks-fieldcommander-intel-tank = Field Operations. Enemy tank inbound. Its cannon fires high-explosive shells, slowly: it beeps while it lines one up, so get out of sight when you hear it. The turret is welded to the hull, and destroying either kills it. Rockets.
-ks-fieldcommander-asset-tank-flamer = Cold out there? Let me warm you up.
-ks-fieldcommander-intel-tank-flamer = Field Operations. A flamer tank is inbound. It has to get close, and where it hits the ground keeps burning: keep your distance and don't stand in the fire.
-ks-fieldcommander-asset-mortar = Bunch up. Please. It saves me shells.
-ks-fieldcommander-intel-mortar = Field Operations. Enemy mortar team setting up about forty tiles out. A shell lands every twelve seconds or so, on whoever is bunched together or on a turret: when a marker shows on the ground or you hear one coming, get off it. Hunt the crew down, and the mortar is yours for what shells it has left.
+ks-fieldcommander-asset-sniper = Keep your heads down.
+ks-fieldcommander-intel-sniper = Sniper outside your lines. Watch for a red laser: it fires when the blinking stops.
+ks-fieldcommander-asset-juggernaut = You'll hear him first.
+ks-fieldcommander-intel-juggernaut = Juggernaut inbound. Heavily armoured, can't be stunned or knocked down. Slow.
+ks-fieldcommander-asset-breacher = Doors are for guests.
+ks-fieldcommander-intel-breacher = Breachers inbound, with wall charges. Watch your walls.
+ks-fieldcommander-asset-tank = I saved something for last.
+ks-fieldcommander-intel-tank = Tank inbound, firing high explosive. It beeps while it aims. Kill the turret or the hull. Rockets.
+ks-fieldcommander-asset-tank-flamer = Cold out there?
+ks-fieldcommander-intel-tank-flamer = Flamer tank inbound. Stay out of its reach, and out of the fire.
+ks-fieldcommander-asset-mortar = Do keep standing together.
+ks-fieldcommander-intel-mortar = Mortar team setting up outside your lines. Watch the ground. The mortar is yours if you take it.
 
 ## Objectives and the uplink
 
-ks-fieldcommander-objective-lost = Another server is mine. Can you feel it slipping away?
-ks-fieldcommander-intel-objective-lost = Field Operations. We've lost a server. { $remaining ->
-    [one] One left. Hold it at all costs.
+ks-fieldcommander-objective-lost = Thank you.
+ks-fieldcommander-intel-objective-lost = Server lost. { $remaining ->
+    [one] One left.
    *[other] { $remaining } remain.
 }
-ks-fieldcommander-uplink-deployed = My uplink is down. Pray, if Nanotrasen lets you.
-ks-fieldcommander-intel-uplink = Field Operations. We have a fix on the Syndicate uplink: { $distance } metres to the { $direction ->
+ks-fieldcommander-uplink-deployed = You're on a timer now.
+ks-fieldcommander-intel-uplink = Uplink located: { $distance } metres to the { $direction ->
     [north] north
     [northeast] north-east
     [east] east
@@ -91,9 +91,9 @@ ks-fieldcommander-intel-uplink = Field Operations. We have a fix on the Syndicat
     [west] west
     [northwest] north-west
    *[other] perimeter
-} of the outpost, under guard. The bombardment comes in about { $minutes } minutes. Hack it or blow it before then.
-ks-fieldcommander-intel-uplink-warning = Field Operations. The uplink has locked its coordinates. Bombardment in { $minutes } minutes. Destroy it now!
-ks-fieldcommander-intel-reinforcements = Field Operations. A resupply pod is inbound to your position. Grab it before the Syndicate does.
+} of the outpost, guarded. Bombardment in about { $minutes } minutes. Hack it or destroy it.
+ks-fieldcommander-intel-uplink-warning = Uplink has locked coordinates. Bombardment in { $minutes } minutes.
+ks-fieldcommander-intel-reinforcements = Resupply pod inbound to your position.
 
 ## Round end
 
@@ -108,7 +108,7 @@ ks-fieldcommander-roundend-uplink-bombarded = The uplink lasted long enough to c
 ## The defenders' briefing
 
 ks-fieldcommander-intel-sender = Nanotrasen Field Operations
-ks-fieldcommander-briefing = Outpost, this is Field Operations, priority traffic. Long-range sensors have a Syndicate field command group making landfall around your position. Expect probing attacks within minutes and a full assault to follow. Fortify, hold the servers, and give no ground. Stay inside the perimeter: the fog beyond it will kill you. Every confirmed kill earns you requisition credit: spend it at the requisitions terminal for ordnance and fire support. Field Operations out.
+ks-fieldcommander-briefing = Outpost, this is Field Operations. A Syndicate field command group is landing around your position. Fortify and hold the servers. Stay inside the perimeter: the fog will kill you. Confirmed kills earn requisition credit, spent at the requisitions terminal. Field Operations out.
 
 ## Points
 
@@ -138,9 +138,9 @@ ks-fieldcommander-endless-vote-title = The uplink is down. Hold the line in endl
 ks-fieldcommander-endless-vote-initiator = Field Operations
 ks-fieldcommander-endless-vote-yes = Hold the line
 ks-fieldcommander-endless-vote-no = Pull out
-ks-fieldcommander-intel-endless-vote = Field Operations. The uplink is down, the field is yours. Vote within { $seconds } seconds: pull out, or dig in and see how long you last.
-ks-fieldcommander-endless = You think that was all of it? Everything I have left is coming for you, and it will keep coming.
-ks-fieldcommander-intel-endless = Field Operations. You're holding the line. Every wave will be bigger and sooner than the last. Hold as long as you can.
+ks-fieldcommander-intel-endless-vote = Uplink destroyed. { $seconds } seconds to vote: pull out, or stay.
+ks-fieldcommander-endless = I'm not leaving. Neither are you.
+ks-fieldcommander-intel-endless = You're staying. Each wave will be bigger and sooner.
 
 ## Doctrines: how the commander spends a wave's budget
 
@@ -149,10 +149,10 @@ ks-fieldcommander-doctrine-swarm = Swarm
 ks-fieldcommander-doctrine-spearhead = Spearhead
 ks-fieldcommander-doctrine-airborne = Airborne
 ks-fieldcommander-doctrine-hoard = Hoard
-ks-fieldcommander-intel-doctrine-swarm = Field Operations. That's a lot of light infantry. Keep the fire up and don't let them flank.
-ks-fieldcommander-intel-doctrine-spearhead = Field Operations. Their best are leading this one. Hold fast and focus fire.
-ks-fieldcommander-intel-doctrine-airborne = Field Operations. Drop pods on scope. Watch the sky inside your lines.
-ks-fieldcommander-intel-doctrine-hoard = Field Operations. That wave is light. They're holding something back; use the time.
+ks-fieldcommander-intel-doctrine-swarm = Light infantry, and a lot of it. Watch your flanks.
+ks-fieldcommander-intel-doctrine-spearhead = Their best are leading this one.
+ks-fieldcommander-intel-doctrine-airborne = Drop pods inbound. Watch inside your lines.
+ks-fieldcommander-intel-doctrine-hoard = Small wave. They're saving up.
 
 ks-fieldcommander-wave-status-paused = { $wave ->
     [0] Waves paused
@@ -165,9 +165,9 @@ ks-fieldcommander-points-heal = Healed: { $name }
 ## The ending: the failed commander, mobilised and sent in himself.
 
 ks-fieldcommander-mobik-sender = Syndicate High Command
-ks-fieldcommander-mobik-announcement = Syndicate High Command to all frequencies. The Field Commander has failed to take the Nanotrasen stronghold. He is relieved of command and mobilised, effective immediately: one rifle, no armour, no rank. Congratulations on your promotion to mobik, soldier. The front is that way.
-ks-fieldcommander-intel-mobik = Field Operations. One pod inbound in about { $seconds } seconds, carrying a single conscript: their own former commander. Put him out of his misery.
-ks-fieldcommander-intel-mobik-killed = Field Operations. The mobik is down. That was the last of them.
+ks-fieldcommander-mobik-announcement = The Field Commander has failed to take the Nanotrasen outpost. He is relieved of command and mobilised, effective immediately: one rifle, no armour, no rank. Congratulations on your promotion to mobik, soldier. The front is that way.
+ks-fieldcommander-intel-mobik = One pod inbound, about { $seconds } seconds out. One conscript aboard: their former commander.
+ks-fieldcommander-intel-mobik-killed = The mobik is dead. That was the last of them.
 ks-fieldcommander-mobik-name = former field commander
 ks-fieldcommander-points-mobik = Mobik killed
 ks-fieldcommander-roundend-mobik-killed = Relieved of command and sent in as a mobik, the field commander was killed too.
