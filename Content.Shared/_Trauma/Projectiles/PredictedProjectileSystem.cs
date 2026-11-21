@@ -52,6 +52,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private _KS14.Impacts.KsImpactSurfaceSystem _ksImpactSurfaceSystem = default!; // KS14
+    [Dependency] private _KS14.Damage.Pending.KsPendingDamageSystem _ksPendingDamageSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -257,8 +258,9 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
             // What the hit shows at once (its blood) plays off this, as it played off the damage when that was dealt here.
             if (damaged)
             {
-                // Shown at once, as pending until the server's hit deals it (DamageableSystem.KsAddPendingDamage).
-                _damageable.KsAddPendingDamage((target, damageable), damage);
+                // Shown at once, as pending until the server's hit of this shot deals it (KsPendingDamageSystem).
+                if (_ksPredictedSpawnSystem.GetKeptShotId(uid) is { } shotId)
+                    _ksPendingDamageSystem.Add(target, damage, shotId);
 
                 var previewedEv = new _KS14.Damage.Events.KsPreviewedDamageEvent(damage, shooter);
                 RaiseLocalEvent(target, ref previewedEv);

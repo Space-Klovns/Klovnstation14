@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Shared._Trauma.Projectiles;
+using Content.Shared._KS14.Damage.Pending;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -57,7 +58,6 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private static readonly ProtoId<Content.Shared._KS14.Particles.KsParticlesPrototype> SplatterMist = "KsBloodSplatterMist";
     private static readonly EntProtoId BulletPistol = "BulletPistol";
     private static readonly ProtoId<DamageTypePrototype> PiercingDamage = "Piercing";
-    private static readonly ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
 
     /// <summary>
     ///     How many spread shots are fired: enough that the spread has built up well past where it starts.
@@ -232,7 +232,7 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private async Task<FixedPoint2> ClientDamage(EntityUid clientUid)
     {
         var total = FixedPoint2.Zero;
-        await Client.WaitPost(() => total = CEntMan.System<DamageableSystem>().GetTotalDamage(clientUid));
+        await Client.WaitPost(() => total = CEntMan.System<KsPendingDamageSystem>().GetShownTotalDamage(clientUid));
         return total;
     }
 
@@ -322,6 +322,12 @@ public sealed class KsGunHitPredictionTest : InteractionTest
             }
 
             shownBeforeTheServerDealtIt |= clientDamage > FixedPoint2.Zero && serverDamage == FixedPoint2.Zero;
+
+            // What is pending is beside the target's damage, never in it: that holds only what the server dealt.
+            var clientRealDamage = FixedPoint2.Zero;
+            await Client.WaitPost(() => clientRealDamage = CEntMan.System<DamageableSystem>().GetTotalDamage(clientTargetUid));
+            Assert.That(clientRealDamage, Is.LessThanOrEqualTo(serverDamage),
+                $"tick {tick}: the client's own damage for the target is {clientRealDamage}, and the server has only dealt {serverDamage}");
             clientDamages.Add(clientDamage);
         }
 
@@ -331,13 +337,14 @@ public sealed class KsGunHitPredictionTest : InteractionTest
         Assert.That(clientDamages[^1], Is.EqualTo(serverDamage), "the client did not end on the server's damage");
 
         var pendingAtTheEnd = FixedPoint2.Zero;
-        await Client.WaitPost(() => pendingAtTheEnd = CEntMan.System<DamageableSystem>().KsGetPendingDamage(clientTargetUid));
+        await Client.WaitPost(() => pendingAtTheEnd = CEntMan.System<KsPendingDamageSystem>().GetPendingDamage(clientTargetUid));
         Assert.That(pendingAtTheEnd, Is.EqualTo(FixedPoint2.Zero), "damage is still pending on the client long after the server dealt it");
     }
 
     /// <summary>
     ///     Damage a client predicted that the server never deals (its bullet missed there) is taken back off, once, after
-    ///         waiting for it; and the server's damage of another kind, meanwhile, is not mistaken for it.
+    ///         waiting for it. Pending damage is matched to its shot: someone else's hit meanwhile, of the same kind and
+    ///         size, is not mistaken for it, and nor is the server's hit of another shot.
     /// </summary>
     [Test]
     public async Task PendingDamageTheServerNeverDealsIsTakenBackOnce()
@@ -352,18 +359,25 @@ public sealed class KsGunHitPredictionTest : InteractionTest
 
         var clientTargetUid = ToClient(targetUid);
         var predicted = FixedPoint2.New(16);
-        var unrelated = FixedPoint2.New(1);
+        var unrelated = predicted; // as like the pending hit as damage can be
+        const int shotId = 7;
 
         await Client.WaitPost(() =>
-            CEntMan.System<DamageableSystem>().KsAddPendingDamage(clientTargetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), predicted)));
+            CEntMan.System<KsPendingDamageSystem>().Add(clientTargetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), predicted), shotId));
         Assert.That(await ClientDamage(clientTargetUid), Is.EqualTo(predicted), "the predicted damage did not show at once");
 
-        // Something else hurts it a little, in another type: not the hit that is pending.
+        // Someone else hits it just as hard, in the same type: not the shot that is pending.
         await Server.WaitPost(() =>
-            SEntMan.System<DamageableSystem>().ChangeDamage(targetUid, new DamageSpecifier(ProtoMan.Index(BluntDamage), unrelated)));
+            SEntMan.System<DamageableSystem>().ChangeDamage(targetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), unrelated)));
         await RunTicks(5);
         Assert.That(await ClientDamage(clientTargetUid), Is.EqualTo(predicted + unrelated),
-            "the server's unrelated damage was taken for the pending hit, or did not arrive on top of it");
+            "someone else's damage was taken for the pending hit, or did not arrive on top of it");
+
+        // Nor is the server's hit of another shot.
+        var resolvedByAnotherShot = false;
+        await Client.WaitPost(() => resolvedByAnotherShot = CEntMan.System<KsPendingDamageSystem>().Resolve(clientTargetUid, shotId + 1));
+        Assert.That(resolvedByAnotherShot, Is.False, "another shot's hit took this shot's pending damage off");
+        Assert.That(await ClientDamage(clientTargetUid), Is.EqualTo(predicted + unrelated));
 
         // It goes exactly once: down to the server's damage, and stays there.
         var drops = 0;

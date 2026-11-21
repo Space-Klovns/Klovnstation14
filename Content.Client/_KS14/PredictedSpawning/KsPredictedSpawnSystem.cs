@@ -28,6 +28,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private KsImpactSurfaceSystem _impactSurfaceSystem = default!;
+    [Dependency] private Content.Shared._KS14.Damage.Pending.KsPendingDamageSystem _pendingDamageSystem = default!;
 
     /// <summary>
     ///     How far, in metres, a server copy may be from a kept copy for the two to be matched as one spawn.
@@ -71,6 +72,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
     private sealed class GoneShot
     {
+        public int ShotId;
         public string? Prototype;
         public GameTick SpawnTick;
         public MapCoordinates Coordinates;
@@ -341,6 +343,13 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
     public override bool IsKeptLocally(EntityUid uid) => _keptQuery.HasComponent(uid);
 
+    public override int? GetKeptShotId(EntityUid uid) => _keptQuery.TryComp(uid, out var keptComponent) ? keptComponent.ShotId : null;
+
+    /// <summary>
+    ///     The last id given to a shot this client keeps a copy of (<see cref="KsKeptPredictedSpawnComponent.ShotId"/>).
+    /// </summary>
+    private int _lastShotId;
+
     public override void PredictedQueueDelDeferrable(EntityUid uid)
     {
         if (GameTiming.ApplyingState && _keptQuery.TryComp(uid, out var keptComponent))
@@ -374,6 +383,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         var keptComponent = EnsureComp<KsKeptPredictedSpawnComponent>(uid);
         keptComponent.SpawnTime = GameTiming.CurTime;
         keptComponent.SpawnTick = GameTiming.CurTick;
+        keptComponent.ShotId = ++_lastShotId;
         EnsureComp<KsPredictedSpawnComponent>(uid);
         PhysicsSystem.UpdateIsPredicted(uid);
     }
@@ -447,6 +457,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     {
         _goneShots.Add(new GoneShot
         {
+            ShotId = entity.Comp.ShotId,
             Prototype = MetaData(entity.Owner).EntityPrototype?.ID,
             SpawnTick = entity.Comp.SpawnTick,
             Coordinates = _transformSystem.GetMapCoordinates(entity.Owner),
@@ -486,8 +497,18 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     private void OnImpact(KsPredictedSpawnImpactEvent args)
     {
         TryGetEntity(args.Target, out var targetUid);
-        if (args.ToPredictingUser && !ClaimServerImpact(args, targetUid))
-            return;
+        if (args.ToPredictingUser)
+        {
+            var showImpact = ClaimServerImpact(args, targetUid, out var shotId);
+
+            // The server's hit of this shot has been dealt: the state of its tick, applied before this was handed over,
+            //      has its damage in it. What the kept copy's hit showed as pending for it no longer is.
+            if (shotId != null && targetUid != null)
+                _pendingDamageSystem.Resolve(targetUid.Value, shotId.Value);
+
+            if (!showImpact)
+                return;
+        }
 
         // No sparks on flesh, which sprays blood instead.
         if (args.ImpactEffect is { } impactEffect && (targetUid == null || _impactSurfaceSystem.ShowsProjectileImpactEffect(targetUid.Value)))
@@ -505,8 +526,11 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     ///     Whether the server's hit on this player's own shot still has to be shown here. If it is shown before the
     ///         shot's kept copy hit anything, the kept copy is muted.
     /// </summary>
-    private bool ClaimServerImpact(KsPredictedSpawnImpactEvent args, EntityUid? targetUid)
+    /// <param name="shotId">This client's id for the shot the hit is of, if it is one this client kept a copy of.</param>
+    private bool ClaimServerImpact(KsPredictedSpawnImpactEvent args, EntityUid? targetUid, out int? shotId)
     {
+        shotId = null;
+
         // A server copy that arrived since the last tick is matched first.
         if (_unpairedServerCopies.Count > 0)
             PairServerCopies();
@@ -520,6 +544,8 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         // Never reached this client (spawned and spent within a tick): the unmatched shot of the same tick, if any.
         if (keptComponent == null && gone == null)
             FindShotBySpawnTick(args, impactCoordinates, out keptComponent, out gone);
+
+        shotId = keptComponent?.ShotId ?? gone?.ShotId;
 
         var playedImpacts = keptComponent?.PlayedImpacts ?? gone?.PlayedImpacts;
         if (playedImpacts == null)
