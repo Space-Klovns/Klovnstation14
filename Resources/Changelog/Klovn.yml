@@ -3096,3 +3096,23 @@ Entries:
         instantly.
   id: 277
   time: '2026-11-18T19:53:47.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Health no longer flickers when you are shot, or on the people you shoot.
+    - type: Fix
+      message: >-
+        Your bullets no longer bend away from where you fired them during
+        sustained fire.
+    - type: Fix
+      message: >-
+        Lasers and other hitscan weapons now hit a moving target you saw them
+        hit, as bullets do.
+    - type: Fix
+      message: Health no longer twitches once a second from passive regeneration.
+    - type: Fix
+      message: >-
+        Blood stains from shooting someone no longer flicker, appear late, or
+        change a moment after they appear.
+  id: 278
+  time: '2026-11-21T19:47:19.0000000+00:00'
