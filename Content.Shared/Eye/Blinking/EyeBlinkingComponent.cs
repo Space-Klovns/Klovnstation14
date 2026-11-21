@@ -132,8 +132,9 @@ public sealed partial class EyeBlinkingComponent : Component
     /// <summary>
     /// The prototype to grant to enable eye-toggling action.
     /// </summary>
+    // KS14: nothing gets the action by default, it's useless clutter on the action bar. Set it in YAML to grant it.
     [DataField]
-    public EntProtoId EyeToggleAction = "ActionToggleEyes";
+    public EntProtoId? /* KS14: made nullable */ EyeToggleAction; // KS14: "ActionToggleEyes" -> null
 
     /// <summary>
     /// The actual eye toggling action entity itself.

@@ -287,10 +287,11 @@ public abstract partial class EyeBlinkingSystem : EntitySystem
     /// </summary>
     private void AddEyeAction(Entity<EyeBlinkingComponent> eyes, EntityUid holder)
     {
-        if (eyes.Comp.EyeToggleActionEntity != null)
+        if (eyes.Comp.EyeToggleActionEntity != null
+            || eyes.Comp.EyeToggleAction == null) // KS14: no action configured
             return;
 
-        _actions.AddAction(holder, ref eyes.Comp.EyeToggleActionEntity, eyes.Comp.EyeToggleAction);
+        _actions.AddAction(holder, ref eyes.Comp.EyeToggleActionEntity, eyes.Comp.EyeToggleAction.Value /* KS14: now nullable */);
         Dirty(eyes);
     }
     #endregion Internal
