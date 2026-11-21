@@ -36,5 +36,7 @@ public static partial class PoolManager
         (CCVars.MovementMobPushing.Name, "false"),
         (CCVars.StorageLimit.Name, "1") /* KS14 */,
         (Content.Shared._KS14.CCVar.KsCCVars.NpcLightDetection.Name, "false") /* KS14: tests that want it turn it on, whatever the presets say */,
+        (Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleVacuumDissipationRate.Name, "0") /* KS14: test maps are in space, so every test puddle would waste away; tests that want it turn it on */,
+        (Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleExposedDissipationRate.Name, "0") /* KS14: likewise, for maps with air */,
     };
 }

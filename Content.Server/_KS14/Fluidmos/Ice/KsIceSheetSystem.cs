@@ -21,7 +21,8 @@ namespace Content.Server._KS14.Fluidmos.Ice;
 /// <summary>
 ///     Ice sheets: what freezes out of a tile's puddle, one sheet per tile. They exchange heat with the air (and the
 ///         puddle under them) in the puddle heat pass, melt back into the puddle above their reagents' melting points,
-///         and sublime into the tile's gas in thin air.
+///         sublime into the tile's gas in thin air, take in whatever of their puddle is supercooled, and waste away in
+///         vacuum or under a map's air (<see cref="KsFluidDissipationSystem"/>).
 /// </summary>
 /// <remarks>
 ///     Sheets are cached per grid and tile, as puddles are, so nothing ever looks entities up per tick, and tiles without
@@ -30,6 +31,7 @@ namespace Content.Server._KS14.Fluidmos.Ice;
 public sealed partial class KsIceSheetSystem : EntitySystem
 {
     [Dependency] private Content.Server._KS14.Atmos.KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
+    [Dependency] private KsFluidDissipationSystem _fluidDissipationSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
@@ -78,7 +80,10 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     /// </summary>
     private readonly List<(Entity<SolutionComponent> Solution, float Heat)> _pendingHeat = new();
 
-    private readonly List<Entity<KsIceSheetComponent>> _sheets = new();
+    /// <summary>
+    ///     The sheets walked this pass, where they lie, and how many units each is to lose to dissipation.
+    /// </summary>
+    private readonly List<(Entity<KsIceSheetComponent> Sheet, EntityUid GridUid, Vector2i Indices, float DissipatedUnits)> _sheets = new();
 
     public override void Update(float frameTime)
     {
@@ -228,8 +233,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         {
             foreach (var (indices, sheet) in tiles)
             {
-                _sheets.Add(sheet);
-                ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume);
+                var dissipationRate = ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume);
+                _sheets.Add((sheet, gridUid, indices, dissipationRate * deltaTime));
             }
         }
 
@@ -242,16 +247,20 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         _pendingHeat.Clear();
 
         // The cache is no longer being walked, so melting may spill and empty sheets may go.
-        foreach (var sheet in _sheets)
+        foreach (var (sheet, gridUid, indices, dissipatedUnits) in _sheets)
         {
             if (!TerminatingOrDeleted(sheet.Owner))
-                StepPhases(sheet, deltaTime, referenceVolume);
+                StepPhases(sheet, gridUid, indices, deltaTime, referenceVolume, dissipatedUnits);
         }
 
         _sheets.Clear();
     }
 
-    private void ExchangeHeat(
+    /// <returns>
+    ///     Units per second the sheet dissipates where it lies (<see cref="KsFluidDissipationSystem.GetRate"/>), from the
+    ///         same read of its tile's air.
+    /// </returns>
+    private float ExchangeHeat(
         Entity<KsIceSheetComponent> sheet,
         EntityUid gridUid,
         Vector2i indices,
@@ -261,11 +270,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     {
         if (!_solutionContainerSystem.TryGetSolution(sheet.Owner, KsIceSheetComponent.SolutionName, out var solutionEntity, out var solution) ||
             solution.Volume <= FixedPoint2.Zero)
-            return;
+            return 0f;
 
         var iceCapacity = solution.GetHeatCapacity(ProtoMan);
         if (iceCapacity <= 0f)
-            return;
+            return 0f;
 
         var iceTemperature = solution.Temperature;
         var iceHeat = 0f;
@@ -286,7 +295,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             iceTemperature,
             conductance * coverage,
             radiatingArea: coverage,
-            deltaTime);
+            deltaTime,
+            out var mixture);
 
         // In contact with the puddle on the same tile.
         if (hasPuddle && puddle.Comp.Solution is { } puddleSolution)
@@ -303,12 +313,21 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
         if (iceHeat != 0f)
             _pendingHeat.Add((solutionEntity.Value, iceHeat));
+
+        return _fluidDissipationSystem.GetRate(mixture);
     }
 
     /// <summary>
-    ///     Melts what is above its melting point into the tile's puddle, and sublimes linked reagents into thin air.
+    ///     Melts what is above its melting point into the tile's puddle, sublimes linked reagents into thin air, freezes
+    ///         what of the puddle is supercooled onto the sheet, and dissipates <paramref name="dissipatedUnits"/>.
     /// </summary>
-    private void StepPhases(Entity<KsIceSheetComponent> sheet, float deltaTime, float referenceVolume)
+    private void StepPhases(
+        Entity<KsIceSheetComponent> sheet,
+        EntityUid gridUid,
+        Vector2i indices,
+        float deltaTime,
+        float referenceVolume,
+        float dissipatedUnits)
     {
         if (!_solutionContainerSystem.TryGetSolution(sheet.Owner, KsIceSheetComponent.SolutionName, out var solutionEntity, out var solution))
             return;
@@ -348,9 +367,9 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
                 changed = true;
             }
-            else if (properties.Linked && properties.Volatile && transformComponent.GridUid is { } gridUid)
+            else if (properties.Linked && properties.Volatile)
             {
-                var removed = Sublime(solution, reagent, (float)quantity, properties, gridUid, coordinates, deltaTime, referenceVolume,
+                var removed = Sublime(solution, reagent, (float)quantity, properties, gridUid, indices, deltaTime, referenceVolume,
                     heatCapacity);
                 if (removed <= 0f)
                     continue;
@@ -366,11 +385,24 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             melted.Temperature = solution.Temperature;
             _puddleSystem.TrySpillAt(coordinates, melted, out _, sound: false);
         }
+        // Not when it has just melted into the puddle, which that left above the melting point.
+        else if (FreezeSupercooledPuddle(solution, gridUid, indices))
+        {
+            changed = true;
+        }
+
+        if (changed)
+            _solutionContainerSystem.UpdateChemicals(solutionEntity.Value);
+
+        if (dissipatedUnits > 0f && solution.Volume > FixedPoint2.Zero)
+        {
+            // Updates the chemicals itself.
+            _fluidDissipationSystem.Dissipate(solutionEntity.Value, gridUid, indices, dissipatedUnits);
+            changed = true;
+        }
 
         if (!changed)
             return;
-
-        _solutionContainerSystem.UpdateChemicals(solutionEntity.Value);
 
         if (solution.Volume <= FixedPoint2.Zero)
         {
@@ -397,15 +429,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         float available,
         KsFluidReagentProperties properties,
         EntityUid gridUid,
-        EntityCoordinates coordinates,
+        Vector2i indices,
         float deltaTime,
         float referenceVolume,
         float heatCapacity)
     {
-        if (!_gridQuery.TryComp(gridUid, out var gridComponent))
-            return 0f;
-
-        var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
         // A sealed tile has nowhere for the gas to go. Anything else takes it, and a map's air or vacuum simply loses it.
         if (_tileEffectAtmosSystem.GetTileAir(gridUid, indices) is not { } tileMixture)
             return 0f;
@@ -455,6 +483,80 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             return 1f;
 
         return (float)(solution.Volume / _puddleSystem.KsGetOverflowVolume(puddleComponent, solution));
+    }
+
+    /// <summary>
+    ///     Freezes onto the sheet whatever of the tile's puddle is below its melting point and already frozen in the sheet,
+    ///         as far as the puddle's heat deficit pays for, as <c>FreezeTileEffect</c> freezes it: the freezing warms what
+    ///         is left to the melting point, and the ice leaves at it.
+    /// </summary>
+    /// <remarks>
+    ///     Ice seeds the freezing of liquid that touches it. Air too thin for a reagent to freeze on its own boils it
+    ///         instead (<c>FreezeTileEffect</c>), cooling it below its melting point, and a spaced room would otherwise keep
+    ///         that supercooled puddle beside the ice it froze earlier for ever. This way a tile seldom holds one reagent as
+    ///         both. Only tiles with ice get here, so puddles without any cost nothing.
+    /// </remarks>
+    /// <returns>Whether anything froze into <paramref name="ice"/>.</returns>
+    private bool FreezeSupercooledPuddle(Solution ice, EntityUid gridUid, Vector2i indices)
+    {
+        if (ice.Volume <= FixedPoint2.Zero ||
+            !_puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) ||
+            !_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var puddleSolution) ||
+            puddle.Comp.Solution is not { } puddleSolutionEntity ||
+            puddleSolution.Volume <= FixedPoint2.Zero)
+            return false;
+
+        var froze = false;
+        for (var i = puddleSolution.Contents.Count - 1; i >= 0; i--)
+        {
+            var (reagent, quantity) = puddleSolution.Contents[i];
+            if (!ice.ContainsPrototype(reagent.Prototype) ||
+                !_propertiesSystem.TryGetProperties(reagent.Prototype, out var properties) ||
+                !properties.Freezable ||
+                properties.FusionHeat <= 0f)
+                continue;
+
+            var meltingPoint = properties.MeltingPoint;
+            var temperature = puddleSolution.Temperature;
+            if (temperature >= meltingPoint)
+                continue;
+
+            // Freezing u units at the melting point leaves (C - u c) T' + u c Tm = C T + u Lf; at T' = Tm, u = C (Tm - T) / Lf.
+            var heatCapacity = puddleSolution.GetHeatCapacity(ProtoMan);
+            var units = (float)FixedPoint2.New(MathF.Min((float)quantity, heatCapacity * (meltingPoint - temperature) / properties.FusionHeat));
+            if (units <= 0f)
+                continue;
+
+            var removed = (float)puddleSolution.RemoveReagent(reagent, FixedPoint2.New(units));
+            if (removed <= 0f)
+                continue;
+
+            // The ice leaves at the melting point. If nothing is left, the ice holds all the heat, which freezing all of it
+            //     raised no further than the melting point.
+            var specificHeat = properties.SpecificHeat;
+            var remainingHeatCapacity = heatCapacity - removed * specificHeat;
+            var frozen = new Solution();
+            frozen.AddReagent(reagent, FixedPoint2.New(removed));
+            if (remainingHeatCapacity > 0f && puddleSolution.Volume > FixedPoint2.Zero)
+            {
+                frozen.Temperature = meltingPoint;
+                puddleSolution.Temperature = (heatCapacity * temperature + removed * properties.FusionHeat - removed * specificHeat * meltingPoint)
+                                             / remainingHeatCapacity;
+            }
+            else
+            {
+                frozen.Temperature = (heatCapacity * temperature + removed * properties.FusionHeat) / (removed * specificHeat);
+            }
+
+            // Merges the temperature by heat capacity.
+            ice.AddSolution(frozen, ProtoMan);
+            froze = true;
+        }
+
+        if (froze)
+            _solutionContainerSystem.UpdateChemicals(puddleSolutionEntity);
+
+        return froze;
     }
 
     /// <summary>

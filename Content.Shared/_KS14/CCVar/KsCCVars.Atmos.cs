@@ -62,6 +62,35 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.atmos.puddle_emissivity", 0.9f, CVar.SERVERONLY);
 
     /// <summary>
+    ///     Units per second a puddle or ice sheet loses in vacuum, on top of whatever boils or sublimes off it: in thin
+    ///         enough air, either cools itself by boiling until it stalls, and would otherwise sit in a spaced room for
+    ///         ever. What goes is that reagent's gas on the tile when it has one, or simply gone. Vacuum is air thinner than
+    ///         <see cref="AtmosPuddleVacuumPressure"/>, space included. 0 turns it off.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPuddleVacuumDissipationRate =
+        CVarDef.Create("klovn.atmos.puddle_vacuum_dissipation_rate", 0.5f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Units per second a puddle or ice sheet loses where a map's own air reaches it: on a planet's surface, or on a
+    ///         grid tile open to the planet, such as a lattice or a grid with no atmosphere of its own. Weather and wind
+    ///         dry it, whatever it is and however cold the planet. Air thinner than <see cref="AtmosPuddleVacuumPressure"/>
+    ///         is vacuum instead. 0 turns it off.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPuddleExposedDissipationRate =
+        CVarDef.Create("klovn.atmos.puddle_exposed_dissipation_rate", 0.1f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Pressure, in kPa, below which the air over a puddle or ice sheet counts as vacuum for
+    ///         <see cref="AtmosPuddleVacuumDissipationRate"/>. Well below anything breathable, and above what a spaced
+    ///         room is left with.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPuddleVacuumPressure =
+        CVarDef.Create("klovn.atmos.puddle_vacuum_pressure", 1f, CVar.SERVERONLY);
+
+    /// <summary>
     ///     How often, in seconds, every puddle's tile effects run: catching fire, boiling, and the rest. Each run covers
     ///         the time since the last, so this sets how quickly a puddle reacts, not how fast anything happens. Every
     ///         puddle with tile effects is updated each time, so halving it doubles that work.

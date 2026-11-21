@@ -79,8 +79,28 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
         float? emissivity = null,
         float maxHeat = float.PositiveInfinity)
     {
+        return ExchangeWithTile(gridUid, indices, capacity, temperature, conductance, radiatingArea, seconds, out _, emissivity, maxHeat);
+    }
+
+    /// <inheritdoc cref="ExchangeWithTile(EntityUid, Vector2i, float, float, float, float, float, float?, float)"/>
+    /// <param name="mixture">
+    ///     The tile's air as this read it, for a caller that also needs it, such as to see whether the body lies in
+    ///         vacuum or under a map's air (<c>KsFluidDissipationSystem</c>): null on a sealed tile.
+    /// </param>
+    public float ExchangeWithTile(
+        EntityUid gridUid,
+        Vector2i indices,
+        float capacity,
+        float temperature,
+        float conductance,
+        float radiatingArea,
+        float seconds,
+        out GasMixture? mixture,
+        float? emissivity = null,
+        float maxHeat = float.PositiveInfinity)
+    {
         var mapUid = Transform(gridUid).MapUid;
-        var mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), mapUid, indices, excite: false);
+        mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), mapUid, indices, excite: false);
         var heat = Exchange(mixture, capacity, temperature, conductance, radiatingArea, seconds, emissivity ?? _emissivity, maxHeat, out var airTemperatureChange);
 
         if (MathF.Abs(airTemperatureChange) >= ExciteDelta)
