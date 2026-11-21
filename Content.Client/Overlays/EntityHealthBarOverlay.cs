@@ -137,7 +137,7 @@ public sealed partial class EntityHealthBarOverlay : Overlay
     /// </summary>
     private (float ratio, bool inCrit)? CalcProgress(EntityUid uid, MobStateComponent component, DamageableComponent dmg, MobThresholdsComponent thresholds)
     {
-        var totalDamage = _entManager.System<Content.Shared._KS14.Damage.Pending.KsPendingDamageSystem>().GetShownTotalDamage((uid, dmg)) /* KS14: _damageable.GetTotalDamage -> with what this client has pending for its own shots */;
+        var totalDamage = _damageable.GetTotalDamage((uid, dmg));
         if (_mobStateSystem.IsAlive(uid, component))
         {
             if (!_mobThresholdSystem.TryGetThresholdForState(uid, MobState.Critical, out var threshold, thresholds) &&

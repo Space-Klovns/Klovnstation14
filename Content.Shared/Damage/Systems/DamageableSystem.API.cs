@@ -416,7 +416,13 @@ public sealed partial class DamageableSystem
         if (!_damageableQuery.Resolve(ent, ref ent.Comp))
             return new();
 
-        return ent.Comp.Damage.Clone();
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        var damage = ent.Comp.Damage.Clone();
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+            damage += pending;
+
+        return damage;
+        // KS14 end
     }
 
     /// <summary>
@@ -427,6 +433,11 @@ public sealed partial class DamageableSystem
     {
         if (!_damageableQuery.Resolve(ent, ref ent.Comp, false))
             return FixedPoint2.Zero;
+
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+            return ent.Comp.TotalDamage + pending.GetTotal();
+        // KS14 end
 
         return ent.Comp.TotalDamage;
     }
@@ -439,6 +450,15 @@ public sealed partial class DamageableSystem
     {
         if (!_damageableQuery.Resolve(ent, ref ent.Comp))
             return new Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2>();
+
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+        {
+            var shownPerGroup = new Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2>();
+            (ent.Comp.Damage + pending).GetDamagePerGroup(ProtoMan, shownPerGroup);
+            return shownPerGroup;
+        }
+        // KS14 end
 
         return ent.Comp.DamagePerGroup;
     }

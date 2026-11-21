@@ -45,6 +45,7 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private const string TestModifierSet = "KsGunHitPredictionTestModifierSet";
     private const string TestPassiveMob = "KsGunHitPredictionTestPassiveMob";
     private const string TestShield = "KsGunHitPredictionTestShield";
+    private const string TestFrailMob = "KsGunHitPredictionTestFrailMob";
     private const string TestLaser = "KsGunHitPredictionTestLaser";
     private const string TestRay = "KsGunHitPredictionTestRay";
     private const string TestBleeder = "KsGunHitPredictionTestBleeder";
@@ -54,6 +55,8 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private readonly EntProtoId _testArmouredTarget = TestArmouredTarget;
     private readonly EntProtoId _testPassiveMob = TestPassiveMob;
     private readonly EntProtoId _testShield = TestShield;
+    private readonly EntProtoId _testFrailMob = TestFrailMob;
+    private static readonly ProtoId<DamageGroupPrototype> BruteGroup = "Brute";
     private readonly EntProtoId _testBleeder = TestBleeder;
     private static readonly ProtoId<Content.Shared._KS14.Particles.KsParticlesPrototype> SplatterMist = "KsBloodSplatterMist";
     private static readonly EntProtoId BulletPistol = "BulletPistol";
@@ -193,6 +196,17 @@ public sealed class KsGunHitPredictionTest : InteractionTest
         Bloodloss: -1
 
 - type: entity
+  id: {TestFrailMob}
+  components:
+  - type: Damageable
+  - type: Injurable
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      20: Critical
+
+- type: entity
   id: {TestShield}
   components:
   - type: Damageable
@@ -232,7 +246,7 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private async Task<FixedPoint2> ClientDamage(EntityUid clientUid)
     {
         var total = FixedPoint2.Zero;
-        await Client.WaitPost(() => total = CEntMan.System<KsPendingDamageSystem>().GetShownTotalDamage(clientUid));
+        await Client.WaitPost(() => total = CEntMan.System<DamageableSystem>().GetTotalDamage(clientUid));
         return total;
     }
 
@@ -323,11 +337,11 @@ public sealed class KsGunHitPredictionTest : InteractionTest
 
             shownBeforeTheServerDealtIt |= clientDamage > FixedPoint2.Zero && serverDamage == FixedPoint2.Zero;
 
-            // What is pending is beside the target's damage, never in it: that holds only what the server dealt.
-            var clientRealDamage = FixedPoint2.Zero;
-            await Client.WaitPost(() => clientRealDamage = CEntMan.System<DamageableSystem>().GetTotalDamage(clientTargetUid));
-            Assert.That(clientRealDamage, Is.LessThanOrEqualTo(serverDamage),
-                $"tick {tick}: the client's own damage for the target is {clientRealDamage}, and the server has only dealt {serverDamage}");
+            // Whatever is shown beyond what the server dealt is pending, and accounted for as pending.
+            var pendingNow = FixedPoint2.Zero;
+            await Client.WaitPost(() => pendingNow = CEntMan.System<KsPendingDamageSystem>().GetPendingDamage(clientTargetUid));
+            Assert.That(clientDamage - pendingNow, Is.LessThanOrEqualTo(serverDamage),
+                $"tick {tick}: the client shows {clientDamage} with {pendingNow} pending, and the server has only dealt {serverDamage}");
             clientDamages.Add(clientDamage);
         }
 
@@ -650,5 +664,85 @@ public sealed class KsGunHitPredictionTest : InteractionTest
         Assert.That(serverDamageTick, Is.Not.Null, "the server's shot never damaged the target, so this proves nothing");
         Assert.That(sprayTick, Is.Not.Null, "the shooter's client never sprayed blood of its own for the hit");
         Assert.That(sprayTick, Is.LessThanOrEqualTo(serverDamageTick), "the shooter's client sprayed its blood only after the server's hit");
+    }
+
+    /// <summary>
+    ///     Whatever asks the damage system for an entity's damage on a client gets what is pending for it too, in the
+    ///         total, by type and by group, with nothing of its own to do for it.
+    /// </summary>
+    [Test]
+    public async Task AskingForDamageIncludesWhatIsPending()
+    {
+        var targetUid = EntityUid.Invalid;
+        var served = FixedPoint2.New(3);
+        var predicted = FixedPoint2.New(16);
+        await Server.WaitPost(() =>
+        {
+            var shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            targetUid = SEntMan.SpawnEntity(_testTarget, new MapCoordinates(shooterPosition + new Vector2(5f, 0f), MapData.MapId));
+            SEntMan.System<DamageableSystem>().ChangeDamage(targetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), served));
+        });
+        await RunTicks(5);
+
+        var clientTargetUid = ToClient(targetUid);
+        await Client.WaitAssertion(() =>
+        {
+            var damageableSystem = CEntMan.System<DamageableSystem>();
+            CEntMan.System<KsPendingDamageSystem>().Add(clientTargetUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), predicted), shotId: 1);
+
+            Assert.Multiple(() =>
+            {
+#pragma warning disable CS0618 // the getters are what is under test
+                Assert.That(damageableSystem.GetTotalDamage(clientTargetUid), Is.EqualTo(served + predicted), "the total");
+                Assert.That(damageableSystem.GetAllDamage(clientTargetUid).DamageDict[PiercingDamage], Is.EqualTo(served + predicted), "by type");
+                Assert.That(damageableSystem.GetDamagePerGroup(clientTargetUid)[BruteGroup], Is.EqualTo(served + predicted), "by group");
+#pragma warning restore CS0618
+            });
+        });
+
+        // The server's own value is untouched by it.
+        Assert.That(await ServerDamage(targetUid), Is.EqualTo(served));
+    }
+
+    /// <summary>
+    ///     Pending damage does not put a mob down. With enough pending to cross its critical threshold, a little damage
+    ///         from the server (whose state makes the client check thresholds) leaves it alive on the client: while a
+    ///         state is applied, an entity's damage is the server's alone. A mob put down here by a hit the server never
+    ///         made would stay down on this client, as the server has nothing to correct.
+    /// </summary>
+    [Test]
+    public async Task PendingDamageDoesNotPutAMobDown()
+    {
+        var mobUid = EntityUid.Invalid;
+        await Server.WaitPost(() =>
+        {
+            var shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            mobUid = SEntMan.SpawnEntity(_testFrailMob, new MapCoordinates(shooterPosition + new Vector2(3f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var clientMobUid = ToClient(mobUid);
+        var critical = FixedPoint2.Zero;
+        await Client.WaitAssertion(() =>
+        {
+            var thresholdSystem = CEntMan.System<Content.Shared.Mobs.Systems.MobThresholdSystem>();
+            Assert.That(thresholdSystem.TryGetThresholdForState(clientMobUid, Content.Shared.Mobs.MobState.Critical, out var threshold));
+            critical = threshold!.Value;
+
+            // A little short of critical by itself; over it with what the server is about to deal.
+            CEntMan.System<KsPendingDamageSystem>().Add(clientMobUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), critical - FixedPoint2.New(1)), shotId: 1);
+        });
+
+        await Server.WaitPost(() =>
+            SEntMan.System<DamageableSystem>().ChangeDamage(mobUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), FixedPoint2.New(2))));
+        await RunTicks(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.System<DamageableSystem>().GetTotalDamage(clientMobUid), Is.GreaterThanOrEqualTo(critical),
+                "the damage shown is not over the threshold, so this proves nothing");
+            Assert.That(CEntMan.System<Content.Shared.Mobs.Systems.MobStateSystem>().IsAlive(clientMobUid),
+                "the mob went down on the client for damage the server has not dealt");
+        });
     }
 }
