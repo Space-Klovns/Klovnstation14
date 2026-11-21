@@ -35,11 +35,18 @@ flight with the ground under it marked, and going off as it lands.
 
 - **The plot** (`KsMortarAimControl`), north up: the mortar at the centre, its `minRange` and `maxRange` rings with the
   band between them shaded, N/E/S/W marks, the aim as a cross with its `spread` ring, and where its last `maxImpacts`
-  shells landed, the newest strongest. A click or a drag aims at that point in whole degrees and tiles, kept to the
-  band; the mouse wheel moves the aim a tile in or out (5 with Shift).
+  shells landed, the newest strongest, with the two ranges written on their rings. The scale is not linear: the circle
+  inside `minRange` gets only `InnerRadiusFraction` (a fifth) of the radius and the band takes the rest
+  (`DistanceToRadius`), so the band fills the plot at any range; impacts, the aim and its spread ring (drawn to the
+  band's scale) use the same mapping. A click or a drag aims at that point to a tenth of a degree and a whole tile,
+  kept to the band (inside the inner circle is `minRange`); the mouse wheel moves the aim a tile in or out (5 with
+  Shift).
 - **The fields**, bearing and distance, are the same aim as the plot: either writes the other, and only because the
-  player did something, so a state from the server never overwrites what is being typed. −/+ nudge by 1 degree or tile
-  (5 with Shift). A field that is not a number, a bearing outside 0 to 360 or a distance outside the range turns red as
+  player did something, so a state from the server never overwrites what is being typed. −/+ nudge the distance by a
+  tile and the bearing by a degree, or less at long range (`BearingNudgeDegrees`: never more than a tile across at the
+  distance aimed at); 5 times that with Shift. A cross of N/W/E/S buttons beside them moves the point aimed at a tile
+  along the map (5 with Shift), the bearing and distance recomputed and kept to the band; both kinds are kept, as one
+  moves along the bearing and the other across the map. Bearings are written to a hundredth of a degree. A field that is not a number, a bearing outside 0 to 360 or a distance outside the range turns red as
   it is typed, Fire goes off and the reason shows under the fields. Enter in either field fires.
 - **Status**: rounds left, a reload bar filling over `manualCooldown`, and Ready / Reloading / Out of shells; the bearing
   readout gives three figures and a compass point (`045° NE`).

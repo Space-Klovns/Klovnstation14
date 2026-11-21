@@ -31,3 +31,4 @@ ks-mortar-compass-6 = W
 ks-mortar-compass-7 = NW
 ks-mortar-window-sight = Sight
 ks-mortar-window-sight-no-picture = No picture
+ks-mortar-window-nudge-tooltip = Move the aim a tile north, south, east or west; five with Shift

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Globalization;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.Mortar;
@@ -77,6 +78,11 @@ public sealed partial class KsMortarWindow : FancyWindow
         DistanceDownButton.OnPressed += _ => NudgeDistance(-1f);
         DistanceUpButton.OnPressed += _ => NudgeDistance(1f);
 
+        NudgeNorthButton.OnPressed += _ => NudgePoint(new Vector2(0f, 1f));
+        NudgeSouthButton.OnPressed += _ => NudgePoint(new Vector2(0f, -1f));
+        NudgeEastButton.OnPressed += _ => NudgePoint(new Vector2(1f, 0f));
+        NudgeWestButton.OnPressed += _ => NudgePoint(new Vector2(-1f, 0f));
+
         AimPlot.OnAimPicked += (bearing, distance) => SetAim(bearing.Degrees, distance);
 
         Validate();
@@ -123,16 +129,43 @@ public sealed partial class KsMortarWindow : FancyWindow
     /// </summary>
     private void SetAim(double bearingDegrees, float distance)
     {
-        BearingEdit.SetText(FormatNumber((float) KsMortarAim.NormalizeDegrees(bearingDegrees)));
+        BearingEdit.SetText(FormatBearing(KsMortarAim.NormalizeDegrees(bearingDegrees)));
         DistanceEdit.SetText(FormatNumber(distance));
         Validate();
     }
 
+    /// <summary>
+    ///     A degree, or less at long range: no more than a tile across at the distance aimed at, so that at 300 tiles a
+    ///         nudge is not a five-tile jump.
+    /// </summary>
+    public static double BearingNudgeDegrees(float distance, float tiles)
+    {
+        var tileDegrees = tiles / Math.Max(distance, 1f) * 180d / Math.PI;
+        return Math.Max(0.01d, Math.Round(Math.Min(tiles * NudgeStep, tileDegrees), 2));
+    }
+
     private void NudgeBearing(float direction)
     {
-        var step = _inputManager.IsKeyDown(Keyboard.Key.Shift) ? NudgeShiftStep : NudgeStep;
+        var tiles = _inputManager.IsKeyDown(Keyboard.Key.Shift) ? NudgeShiftStep : NudgeStep;
         var from = _bearingDegrees ?? AimPlot.Bearing.Degrees;
-        SetAim(from + direction * step, _distance ?? AimPlot.Distance);
+        var distance = _distance ?? AimPlot.Distance;
+        SetAim(from + direction * BearingNudgeDegrees(distance, tiles), distance);
+    }
+
+    /// <summary>
+    ///     Moves the point aimed at a step along the map (north, south, east or west), kept to the band.
+    /// </summary>
+    private void NudgePoint(Vector2 direction)
+    {
+        var step = _inputManager.IsKeyDown(Keyboard.Key.Shift) ? NudgeShiftStep : NudgeStep;
+        var bearing = _bearingDegrees is { } degrees ? Angle.FromDegrees(degrees) : AimPlot.Bearing;
+        var offset = KsMortarAim.ToOffset(bearing, _distance ?? AimPlot.Distance) + direction * step;
+
+        var distance = offset.Length();
+        if (_state != null)
+            distance = Math.Clamp(distance, _state.MinRange, _state.MaxRange);
+
+        SetAim(KsMortarAim.ToBearing(offset).Degrees, distance);
     }
 
     private void NudgeDistance(float direction)
@@ -307,6 +340,15 @@ public sealed partial class KsMortarWindow : FancyWindow
             return;
 
         OnFire?.Invoke(Angle.FromDegrees(bearing), distance);
+    }
+
+    /// <summary>
+    ///     To a hundredth of a degree: under a tile across out to some 5700 tiles.
+    /// </summary>
+    private static string FormatBearing(double degrees)
+    {
+        var rounded = Math.Round(degrees, 2);
+        return (rounded >= 360d ? 0d : rounded).ToString("0.##", CultureInfo.InvariantCulture);
     }
 
     private static string FormatNumber(float value)
