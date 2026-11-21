@@ -1,11 +1,32 @@
+using Content.Shared._KS14.Weapons.Ranged;
 using Content.Shared.Weapons.Hitscan.Components;
 using Content.Shared.Weapons.Ranged.Components;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
 
-// Partial: shots called off after their ammo was taken, kept apart from the upstream code.
+// Partial: shots called off after their ammo was taken, and shooting ended outright, kept apart from the upstream code.
 public abstract partial class SharedGunSystem
 {
+    /// <summary>
+    ///     Ends <paramref name="gun"/>'s shooting outright: releases its trigger, cuts its burst short, and raises
+    ///         <see cref="KsGunShootingInterruptedEvent"/> for whatever would keep it firing on its own. Its fire rate
+    ///         is left alone, so it can't fire again any sooner.
+    /// </summary>
+    public void KsInterruptShooting(Entity<GunComponent> gun)
+    {
+        KsReleaseTrigger(gun);
+
+        if (gun.Comp.BurstActivated || gun.Comp.BurstShotsCount != 0)
+        {
+            gun.Comp.BurstActivated = false;
+            gun.Comp.BurstShotsCount = 0;
+            DirtyFields(gun!, null, nameof(GunComponent.BurstActivated), nameof(GunComponent.BurstShotsCount));
+        }
+
+        var ev = new KsGunShootingInterruptedEvent();
+        RaiseLocalEvent(gun, ref ev);
+    }
+
     /// <summary>
     ///     Uses up the ammo of a shot its shooter called off (<see cref="Events.SelfBeforeGunShotEvent"/>, a clumsy
     ///         backfire) after the gun had already given it up, as firing it would have: a cartridge is spent, then

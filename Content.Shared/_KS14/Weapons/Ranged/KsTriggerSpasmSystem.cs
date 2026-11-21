@@ -144,17 +144,28 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
     }
 
     // Stuns and the step from crit to death raise the drop again, and it shouldn't get a fresh roll against the grip.
+    //      Not once the spasm is over: a backfire ends it and then stuns, and the gun drops like any other.
     [SubscribeLocalEvent]
     private void OnGunFellDown(Entity<KsTriggerSpasmComponent> entity, ref FellDownThrowAttemptEvent args)
     {
-        args.Cancelled = true;
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+            args.Cancelled = true;
+    }
+
+    // Something ended the shooting outright, such as a backfire.
+    [SubscribeLocalEvent]
+    private void OnShootingInterrupted(Entity<KsTriggerSpasmComponent> entity, ref KsGunShootingInterruptedEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running && _gunQuery.TryComp(entity, out var gunComponent))
+            Stop(entity, (entity.Owner, gunComponent));
     }
 
     // A wielded gun's other hand holds a virtual item, and dropping that would unwield the gun.
     [SubscribeLocalEvent]
     private void OnVirtualItemFellDown(Entity<VirtualItemComponent> entity, ref FellDownThrowAttemptEvent args)
     {
-        if (_triggerSpasmQuery.HasComp(entity.Comp.BlockingEntity))
+        if (_triggerSpasmQuery.TryComp(entity.Comp.BlockingEntity, out var triggerSpasmComponent) &&
+            triggerSpasmComponent.LifeStage <= ComponentLifeStage.Running)
             args.Cancelled = true;
     }
 
@@ -166,6 +177,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
         var query = EntityQueryEnumerator<KsTriggerSpasmComponent, GunComponent>();
         while (query.MoveNext(out var gunUid, out var triggerSpasmComponent, out var gunComponent))
         {
+            // Ended this tick, and removed at its end.
+            if (triggerSpasmComponent.LifeStage > ComponentLifeStage.Running)
+                continue;
+
             // A client only predicts its own gun.
             if (_netManager.IsClient && _playerManager.LocalEntity != triggerSpasmComponent.User)
                 continue;
@@ -205,6 +220,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
 
         if (!_gunSystem.KsAttemptInvoluntaryShoot(userUid, gun, _transformSystem.ToCoordinates(userUid, targetCoordinates)))
             return false;
+
+        // The shot ended the spasm itself (a backfire), and it has stopped already.
+        if (entity.Comp.LifeStage > ComponentLifeStage.Running)
+            return true;
 
         var random = SharedRandomExtensions.PredictedRandom(_gameTiming, GetNetEntity(gun));
         var drift = Math.Max(
