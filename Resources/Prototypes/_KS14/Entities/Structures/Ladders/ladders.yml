@@ -1,11 +1,38 @@
 - type: entity
-  id: KsLadderWall
-  name: ladder
+  abstract: true
+  id: KsBaseLadder
+  description: Leads somewhere else. Climb it to find out where.
   components:
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Structures/Ladders/ladder.rsi
+    drawdepth: FloorObjects
+  - type: Physics
+    bodyType: Static
+    canCollide: false
   - type: KsLadder
 
 - type: entity
+  parent: KsBaseLadder
+  id: KsLadderWall
+  name: ladder
+  suffix: Up
+  description: A ladder fixed to the wall, leading up.
+  components:
+  - type: Sprite
+    state: wall
+    drawdepth: WallMountedItems
+
+- type: entity
+  parent: KsBaseLadder
   id: KsLadderFloor
   name: ladder
+  suffix: Down
+  description: A hatch with a ladder leading down.
   components:
-  - type: KsLadder
+  - type: Sprite
+    state: floor
