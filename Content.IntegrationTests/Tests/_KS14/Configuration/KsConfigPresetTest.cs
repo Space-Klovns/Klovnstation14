@@ -24,7 +24,9 @@ namespace Content.IntegrationTests.Tests._KS14.Configuration;
 [TestOf(typeof(KsConfigPresets))]
 public sealed class KsConfigPresetTest : GameTest
 {
-    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
+    // Fresh and destroyed after: these change cvar defaults, and a recycled pair puts back each changed cvar with
+    //     SetCVar, an explicit value that would then outrank any default a later test (or preset) sets.
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true, Fresh = true, Destructive = true };
 
     private static MemoryStream PresetStream(string toml)
     {
