@@ -33,6 +33,12 @@ flight with the ground under it marked, and going off as it lands.
 
 ## The window
 
+Built as the S.P.A.M. window is: headed `KsSectionPanel`s (a tgui Section body under tgui, a flat `#1B1B1E` panel under
+Baron), 6px apart and 6px inside. **Aim** (the plot, the range at the right of its heading) and **Sight** share the top
+row and grow with the window (the sight stays square, `KsMortarSquareBox`); **Adjust** is a `KsTguiLabeledList` of
+bearing, distance and the target in words, with the arrow pad beside it; **Status** has shells, the reload bar and Fire.
+The window is resizable, never below what its contents need (recomputed when the sight comes or goes).
+
 - **The plot** (`KsMortarAimControl`), north up: the mortar at the centre, its `minRange` and `maxRange` rings with the
   band between them shaded, N/E/S/W marks, the aim as a cross with its `spread` ring, and where its last `maxImpacts`
   shells landed, the newest strongest, with the two ranges written on their rings. The scale is not linear: the circle
@@ -49,10 +55,11 @@ flight with the ground under it marked, and going off as it lands.
   aimed at a tile along the map in that direction (a diagonal a tile on both axes; 5 with Shift), the bearing and
   distance recomputed and kept to the band; both kinds of nudge are kept, as one moves along the bearing and the other
   across the map. Bearings are written to a hundredth of a degree. A field that is not a number, a bearing outside 0 to
-  360 or a distance outside the range turns red as it is typed, Fire goes off and the reason shows in red in place of
-  the readiness word. Enter in either field fires.
-- **Status**: rounds left, a reload bar filling over `manualCooldown`, and Ready / Reloading / Out of shells; the bearing
-  readout gives three figures and a compass point (`045° NE`).
+  360 or a distance outside the range turns red as it is typed, Fire goes off and the reason shows in red on the Target
+  row. Enter in either field fires.
+- **Status**: shells left (red at none), a reload bar that tracks `manualCooldown` exactly (no easing) with Ready /
+  Reloading / Out of shells in it (full red when out), and a red Fire button. The Target row gives the aim in words
+  (`045° NE, 40 tiles`), or in red why it cannot be fired at; a bad field gets a red box of the theme's own size.
 - **Fall of shot**: each shell carries `KsMortarFallOfShotComponent` (its mortar); on `SupplyPodLandedEvent` the mortar
   keeps where it landed, relative to itself, dropping the oldest past `maxImpacts`, and sends a new state.
 - **The sight**, beside the plot, with `sightRadius` above 0: a live view `sightRadius` tiles around the aim, the spread

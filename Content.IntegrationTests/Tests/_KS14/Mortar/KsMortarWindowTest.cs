@@ -103,8 +103,8 @@ public sealed class KsMortarWindowTest : GameTest
             Assert.That(window.DistanceEdit.Text, Is.EqualTo(MinRange.ToString()), "a click short of the band should aim at its least range");
         });
 
-        // Past the outer ring, in the plot's corner.
-        await Click(window.AimPlot, new Vector2(1f, 1f));
+        // Past the outer ring, to the north-west.
+        await Click(window.AimPlot, PlotPoint(window.AimPlot, 315, MaxRange + (MaxRange - MinRange) * 0.3f));
         await Client.WaitAssertion(() =>
         {
             Assert.That(window.BearingEdit.Text, Is.EqualTo("315"));
@@ -125,13 +125,14 @@ public sealed class KsMortarWindowTest : GameTest
             window.DistanceEdit.SetText((MaxRange + 10f).ToString(), invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.True, "a distance past the range should stop Fire as it is typed");
             Assert.That(window.DistanceInvalid, Is.True, "the distance field should be marked");
-            Assert.That(window.DistanceEdit.ModulateSelfOverride, Is.Not.Null, "the distance field should turn red");
+            Assert.That(window.DistanceEdit.StyleBoxOverride, Is.Not.Null, "the distance field should turn red");
             Assert.That(window.InputProblem, Is.Not.Null.And.Not.Empty, "it should say why Fire is off");
-            Assert.That(window.StatusLabel.Text, Is.EqualTo(window.InputProblem), "where the readiness is shown");
+            Assert.That(window.AimReadout, Is.EqualTo(window.InputProblem), "in place of the aim in words");
 
             window.DistanceEdit.SetText("40", invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.False, "back in range, Fire should be on again");
             Assert.That(window.InputProblem, Is.Null);
+            Assert.That(window.DistanceEdit.StyleBoxOverride, Is.Null, "a field put right should go back to the theme's box");
 
             window.BearingEdit.SetText("north", invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.True, "a bearing that is no number should stop Fire");
@@ -161,7 +162,7 @@ public sealed class KsMortarWindowTest : GameTest
             window.DistanceEdit.SetText("45", invokeEvent: true);
             Assert.That(window.AimPlot.Bearing.Degrees, Is.EqualTo(90d).Within(1e-6), "typing a bearing should move the plot's aim");
             Assert.That(window.AimPlot.Distance, Is.EqualTo(45f).Within(1e-6), "typing a distance should move the plot's aim");
-            Assert.That(window.BearingReadout.Text, Does.StartWith("090°"), "the readout should give the bearing in three figures");
+            Assert.That(window.AimReadout, Does.StartWith("090°"), "the readout should give the bearing in three figures");
         });
 
         await Click(window.AimPlot, PlotPoint(window.AimPlot, 0, 35f));

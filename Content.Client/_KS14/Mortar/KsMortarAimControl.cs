@@ -66,6 +66,8 @@ public sealed partial class KsMortarAimControl : Control
     private static readonly Color AimColor = Color.FromHex("#6CFF6C");
     private static readonly Color InvalidAimColor = Color.FromHex("#808080");
 
+    private static readonly Vector2[] CrossArms = { new(1f, 0f), new(-1f, 0f), new(0f, 1f), new(0f, -1f) };
+
     private readonly string[] _marks = new string[4];
     private readonly Vector2[] _bandVertices = new Vector2[(Segments + 1) * 2];
     private readonly List<Vector2> _impacts = new();
@@ -195,8 +197,11 @@ public sealed partial class KsMortarAimControl : Control
         if (distance <= 0f)
             return Vector2.Zero;
 
+        // Nothing is drawn far past the outer ring: an aim left over from another range, or a stray impact, sits just
+        //      outside it, in its direction.
         var direction = offset / distance;
-        return new Vector2(direction.X, -direction.Y) * DistanceToRadius(distance, MinRange, MaxRange, ringRadius);
+        var radius = MathF.Min(DistanceToRadius(distance, MinRange, MaxRange, ringRadius), ringRadius * 1.05f);
+        return new Vector2(direction.X, -direction.Y) * radius;
     }
 
     /// <summary>
@@ -330,9 +335,14 @@ public sealed partial class KsMortarAimControl : Control
         var aim = centre + OffsetFromCentre(KsMortarAim.ToOffset(Bearing, Distance), radius);
         var arm = 5f * UIScale;
 
-        handle.DrawLine(centre, aim, aimColor.WithAlpha(0.35f));
-        handle.DrawLine(aim - new Vector2(arm, 0f), aim + new Vector2(arm, 0f), aimColor);
-        handle.DrawLine(aim - new Vector2(0f, arm), aim + new Vector2(0f, arm), aimColor);
+        // A crosshair open in the middle, so the impacts it is laid over still show.
+        var gap = 2.5f * UIScale;
+        var toAim = aim - centre;
+        if (toAim.Length() > gap)
+            handle.DrawLine(centre, aim - Vector2.Normalize(toAim) * gap, aimColor.WithAlpha(0.35f));
+
+        foreach (var direction in CrossArms)
+            handle.DrawLine(aim + direction * gap, aim + direction * (gap + arm), aimColor);
         handle.DrawCircle(aim, MathF.Max(Spread * BandScale(MinRange, MaxRange, radius), 2f * UIScale), aimColor.WithAlpha(0.8f), filled: false);
     }
 

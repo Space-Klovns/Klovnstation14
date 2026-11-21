@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Globalization;
+using Content.Client._KS14.Tgui;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.Mortar;
 using Content.Shared.Localizations;
@@ -38,7 +40,16 @@ public sealed partial class KsMortarWindow : FancyWindow
 
     public const float NudgeShiftStep = 5f;
 
-    private static readonly Color InvalidFieldColor = Color.FromHex("#FF8080");
+    /// <summary>
+    ///     A field that will not do: a red-bordered, red-tinted box in place of the theme's, under either theme. Red is a
+    ///         state colour, the same in both.
+    /// </summary>
+    private static readonly Color InvalidBorderColor = KsTguiPalettes.Bad;
+
+    private static readonly Color InvalidBackgroundColor = Color.FromHex("#4A1414");
+
+    private bool _minSizeDirty = true;
+    private bool _barShowsEmpty;
 
     /// <summary>
     ///     A compass bearing (zero is north, turning clockwise) and a distance in tiles.
@@ -66,6 +77,16 @@ public sealed partial class KsMortarWindow : FancyWindow
     {
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
+
+        BearingDownButton.Icon = KsTguiIcons.Minus;
+        BearingUpButton.Icon = KsTguiIcons.Plus;
+        DistanceDownButton.Icon = KsTguiIcons.Minus;
+        DistanceUpButton.Icon = KsTguiIcons.Plus;
+        FireButton.Icon = KsTguiIcons.Fire;
+
+        // Full is loaded; anything less is the reload under way.
+        ReloadBar.AddRange(KsTguiColor.Good, 1f, float.PositiveInfinity);
+        ReloadBar.AddRange(KsTguiColor.Average, float.NegativeInfinity, 1f);
 
         FireButton.OnPressed += _ => Fire();
         BearingEdit.OnTextChanged += _ => Validate();
@@ -104,7 +125,8 @@ public sealed partial class KsMortarWindow : FancyWindow
         var first = _state == null;
         _state = state;
 
-        RoundsLabel.Text = Loc.GetString("ks-mortar-window-rounds", ("rounds", state.Rounds));
+        RoundsItem.Text = state.Rounds.ToString(CultureInfo.InvariantCulture);
+        RoundsItem.TextColor = state.Rounds > 0 ? null : KsTguiPalettes.Bad;
         RangeLabel.Text = Loc.GetString("ks-mortar-window-range", ("min", FormatNumber(state.MinRange)), ("max", FormatNumber(state.MaxRange)));
 
         AimPlot.SetRange(state.MinRange, state.MaxRange);
@@ -216,22 +238,60 @@ public sealed partial class KsMortarWindow : FancyWindow
             _distance = distance;
         }
 
-        BearingEdit.ModulateSelfOverride = _bearingDegrees == null ? InvalidFieldColor : null;
-        DistanceEdit.ModulateSelfOverride = _distance == null ? InvalidFieldColor : null;
+        MarkField(BearingEdit, _bearingDegrees == null);
+        MarkField(DistanceEdit, _distance == null);
         InputProblem = reason;
 
         // What is valid of the aim goes on the plot; what is not keeps its last place there, greyed out.
         AimPlot.SetAim(_bearingDegrees is { } degrees ? Angle.FromDegrees(degrees) : AimPlot.Bearing, _distance ?? AimPlot.Distance);
         AimPlot.AimValid = InputValid;
 
-        BearingReadout.Text = _bearingDegrees is { } shown
-            ? Loc.GetString("ks-mortar-window-bearing-readout",
-                ("degrees", ((int) Math.Round(shown) % 360).ToString("000", CultureInfo.InvariantCulture)),
-                ("point", Loc.GetString($"ks-mortar-compass-{KsMortarAim.CompassPoint(shown)}")))
-            : Loc.GetString("ks-mortar-window-bearing-readout-none");
+        // The aim in words, or why there is none to fire at.
+        AimItem.TextColor = reason != null ? KsTguiPalettes.Bad : null;
+        AimItem.Text = reason ?? Loc.GetString("ks-mortar-window-aim-readout",
+            ("degrees", ((int) Math.Round(_bearingDegrees!.Value) % 360).ToString("000", CultureInfo.InvariantCulture)),
+            ("point", Loc.GetString($"ks-mortar-compass-{KsMortarAim.CompassPoint(_bearingDegrees.Value)}")),
+            ("distance", FormatNumber(_distance!.Value)));
 
         UpdateReadiness();
         RaiseAim();
+    }
+
+    /// <summary>
+    ///     The aim in words, or why the fields cannot be fired at.
+    /// </summary>
+    public string? AimReadout => AimItem.Text;
+
+    /// <summary>
+    ///     Gives a field that will not do the red box, and one that will its theme's own back, with the same content margins
+    ///         so that nothing moves.
+    /// </summary>
+    private static void MarkField(LineEdit field, bool invalid)
+    {
+        if (!invalid)
+        {
+            field.StyleBoxOverride = null;
+            return;
+        }
+
+        if (field.StyleBoxOverride != null)
+            return;
+
+        var box = new StyleBoxFlat
+        {
+            BackgroundColor = InvalidBackgroundColor,
+            BorderColor = InvalidBorderColor,
+            BorderThickness = new Thickness(1f),
+        };
+
+        field.StyleBoxOverride = null;
+        if (field.TryGetStyleProperty<StyleBox>(LineEdit.StylePropertyStyleBox, out var themed))
+        {
+            foreach (var margin in new[] { StyleBox.Margin.Left, StyleBox.Margin.Top, StyleBox.Margin.Right, StyleBox.Margin.Bottom })
+                box.SetContentMarginOverride(margin, themed.GetContentMargin(margin));
+        }
+
+        field.StyleBoxOverride = box;
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
@@ -239,6 +299,32 @@ public sealed partial class KsMortarWindow : FancyWindow
         base.FrameUpdate(args);
         UpdateReadiness();
         UpdateSightView();
+
+        if (_minSizeDirty)
+            UpdateMinimumSize();
+    }
+
+    protected override void Resized()
+    {
+        base.Resized();
+        _minSizeDirty = true;
+    }
+
+    /// <summary>
+    ///     The window may be made larger (the plot grows with it) but never smaller than its contents need, sight or none.
+    /// </summary>
+    private void UpdateMinimumSize()
+    {
+        if (RootBox.Size.X <= 0f)
+            return;
+
+        _minSizeDirty = false;
+        var marginSize = new Vector2(RootBox.Margin.SumHorizontal, RootBox.Margin.SumVertical);
+        var frameSize = Size - RootBox.Size - marginSize;
+        RootBox.Measure(new Vector2(float.PositiveInfinity, float.PositiveInfinity));
+        var minimum = frameSize + RootBox.DesiredSize;
+        if (Vector2.Distance(MinSize, minimum) > 0.5f)
+            MinSize = minimum;
     }
 
     /// <summary>
@@ -261,6 +347,9 @@ public sealed partial class KsMortarWindow : FancyWindow
     private void SetSightRadius(float sightRadius)
     {
         var enabled = float.IsFinite(sightRadius) && sightRadius > 0f;
+        if (SightBox.Visible != enabled)
+            _minSizeDirty = true;
+
         SightBox.Visible = enabled;
         if (!enabled)
         {
@@ -329,16 +418,37 @@ public sealed partial class KsMortarWindow : FancyWindow
         var loaded = wait <= TimeSpan.Zero;
         FireButton.Disabled = _state.Rounds <= 0 || !loaded || !InputValid;
 
-        ReloadBar.Value = loaded || _state.ReloadTime <= TimeSpan.Zero
+        // Out of shells is a full red bar, not an empty one.
+        var empty = _state.Rounds <= 0;
+        if (empty != _barShowsEmpty)
+        {
+            _barShowsEmpty = empty;
+            if (empty)
+                ReloadBar.SetRanges((KsTguiColor.Bad, float.NegativeInfinity, float.PositiveInfinity));
+            else
+                ReloadBar.SetRanges((KsTguiColor.Good, 1f, float.PositiveInfinity), (KsTguiColor.Average, float.NegativeInfinity, 1f));
+
+            ReloadBar.Advance(float.PositiveInfinity);
+        }
+
+        var fill = empty || loaded || _state.ReloadTime <= TimeSpan.Zero
             ? 1f
             : Math.Clamp(1f - (float) (wait.TotalSeconds / _state.ReloadTime.TotalSeconds), 0f, 1f);
+        // A countdown, not a reading: it is where the reload is now, never easing behind it.
+        if (ReloadBar.Value != fill)
+        {
+            ReloadBar.Value = fill;
+            ReloadBar.Advance(float.PositiveInfinity);
+        }
 
-        StatusLabel.FontColorOverride = InputProblem != null ? InvalidFieldColor : null;
-        StatusLabel.Text = InputProblem ?? (_state.Rounds <= 0
+        var status = _state.Rounds <= 0
             ? Loc.GetString("ks-mortar-window-empty")
             : loaded
                 ? Loc.GetString("ks-mortar-window-ready")
-                : Loc.GetString("ks-mortar-window-reloading"));
+                : Loc.GetString("ks-mortar-window-reloading");
+
+        if (ReloadBar.Text != status)
+            ReloadBar.Text = status;
     }
 
     private void Fire()
