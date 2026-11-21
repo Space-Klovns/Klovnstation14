@@ -20,7 +20,6 @@ using Content.Shared.Light.Components;
 using Content.Shared.Light.EntitySystems;
 using Content.Shared.Maps;
 using Content.Shared.Parallax;
-using Content.Shared.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -34,8 +33,8 @@ namespace Content.IntegrationTests.Tests._KS14.ZLevel;
 
 /// <summary>
 ///     The level builder puts linked ladders between the user's tile and the spot above it, creating the level above,
-///         static grid and all, when there is none, at most once per cooldown, and that level carries and keeps
-///         following its source map's environment.
+///         static grid and all, when there is none, and that level carries and keeps following its source map's
+///         environment.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(KsZLevelBuilderSystem))]
@@ -67,9 +66,7 @@ public sealed class KsZLevelBuilderTest : GameTest
   id: KsTestZLevelBuilder
   components:
   - type: UseDelay
-    delays:
-      ksZLevelBuilderLevel:
-        length: 600
+    delay: 600
   - type: KsZLevelBuilder
     lowerLadder: KsTestZLevelBuilderLadderLower
     upperLadder: KsTestZLevelBuilderLadderUpper
@@ -78,9 +75,7 @@ public sealed class KsZLevelBuilderTest : GameTest
   id: KsTestZLevelBuilderQuick
   components:
   - type: UseDelay
-    delays:
-      ksZLevelBuilderLevel:
-        length: 0.1
+    delay: 0.1
   - type: KsZLevelBuilder
     lowerLadder: KsTestZLevelBuilderLadderLower
     upperLadder: KsTestZLevelBuilderLadderUpper
@@ -161,38 +156,6 @@ public sealed class KsZLevelBuilderTest : GameTest
     }
 
     [Test]
-    public async Task CooldownStopsANewLevelButNotLaddersOntoAnExistingOne()
-    {
-        var server = Pair.Server;
-        var testMap = await Pair.CreateTestMap();
-        var zLevelSystem = server.System<KsZLevelSystem>();
-        var builderSystem = server.System<KsZLevelBuilderSystem>();
-        EntityUid userUid = default;
-        EntityUid builderUid = default;
-        EntityUid upperMapUid = default;
-
-        await server.WaitPost(() =>
-        {
-            userUid = SpawnUserOn(testMap.Grid, Vector2i.Zero);
-            builderUid = server.EntMan.SpawnEntity(_builder, MapCoordinates.Nullspace);
-            Assert.That(builderSystem.TryBuild(Builder(builderUid), userUid), Is.True);
-            upperMapUid = AboveOf(testMap.MapUid);
-
-            // Onto the existing level, from another tile: the cooldown has nothing to say about that.
-            MoveUserTo(userUid, testMap.Grid, new Vector2i(1, 0));
-            Assert.That(builderSystem.TryBuild(Builder(builderUid), userUid), Is.True, "a ladder onto an existing level is built during the cooldown");
-            Assert.That(zLevelSystem.TryGetZLevelAbove(upperMapUid, out _), Is.False, "that made no new level");
-            Assert.That(LaddersOn(upperMapUid), Has.Count.EqualTo(2));
-
-            // Up there, with nothing above: that needs a new level, which the cooldown refuses.
-            var upperGrid = GridsOn(upperMapUid)[0];
-            MoveUserTo(userUid, (upperGrid, server.EntMan.GetComponent<MapGridComponent>(upperGrid)), new Vector2i(0, 1));
-            Assert.That(builderSystem.TryBuild(Builder(builderUid), userUid), Is.False, "no new level during the cooldown");
-            Assert.That(zLevelSystem.TryGetZLevelAbove(upperMapUid, out _), Is.False, "the cooldown stopped another level");
-        });
-    }
-
-    [Test]
     public async Task NewLevelCarriesTheSourceEnvironmentAndFollowsItsWeather()
     {
         var server = Pair.Server;
@@ -238,12 +201,10 @@ public sealed class KsZLevelBuilderTest : GameTest
         await server.WaitAssertion(() =>
         {
             var upperMapId = server.EntMan.GetComponent<MapComponent>(upperMapUid).MapId;
-            Assert.That(server.EntMan.GetComponent<MapLightComponent>(testMap.MapUid).AmbientLightColor, Is.Not.EqualTo(Color.Black),
-                "the map below should have ambient light for the level above not to take");
-            Assert.That(server.EntMan.GetComponent<MapLightComponent>(upperMapUid).AmbientLightColor, Is.EqualTo(Color.Black),
-                "a built level should have no ambient light of its own: it would fall onto the level below, on top of that one's");
-            Assert.That(server.EntMan.HasComponent<LightCycleComponent>(upperMapUid), Is.False,
-                "nor a day cycle, which would set its ambient light again");
+            Assert.That(server.EntMan.GetComponent<MapLightComponent>(upperMapUid).AmbientLightColor, Is.EqualTo(ambientColour),
+                "a built level should have the ambient light of the map below: the sky lights every level");
+            Assert.That(server.EntMan.GetComponent<LightCycleComponent>(upperMapUid).Offset, Is.EqualTo(lightCycleOffset),
+                "and be at the same time of day");
             var upperAtmosphere = server.EntMan.GetComponent<MapAtmosphereComponent>(upperMapUid);
             Assert.That(upperAtmosphere.Space, Is.False, "atmosphere");
             var upperMixture = upperAtmosphere.Mixture;
@@ -349,22 +310,19 @@ public sealed class KsZLevelBuilderTest : GameTest
     }
 
     /// <summary>
-    ///     A use that is refused starts no delay: neither the one every handled use of an item starts, nor the one
-    ///         for making a level.
+    ///     A use that is refused doesn't start the item's use delay, which every handled use otherwise does.
     /// </summary>
     [Test]
     public async Task ARefusedUseStartsNoDelay()
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
-        var useDelaySystem = server.System<UseDelaySystem>();
 
         await server.WaitAssertion(() =>
         {
             var userUid = SpawnUserOn(testMap.Grid, Vector2i.Zero);
             var builderUid = server.EntMan.SpawnEntity(_builder, MapCoordinates.Nullspace);
             var builder = Builder(builderUid);
-            var useDelayComponent = server.EntMan.GetComponent<UseDelayComponent>(builderUid);
 
             // A ladder already stands here, so there is nothing to build: refused before any level is made.
             server.EntMan.SpawnEntity(builder.Comp.LowerLadder, server.EntMan.GetComponent<TransformComponent>(userUid).Coordinates);
@@ -373,17 +331,13 @@ public sealed class KsZLevelBuilderTest : GameTest
             server.EntMan.EventBus.RaiseLocalEvent(builderUid, refused);
             Assert.That(refused.Handled, Is.True);
             Assert.That(refused.ApplyDelay, Is.False, "a refused use should not start the item's use delay");
-            Assert.That(useDelaySystem.IsDelayed((builderUid, useDelayComponent), builder.Comp.LevelDelayId), Is.False,
-                "a refused use should not start the level delay");
             Assert.That(server.System<KsZLevelSystem>().TryGetZLevelAbove(testMap.MapUid, out _), Is.False, "and it made no level");
 
-            // From a free tile it builds, and that does start them.
+            // From a free tile it builds, and that does start it.
             MoveUserTo(userUid, testMap.Grid, new Vector2i(2, 0));
             var built = new UseInHandEvent(userUid);
             server.EntMan.EventBus.RaiseLocalEvent(builderUid, built);
             Assert.That(built.ApplyDelay, Is.True, "a use that builds starts the item's use delay as any use does");
-            Assert.That(useDelaySystem.IsDelayed((builderUid, useDelayComponent), builder.Comp.LevelDelayId), Is.True,
-                "making a level starts the level delay");
         });
     }
 

@@ -8,7 +8,6 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
-using Content.Shared.Timing;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -33,11 +32,9 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private TurfSystem _turfSystem = default!;
-    [Dependency] private UseDelaySystem _useDelaySystem = default!;
 
     private static readonly LocId NoFloorMessage = "ks-zlevel-builder-no-floor";
     private static readonly LocId LadderHereMessage = "ks-zlevel-builder-ladder-here";
-    private static readonly LocId CooldownMessage = "ks-zlevel-builder-cooldown";
     private static readonly LocId BuiltMessage = "ks-zlevel-builder-built";
     private static readonly LocId LadderAboveMessage = "ks-zlevel-builder-ladder-above";
     private static readonly LocId BlockedAboveMessage = "ks-zlevel-builder-blocked-above";
@@ -53,8 +50,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
 
         args.Handled = true;
 
-        // A refused attempt built nothing, so it starts no delay either: not the item's own, which every handled use
-        //      would otherwise start, nor the level one, which TryBuild starts only once a level is made.
+        // A refused attempt built nothing, so it doesn't start the item's use delay, which every handled use would.
         if (!TryBuild((uid, component), args.User))
             args.ApplyDelay = false;
     }
@@ -98,15 +94,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
         }
         else
         {
-            if (_useDelaySystem.IsDelayed(builder.Owner, builder.Comp.LevelDelayId))
-            {
-                Refuse(builder, userUid, CooldownMessage);
-                return false;
-            }
-
             upperMapUid = _zLevelEnvironmentSystem.CreateZLevelAbove((lowerMapUid, lowerZLevelComponent));
-            if (TryComp<UseDelayComponent>(builder, out var useDelayComponent))
-                _useDelaySystem.TryResetDelay((builder, useDelayComponent), id: builder.Comp.LevelDelayId);
         }
 
         var upperCoordinates = ResolveUpperFloor(builder, upperMapUid, spot.Position, _transformSystem.GetWorldRotation(lowerGridUid));

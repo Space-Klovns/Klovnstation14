@@ -136,6 +136,13 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
         var debugFlat = _lightBufferSystem.DebugFlat;
         var shader = _shader;
 
+        // A Vector3, not a Color: a colour uniform is converted to linear on the way in, and the light map holds
+        //      the ambient colour as it is.
+        _zLevelSystem.TryGetZLevelAbove(mapUid, out var aboveEntity);
+        var sharedAmbient = aboveEntity is { } above
+            ? KsZLevelLightLeak.GetSharedAmbient(GetAmbient(above.Owner), GetAmbient(mapUid))
+            : Vector3.Zero;
+
         Composite(aboveCapture, aboveDim, maskWeight: 1f);
 
         void Composite(KsZLevelLightCapture capture, float dim, float maskWeight)
@@ -148,6 +155,7 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
             shader.SetParameter("MASK_TEXTURE", capture.Colour.Texture);
             shader.SetParameter("dim", dim);
             shader.SetParameter("maskWeight", maskWeight);
+            shader.SetParameter("sharedAmbient", sharedAmbient);
 
             worldHandle.RenderInRenderTarget(
                 target,
@@ -170,6 +178,11 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
                 null
             );
         }
+    }
+
+    private Color GetAmbient(EntityUid mapUid)
+    {
+        return _entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ?? MapLightComponent.DefaultColor;
     }
 
     /// <summary>

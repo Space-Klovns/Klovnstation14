@@ -5,8 +5,7 @@ namespace Content.Shared._KS14.ZLevel.Builder;
 
 /// <summary>
 ///     Used in hand, puts <see cref="LowerLadder"/> on the user's tile and <see cref="UpperLadder"/> directly above it on
-///         the z-level above, linked. Creates that z-level if there is none, at most once per <see cref="LevelDelayId"/>
-///         of the item's <c>UseDelay</c>.
+///         the z-level above, linked. Creates that z-level if there is none. How often is the item's <c>UseDelay</c>.
 /// </summary>
 [RegisterComponent]
 public sealed partial class KsZLevelBuilderComponent : Component
@@ -22,13 +21,6 @@ public sealed partial class KsZLevelBuilderComponent : Component
     /// </summary>
     [DataField]
     public ProtoId<ContentTileDefinition> Tile = "Plating";
-
-    /// <summary>
-    ///     The <c>UseDelay</c> delay started when a z-level is created, and checked before one is. Not the default
-    ///         delay: that one would block every use, ladder-building on an existing level included.
-    /// </summary>
-    [DataField]
-    public string LevelDelayId = "ksZLevelBuilderLevel";
 
     /// <summary>
     ///     How far from the spot a ladder already counts as being there.

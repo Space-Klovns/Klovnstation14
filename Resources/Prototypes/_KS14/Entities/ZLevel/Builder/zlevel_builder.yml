@@ -11,7 +11,5 @@
   - type: Item
     size: Normal
   - type: UseDelay
-    delays:
-      ksZLevelBuilderLevel:
-        length: 30
+    delay: 30s
   - type: KsZLevelBuilder
