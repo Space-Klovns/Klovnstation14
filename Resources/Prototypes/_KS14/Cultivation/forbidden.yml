@@ -1,0 +1,201 @@
+# The Demonic Path. Only those already sworn against the station can read the scripture; a master can pass the arts
+# on to a disciple, who can never pass them further.
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationDevouringArt
+  name: Devouring Art
+  description: Drink the essence of a corpse beside you, leaving a husk that can be cloned but never revived. You gain insight and qi, and your wounds close; a dead cultivator gives up a quarter of their cultivation. Also drains someone dying in front of you. Taints your qi. 10 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: devouring_art }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:DevouringArtActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationGuWorm
+  name: Plant Gu Worm
+  description: Slip a gu worm raised on your own blood into someone beside you. They feel only a sting. For five minutes it sips their health into your qi. Holy water in the blood drives it out. 20 qi.
+  components:
+  - type: Action
+    useDelay: 45
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: gu_worm }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:GuWormActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationStirGu
+  name: Stir the Gu
+  description: Make your gu worms writhe inside their hosts, wherever they are. Crippling pain, heavy poison that grows with your realm, and they're knocked flat; the worms die doing it. 5 qi.
+  components:
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: stir_gu }
+  - type: InstantAction
+    event: !type:StirGuActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSoulSearch
+  name: Soul Search
+  description: Rip through the memories of someone helpless beside you (cuffed, stunned, knocked down or in critical condition). Learn who they really are and whom they serve. It leaves them shaking. 35 qi.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: soul_search }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:SoulSearchActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationCorpsePuppet
+  name: Corpse Puppet
+  description: String a corpse beside you up with demonic qi. It hops after you as a jiangshi and fights whoever hurts you for three minutes, a minute more for every realm above Golden Core, then collapses. Any talisman pressed to its brow drops it at once. 50 qi.
+  components:
+  - type: Action
+    useDelay: 90
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: corpse_puppet }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:CorpsePuppetActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBloodEscape
+  name: Heavenly Demon Blood Escape
+  description: Spit out a sixth of your life as blood and let it carry you 8 to 15 tiles away in a random direction. No grip or cuff can hold the blood. 30 qi.
+  components:
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: blood_escape }
+  - type: InstantAction
+    event: !type:BloodEscapeActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationExplodingHeartPalm
+  name: Five-Point Exploding Heart Palm
+  description: Strike five points around the heart of someone beside you. After five steps, one more for every realm they stand above you, their heart bursts. Standing still is safe. Acupoint Sealing or two cycles of meditation undo it. Heavy armour turns your fingers aside, it can't be used in an honor duel, and your palms reek of it for five minutes. 45 qi.
+  components:
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: exploding_heart }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:ExplodingHeartPalmActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationTransmitDemonicArt
+  name: Transmit Demonic Art
+  description: Write the forbidden arts in your own blood for one disciple. Whoever reads it takes up the Demonic Path, awakening if they were a mortal, but can never pass it on. 40 qi.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: transmit_demonic }
+  - type: InstantAction
+    event: !type:TransmitDemonicArtActionEvent
+
+- type: entity
+  parent: BaseItem
+  id: KsDemonicScripture
+  name: Heaven-Devouring Demonic Scripture
+  description: A book bound in something that is not quite leather. The characters inside squirm when you aren't looking directly at them.
+  components:
+  - type: Item
+    size: Small
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_demonic
+  - type: DemonicScripture
+
+- type: entity
+  parent: BaseItem
+  id: KsDemonicTransmission
+  name: blood-written slip
+  description: A strip of bone covered in tiny characters written in blood. Reading it would teach you something the righteous sects burned every copy of.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: blood_slip
+  - type: DemonicScripture
+    transmission: true
+    readDuration: 10
+
+# A corpse strung up with demonic qi. It wears the face of the body inside it.
+- type: entity
+  parent: MobHuman
+  id: KsJiangshi
+  categories: [ HideSpawnMenu ]
+  name: jiangshi
+  description: A stiff corpse hopping about with its arms held straight out. Its eyes are empty.
+  components:
+  - type: Sprite
+    color: "#a9b8a4"
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: KsSpiritBeastCompound
+  - type: NpcFactionMember
+    factions:
+    - SimpleNeutral
+  - type: NPCRetaliation
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 2.5
+    baseSprintSpeed: 3.5
+
+- type: alert
+  id: KsExplodingHeart
+  icons:
+  - sprite: /Textures/_KS14/Cultivation/exploding_heart.rsi
+    state: base
+  alertViewEntity: AlertKsExplodingHeartSpriteView
+  name: alerts-ks-exploding-heart-name
+  description: alerts-ks-exploding-heart-desc
+
+- type: entity
+  id: AlertKsExplodingHeartSpriteView
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: GenericCounterAlert
+    centerGlyph: false
+    hideLeadingZeroes: false
+  - type: Sprite
+    sprite: /Textures/_KS14/Cultivation/exploding_heart.rsi
+    layers:
+    - map: [ "enum.AlertVisualLayers.Base" ]
+    - map: [ "1" ]
+      offset: 0.25, -0.125
+    - map: [ "10" ]
+      offset: 0.125, -0.125
+    - map: [ "100" ]
+      offset: 0, -0.125

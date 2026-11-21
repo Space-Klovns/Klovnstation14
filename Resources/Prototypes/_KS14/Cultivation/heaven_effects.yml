@@ -1,0 +1,148 @@
+# Heaven answering a cultivator (heaven.rsi). The bolts and the pillar touch the ground
+# 16 pixels above the bottom of their 352-pixel canvas, so they are offset five tiles up to land on the tile they mark.
+# Each bolt variant waits a little longer before striking, so spawning several makes them fall one after another.
+
+- type: entity
+  id: KsFxHeavenBolt0
+  categories: [ HideSpawnMenu ]
+  name: heavenly lightning
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/heaven.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: bolt_0
+      shader: unshaded
+      offset: 0, 5
+  - type: PointLight
+    color: "#a9c2ff"
+    radius: 9
+    energy: 7
+    netsync: false
+  - type: LightFade
+    duration: 0.47
+  - type: TimedDespawn
+    lifetime: 0.47
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  parent: KsFxHeavenBolt0
+  id: KsFxHeavenBolt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: bolt_1
+      shader: unshaded
+      offset: 0, 5
+  - type: PointLight
+    energy: 3
+  - type: LightFade
+    duration: 0.62
+  - type: TimedDespawn
+    lifetime: 0.62
+
+- type: entity
+  parent: KsFxHeavenBolt0
+  id: KsFxHeavenBolt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: bolt_2
+      shader: unshaded
+      offset: 0, 5
+  - type: PointLight
+    energy: 3
+  - type: LightFade
+    duration: 0.77
+  - type: TimedDespawn
+    lifetime: 0.77
+
+# Where the bolt lands: a white-hot burst, arcs crawling over the floor and a scorch ring.
+- type: entity
+  id: KsFxStrikeFlash
+  categories: [ HideSpawnMenu ]
+  name: lightning strike
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/heaven.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: strike_flash
+      shader: unshaded
+  - type: PointLight
+    color: "#d6e2ff"
+    radius: 6
+    energy: 8
+    netsync: false
+  - type: LightFade
+    duration: 0.5
+  - type: TimedDespawn
+    lifetime: 0.53
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Lightning crawling over a body for as long as it lasts (the Thunderclap stance).
+- type: entity
+  id: KsFxCrackleAura
+  categories: [ HideSpawnMenu ]
+  name: crackling lightning
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/heaven.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: crackle
+      shader: unshaded
+  - type: PointLight
+    color: "#a9c2ff"
+    radius: 2.5
+    energy: 2
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Lightning still crawling over someone heaven has just struck (or just let through).
+- type: entity
+  parent: KsFxCrackleAura
+  id: KsFxCrackle
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 2.8
+
+# The golden column of a successful breakthrough, from the floor to the heavens.
+- type: entity
+  id: KsFxAscendPillar
+  categories: [ HideSpawnMenu ]
+  name: pillar of light
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/heaven.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: ascend_pillar
+      shader: unshaded
+      # Its base glow sits 16px above the canvas bottom; 4.6 tiles up puts it at a character's feet, not their middle.
+      offset: 0, 4.6
+  - type: PointLight
+    color: "#ffc24a"
+    radius: 9
+    energy: 6
+    netsync: false
+  - type: LightFade
+    duration: 1.1
+  - type: TimedDespawn
+    lifetime: 1.1
+  - type: Tag
+    tags:
+    - HideContextMenu

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from the SurfShack13 cultivation port",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "guqin"
+    },
+    {
+      "name": "mat"
+    },
+    {
+      "name": "ring"
+    },
+    {
+      "name": "spirit_herb"
+    },
+    {
+      "name": "spirit_herb_plant",
+      "delays": [
+        [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ]
+      ]
+    }
+  ]
+}

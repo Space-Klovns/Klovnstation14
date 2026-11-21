@@ -1,0 +1,119 @@
+# Qi arts: cultivators only, paid for with qi.
+
+- type: martialArt
+  id: KsDragonPalms
+  name: martial-art-dragon-palms-name
+  kind: Qi
+  minRealm: FoundationEstablishment
+  actions:
+  - ActionMartialDragonPalm
+
+- type: martialArt
+  id: KsSixMeridians
+  name: martial-art-six-meridians-name
+  kind: Qi
+  minRealm: FoundationEstablishment
+  actions:
+  - ActionMartialSixMeridians
+
+- type: martialArt
+  id: KsNorthernDarkness
+  name: martial-art-northern-darkness-name
+  kind: Qi
+  actions:
+  - ActionMartialNorthernDarkness
+
+- type: martialArt
+  id: KsStarAbsorbing
+  name: martial-art-star-absorbing-name
+  kind: Qi
+  forbidden: true
+  actions:
+  - ActionMartialStarAbsorbing
+
+- type: martialArt
+  id: KsGreatShift
+  name: martial-art-great-shift-name
+  kind: Qi
+  minRealm: GoldenCore
+  actions:
+  - ActionMartialGreatShift
+
+- type: martialArt
+  id: KsNineYang
+  name: martial-art-nine-yang-name
+  kind: Qi
+  components:
+  - type: NineYang
+
+# Body arts: anyone can learn these, and they cost stamina.
+
+- type: martialArt
+  id: KsGoldenBell
+  name: martial-art-golden-bell-name
+  kind: Body
+  actions:
+  - ActionMartialGoldenBell
+
+- type: martialArt
+  id: KsGracefulSteps
+  name: martial-art-graceful-steps-name
+  kind: Body
+  actions:
+  - ActionMartialGracefulSteps
+
+- type: martialArt
+  id: KsLadderCloud
+  name: martial-art-ladder-cloud-name
+  kind: Body
+  actions:
+  - ActionMartialLadderCloud
+
+- type: martialArt
+  id: KsDugu
+  name: martial-art-dugu-name
+  kind: Body
+  actions:
+  - ActionMartialDuguCounter
+
+- type: martialArt
+  id: KsMuscleTendon
+  name: martial-art-muscle-tendon-name
+  kind: Body
+  components:
+  - type: MuscleTendon
+
+# Fighting styles: punch, shove and grab streaks land combos. Anyone can learn them.
+
+- type: martialArt
+  id: KsDrunkenFist
+  name: martial-art-drunken-fist-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: DrunkenFist
+
+- type: martialArt
+  id: KsEagleClaw
+  name: martial-art-eagle-claw-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: EagleClaw
+
+- type: martialArt
+  id: KsWingChun
+  name: martial-art-wing-chun-name
+  kind: Body
+  actions:
+  - ActionWuxiaRecallTeachings
+  - ActionJianghuDuel
+  components:
+  - type: WuxiaStyle
+    style: WingChun

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Drawn for Klovnstation 14 cultivation fire techniques",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "flame",
+      "delays": [
+        [
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09
+        ]
+      ]
+    },
+    {
+      "name": "flame_small",
+      "delays": [
+        [
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09
+        ]
+      ]
+    },
+    {
+      "name": "embers",
+      "delays": [
+        [
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09
+        ]
+      ]
+    }
+  ]
+}

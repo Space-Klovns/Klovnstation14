@@ -1,0 +1,40 @@
+- type: alert
+  id: KsQi
+  icons:
+  - sprite: /Textures/_KS14/Cultivation/qi_counter.rsi
+    state: qi
+  alertViewEntity: AlertKsQiSpriteView
+  name: alerts-ks-qi-name
+  description: alerts-ks-qi-desc
+
+- type: entity
+  id: AlertKsQiSpriteView
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: GenericCounterAlert
+    centerGlyph: false
+    hideLeadingZeroes: false
+  - type: Sprite
+    sprite: /Textures/_KS14/Cultivation/qi_counter.rsi
+    layers:
+    - map: [ "enum.AlertVisualLayers.Base" ]
+    - map: [ "1" ]
+      offset: 0.25, -0.125
+    - map: [ "10" ]
+      offset: 0.125, -0.125
+    - map: [ "100" ]
+      offset: 0, -0.125
+
+- type: alert
+  id: KsInternalInjury
+  icons:
+  - sprite: /Textures/_KS14/Cultivation/internal_injury.rsi
+    state: injury1
+  - sprite: /Textures/_KS14/Cultivation/internal_injury.rsi
+    state: injury2
+  - sprite: /Textures/_KS14/Cultivation/internal_injury.rsi
+    state: injury3
+  name: alerts-ks-internal-injury-name
+  description: alerts-ks-internal-injury-desc
+  minSeverity: 1
+  maxSeverity: 3

@@ -1,0 +1,194 @@
+# Cultivation sites, ported from SurfShack13: the mat that makes surroundings matter, what counts towards each of the
+# five elements around it, and the guqin.
+
+# ---------------------------------------------------------------- the five elements on a space station
+
+- type: fengShuiElement
+  id: KsFengShuiWood
+  element: Wood
+  prefixes:
+  - PottedPlant
+  prototypes:
+  - TableWood
+  - ChairWood
+  - Bookshelf
+  - hydroponicsTray
+  - Log
+  components:
+  - Produce
+  - PlantHolder
+  stacks:
+  - WoodPlank
+
+- type: fengShuiElement
+  id: KsFengShuiFire
+  element: Fire
+  burning: true
+  prototypes:
+  - Candle
+  - Fireplace
+  - Bonfire
+  - SpaceHeater
+  - KitchenMicrowave
+  - KitchenElectricGrill
+
+- type: fengShuiElement
+  id: KsFengShuiEarth
+  element: Earth
+  prefixes:
+  - Statue
+  prototypes:
+  - TableBrass
+  stacks:
+  - Gold
+  - Diamond
+  - Coal
+  - Silver
+  - Uranium
+  - GoldOre
+  - SilverOre
+  - SteelOre
+  - UraniumOre
+  - PlasmaOre
+  - BananiumOre
+  - SaltOre
+  - DiamondOre
+
+- type: fengShuiElement
+  id: KsFengShuiMetal
+  element: Metal
+  prefixes:
+  - Toolbox
+  prototypes:
+  - Katana
+  - Claymore
+  - TableReinforced
+  components:
+  - Welder
+  stacks:
+  - Steel
+  - MetalRod
+  - Plasteel
+
+- type: fengShuiElement
+  id: KsFengShuiWater
+  element: Water
+  prototypes:
+  - Sink
+  - SinkWide
+  - WaterTankFull
+  - WaterCooler
+  components:
+  - Puddle
+
+# ---------------------------------------------------------------- the mat
+
+- type: entity
+  id: KsCultivationMat
+  name: cultivation mat
+  description: A round woven mat with the eight trigrams stitched around the edge. Supposedly it helps you focus.
+  components:
+  - type: Construction
+    graph: KsCultivationMat
+    node: done
+  - type: Transform
+    anchored: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: mat
+    drawdepth: FloorObjects
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Anchorable
+  - type: Pullable
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          MaterialCloth1:
+            min: 2
+            max: 3
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: CultivationMat
+
+- type: constructionGraph
+  id: KsCultivationMat
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Cloth
+        amount: 3
+        doAfter: 5
+  - node: done
+    entity: KsCultivationMat
+
+- type: construction
+  id: KsCultivationMat
+  graph: KsCultivationMat
+  startNode: start
+  targetNode: done
+  category: construction-category-furniture
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  conditions:
+  - !type:TileNotBlocked
+
+# ---------------------------------------------------------------- the guqin
+
+- type: entity
+  parent: BaseHandheldInstrument
+  id: KsGuqin
+  name: guqin
+  description: A long, low seven-string zither of lacquered paulownia wood. The sages said a gentleman is never without his qin.
+  components:
+  - type: Construction
+    graph: KsGuqin
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: guqin
+  - type: Instrument
+    program: 107
+  - type: Item
+    size: Large
+  - type: Guqin
+
+- type: constructionGraph
+  id: KsGuqin
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: WoodPlank
+        amount: 8
+      - material: Cable
+        amount: 7
+      - tool: Cutting
+        doAfter: 10
+  - node: done
+    entity: KsGuqin
+
+- type: construction
+  id: KsGuqin
+  graph: KsGuqin
+  startNode: start
+  targetNode: done
+  category: construction-category-misc
+  objectType: Item

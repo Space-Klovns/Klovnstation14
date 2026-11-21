@@ -1,0 +1,86 @@
+- type: entity
+  abstract: true
+  parent: BaseItem
+  id: BaseCultivationManual
+  description: A hand-bound manual, its pages dense with meridian charts and cryptic verses. Only a cultivator could make sense of it.
+  components:
+  - type: Item
+    size: Small
+
+- type: entity
+  parent: BaseCultivationManual
+  id: CultivationManualMetal
+  name: Golden Edge Sutra
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_metal
+  - type: CultivationManual
+    law: KsMetal
+
+- type: entity
+  parent: BaseCultivationManual
+  id: CultivationManualWood
+  name: Evergreen Spring Canon
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_wood
+  - type: CultivationManual
+    law: KsWood
+
+- type: entity
+  parent: BaseCultivationManual
+  id: CultivationManualWater
+  name: Still Lake Scripture
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_water
+  - type: CultivationManual
+    law: KsWater
+
+- type: entity
+  parent: BaseCultivationManual
+  id: CultivationManualFire
+  name: Scorching Sun Classic
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_fire
+  - type: CultivationManual
+    law: KsFire
+
+- type: entity
+  parent: BaseCultivationManual
+  id: CultivationManualEarth
+  name: Immovable Mountain Record
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: manual_earth
+  - type: CultivationManual
+    law: KsEarth
+
+- type: entity
+  parent: BaseBullet
+  id: ProjectileCultivationSwordQi
+  categories: [ HideSpawnMenu ]
+  name: sword qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_32.rsi
+    layers:
+    - state: sword_qi
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 1.5
+    energy: 1.5
+  - type: Projectile
+    impactEffect: KsFxSwordQiImpact
+    damage:
+      types:
+        Slash: 15
+  - type: TimedDespawn
+    lifetime: 2

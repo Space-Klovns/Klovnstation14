@@ -1,0 +1,116 @@
+# The jianghu, the martial world: face and honor duels.
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionJianghuDuel
+  name: Challenge to Duel
+  description: Formally challenge someone nearby to an honor duel. The winner gains face and the loser loses it, anyone watching learns from it, and anyone who interferes is disgraced. Lasts until someone is beaten, yields, flees, or three minutes pass. Each side can wager what they hold, and the winner takes every stake.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: duel }
+  - type: TargetAction
+    range: 4
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:ChallengeDuelActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionJianghuFoundSect
+  name: Found Sect
+  description: Establish your own sect where you stand and hang its plaque. Others ask to join at the plaque, members can send telepathic transmissions, cultivate faster together and near the plaque, and the sect is always set a mission. As Sect Master you can declare rivals and proclaim tournaments. 50 qi.
+  components:
+  - type: Action
+    useDelay: 300
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: found_sect }
+  - type: InstantAction
+    event: !type:FoundSectActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionJianghuSectTransmission
+  name: Sect Transmission
+  description: Send a telepathic message to every member of your sect.
+  components:
+  - type: Action
+    useDelay: 3
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: sect_transmission }
+  - type: InstantAction
+    event: !type:SectTransmissionActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionJianghuDeclareRivalry
+  name: Declare Rivalry
+  description: As Sect Master, point at a member of another sect, or at its plaque, and declare that sect your sworn rival. Honor duels between rivals are worth more face.
+  components:
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: declare_rivalry }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: EntityTargetAction
+    canTargetSelf: false
+    event: !type:DeclareRivalryActionEvent
+
+# A sect's gate. Members meditating near it cultivate faster.
+- type: entity
+  id: KsSectPlaque
+  categories: [ HideSpawnMenu ]
+  name: sect plaque
+  description: A gilded plaque proclaiming the gate of a sect.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: sect_plaque
+    drawdepth: Objects
+  - type: Damageable
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: CultivationQiSource
+    range: 3
+    multiplier: 1.25
+  - type: SectPlaque
+
+# Three sticks of incense for swearing brotherhood. Light it in hand, then use it on someone beside you.
+- type: entity
+  parent: BaseItem
+  id: KsSwornIncense
+  name: bundle of incense
+  description: Three sticks of sandalwood incense tied with red thread. Light it and offer it to someone to swear brotherhood.
+  components:
+  - type: Construction
+    graph: KsSwornIncense
+    node: done
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    layers:
+    - state: incense
+      map: [ "enum.SwornIncenseVisuals.Lit" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SwornIncenseVisuals.Lit:
+        enum.SwornIncenseVisuals.Lit:
+          True: { state: incense_lit }
+          False: { state: incense }
+  - type: SwornIncense

@@ -1,0 +1,503 @@
+# Ordinary wuxia weapons anyone can make, one trick each, and the hidden weapons cultivators throw.
+# In-hand sprites borrow vanilla ones that read the same in a fist.
+
+- type: entity
+  parent: BaseItem
+  id: KsMeteorHammer
+  name: meteor hammer
+  description: Two iron weights on a long rope, swung in whirling arcs. It reaches two tiles, and a good hit can drag the target towards you.
+  components:
+  - type: Construction
+    graph: KsMeteorHammer
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: meteor_hammer
+  - type: Item
+    size: Normal
+    sprite: Objects/Weapons/Melee/sledgehammer.rsi
+  - type: MeleeWeapon
+    range: 2
+    attackRate: 0.8
+    damage:
+      types:
+        Blunt: 12
+    soundHit:
+      path: /Audio/Weapons/smash.ogg
+  - type: MeteorHammer
+
+- type: entity
+  parent: BaseItem
+  id: KsRopeDart
+  name: rope dart
+  description: A steel dart on a long cord. Click someone up to four tiles away to shoot it out and snap it back; it can tear what they're holding out of their hand.
+  components:
+  - type: Construction
+    graph: KsRopeDart
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: rope_dart
+  - type: Item
+    size: Small
+    sprite: Objects/Weapons/Melee/throwing_knife.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Piercing: 8
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: UseDelay
+    delay: 3
+  - type: RopeDart
+
+- type: entity
+  parent: BaseItem
+  id: KsButterflySword
+  name: butterfly sword
+  description: A short, broad single-edged blade with a hand guard, made to be used in pairs. With one in each hand, each strikes faster.
+  components:
+  - type: Construction
+    graph: KsButterflySword
+    node: done
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: butterfly_sword
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/machete.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 11
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: ButterflySword
+
+- type: entity
+  parent: BaseItem
+  id: KsIronFan
+  name: iron fan
+  description: A folding fan with iron ribs and a razor edge. It slices up close, and cuts deeper thrown.
+  components:
+  - type: Construction
+    graph: KsIronFan
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: iron_fan
+  - type: Item
+    size: Small
+    sprite: Objects/Weapons/Melee/gohei.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 9
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Slash: 14
+
+- type: entity
+  parent: BaseItem
+  id: KsBambooStaff
+  name: bamboo staff
+  description: A long staff of dried bamboo. Wielded in both hands, a heavy swing can knock someone off their feet, but bamboo splits after enough of them.
+  components:
+  - type: Construction
+    graph: KsBambooStaff
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: bamboo_staff
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/spear.rsi
+  - type: MeleeWeapon
+    range: 1.5
+    damage:
+      types:
+        Blunt: 6
+    soundHit:
+      path: /Audio/Weapons/genhit2.ogg
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Blunt: 6
+  - type: BambooStaff
+
+- type: entity
+  parent: BaseItem
+  id: KsSectJian
+  categories: [ HideSpawnMenu ]
+  name: sect jian
+  description: A straight double-edged sword with a tassel in a sect's colours. It feels right in a member's hand.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: sect_jian
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/katana.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 12
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: SectJian
+
+- type: entity
+  parent: BaseItem
+  id: KsPlumBlossomNeedle
+  name: plum blossom needle
+  description: A slender steel needle for throwing. In a cultivator's hand it can find an acupoint from across the room.
+  components:
+  - type: Construction
+    graph: KsPlumBlossomNeedle
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: needles
+  - type: Item
+    size: Tiny
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.1
+        density: 3
+        mask:
+        - ItemMask
+  - type: EmbeddableProjectile
+    sound: /Audio/Weapons/star_hit.ogg
+  - type: LandAtCursor
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Piercing: 4
+  - type: AcupointNeedle
+
+- type: entity
+  parent: BaseItem
+  id: KsFlyingDagger
+  name: willow-leaf flying dagger
+  description: A slim, perfectly balanced throwing dagger. Cultivators throw them hard enough to bury them to the hilt.
+  components:
+  - type: Construction
+    graph: KsFlyingDagger
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: flying_dagger
+  - type: Item
+    size: Small
+    sprite: Objects/Weapons/Melee/throwing_knife.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 8
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.2
+        density: 5
+        mask:
+        - ItemMask
+  - type: EmbeddableProjectile
+    sound: /Audio/Weapons/star_hit.ogg
+  - type: LandAtCursor
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Slash: 12
+  - type: FlyingDagger
+
+- type: entity
+  parent: BaseItem
+  id: KsSmokePellet
+  name: smoke pellet
+  description: A paper twist packed with powder. Throw it, or crush it in your hand, to vanish in a cloud of smoke.
+  components:
+  - type: Construction
+    graph: KsSmokePellet
+    node: done
+  - type: Sprite
+    sprite: _KS14/Cultivation/items.rsi
+    state: smoke_pellet
+  - type: Item
+    size: Tiny
+  - type: SmokePellet
+
+- type: entity
+  id: KsSmokePelletCloud
+  categories: [ HideSpawnMenu ]
+  name: smoke
+  description: A thick grey cloud. You can't see through it.
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    state: chemsmoke
+    color: "#9a9a9add"
+    drawdepth: Effects
+  - type: Occluder
+  - type: TimedDespawn
+    lifetime: 8
+
+# Crafting.
+
+- type: constructionGraph
+  id: KsMeteorHammer
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Steel
+        amount: 4
+      - material: Cloth
+        amount: 2
+      - tool: Welding
+        doAfter: 6
+  - node: done
+    entity: KsMeteorHammer
+
+- type: constructionGraph
+  id: KsRopeDart
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: MetalRod
+        amount: 2
+      - material: Cloth
+        amount: 2
+      - tool: Cutting
+        doAfter: 4
+  - node: done
+    entity: KsRopeDart
+
+- type: constructionGraph
+  id: KsButterflySword
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Steel
+        amount: 2
+      - material: Cloth
+        amount: 1
+      - tool: Welding
+        doAfter: 4
+  - node: done
+    entity: KsButterflySword
+
+- type: constructionGraph
+  id: KsIronFan
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: MetalRod
+        amount: 3
+      - material: Cloth
+        amount: 1
+      - tool: Welding
+        doAfter: 4
+  - node: done
+    entity: KsIronFan
+
+- type: constructionGraph
+  id: KsBambooStaff
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: WoodPlank
+        amount: 4
+        doAfter: 3
+  - node: done
+    entity: KsBambooStaff
+
+- type: constructionGraph
+  id: KsPlumBlossomNeedle
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: MetalRod
+        amount: 1
+      - tool: Cutting
+        doAfter: 2
+  - node: done
+    entity: KsPlumBlossomNeedle
+
+- type: constructionGraph
+  id: KsFlyingDagger
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Steel
+        amount: 2
+      - material: Cloth
+        amount: 1
+      - tool: Welding
+        doAfter: 5
+  - node: done
+    entity: KsFlyingDagger
+
+- type: constructionGraph
+  id: KsSmokePellet
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Cardboard
+        amount: 1
+        doAfter: 3
+  - node: done
+    entity: KsSmokePellet
+
+- type: constructionGraph
+  id: KsSwornIncense
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: WoodPlank
+        amount: 1
+      - material: Cloth
+        amount: 1
+        doAfter: 3
+  - node: done
+    entity: KsSwornIncense
+
+- type: construction
+  id: KsMeteorHammer
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsMeteorHammer
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsRopeDart
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsRopeDart
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsButterflySword
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsButterflySword
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsIronFan
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsIronFan
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsBambooStaff
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsBambooStaff
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsPlumBlossomNeedle
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsPlumBlossomNeedle
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsFlyingDagger
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsFlyingDagger
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsSmokePellet
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsSmokePellet
+  startNode: start
+  targetNode: done
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: KsSwornIncense
+  conditions:
+  - !type:WuxiaRoundCondition
+  graph: KsSwornIncense
+  startNode: start
+  targetNode: done
+  category: construction-category-misc
+  objectType: Item

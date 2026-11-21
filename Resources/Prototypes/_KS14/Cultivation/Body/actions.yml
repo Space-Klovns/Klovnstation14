@@ -1,0 +1,290 @@
+- type: entity
+  abstract: true
+  parent: BaseActionCultivation
+  id: BaseActionBodyArt
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyForge
+  name: Forge the Body
+  description: Pour your banked tempering into your least tempered part in punishing five-second cycles until you move or run out. Every part must be forged past your stage before the Tribulation of Flesh.
+  components:
+  - type: Action
+    useDelay: 3
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_forge }
+  - type: InstantAction
+    event: !type:BodyForgeActionEvent
+  - type: AlwaysOnBar
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyTribulation
+  name: Tribulation of Flesh
+  description: Once every part is forged past your stage, break your whole body down and rebuild it one stage higher. Stay still and conscious while your bones crack and reset. Readiness of 70 or more always succeeds; a full stomach and the Mountain stance help, being hurt hurts.
+  components:
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_tribulation }
+  - type: InstantAction
+    event: !type:BodyTribulationActionEvent
+  - type: AlwaysOnBar
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyBreathOfRenewal
+  name: Breath of Renewal
+  description: 'Breathe deep and drive your blood around your body: up to three two-second breaths, each healing more with your stage and a forged heart. 15 exhaustion per breath.'
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_breath }
+  - type: InstantAction
+    event: !type:BodyBreathOfRenewalActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyIronShirt
+  name: Iron Shirt
+  description: 'Clench every muscle into a shell: brute damage is halved for ten seconds plus one per stage, half again as long in the Mountain stance. 20 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 45
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_iron_shirt }
+  - type: InstantAction
+    event: !type:BodyIronShirtActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyMountainLeap
+  name: Mountain Leap
+  description: 'Leap like a falling boulder: three tiles plus your stage. From Crimson Blood your landing floors everyone around you. 15 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_leap }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 12
+  - type: WorldTargetAction
+    event: !type:BodyMountainLeapActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyEarthStomp
+  name: Earth-Shattering Stomp
+  description: Drive your heel into the floor and knock down everyone around you, wider and harder with your stage. Furniture and windows nearby break and walls crack; from Bronze Bones the walls give way. In the Mountain stance it throws people back. 20 exhaustion.
+  components:
+  - type: Action
+    useDelay: 25
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_stomp }
+  - type: InstantAction
+    event: !type:BodyEarthStompActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyShatteringFist
+  name: Shattering Fist
+  description: Put your whole forged body behind one punch. People are hurled away; walls crack under it, and a few punches bring one down. From Jade Marrow a punch at a wall or machine blasts a trench through it, deeper every stage. 25 exhaustion.
+  components:
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_fist }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    event: !type:BodyShatteringFistActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyHundredFists
+  name: Hundred Fist Barrage
+  description: A blur of fists on someone beside you, more blows the higher your stage, the last one sending them flying. 25 exhaustion.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_hundred_fists }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:BodyHundredFistsActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyBoneSetting
+  name: Bone Setting
+  description: Wrench your own dislocations and fractures back into place, healing blunt trauma. 15 exhaustion.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_bone_setting }
+  - type: InstantAction
+    event: !type:BodyBoneSettingActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyStanceThunderclap
+  name: Thunderclap Stance
+  description: 'Commit to the attack: you move faster and your barrages hit harder, but you take 10% more damage. Two seconds to settle into; use again to leave it.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_thunderclap }
+  - type: InstantAction
+    event: !type:BodyStanceActionEvent
+      stance: Thunderclap
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyStanceMountain
+  name: Immovable Mountain Stance
+  description: 'Hold the line: 10% less brute damage, Iron Shirt and the Vajra Golden Body last half again as long, your stomp throws people back and your tribulations are steadier, but you move slower.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_mountain }
+  - type: InstantAction
+    event: !type:BodyStanceActionEvent
+      stance: Mountain
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyDisciple
+  name: Accept Body Disciple
+  description: Take someone beside you who has already read the Copper Skin Primer as a disciple of the Body Molding Art. They commit to the path of the flesh, can never cultivate qi, and start with a gift of tempering.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_disciple }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:BodyDiscipleActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyRemold
+  name: Remold Flesh
+  description: 'The Body Molding Art itself: shape your flesh again like clay, healing heavily. 40 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 180
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_remold }
+  - type: InstantAction
+    event: !type:BodyRemoldActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyBullCharge
+  name: Raging Bull Charge
+  description: Charge in a straight line, four tiles plus your stage, and nothing stops you. People are bowled aside, and tables, machines, windows and walls in the way are smashed through. 30 exhaustion.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_bull_charge }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 14
+  - type: WorldTargetAction
+    event: !type:BodyBullChargeActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyBloodBoil
+  name: Blood Boil
+  description: Set your blood boiling. For fifteen seconds your exhaustion drains away fast and nothing slows you, then you crash hard (+40 exhaustion).
+  components:
+  - type: Action
+    useDelay: 90
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_blood_boil }
+  - type: InstantAction
+    event: !type:BodyBloodBoilActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyFallingMountain
+  name: Falling Mountain Descent
+  description: Leap high and come down on a spot up to nine tiles away like a falling mountain, smashing everyone at the centre and flooring everyone around it. 30 exhaustion.
+  components:
+  - type: Action
+    useDelay: 40
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_falling_mountain }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:BodyFallingMountainActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyMountainHurl
+  name: Mountain-Toppling Throw
+  description: 'Pull someone, then use this and click where to throw them: they fly further the higher your stage and land hard. 25 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_hurl }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 14
+  - type: WorldTargetAction
+    event: !type:BodyMountainHurlActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodySkySplittingPalm
+  name: Sky-Splitting Palm
+  description: 'Strike the air so hard it splits: a shockwave tears down a line seven tiles plus your stage long, hurling people back and shattering what it passes. 30 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 35
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_sky_palm }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:BodySkySplittingPalmActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyVajra
+  name: Vajra Golden Body
+  description: 'Turn your skin to temple gold for eight seconds: three quarters less brute and burn damage. 30 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_vajra }
+  - type: InstantAction
+    event: !type:BodyVajraActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyHeavenQuake
+  name: Heaven-Shaking Quake
+  description: 'Pound the ground and shake the whole area: five pulses knock down everyone nearby and rattle windows apart. 40 exhaustion.'
+  components:
+  - type: Action
+    useDelay: 90
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_quake }
+  - type: InstantAction
+    event: !type:BodyHeavenQuakeActionEvent
+
+- type: entity
+  parent: BaseActionBodyArt
+  id: ActionBodyPrimordialRoar
+  name: Primordial Roar
+  description: Roar with the voice of the first mountain. Everyone weaker than you within seven tiles is knocked flat and battered, and every window shatters. 30 exhaustion.
+  components:
+  - type: Action
+    useDelay: 180
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_roar }
+  - type: InstantAction
+    event: !type:BodyPrimordialRoarActionEvent

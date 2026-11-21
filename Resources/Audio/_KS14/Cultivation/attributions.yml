@@ -1,0 +1,4 @@
+- files: ["great_bell.ogg", "temple_bell.ogg", "guqin_rise.ogg", "guqin_breakthrough.ogg", "guqin_fall.ogg", "wind_chimes.ogg", "qinggong.ogg", "mountain_fall.ogg", "ascend.ogg"]
+  license: CC-BY-SA-3.0
+  copyright: "Mixed for Klovnstation 14 from tgstation samples (gong, fluid celeste and crisis nylon instrument samples, fwoosh, rustle, meteor impact, rock break, distant explosion, magic charge), as layered by the SurfShack13 cultivation port"
+  source: "https://github.com/tgstation/tgstation"

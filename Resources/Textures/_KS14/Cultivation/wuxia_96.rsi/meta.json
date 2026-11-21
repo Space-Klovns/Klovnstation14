@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from the SurfShack13 cultivation port",
+  "size": {
+    "x": 96,
+    "y": 96
+  },
+  "states": [
+    {
+      "name": "storm_cloud",
+      "delays": [
+        [
+          0.3,
+          0.3,
+          0.12,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "sigil_gathering"
+    },
+    {
+      "name": "sigil_alarm"
+    }
+  ]
+}

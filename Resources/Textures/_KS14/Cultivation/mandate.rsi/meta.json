@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from the SurfShack13 cultivation port",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "jade_seal"
+    },
+    {
+      "name": "imperial_decree"
+    },
+    {
+      "name": "mandate_kneel"
+    },
+    {
+      "name": "mandate_treasury"
+    },
+    {
+      "name": "mandate_pardon"
+    },
+    {
+      "name": "mandate_jinyiwei"
+    },
+    {
+      "name": "mandate_fealty"
+    },
+    {
+      "name": "mandate_ennoble"
+    },
+    {
+      "name": "mandate_punishment"
+    }
+  ]
+}
