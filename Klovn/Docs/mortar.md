@@ -44,10 +44,13 @@ flight with the ground under it marked, and going off as it lands.
 - **The fields**, bearing and distance, are the same aim as the plot: either writes the other, and only because the
   player did something, so a state from the server never overwrites what is being typed. −/+ nudge the distance by a
   tile and the bearing by a degree, or less at long range (`BearingNudgeDegrees`: never more than a tile across at the
-  distance aimed at); 5 times that with Shift. A cross of N/W/E/S buttons beside them moves the point aimed at a tile
-  along the map (5 with Shift), the bearing and distance recomputed and kept to the band; both kinds are kept, as one
-  moves along the bearing and the other across the map. Bearings are written to a hundredth of a degree. A field that is not a number, a bearing outside 0 to 360 or a distance outside the range turns red as
-  it is typed, Fire goes off and the reason shows under the fields. Enter in either field fires.
+  distance aimed at); 5 times that with Shift. An eight-way arrow pad beside them (`KsTguiDirectionPad`, tg's launchpad
+  pad), bottom-aligned with the distance row and taking its extra height upwards beside the range label, moves the point
+  aimed at a tile along the map in that direction (a diagonal a tile on both axes; 5 with Shift), the bearing and
+  distance recomputed and kept to the band; both kinds of nudge are kept, as one moves along the bearing and the other
+  across the map. Bearings are written to a hundredth of a degree. A field that is not a number, a bearing outside 0 to
+  360 or a distance outside the range turns red as it is typed, Fire goes off and the reason shows in red in place of
+  the readiness word. Enter in either field fires.
 - **Status**: rounds left, a reload bar filling over `manualCooldown`, and Ready / Reloading / Out of shells; the bearing
   readout gives three figures and a compass point (`045° NE`).
 - **Fall of shot**: each shell carries `KsMortarFallOfShotComponent` (its mortar); on `SupplyPodLandedEvent` the mortar
@@ -125,7 +128,7 @@ that (tests: `KsMortarTest.ALongRangeShellLandsWhereAimed`, `ALongRangeCrewFinds
 - **Plot**: the band fills the plot whatever the ranges (see *The window*); range labels are written to one decimal, so
   tiny ranges read too; the spread ring is at least 2 px.
 - **Aiming precision**: clicks pick a tenth of a degree (under a tile out to ~570 tiles), fields keep a hundredth,
-  bearing nudges shrink to about a tile across at the distance aimed at, and the cross and distance nudges move a tile.
+  bearing nudges shrink to about a tile across at the distance aimed at, and the arrow pad and distance nudges move a tile.
   Bearing to offset is done in doubles (`KsMortarAim.ToOffset`); float error at 300 tiles is around 1e-5 tiles.
 - **Impacts** are offsets from the mortar, so they keep their precision; `spread` is in tiles and unaffected.
 - **Nothing clamps to PVS or view range**: the shell is spawned where it lands, uninitialised, at map coordinates, so on

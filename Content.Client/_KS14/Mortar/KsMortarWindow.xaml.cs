@@ -78,10 +78,7 @@ public sealed partial class KsMortarWindow : FancyWindow
         DistanceDownButton.OnPressed += _ => NudgeDistance(-1f);
         DistanceUpButton.OnPressed += _ => NudgeDistance(1f);
 
-        NudgeNorthButton.OnPressed += _ => NudgePoint(new Vector2(0f, 1f));
-        NudgeSouthButton.OnPressed += _ => NudgePoint(new Vector2(0f, -1f));
-        NudgeEastButton.OnPressed += _ => NudgePoint(new Vector2(1f, 0f));
-        NudgeWestButton.OnPressed += _ => NudgePoint(new Vector2(-1f, 0f));
+        NudgePad.OnDirectionPressed += direction => NudgePoint(new Vector2(direction.X, direction.Y));
 
         AimPlot.OnAimPicked += (bearing, distance) => SetAim(bearing.Degrees, distance);
 
@@ -94,6 +91,11 @@ public sealed partial class KsMortarWindow : FancyWindow
     public bool InputValid => _bearingDegrees != null && _distance != null;
 
     public bool BearingInvalid => _bearingDegrees == null;
+
+    /// <summary>
+    ///     Why the fields cannot be fired at, shown in red where the readiness is; null when they can.
+    /// </summary>
+    public string? InputProblem { get; private set; }
 
     public bool DistanceInvalid => _distance == null;
 
@@ -153,10 +155,14 @@ public sealed partial class KsMortarWindow : FancyWindow
     }
 
     /// <summary>
-    ///     Moves the point aimed at a step along the map (north, south, east or west), kept to the band.
+    ///     Moves the point aimed at a step along the map in each axis <paramref name="direction"/> has (a diagonal moves a step
+    ///         north or south and a step east or west), kept to the band.
     /// </summary>
     private void NudgePoint(Vector2 direction)
     {
+        if (direction == Vector2.Zero)
+            return;
+
         var step = _inputManager.IsKeyDown(Keyboard.Key.Shift) ? NudgeShiftStep : NudgeStep;
         var bearing = _bearingDegrees is { } degrees ? Angle.FromDegrees(degrees) : AimPlot.Bearing;
         var offset = KsMortarAim.ToOffset(bearing, _distance ?? AimPlot.Distance) + direction * step;
@@ -212,7 +218,7 @@ public sealed partial class KsMortarWindow : FancyWindow
 
         BearingEdit.ModulateSelfOverride = _bearingDegrees == null ? InvalidFieldColor : null;
         DistanceEdit.ModulateSelfOverride = _distance == null ? InvalidFieldColor : null;
-        ReasonLabel.Text = reason ?? " ";
+        InputProblem = reason;
 
         // What is valid of the aim goes on the plot; what is not keeps its last place there, greyed out.
         AimPlot.SetAim(_bearingDegrees is { } degrees ? Angle.FromDegrees(degrees) : AimPlot.Bearing, _distance ?? AimPlot.Distance);
@@ -327,11 +333,12 @@ public sealed partial class KsMortarWindow : FancyWindow
             ? 1f
             : Math.Clamp(1f - (float) (wait.TotalSeconds / _state.ReloadTime.TotalSeconds), 0f, 1f);
 
-        StatusLabel.Text = _state.Rounds <= 0
+        StatusLabel.FontColorOverride = InputProblem != null ? InvalidFieldColor : null;
+        StatusLabel.Text = InputProblem ?? (_state.Rounds <= 0
             ? Loc.GetString("ks-mortar-window-empty")
             : loaded
                 ? Loc.GetString("ks-mortar-window-ready")
-                : Loc.GetString("ks-mortar-window-reloading");
+                : Loc.GetString("ks-mortar-window-reloading"));
     }
 
     private void Fire()

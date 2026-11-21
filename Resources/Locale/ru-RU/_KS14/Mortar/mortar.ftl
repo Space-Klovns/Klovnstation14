@@ -33,4 +33,4 @@ ks-mortar-compass-6 = З
 ks-mortar-compass-7 = СЗ
 ks-mortar-window-sight = Прицел
 ks-mortar-window-sight-no-picture = Нет изображения
-ks-mortar-window-nudge-tooltip = Сдвинуть точку прицеливания на тайл к северу, югу, востоку или западу; на пять с Shift
+ks-mortar-window-nudge-tooltip = Сдвинуть точку прицеливания на тайл в эту сторону; на пять с Shift

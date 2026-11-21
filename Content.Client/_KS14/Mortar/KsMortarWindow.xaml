@@ -3,6 +3,7 @@
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
     xmlns:mortar="clr-namespace:Content.Client._KS14.Mortar"
     xmlns:viewport="clr-namespace:Content.Client.Viewport"
+    xmlns:tg="clr-namespace:Content.Client._KS14.Tgui.Controls"
     xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
     Title="{Loc ks-mortar-window-title}"
     MinWidth="320"
@@ -24,33 +25,25 @@
                 </Control>
             </BoxContainer>
         </BoxContainer>
-        <Label Name="RangeLabel" StyleClasses="LabelSubText" />
         <BoxContainer Orientation="Horizontal" SeparationOverride="8">
-            <GridContainer Columns="5" HSeparationOverride="4" VSeparationOverride="4" VerticalAlignment="Center">
-                <Label Text="{Loc ks-mortar-window-bearing}" VerticalAlignment="Center" />
-                <Button Name="BearingDownButton" Access="Public" Text="−" MinWidth="28" />
-                <LineEdit Name="BearingEdit" Access="Public" MinWidth="80" />
-                <Button Name="BearingUpButton" Access="Public" Text="+" MinWidth="28" />
-                <Label Name="BearingReadout" Access="Public" MinWidth="72" VerticalAlignment="Center" Margin="4 0 0 0" />
-                <Label Text="{Loc ks-mortar-window-distance}" VerticalAlignment="Center" />
-                <Button Name="DistanceDownButton" Access="Public" Text="−" MinWidth="28" />
-                <LineEdit Name="DistanceEdit" Access="Public" MinWidth="80" />
-                <Button Name="DistanceUpButton" Access="Public" Text="+" MinWidth="28" />
-                <Control />
-            </GridContainer>
-            <GridContainer Columns="3" HSeparationOverride="2" VSeparationOverride="2" HorizontalAlignment="Right" HorizontalExpand="True" ToolTip="{Loc ks-mortar-window-nudge-tooltip}">
-                <Control />
-                <Button Name="NudgeNorthButton" Access="Public" Text="{Loc ks-mortar-compass-0}" MinWidth="26" />
-                <Control />
-                <Button Name="NudgeWestButton" Access="Public" Text="{Loc ks-mortar-compass-6}" MinWidth="26" />
-                <Control />
-                <Button Name="NudgeEastButton" Access="Public" Text="{Loc ks-mortar-compass-2}" MinWidth="26" />
-                <Control />
-                <Button Name="NudgeSouthButton" Access="Public" Text="{Loc ks-mortar-compass-4}" MinWidth="26" />
-                <Control />
-            </GridContainer>
+            <BoxContainer Orientation="Vertical" SeparationOverride="6" HorizontalExpand="True" VerticalAlignment="Bottom">
+                <Label Name="RangeLabel" StyleClasses="LabelSubText" />
+                <GridContainer Columns="5" HSeparationOverride="4" VSeparationOverride="4">
+                    <Label Text="{Loc ks-mortar-window-bearing}" VerticalAlignment="Center" />
+                    <Button Name="BearingDownButton" Access="Public" Text="−" MinWidth="28" />
+                    <LineEdit Name="BearingEdit" Access="Public" MinWidth="80" />
+                    <Button Name="BearingUpButton" Access="Public" Text="+" MinWidth="28" />
+                    <Label Name="BearingReadout" Access="Public" MinWidth="72" VerticalAlignment="Center" Margin="4 0 0 0" />
+                    <Label Text="{Loc ks-mortar-window-distance}" VerticalAlignment="Center" />
+                    <Button Name="DistanceDownButton" Access="Public" Text="−" MinWidth="28" />
+                    <LineEdit Name="DistanceEdit" Access="Public" MinWidth="80" />
+                    <Button Name="DistanceUpButton" Access="Public" Text="+" MinWidth="28" />
+                    <Control />
+                </GridContainer>
+            </BoxContainer>
+            <!-- Its extra height goes up, beside the range label, its bottom level with the distance row. -->
+            <tg:KsTguiDirectionPad Name="NudgePad" Access="Public" VerticalAlignment="Bottom" ToolTip="{Loc ks-mortar-window-nudge-tooltip}" />
         </BoxContainer>
-        <Label Name="ReasonLabel" Access="Public" FontColorOverride="#FF6060" />
         <BoxContainer Orientation="Horizontal" SeparationOverride="8">
             <Label Name="RoundsLabel" VerticalAlignment="Center" />
             <ProgressBar Name="ReloadBar" Access="Public" HorizontalExpand="True" VerticalAlignment="Center" MinHeight="12" MinWidth="60" MinValue="0" MaxValue="1" Value="1" />

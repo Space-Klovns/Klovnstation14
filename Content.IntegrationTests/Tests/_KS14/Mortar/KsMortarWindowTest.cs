@@ -126,16 +126,17 @@ public sealed class KsMortarWindowTest : GameTest
             Assert.That(window.FireButton.Disabled, Is.True, "a distance past the range should stop Fire as it is typed");
             Assert.That(window.DistanceInvalid, Is.True, "the distance field should be marked");
             Assert.That(window.DistanceEdit.ModulateSelfOverride, Is.Not.Null, "the distance field should turn red");
-            Assert.That(window.ReasonLabel.Text!.Trim(), Is.Not.Empty, "it should say why Fire is off");
+            Assert.That(window.InputProblem, Is.Not.Null.And.Not.Empty, "it should say why Fire is off");
+            Assert.That(window.StatusLabel.Text, Is.EqualTo(window.InputProblem), "where the readiness is shown");
 
             window.DistanceEdit.SetText("40", invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.False, "back in range, Fire should be on again");
-            Assert.That(window.ReasonLabel.Text!.Trim(), Is.Empty);
+            Assert.That(window.InputProblem, Is.Null);
 
             window.BearingEdit.SetText("north", invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.True, "a bearing that is no number should stop Fire");
             Assert.That(window.BearingInvalid, Is.True);
-            Assert.That(window.ReasonLabel.Text!.Trim(), Is.Not.Empty);
+            Assert.That(window.InputProblem, Is.Not.Null);
 
             window.BearingEdit.SetText("400", invokeEvent: true);
             Assert.That(window.FireButton.Disabled, Is.True, "a bearing past 360 should stop Fire");
@@ -195,43 +196,52 @@ public sealed class KsMortarWindowTest : GameTest
     }
 
     /// <summary>
-    ///     The cross of nudge buttons moves the point aimed at along the map, a step at a time, the bearing and distance
-    ///         following, kept to the band.
+    ///     Each of the pad's eight arrows moves the point aimed at a step that way along the map (a diagonal a step on both
+    ///         axes), the bearing and distance following, kept to the band.
     /// </summary>
     [Test]
-    public async Task TheCrossMovesThePointAimedAt()
+    public async Task ThePadMovesThePointAimedAtInEightDirections()
     {
         var window = await OpenWindow();
         var step = KsMortarWindow.NudgeStep;
+        var invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+        // Due east, 40 tiles out: (40, 0) on the map.
+        var start = new Vector2(40f, 0f);
+        for (var x = -1; x <= 1; x++)
+        {
+            for (var y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0)
+                    continue;
+
+                var direction = new Vector2i(x, y);
+                await Client.WaitPost(() =>
+                {
+                    window.BearingEdit.SetText("90", invokeEvent: true);
+                    window.DistanceEdit.SetText("40", invokeEvent: true);
+                });
+
+                await Click(window.NudgePad.GetButton(direction)!, Vector2.One);
+                await Client.WaitAssertion(() =>
+                {
+                    var expected = start + new Vector2(x, y) * step;
+                    var expectedBearing = (Math.Atan2(expected.X, expected.Y) * 180d / Math.PI + 360d) % 360d;
+                    Assert.That(double.Parse(window.BearingEdit.Text, invariant), Is.EqualTo(expectedBearing).Within(0.01d),
+                        $"{direction}: the bearing should follow the point moved a step that way");
+                    Assert.That(float.Parse(window.DistanceEdit.Text, invariant), Is.EqualTo(expected.Length()).Within(0.05f),
+                        $"{direction}: the distance should follow the point moved a step that way");
+                    Assert.That(window.AimPlot.Bearing.Degrees, Is.EqualTo(expectedBearing).Within(0.01d), $"{direction}: the plot should follow the pad");
+                });
+            }
+        }
 
         await Client.WaitPost(() =>
         {
             window.BearingEdit.SetText("0", invokeEvent: true);
-            window.DistanceEdit.SetText("40", invokeEvent: true);
-        });
-
-        await Click(window.NudgeEastButton, Vector2.One);
-        await Client.WaitAssertion(() =>
-        {
-            var expected = Math.Atan2(step, 40d) * 180d / Math.PI;
-            Assert.That(double.Parse(window.BearingEdit.Text, System.Globalization.CultureInfo.InvariantCulture), Is.EqualTo(expected).Within(0.01d),
-                "a step east from due north should turn the bearing east by as much");
-            Assert.That(float.Parse(window.DistanceEdit.Text, System.Globalization.CultureInfo.InvariantCulture),
-                Is.EqualTo(MathF.Sqrt(40f * 40f + step * step)).Within(0.05f), "and lengthen the distance by as little");
-            Assert.That(window.AimPlot.Bearing.Degrees, Is.EqualTo(expected).Within(0.01d), "the plot should follow the cross");
-        });
-
-        await Click(window.NudgeWestButton, Vector2.One);
-        await Click(window.NudgeSouthButton, Vector2.One);
-        await Client.WaitAssertion(() =>
-        {
-            Assert.That(window.BearingEdit.Text, Is.EqualTo("0"), "west again should be back on north");
-            Assert.That(float.Parse(window.DistanceEdit.Text, System.Globalization.CultureInfo.InvariantCulture), Is.EqualTo(40f - step).Within(0.05f),
-                "a step south from due north should shorten the distance by a step");
             window.DistanceEdit.SetText(MinRange.ToString(), invokeEvent: true);
         });
-
-        await Click(window.NudgeSouthButton, Vector2.One);
+        await Click(window.NudgePad.GetButton(new Vector2i(0, -1))!, Vector2.One);
         await Client.WaitAssertion(() =>
         {
             Assert.That(window.DistanceEdit.Text, Is.EqualTo(MinRange.ToString()), "a step inside the least range should be kept to it");

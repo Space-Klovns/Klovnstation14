@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Numerics;
 using Content.Shared._KS14.Mortar;
 using Robust.Client.Graphics;
+using Content.Client.Resources;
 using Robust.Client.Input;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared.Input;
 
@@ -27,6 +29,7 @@ namespace Content.Client._KS14.Mortar;
 public sealed partial class KsMortarAimControl : Control
 {
     [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
 
     /// <summary>
     ///     Room between the outer ring and the edge, in virtual pixels, for the compass marks.
@@ -69,6 +72,7 @@ public sealed partial class KsMortarAimControl : Control
     private bool _dragging;
     private string _minLabel = string.Empty;
     private string _maxLabel = string.Empty;
+    private readonly Font _font;
 
     public float MinRange { get; private set; }
 
@@ -100,6 +104,9 @@ public sealed partial class KsMortarAimControl : Control
     {
         IoCManager.InjectDependencies(this);
         MouseFilter = MouseFilterMode.Stop;
+
+        // The theme's default font draws nothing here; Noto has Cyrillic for the Russian marks.
+        _font = _resourceCache.GetFont(new[] { "/Fonts/NotoSans/NotoSans-Regular.ttf", "/Fonts/NotoSans/NotoSansSymbols-Regular.ttf" }, 10);
         RectClipContent = true;
 
         _marks[0] = Loc.GetString("ks-mortar-compass-0");
@@ -331,7 +338,7 @@ public sealed partial class KsMortarAimControl : Control
 
     private void DrawMarks(DrawingHandleScreen handle, Vector2 centre, float radius)
     {
-        var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+        var font = _font;
         var textScale = UIScale;
 
         for (var i = 0; i < _marks.Length; i++)
@@ -352,7 +359,7 @@ public sealed partial class KsMortarAimControl : Control
     /// </summary>
     private void DrawRangeLabels(DrawingHandleScreen handle, Vector2 centre, float innerRadius, float radius)
     {
-        var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+        var font = _font;
         var textScale = UIScale * 0.8f;
         var direction = Vector2.Normalize(new Vector2(1f, 1f));
 
