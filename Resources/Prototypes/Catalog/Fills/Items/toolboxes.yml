@@ -164,7 +164,7 @@
   suffix: Filled
   components:
   - type: EntityTableContainerFill
-    sort: true
+    sort: true # KS14: port of upstream #44134
     containers:
       storagebase: !type:NestedSelector
         tableId: FoolboxTable
@@ -205,12 +205,14 @@
         - id: ClothingHeadHatFancyCrown
         - id: ClothingHeadHatChameleon
     - !type:GroupSelector # Offensive clown items
+      # rolls: 2 # KS14: removed, port of upstream #44134
       children:
       - !type:NestedSelector
         tableId: AllToyWeaponsTable
       - id: EnergySword # ~1/1001
         weight: 0.001
     - !type:GroupSelector # Rarer clown tools
+      # rolls: 2 # KS14: removed, port of upstream #44134
       children:
       - !type:NestedSelector
         tableId: AllMiscToysTable

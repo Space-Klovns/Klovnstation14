@@ -66,8 +66,10 @@ public sealed partial class DungeonJob
             {
                 var newStart = remaining.First();
                 frontier.Enqueue(newStart, 0f);
+                // KS14 start: port of upstream #44511, a second cable island had no cost and threw
                 if (!costSoFar.ContainsKey(newStart))
                     costSoFar[newStart] = 0f;
+                // KS14 end
                 lastDirection[newStart] = Direction.Invalid;
             }
 
