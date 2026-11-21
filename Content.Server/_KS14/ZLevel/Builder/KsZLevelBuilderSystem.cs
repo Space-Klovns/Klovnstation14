@@ -9,6 +9,7 @@ using Content.Shared.Maps;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.Timing;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -33,6 +34,13 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private TurfSystem _turfSystem = default!;
     [Dependency] private UseDelaySystem _useDelaySystem = default!;
+
+    private static readonly LocId NoFloorMessage = "ks-zlevel-builder-no-floor";
+    private static readonly LocId LadderHereMessage = "ks-zlevel-builder-ladder-here";
+    private static readonly LocId CooldownMessage = "ks-zlevel-builder-cooldown";
+    private static readonly LocId BuiltMessage = "ks-zlevel-builder-built";
+    private static readonly LocId LadderAboveMessage = "ks-zlevel-builder-ladder-above";
+    private static readonly LocId BlockedAboveMessage = "ks-zlevel-builder-blocked-above";
 
     private readonly HashSet<Entity<KsLadderComponent>> _ladders = [];
 
@@ -59,7 +67,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
             userTransform.MapUid is not { } lowerMapUid ||
             _zLevelSystem.IsGap(lowerMapUid))
         {
-            Refuse(builder, userUid, "ks-zlevel-builder-no-floor");
+            Refuse(builder, userUid, NoFloorMessage);
             return false;
         }
 
@@ -69,7 +77,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
 
         if (HasLadderAt(builder, spot))
         {
-            Refuse(builder, userUid, "ks-zlevel-builder-ladder-here");
+            Refuse(builder, userUid, LadderHereMessage);
             return false;
         }
 
@@ -88,7 +96,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
         {
             if (_useDelaySystem.IsDelayed(builder.Owner, builder.Comp.LevelDelayId))
             {
-                Refuse(builder, userUid, "ks-zlevel-builder-cooldown");
+                Refuse(builder, userUid, CooldownMessage);
                 return false;
             }
 
@@ -103,16 +111,16 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
         var upperLadderUid = Spawn(builder.Comp.UpperLadder, upperCoordinates);
         _ladderSystem.Link(lowerLadderUid, upperLadderUid);
 
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-zlevel-builder-built"), builder, userUid);
+        _popupSystem.PopupEntity(KsPopupMessage.Create(BuiltMessage), builder, userUid);
         return true;
     }
 
-    private bool CanBuildAbove(Entity<KsZLevelBuilderComponent> builder, EntityUid upperMapUid, Vector2 position, out string reason)
+    private bool CanBuildAbove(Entity<KsZLevelBuilderComponent> builder, EntityUid upperMapUid, Vector2 position, out LocId reason)
     {
-        reason = string.Empty;
+        reason = default;
         if (HasLadderAt(builder, new MapCoordinates(position, Comp<MapComponent>(upperMapUid).MapId)))
         {
-            reason = "ks-zlevel-builder-ladder-above";
+            reason = LadderAboveMessage;
             return false;
         }
 
@@ -121,7 +129,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
             var upperIndices = _mapSystem.WorldToTile(upperGridUid, upperGridComponent, position);
             if (_turfSystem.IsTileBlocked(upperGridUid, upperIndices, CollisionGroup.Impassable, upperGridComponent))
             {
-                reason = "ks-zlevel-builder-blocked-above";
+                reason = BlockedAboveMessage;
                 return false;
             }
         }
@@ -163,7 +171,7 @@ public sealed partial class KsZLevelBuilderSystem : EntitySystem
         return _ladders.Count > 0;
     }
 
-    private void Refuse(Entity<KsZLevelBuilderComponent> builder, EntityUid userUid, string messageId)
+    private void Refuse(Entity<KsZLevelBuilderComponent> builder, EntityUid userUid, LocId messageId)
     {
         _popupSystem.PopupEntity(KsPopupMessage.Create(messageId), builder, userUid);
     }
