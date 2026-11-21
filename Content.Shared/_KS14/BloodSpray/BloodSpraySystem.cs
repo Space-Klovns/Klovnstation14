@@ -276,6 +276,9 @@ public sealed partial class BloodSpraySystem : EntitySystem
         }
 
         // A stain is networked state on what it is on: a kept copy's hit leaves it to the server's.
+        // TODO: predict these for a kept copy's hit as the floor decals are (KsAddKeptPredictedDecal): a client-only
+        //      stain on the wall, drawn by StainOverlayVisualizerSystem, until the server's StainedComponent state has it.
+        //      Until then the shooter sees the blood on a wall a round trip after the blood on the floor.
         if (_keptHit)
             return;
 

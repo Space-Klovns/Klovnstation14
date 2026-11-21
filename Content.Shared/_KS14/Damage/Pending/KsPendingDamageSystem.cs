@@ -19,8 +19,14 @@ namespace Content.Shared._KS14.Damage.Pending;
 ///             to whatever asks for the entity's damage (<see cref="TryGetShownPending"/>), so a health bar, an
 ///             examine or anything else shows it with no code of its own. Not while a state is being applied: what
 ///             handles the server's damage then (thresholds, mob states) reads the server's alone, and does not act
-///             on a hit the server may not make. Nothing is raised for it either: nothing bleeds, falls or dies for
-///             pending damage.
+///             on a hit the server may not make. No <see cref="DamageChangedEvent"/> is raised for it either: nothing
+///             bleeds, falls or dies for pending damage. What shows damage without asking every frame hears
+///             <see cref="KsPendingDamageChangedEvent"/>.
+///     </para>
+///     <para>
+///         Not added to what feeds healing: <see cref="DamageableSystem.GetPositiveDamage(Entity{DamageableComponent})"/>
+///             and <see cref="DamageableSystem.TryGetDamageGreaterThan"/> work out how much there is to heal, and
+///             healing damage the server has not dealt would heal something else instead.
 ///     </para>
 ///     <para>
 ///         Each entry is one shot's hit (<see cref="KsPendingDamage.ShotId"/>). The server tells the shooter's client of
@@ -70,6 +76,17 @@ public sealed partial class KsPendingDamageSystem : EntitySystem
             lifetime = MaxLifetime;
 
         EnsureComp<KsPendingDamageComponent>(uid).Entries.Add(new KsPendingDamage(pendingDamage, shotId, _gameTiming.CurTime + lifetime));
+        RaiseChanged(uid);
+    }
+
+    /// <summary>
+    ///     What is pending for <paramref name="uid"/> changed: whatever shows its damage other than by asking every frame
+    ///         (damage visuals) goes over it again.
+    /// </summary>
+    private void RaiseChanged(EntityUid uid)
+    {
+        var ev = new KsPendingDamageChangedEvent();
+        RaiseLocalEvent(uid, ref ev);
     }
 
     /// <summary>
@@ -92,6 +109,7 @@ public sealed partial class KsPendingDamageSystem : EntitySystem
             if (entries.Count == 0)
                 RemCompDeferred<KsPendingDamageComponent>(uid);
 
+            RaiseChanged(uid);
             return true;
         }
 
@@ -159,14 +177,13 @@ public sealed partial class KsPendingDamageSystem : EntitySystem
                 continue; // already on its way out, with nothing pending
 
             var entries = pendingComponent.Entries;
-            for (var i = entries.Count - 1; i >= 0; i--)
-            {
-                if (entries[i].ExpiresAt <= now)
-                    entries.RemoveAt(i);
-            }
+            var expired = entries.RemoveAll(entry => entry.ExpiresAt <= now) > 0;
 
             if (entries.Count == 0)
                 RemCompDeferred<KsPendingDamageComponent>(uid);
+
+            if (expired)
+                RaiseChanged(uid);
         }
     }
 }

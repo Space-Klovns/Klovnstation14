@@ -22,6 +22,14 @@ public sealed partial class KsPendingDamageComponent : Component
 }
 
 /// <summary>
+///     Raised on an entity, on a client, when what is pending for it changed: a hit was predicted, the server dealt it, or
+///         it expired. For what shows the entity's damage and is only gone over when told to (damage visuals); what
+///         asks <see cref="Content.Shared.Damage.Systems.DamageableSystem"/> every frame needs nothing.
+/// </summary>
+[ByRefEvent]
+public readonly record struct KsPendingDamageChangedEvent;
+
+/// <summary>
 ///     One predicted hit's damage.
 /// </summary>
 /// <param name="Damage">What it would deal, by type: resistances applied, all of it harm.</param>

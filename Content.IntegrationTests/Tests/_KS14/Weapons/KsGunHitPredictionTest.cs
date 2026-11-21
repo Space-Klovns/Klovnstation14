@@ -55,6 +55,7 @@ public sealed class KsGunHitPredictionTest : InteractionTest
     private readonly EntProtoId _testArmouredTarget = TestArmouredTarget;
     private readonly EntProtoId _testPassiveMob = TestPassiveMob;
     private readonly EntProtoId _testShield = TestShield;
+    private static readonly EntProtoId MobHuman = "MobHuman";
     private readonly EntProtoId _testFrailMob = TestFrailMob;
     private static readonly ProtoId<DamageGroupPrototype> BruteGroup = "Brute";
     private readonly EntProtoId _testBleeder = TestBleeder;
@@ -854,6 +855,55 @@ public sealed class KsGunHitPredictionTest : InteractionTest
                         Vector2.Distance(servedDecal.Coordinates, predictedDecal.Coordinates) < 0.5f),
                     $"no stain of the server's matches the predicted {predictedDecal.Id} at {predictedDecal.Coordinates}");
             }
+        });
+    }
+
+    /// <summary>
+    ///     The wounds a mob's sprite shows follow what is pending for it: there with the predicted hit, and gone again if
+    ///         the server never deals it. They were only gone over when the server's own damage arrived. A real mob's
+    ///         visuals are the subject, so it is a real mob; what it takes to show a wound is read from it.
+    /// </summary>
+    [Test]
+    public async Task DamageVisualsFollowPendingDamage()
+    {
+        var mobUid = EntityUid.Invalid;
+        await Server.WaitPost(() =>
+        {
+            var shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            mobUid = SEntMan.SpawnEntity(MobHuman, new MapCoordinates(shooterPosition + new Vector2(3f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var clientMobUid = ToClient(mobUid);
+
+        FixedPoint2 ShownBruteThreshold()
+        {
+            var damageVisualsComponent = CEntMan.GetComponent<Content.Client.Damage.DamageVisualsComponent>(clientMobUid);
+            return damageVisualsComponent.LastThresholdPerGroup.GetValueOrDefault(BruteGroup);
+        }
+
+        await Client.WaitAssertion(() =>
+        {
+            var damageVisualsComponent = CEntMan.GetComponent<Content.Client.Damage.DamageVisualsComponent>(clientMobUid);
+            Assert.That(ShownBruteThreshold(), Is.EqualTo(FixedPoint2.Zero), "the mob shows wounds before anything hurt it");
+
+            // Enough to pass its highest threshold, whatever those are tuned to.
+            var enough = damageVisualsComponent.Thresholds[^1] * damageVisualsComponent.Divisor + FixedPoint2.New(1);
+            CEntMan.System<KsPendingDamageSystem>().Add(clientMobUid, new DamageSpecifier(ProtoMan.Index(PiercingDamage), enough), shotId: 1);
+        });
+
+        await RunTicks(3); // a frame goes over the visuals
+        await Client.WaitAssertion(() =>
+            Assert.That(ShownBruteThreshold(), Is.GreaterThan(FixedPoint2.Zero), "the mob shows no wound for the hit predicted on it"));
+
+        // The server never deals it: the wound goes with the pending damage.
+        var ticks = (int)(3f * (float)Server.ResolveDependency<IGameTiming>().TickRate);
+        await RunTicks(ticks);
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.System<KsPendingDamageSystem>().GetPendingDamage(clientMobUid), Is.EqualTo(FixedPoint2.Zero),
+                "the damage is still pending, so this proves nothing");
+            Assert.That(ShownBruteThreshold(), Is.EqualTo(FixedPoint2.Zero), "the mob still shows the wound of a hit the server never made");
         });
     }
 }

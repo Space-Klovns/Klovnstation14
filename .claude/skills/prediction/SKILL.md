@@ -92,7 +92,9 @@ down on this client by a hit the server never makes and stays down. Each entry i
 (`KsKeptPredictedSpawnComponent.ShotId`), dropped when the server's `KsPredictedSpawnImpactEvent` for that shot and
 target arrives, which the engine hands over once the state of its tick (with the damage in it) is applied, and taken
 off once if it never does. And what plays off a hit (blood) plays off `KsPreviewedDamageEvent`, since no
-`DamageChangedEvent` is raised for it.
+`DamageChangedEvent` is raised for it; what shows damage without asking every frame (damage visuals) hears
+`KsPendingDamageChangedEvent`. The getters that feed healing (`GetPositiveDamage`, `TryGetDamageGreaterThan`) leave
+pending damage out.
 
 **A decal from a kept copy's hit is a kept decal**, not `TryAddDecal`: that writes into the networked
 `DecalChunkComponent`, which the next state puts back, and nothing runs a kept copy's hit again to write it again, so

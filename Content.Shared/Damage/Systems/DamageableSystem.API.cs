@@ -273,6 +273,11 @@ public sealed partial class DamageableSystem
     /// <param name="damage">Damage specifier we're returning with</param>
     /// <param name="group">An optional group, note that if it fails to index it will just use all damage.</param>
     /// <returns>True if the total damage is greater than the specified amount</returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public bool TryGetDamageGreaterThan(Entity<DamageableComponent> ent,
         FixedPoint2 amount,
         out DamageSpecifier damage,
@@ -291,6 +296,11 @@ public sealed partial class DamageableSystem
     /// <param name="ent">entity with damage</param>
     /// <param name="group">group of damage to get values from</param>
     /// <returns></returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public DamageSpecifier GetPositiveDamage(Entity<DamageableComponent> ent, ProtoId<DamageGroupPrototype> group)
     {
         // No damage if no group exists...
@@ -316,6 +326,11 @@ public sealed partial class DamageableSystem
     /// </summary>
     /// <param name="ent">entity with damage</param>
     /// <returns></returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public DamageSpecifier GetPositiveDamage(Entity<DamageableComponent> ent)
     {
         var damage = new DamageSpecifier();
