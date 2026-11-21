@@ -41,6 +41,11 @@ public sealed partial class KsTrailSystem : EntitySystem
 
         var alpha = trailComponent.Color.A;
 
+        // Nothing of a revealed trail shows before its reveal starts, wherever its source is: a source kept out of
+        //      sight until then (a supply pod seen only for the end of its fall) has its trail kept out of sight with it.
+        if (trailComponent.RevealDuration > TimeSpan.Zero && curTime < trailComponent.RevealStartTime)
+            return 0f;
+
         // Progressive reveal: the tile furthest from the origin shows up first, so the trail
         // appears to be drawn by whatever is travelling down it.
         if (sourceDistance is { } distance)

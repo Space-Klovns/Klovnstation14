@@ -102,6 +102,18 @@ public sealed partial class KsMortarComponent : Component
     public TimeSpan FlightTime = TimeSpan.FromSeconds(5);
 
     /// <summary>
+    ///     The least and most of its flight the shell is seen falling for: as long as the incoming clip picked for it, kept
+    ///         between the two, and never longer than <see cref="FlightTime"/>. Before that it is nowhere to be seen, its
+    ///         landing zone marked all the same.
+    /// </summary>
+    [DataField]
+    public TimeSpan MinDescentTime = TimeSpan.FromSeconds(1);
+
+    /// <inheritdoc cref="MinDescentTime"/>
+    [DataField]
+    public TimeSpan MaxDescentTime = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     ///     Played where the shell is to land, starting as long before it lands as the clip picked lasts, so that it ends as it
     ///         lands. A collection: one is picked for each shell.
     /// </summary>

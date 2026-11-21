@@ -41,6 +41,15 @@ public sealed partial class SupplyPodComponent : Component
     public TimeSpan FallDuration = TimeSpan.Zero;
 
     /// <summary>
+    ///     How much of the end of <see cref="FallDuration"/> the pod is seen falling, its sprite and trail hidden until
+    ///         then; null for the whole of it. The fall is the same, played over this length. Lets something land long
+    ///         after it was sent, its landing zone marked all the while, without hanging in the air the whole time. Set
+    ///         through <see cref="SharedSupplyPodSystem.SetDescentDuration"/>.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public TimeSpan? DescentDuration;
+
+    /// <summary>
     ///     Time from fall start that
     ///         the fall sound will be played.
     /// </summary>

@@ -40,6 +40,8 @@ public sealed class KsMortarTest : GameTest
     private readonly EntProtoId _priorityTarget = "KsTestMortarPriorityTarget";
     private readonly EntProtoId _impact = "KsTestMortarImpact";
     private readonly EntProtoId _defender = "KsTestMortarDefender";
+    private readonly EntProtoId _mortarLongDescent = "KsTestMortarLongDescent";
+    private readonly EntProtoId _mortarShortDescent = "KsTestMortarShortDescent";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -85,6 +87,25 @@ public sealed class KsMortarTest : GameTest
     abandonedFactions:
     - NanoTrasen
     abandonedPriority: 0.7
+
+# Bounds every clip of KsMortarIncoming is outside: below them, and above.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarLongDescent
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minDescentTime: 1.8
+    maxDescentTime: 1.9
+
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarShortDescent
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    minDescentTime: 0.2
+    maxDescentTime: 0.5
 
 - type: entity
   id: KsTestMortarCrew
@@ -287,6 +308,118 @@ public sealed class KsMortarTest : GameTest
             var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(180), 10f), Is.False, "with no rounds left");
         });
+    }
+
+    /// <summary>
+    ///     A shell falls for the whole flight, but is seen falling only for as long as its incoming clip, kept to the
+    ///         mortar's bounds: within them (0), held up to the least (1) and down to the most (2).
+    /// </summary>
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task AShellIsSeenFallingForItsClipWithinItsBounds(int mortarIndex)
+    {
+        var mortarId = new[] { _mortar, _mortarLongDescent, _mortarShortDescent }[mortarIndex];
+        await SetUpMap();
+        var (_, shellUid, fireTime) = await SpawnAndFire(mortarId);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SProtoMan.Index(mortarId).TryGetComponent<KsMortarComponent>(out var mortarComponent, SEntMan.ComponentFactory));
+            var supplyPodComponent = SEntMan.GetComponent<SupplyPodComponent>(shellUid);
+            var activeComponent = SEntMan.GetComponent<ActiveSupplyPodComponent>(shellUid);
+            var shellComponent = SEntMan.GetComponent<KsMortarShellComponent>(shellUid);
+            var clip = SEntMan.System<Robust.Server.Audio.AudioSystem>().GetAudioLength(shellComponent.IncomingSound!);
+
+            var min = mortarComponent!.MinDescentTime.TotalSeconds;
+            var max = mortarComponent.MaxDescentTime.TotalSeconds;
+            var expected = Math.Min(Math.Clamp(clip.TotalSeconds, min, max), mortarComponent.FlightTime.TotalSeconds);
+
+            switch (mortarIndex)
+            {
+                case 1:
+                    Assert.That(clip.TotalSeconds, Is.LessThan(min), "precondition: a clip shorter than the least descent");
+                    break;
+                case 2:
+                    Assert.That(clip.TotalSeconds, Is.GreaterThan(max), "precondition: a clip longer than the most descent");
+                    break;
+                default:
+                    Assert.That(max, Is.LessThanOrEqualTo(mortarComponent.FlightTime.TotalSeconds), "precondition: bounds within the flight");
+                    break;
+            }
+
+            Assert.That(supplyPodComponent.DescentDuration, Is.Not.Null, "a mortar shell should be seen only for the end of its fall");
+            Assert.That(supplyPodComponent.DescentDuration!.Value.TotalSeconds, Is.EqualTo(expected).Within(1e-6),
+                $"the shell should be seen falling for its {clip} clip, kept between {min} and {max} seconds");
+            Assert.That((activeComponent.LaunchFinishTime - fireTime - mortarComponent.FlightTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                "the shell should still fall for the whole flight");
+            Assert.That((shellComponent.IncomingAt + clip - activeComponent.LaunchFinishTime).Duration(), Is.LessThan(TimeSpan.FromMilliseconds(1)),
+                "the incoming clip should still end as the shell lands");
+        });
+    }
+
+    /// <summary>
+    ///     The ground under a shell is marked from the moment it is fired to when it lands, the part of its fall nobody sees
+    ///         included.
+    /// </summary>
+    [Test]
+    public async Task AShellIsMarkedFromTheMomentItIsFired()
+    {
+        await SetUpMap();
+        var (mortarUid, shellUid, fireTime) = await SpawnAndFire(_mortar, waitTicks: 0);
+
+        await Server.WaitAssertion(() =>
+        {
+            var indicatorUid = SEntMan.GetComponent<SupplyPodLandingZoneComponent>(shellUid).IndicatorEntity;
+            Assert.That(indicatorUid, Is.Not.Null, "the landing zone should be marked as the shell is fired");
+            var indicatorComponent = SEntMan.GetComponent<SupplyPodLandingZoneIndicatorComponent>(indicatorUid!.Value);
+            var flight = SEntMan.GetComponent<KsMortarComponent>(mortarUid).FlightTime;
+            Assert.That(indicatorComponent.StartTime, Is.EqualTo(fireTime), "the marker should count down from the shot");
+            Assert.That(indicatorComponent.Duration, Is.EqualTo(flight), "the marker should count down over the whole flight");
+            Assert.That(SEntMan.GetComponent<SupplyPodComponent>(shellUid).DescentDuration, Is.LessThan(flight),
+                "precondition: a shell unseen for part of its flight");
+        });
+    }
+
+    /// <summary>
+    ///     A shell on its way is its own thing: the mortar gone, it still lands.
+    /// </summary>
+    [Test]
+    public async Task AShellLandsAfterItsMortarIsGone()
+    {
+        await SetUpMap();
+        var (mortarUid, _, _) = await SpawnAndFire(_mortar, waitTicks: 0);
+        await Server.WaitPost(() => SEntMan.DeleteEntity(mortarUid));
+
+        var impact = await WaitForShell();
+        Assert.That(Vector2.Distance(impact, new Vector2(10.5f, 0.5f)), Is.LessThan(0.05f), $"the shell should land ten tiles east: {impact}");
+    }
+
+    /// <summary>
+    ///     Spawns <paramref name="mortarId"/> at the origin and fires it east, ten tiles; returns the shell and when it was fired.
+    /// </summary>
+    private async Task<(EntityUid Mortar, EntityUid Shell, TimeSpan FireTime)> SpawnAndFire(EntProtoId mortarId, int waitTicks = 1)
+    {
+        EntityUid mortarUid = default, shellUid = default;
+        var fireTime = TimeSpan.Zero;
+        var system = SEntMan.System<KsMortarSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(mortarId, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            var defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            fireTime = Server.ResolveDependency<IGameTiming>().CurTime;
+            var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+            Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(90), 10f), Is.True, "the mortar should fire");
+
+            var shellQuery = SEntMan.AllEntityQueryEnumerator<KsMortarShellComponent>();
+            Assert.That(shellQuery.MoveNext(out shellUid, out _), Is.True, "the shell should be on its way");
+        });
+
+        if (waitTicks > 0)
+            await Pair.RunTicksSync(waitTicks);
+
+        return (mortarUid, shellUid, fireTime);
     }
 
     /// <summary>

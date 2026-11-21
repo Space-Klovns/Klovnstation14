@@ -254,11 +254,12 @@ public sealed partial class KsMortarSystem : EntitySystem
         mortar.Comp.Rounds--;
         var landing = new MapCoordinates(aim.Position + _robustRandom.NextVector2(mortar.Comp.Spread), aim.MapId);
 
-        // Spawned where it lands, falling for the whole flight: its landing zone is marked from now until it lands.
+        // Spawned where it lands, falling for the whole flight, so that its landing zone is marked from now until it lands
+        //      and it lands whatever becomes of the mortar; but seen falling only at the end of it, for as long as its
+        //      incoming clip lasts, kept to the mortar's bounds.
         var flight = mortar.Comp.FlightTime;
         var shellUid = EntityManager.CreateEntityUninitialized(mortar.Comp.Shell, landing);
-        if (_supplyPodQuery.TryComp(shellUid, out var supplyPodComponent))
-            _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
+        var clipLength = (TimeSpan?) null;
 
         // The incoming clip ends as it lands, whichever one it is, over the end of the travel; one longer than the flight
         //      starts with it.
@@ -267,7 +268,14 @@ public sealed partial class KsMortarSystem : EntitySystem
             var shellComponent = EnsureComp<KsMortarShellComponent>(shellUid);
             shellComponent.IncomingSound = _audioSystem.ResolveSound(incomingSound);
             var length = _audioSystem.GetAudioLength(shellComponent.IncomingSound);
+            clipLength = length;
             shellComponent.IncomingAt = now + flight - (length < flight ? length : flight);
+        }
+
+        if (_supplyPodQuery.TryComp(shellUid, out var supplyPodComponent))
+        {
+            _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
+            _supplyPodSystem.SetDescentDuration((shellUid, supplyPodComponent), GetDescentTime(mortar.Comp, clipLength));
         }
 
         EntityManager.InitializeAndStartEntity(shellUid);
@@ -279,6 +287,20 @@ public sealed partial class KsMortarSystem : EntitySystem
 
         if (mortar.Comp.Rounds <= 0 && mortar.Comp.IdleEndsAt is { } idleEndsAt && now + mortar.Comp.EmptyTime < idleEndsAt)
             mortar.Comp.IdleEndsAt = now + mortar.Comp.EmptyTime;
+    }
+
+    /// <summary>
+    ///     How long a shell is seen falling: as long as its incoming clip, or the least it may be without one, kept between
+    ///         <see cref="KsMortarComponent.MinDescentTime"/> and <see cref="KsMortarComponent.MaxDescentTime"/>, and to the
+    ///         flight.
+    /// </summary>
+    public static TimeSpan GetDescentTime(KsMortarComponent mortarComponent, TimeSpan? clipLength)
+    {
+        var min = mortarComponent.MinDescentTime;
+        var max = mortarComponent.MaxDescentTime < min ? min : mortarComponent.MaxDescentTime;
+        var descent = clipLength ?? min;
+        descent = descent < min ? min : descent > max ? max : descent;
+        return descent > mortarComponent.FlightTime ? mortarComponent.FlightTime : descent;
     }
 
     /// <summary>
