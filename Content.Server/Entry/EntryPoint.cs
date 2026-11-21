@@ -25,6 +25,7 @@ using Content.Server.Preferences.Managers;
 using Content.Server.ServerInfo;
 using Content.Server.ServerUpdates;
 using Content.Server.Voting.Managers;
+using Content.Shared._KS14.Configuration; // KS14
 using Content.Shared.CCVar;
 using Content.Shared.FeedbackSystem;
 using Content.Shared.Kitchen;
@@ -237,7 +238,7 @@ namespace Content.Server.Entry
                     continue;
                 }
 
-                cfg.LoadDefaultsFromTomlStream(file);
+                KsConfigPresets.LoadDefaults(cfg, file, sawmill) /* KS14: skips cvars only the client registers, was cfg.LoadDefaultsFromTomlStream(file) */;
                 sawmill.Info("Loaded config preset: {Preset}", path);
             }
         }
@@ -257,7 +258,7 @@ namespace Content.Server.Entry
                 var path = $"{ConfigPresetsDirBuild}{name}.toml";
                 if (cfg.GetCVar(cVar) && res.TryContentFileRead(path, out var file))
                 {
-                    cfg.LoadDefaultsFromTomlStream(file);
+                    KsConfigPresets.LoadDefaults(cfg, file, sawmill) /* KS14: skips cvars only the client registers, was cfg.LoadDefaultsFromTomlStream(file) */;
                     sawmill.Info("Loaded config preset: {Preset}", path);
                 }
             }

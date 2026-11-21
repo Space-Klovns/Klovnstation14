@@ -38,7 +38,7 @@ public sealed class ConfigPresetTests : GameTest
                 foreach (var preset in presets)
                 {
                     var stream = resources.ContentFileRead(preset);
-                    Assert.DoesNotThrow(() => config.LoadDefaultsFromTomlStream(stream));
+                    Assert.DoesNotThrow(() => Content.Shared._KS14.Configuration.KsConfigPresets.LoadDefaults(config, stream, server.ResolveDependency<Robust.Shared.Log.ILogManager>().GetSawmill("configpreset")) /* KS14: as the game loads them, skipping cvars only the client registers */);
                 }
             });
 
