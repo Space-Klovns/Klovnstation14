@@ -41,7 +41,13 @@ void fragment()
     //      KeepAspectCovered shows.
     highp float bulge = curvature * strength;
     highp vec2 curved = p * (1.0 + bulge * dot(p * aspectScale * 2.0, p * aspectScale * 2.0)) / (1.0 + bulge);
+#ifdef HAS_DFDX
     highp vec2 uvPerP = vec2(dFdx(UV.x) / dFdx(p.x), dFdy(UV.y) / dFdy(p.y));
+#else
+    // No derivatives (GLES2 without OES_standard_derivatives): nothing to measure UV against the quad with, so the
+    //      picture stays flat and unfringed. The rest of the grade is the same.
+    highp vec2 uvPerP = vec2(0.0);
+#endif
     highp vec2 uv = UV + (curved - p) * uvPerP;
 
     // The part of the texture the quad shows, so the fringe's offset samples never reach past it.
