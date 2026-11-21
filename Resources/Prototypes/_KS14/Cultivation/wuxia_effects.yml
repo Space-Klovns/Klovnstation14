@@ -1,0 +1,520 @@
+# Effects ported from the SurfShack13 cultivation sprites. Their SS13 animations (the falling palm, the rift snapping
+# open, the flying rubble) are baked into the frames; an animated state loops,
+# so each one despawns as its single run ends.
+
+# Buddha's Palm: drawn at native size on a tall canvas whose landing point sits 80 pixels below its centre, so each size
+# offsets it by 80 * scale / 32 tiles to land on the tile it was called down on. It hits the floor 1.2 seconds in.
+- type: entity
+  id: KsFxBuddhaPalm
+  categories: [ HideSpawnMenu ]
+  name: Buddha's palm
+  description: A colossal golden palm, falling from the heavens.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/buddha_palm.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: palm
+      shader: unshaded
+      scale: 1.6, 1.6
+      offset: 0, 4
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 6
+    energy: 3
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 2.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  parent: KsFxBuddhaPalm
+  id: KsFxBuddhaPalmBig
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: palm
+      shader: unshaded
+      scale: 2.4, 2.4
+      offset: 0, 6
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 9
+    energy: 4
+
+- type: entity
+  parent: KsFxBuddhaPalm
+  id: KsFxBuddhaPalmHuge
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: palm
+      shader: unshaded
+      scale: 3.2, 3.2
+      offset: 0, 8
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 12
+    energy: 5
+
+# Grows and darkens while the palm falls.
+- type: entity
+  id: KsFxPalmShadow
+  categories: [ HideSpawnMenu ]
+  name: palm shadow
+  description: A vast shadow, growing darker by the moment.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_128.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: palm_shadow
+  - type: TimedDespawn
+    lifetime: 1.55
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  parent: KsFxPalmShadow
+  id: KsFxPalmShadowBig
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: palm_shadow
+      scale: 1.5, 1.5
+
+- type: entity
+  parent: KsFxPalmShadow
+  id: KsFxPalmShadowHuge
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: palm_shadow
+      scale: 2, 2
+
+# A cracked crater that lingers for half a minute, as in SS13. Bigger blows leave bigger ones.
+- type: entity
+  id: KsFxCrater
+  categories: [ HideSpawnMenu ]
+  name: crater
+  description: The floor here has been punched in.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: FloorObjects
+    layers:
+    - state: crater
+  - type: TimedDespawn
+    lifetime: 30
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  parent: KsFxCrater
+  id: KsFxCraterBig
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: crater
+      scale: 1.5, 1.5
+
+- type: entity
+  parent: KsFxCrater
+  id: KsFxCraterHuge
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: crater
+      scale: 2.4, 2.4
+
+# Rock chips flying out of whatever just gave way.
+- type: entity
+  id: KsFxRubble
+  categories: [ HideSpawnMenu ]
+  name: rubble
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: rubble
+  - type: TimedDespawn
+    lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Snaps open sideways, then pinches shut.
+- type: entity
+  id: KsFxVoidRift
+  categories: [ HideSpawnMenu ]
+  name: void rift
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: void_rift
+      shader: unshaded
+      offset: 0, 0.25
+  - type: PointLight
+    color: "#8a5cff"
+    radius: 2.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSwordQiImpact
+  categories: [ HideSpawnMenu ]
+  name: sword qi
+  components:
+  # Steel on steel: real sparks where the sword qi bites.
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: steel_sparks
+      shader: unshaded
+      color: "#e6f4ffff"
+  - type: EffectVisuals
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 1.5
+    energy: 1.5
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxThornSplinters
+  categories: [ HideSpawnMenu ]
+  name: thorn splinters
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_32.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: thorn_splinters
+  - type: EffectVisuals
+  - type: TimedDespawn
+    lifetime: 0.5
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Shoots up out of the floor and sways while it holds someone.
+- type: entity
+  id: KsFxVines
+  categories: [ HideSpawnMenu ]
+  name: binding vines
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_32.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: vines
+  - type: TimedDespawn
+    lifetime: 3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Glowing magma footprints, cooling to black.
+- type: entity
+  id: KsFxMoltenStep
+  categories: [ HideSpawnMenu ]
+  name: smouldering embers
+  description: Where they stepped, the floor still smoulders.
+  components:
+  # Low real flames that linger and die down after the fire on the spot burns out.
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: embers
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1c"
+    radius: 1.6
+    energy: 1.6
+    netsync: false
+  - type: LightFade
+    duration: 6
+  - type: TimedDespawn
+    lifetime: 6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Lasting states, worn over the body.
+- type: entity
+  id: KsFxGoldenBell
+  categories: [ HideSpawnMenu ]
+  name: golden bell
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/temple.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: golden_bell
+      shader: unshaded
+      scale: 0.5, 0.5
+      offset: 0, 0.2
+  - type: PointLight
+    color: "#ffcc33"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaterBubble
+  categories: [ HideSpawnMenu ]
+  name: water bubble
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: water_bubble
+      shader: unshaded
+      color: "#ffffffbb"
+  - type: PointLight
+    color: "#5ab8ff"
+    radius: 2
+    energy: 1
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  parent: KsFxWaterBubble
+  id: KsFxMirrorBubble
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: water_bubble
+      shader: unshaded
+      color: "#d8f4ffcc"
+
+- type: entity
+  id: KsFxDharmaIdol
+  categories: [ HideSpawnMenu ]
+  name: dharma idol
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/temple.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    layers:
+    - state: dharma_idol
+      shader: unshaded
+      color: "#ffffffe6"
+      offset: 0, 0.8
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxHeartDemonAura
+  categories: [ HideSpawnMenu ]
+  name: heart demon aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: heart_demon_aura
+      shader: unshaded
+  - type: PointLight
+    color: "#a02a6a"
+    radius: 2
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxBeastAura
+  categories: [ HideSpawnMenu ]
+  name: spirit beast aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: beast_aura
+      shader: unshaded
+      color: "#ffffffaa"
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxStormCloud
+  categories: [ HideSpawnMenu ]
+  name: tribulation clouds
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_96.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: storm_cloud
+      color: "#ffffffe6"
+      offset: 0, 1.75
+  - type: PointLight
+    color: "#9ab8ff"
+    radius: 3
+    energy: 1
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Mountain Collapse: a boulder dropping out of the sky onto each foe.
+- type: entity
+  id: KsFxFallingRock
+  categories: [ HideSpawnMenu ]
+  name: falling boulder
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/signature.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: falling_rock
+  - type: TimedDespawn
+    lifetime: 0.62
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Tidal Surge: a ring of water rearing up and crashing outward.
+- type: entity
+  id: KsFxTide
+  categories: [ HideSpawnMenu ]
+  name: tide
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/signature.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: tide
+      shader: unshaded
+      scale: 1.6, 1.6
+  - type: PointLight
+    color: "#5ab8ff"
+    radius: 4
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.59
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Sword Riding: the glowing flying sword under the rider's feet.
+- type: entity
+  id: KsFxSwordRide
+  categories: [ HideSpawnMenu ]
+  name: flying sword
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_riding.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: sword_ride
+      shader: unshaded
+      offset: 0, -0.35
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 2
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Qinggong: a puff of golden cloud left where the leap began.
+- type: entity
+  id: KsFxQiCloud
+  categories: [ HideSpawnMenu ]
+  name: qi cloud
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_riding.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: qi_cloud
+      offset: 0, -0.3
+  - type: TimedDespawn
+    lifetime: 1.19
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Sword Formation: three blades wheeling round their master for as long as it lasts.
+- type: entity
+  id: KsFxSwordOrbit
+  categories: [ HideSpawnMenu ]
+  name: sword formation
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sword_orbit
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu

@@ -1,0 +1,509 @@
+# Universal techniques, the rest of each law's techniques, and the combinations two laws open together.
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSpiritualSense
+  name: Spiritual Sense
+  description: 'Pulse your divine sense outward: reveals the realm of nearby cultivators, the stage of body cultivators, and manuals steeped in qi. 5 qi.'
+  components:
+  - type: Action
+    useDelay: 8
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: spiritual_sense }
+  - type: InstantAction
+    event: !type:SpiritualSenseActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationEmptyPalm
+  name: Empty Palm
+  description: 'A palm carried by qi rather than muscle: shoves someone beside you several tiles away and winds them. 10 qi.'
+  components:
+  - type: Action
+    useDelay: 6
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: empty_palm }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:EmptyPalmActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationQinggong
+  name: Qinggong
+  description: 'The lightness skill: dash four tiles, two more per realm, skimming over tables and railings. 10 qi.'
+  components:
+  - type: Action
+    useDelay: 4
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: qinggong }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 14
+  - type: WorldTargetAction
+    event: !type:QinggongActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationVoidStep
+  name: Void Step
+  description: Tear a hole in space and step through it to any open spot up to six tiles away, straight through walls and locked doors. 25 qi.
+  components:
+  - type: Action
+    useDelay: 12
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: void_step }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 6
+  - type: WorldTargetAction
+    event: !type:VoidStepActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationRealmPressure
+  name: Realm Pressure
+  description: 'Release the full weight of your cultivation. Everyone nearby of a lower realm, mortals included, is crushed: slowed and winded. 40 qi.'
+  components:
+  - type: Action
+    useDelay: 40
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: realm_pressure }
+  - type: InstantAction
+    event: !type:RealmPressureActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationAcupointSealing
+  name: Acupoint Sealing
+  description: 'Jab a pressure point: silences someone and numbs their legs for a while. It also unseals the Five-Point Exploding Heart Palm. 25 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: acupoint }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:AcupointSealingActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationWriteTalisman
+  name: Write Talisman
+  description: Inscribe the paper in your hand with qi, making a one-use talisman anyone can burn. What it does depends on your Root Law. 20 qi.
+  components:
+  - type: Action
+    useDelay: 8
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: write_talisman }
+  - type: InstantAction
+    event: !type:WriteTalismanActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationTransmitLaw
+  name: Transmit Law
+  description: Pour your Root Law into a jade slip. Whoever studies it learns the law, and even a mortal awakens as a cultivator. Teaching is its own kind of insight. 30 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: transmit_law }
+  - type: InstantAction
+    event: !type:TransmitLawActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationConcealment
+  name: Concealment Art
+  description: 'Draw your qi deep inside until you pass for a mortal: no aura on examine, and Spiritual Sense finds nothing. Any technique reveals you. Use again to stop. 15 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: concealment }
+  - type: InstantAction
+    event: !type:ConcealmentActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationForcedCirculation
+  name: Forced Circulation
+  description: 'Toggle. While on, meditation drives your qi past the safe limit: twice the insight, but every cycle risks an internal injury.'
+  components:
+  - type: Action
+    useDelay: 2
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: forced_circulation }
+  - type: InstantAction
+    event: !type:ForcedCirculationActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationForgetLaw
+  name: Release Complementary Law
+  description: Spend thirty still seconds letting your Complementary Law drain out of your meridians, freeing the slot for another. Your Root Law can never be released.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: forget_law }
+  - type: InstantAction
+    event: !type:ForgetLawActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationGatheringArray
+  name: Gathering Array
+  description: 'Inscribe a gathering array at your feet for two minutes. It draws heaven and earth''s qi in: meditating inside is far more effective. 30 qi.'
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: gathering_array }
+  - type: InstantAction
+    event: !type:InscribeFormationActionEvent
+      formation: Gathering
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBarrierArray
+  name: Barrier Array
+  description: Raise a ring of qi walls around you for a minute. You and your friends pass freely; everyone else is kept out, or in. 30 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: barrier_array }
+  - type: InstantAction
+    event: !type:InscribeFormationActionEvent
+      formation: Barrier
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationAlarmArray
+  name: Alarm Array
+  description: Inscribe an alarm array at your feet for five minutes. It whispers to you whenever a stranger steps inside. 30 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: alarm_array }
+  - type: InstantAction
+    event: !type:InscribeFormationActionEvent
+      formation: Alarm
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBodyOutsideBody
+  name: Body Outside the Body
+  description: Your nascent soul steps out as a small golden figure for thirty seconds, flying over tables and crowds and straight through walls. If it's destroyed, your body pays. 50 qi.
+  components:
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_outside_body }
+  - type: InstantAction
+    event: !type:BodyOutsideBodyActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationReturnToBody
+  name: Return to Body
+  description: Fly back into your body at once.
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: return_to_body }
+  - type: InstantAction
+    event: !type:ReturnToBodyActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBindArtifact
+  name: Bind Artifact
+  description: With an item in hand, bind it to your soul. With empty hands, call your bound artifact back from seven tiles, three more per realm. 5 qi.
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: bind_artifact }
+  - type: InstantAction
+    event: !type:BindArtifactActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationArtifactStrike
+  name: Flying Artifact
+  description: Hurl the bound artifact in your hand at someone with the force of your qi. Call it back with Bind Artifact. 12 qi.
+  components:
+  - type: Action
+    useDelay: 2.5
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: artifact_strike }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 8
+  - type: EntityTargetAction
+    canTargetSelf: false
+    event: !type:ArtifactStrikeActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSwordRiding
+  name: Sword Riding
+  description: 'Ride your qi for eight seconds: much faster, and chasms and lava pass beneath you. 40 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: sword_riding }
+  - type: InstantAction
+    event: !type:SwordRidingActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSwordFormation
+  name: Sword Formation
+  description: Spectral swords orbit you for twelve seconds, slashing anyone hostile within two tiles and batting aside some projectiles. 60 qi.
+  components:
+  - type: Action
+    useDelay: 45
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: sword_formation }
+  - type: InstantAction
+    event: !type:SwordFormationActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationCalmHeart
+  name: Calm Heart
+  description: 'Touch someone''s mind with stillness: shakes off stuns, knockdowns and holds. 20 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: calm_heart }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: true
+    whitelist:
+      components:
+      - MobState
+    event: !type:CalmHeartActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationTurtleBreathing
+  name: Turtle Breathing
+  description: Slow your breath until you need none at all. For half a minute you can't suffocate and the cold of the void can't reach you. 30 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: turtle_breathing }
+  - type: InstantAction
+    event: !type:TurtleBreathingActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMirrorLake
+  name: Mirror Lake
+  description: 'Become as still as a mirror lake: for eight seconds, projectiles fired at you go back at the shooter, half again as strong. 50 qi.'
+  components:
+  - type: Action
+    useDelay: 40
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: mirror_lake }
+  - type: InstantAction
+    event: !type:MirrorLakeActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationKindle
+  name: Kindle
+  description: Light something with a snap of your fingers. Candles, cigarettes... or people, if you're close enough. 10 qi.
+  components:
+  - type: Action
+    useDelay: 4
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: kindle }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    event: !type:KindleActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationFurnaceBurst
+  name: Furnace Burst
+  description: Stoke your inner furnace and release a ring of fire around you. It's hot for you too. Fire Root flings you back out of the flames. 35 qi.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: furnace_burst }
+  - type: InstantAction
+    event: !type:FurnaceBurstActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBurningBlood
+  name: Burning Blood Essence
+  description: 'The desperate technique: burn your own blood essence for a flood of qi and speed. It hurts.'
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: burning_blood }
+  - type: InstantAction
+    event: !type:BurningBloodActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationGoldenBellQi
+  name: Golden Bell Qi
+  description: 'Wrap yourself in a bell of golden qi: for a few seconds, longer at higher realms, nothing gets through. 30 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: golden_bell_qi }
+  - type: InstantAction
+    event: !type:GoldenBellQiActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationDharmaIdol
+  name: Dharma Idol
+  description: Project a towering golden Buddha behind you for fifteen seconds. You loom larger, blows land far softer, and your bare-handed strikes become its giant golden palms, hurling people away and smashing walls. 60 qi.
+  components:
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: dharma_idol }
+  - type: InstantAction
+    event: !type:DharmaIdolActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBuddhaPalm
+  name: Buddha's Palm
+  description: Call down a colossal golden palm. Its shadow falls first; a moment later it slams the area flat. 60 qi.
+  components:
+  - type: Action
+    useDelay: 45
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: buddha_palm }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:BuddhaPalmActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationVerdantGrowth
+  name: Verdant Growth
+  description: 'Pour wood qi into the plants around you: they grow, heal, and lose their weeds and pests. 20 qi.'
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: verdant_growth }
+  - type: InstantAction
+    event: !type:VerdantGrowthActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBindingVines
+  name: Binding Vines
+  description: Vines burst from the floor and hold someone in place for a few seconds. 30 qi.
+  components:
+  - type: Action
+    useDelay: 18
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: binding_vines }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 7
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:BindingVinesActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSteamVeil
+  name: Steam Veil
+  description: 'Fire and water meet: a billowing cloud of steam hides you. 25 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: steam_veil }
+  - type: InstantAction
+    event: !type:SteamVeilActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationThousandThorns
+  name: Thousand Thorn Swords
+  description: 'Metal and wood meet: a fan of iron-hard thorn swords that pierce and stagger. 30 qi.'
+  components:
+  - type: Action
+    useDelay: 12
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: thousand_thorns }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:ThousandThornsActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMoltenStep
+  name: Molten Step
+  description: 'Earth and fire meet: for eight seconds every step leaves glowing magma behind you. 25 qi.'
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: molten_step }
+  - type: InstantAction
+    event: !type:MoltenStepActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMudPrison
+  name: Mud Prison
+  description: 'Water and earth meet: an area turns to sucking mud for a while, and whoever stands at the centre is stuck. 25 qi.'
+  components:
+  - type: Action
+    useDelay: 18
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: mud_prison }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 8
+  - type: WorldTargetAction
+    event: !type:MudPrisonActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBeastContract
+  name: Spirit Beast Contract
+  description: Bind a station animal as your spirit beast. It follows you, takes your side, and turns on whoever hurts you. One contract at a time. 30 qi.
+  components:
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: beast_contract }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:BeastContractActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSummonBeast
+  name: Summon Spirit Beast
+  description: Call your contracted spirit beast to your side from anywhere nearby. 10 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: summon_beast }
+  - type: InstantAction
+    event: !type:SummonBeastActionEvent
+
+# Opens the radial menu of every technique the cultivator knows; only a handful are equipped at once.
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsTechniques
+  name: Techniques
+  description: Choose which of your techniques, arts and jianghu actions are ready on your action bar. Everything you know is kept; only a few can be equipped at once.
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: recall_teachings }
+  - type: InstantAction
+    event: !type:TechniqueMenuActionEvent

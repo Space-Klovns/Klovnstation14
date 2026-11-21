@@ -1,0 +1,180 @@
+# What a body art leaves behind: cracked floors, a shockwave rippling the air, and dust.
+
+- type: decal
+  id: KsCrack1
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack1
+
+- type: decal
+  id: KsCrack2
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack2
+
+- type: decal
+  id: KsCrack3
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack3
+
+- type: decal
+  id: KsCrack4
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack4
+
+# Ripples the air out from the impact, using the explosion shockwave shader.
+- type: entity
+  id: KsBodyShockwave
+  categories: [ HideSpawnMenu ]
+  name: shockwave
+  components:
+  - type: KsShockwave
+    falloffPower: 30
+    sharpness: 8
+    width: 0.9
+  - type: TimedDespawn
+    lifetime: 1.5
+
+- type: entity
+  id: KsBodyDust
+  categories: [ HideSpawnMenu ]
+  name: dust
+  description: A cloud of pulverised floor.
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    state: chemsmoke
+    color: "#8a7f72aa"
+    drawdepth: Effects
+  - type: TimedDespawn
+    lifetime: 1.2
+
+# Fire for show: it lights the room and flickers out. What actually burns is up to the technique.
+# Real fire, the same flames a burning room shows, in three sizes; fire techniques are built from these.
+- type: entity
+  id: KsFxFlameBig
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames_big.rsi
+    drawdepth: Effects
+    noRot: true
+    offset: 0, 0.25
+    layers:
+    - state: flame_big
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1e"
+    radius: 4
+    energy: 4
+    netsync: false
+  - type: LightFade
+    duration: 2.4
+  - type: TimedDespawn
+    lifetime: 2.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxFlameSmall
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_small
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.6
+  - type: TimedDespawn
+    lifetime: 1.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxFlame
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    layers:
+    - state: flame
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8a2a"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2
+  - type: TimedDespawn
+    lifetime: 2
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Bend the picture around a point for a moment, like the air round a singularity.
+- type: entity
+  id: KsFxDistortionPush
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -60
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDistortionPulse
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: 40
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDistortionRoar
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -400
+    falloffPower: 1.8
+  - type: TimedDespawn
+    lifetime: 1.2
+  - type: Tag
+    tags:
+    - HideContextMenu

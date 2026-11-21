@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Worn sprites from Objects/Weapons/Melee/katana.rsi (taken and modified by Taral from tgstation at https://github.com/tgstation/tgstation/pull/20520/commits/47d235721d658027a9effd37177cc8104844e0bf; belt sprites by RedBoockase on Github). The suit storage state reuses the back sprite. Shared by the wuxia swords.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "equipped-BACKPACK",
+      "directions": 4
+    },
+    {
+      "name": "equipped-BELT",
+      "directions": 4
+    },
+    {
+      "name": "equipped-SUITSTORAGE",
+      "directions": 4
+    }
+  ]
+}

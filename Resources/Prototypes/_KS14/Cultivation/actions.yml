@@ -1,0 +1,180 @@
+- type: entity
+  abstract: true
+  parent: BaseAction
+  id: BaseActionCultivation
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    checkCanInteract: false
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMeditate
+  name: Meditate
+  description: Sit still and circulate your qi. Each cycle gathers insight and qi, and every second cycle eases an internal injury. Keeps going until there's nothing left to gain or you move.
+  components:
+  - type: Action
+    priority: -10
+    useDelay: 2
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: meditate }
+  - type: InstantAction
+    event: !type:CultivationMeditateActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBreakthrough
+  name: Break Through
+  description: With enough insight, spend fifteen still seconds forcing open the next realm. Internal injuries make a qi deviation far more likely.
+  components:
+  - type: Action
+    priority: -9
+    useDelay: 5
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: breakthrough }
+  - type: InstantAction
+    event: !type:CultivationBreakthroughActionEvent
+
+# Metal
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationFlyingSword
+  name: Flying Sword Qi
+  description: Hurl a blade of sword qi. 15 qi. Metal Root fans out three blades.
+  components:
+  - type: Action
+    useDelay: 3
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: flying_sword }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:CultivationFlyingSwordActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSwordRain
+  name: Sword Rain
+  description: Loose a cone of five blades of sword qi. 40 qi.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: sword_rain }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:CultivationSwordRainActionEvent
+
+# Fire
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBurningPalm
+  name: Burning Palm
+  description: Strike with a palm wreathed in flame, burning and igniting the target. 15 qi. Fire Root makes the flames catch twice as hard.
+  components:
+  - type: Action
+    useDelay: 6
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: burning_palm }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:CultivationBurningPalmActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSeaOfFlames
+  name: Sea of Flames
+  description: Set everyone around you who isn't a friend ablaze. 45 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: sea_of_flames }
+  - type: InstantAction
+    event: !type:CultivationSeaOfFlamesActionEvent
+
+# Water
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationStillWaterWard
+  name: Still Water Ward
+  description: Wrap yourself in still water for ten seconds, halving incoming damage. 20 qi. Water Root releases the soaked-up force as a wave when it ends.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: still_water }
+  - type: InstantAction
+    event: !type:CultivationStillWaterWardActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationTidalSurge
+  name: Tidal Surge
+  description: A surge of water throws everyone around you who isn't a friend away and off their feet. 40 qi.
+  components:
+  - type: Action
+    useDelay: 25
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: tidal_surge }
+  - type: InstantAction
+    event: !type:CultivationTidalSurgeActionEvent
+
+# Wood
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationSpringMending
+  name: Spring Mending
+  description: Pour spring qi into yourself or someone else to mend their wounds. 20 qi. Wood Root also eases an internal injury and lets some of the warmth flow back to you.
+  components:
+  - type: Action
+    useDelay: 8
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: spring_mending }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: true
+    whitelist:
+      components:
+      - MobState
+    event: !type:CultivationSpringMendingActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMyriadSpring
+  name: Myriad Spring
+  description: Heal yourself and every friend around you. 45 qi.
+  components:
+  - type: Action
+    useDelay: 30
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: myriad_spring }
+  - type: InstantAction
+    event: !type:CultivationMyriadSpringActionEvent
+
+# Earth
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationRootedStance
+  name: Rooted Mountain Stance
+  description: Root yourself for fifteen seconds, taking a quarter less damage but moving slowly. 10 qi. Earth Root takes two fifths less.
+  components:
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: rooted_stance }
+  - type: InstantAction
+    event: !type:CultivationRootedStanceActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationMountainCollapse
+  name: Mountain Collapse
+  description: Bring the mountain down on everyone close who isn't a friend, battering them and knocking them flat. 40 qi.
+  components:
+  - type: Action
+    useDelay: 25
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: mountain_collapse }
+  - type: InstantAction
+    event: !type:CultivationMountainCollapseActionEvent

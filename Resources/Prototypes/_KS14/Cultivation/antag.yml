@@ -1,0 +1,135 @@
+- type: antag
+  id: KsCultivator
+  name: roles-antag-ks-cultivator-name
+  antagonist: true
+  setPreference: true
+  objective: roles-antag-ks-cultivator-objective
+  requirements:
+  - !type:OverallPlaytimeRequirement
+    time: 1h
+
+- type: antagSpecifier
+  parent: RestrictedAntag
+  id: KsCultivator
+  prefRoles:
+  - KsCultivator
+  briefing:
+    text: ks-cultivator-role-greeting
+    color: "#5cba96"
+    sound: /Audio/Effects/church_bell2.ogg
+  blacklist:
+    components:
+    - AntagImmune
+  # No path yet: they're handed a Fork in the Road and choose qi or the body themselves (WuxiaAscensionRuleSystem).
+  mindRoles:
+  - MindRoleKsCultivator
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsCultivator
+  name: Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsCultivator
+  - type: CultivatorRole
+
+- type: entity
+  parent: [ BaseGameRule, BaseRoundstartAntagRule ]
+  id: KsCultivators
+  components:
+  - type: GameRule
+    minPlayers: 10
+  - type: CultivatorRule
+  - type: AntagSelection
+    agentName: ks-cultivator-round-end-agent-name
+    antags:
+    - !type:LinearAntagCount
+      proto: KsCultivator
+      range:
+        min: 1
+        max: 3
+
+# The jianghu waking on the station: loot, spirit herbs, omens and wuxia crafting. See WuxiaWorldRuleSystem.
+- type: entity
+  parent: BaseGameRule
+  id: KsWuxiaWorld
+  components:
+  - type: WuxiaWorldRule
+
+# Wuxia: Ascension. Everyone may cultivate and they race for the peak. See WuxiaAscensionRuleSystem.
+- type: entity
+  parent: BaseGameRule
+  id: KsWuxiaAscension
+  components:
+  - type: WuxiaAscensionRule
+
+- type: entity
+  parent: BaseItem
+  id: KsPathChoice
+  name: Fork in the Road
+  description: A silk scroll painted with two roads, one rising into the clouds as qi, one cut into the mountain as flesh and bone. Use it in hand to choose your path; the choice is for life.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: path_choice
+  - type: Item
+    size: Small
+  - type: PathChoice
+  - type: ActivatableUI
+    key: enum.PathChoiceUiKey.Key
+    inHandsOnly: true
+    requireActiveHand: false
+  - type: UserInterface
+    interfaces:
+      enum.PathChoiceUiKey.Key:
+        type: PathChoiceBoundUserInterface
+
+# Wuxia: Ascension: everyone who takes a path is racing everyone else for the peak. The role names the path.
+- type: antag
+  id: KsAscensionQi
+  name: roles-antag-ks-ascension-qi-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-objective
+
+- type: antag
+  id: KsAscensionBody
+  name: roles-antag-ks-ascension-body-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-objective
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionQi
+  name: Ascension Qi Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionQi
+  - type: AscensionContenderRole
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionBody
+  name: Ascension Body Cultivator Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionBody
+  - type: AscensionContenderRole
+
+# Ascension's heads of staff and Jinyiwei: they can't claim the peak, and hunt those who try.
+- type: antag
+  id: KsAscensionCourt
+  name: roles-antag-ks-ascension-court-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-ks-ascension-court-objective
+
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleKsAscensionCourt
+  name: Ascension Court Enforcer Role
+  components:
+  - type: MindRole
+    antagPrototype: KsAscensionCourt
+  - type: AscensionContenderRole

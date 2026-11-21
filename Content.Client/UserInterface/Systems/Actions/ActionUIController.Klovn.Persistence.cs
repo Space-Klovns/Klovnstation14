@@ -444,7 +444,9 @@ public sealed partial class ActionUIController
             if (assigned.Contains(action.Owner) || !action.Comp.AutoPopulate)
                 continue;
 
-            if (identities.TryGetValue(action.Owner, out var identity) &&
+            // Actions marked always-on-bar come back even if the saved layout once dropped them.
+            if (!EntityManager.HasComponent<Content.Shared._KS14.Actions.AlwaysOnBarComponent>(action.Owner) &&
+                identities.TryGetValue(action.Owner, out var identity) &&
                 configuration.KnownActions.Any(saved => KsActionBarIdentity.MatchesSaved(saved, identity)))
             {
                 continue;

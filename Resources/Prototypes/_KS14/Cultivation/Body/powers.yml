@@ -1,0 +1,829 @@
+# Nine powers for each part of the body the Body Molding Art tempers. How their effects combine: BodyTemperingPowerPrototype.
+
+- type: bodyTemperingPower
+  id: KsBodyHeadFearless
+  group: Head
+  level: 1
+  name: body-power-head-fearless-name
+  description: body-power-head-fearless-desc
+  staminaMultiplier: 0.95
+
+- type: bodyTemperingPower
+  id: KsBodyHeadClearHead
+  group: Head
+  level: 2
+  name: body-power-head-clear-head-name
+  description: body-power-head-clear-head-desc
+  staminaMultiplier: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyHeadStillMind
+  group: Head
+  level: 3
+  name: body-power-head-still-mind-name
+  description: body-power-head-still-mind-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyHeadIndomitableWill
+  group: Head
+  level: 4
+  major: true
+  name: body-power-head-indomitable-will-name
+  description: body-power-head-indomitable-will-desc
+  components:
+  - type: IgnoreSlowOnDamage
+
+- type: bodyTemperingPower
+  id: KsBodyHeadWillToLive
+  group: Head
+  level: 5
+  name: body-power-head-will-to-live-name
+  description: body-power-head-will-to-live-desc
+  regenPerSecond: 0.05
+
+- type: bodyTemperingPower
+  id: KsBodyHeadIronSkull
+  group: Head
+  level: 6
+  name: body-power-head-iron-skull-name
+  description: body-power-head-iron-skull-desc
+  damageMultipliers:
+    Blunt: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyHeadMindLikeAMountain
+  group: Head
+  level: 7
+  name: body-power-head-mind-like-a-mountain-name
+  description: body-power-head-mind-like-a-mountain-desc
+  healthBonus: 15
+
+- type: bodyTemperingPower
+  id: KsBodyHeadBattleTrance
+  group: Head
+  level: 8
+  major: true
+  name: body-power-head-battle-trance-name
+  description: body-power-head-battle-trance-desc
+  staminaMultiplier: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyHeadPrimordialWill
+  group: Head
+  level: 9
+  major: true
+  name: body-power-head-primordial-will-name
+  description: body-power-head-primordial-will-desc
+  healthBonus: 20
+  damageMultipliers:
+    Cellular: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyChestThickHide
+  group: Chest
+  level: 1
+  name: body-power-chest-thick-hide-name
+  description: body-power-chest-thick-hide-desc
+  damageMultipliers:
+    Blunt: 0.95
+    Slash: 0.95
+    Piercing: 0.95
+
+- type: bodyTemperingPower
+  id: KsBodyChestIronHide
+  group: Chest
+  level: 2
+  name: body-power-chest-iron-hide-name
+  description: body-power-chest-iron-hide-desc
+  damageMultipliers:
+    Blunt: 0.9
+    Slash: 0.9
+    Piercing: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyChestNeedleproofSkin
+  group: Chest
+  level: 3
+  name: body-power-chest-needleproof-skin-name
+  description: body-power-chest-needleproof-skin-desc
+  damageMultipliers:
+    Piercing: 0.75
+
+- type: bodyTemperingPower
+  id: KsBodyChestFireTemperedSkin
+  group: Chest
+  level: 4
+  name: body-power-chest-fire-tempered-skin-name
+  description: body-power-chest-fire-tempered-skin-desc
+  damageMultipliers:
+    Heat: 0.75
+
+- type: bodyTemperingPower
+  id: KsBodyChestSteelHide
+  group: Chest
+  level: 5
+  name: body-power-chest-steel-hide-name
+  description: body-power-chest-steel-hide-desc
+  damageMultipliers:
+    Blunt: 0.85
+    Slash: 0.85
+    Piercing: 0.85
+
+- type: bodyTemperingPower
+  id: KsBodyChestBatonproof
+  group: Chest
+  level: 6
+  major: true
+  name: body-power-chest-batonproof-name
+  description: body-power-chest-batonproof-desc
+  damageMultipliers:
+    Shock: 0.5
+  staminaMultiplier: 0.85
+
+- type: bodyTemperingPower
+  id: KsBodyChestFireproof
+  group: Chest
+  level: 7
+  name: body-power-chest-fireproof-name
+  description: body-power-chest-fireproof-desc
+  damageMultipliers:
+    Heat: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyChestDiamondHide
+  group: Chest
+  level: 8
+  major: true
+  name: body-power-chest-diamond-hide-name
+  description: body-power-chest-diamond-hide-desc
+  damageMultipliers:
+    Blunt: 0.75
+    Slash: 0.75
+    Piercing: 0.75
+    Heat: 0.6
+    Cold: 0.6
+    Caustic: 0.6
+
+- type: bodyTemperingPower
+  id: KsBodyChestNeverWounded
+  group: Chest
+  level: 9
+  major: true
+  name: body-power-chest-never-wounded-name
+  description: body-power-chest-never-wounded-desc
+  damageMultipliers:
+    Blunt: 0.65
+    Slash: 0.65
+    Piercing: 0.65
+
+- type: bodyTemperingPower
+  id: KsBodyArmsIronPalms
+  group: Arms
+  level: 1
+  name: body-power-arms-iron-palms-name
+  description: body-power-arms-iron-palms-desc
+  damageMultipliers:
+    Heat: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyArmsQuickHands
+  group: Arms
+  level: 2
+  name: body-power-arms-quick-hands-name
+  description: body-power-arms-quick-hands-desc
+  punchDamage: 2
+
+- type: bodyTemperingPower
+  id: KsBodyArmsIronGrip
+  group: Arms
+  level: 3
+  name: body-power-arms-iron-grip-name
+  description: body-power-arms-iron-grip-desc
+  punchStaminaDamage: 5
+
+- type: bodyTemperingPower
+  id: KsBodyArmsStrengthOfAnOx
+  group: Arms
+  level: 4
+  name: body-power-arms-strength-of-an-ox-name
+  description: body-power-arms-strength-of-an-ox-desc
+  punchDamage: 3
+
+- type: bodyTemperingPower
+  id: KsBodyArmsCrushingBlows
+  group: Arms
+  level: 5
+  name: body-power-arms-crushing-blows-name
+  description: body-power-arms-crushing-blows-desc
+  punchStaminaDamage: 10
+
+- type: bodyTemperingPower
+  id: KsBodyArmsTopplingBlows
+  group: Arms
+  level: 6
+  major: true
+  name: body-power-arms-toppling-blows-name
+  description: body-power-arms-toppling-blows-desc
+  punchKnockdownChance: 0.15
+
+- type: bodyTemperingPower
+  id: KsBodyArmsThunderFists
+  group: Arms
+  level: 7
+  major: true
+  name: body-power-arms-thunder-fists-name
+  description: body-power-arms-thunder-fists-desc
+  punchThrowChance: 0.15
+
+- type: bodyTemperingPower
+  id: KsBodyArmsBreakingFists
+  group: Arms
+  level: 8
+  major: true
+  name: body-power-arms-breaking-fists-name
+  description: body-power-arms-breaking-fists-desc
+  punchStructuralDamage: 40
+
+- type: bodyTemperingPower
+  id: KsBodyArmsMountainBreakingFists
+  group: Arms
+  level: 9
+  major: true
+  name: body-power-arms-mountain-breaking-fists-name
+  description: body-power-arms-mountain-breaking-fists-desc
+  punchStructuralDamage: 80
+  punchBreaksWalls: true
+
+- type: bodyTemperingPower
+  id: KsBodyLegsLightStep
+  group: Legs
+  level: 1
+  name: body-power-legs-light-step-name
+  description: body-power-legs-light-step-desc
+  components:
+  - type: ProtectedFromStepTriggers
+
+- type: bodyTemperingPower
+  id: KsBodyLegsSureFooting
+  group: Legs
+  level: 2
+  name: body-power-legs-sure-footing-name
+  description: body-power-legs-sure-footing-desc
+  speedMultiplier: 1.03
+
+- type: bodyTemperingPower
+  id: KsBodyLegsSwiftFeet
+  group: Legs
+  level: 3
+  name: body-power-legs-swift-feet-name
+  description: body-power-legs-swift-feet-desc
+  speedMultiplier: 1.08
+
+- type: bodyTemperingPower
+  id: KsBodyLegsVaulting
+  group: Legs
+  level: 4
+  name: body-power-legs-vaulting-name
+  description: body-power-legs-vaulting-desc
+  staminaMultiplier: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyLegsSturdyFrame
+  group: Legs
+  level: 5
+  name: body-power-legs-sturdy-frame-name
+  description: body-power-legs-sturdy-frame-desc
+  components:
+  - type: IgnoreSlowOnDamage
+
+- type: bodyTemperingPower
+  id: KsBodyLegsRooted
+  group: Legs
+  level: 6
+  name: body-power-legs-rooted-name
+  description: body-power-legs-rooted-desc
+  damageMultipliers:
+    Blunt: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyLegsSilentStride
+  group: Legs
+  level: 7
+  name: body-power-legs-silent-stride-name
+  description: body-power-legs-silent-stride-desc
+  speedMultiplier: 1.15
+
+- type: bodyTemperingPower
+  id: KsBodyLegsUnslippable
+  group: Legs
+  level: 8
+  major: true
+  name: body-power-legs-unslippable-name
+  description: body-power-legs-unslippable-desc
+  components:
+  - type: NoSlip
+
+- type: bodyTemperingPower
+  id: KsBodyLegsThousandLeagueLegs
+  group: Legs
+  level: 9
+  major: true
+  name: body-power-legs-thousand-league-legs-name
+  description: body-power-legs-thousand-league-legs-desc
+  speedMultiplier: 1.22
+
+- type: bodyTemperingPower
+  id: KsBodyEyesClearEyes
+  group: Eyes
+  level: 3
+  major: true
+  name: body-power-eyes-clear-eyes-name
+  description: body-power-eyes-clear-eyes-desc
+  components:
+  - type: FlashImmunity
+
+- type: bodyTemperingPower
+  id: KsBodyEyesUnblinkingEyes
+  group: Eyes
+  level: 6
+  major: true
+  name: body-power-eyes-unblinking-eyes-name
+  description: body-power-eyes-unblinking-eyes-desc
+  components:
+  - type: PhosphorNightVision
+    enabled: true
+    phosphorColor: "#ffe9c0"
+    lightingColor: "#FFFFFF20"
+    amplification: 40
+
+- type: bodyTemperingPower
+  id: KsBodyEyesHunterSSight
+  group: Eyes
+  level: 7
+  major: true
+  name: body-power-eyes-hunter-s-sight-name
+  description: body-power-eyes-hunter-s-sight-desc
+  replaceComponents: true
+  components:
+  - type: PhosphorNightVision
+    enabled: true
+    phosphorColor: "#fff6e6"
+    lightingColor: "#FFFFFF38"
+    amplification: 160
+
+- type: bodyTemperingPower
+  id: KsBodyEyesHealerSEyes
+  group: Eyes
+  level: 1
+  major: true
+  name: body-power-eyes-healer-s-eyes-name
+  description: body-power-eyes-healer-s-eyes-desc
+  components:
+  - type: ShowHealthBars
+
+- type: bodyTemperingPower
+  id: KsBodyEyesStoneReadingEyes
+  group: Eyes
+  level: 4
+  name: body-power-eyes-stone-reading-eyes-name
+  description: body-power-eyes-stone-reading-eyes-desc
+  damageMultipliers:
+    Blunt: 0.95
+    Slash: 0.95
+    Piercing: 0.95
+
+- type: bodyTemperingPower
+  id: KsBodyEyesHeatSight
+  group: Eyes
+  level: 8
+  major: true
+  name: body-power-eyes-heat-sight-name
+  description: body-power-eyes-heat-sight-desc
+  components:
+  - type: KsHeatSight
+
+- type: bodyTemperingPower
+  id: KsBodyEyesJudgingEyes
+  group: Eyes
+  level: 2
+  name: body-power-eyes-judging-eyes-name
+  description: body-power-eyes-judging-eyes-desc
+  components:
+  - type: ShowCriminalRecordIcons
+
+- type: bodyTemperingPower
+  id: KsBodyEyesDiamondEyes
+  group: Eyes
+  level: 5
+  name: body-power-eyes-diamond-eyes-name
+  description: body-power-eyes-diamond-eyes-desc
+  components:
+  - type: EyeProtection
+
+- type: bodyTemperingPower
+  id: KsBodyEyesPrimordialGaze
+  group: Eyes
+  level: 9
+  name: body-power-eyes-primordial-gaze-name
+  description: body-power-eyes-primordial-gaze-desc
+  components:
+  - type: ShowMindShieldIcons
+
+- type: bodyTemperingPower
+  id: KsBodyEarsKeenEars
+  group: Ears
+  level: 1
+  name: body-power-ears-keen-ears-name
+  description: body-power-ears-keen-ears-desc
+  staminaMultiplier: 0.97
+
+- type: bodyTemperingPower
+  id: KsBodyEarsNightEars
+  group: Ears
+  level: 2
+  name: body-power-ears-night-ears-name
+  description: body-power-ears-night-ears-desc
+  healthBonus: 3
+
+- type: bodyTemperingPower
+  id: KsBodyEarsRingingEars
+  group: Ears
+  level: 3
+  name: body-power-ears-ringing-ears-name
+  description: body-power-ears-ringing-ears-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyEarsWallListening
+  group: Ears
+  level: 4
+  name: body-power-ears-wall-listening-name
+  description: body-power-ears-wall-listening-desc
+  damageMultipliers:
+    Blunt: 0.95
+
+- type: bodyTemperingPower
+  id: KsBodyEarsBalance
+  group: Ears
+  level: 5
+  name: body-power-ears-balance-name
+  description: body-power-ears-balance-desc
+  staminaMultiplier: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyEarsThunderproof
+  group: Ears
+  level: 6
+  major: true
+  name: body-power-ears-thunderproof-name
+  description: body-power-ears-thunderproof-desc
+  components:
+  - type: FlashImmunity
+
+- type: bodyTemperingPower
+  id: KsBodyEarsInnerCompass
+  group: Ears
+  level: 7
+  major: true
+  name: body-power-ears-inner-compass-name
+  description: body-power-ears-inner-compass-desc
+  components:
+  - type: MovementIgnoreGravity
+
+- type: bodyTemperingPower
+  id: KsBodyEarsDiamondEars
+  group: Ears
+  level: 8
+  name: body-power-ears-diamond-ears-name
+  description: body-power-ears-diamond-ears-desc
+  healthBonus: 10
+
+- type: bodyTemperingPower
+  id: KsBodyEarsVoicesOfTheDead
+  group: Ears
+  level: 9
+  name: body-power-ears-voices-of-the-dead-name
+  description: body-power-ears-voices-of-the-dead-desc
+  healthBonus: 15
+
+- type: bodyTemperingPower
+  id: KsBodyHeartStrongPulse
+  group: Heart
+  level: 1
+  name: body-power-heart-strong-pulse-name
+  description: body-power-heart-strong-pulse-desc
+  regenPerSecond: 0.05
+
+- type: bodyTemperingPower
+  id: KsBodyHeartStableHeart
+  group: Heart
+  level: 2
+  name: body-power-heart-stable-heart-name
+  description: body-power-heart-stable-heart-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyHeartTireless
+  group: Heart
+  level: 3
+  name: body-power-heart-tireless-name
+  description: body-power-heart-tireless-desc
+  staminaMultiplier: 0.9
+
+- type: bodyTemperingPower
+  id: KsBodyHeartHotBlood
+  group: Heart
+  level: 4
+  name: body-power-heart-hot-blood-name
+  description: body-power-heart-hot-blood-desc
+  damageMultipliers:
+    Cold: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyHeartCrimsonTide
+  group: Heart
+  level: 5
+  major: true
+  name: body-power-heart-crimson-tide-name
+  description: body-power-heart-crimson-tide-desc
+  regenPerSecond: 0.15
+
+- type: bodyTemperingPower
+  id: KsBodyHeartFurnaceHeart
+  group: Heart
+  level: 6
+  name: body-power-heart-furnace-heart-name
+  description: body-power-heart-furnace-heart-desc
+  damageMultipliers:
+    Heat: 0.7
+
+- type: bodyTemperingPower
+  id: KsBodyHeartHeartOfTheMountain
+  group: Heart
+  level: 7
+  name: body-power-heart-heart-of-the-mountain-name
+  description: body-power-heart-heart-of-the-mountain-desc
+  healthBonus: 20
+
+- type: bodyTemperingPower
+  id: KsBodyHeartUndyingPulse
+  group: Heart
+  level: 8
+  major: true
+  name: body-power-heart-undying-pulse-name
+  description: body-power-heart-undying-pulse-desc
+  regenPerSecond: 0.4
+
+- type: bodyTemperingPower
+  id: KsBodyHeartEternalHeart
+  group: Heart
+  level: 9
+  major: true
+  name: body-power-heart-eternal-heart-name
+  description: body-power-heart-eternal-heart-desc
+  eternalHeart: true
+
+- type: bodyTemperingPower
+  id: KsBodyLungsDeepBreath
+  group: Lungs
+  level: 1
+  name: body-power-lungs-deep-breath-name
+  description: body-power-lungs-deep-breath-desc
+  damageMultipliers:
+    Asphyxiation: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyLungsThinAirLungs
+  group: Lungs
+  level: 2
+  name: body-power-lungs-thin-air-lungs-name
+  description: body-power-lungs-thin-air-lungs-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyLungsCleanBreath
+  group: Lungs
+  level: 3
+  major: true
+  name: body-power-lungs-clean-breath-name
+  description: body-power-lungs-clean-breath-desc
+  components:
+  - type: ZombieImmune
+
+- type: bodyTemperingPower
+  id: KsBodyLungsCrushingDepthLungs
+  group: Lungs
+  level: 4
+  major: true
+  name: body-power-lungs-crushing-depth-lungs-name
+  description: body-power-lungs-crushing-depth-lungs-desc
+  components:
+  - type: PressureImmunity
+
+- type: bodyTemperingPower
+  id: KsBodyLungsEndlessBreath
+  group: Lungs
+  level: 5
+  name: body-power-lungs-endless-breath-name
+  description: body-power-lungs-endless-breath-desc
+  damageMultipliers:
+    Asphyxiation: 0.25
+
+- type: bodyTemperingPower
+  id: KsBodyLungsSecondWind
+  group: Lungs
+  level: 6
+  name: body-power-lungs-second-wind-name
+  description: body-power-lungs-second-wind-desc
+  staminaMultiplier: 0.85
+
+- type: bodyTemperingPower
+  id: KsBodyLungsLionSRoar
+  group: Lungs
+  level: 7
+  name: body-power-lungs-lion-s-roar-name
+  description: body-power-lungs-lion-s-roar-desc
+  healthBonus: 10
+
+- type: bodyTemperingPower
+  id: KsBodyLungsIronLungs
+  group: Lungs
+  level: 8
+  name: body-power-lungs-iron-lungs-name
+  description: body-power-lungs-iron-lungs-desc
+  damageMultipliers:
+    Asphyxiation: 0.1
+
+- type: bodyTemperingPower
+  id: KsBodyLungsBreathlessBody
+  group: Lungs
+  level: 9
+  major: true
+  name: body-power-lungs-breathless-body-name
+  description: body-power-lungs-breathless-body-desc
+  damageMultipliers:
+    Asphyxiation: 0
+  # A body that no longer needs air doesn't breathe at all: no gasping, and no breathing in poison.
+  removeComponents:
+  - Respirator
+
+- type: bodyTemperingPower
+  id: KsBodyLiverIronLiver
+  group: Liver
+  level: 1
+  name: body-power-liver-iron-liver-name
+  description: body-power-liver-iron-liver-desc
+  damageMultipliers:
+    Poison: 0.9
+  components:
+  - type: LightweightDrunk
+    boozeStrengthMultiplier: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyLiverToxinFilter
+  group: Liver
+  level: 2
+  name: body-power-liver-toxin-filter-name
+  description: body-power-liver-toxin-filter-desc
+  damageMultipliers:
+    Poison: 0.75
+
+- type: bodyTemperingPower
+  id: KsBodyLiverStableLiver
+  group: Liver
+  level: 3
+  name: body-power-liver-stable-liver-name
+  description: body-power-liver-stable-liver-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyLiverPurifier
+  group: Liver
+  level: 4
+  name: body-power-liver-purifier-name
+  description: body-power-liver-purifier-desc
+  damageMultipliers:
+    Poison: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyLiverSoberMind
+  group: Liver
+  level: 5
+  name: body-power-liver-sober-mind-name
+  description: body-power-liver-sober-mind-desc
+  staminaMultiplier: 0.95
+  replaceComponents: true
+  components:
+  - type: LightweightDrunk
+    boozeStrengthMultiplier: 0.1
+
+- type: bodyTemperingPower
+  id: KsBodyLiverToxinEater
+  group: Liver
+  level: 6
+  name: body-power-liver-toxin-eater-name
+  description: body-power-liver-toxin-eater-desc
+  damageMultipliers:
+    Poison: 0.25
+
+- type: bodyTemperingPower
+  id: KsBodyLiverRadiantBlood
+  group: Liver
+  level: 7
+  major: true
+  name: body-power-liver-radiant-blood-name
+  description: body-power-liver-radiant-blood-desc
+  damageMultipliers:
+    Radiation: 0
+
+- type: bodyTemperingPower
+  id: KsBodyLiverDiamondLiver
+  group: Liver
+  level: 8
+  name: body-power-liver-diamond-liver-name
+  description: body-power-liver-diamond-liver-desc
+  healthBonus: 10
+
+- type: bodyTemperingPower
+  id: KsBodyLiverPoisonImmunity
+  group: Liver
+  level: 9
+  major: true
+  name: body-power-liver-poison-immunity-name
+  description: body-power-liver-poison-immunity-desc
+  damageMultipliers:
+    Poison: 0
+
+- type: bodyTemperingPower
+  id: KsBodyStomachIronBelly
+  group: Stomach
+  level: 1
+  name: body-power-stomach-iron-belly-name
+  description: body-power-stomach-iron-belly-desc
+  healthBonus: 3
+
+- type: bodyTemperingPower
+  id: KsBodyStomachLeanBody
+  group: Stomach
+  level: 2
+  name: body-power-stomach-lean-body-name
+  description: body-power-stomach-lean-body-desc
+  hungerMultiplier: 0.8
+
+- type: bodyTemperingPower
+  id: KsBodyStomachLightEater
+  group: Stomach
+  level: 3
+  name: body-power-stomach-light-eater-name
+  description: body-power-stomach-light-eater-desc
+  hungerMultiplier: 0.5
+
+- type: bodyTemperingPower
+  id: KsBodyStomachHearty
+  group: Stomach
+  level: 4
+  name: body-power-stomach-hearty-name
+  description: body-power-stomach-hearty-desc
+  healthBonus: 5
+
+- type: bodyTemperingPower
+  id: KsBodyStomachInnerFurnace
+  group: Stomach
+  level: 5
+  name: body-power-stomach-inner-furnace-name
+  description: body-power-stomach-inner-furnace-desc
+  regenPerSecond: 0.1
+
+- type: bodyTemperingPower
+  id: KsBodyStomachFrugalBelly
+  group: Stomach
+  level: 6
+  name: body-power-stomach-frugal-belly-name
+  description: body-power-stomach-frugal-belly-desc
+  hungerMultiplier: 0.25
+
+- type: bodyTemperingPower
+  id: KsBodyStomachDiamondStomach
+  group: Stomach
+  level: 7
+  name: body-power-stomach-diamond-stomach-name
+  description: body-power-stomach-diamond-stomach-desc
+  healthBonus: 10
+
+- type: bodyTemperingPower
+  id: KsBodyStomachWindDrinker
+  group: Stomach
+  level: 8
+  name: body-power-stomach-wind-drinker-name
+  description: body-power-stomach-wind-drinker-desc
+  hungerMultiplier: 0.1
+
+- type: bodyTemperingPower
+  id: KsBodyStomachBigu
+  group: Stomach
+  level: 9
+  major: true
+  name: body-power-stomach-bigu-name
+  description: body-power-stomach-bigu-desc
+  hungerMultiplier: 0

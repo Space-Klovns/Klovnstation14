@@ -1,0 +1,2301 @@
+# Glowing cultivation effects in every element colour (qi_effects.rsi).
+# Glowing cultivation effects, one per element colour. Bursts (waves, sparks, motes) fade out on their own;
+# auras, domes and sigils follow a cultivator until CultivationVisualsSystem removes them.
+
+- type: entity
+  id: KsFxWaveQi
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ffff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveGold
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55aff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveMetal
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbeaff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveWater
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ffff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveFire
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1fff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveEarth
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560ff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#c99560"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveWood
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35fff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBlood
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251cff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#d0251c"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveVoid
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cffff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveSense
+  categories: [ HideSpawnMenu ]
+  name: wave
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ffff"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 1.5, 1.5
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigQi
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ffdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigGold
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55add"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigMetal
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbeadd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigWater
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ffdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigFire
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1fdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigEarth
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560dd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#c99560"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigWood
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35fdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigBlood
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251cdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#d0251c"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigVoid
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cffdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaveBigSense
+  categories: [ HideSpawnMenu ]
+  name: wavebig
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ffdd"
+    layers:
+    - state: wave
+      shader: unshaded
+    scale: 4.0, 4.0
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkQi
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ffff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkGold
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55aff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkMetal
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbeaff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkWater
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ffff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkFire
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1fff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkEarth
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560ff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkWood
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35fff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkBlood
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251cff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkVoid
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cffff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSparkSense
+  categories: [ HideSpawnMenu ]
+  name: spark
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ffff"
+    layers:
+    - state: spark
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 2.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesQi
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ffee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesGold
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55aee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesMetal
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbeaee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesWater
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ffee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesFire
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1fee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesEarth
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560ee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesWood
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35fee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesBlood
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251cee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesVoid
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cffee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMotesSense
+  categories: [ HideSpawnMenu ]
+  name: motes
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ffee"
+    layers:
+    - state: motes
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraQi
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#9fe3ffee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraGold
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#ffd55aee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraMetal
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#d4dbeaee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraWater
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#4fb3ffee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraFire
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#ff6a1fee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraEarth
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#c99560ee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraWood
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#5fd35fee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraBlood
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#d0251cee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraVoid
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#9b5cffee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxAuraSense
+  categories: [ HideSpawnMenu ]
+  name: aura
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    offset: 0, 0.2
+    color: "#d8f4ffee"
+    layers:
+    - state: aura
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 2.0
+    energy: 1.4
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeQi
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ffaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeGold
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55aaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeMetal
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbeaaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeWater
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ffaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeFire
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1faa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeEarth
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560aa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeWood
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35faa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeBlood
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251caa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeVoid
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cffaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDomeSense
+  categories: [ HideSpawnMenu ]
+  name: dome
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ffaa"
+    layers:
+    - state: dome
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 2.5
+    energy: 1.5
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilQi
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#9fe3ffcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilGold
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#ffd55acc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilMetal
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#d4dbeacc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilWater
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#4fb3ffcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilFire
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#ff6a1fcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilEarth
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#c99560cc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilWood
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#5fd35fcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilBlood
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#d0251ccc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilVoid
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#9b5cffcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxSigilSense
+  categories: [ HideSpawnMenu ]
+  name: sigil
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    color: "#d8f4ffcc"
+    layers:
+    - state: sigil
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 2.0
+    energy: 1.0
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastQi
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: wave
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigQi
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9fe3ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: wave
+      shader: unshaded
+  - type: PointLight
+    color: "#9fe3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastGold
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55a"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_rays
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigGold
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ffd55a"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_rays
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastMetal
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbea"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_slash
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigMetal
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d4dbea"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_slash
+      shader: unshaded
+  - type: PointLight
+    color: "#d4dbea"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastWater
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigWater
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#4fb3ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#4fb3ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastFire
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1f"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_flare
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigFire
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#ff6a1f"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_flare
+      shader: unshaded
+  - type: PointLight
+    color: "#ff6a1f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.42
+  - type: TimedDespawn
+    lifetime: 0.42
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastEarth
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_rune
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigEarth
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#c99560"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_rune
+      shader: unshaded
+  - type: PointLight
+    color: "#c99560"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastWood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35f"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_petals
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.54
+  - type: TimedDespawn
+    lifetime: 0.54
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigWood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#5fd35f"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_petals
+      shader: unshaded
+  - type: PointLight
+    color: "#5fd35f"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.54
+  - type: TimedDespawn
+    lifetime: 0.54
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBlood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251c"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_spikes
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigBlood
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d0251c"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_spikes
+      shader: unshaded
+  - type: PointLight
+    color: "#d0251c"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.3
+  - type: TimedDespawn
+    lifetime: 0.3
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastVoid
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_implode
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigVoid
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#9b5cff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_implode
+      shader: unshaded
+  - type: PointLight
+    color: "#9b5cff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.48
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastSense
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ff"
+    scale: 1.6, 1.6
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 3.0
+    energy: 2.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxCastBigSense
+  categories: [ HideSpawnMenu ]
+  name: qi
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#d8f4ff"
+    scale: 4.0, 4.0
+    layers:
+    - state: cast_ripple
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f4ff"
+    radius: 6.0
+    energy: 3.5
+    netsync: false
+  - type: LightFade
+    duration: 0.63
+  - type: TimedDespawn
+    lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxPillar
+  categories: [ HideSpawnMenu ]
+  name: pillar of light
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/qi_effects.rsi
+    drawdepth: Effects
+    noRot: true
+    color: "#fff3b0"
+    scale: 1.5, 3
+    offset: 0, 1.5
+    layers:
+    - state: pillar
+      shader: unshaded
+  - type: PointLight
+    color: "#fff3b0"
+    radius: 7
+    energy: 5
+    netsync: false
+  - type: LightFade
+    duration: 0.8
+  - type: TimedDespawn
+    lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu

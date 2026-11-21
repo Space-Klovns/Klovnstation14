@@ -1,0 +1,44 @@
+# Where heaven's lightning comes from during a breakthrough: an unseen point above, gone a moment later.
+- type: entity
+  id: KsTribulationCloud
+  categories: [ HideSpawnMenu ]
+  name: tribulation cloud
+  components:
+  - type: TimedDespawn
+    lifetime: 1
+
+# Your own doubts, given flesh. Hunts only the one it came from.
+- type: entity
+  parent: MobHuman
+  id: KsHeartDemon
+  categories: [ HideSpawnMenu ]
+  name: heart demon
+  description: A face you know, twisted by every doubt its owner ever had.
+  components:
+  - type: Sprite
+    color: "#5a2a6aee"
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: SimpleHumanoidHostileCompound
+  - type: NpcFactionMember
+    factions:
+    - SimpleNeutral
+  - type: NPCRetaliation
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3.5
+    baseSprintSpeed: 5
+
+# Heaven's lightning as it's seen. The tribulation deals its own damage, so the bolt itself doesn't electrocute:
+# a stunned cultivator would lose the breakthrough to the stun rather than to the lightning.
+- type: entity
+  parent: BaseLightning
+  id: KsTribulationLightning
+  categories: [ HideSpawnMenu ]
+  name: tribulation lightning
+  components:
+  - type: Electrified
+    enabled: false
+  - type: TimedDespawn
+    lifetime: 1

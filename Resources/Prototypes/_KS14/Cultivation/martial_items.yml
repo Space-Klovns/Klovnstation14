@@ -1,0 +1,277 @@
+- type: entity
+  abstract: true
+  parent: BaseItem
+  id: BaseMartialArtManual
+  description: A worn martial arts manual, its pages full of stances, breathing charts and marginal notes.
+  components:
+  - type: Item
+    size: Small
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualDragonPalms
+  name: Eighteen Dragon-Subduing Palms
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_dragon_palm
+  - type: MartialArtManual
+    art: KsDragonPalms
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualSixMeridians
+  name: Six Meridians Divine Sword Manual
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_six_meridians
+  - type: MartialArtManual
+    art: KsSixMeridians
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualNorthernDarkness
+  name: Northern Darkness Scroll
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_northern_darkness
+  - type: MartialArtManual
+    art: KsNorthernDarkness
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualStarAbsorbing
+  name: Star-Absorbing Great Method
+  description: Someone has scratched a warning on the cover. The pages inside feel cold.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_star_absorbing
+  - type: MartialArtManual
+    art: KsStarAbsorbing
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGreatShift
+  name: Great Shift of Heaven and Earth
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_great_shift
+  - type: MartialArtManual
+    art: KsGreatShift
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualNineYang
+  name: Nine Yang Manual
+  description: A manual written in the margins of another book. It is warm to the touch.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_nine_yang
+  - type: MartialArtManual
+    art: KsNineYang
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGoldenBell
+  name: Golden Bell Shield Manual
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_golden_bell
+  - type: MartialArtManual
+    art: KsGoldenBell
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualGracefulSteps
+  name: Graceful Waves Steps
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_graceful_steps
+  - type: MartialArtManual
+    art: KsGracefulSteps
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualLadderCloud
+  name: Ladder-Cloud Leap Manual
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_ladder_cloud
+  - type: MartialArtManual
+    art: KsLadderCloud
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualDugu
+  name: Nine Swords of Dugu
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_dugu
+  - type: MartialArtManual
+    art: KsDugu
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualMuscleTendon
+  name: Muscle-Tendon Changing Classic
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_muscle_tendon
+  - type: MartialArtManual
+    art: KsMuscleTendon
+
+- type: entity
+  parent: ProjectileCultivationSwordQi
+  id: ProjectileSixMeridiansSwordQi
+  categories: [ HideSpawnMenu ]
+  name: finger sword qi
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
+    layers:
+    - state: magicm_yellow
+      shader: unshaded
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 12
+
+# Legendary armor
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterSoftHedgehogArmor
+  name: soft hedgehog armor
+  description: A supple vest of black silk lined with barbs. Whoever strikes its wearer up close is pricked bloody.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/soft_hedgehog_armor.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/soft_hedgehog_armor.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.7
+        Piercing: 0.8
+  - type: SoftHedgehogArmor
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterGoldenSilkVest
+  name: golden silk vest
+  description: A treasure vest woven from golden silk, light as cloth and almost impossible to cut or pierce.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/golden_silk_vest.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/golden_silk_vest.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Slash: 0.4
+        Piercing: 0.5
+        Blunt: 0.9
+
+# The Great Sage's regalia, given by the Dragon Kings of the Four Seas. Wear all three to wake the set.
+
+- type: entity
+  parent: ClothingOuterBase
+  id: ClothingOuterGoldenChainMail
+  name: golden chain-mail
+  description: Fish-scale mail of red gold between black lacquered plates, with a heart-protecting mirror on either breast. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/golden_chain_mail.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/golden_chain_mail.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.6
+        Heat: 0.75
+  - type: ClothingSpeedModifier
+    walkModifier: 0.95
+    sprintModifier: 0.95
+  - type: GreatSageRegalia
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadPhoenixWingCrown
+  name: phoenix-wing purple-gold crown
+  description: A purple cap under a band of gold, crowned with two long pheasant plumes. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/phoenix_crown.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/phoenix_crown.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.85
+        Slash: 0.85
+  - type: GreatSageRegalia
+
+- type: entity
+  parent: ClothingShoesBase
+  id: ClothingShoesCloudStepping
+  name: lotus-silk cloud-stepping boots
+  description: Boots of lotus-root silk with upturned cloud toes. The wearer never slips and seems to walk on air. Part of the Great Sage's regalia.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/cloud_stepping_boots.rsi
+  - type: Clothing
+    sprite: _KS14/Cultivation/cloud_stepping_boots.rsi
+  - type: ClothingSpeedModifier
+    walkModifier: 1.15
+    sprintModifier: 1.15
+  - type: NoSlip
+  - type: GreatSageRegalia
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualDrunkenFist
+  name: Drunken Fist manual
+  description: A wine-stained manual of the Drunken Fist. Several pages are stuck together.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_drunken_fist
+  - type: MartialArtManual
+    art: KsDrunkenFist
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualEagleClaw
+  name: Eagle Claw manual
+  description: A manual of the Eagle Claw, its margins full of angry talon sketches.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_eagle_claw
+  - type: MartialArtManual
+    art: KsEagleClaw
+
+- type: entity
+  parent: BaseMartialArtManual
+  id: MartialManualWingChun
+  name: Wing Chun manual
+  description: A slim, practical manual of Wing Chun. Someone has written "chain punch!!" on every page.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_wing_chun
+  - type: MartialArtManual
+    art: KsWingChun
