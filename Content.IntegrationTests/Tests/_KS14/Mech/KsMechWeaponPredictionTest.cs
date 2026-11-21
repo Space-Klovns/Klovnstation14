@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Shared._KS14.PredictedSpawning;
+using Content.Shared.Camera;
 using Content.Shared.Mech.Components;
 using Content.Shared.Mech.EntitySystems;
 using Content.Shared.Power.Components;
@@ -192,6 +193,32 @@ public sealed class KsMechWeaponPredictionTest : InteractionTest
 
             Assert.That(gunshots, Is.EqualTo(1), "the server played no gunshot to check");
         });
+    }
+
+    /// <summary>
+    ///     A mech weapon's recoil kicks the pilot's camera, predicted on their client as a held gun's is. It went to the
+    ///         mech, which has no camera to kick, so firing from a mech never shook the view.
+    /// </summary>
+    [Test]
+    public async Task MechWeaponsRecoilKicksThePilotsCamera()
+    {
+        var (mechUid, weaponUid) = await BoardArmedMech();
+        var clientPilotUid = ToClient(SPlayer);
+        Assert.That(CEntMan.HasComponent<CameraRecoilComponent>(clientPilotUid), "the pilot has no camera recoil to kick");
+
+        await Fire(mechUid, weaponUid);
+
+        var kicked = false;
+        for (var tick = 0; tick < 10 && !kicked; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                kicked |= CEntMan.GetComponent<CameraRecoilComponent>(clientPilotUid).CurrentKick != Vector2.Zero;
+            });
+        }
+
+        Assert.That(kicked, "the mech weapon's shot never kicked the pilot's camera");
     }
 
     /// <summary>

@@ -677,7 +677,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             // <Trauma>
             if (userImpulse)
-                Recoil(user, mapDirection, gun.Comp.CameraRecoilScalarModified);
+                Recoil(KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */, mapDirection, gun.Comp.CameraRecoilScalarModified);
             // </Trauma>
         }
 
