@@ -31,7 +31,7 @@
     fallDuration: 2s # the mortar sets it to the whole flight, and its descent to the end of it, and plays its sounds itself
     fallSound: null
     angularDeviation: 10
-    trailProto: KsSupplyPodTrail
+    trailProto: KsMortarShellTrail
   - type: SupplyPodLandingZone
     indicatorProto: KsStrikeWarning
   - type: SupplyPodDrawDepth

@@ -6,3 +6,7 @@ ent-KsSupplyPodTrail = дымовой след
 # Resources\Prototypes\_KS14\Entities\Effects\trail.yml
 ent-KsSupplyPodTrailSlow = дымовой след
     .desc = След, который оставляет капсула в воздухе за собой.
+
+# Resources\Prototypes\_KS14\Entities\Effects\SupplyPod\trail.yml
+ent-KsMortarShellTrail = дымовой след
+    .desc = След, который оставляет капсула в воздухе за собой.
