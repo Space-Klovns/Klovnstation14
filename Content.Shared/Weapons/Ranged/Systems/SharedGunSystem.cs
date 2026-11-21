@@ -411,6 +411,9 @@ public abstract partial class SharedGunSystem : EntitySystem
             return false;
         }
 
+        if (shots > 0 && KsShotCalledOff(user, gun, newNextFire)) // KS14: a clumsy backfire calls the shot off before any ammo is taken
+            return false;
+
         var fromCoordinates = fromCoordinatesOverride ?? Transform(user).Coordinates;
         // Remove ammo
         var ev = new TakeAmmoEvent(shots, [], fromCoordinates, user);
@@ -567,10 +570,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             var selfEvent = new SelfBeforeGunShotEvent(user.Value, gun, ammo);
             RaiseLocalEvent(user.Value, selfEvent);
             if (selfEvent.Cancelled)
-            {
-                KsUseUpCalledOffShot(gun, ammo, user, throwItems); // KS14: the ammo was already taken, so use it up rather than leave it lying about
                 return;
-            }
         }
 
         var fromMap = TransformSystem.ToMapCoordinates(fromCoordinates);

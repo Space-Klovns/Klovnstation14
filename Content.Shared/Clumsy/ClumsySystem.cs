@@ -1,5 +1,6 @@
 using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared._KS14.Random.Helpers; // KS14
+using Content.Shared._KS14.Weapons.Ranged; // KS14
 using Content.Shared.CCVar;
 using Content.Shared.Chemistry.Events;
 using Content.Shared.Climbing.Components;
@@ -37,7 +38,7 @@ public sealed partial class ClumsySystem : EntitySystem
     {
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeInjectEvent>(BeforeHyposprayEvent);
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeDefibrillatorZapsEvent>(BeforeDefibrillatorZapsEvent);
-        SubscribeLocalEvent<ClumsyComponent, SelfBeforeGunShotEvent>(BeforeGunShotEvent);
+        SubscribeLocalEvent<ClumsyComponent, KsShooterFireAttemptEvent /* KS14: SelfBeforeGunShotEvent -> raised before the gun gives up any ammo */>(BeforeGunShotEvent);
         SubscribeLocalEvent<ClumsyComponent, CatchAttemptEvent>(OnCatchAttempt);
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeClimbEvent>(OnBeforeClimbEvent);
     }
@@ -104,7 +105,7 @@ public sealed partial class ClumsySystem : EntitySystem
         _audio.PlayPvs(ent.Comp.ClumsySound, ent);
     }
 
-    private void BeforeGunShotEvent(Entity<ClumsyComponent> ent, ref SelfBeforeGunShotEvent args)
+    private void BeforeGunShotEvent(Entity<ClumsyComponent> ent, ref KsShooterFireAttemptEvent /* KS14: SelfBeforeGunShotEvent -> raised before the gun gives up any ammo */ args)
     {
         // Clumsy people sometimes can't shoot :(
 
@@ -125,10 +126,10 @@ public sealed partial class ClumsySystem : EntitySystem
             return;
         // KS14 end
 
-        // KS14 start: a backfire ends the shooting, as dropping the gun does upstream. Before the stun, so going down
-        //      to it doesn't clench the shooter's hand on a trigger still held, firing (and backfiring) for as long as
-        //      it stuns them again: hundreds of times over. Also ends a clench that was already firing.
-        args.Cancel();
+        // KS14 start: the whole shot is called off, the gun untouched, and the shooting ends, as dropping the gun does
+        //      upstream. Before the stun, so going down to it doesn't clench the shooter's hand on a trigger still held.
+        //      Also ends a clench that was already firing.
+        args.Cancelled = true;
         _gun.KsInterruptShooting(args.Gun);
         // KS14 end
 

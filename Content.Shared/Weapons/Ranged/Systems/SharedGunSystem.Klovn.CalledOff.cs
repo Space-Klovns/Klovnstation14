@@ -1,10 +1,10 @@
 using Content.Shared._KS14.Weapons.Ranged;
-using Content.Shared.Weapons.Hitscan.Components;
 using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
 
-// Partial: shots called off after their ammo was taken, and shooting ended outright, kept apart from the upstream code.
+// Partial: shots called off before they take their ammo, and shooting ended outright, kept apart from the upstream code.
 public abstract partial class SharedGunSystem
 {
     /// <summary>
@@ -28,49 +28,25 @@ public abstract partial class SharedGunSystem
     }
 
     /// <summary>
-    ///     Uses up the ammo of a shot its shooter called off (<see cref="Events.SelfBeforeGunShotEvent"/>, a clumsy
-    ///         backfire) after the gun had already given it up, as firing it would have: a cartridge is spent, then
-    ///         ejected or deleted as a fired one is, and a round that is its own projectile or ray is deleted. Left as
-    ///         it was, a cartridge lay on the floor unspent, and a battery's bolt sat motionless where it was spawned.
+    ///     Raises <see cref="KsShooterFireAttemptEvent"/> on <paramref name="user"/> for a shot about to take its ammo.
+    ///         If they call it off, the gun is left as it was, bar waiting out its fire rate as if it had fired.
     /// </summary>
-    /// <param name="throwItems">What a pneumatic cannon throws is an item rather than a round, so it's left where it fell.</param>
-    private void KsUseUpCalledOffShot(
-        Entity<GunComponent> gun,
-        List<(EntityUid? Entity, IShootable Shootable)> ammo,
-        EntityUid? user,
-        bool throwItems)
+    /// <returns>Whether the shot was called off.</returns>
+    private bool KsShotCalledOff(EntityUid user, Entity<GunComponent> gun, TimeSpan nextFire)
     {
-        if (throwItems)
-            return;
+        // An empty gun clicks; nothing in it can blow up.
+        var ammoCountEv = new GetAmmoCountEvent();
+        RaiseLocalEvent(gun, ref ammoCountEv);
+        if (ammoCountEv.Count <= 0)
+            return false;
 
-        foreach (var (ammoUid, shootable) in ammo)
-        {
-            if (ammoUid is not { } uid)
-                continue;
+        var ev = new KsShooterFireAttemptEvent(gun);
+        RaiseLocalEvent(user, ref ev);
+        if (!ev.Cancelled)
+            return false;
 
-            switch (shootable)
-            {
-                case CartridgeAmmoComponent cartridge:
-                    if (!cartridge.Spent)
-                    {
-                        SetCartridgeSpent(uid, cartridge, true);
-
-                        if (cartridge.DeleteOnSpawn)
-                        {
-                            PredictedQueueDel(uid);
-                            break;
-                        }
-                    }
-
-                    // One left in its chamber or cylinder stays there, as a fired one does.
-                    if (!Containers.IsEntityInContainer(uid))
-                        EjectCartridge(GetRandom(gun), uid, user: user);
-                    break;
-                case AmmoComponent:
-                case HitscanAmmoComponent:
-                    PredictedQueueDel(uid);
-                    break;
-            }
-        }
+        gun.Comp.NextFire = nextFire;
+        DirtyField(gun.AsNullable(), nameof(GunComponent.NextFire));
+        return true;
     }
 }
