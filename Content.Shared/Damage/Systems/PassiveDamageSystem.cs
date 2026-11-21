@@ -8,6 +8,7 @@ public sealed partial class PassiveDamageSystem : EntitySystem
 {
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private Robust.Shared.Network.INetManager _netManager = default!; // KS14
 
     public override void Initialize()
     {
@@ -25,6 +26,13 @@ public sealed partial class PassiveDamageSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
+
+        // KS14 start: the server's alone. NextDamage is not networked, so a client healed each mob on a clock of its own,
+        //      the next state put that back, and the server's heal then arrived: health flickered every second.
+        if (_netManager.IsClient)
+            return;
+        // KS14 end
+
         var curTime = _timing.CurTime;
 
         // Go through every entity with the component

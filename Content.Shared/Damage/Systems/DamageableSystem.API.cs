@@ -273,6 +273,11 @@ public sealed partial class DamageableSystem
     /// <param name="damage">Damage specifier we're returning with</param>
     /// <param name="group">An optional group, note that if it fails to index it will just use all damage.</param>
     /// <returns>True if the total damage is greater than the specified amount</returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public bool TryGetDamageGreaterThan(Entity<DamageableComponent> ent,
         FixedPoint2 amount,
         out DamageSpecifier damage,
@@ -291,6 +296,11 @@ public sealed partial class DamageableSystem
     /// <param name="ent">entity with damage</param>
     /// <param name="group">group of damage to get values from</param>
     /// <returns></returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public DamageSpecifier GetPositiveDamage(Entity<DamageableComponent> ent, ProtoId<DamageGroupPrototype> group)
     {
         // No damage if no group exists...
@@ -316,6 +326,11 @@ public sealed partial class DamageableSystem
     /// </summary>
     /// <param name="ent">entity with damage</param>
     /// <returns></returns>
+    /// <remarks>
+    /// KS14: the server's damage alone. A client's pending damage (<see cref="_KS14.Damage.Pending.KsPendingDamageSystem"/>),
+    /// which <see cref="GetTotalDamage"/> and the getters beside it add, is left out: this works out how much there is
+    /// to heal, and damage the server has not dealt is not there to be healed.
+    /// </remarks>
     public DamageSpecifier GetPositiveDamage(Entity<DamageableComponent> ent)
     {
         var damage = new DamageSpecifier();
@@ -416,7 +431,13 @@ public sealed partial class DamageableSystem
         if (!_damageableQuery.Resolve(ent, ref ent.Comp))
             return new();
 
-        return ent.Comp.Damage.Clone();
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        var damage = ent.Comp.Damage.Clone();
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+            damage += pending;
+
+        return damage;
+        // KS14 end
     }
 
     /// <summary>
@@ -427,6 +448,11 @@ public sealed partial class DamageableSystem
     {
         if (!_damageableQuery.Resolve(ent, ref ent.Comp, false))
             return FixedPoint2.Zero;
+
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+            return ent.Comp.TotalDamage + pending.GetTotal();
+        // KS14 end
 
         return ent.Comp.TotalDamage;
     }
@@ -439,6 +465,15 @@ public sealed partial class DamageableSystem
     {
         if (!_damageableQuery.Resolve(ent, ref ent.Comp))
             return new Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2>();
+
+        // KS14 start: with what this client has pending for the entity (KsPendingDamageSystem)
+        if (_ksPendingDamageSystem.TryGetShownPending(ent.Owner, out var pending))
+        {
+            var shownPerGroup = new Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2>();
+            (ent.Comp.Damage + pending).GetDamagePerGroup(ProtoMan, shownPerGroup);
+            return shownPerGroup;
+        }
+        // KS14 end
 
         return ent.Comp.DamagePerGroup;
     }

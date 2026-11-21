@@ -70,6 +70,14 @@ namespace Content.Client.Decals.Overlays
                 }
             }
 
+            // KS14 start: and the decals this client predicted once and keeps until the server's arrive
+            foreach (var kept in _entManager.System<DecalSystem>().KsGetKeptDecals(owner))
+            {
+                if (gridAABB.Contains(kept.Decal.Coordinates))
+                    _decals.Add((new DecalIndex(default, ushort.MaxValue), kept.Decal));
+            }
+            // KS14 end
+
             if (_decals.Count == 0)
                 return;
 

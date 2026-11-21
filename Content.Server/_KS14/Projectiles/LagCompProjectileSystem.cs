@@ -29,7 +29,7 @@ namespace Content.Server._KS14.Projectiles;
 /// closest thing first all fall out of normal physics simulation instead of being reimplemented by hand.
 /// Each ghost is re-rewound every tick so it stays a constant lag-duration behind its real target instead
 /// of staying frozen at the position it was spawned at, keeping it accurate for the whole projectile flight.
-/// Only covers physical projectiles; hitscan has its own path.
+/// Only covers physical projectiles; hitscan has its own path (<see cref="Content.Server._KS14.Weapons.Hitscan.KsHitscanLagCompensationSystem"/>).
 /// </summary>
 public sealed partial class LagCompProjectileSystem : EntitySystem
 {
@@ -51,7 +51,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
     // Generous upper bound on mob hitbox radii, padding the broadphase lookup so a target whose center sits
     // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
-    private const float MaxHitboxRadius = 2.5f;
+    public const float MaxHitboxRadius = 2.5f;
 
     // The least the search assumes a mob could have moved per second of the lag window: base sprint speed (see
     //      MovementSpeedModifierComponent.DefaultBaseSprintSpeed). Not lower even when every mob is slow now, since a mob
@@ -256,7 +256,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// least <see cref="MinCompensationSpeed"/>: the furthest a target can have got from where the shooter saw it, per
     /// second of lag. Bounds the search for targets, so a mob sped up past base sprint speed is still found.
     /// </summary>
-    private float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
+    public float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
     {
         RefreshMapSpeeds();
 
@@ -351,7 +351,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// Returns the coordinates an entity's <see cref="LagCompensationComponent"/> recorded closest to
     /// <paramref name="targetTime"/>, falling back to its current position if it has no history.
     /// </summary>
-    private static EntityCoordinates GetCompensatedCoordinates(Entity<LagCompensationComponent, TransformComponent> entity, TimeSpan targetTime)
+    public static EntityCoordinates GetCompensatedCoordinates(Entity<LagCompensationComponent, TransformComponent> entity, TimeSpan targetTime)
     {
         var (_, lagCompensationComponent, targetTransformComponent) = entity;
 

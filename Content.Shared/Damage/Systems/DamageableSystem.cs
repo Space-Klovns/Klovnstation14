@@ -21,6 +21,7 @@ public sealed partial class DamageableSystem : EntitySystem
     [Dependency] private IConfigurationManager _config = default!;
     [Dependency] private SharedChemistryGuideDataSystem _chemistryGuideData = default!;
     [Dependency] private SharedExplosionSystem _explosion = default!;
+    [Dependency] private _KS14.Damage.Pending.KsPendingDamageSystem _ksPendingDamageSystem = default!; // KS14
 
     [Dependency] private EntityQuery<AppearanceComponent> _appearanceQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;

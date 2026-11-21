@@ -56,7 +56,8 @@ public sealed partial class BlockingSystem
         var blockFraction = blocking.IsBlocking ? blocking.ActiveBlockFraction : blocking.PassiveBlockFraction;
         var modifier = blocking.IsBlocking ? blocking.ActiveBlockDamageModifier : blocking.PassiveBlockDamageModifer;
         blockFraction = Math.Clamp(blockFraction, 0, 1);
-        _damageable.TryChangeDamage((item, dmgComp), blockFraction * args.OriginalDamage);
+        if (!args.KsPreviewOnly) // KS14: asked what the damage would be, the shield takes none of it
+            _damageable.TryChangeDamage((item, dmgComp), blockFraction * args.OriginalDamage);
 
         var modify = new DamageModifierSet();
         foreach (var key in modifier.Coefficients.Keys.Concat(modifier.FlatReductions.Keys))
@@ -66,7 +67,7 @@ public sealed partial class BlockingSystem
 
         args.Damage = DamageSpecifier.ApplyModifierSet(args.Damage, modify);
 
-        if (blocking.IsBlocking && !args.Damage.Equals(args.OriginalDamage))
+        if (blocking.IsBlocking && !args.KsPreviewOnly /* KS14: added, nothing was blocked */ && !args.Damage.Equals(args.OriginalDamage))
         {
             _audio.PlayPvs(blocking.BlockSound, uid);
         }
