@@ -1,0 +1,11 @@
+- type: entity
+  id: KsLadderWall
+  name: ladder
+  components:
+  - type: KsLadder
+
+- type: entity
+  id: KsLadderFloor
+  name: ladder
+  components:
+  - type: KsLadder
