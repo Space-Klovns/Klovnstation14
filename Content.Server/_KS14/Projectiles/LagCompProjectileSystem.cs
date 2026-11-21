@@ -5,6 +5,7 @@ using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
 using Content.Shared.Trigger.Components.Triggers;
 using Content.Shared.Trigger.Systems;
+using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -36,6 +37,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private PredictedProjectileSystem _projectile = default!;
+    [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private FixtureSystem _fixtures = default!;
@@ -78,13 +80,15 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
 
-        if (!_lagCompensationQuery.HasComp(shooterUid))
+        // A mech shoots as itself, and is piloted by the player whose shot it is.
+        if (_gunSystem.KsGetPredictingUser(shooterUid) is not { } predictingUid ||
+            !_lagCompensationQuery.HasComp(predictingUid))
             return;
 
         // Only a real player's shot needs compensating - NPCs/turrets simulate entirely server-side already,
         // so there's no client round trip to correct for. This also gives us that player's session, which is
         // the only server-trusted source of latency we have (see the CurTime comment below).
-        if (!_playerManager.TryGetSessionByEntity(shooterUid, out var shooterSession))
+        if (!_playerManager.TryGetSessionByEntity(predictingUid, out var shooterSession))
             return;
 
         // IMPORTANT: a client-sent IGameTiming.CurTime is NOT comparable to the server's. RobustToolbox
