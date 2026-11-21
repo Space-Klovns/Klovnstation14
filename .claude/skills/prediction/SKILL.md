@@ -79,6 +79,25 @@ state later, and it flickers. A kept vapor spilling into a puddle the server alr
 adds a client-only `KsPredictedPuddleTopUpComponent`, which only changes the drawn volume, until a state shows the
 server's spill has landed.
 
+A kept bullet's hit is the same: `PredictedProjectileSystem.DoHit` works out what it would deal with
+`DamageableSystem.PreviewDamage` (the steps of `ChangeDamage`, minus the write) for the impact and for going through,
+and raises `ProjectileHitEvent` with `KsPreviewOnly`, which a handler that changes the target (stamina) returns on.
+Dealt by the kept copy, damage was put back by the next state and dealt again by the server's hit: health flickered on
+every shot. A projectile the client does not predict at all (anyone else's, the hidden server copy of its own) hits
+nothing on it, and `KsRayCollisionSystem` does not look ahead of it. `KsGunHitPredictionTest`.
+
+**The server takes a player's shot against where each mob was when their client fired**, by ping: bullets through
+`LagCompProjectileSystem`'s rewound ghosts, hitscan through `KsHitscanLagCompensationSystem`, which corrects what the
+ray crossed (`KsModifyHitscanRaycastResultsEvent`). A client predicts against what it sees, so without it a shot seen
+to land on a moving target missed on the server. Pooled test channels report a ping of zero: pass the lag in
+(`CompensateProjectile`, `Compensate`, `LagDurationOverride`), and keep the target moving, as a position is only
+recorded on a move (`KsHitscanLagCompensationTest`).
+
+**A field of a `fieldDeltas` component the server never `DirtyField`s is never sent**, and every state reset puts the
+client's back to what it was sent last: `GunComponent.CurrentAngle` was written each shot and not dirtied, so the
+client's spread restarted on every state (`SpreadBuildsTheSameOnClientAndServer`); the burst fields did the same (#415).
+Whatever a predicted path writes, it dirties, and what it reads back next time (`LastFire`) is networked too.
+
 `KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` and
 `KsPredictedSpillTest.SprayLaysPuddlesThatLastUntilTheServersArrive` fail with engine spawns or without the handover.
 
