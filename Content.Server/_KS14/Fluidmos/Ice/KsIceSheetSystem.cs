@@ -9,6 +9,7 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Shared.Fluids.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -40,6 +41,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
 
     private static readonly EntProtoId IceSheetPrototype = "KsIceSheet";
+
+    /// <summary>
+    ///     The puddle a sheet is drawn as, whose overflow volume sets how full a sheet looks.
+    /// </summary>
+    private static readonly EntProtoId PuddlePrototype = "Puddle";
 
     /// <summary>
     ///     Volume, in units, below which a sheet is only frost: nobody slips on it.
@@ -440,6 +446,18 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     }
 
     /// <summary>
+    ///     How full a puddle of what the sheet holds would be, as <c>PuddleVisuals.CurrentVolume</c> measures it, so the
+    ///         sheet looks like the puddle it froze out of.
+    /// </summary>
+    private float GetFill(Solution solution)
+    {
+        if (!ProtoMan.Index(PuddlePrototype).TryComp<PuddleComponent>(out var puddleComponent, Factory))
+            return 1f;
+
+        return (float)(solution.Volume / _puddleSystem.KsGetOverflowVolume(puddleComponent, solution));
+    }
+
+    /// <summary>
     ///     Sets a solution's temperature after units left it carrying <paramref name="energyRemoved"/> joules.
     /// </summary>
     private static void SetTemperatureAfterRemoving(Solution solution, float heatCapacity, float temperature, float energyRemoved, float heatCapacityRemoved)
@@ -450,8 +468,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Tints the sheet by its solution and makes it slippery once it is more than frost. Only touches physics when the
-    ///         slipperiness actually changes.
+    ///     Tints the sheet by its solution, shapes it as a puddle of as much, and makes it slippery once it is more than
+    ///         frost. Only touches physics when the slipperiness actually changes.
     /// </summary>
     private void UpdateSheet(Entity<KsIceSheetComponent> sheet)
     {
@@ -462,6 +480,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         var color = solution.GetColor(ProtoMan);
         var alpha = MinimumAlpha + (MaximumAlpha - MinimumAlpha) * MathF.Min(1f, volume / OpaqueUnits);
         _appearanceSystem.SetData(sheet, KsIceSheetVisuals.Color, color.WithAlpha(alpha));
+        _appearanceSystem.SetData(sheet, KsIceSheetVisuals.Fill, GetFill(solution));
 
         var slippery = volume >= SlipThresholdUnits;
         if (TryComp<Robust.Shared.Physics.Components.PhysicsComponent>(sheet, out var physicsComponent) &&
