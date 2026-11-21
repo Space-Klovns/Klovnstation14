@@ -1,4 +1,5 @@
-# Marks where something hostile is about to come down (cruise missiles, mortar shells), in place of the supply pod
+# Marks where something hostile is about to come down (cruise missiles; mortar shells have their own, gentler
+#     KsMortarWarning), in place of the supply pod
 #     landing zone. Sized to the blast and drawn over mobs, doors, structures and vehicles, unshaded so it reads in the dark; the
 #     client (KsStrikeWarningSystem) pulses it ever faster and closes the chevrons in on the rim as the impact nears.
 - type: entity

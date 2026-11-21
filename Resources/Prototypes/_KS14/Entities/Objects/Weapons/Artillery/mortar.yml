@@ -33,7 +33,7 @@
     angularDeviation: 10
     trailProto: KsMortarShellTrail
   - type: SupplyPodLandingZone
-    indicatorProto: KsStrikeWarning
+    indicatorProto: KsMortarWarning
   - type: SupplyPodDrawDepth
     transitDrawDepth: Effects
     landedDrawDepth: Effects
@@ -49,6 +49,32 @@
     maxTileBreak: 0
     canCreateVacuum: false
   - type: DeleteOnTrigger
+
+# Where a mortar shell is coming down: a strike warning (Effects/SupplyPod/strike_warning.yml) toned down, a mortar
+#     being the lesser threat. A thin, broken amber ring on the blast's rim and a small cross, nothing filled in, no
+#     chevrons, pulsing slower and never as faint.
+- type: entity
+  id: KsMortarWarning
+  categories: [ HideSpawnMenu ]
+  name: mortar warning
+  description: A dashed ring marking where a mortar shell is coming down. Best not to stand in it.
+  save: false
+  components:
+  - type: Sprite
+    sprite: /Textures/_KS14/Objects/Weapons/Artillery/mortar_warning.rsi
+    drawdepth: Gasses # over a tank's turret (Overdoors), under the shell coming down (Effects)
+    layers:
+    - state: ring
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Area ]
+    - state: cross
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Reticle ]
+  - type: SupplyPodLandingZoneIndicator
+  - type: KsStrikeWarning
+    pulseStartFrequency: 0.6
+    pulseEndFrequency: 2
+    pulseMinimumAlpha: 0.6
 
 # Limited-ammo immovable mortar that requires you to choose a bearing and distance to fire
 # TODO LCDC: 'gods-eye view' that shows you a little view of where the mortar is landing

@@ -36,12 +36,21 @@ public sealed partial class KsStrikeWarningSystem : EntitySystem
             var chevronScale = areaScale * float.Lerp(warningComponent.ChevronStartScale, 1f, fraction);
             var alpha = PulseAlpha(warningComponent, Math.Min(elapsedSeconds, durationSeconds), durationSeconds);
 
-            _spriteSystem.LayerSetScale(spriteEntity, KsStrikeWarningLayers.Area, new Vector2(areaScale, areaScale));
-            _spriteSystem.LayerSetScale(spriteEntity, KsStrikeWarningLayers.Reticle, new Vector2(areaScale, areaScale));
-            _spriteSystem.LayerSetScale(spriteEntity, KsStrikeWarningLayers.Chevrons, new Vector2(chevronScale, chevronScale));
+            // A marker may leave a layer out (the mortar's has no chevrons).
+            if (_spriteSystem.LayerMapTryGet(spriteEntity, KsStrikeWarningLayers.Area, out var areaIndex, logMissing: false))
+            {
+                _spriteSystem.LayerSetScale(spriteEntity, areaIndex, new Vector2(areaScale, areaScale));
+                _spriteSystem.LayerSetColor(spriteEntity, areaIndex, Color.White.WithAlpha(alpha));
+            }
 
-            _spriteSystem.LayerSetColor(spriteEntity, KsStrikeWarningLayers.Area, Color.White.WithAlpha(alpha));
-            _spriteSystem.LayerSetColor(spriteEntity, KsStrikeWarningLayers.Reticle, Color.White.WithAlpha(alpha));
+            if (_spriteSystem.LayerMapTryGet(spriteEntity, KsStrikeWarningLayers.Reticle, out var reticleIndex, logMissing: false))
+            {
+                _spriteSystem.LayerSetScale(spriteEntity, reticleIndex, new Vector2(areaScale, areaScale));
+                _spriteSystem.LayerSetColor(spriteEntity, reticleIndex, Color.White.WithAlpha(alpha));
+            }
+
+            if (_spriteSystem.LayerMapTryGet(spriteEntity, KsStrikeWarningLayers.Chevrons, out var chevronIndex, logMissing: false))
+                _spriteSystem.LayerSetScale(spriteEntity, chevronIndex, new Vector2(chevronScale, chevronScale));
         }
     }
 
@@ -58,7 +67,7 @@ public sealed partial class KsStrikeWarningSystem : EntitySystem
     ///     Opacity of the pulsing layers. The rate rises linearly over the countdown, so the phase is its integral: a
     ///         chirp that never jumps back when the rate changes.
     /// </summary>
-    private static float PulseAlpha(KsStrikeWarningComponent warningComponent, float elapsedSeconds, float durationSeconds)
+    public static float PulseAlpha(KsStrikeWarningComponent warningComponent, float elapsedSeconds, float durationSeconds)
     {
         var rateGain = durationSeconds <= 0f
             ? 0f
