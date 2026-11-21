@@ -1,45 +1,42 @@
 light_mode unshaded;
 
-uniform highp float bloom_intensity = 1.5;
-uniform highp float threshold = 0.15;
-uniform highp float bloom_softness = 0.15;
+// No initialisers here: GLSL ES (compatibility mode) refuses them, and the shader fails to compile. The defaults
+//      (bloom_intensity 1.5, threshold 0.15, bloom_softness 0.15) are the Emissive prototype's params.
+uniform highp float bloom_intensity;
+uniform highp float threshold;
+uniform highp float bloom_softness;
 
 void fragment() {
-    highp vec4 base = texture(TEXTURE, UV);
-
-    const highp float kernel[9] = float[9](
-        1.0, 2.0, 1.0,
-        2.0, 4.0, 2.0,
-        1.0, 2.0, 1.0
-    );
-
-    const highp vec2 offsets[9] = vec2[9](
-        vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0),
-        vec2(-1.0,  0.0), vec2(0.0,  0.0), vec2(1.0,  0.0),
-        vec2(-1.0,  1.0), vec2(0.0,  1.0), vec2(1.0,  1.0)
-    );
+    highp vec4 base = texture2D(TEXTURE, UV);
 
     highp vec3 blur = vec3(0.0);
     highp float total = 0.0;
 
-    for (int i = 0; i < 9; i++) {
-        highp vec3 s = texture(
-            TEXTURE,
-            UV + offsets[i] * TEXTURE_PIXEL_SIZE
-        ).rgb;
+    // A 3x3 tent (1 2 1 / 2 4 2 / 1 2 1), row by row. Loops, not a const table: GLSL ES 1.0 (compatibility mode) has
+    //      neither const arrays nor array constructors.
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            highp vec2 offset = vec2(float(x), float(y));
+            highp float kernel = (2.0 - abs(offset.x)) * (2.0 - abs(offset.y));
 
-        highp float brightness = dot(
-            s, vec3(0.299, 0.587, 0.114)
-        );
+            highp vec3 s = texture2D(
+                TEXTURE,
+                UV + offset * TEXTURE_PIXEL_SIZE
+            ).rgb;
 
-        highp float mask = smoothstep(
-            threshold,
-            threshold + bloom_softness,
-            brightness
-        );
+            highp float brightness = dot(
+                s, vec3(0.299, 0.587, 0.114)
+            );
 
-        blur += s * mask * kernel[i];
-        total += kernel[i];
+            highp float mask = smoothstep(
+                threshold,
+                threshold + bloom_softness,
+                brightness
+            );
+
+            blur += s * mask * kernel;
+            total += kernel;
+        }
     }
 
     blur /= total;
