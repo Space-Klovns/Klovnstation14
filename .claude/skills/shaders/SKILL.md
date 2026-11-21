@@ -1,12 +1,17 @@
 ---
 name: shaders
-description: How shaders work in this repo - SWSL source files and shader prototypes, how the engine splices fragment() into its wrapper (no early return), built-ins (UV vs UV2, FRAGCOORD, TEXTURE_PIXEL_SIZE), z-library helpers, mapping UV to UV2 with derivatives, shared vs unique instances and uniforms that leak between users, where a shader can be applied (sprite layers, post-shaders, overlays, status effects), and the traps that fail silently. Use when writing, changing or debugging any .swsl or shader prototype, a sprite or screen effect that needs a shader, a shader that compiles but draws garbage, or a uniform that seems to hold another entity's value.
+description: How shaders work in this repo - SWSL source files and shader prototypes, how the engine splices fragment() into its wrapper (no early return), built-ins (UV vs UV2, FRAGCOORD, TEXTURE_PIXEL_SIZE), z-library helpers, mapping UV to UV2 with derivatives, shared vs unique instances and uniforms that leak between users, where a shader can be applied (sprite layers, post-shaders, overlays, status effects), compatibility mode (GLSL ES, which every shader must compile under, and how to rewrite what it refuses), and the traps that fail silently. Use when writing, changing or debugging any .swsl or shader prototype, a sprite or screen effect that needs a shader, a shader that compiles but draws garbage, or a uniform that seems to hold another entity's value.
 ---
 
 # Shaders
 
 How shaders work in this codebase: where they live, what the engine does with them, which built-ins you get, and
 the traps that fail silently. Engine paths below are under `RobustToolbox/Robust.Client/Graphics/`.
+
+**Every shader must compile in compatibility mode** (GLSL ES 3.00 and 1.00), not only on desktop GL. One that
+doesn't crashes the game at startup for every player in compatibility mode, even if nothing ever uses it. Write
+GLSL ES 1.00 from the start; [Compatibility mode](#compatibility-mode-gles-every-shader-must-compile-there) lists what
+it refuses, what to write instead, and how to check.
 
 ## The two files
 
@@ -310,7 +315,24 @@ Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParamete
 - [ ] Every per-use uniform is set on every instance, or the shader has its own program.
 - [ ] Every `InstanceUnique()` is disposed.
 
-## Compatibility mode (GLES)
+## Compatibility mode (GLES): every shader must compile there
+
+Players on old or unusual GPUs, and anyone whose drivers fail at desktop GL, run in compatibility mode. So it is a
+requirement, not a nice-to-have, and fixing a shader for it must not change how it looks on desktop GL. Every rewrite
+below gives identical output on both.
+
+| GLSL ES refuses | Write instead |
+| --- | --- |
+| `uniform highp float c = 0.3;` | `uniform highp float c;`, plus `params: { c: 0.3 }` on the shader prototype |
+| `texture(TEXTURE, uv)` | `texture2D(TEXTURE, uv)` |
+| `const float k[3] = float[3](1.0, 2.0, 1.0);` | Compute it from the loop index: `float k = 2.0 - abs(float(i));` |
+| `2`, `1 - x` where a float is meant | `2.0`, `1.0 - x` |
+| `for (int i = 0; i < count; i++)` | `for (int i = 0; i < 32; i++) { if (i >= count) break; ... }` |
+| `while`, `%` on ints, bitwise ops | A constant-bound `for`; `mod()` on floats; float maths |
+| `dFdx`/`dFdy`/`fwidth` on their own | Inside `#ifdef HAS_DFDX`, with an `#else` fallback |
+| `pow(x, 2.0)` with a negative `x` | `x * x`. It compiles, but is NaN on D3D-backed ANGLE |
+
+Details:
 
 `display.compat true` makes the client ask for a GLES3 context, then GLES2 (`GLContextWindow.SpecsToTry`); on Windows
 that is ANGLE over D3D11. Clyde then prefixes the source with `#version 300 es`, or `#version 100` plus
@@ -338,7 +360,8 @@ ShaderSourceResource at '<path>'`, then the GL compiler's errors.
 ## Testing
 
 Nothing headless compiles or runs a shader. Integration tests and the YAML linter load the prototype but don't
-check the GLSL. Launch the client and look.
+check the GLSL. Launch the client and look, and after adding or changing any `.swsl` launch it once more with
+`--cvar display.compat=true` and make sure it reaches the main menu (see Compatibility mode).
 
 - **Compile errors** show in the client log when the shader is first used, with `error.glsl` next to them.
 - **For iterating on values,** VV the component or the effect entity and change parameters live, rather than
