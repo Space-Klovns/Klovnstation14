@@ -23,6 +23,8 @@ internal sealed partial class MappingClientSideSetupCommand : LocalizedEntityCom
         _markerSystem.MarkersVisible = true;
         _lightManager.Enabled = false;
         _subfloorSystem.ShowAll = true;
-        _actionSystem.LoadActionAssignments("/mapping_actions.yml", false);
+        /* _actionSystem.LoadActionAssignments("/mapping_actions.yml", false); */ // KS14: removed; mapping editor controls use MappingState bindings
+        shell.ExecuteCommand("zoom 1.5"); // KS14: mapping editor zoom
+        shell.ExecuteCommand("scene MappingState"); // KS14: enter mapping editor state
     }
 }

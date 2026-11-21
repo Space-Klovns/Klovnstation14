@@ -1,5 +1,13 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: MiniTileDark
+  parent: MiniTile
+  abstract: true
+
+- type: decal
+# KS14 end
   id: MiniTileDarkBox
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -7,6 +15,7 @@
 
 - type: decal
   id: MiniTileDarkCornerNe
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -14,6 +23,7 @@
 
 - type: decal
   id: MiniTileDarkCornerSe
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -21,6 +31,7 @@
 
 - type: decal
   id: MiniTileDarkCornerNw
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -28,6 +39,7 @@
 
 - type: decal
   id: MiniTileDarkCornerSw
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -35,6 +47,7 @@
 
 - type: decal
   id: MiniTileDarkInnerNe
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -42,6 +55,7 @@
 
 - type: decal
   id: MiniTileDarkInnerSe
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -49,6 +63,7 @@
 
 - type: decal
   id: MiniTileDarkInnerNw
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -56,6 +71,7 @@
 
 - type: decal
   id: MiniTileDarkInnerSw
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -63,6 +79,7 @@
 
 - type: decal
   id: MiniTileDarkEndN
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -70,6 +87,7 @@
 
 - type: decal
   id: MiniTileDarkEndE
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -77,6 +95,7 @@
 
 - type: decal
   id: MiniTileDarkEndS
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -84,6 +103,7 @@
 
 - type: decal
   id: MiniTileDarkEndW
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -91,6 +111,7 @@
 
 - type: decal
   id: MiniTileDarkLineN
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -98,6 +119,7 @@
 
 - type: decal
   id: MiniTileDarkLineE
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -105,6 +127,7 @@
 
 - type: decal
   id: MiniTileDarkLineS
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -112,6 +135,7 @@
 
 - type: decal
   id: MiniTileDarkLineW
+  parent: MiniTileDark # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
