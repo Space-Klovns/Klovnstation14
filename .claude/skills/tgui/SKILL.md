@@ -122,7 +122,7 @@ dark overlays on near-base content only. A light colour over varied content, or 
 ## Porting a tgui interface 1:1
 
 **Both themes open the port**: the BUI's choice reads `KsTguiTheme.UsePortedWindows()` (always true), and Baron skins
-the control library through `KsBaronUiSheetlet.Tgui.cs` (tinted button_3 per colour, green selected, flat notice colours, a
+the control library through `KsBaronUiSheetlet.Tgui.cs` (button_3 tinted so its face is the tgui colour of each state, `KsBaronUiSheetlet.FaceTintOf`, with tg's dimmed text when disabled; green selected, flat notice colours, a
 section title line, Baron colours for the self-drawing controls). A port must therefore work under Baron too: no class that only
 the tgui sheet styles may carry meaning on its own, and `KsBaronPortedWindowUIController` adds Baron's taller header to a stated
 height when the window opens (a window that restates its height later adds `KsBaronPortedWindowUIController.ExtraHeight(this)`).

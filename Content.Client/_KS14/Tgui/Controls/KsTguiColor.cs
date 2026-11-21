@@ -85,6 +85,20 @@ public static class KsTguiColors
     }
 
     /// <summary>
+    ///     The text of a disabled button: tgui dims the whole button to opacity .5 (<c>--button-disabled-opacity</c>), so its
+    ///         text is half its own colour and half the window's, as <see cref="Disabled"/> is for the face.
+    /// </summary>
+    public static Color DisabledText(KsTguiColor color)
+    {
+        var text = Text(color);
+        var backdrop = KsTguiPalettes.Base;
+        return new Color(
+            (text.R + backdrop.R) / 2f,
+            (text.G + backdrop.G) / 2f,
+            (text.B + backdrop.B) / 2f);
+    }
+
+    /// <summary>
     ///     The text colour on a button of this colour: black on the low-contrast colours (tgui's `yellow` and `white` alone, not `caution`), white otherwise.
     /// </summary>
     public static Color Text(KsTguiColor color)
