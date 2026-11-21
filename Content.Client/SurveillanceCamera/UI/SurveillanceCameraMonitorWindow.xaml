@@ -4,10 +4,10 @@
                Title="{Loc 'surveillance-camera-monitor-ui-window'}">
     <BoxContainer>
         <!-- Panel with tabs -->
-        <BoxContainer Orientation="Vertical" MinWidth="350">
+        <BoxContainer Orientation="Vertical" MinWidth="350" StyleClasses="KsButtonStack"> <!-- KS14: KsButtonStack spaces the buttons under tgui -->
             <TabContainer Name="ViewModeTabs" VerticalExpand="True">
                 <!-- Camera list tab -->
-                <BoxContainer Name="{Loc 'surveillance-camera-monitor-ui-tab-list'}" Orientation="Vertical">
+                <BoxContainer Name="{Loc 'surveillance-camera-monitor-ui-tab-list'}" Orientation="Vertical" StyleClasses="KsButtonStack"> <!-- KS14: added class -->
                     <OptionButton Name="SubnetSelector"/>
                     <Button Name="SubnetRefreshButton" Text="{Loc 'surveillance-camera-monitor-ui-refresh-subnets'}"/>
                     <ScrollContainer VerticalExpand="True">
@@ -17,7 +17,7 @@
                 </BoxContainer>
 
                 <!-- Map view tab -->
-                <BoxContainer Name="{Loc 'surveillance-camera-monitor-ui-tab-map'}" Orientation="Vertical" VerticalExpand="True">
+                <BoxContainer Name="{Loc 'surveillance-camera-monitor-ui-tab-map'}" Orientation="Vertical" VerticalExpand="True" StyleClasses="KsButtonStack"> <!-- KS14: added class -->
                     <local:SurveillanceCameraNavMapControl Name="CameraMap"
                                                            VerticalExpand="True"
                                                            HorizontalExpand="True"

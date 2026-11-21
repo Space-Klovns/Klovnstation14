@@ -171,6 +171,13 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     private static readonly Thickness ButtonGap = new(0f, 0f, 2f, 0f);
 
     /// <summary>
+    ///     On a vertical <see cref="BoxContainer"/> of plain buttons. A box's own separation is 0, and with no bottom margin (see
+    ///         <see cref="ButtonGap"/>) its buttons touch, which tg's never do. This gives it tg's 2px between them under tgui only:
+    ///         Baron's framed buttons read as separate already. Not set from XAML or code, as either would beat the sheet.
+    /// </summary>
+    public const string StyleClassButtonStack = "KsButtonStack";
+
+    /// <summary>
     ///     Set on every button by this sheet alone: <see cref="Content.Client._KS14.Tgui.Controls.KsRestylingButton"/> restyles its children only under tgui.
     /// </summary>
     public const string StylePropertyRestyleChildren = "ks-tgui-restyle-children";
@@ -240,6 +247,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             //      entries, lists and tabs are other ContainerButtons and get none. The chat filter sits in a row of its own.
             E<Button>().Class(ContainerButton.StyleClassButton).Margin(ButtonGap),
             E<Button>().Class(ChatInputBox.StyleClassChatFilterOptionButton).Margin(0f),
+            E<BoxContainer>().Class(StyleClassButtonStack).Prop(BoxContainer.StylePropertySeparation, 2),
 
             // A child of a button does not restyle when the button's pseudo-class changes; KsRestylingButton reads this.
             CButton().Prop(StylePropertyRestyleChildren, true),

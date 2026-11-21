@@ -22,8 +22,10 @@
                                  VerticalExpand="True"
                                  SetWidth="520"
                                  Margin="8, 8, 8, 8">
+                    <!-- KS14: KsButtonStack spaces the rows under tgui -->
                     <BoxContainer Name="SensorsTable"
                                    Orientation="Vertical"
+                                   StyleClasses="KsButtonStack"
                                    HorizontalExpand="True"
                                    Margin="0 0 10 0">
                         <!-- Table rows are filled by code -->
