@@ -1,0 +1,17 @@
+- type: entity
+  parent: BaseItem
+  id: KsZLevelBuilder
+  name: level builder
+  suffix: Admeme
+  description: Puts a ladder where you stand and a floor for it on the level above, building that level first if there isn't one.
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/rcd.rsi
+    state: icon
+  - type: Item
+    size: Normal
+  - type: UseDelay
+    delays:
+      ksZLevelBuilderLevel:
+        length: 30
+  - type: KsZLevelBuilder
