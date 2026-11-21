@@ -169,3 +169,5 @@ ks-fieldcommander-intel-mobik-killed = Мобик мёртв, и он был п�
 ks-fieldcommander-mobik-name = бывший полевой командир
 ks-fieldcommander-points-mobik = Мобик убит
 ks-fieldcommander-roundend-mobik-killed = Отстранённый от командования и отправленный в бой мобиком, полевой командир тоже погиб.
+
+ks-fieldcommander-rcd-blocked = РСУ заблокировано, пока с волной не покончено.

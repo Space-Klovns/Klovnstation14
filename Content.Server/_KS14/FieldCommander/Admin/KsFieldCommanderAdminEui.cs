@@ -189,6 +189,10 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
                 _ruleSystem.SetPaused(commander, setPaused.Paused);
                 return true;
 
+            case KsFieldCommanderAdminSetBlockRcdMessage setBlockRcd:
+                _ruleSystem.SetBlockRcdDuringWaves(commander, setBlockRcd.Block);
+                return true;
+
             case KsFieldCommanderAdminForceWaveMessage:
                 _ruleSystem.ForceWave(commander);
                 return true;
@@ -264,6 +268,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
         return message switch
         {
             KsFieldCommanderAdminSetPausedMessage setPaused => setPaused.Paused ? "paused it" : "unpaused it",
+            KsFieldCommanderAdminSetBlockRcdMessage setBlockRcd => setBlockRcd.Block ? "blocked RCDs during waves" : "allowed RCDs during waves",
             KsFieldCommanderAdminForceWaveMessage => "forced a wave",
             KsFieldCommanderAdminSendMobikMessage => "sent the mobik",
             KsFieldCommanderAdminSetPhaseMessage setPhase => $"moved it to phase {setPhase.Phase}",
@@ -318,6 +323,7 @@ public sealed partial class KsFieldCommanderAdminEui : BaseEui
             CarriedBudget = status.CarriedBudget,
             WavesSent = status.WavesSent,
             Paused = status.Paused,
+            BlockRcdDuringWaves = rule.Comp1.BlockRcdDuringWaves,
             DoctrineName = status.DoctrineName,
         };
 

@@ -94,6 +94,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         // A rule ended mid-round, by an admin, takes its fog and no-build zones with it.
         ClearFog(component);
+        ClearRcdBlock(component);
         ClearWaveStatus(component);
         AllowBuildingInSafeZones(component);
         RestoreAftermathLights(component);
@@ -145,6 +146,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         {
             component.NextOrderTime = curTime + component.OrderInterval;
             GiveOrders((uid, component));
+            RefreshRcdBlock((uid, component));
         }
 
         UpdateUplink(component, curTime);
@@ -180,6 +182,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         PrepareExistingDefenders(rule);
         RaiseFog(component);
         PrepareWaveStatus(component);
+        RefreshRcdBlock(rule);
         component.Prepared = true;
         return true;
     }

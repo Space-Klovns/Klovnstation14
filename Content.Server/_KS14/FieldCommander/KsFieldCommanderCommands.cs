@@ -241,3 +241,39 @@ public sealed partial class KsFieldCommanderStuckCommand : KsFieldCommanderComma
             : CompletionResult.Empty;
     }
 }
+
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderRcdBlockCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcrcdblock";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        bool? block = null;
+        if (args.Length > 0)
+        {
+            if (!bool.TryParse(args[0], out var parsed))
+            {
+                shell.WriteError(Loc.GetString("cmd-ks_fcrcdblock-help"));
+                return;
+            }
+
+            block = parsed;
+        }
+
+        foreach (var rule in GetRules(shell))
+        {
+            if (block is { } newBlock)
+                FieldCommanderRuleSystem.SetBlockRcdDuringWaves((rule.Owner, rule.Comp1), newBlock);
+
+            shell.WriteLine(Loc.GetString("cmd-ks_fcrcdblock-state", ("block", rule.Comp1.BlockRcdDuringWaves)));
+        }
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length == 1
+            ? CompletionResult.FromOptions(["true", "false"])
+            : CompletionResult.Empty;
+    }
+}

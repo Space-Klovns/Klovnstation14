@@ -61,3 +61,10 @@ cmd-ks_fcperk-help = ks_fcperk <игрок> <перк>
 cmd-ks_fcperk-hint-perk = <перк>
 cmd-ks_fcperk-unknown = Перка «{ $perk }» не существует.
 cmd-ks_fcperk-done = Перк игрока { $player } теперь — { $perk }.
+
+cmd-ks_fcrcdblock-desc = Сообщает, заблокированы ли РСУ, пока волна полевого командира на поле, или задаёт это.
+cmd-ks_fcrcdblock-help = ks_fcrcdblock [true|false]
+cmd-ks_fcrcdblock-state = { $block ->
+    [true] РСУ заблокированы, пока волна на поле.
+   *[false] РСУ работают во время волн.
+}

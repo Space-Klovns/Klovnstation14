@@ -5,14 +5,22 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.RCD;
 
 /// <summary>
-///     On a map: circles where an RCD can't be used at all, such as a game mode's spawn area. Networked, so the
-///         RCD's placement ghost shows it as impossible before anyone tries.
+///     On a map: where an RCD can't be used at all. Circles, such as a game mode's spawn area, and a switch for the
+///         whole map. Networked, so the client predicts the refusal and the RCD's placement ghost shows it as
+///         impossible before anyone tries.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(KsNoBuildZoneSystem))]
 public sealed partial class KsNoBuildZonesComponent : Component
 {
     [DataField, AutoNetworkedField]
     public List<KsNoBuildZone> Zones = [];
+
+    /// <summary>
+    ///     When set, an RCD can't be used anywhere on the map, and this is what whoever tries is told.
+    /// </summary>
+    /// <seealso cref="KsNoBuildZoneSystem.SetBlocked"/>
+    [DataField, AutoNetworkedField]
+    public LocId? BlockedMessage;
 }
 
 /// <summary>

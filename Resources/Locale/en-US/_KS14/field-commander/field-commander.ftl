@@ -171,3 +171,5 @@ ks-fieldcommander-intel-mobik-killed = The mobik is dead, and he was the last of
 ks-fieldcommander-mobik-name = former field commander
 ks-fieldcommander-points-mobik = Mobik killed
 ks-fieldcommander-roundend-mobik-killed = Relieved of command and sent in as a mobik, the field commander was killed too.
+
+ks-fieldcommander-rcd-blocked = The RCD stays locked until the wave is dealt with.
