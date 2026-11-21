@@ -22,8 +22,7 @@ public sealed class KsMortarBuiState(
     TimeSpan readyAt,
     TimeSpan reloadTime,
     List<Vector2> impacts,
-    float sightRadius,
-    Dictionary<NetEntity, NetEntity> sightEyes) : BoundUserInterfaceState
+    float sightRadius) : BoundUserInterfaceState
 {
     public int Rounds = rounds;
     public float MinRange = minRange;
@@ -53,11 +52,6 @@ public sealed class KsMortarBuiState(
     ///     How far around its aim its sight shows, in tiles; zero for a mortar with no sight.
     /// </summary>
     public float SightRadius = sightRadius;
-
-    /// <summary>
-    ///     The eye each user with the window open sees their aim through, keyed by that user.
-    /// </summary>
-    public Dictionary<NetEntity, NetEntity> SightEyes = sightEyes;
 }
 
 /// <summary>

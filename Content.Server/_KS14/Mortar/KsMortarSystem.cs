@@ -39,6 +39,7 @@ public sealed partial class KsMortarSystem : EntitySystem
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private Robust.Shared.Containers.SharedContainerSystem _containerSystem = default!;
     [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private EntityQuery<KsMortarComponent> _mortarQuery = default!;
     [Dependency] private EntityQuery<KsMortarCrewComponent> _crewQuery = default!;
@@ -168,7 +169,7 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsMortarComponent> entity, ref ComponentShutdown args)
     {
-        CloseAllSights(entity.Comp);
+        CloseAllSights(entity);
 
         if (entity.Comp.CrewUid is { } crewUid)
             ReleaseCrew(entity, crewUid);
@@ -363,8 +364,9 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShellLanded(Entity<KsMortarFallOfShotComponent> entity, ref SupplyPodLandedEvent args)
     {
-        var mortarUid = entity.Comp.MortarUid;
-        if (TerminatingOrDeleted(mortarUid) || !_mortarQuery.TryComp(mortarUid, out var mortarComponent))
+        if (entity.Comp.MortarUid is not { } mortarUid ||
+            TerminatingOrDeleted(mortarUid) ||
+            !_mortarQuery.TryComp(mortarUid, out var mortarComponent))
             return;
 
         var landing = _transformSystem.GetMapCoordinates(entity);
@@ -402,8 +404,7 @@ public sealed partial class KsMortarSystem : EntitySystem
                 mortar.Comp.NextFire,
                 mortar.Comp.ManualCooldown,
                 new List<Vector2>(mortar.Comp.Impacts),
-                mortar.Comp.SightRadius,
-                GetSightEyes(mortar.Comp)));
+                mortar.Comp.SightRadius));
     }
 
     #endregion
@@ -498,9 +499,10 @@ public sealed partial class KsMortarSystem : EntitySystem
             var memberQuery = EntityQueryEnumerator<NpcFactionMemberComponent, TransformComponent>();
             while (memberQuery.MoveNext(out var memberUid, out _, out var memberTransform))
             {
-                // Not in a container, on this map, and hostile; the range is checked below.
+                // On this map, hostile, and not in a container, which the lookup above leaves out too: someone buckled or
+                //     riding is a target at any range. The range is checked below.
                 if (memberTransform.MapID != origin.MapId ||
-                    memberTransform.ParentUid != memberTransform.GridUid && memberTransform.ParentUid != memberTransform.MapUid ||
+                    _containerSystem.IsEntityInContainer(memberUid) ||
                     !_npcFactionSystem.IsEntityHostile((factions.Owner, factions.Comp, null), memberUid))
                     continue;
 

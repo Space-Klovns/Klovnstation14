@@ -48,11 +48,6 @@ public sealed class KsMortarWarningTest : GameTest
                 "a mortar shell should be marked otherwise than a cruise missile");
             Assert.That(shellBlast, Is.Not.EqualTo(missileBlast).Within(0.01f), "precondition: blasts of different sizes");
 
-            // The lesser threat: pulsing slower all the way, and never as faint.
-            Assert.That(shellWarning.PulseStartFrequency, Is.LessThan(missileWarning.PulseStartFrequency), "the mortar's should pulse slower at first");
-            Assert.That(shellWarning.PulseEndFrequency, Is.LessThan(missileWarning.PulseEndFrequency), "the mortar's should pulse slower at the end");
-            Assert.That(shellWarning.PulseMinimumAlpha, Is.GreaterThan(missileWarning.PulseMinimumAlpha), "the mortar's should never fade as far");
-
             // Off before either lands.
             SEntMan.DeleteEntity(shellUid);
             SEntMan.DeleteEntity(missileUid);

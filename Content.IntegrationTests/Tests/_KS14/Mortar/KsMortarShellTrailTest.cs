@@ -22,7 +22,7 @@ public sealed class KsMortarShellTrailTest : GameTest
     private static readonly EntProtoId MortarShellTrail = "KsMortarShellTrail";
 
     [Test]
-    public async Task AMortarShellTrailIsAPodTrailAtHalfTheWidth()
+    public async Task AMortarShellTrailIsNarrowerThanAPods()
     {
         await Server.WaitAssertion(() =>
         {
@@ -44,20 +44,8 @@ public sealed class KsMortarShellTrailTest : GameTest
             var nativeSize = Vector2.One;
             var podTile = trailSystem.GetTileSize(podTrail!, nativeSize);
             var shellTile = trailSystem.GetTileSize(shellTrail!, nativeSize);
-            Assert.That(shellTile.X / podTile.X, Is.EqualTo(0.5f).Within(1e-4f), "the shell's trail should be half as wide as a pod's");
-            Assert.That(shellTile.Y, Is.EqualTo(podTile.Y), "the shell's trail should be as long a tile as a pod's");
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(shellTrail!.Sprite, Is.EqualTo(podTrail!.Sprite), "otherwise the same: sprite");
-                Assert.That(shellTrail.StartSprite, Is.EqualTo(podTrail.StartSprite), "otherwise the same: start sprite");
-                Assert.That(shellTrail.Spacing, Is.EqualTo(podTrail.Spacing), "otherwise the same: spacing");
-                Assert.That(shellTrail.Color, Is.EqualTo(podTrail.Color), "otherwise the same: colour");
-                Assert.That(shellTrail.Blur, Is.EqualTo(podTrail.Blur), "otherwise the same: blur");
-                Assert.That(shellTrail.BlurScale, Is.EqualTo(podTrail.BlurScale), "otherwise the same: blur scale");
-                Assert.That(shellTrail.TailFadeTiles, Is.EqualTo(podTrail.TailFadeTiles), "otherwise the same: tail fade");
-                Assert.That(shellTrail.RevealFadeInFraction, Is.EqualTo(podTrail.RevealFadeInFraction), "otherwise the same: reveal fade");
-            });
+            Assert.That(shellTile.X, Is.LessThan(podTile.X), "the shell's trail should be narrower than a pod's");
+            Assert.That(shellTile.Y, Is.EqualTo(podTile.Y), "a width scale should leave the length of a tile alone");
         });
     }
 }

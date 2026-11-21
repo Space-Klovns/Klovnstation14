@@ -22,11 +22,18 @@ public sealed partial class KsMortarSystem
     [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
     [Dependency] private EntityQuery<ActorComponent> _actorQuery = default!;
     [Dependency] private EntityQuery<EyeComponent> _eyeQuery = default!;
+    [Dependency] private EntityQuery<KsMortarSightViewerComponent> _sightViewerQuery = default!;
 
     /// <summary>
     ///     Tiles of view past the edge of the sight, so that what is at its edge is there before it comes into it.
     /// </summary>
     private const float SightViewMargin = 4f;
+
+    /// <summary>
+    ///     The users of the mortar being updated, taken out to be walked: moving a sight whose eye is gone closes it,
+    ///         which takes it out of the mortar's own dictionary.
+    /// </summary>
+    private readonly List<EntityUid> _sightUsers = new();
 
     /// <summary>
     ///     Closing the window by any road (the player, the range check, the user going) ends their sight.
@@ -70,6 +77,11 @@ public sealed partial class KsMortarSystem
 
         _viewSubscriberSystem.AddViewSubscriber(eyeUid, actorComponent.PlayerSession);
         mortar.Comp.Sights[userUid] = new KsMortarSight(eyeUid, actorComponent.PlayerSession);
+
+        // Which eye is theirs goes to that player alone, not to everyone with the window open.
+        var viewerComponent = EnsureComp<KsMortarSightViewerComponent>(userUid);
+        viewerComponent.Eyes[mortar.Owner] = eyeUid;
+        Dirty(userUid, viewerComponent);
     }
 
     /// <summary>
@@ -80,22 +92,30 @@ public sealed partial class KsMortarSystem
         if (!mortar.Comp.Sights.Remove(userUid, out var sight))
             return false;
 
-        EndSight(sight);
+        EndSight(mortar.Owner, userUid, sight);
         return true;
     }
 
-    private void CloseAllSights(KsMortarComponent mortarComponent)
+    private void CloseAllSights(Entity<KsMortarComponent> mortar)
     {
-        foreach (var sight in mortarComponent.Sights.Values)
+        foreach (var (userUid, sight) in mortar.Comp.Sights)
         {
-            EndSight(sight);
+            EndSight(mortar.Owner, userUid, sight);
         }
 
-        mortarComponent.Sights.Clear();
+        mortar.Comp.Sights.Clear();
     }
 
-    private void EndSight(KsMortarSight sight)
+    private void EndSight(EntityUid mortarUid, EntityUid userUid, KsMortarSight sight)
     {
+        if (_sightViewerQuery.TryComp(userUid, out var viewerComponent) && viewerComponent.Eyes.Remove(mortarUid))
+        {
+            if (viewerComponent.Eyes.Count == 0)
+                RemCompDeferred<KsMortarSightViewerComponent>(userUid);
+            else
+                Dirty(userUid, viewerComponent);
+        }
+
         _viewSubscriberSystem.RemoveViewSubscriber(sight.EyeUid, sight.Session);
         if (!TerminatingOrDeleted(sight.EyeUid))
             QueueDel(sight.EyeUid);
@@ -128,16 +148,15 @@ public sealed partial class KsMortarSystem
     /// </summary>
     private void UpdateSights(Entity<KsMortarComponent> mortar, TimeSpan now)
     {
-        foreach (var (userUid, sight) in mortar.Comp.Sights)
-        {
-            if (sight.PendingOffset != null && now >= sight.NextMoveAt)
-            {
-                MoveSight(mortar, userUid, sight, now);
+        if (mortar.Comp.Sights.Count == 0)
+            return;
 
-                // An eye found gone takes its sight out of the dictionary being walked.
-                if (!mortar.Comp.Sights.ContainsKey(userUid))
-                    break;
-            }
+        _sightUsers.Clear();
+        _sightUsers.AddRange(mortar.Comp.Sights.Keys);
+        foreach (var userUid in _sightUsers)
+        {
+            if (mortar.Comp.Sights.TryGetValue(userUid, out var sight) && sight.PendingOffset != null && now >= sight.NextMoveAt)
+                MoveSight(mortar, userUid, sight, now);
         }
     }
 
@@ -165,21 +184,6 @@ public sealed partial class KsMortarSystem
             return;
 
         _transformSystem.SetCoordinates(sight.EyeUid, coordinates);
-    }
-
-    /// <summary>
-    ///     The eye each user sees through, by user, for the window's state.
-    /// </summary>
-    private Dictionary<NetEntity, NetEntity> GetSightEyes(KsMortarComponent mortarComponent)
-    {
-        var eyes = new Dictionary<NetEntity, NetEntity>(mortarComponent.Sights.Count);
-        foreach (var (userUid, sight) in mortarComponent.Sights)
-        {
-            if (!TerminatingOrDeleted(userUid) && !TerminatingOrDeleted(sight.EyeUid))
-                eyes[GetNetEntity(userUid)] = GetNetEntity(sight.EyeUid);
-        }
-
-        return eyes;
     }
 
     /// <summary>

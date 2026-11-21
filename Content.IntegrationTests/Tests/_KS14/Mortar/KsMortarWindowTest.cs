@@ -34,7 +34,7 @@ public sealed class KsMortarWindowTest : GameTest
     private static KsMortarBuiState State(int rounds = 5)
     {
         return new KsMortarBuiState(rounds, MinRange, MaxRange, spread: 1.5f, readyAt: TimeSpan.Zero, reloadTime: TimeSpan.FromSeconds(6),
-            impacts: new List<Vector2> { new(0f, 40f), new(10f, 35f) }, sightRadius: 0f, sightEyes: new Dictionary<NetEntity, NetEntity>());
+            impacts: new List<Vector2> { new(0f, 40f), new(10f, 35f) }, sightRadius: 0f);
     }
 
     private async Task<KsMortarWindow> OpenWindow()

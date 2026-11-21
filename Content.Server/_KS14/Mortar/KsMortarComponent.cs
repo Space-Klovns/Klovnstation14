@@ -308,5 +308,5 @@ public sealed partial class KsMortarShellComponent : Component
 public sealed partial class KsMortarFallOfShotComponent : Component
 {
     [ViewVariables]
-    public EntityUid MortarUid;
+    public EntityUid? MortarUid;
 }

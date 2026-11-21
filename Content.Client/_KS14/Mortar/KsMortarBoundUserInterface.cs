@@ -11,6 +11,7 @@ namespace Content.Client._KS14.Mortar;
 public sealed partial class KsMortarBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey), IBuiPreTickUpdate
 {
     private KsMortarWindow? _window;
+    private NetEntity? _sightEye;
 
     // A mutable struct: kept as a field, never copied.
     private InputCoalescer<(Angle Bearing, float Distance)> _aimCoalescer;
@@ -26,6 +27,8 @@ public sealed partial class KsMortarBoundUserInterface(EntityUid owner, Enum uiK
 
     void IBuiPreTickUpdate.PreTickUpdate()
     {
+        UpdateSightEye();
+
         if (_aimCoalescer.CheckIsModified(out var aim))
             SendMessage(new KsMortarAimMessage(aim.Bearing, aim.Distance));
     }
@@ -38,11 +41,28 @@ public sealed partial class KsMortarBoundUserInterface(EntityUid owner, Enum uiK
             return;
 
         _window.UpdateState(mortarState);
+        UpdateSightEye();
+    }
+
+    /// <summary>
+    ///     Shows the window the eye this player sees their aim through, which the server tells them alone
+    ///         (<see cref="KsMortarSightViewerComponent"/>): looked up each tick, as it arrives apart from the window's state.
+    /// </summary>
+    private void UpdateSightEye()
+    {
+        if (_window == null)
+            return;
 
         NetEntity? sightEye = null;
-        if (PlayerManager.LocalEntity is { } localUid && mortarState.SightEyes.TryGetValue(EntMan.GetNetEntity(localUid), out var eye))
-            sightEye = eye;
+        if (PlayerManager.LocalEntity is { } localUid &&
+            EntMan.TryGetComponent(localUid, out KsMortarSightViewerComponent? viewerComponent) &&
+            viewerComponent.Eyes.TryGetValue(Owner, out var eyeUid))
+            sightEye = EntMan.GetNetEntity(eyeUid);
 
+        if (sightEye == _sightEye)
+            return;
+
+        _sightEye = sightEye;
         _window.SetSightEye(sightEye);
     }
 }
