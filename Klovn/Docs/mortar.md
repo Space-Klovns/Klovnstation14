@@ -9,13 +9,14 @@ flight with the ground under it marked, and going off as it lands.
 | --- | --- |
 | `KsMortarComponent`, `KsMortarCrewComponent`, `KsMortarShellComponent`, `KsMortarDeployedEvent` / `KsMortarLostEvent` | `Content.Server/_KS14/Mortar/KsMortarComponent.cs` |
 | `KsMortarSystem` (crew set-up and fire, manual fire, launch, abandoning, dissolving) | `Content.Server/_KS14/Mortar/KsMortarSystem.cs` |
-| Window: `KsMortarUiKey`, `KsMortarBuiState`, `KsMortarFireMessage` | `Content.Shared/_KS14/Mortar/KsMortarUi.cs`, `Content.Client/_KS14/Mortar/` |
+| Window: `KsMortarUiKey`, `KsMortarBuiState`, `KsMortarFireMessage`; `KsMortarAim` (bearing and distance to an offset and back) | `Content.Shared/_KS14/Mortar/KsMortarUi.cs`, `KsMortarAim.cs` |
+| `KsMortarWindow`, `KsMortarAimControl` (the plot), `KsMortarBoundUserInterface` | `Content.Client/_KS14/Mortar/` |
 | `KsMortar`, `KsMortarShell`, `KsMortarWarning`, `KsMortarIncoming` | `Resources/Prototypes/_KS14/Entities/Objects/Weapons/Artillery/mortar.yml` |
 | `KsMortarShellTrail` | `Resources/Prototypes/_KS14/Entities/Effects/SupplyPod/trail.yml` |
 | Art | `Resources/Textures/_KS14/Objects/Weapons/Artillery/mortar.rsi`, `mortar_warning.rsi` |
 | Sounds | `Resources/Audio/_KS14/Weapons/Mortar/` |
 | Field Commander hook | `Content.Server/_KS14/FieldCommander/KsFieldCommanderRuleSystem.Mortar.cs` |
-| Tests | `Content.IntegrationTests/Tests/_KS14/Mortar/`, `Tests/_KS14/FieldCommander/KsFieldCommanderMortarCrewTest.cs`, `Tests/_KS14/SupplyPod/KsSupplyPodDescentTest.cs` |
+| Tests | `Content.IntegrationTests/Tests/_KS14/Mortar/` (`KsMortarWindowTest` for the window, headless), `Tests/_KS14/FieldCommander/KsFieldCommanderMortarCrewTest.cs`, `Tests/_KS14/SupplyPod/KsSupplyPodDescentTest.cs` |
 
 ## Who fires it
 
@@ -28,6 +29,22 @@ flight with the ground under it marked, and going off as it lands.
   distance kept to its range, every `manualCooldown`. Whoever fires it takes it over: its NPC factions become theirs. A
   crewman only down, not dead, loses the mortar for good to whoever fires it.
 - **A mortar put down with no crewman** (by an admin, or on a map) is anyone's from the start, ready at once.
+
+## The window
+
+- **The plot** (`KsMortarAimControl`), north up: the mortar at the centre, its `minRange` and `maxRange` rings with the
+  band between them shaded, N/E/S/W marks, the aim as a cross with its `spread` ring, and where its last `maxImpacts`
+  shells landed, the newest strongest. A click or a drag aims at that point in whole degrees and tiles, kept to the
+  band; the mouse wheel moves the aim a tile in or out (5 with Shift).
+- **The fields**, bearing and distance, are the same aim as the plot: either writes the other, and only because the
+  player did something, so a state from the server never overwrites what is being typed. −/+ nudge by 1 degree or tile
+  (5 with Shift). A field that is not a number, a bearing outside 0 to 360 or a distance outside the range turns red as
+  it is typed, Fire goes off and the reason shows under the fields. Enter in either field fires.
+- **Status**: rounds left, a reload bar filling over `manualCooldown`, and Ready / Reloading / Out of shells; the bearing
+  readout gives three figures and a compass point (`045° NE`).
+- **Fall of shot**: each shell carries `KsMortarFallOfShotComponent` (its mortar); on `SupplyPodLandedEvent` the mortar
+  keeps where it landed, relative to itself, dropping the oldest past `maxImpacts`, and sends a new state.
+- The server still checks everything in `KsMortarFireMessage`: a number, clamped to the range, cooldown and rounds.
 
 ## Abandoned
 
@@ -57,7 +74,8 @@ Without it (the default), it stays until destroyed. A crewed mortar never times 
 | `interval` | 12 s | How often its crewman fires |
 | `manualCooldown` | 6 s | How soon anyone else may fire again |
 | `clusterRadius`, `priorityWeight` | 3, 5 | Crew target scoring |
-| `spread` | 1.5 | Tiles a shell may land off its aim |
+| `spread` | 1.5 | Tiles a shell may land off its aim; drawn as a ring round the aim |
+| `maxImpacts` | 5 | How many of its last impacts its window plots; 0 for none |
 | `crewRange`, `maxCrewSpeed` | 2, 0.5 | How near and how still the crewman must be to fire |
 | `flightTime` | 5 s | From the shot to the landing |
 | `minDescentTime`, `maxDescentTime` | 1 s, 2 s | Bounds on how long the shell is seen falling |

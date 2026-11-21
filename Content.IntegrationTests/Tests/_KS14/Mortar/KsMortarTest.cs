@@ -6,6 +6,7 @@ using Content.IntegrationTests.Tests._KS14.FieldCommander;
 using Content.Shared._KS14.Dissolve;
 using Content.Server._KS14.Mortar;
 using Content.Server._KS14.NPC.Targeting;
+using Content.Shared._KS14.Mortar;
 using Content.Shared._KS14.SupplyPod;
 using Content.Shared._KS14.SupplyPod.LandingZone;
 using Content.Shared.Mobs;
@@ -45,6 +46,7 @@ public sealed class KsMortarTest : GameTest
     private readonly EntProtoId _mortarLongDescent = "KsTestMortarLongDescent";
     private readonly EntProtoId _mortarShortDescent = "KsTestMortarShortDescent";
     private readonly EntProtoId _dissolvingCrew = "KsTestMortarDissolvingCrew";
+    private readonly EntProtoId _mortarFallOfShot = "KsTestMortarFallOfShot";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -109,6 +111,19 @@ public sealed class KsMortarTest : GameTest
     shell: KsTestMortarShell
     minDescentTime: 0.2
     maxDescentTime: 0.5
+
+# The same, with its window, keeping its last two impacts.
+- type: entity
+  parent: KsTestMortar
+  id: KsTestMortarFallOfShot
+  components:
+  - type: KsMortar
+    shell: KsTestMortarShell
+    maxImpacts: 2
+  - type: UserInterface
+    interfaces:
+      enum.KsMortarUiKey.Key:
+        type: KsMortarBoundUserInterface
 
 - type: entity
   id: KsTestMortarCrew
@@ -328,6 +343,66 @@ public sealed class KsMortarTest : GameTest
             var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
             Assert.That(system.TryFireAt(mortar, defenderUid, Angle.FromDegrees(180), 10f), Is.False, "with no rounds left");
         });
+    }
+
+    /// <summary>
+    ///     Where its shells land goes into its window's state, relative to the mortar, newest last; and it keeps only its last
+    ///         <see cref="KsMortarComponent.MaxImpacts"/> of them.
+    /// </summary>
+    [Test]
+    public async Task ItsWindowShowsWhereItsLastShellsLanded()
+    {
+        await SetUpMap();
+        EntityUid mortarUid = default, defenderUid = default;
+        var system = SEntMan.System<KsMortarSystem>();
+        var uiSystem = SEntMan.System<SharedUserInterfaceSystem>();
+        var maxImpacts = 0;
+
+        await Server.WaitPost(() =>
+        {
+            mortarUid = SEntMan.SpawnEntity(_mortarFallOfShot, new EntityCoordinates(_map.Grid.Owner, 0.5f, 0.5f));
+            defenderUid = SEntMan.SpawnEntity(_defender, new EntityCoordinates(_map.Grid.Owner, 1.5f, 0.5f));
+            var mortarComponent = SEntMan.GetComponent<KsMortarComponent>(mortarUid);
+            maxImpacts = mortarComponent.MaxImpacts;
+            Assert.That(maxImpacts, Is.GreaterThan(0), "precondition: a mortar that keeps its impacts");
+            Assert.That(mortarComponent.Rounds, Is.GreaterThan(maxImpacts), "precondition: rounds enough to go past the cap");
+            Assert.That(mortarComponent.Spread, Is.Zero, "precondition: shells that land where they are aimed");
+        });
+
+        // One more shot than it keeps, each somewhere else, within its range.
+        var expected = new List<Vector2>();
+        for (var shot = 0; shot <= maxImpacts; shot++)
+        {
+            var bearing = Angle.FromDegrees(90 * shot);
+            var distance = 0f;
+            await Server.WaitAssertion(() =>
+            {
+                var mortar = new Entity<KsMortarComponent>(mortarUid, SEntMan.GetComponent<KsMortarComponent>(mortarUid));
+                distance = mortar.Comp.MinRange + shot + 1f;
+                Assert.That(distance, Is.LessThanOrEqualTo(mortar.Comp.MaxRange), "precondition: aimed within its range");
+                Assert.That(system.TryFireAt(mortar, defenderUid, bearing, distance), Is.True, $"shot {shot} should be fired");
+            });
+
+            expected.Add(new Vector2((float) Math.Sin(bearing.Theta), (float) Math.Cos(bearing.Theta)) * distance);
+            await WaitForShell();
+
+            await Server.WaitAssertion(() =>
+            {
+                Assert.That(uiSystem.TryGetUiState<KsMortarBuiState>(mortarUid, KsMortarUiKey.Key, out var state), Is.True,
+                    "the mortar's window should have a state");
+                var kept = Math.Min(expected.Count, maxImpacts);
+                Assert.That(state!.Impacts, Has.Count.EqualTo(kept), $"after {expected.Count} landings it should keep {kept}");
+                for (var i = 0; i < kept; i++)
+                {
+                    var wanted = expected[expected.Count - kept + i];
+                    Assert.That(Vector2.Distance(state.Impacts[i], wanted), Is.LessThan(0.05f),
+                        $"impact {i} should be {wanted} from the mortar, oldest first: {state.Impacts[i]}");
+                }
+            });
+
+            // Its cooldown, before the next.
+            await Pair.RunTicksSync(Ticks(1.5f));
+        }
     }
 
     /// <summary>

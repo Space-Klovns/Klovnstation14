@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared._KS14.FarSound;
 using Content.Shared.NPC.Prototypes;
 using Robust.Shared.Audio;
@@ -169,6 +170,19 @@ public sealed partial class KsMortarComponent : Component
     public TimeSpan NextFire;
 
     /// <summary>
+    ///     How many of its last impacts it keeps for its window to show (<see cref="Impacts"/>); zero keeps none.
+    /// </summary>
+    [DataField]
+    public int MaxImpacts = 5;
+
+    /// <summary>
+    ///     Where its last <see cref="MaxImpacts"/> shells landed, relative to it, on the map's axes, oldest first: the fall
+    ///         of shot its window plots.
+    /// </summary>
+    [ViewVariables]
+    public List<Vector2> Impacts = new();
+
+    /// <summary>
     ///     When an abandoned mortar dissolves, unless someone uses it first. Null while it is crewed, and for one that never
     ///         dissolves.
     /// </summary>
@@ -239,4 +253,14 @@ public sealed partial class KsMortarShellComponent : Component
 
     [ViewVariables, AutoPausedField]
     public TimeSpan IncomingAt;
+}
+
+/// <summary>
+///     A mortar shell, for as long as it is on its way: which mortar fired it, for that mortar to record where it lands.
+/// </summary>
+[RegisterComponent, Access(typeof(KsMortarSystem))]
+public sealed partial class KsMortarFallOfShotComponent : Component
+{
+    [ViewVariables]
+    public EntityUid MortarUid;
 }

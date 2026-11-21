@@ -240,10 +240,8 @@ public sealed partial class KsMortarSystem : EntitySystem
         distance = Math.Clamp(distance, mortar.Comp.MinRange, mortar.Comp.MaxRange);
 
         // Zero is north, and it turns clockwise.
-        var theta = bearing.Theta;
-        var direction = new Vector2((float) Math.Sin(theta), (float) Math.Cos(theta));
         var origin = _transformSystem.GetMapCoordinates(mortar);
-        Launch(mortar, new MapCoordinates(origin.Position + direction * distance, origin.MapId), userUid, now);
+        Launch(mortar, new MapCoordinates(origin.Position + KsMortarAim.ToOffset(bearing, distance), origin.MapId), userUid, now);
 
         // Whoever fires it is whose it is now.
         if (_factionQuery.TryComp(userUid, out var userFactions))
@@ -289,6 +287,8 @@ public sealed partial class KsMortarSystem : EntitySystem
             _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
             _supplyPodSystem.SetDescentDuration((shellUid, supplyPodComponent), GetDescentTime(mortar.Comp, clipLength));
         }
+
+        EnsureComp<KsMortarFallOfShotComponent>(shellUid).MortarUid = mortar.Owner;
 
         EntityManager.InitializeAndStartEntity(shellUid);
         _killCreditSystem.SetSender(shellUid, firerUid);
@@ -345,11 +345,51 @@ public sealed partial class KsMortarSystem : EntitySystem
         _npcFactionSystem.AddFactions(target, new HashSet<ProtoId<NpcFactionPrototype>>(factions));
     }
 
+    /// <summary>
+    ///     Its shell down: where it landed goes on its mortar's fall of shot, if the mortar is still there to keep it.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnShellLanded(Entity<KsMortarFallOfShotComponent> entity, ref SupplyPodLandedEvent args)
+    {
+        var mortarUid = entity.Comp.MortarUid;
+        if (TerminatingOrDeleted(mortarUid) || !_mortarQuery.TryComp(mortarUid, out var mortarComponent))
+            return;
+
+        var landing = _transformSystem.GetMapCoordinates(entity);
+        var origin = _transformSystem.GetMapCoordinates(mortarUid);
+        if (landing.MapId != origin.MapId)
+            return;
+
+        RecordImpact((mortarUid, mortarComponent), landing.Position - origin.Position);
+    }
+
+    /// <summary>
+    ///     Keeps <paramref name="offset"/> (from the mortar) as its newest impact, dropping the oldest past its
+    ///         <see cref="KsMortarComponent.MaxImpacts"/>.
+    /// </summary>
+    private void RecordImpact(Entity<KsMortarComponent> mortar, Vector2 offset)
+    {
+        var impacts = mortar.Comp.Impacts;
+        impacts.Add(offset);
+
+        var excess = impacts.Count - Math.Max(0, mortar.Comp.MaxImpacts);
+        if (excess > 0)
+            impacts.RemoveRange(0, excess);
+
+        UpdateUi(mortar);
+    }
+
     private void UpdateUi(Entity<KsMortarComponent> mortar)
     {
         _uiSystem.SetUiState(mortar.Owner,
             KsMortarUiKey.Key,
-            new KsMortarBuiState(mortar.Comp.Rounds, mortar.Comp.MinRange, mortar.Comp.MaxRange, mortar.Comp.NextFire));
+            new KsMortarBuiState(mortar.Comp.Rounds,
+                mortar.Comp.MinRange,
+                mortar.Comp.MaxRange,
+                mortar.Comp.Spread,
+                mortar.Comp.NextFire,
+                mortar.Comp.ManualCooldown,
+                new List<Vector2>(mortar.Comp.Impacts)));
     }
 
     #endregion
