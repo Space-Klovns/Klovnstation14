@@ -3,6 +3,7 @@ using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Bed.Sleep;
+using Content.Shared.Clumsy;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory.VirtualItem;
@@ -59,6 +60,7 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
     private const float AimDistance = 10f;
 
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private ClumsySystem _clumsySystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -111,6 +113,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
 
         // Whoever can still shoot, such as someone only knocked down, hasn't lost control of their hand.
         if (_actionBlockerSystem.CanAttack(userUid))
+            return;
+
+        // A clumsy hand would blow the gun up in their face on the first shot of it.
+        if (_clumsySystem.KsCanBackfire(userUid, gunComponent))
             return;
 
         var gunNetEntity = GetNetEntity(gunUid);
