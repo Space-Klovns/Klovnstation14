@@ -6,6 +6,7 @@ using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared._KS14.Klovnmed.Dismemberment;
+using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Body;
 using Content.Shared.Eye.Blinding.Components;
@@ -35,6 +36,7 @@ public sealed class KsEyeBlinkingTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId HumanProto = "MobHuman";
+    private static readonly EntProtoId ToggleEyesActionProto = "ActionToggleEyes";
 
     /// <summary>
     ///     A mob with eyes that blink, and the eyes organ itself, on the server.
@@ -85,6 +87,26 @@ public sealed class KsEyeBlinkingTest : GameTest
         return visibility;
     }
 
+    /// <summary>
+    ///     The open/close eyes action is clutter nobody uses, so no mob gets it unless its eyes ask for it in YAML.
+    /// </summary>
+    [Test]
+    public async Task TestNoEyeToggleActionByDefault()
+    {
+        var (bodyUid, eyesUid) = await SpawnBlinkingMob();
+
+        await Server.WaitAssertion(() =>
+        {
+            var actionsSystem = SEntMan.System<SharedActionsSystem>();
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(SEntMan.GetComponent<EyeBlinkingComponent>(eyesUid).EyeToggleActionEntity, Is.Null, "The eyes granted their action.");
+                Assert.That(actionsSystem.GetActions(bodyUid).Any(action => SEntMan.GetComponent<MetaDataComponent>(action.Owner).EntityPrototype?.ID == ToggleEyesActionProto.Id),
+                    Is.False, "The mob has the open/close eyes action.");
+            }
+        });
+    }
+
     [Test]
     public async Task TestEyelidsAndActionFollowTheEyesOffAndBackOn()
     {
@@ -105,6 +127,12 @@ public sealed class KsEyeBlinkingTest : GameTest
             carrierParentUid = transformSystem.GetParentUid(carrierUid);
 
             var blinkingComponent = SEntMan.GetComponent<EyeBlinkingComponent>(eyesUid);
+
+            // No mob gets the action by default, so opt these eyes in, as YAML would, and give it to the holder the
+            //     way the eyes going in does.
+            blinkingComponent.EyeToggleAction = ToggleEyesActionProto;
+            SEntMan.System<SharedActionsSystem>().AddAction(bodyUid, ref blinkingComponent.EyeToggleActionEntity, ToggleEyesActionProto);
+
             Assert.That(blinkingComponent.EyeToggleActionEntity, Is.Not.Null, "precondition: the holder can close its eyes");
             oldActionUid = blinkingComponent.EyeToggleActionEntity!.Value;
 

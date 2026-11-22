@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="Nett" /> <!-- KS14: config presets, KsConfigPresets -->
   </ItemGroup>
 
   <!-- MNET14 -->

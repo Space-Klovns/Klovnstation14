@@ -1,0 +1,65 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "Puddle shapes from Fluids/puddle.rsi (made by Alekshhh and modified by potato1234x on github), textured with the ice of Objects/Misc/ice_crust.rsi (taken from space-station-14 Tiles/Planet/Snow); combined for Klovnstation 14",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "splata"
+        },
+        {
+            "name": "splatb"
+        },
+        {
+            "name": "splat0"
+        },
+        {
+            "name": "splat1"
+        },
+        {
+            "name": "splat2"
+        },
+        {
+            "name": "splat3"
+        },
+        {
+            "name": "splat4"
+        },
+        {
+            "name": "splat5"
+        },
+        {
+            "name": "splat6"
+        },
+        {
+            "name": "splat7"
+        },
+        {
+            "name": "splat8"
+        },
+        {
+            "name": "splat9"
+        },
+        {
+            "name": "splat10"
+        },
+        {
+            "name": "splat11"
+        },
+        {
+            "name": "splat12"
+        },
+        {
+            "name": "splat13"
+        },
+        {
+            "name": "splat14"
+        },
+        {
+            "name": "splat15"
+        }
+    ]
+}

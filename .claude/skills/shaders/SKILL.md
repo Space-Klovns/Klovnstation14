@@ -1,12 +1,17 @@
 ---
 name: shaders
-description: How shaders work in this repo - SWSL source files and shader prototypes, how the engine splices fragment() into its wrapper (no early return), built-ins (UV vs UV2, FRAGCOORD, TEXTURE_PIXEL_SIZE), z-library helpers, mapping UV to UV2 with derivatives, shared vs unique instances and uniforms that leak between users, where a shader can be applied (sprite layers, post-shaders, overlays, status effects), and the traps that fail silently. Use when writing, changing or debugging any .swsl or shader prototype, a sprite or screen effect that needs a shader, a shader that compiles but draws garbage, or a uniform that seems to hold another entity's value.
+description: How shaders work in this repo - SWSL source files and shader prototypes, how the engine splices fragment() into its wrapper (no early return), built-ins (UV vs UV2, FRAGCOORD, TEXTURE_PIXEL_SIZE), z-library helpers, mapping UV to UV2 with derivatives, shared vs unique instances and uniforms that leak between users, where a shader can be applied (sprite layers, post-shaders, overlays, status effects), compatibility mode (GLSL ES, which every shader must compile under, and how to rewrite what it refuses), and the traps that fail silently. Use when writing, changing or debugging any .swsl or shader prototype, a sprite or screen effect that needs a shader, a shader that compiles but draws garbage, or a uniform that seems to hold another entity's value.
 ---
 
 # Shaders
 
 How shaders work in this codebase: where they live, what the engine does with them, which built-ins you get, and
 the traps that fail silently. Engine paths below are under `RobustToolbox/Robust.Client/Graphics/`.
+
+**Every shader must compile in compatibility mode** (GLSL ES 3.00 and 1.00), not only on desktop GL. One that
+doesn't crashes the game at startup for every player in compatibility mode, even if nothing ever uses it. Write
+GLSL ES 1.00 from the start; [Compatibility mode](#compatibility-mode-gles-every-shader-must-compile-there) lists what
+it refuses, what to write instead, and how to check.
 
 ## The two files
 
@@ -50,7 +55,7 @@ preset raw;               //   blend_mode mix|add|subtract|multiply|none
                           //   preset raw               - use the raw wrapper instead of the default one
 
 uniform highp float speed;          // Settable from params: and from code.
-uniform highp float c = 0.3;        // Scalar initialisers work.
+uniform highp float c;              // No initialiser (= 0.3): GLSL ES refuses one. Defaults go in params:.
 varying highp vec2 myVarying;       // Passed from vertex() to fragment().
 
 highp float helper(highp float x) { return x * 2.0; }   // Ordinary functions are fine.
@@ -301,6 +306,8 @@ Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParamete
       scene (sharply, over pixel art), and rotating the pattern per pixel to hide that turns into visible grain. About
       24 taps on a golden-angle spiral, weighted towards the middle, is smooth (`_KS14/Shaders/visor_rain.swsl`).
 - [ ] Every float literal has a decimal point: `1.0`, not `1`. GLSL ES does not convert `int` to `float` for you.
+- [ ] It compiles in compatibility mode (below): no uniform initialisers, `texture2D` not `texture`, no array
+      constructors or `const` arrays, loops with constant bounds.
 - [ ] `highp` on anything that holds positions, UVs or `TIME`. `TIME` gets big, and at `mediump` it loses its
       fractional part.
 - [ ] Derivatives are behind `#ifdef HAS_DFDX` with a fallback.
@@ -308,10 +315,53 @@ Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParamete
 - [ ] Every per-use uniform is set on every instance, or the shader has its own program.
 - [ ] Every `InstanceUnique()` is disposed.
 
+## Compatibility mode (GLES): every shader must compile there
+
+Players on old or unusual GPUs, and anyone whose drivers fail at desktop GL, run in compatibility mode. So it is a
+requirement, not a nice-to-have, and fixing a shader for it must not change how it looks on desktop GL. Every rewrite
+below gives identical output on both.
+
+| GLSL ES refuses | Write instead |
+| --- | --- |
+| `uniform highp float c = 0.3;` | `uniform highp float c;`, plus `params: { c: 0.3 }` on the shader prototype |
+| `texture(TEXTURE, uv)` | `texture2D(TEXTURE, uv)` |
+| `const float k[3] = float[3](1.0, 2.0, 1.0);` | Compute it from the loop index: `float k = 2.0 - abs(float(i));` |
+| `2`, `1 - x` where a float is meant | `2.0`, `1.0 - x` |
+| `for (int i = 0; i < count; i++)` | `for (int i = 0; i < 32; i++) { if (i >= count) break; ... }` |
+| `while`, `%` on ints, bitwise ops | A constant-bound `for`; `mod()` on floats; float maths |
+| `dFdx`/`dFdy`/`fwidth` on their own | Inside `#ifdef HAS_DFDX`, with an `#else` fallback |
+| `pow(x, 2.0)` with a negative `x` | `x * x`. It compiles, but is NaN on D3D-backed ANGLE |
+
+Details:
+
+`display.compat true` makes the client ask for a GLES3 context, then GLES2 (`GLContextWindow.SpecsToTry`); on Windows
+that is ANGLE over D3D11. Clyde then prefixes the source with `#version 300 es`, or `#version 100` plus
+`HAS_VARYING_ATTRIBUTE` on GLES2, instead of desktop `#version 140` (`Clyde._compileProgram`). Desktop GLSL accepts
+things GLSL ES refuses, and **every shader prototype compiles while prototypes load, so one bad `.swsl` crashes the
+client at startup** with `ShaderCompilationException` (the engine has no fallback for shader sources). What breaks:
+
+- **Uniform initialisers** (`uniform highp float c = 0.3;`): refused by both GLES versions. Put the default in the
+  prototype's `params:`; `Instance()` and `InstanceUnique()` carry it.
+- **`texture()`**: GLSL ES 1.0 only has `texture2D()`. Write `texture2D`; z-library `#define`s it to `texture` elsewhere.
+- **Array constructors and `const` arrays** (`float[9](...)`): not in GLSL ES 1.0. Compute the value from the loop
+  index instead (`bloom.swsl`).
+- **Implicit `int` to `float`** (`const highp float x = 2;`, `1 - smoothstep(...)`).
+- **Loops** need a constant bound (`for (int i = 0; i < 32; i++) { if (i >= count) break; ... }`), no `while`, no `%`
+  on ints, no bitwise ops.
+- **Derivatives** without `#ifdef HAS_DFDX` (GLES2 without `OES_standard_derivatives`).
+- **`pow(x, y)` with `x < 0`** compiles but is NaN on D3D-backed ANGLE: square by multiplying.
+
+To check, run the client with `--cvar display.compat=true` (GLES3 through ANGLE here) and, for `#version 100`,
+`--cvar display.angle=true --cvar display.angle_force_es2=true` (D3D feature level 9_3: also hits backend limits such as
+29 fragment uniform vectors, which `visor_rain.swsl` and several upstream shaders exceed). Reaching the main menu means
+every shader prototype compiled; the first failure is in the log as `Exception while loading resource ...
+ShaderSourceResource at '<path>'`, then the GL compiler's errors.
+
 ## Testing
 
 Nothing headless compiles or runs a shader. Integration tests and the YAML linter load the prototype but don't
-check the GLSL. Launch the client and look.
+check the GLSL. Launch the client and look, and after adding or changing any `.swsl` launch it once more with
+`--cvar display.compat=true` and make sure it reaches the main menu (see Compatibility mode).
 
 - **Compile errors** show in the client log when the shader is first used, with `error.glsl` next to them.
 - **For iterating on values,** VV the component or the effect entity and change parameters live, rather than

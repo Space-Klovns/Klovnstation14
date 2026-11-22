@@ -2,6 +2,10 @@
   id: Emissive
   kind: source
   path: "/Textures/_KS14/Shaders/bloom.swsl"
+  params:
+    bloom_intensity: 1.5
+    threshold: 0.15
+    bloom_softness: 0.15
 
 - type: shader
   id: KsAdditive

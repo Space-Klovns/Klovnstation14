@@ -23,8 +23,8 @@ namespace Content.Client._KS14.Tgui.Windows.Lathe;
 ///             <item>tg's Fabricator, for every lathe but the autolathe: the browser with the queue in a column of its own,
 ///                 and the material bar along the bottom.</item>
 ///             <item>tg's Autolathe, for a lathe with <see cref="KsTguiAutolatheLayoutComponent"/>: a Total Materials section on
-///                 top, then the browser, 670 wide as tg's window is. The queue goes under the designs, in a section that is
-///                 there only while something is printing or waiting, so the designs keep the width.</item>
+///                 top, then the browser with the queue in its column as the Fabricator has it. Wider than tg's 670, which has no
+///                 queue: under the designs it took their height, and only while it had something in it.</item>
 ///         </list>
 /// </summary>
 public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
@@ -193,11 +193,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     }
 
     /// <summary>
-    ///     What the Autolathe layout's queue section keeps: the print notice, a row or two and the section around them.
-    /// </summary>
-    private const float QueueMinHeight = 150f;
-
-    /// <summary>
     ///     Which of the two layouts the window is in.
     /// </summary>
     public bool IsAutolatheLayout => _autolatheLayout;
@@ -208,7 +203,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     public string? DesignsTitle => _designsSection.Title;
 
     /// <summary>
-    ///     Whether the build queue section is on show. The Autolathe layout hides it while the queue is empty.
+    ///     Whether the build queue section is on show. Both layouts always have it.
     /// </summary>
     public bool QueueShown => _queueSection.Visible;
 
@@ -232,44 +227,26 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap, Margin = new Thickness(6f) };
 
+        // The queue is a column of its own in both layouts, beside the designs.
+        _queueSection.Fill = true;
+        _queueSection.MinWidth = 250f;
+        _queueSection.Visible = true;
+
+        var topRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
+        topRow.AddChild(_categoriesColumn);
+        topRow.AddChild(_designsSection);
+        topRow.AddChild(_queueSection);
+
+        MinSize = new Vector2(760f, 450f + baronExtra);
+        SetSize = new Vector2(940f, 600f + baronExtra);
+
         if (autolathe)
         {
-            // Autolathe.tsx is 670x600. The queue sits under the designs, so they keep the width: beside them they would be left
-            //      with less than half of it. It is only there while it has something to show.
-            MinSize = new Vector2(670f, 450f + baronExtra);
-            SetSize = new Vector2(670f, 600f + baronExtra);
-
-            _queueSection.Fill = false;
-            _queueSection.MinWidth = 0f;
-            _queueSection.MinHeight = QueueMinHeight;
-            _queueSection.Visible = _isSmelter || _isFabricating || _queuedBatches > 0;
-
-            var designsColumn = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
-            designsColumn.AddChild(_designsSection);
-            designsColumn.AddChild(_queueSection);
-
-            var browser = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
-            browser.AddChild(_categoriesColumn);
-            browser.AddChild(designsColumn);
-
             root.AddChild(_materialSummary);
-            root.AddChild(browser);
+            root.AddChild(topRow);
         }
         else
         {
-            MinSize = new Vector2(760f, 450f + baronExtra);
-            SetSize = new Vector2(940f, 600f + baronExtra);
-
-            _queueSection.Fill = true;
-            _queueSection.MinWidth = 250f;
-            _queueSection.MinHeight = 0f;
-            _queueSection.Visible = true;
-
-            var topRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
-            topRow.AddChild(_categoriesColumn);
-            topRow.AddChild(_designsSection);
-            topRow.AddChild(_queueSection);
-
             root.AddChild(topRow);
             root.AddChild(_materialsSection);
         }
@@ -515,7 +492,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     {
         _queuedBatches = queue.Count;
         RefreshQueueEmptyLabel();
-        RefreshQueueSection();
 
         var oldChildCount = _queueList.ChildCount;
 
@@ -558,16 +534,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         }
     }
 
-    /// <summary>
-    ///     The notice is only true when the lathe is neither printing something nor holding a queue.
-    /// </summary>
-    private void RefreshQueueSection()
-    {
-        // The Autolathe layout shows the queue only while it has something in it; the other has a column for it.
-        if (_autolatheLayout)
-            _queueSection.Visible = _isSmelter || _isFabricating || _queuedBatches > 0;
-    }
-
     private void RefreshQueueEmptyLabel()
     {
         _queueEmptyLabel.Visible = !_isFabricating && _queuedBatches == 0;
@@ -578,7 +544,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _fabricatingContainer.Visible = recipeProto != null;
         _isFabricating = recipeProto != null;
         RefreshQueueEmptyLabel();
-        RefreshQueueSection();
         if (recipeProto == null)
             return;
 
@@ -603,7 +568,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             _queueSection.Title = Loc.GetString("ks-salvage-tablet-smelter-ui-title");
             _queueBody.Visible = false;
             _smelterBody.Visible = true;
-            RefreshQueueSection();
         }
 
         _smelterPointsItem.Text = Loc.GetString("ks-salvage-tablet-number", ("number", points));

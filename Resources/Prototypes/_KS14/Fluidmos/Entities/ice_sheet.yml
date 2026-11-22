@@ -1,6 +1,7 @@
 # What freezes out of a tile's puddle (FreezeTileEffect), one sheet per tile (KsIceSheetSystem). Modelled on IceCrust but
-#     not parented to it: its temperature is its solution's, not a Temperature component's. Tinted by what froze into it,
-#     and slippery only once it is more than frost.
+#     not parented to it: its temperature is its solution's, not a Temperature component's. Drawn as the puddle it froze
+#     out of, frozen: the puddle's shapes by how full it is, smoothed into the sheets beside it once full
+#     (KsIceSheetVisualizerSystem). Tinted by what froze into it, and slippery only once it is more than frost.
 - type: entity
   id: KsIceSheet
   categories: [ HideSpawnMenu ]
@@ -11,16 +12,24 @@
   components:
   - type: Transform
     anchored: true
+    noRot: true
   - type: MeleeSound
     soundGroups:
       Brute:
         collection: GlassBreak
   - type: Sprite
-    sprite: Objects/Misc/ice_crust.rsi
+    sprite: _KS14/Fluidmos/ice_sheet.rsi
     layers:
-    - state: ice
+    - state: splata
     drawdepth: FloorObjects
     color: "#ffffff44"
+  - type: IconSmooth
+    key: ksIceSheets
+    additionalKeys:
+    - walls
+    base: splat
+    mode: CardinalFlags
+    enabled: false
   - type: Appearance
   - type: Clickable
   - type: Physics

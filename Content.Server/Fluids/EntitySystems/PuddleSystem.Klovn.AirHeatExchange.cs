@@ -1,5 +1,6 @@
 using Content.Server._KS14.Atmos;
 using Content.Server._KS14.Atmos.FoamBlanket;
+using Content.Server._KS14.Fluidmos;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
@@ -9,17 +10,20 @@ using Robust.Shared.Timing;
 namespace Content.Server.Fluids.EntitySystems;
 
 /// <summary>
-///     Heat exchange between a puddle's solution and the air on its tile, by conduction and thermal radiation.
+///     Heat exchange between a puddle's solution and the air on its tile, by conduction and thermal radiation, and the
+///         puddle wasting away in vacuum or under a map's air (<see cref="KsFluidDissipationSystem"/>), from the same read
+///         of that air.
 /// </summary>
 /// <remarks>
 ///     A puddle under a foam blanket is insulated from the air: its heat goes through the blanket instead
-///         (<see cref="KsFoamBlanketSystem"/>).
+///         (<see cref="KsFoamBlanketSystem"/>), and nothing dissipates from under it.
 /// </remarks>
 public sealed partial class PuddleSystem
 {
     [Dependency] private KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
+    [Dependency] private KsFluidDissipationSystem _fluidDissipationSystem = default!;
     [Dependency] private Content.Server._KS14.Fluidmos.Ice.KsIceSheetSystem _iceSheetSystem = default!;
 
     private static readonly TimeSpan AirHeatExchangeInterval = TimeSpan.FromSeconds(1d);
@@ -38,6 +42,11 @@ public sealed partial class PuddleSystem
     ///     thermal energy updates the solution's chemicals, which can run reactions that spawn or delete puddles.
     /// </summary>
     private readonly List<(Entity<SolutionComponent> Solution, float Heat)> _pendingAirHeatExchanges = new();
+
+    /// <summary>
+    ///     Units to dissipate from puddles, gathered with the heat and taken after it, for the same reason.
+    /// </summary>
+    private readonly List<(Entity<SolutionComponent> Solution, EntityUid GridUid, Vector2i Indices, float Units)> _pendingDissipations = new();
 
     private TimeSpan _nextAirHeatExchange = TimeSpan.MinValue;
     private TimeSpan _lastAirHeatExchange = TimeSpan.MinValue;
@@ -80,6 +89,14 @@ public sealed partial class PuddleSystem
 
         _pendingAirHeatExchanges.Clear();
 
+        foreach (var (solutionEntity, gridUid, indices, units) in _pendingDissipations)
+        {
+            if (!TerminatingOrDeleted(solutionEntity.Owner))
+                _fluidDissipationSystem.Dissipate(solutionEntity, gridUid, indices, units);
+        }
+
+        _pendingDissipations.Clear();
+
         // Ice sheets in the same pass, with the same conductance and coverage, now that the puddles are done.
         _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume);
     }
@@ -111,9 +128,17 @@ public sealed partial class PuddleSystem
             solution.Temperature,
             AirHeatExchangeConductance * coverage,
             radiatingArea: coverage,
-            deltaTime);
+            deltaTime,
+            out var mixture);
 
-        if (heat != 0f && puddle.Comp.Solution is { } solutionEntity)
+        if (puddle.Comp.Solution is not { } solutionEntity)
+            return;
+
+        if (heat != 0f)
             _pendingAirHeatExchanges.Add((solutionEntity, heat));
+
+        var dissipationRate = _fluidDissipationSystem.GetRate(mixture);
+        if (dissipationRate > 0f)
+            _pendingDissipations.Add((solutionEntity, gridUid, indices, dissipationRate * deltaTime));
     }
 }

@@ -1,19 +1,16 @@
-using Content.Server.Mech.Systems;
+// KS14: moved from Content.Server, so the pilot's client predicts the top-up of the shot it predicts
+using Content.Shared.Mech.EntitySystems; // KS14: Content.Server.Mech.Systems -> shared
 using Content.Shared._Trauma.Mech;
-using Content.Server.Power.Components;
-using Content.Server.Power.EntitySystems;
+using Content.Shared.Power.EntitySystems; // KS14: Content.Server.Power.EntitySystems -> shared
 using Content.Shared.Mech.Components;
 using Content.Shared.Mech.Equipment.Components;
-using Content.Shared.Throwing;
-using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Shared.Random;
 using Content.Shared.Power.Components;
 
-namespace Content.Server.Mech.Equipment.EntitySystems;
+namespace Content.Shared.Mech.Equipment.EntitySystems; // KS14: Content.Server -> Content.Shared
 public sealed partial class MechGunSystem : EntitySystem
 {
-    [Dependency] private MechSystem _mech = default!;
-    [Dependency] private BatterySystem _battery = default!;
+    [Dependency] private SharedMechSystem _mech = default!; // KS14: MechSystem -> SharedMechSystem
+    [Dependency] private SharedBatterySystem _battery = default!; // KS14: BatterySystem -> SharedBatterySystem
 
     public override void Initialize()
     {

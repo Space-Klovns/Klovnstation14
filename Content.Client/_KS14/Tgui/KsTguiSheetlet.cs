@@ -165,10 +165,22 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     /// <summary>
     ///     tgui's <c>--space-xs</c>, the right margin of every plain Button. Not the bottom one: tg's buttons in a row sit on a shared baseline, where
     ///         margin-bottom never changes a button's box, while here a box stretches each child into its slot minus its margin, so a
-    ///         bottom margin would leave a button 2px shorter than a LineEdit or SpinBox beside it. A vertical stack already has the box's
-    ///         own separation. <see cref="Content.Client._KS14.Tgui.Controls.KsTguiButton"/> sets its margins in code, with the bottom one in a column.
+    ///         bottom margin would leave a button 2px shorter than a LineEdit or SpinBox beside it. In a vertical box,
+    ///         <see cref="ButtonStackGap"/> adds the bottom one. <see cref="Content.Client._KS14.Tgui.Controls.KsTguiButton"/> sets its margins in code, with the bottom one in a column.
     /// </summary>
     private static readonly Thickness ButtonGap = new(0f, 0f, 2f, 0f);
+
+    /// <summary>
+    ///     <see cref="ButtonGap"/> with tg's margin-bottom, for a button stacked in a vertical box (<see cref="KsTguiButtonStackSelector"/>).
+    /// </summary>
+    private static readonly Thickness ButtonStackGap = new(0f, 0f, 2f, 2f);
+
+    /// <summary>
+    ///     On a vertical <see cref="BoxContainer"/> whose buttons have their margins written in XAML or code, which beat the margin
+    ///         <see cref="KsTguiButtonStackSelector"/> gives them: the box puts tg's 2px between its children instead, under tgui only.
+    ///         Baron's framed buttons read as separate already. Not set from XAML or code, as either would beat the sheet.
+    /// </summary>
+    public const string StyleClassButtonStack = "KsButtonStack";
 
     /// <summary>
     ///     Set on every button by this sheet alone: <see cref="Content.Client._KS14.Tgui.Controls.KsRestylingButton"/> restyles its children only under tgui.
@@ -240,6 +252,9 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             //      entries, lists and tabs are other ContainerButtons and get none. The chat filter sits in a row of its own.
             E<Button>().Class(ContainerButton.StyleClassButton).Margin(ButtonGap),
             E<Button>().Class(ChatInputBox.StyleClassChatFilterOptionButton).Margin(0f),
+            E<BoxContainer>().Class(StyleClassButtonStack).Prop(BoxContainer.StylePropertySeparation, 2),
+            // Stacked in a vertical box, a button touched the next: tg's margin-bottom, in a column only.
+            new StyleRule(new KsTguiButtonStackSelector(), new[] { new StyleProperty(nameof(Control.Margin), ButtonStackGap) }),
 
             // A child of a button does not restyle when the button's pseudo-class changes; KsRestylingButton reads this.
             CButton().Prop(StylePropertyRestyleChildren, true),

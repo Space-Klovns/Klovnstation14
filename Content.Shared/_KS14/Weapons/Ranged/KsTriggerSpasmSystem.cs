@@ -3,6 +3,7 @@ using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._Trauma.Hands;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Bed.Sleep;
+using Content.Shared.Clumsy;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory.VirtualItem;
@@ -59,6 +60,7 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
     private const float AimDistance = 10f;
 
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private ClumsySystem _clumsySystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -113,6 +115,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
         if (_actionBlockerSystem.CanAttack(userUid))
             return;
 
+        // A clumsy hand would blow the gun up in their face on the first shot of it.
+        if (_clumsySystem.KsCanBackfire(userUid, gunComponent))
+            return;
+
         var gunNetEntity = GetNetEntity(gunUid);
         var userNetEntity = GetNetEntity(userUid);
         if (!SharedRandomExtensions.PredictedProb(_gameTiming, _chance, userNetEntity, gunNetEntity))
@@ -144,17 +150,28 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
     }
 
     // Stuns and the step from crit to death raise the drop again, and it shouldn't get a fresh roll against the grip.
+    //      Not once the spasm is over: a backfire ends it and then stuns, and the gun drops like any other.
     [SubscribeLocalEvent]
     private void OnGunFellDown(Entity<KsTriggerSpasmComponent> entity, ref FellDownThrowAttemptEvent args)
     {
-        args.Cancelled = true;
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+            args.Cancelled = true;
+    }
+
+    // Something ended the shooting outright, such as a backfire.
+    [SubscribeLocalEvent]
+    private void OnShootingInterrupted(Entity<KsTriggerSpasmComponent> entity, ref KsGunShootingInterruptedEvent args)
+    {
+        if (entity.Comp.LifeStage <= ComponentLifeStage.Running && _gunQuery.TryComp(entity, out var gunComponent))
+            Stop(entity, (entity.Owner, gunComponent));
     }
 
     // A wielded gun's other hand holds a virtual item, and dropping that would unwield the gun.
     [SubscribeLocalEvent]
     private void OnVirtualItemFellDown(Entity<VirtualItemComponent> entity, ref FellDownThrowAttemptEvent args)
     {
-        if (_triggerSpasmQuery.HasComp(entity.Comp.BlockingEntity))
+        if (_triggerSpasmQuery.TryComp(entity.Comp.BlockingEntity, out var triggerSpasmComponent) &&
+            triggerSpasmComponent.LifeStage <= ComponentLifeStage.Running)
             args.Cancelled = true;
     }
 
@@ -166,6 +183,10 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
         var query = EntityQueryEnumerator<KsTriggerSpasmComponent, GunComponent>();
         while (query.MoveNext(out var gunUid, out var triggerSpasmComponent, out var gunComponent))
         {
+            // Ended this tick, and removed at its end.
+            if (triggerSpasmComponent.LifeStage > ComponentLifeStage.Running)
+                continue;
+
             // A client only predicts its own gun.
             if (_netManager.IsClient && _playerManager.LocalEntity != triggerSpasmComponent.User)
                 continue;
@@ -203,6 +224,8 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
             userCoordinates.Position + entity.Comp.AimAngle.ToVec() * AimDistance,
             userCoordinates.MapId);
 
+        // A backfire calls the shot off (false here) and has already stopped the spasm through
+        //      KsGunShootingInterruptedEvent; stopping it again on false is harmless.
         if (!_gunSystem.KsAttemptInvoluntaryShoot(userUid, gun, _transformSystem.ToCoordinates(userUid, targetCoordinates)))
             return false;
 

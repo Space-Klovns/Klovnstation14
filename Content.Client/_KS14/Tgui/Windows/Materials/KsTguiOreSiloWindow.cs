@@ -14,20 +14,21 @@ namespace Content.Client._KS14.Tgui.Windows.Materials;
 /// </summary>
 public sealed partial class KsTguiOreSiloWindow : FancyWindow, IKsOreSiloWindow
 {
-    [Dependency] private IEntityManager _entityManager = default!;
-
     private readonly KsTguiMaterialList _materials;
     private readonly BoxContainer _clientList;
     private readonly KsTguiNoticeBox _noClientsNotice;
 
-    private EntityUid _silo;
+    private readonly Dictionary<NetEntity, KsTguiButton> _clientButtons = new();
+
+    /// <summary>
+    ///     The row of each machine listed.
+    /// </summary>
+    public IReadOnlyDictionary<NetEntity, KsTguiButton> ClientButtons => _clientButtons;
 
     public event Action<NetEntity>? OnClientEntryPressed;
 
     public KsTguiOreSiloWindow()
     {
-        IoCManager.InjectDependencies(this);
-
         Title = Loc.GetString("ore-silo-ui-title");
         MinSize = new Vector2(400f, 260f);
         SetSize = new Vector2(520f, 520f);
@@ -53,39 +54,55 @@ public sealed partial class KsTguiOreSiloWindow : FancyWindow, IKsOreSiloWindow
 
     public void SetEntity(EntityUid uid)
     {
-        _silo = uid;
         _materials.SetOwner(uid);
     }
 
     public void Update(OreSiloBuiState state)
     {
-        _clientList.RemoveAllChildren();
+        // Rows are kept for the machines still listed, so a row being clicked is not swapped for a new one under the mouse
+        //     when a state arrives between the press and the release.
+        var listed = new HashSet<NetEntity>();
+        var position = 0;
 
         // The stock list is in the order of the entities' ids once it has them.
         foreach (var (client, text, _) in state.Clients.OrderBy(entry => entry.Item1))
         {
-            var clientEntity = client;
-            var button = new KsTguiButton
+            listed.Add(client);
+
+            if (!_clientButtons.TryGetValue(client, out var button))
             {
-                Text = text,
-                Fluid = true,
-                LeftAligned = true,
-                Selected = IsLinked(clientEntity),
-            };
-            button.OnPressed += _ => OnClientEntryPressed?.Invoke(clientEntity);
-            _clientList.AddChild(button);
+                var clientEntity = client;
+                button = new KsTguiButton
+                {
+                    Fluid = true,
+                    LeftAligned = true,
+                };
+                button.OnPressed += _ => OnClientEntryPressed?.Invoke(clientEntity);
+                _clientButtons.Add(client, button);
+                _clientList.AddChild(button);
+            }
+
+            button.Text = text;
+            button.SetPositionInParent(position++);
+        }
+
+        foreach (var (client, button) in _clientButtons.ToList())
+        {
+            if (listed.Contains(client))
+                continue;
+
+            button.Orphan();
+            _clientButtons.Remove(client);
         }
 
         _noClientsNotice.Visible = state.Clients.Count == 0;
-    }
 
-    /// <summary>
-    ///     Whether the client is linked to this silo, where the client is known. The text of every row says so as well.
-    /// </summary>
-    private bool IsLinked(NetEntity client)
-    {
-        return _entityManager.TryGetEntity(client, out var clientUid)
-            && _entityManager.TryGetComponent<OreSiloClientComponent>(clientUid, out var clientComponent)
-            && clientComponent.Silo == _silo;
+        // Whether a machine is linked comes with its row's text, from the server. The machine's own link can't be read
+        //     here: one out of the player's sight sends the client nothing, and one in sight can have its state applied
+        //     after this one, leaving the row a colour that its text contradicts (#451).
+        foreach (var (client, button) in _clientButtons)
+        {
+            button.Selected = state.KsLinked.Contains(client);
+        }
     }
 }

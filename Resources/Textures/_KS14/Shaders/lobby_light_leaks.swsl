@@ -25,9 +25,14 @@ highp vec3 flareLine(highp vec2 p, highp vec2 centre, highp float angle, highp f
     highp float t = dot(d, along) / halfLength;
     highp float fade = exp(-t * t * 3.0);
     highp float s = dot(d, across);
-    highp float r = exp(-pow((s - width * 1.6) / width, 2.0));
-    highp float g = exp(-pow(s / width, 2.0));
-    highp float b = exp(-pow((s + width * 1.6) / width, 2.0));
+    // Squared by multiplying, not pow(): pow() is undefined for a negative base, which most of a line's width has, and HLSL's
+    //      (ANGLE, so compatibility mode on Windows) returns NaN for one.
+    highp float rOffset = (s - width * 1.6) / width;
+    highp float gOffset = s / width;
+    highp float bOffset = (s + width * 1.6) / width;
+    highp float r = exp(-rOffset * rOffset);
+    highp float g = exp(-gOffset * gOffset);
+    highp float b = exp(-bOffset * bOffset);
     return vec3(r, g, b) * fade;
 }
 

@@ -1,4 +1,6 @@
 using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared._KS14.Random.Helpers; // KS14
+using Content.Shared._KS14.Weapons.Ranged; // KS14
 using Content.Shared.CCVar;
 using Content.Shared.Chemistry.Events;
 using Content.Shared.Climbing.Components;
@@ -11,6 +13,7 @@ using Content.Shared.Random.Helpers;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Weapons.Ranged.Systems; // KS14
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.Network;
@@ -29,12 +32,13 @@ public sealed partial class ClumsySystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private INetManager _net = default!;
+    [Dependency] private SharedGunSystem _gun = default!; // KS14
 
     public override void Initialize()
     {
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeInjectEvent>(BeforeHyposprayEvent);
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeDefibrillatorZapsEvent>(BeforeDefibrillatorZapsEvent);
-        SubscribeLocalEvent<ClumsyComponent, SelfBeforeGunShotEvent>(BeforeGunShotEvent);
+        SubscribeLocalEvent<ClumsyComponent, KsShooterFireAttemptEvent /* KS14: SelfBeforeGunShotEvent -> raised before the gun gives up any ammo */>(BeforeGunShotEvent);
         SubscribeLocalEvent<ClumsyComponent, CatchAttemptEvent>(OnCatchAttempt);
         SubscribeLocalEvent<ClumsyComponent, SelfBeforeClimbEvent>(OnBeforeClimbEvent);
     }
@@ -101,7 +105,7 @@ public sealed partial class ClumsySystem : EntitySystem
         _audio.PlayPvs(ent.Comp.ClumsySound, ent);
     }
 
-    private void BeforeGunShotEvent(Entity<ClumsyComponent> ent, ref SelfBeforeGunShotEvent args)
+    private void BeforeGunShotEvent(Entity<ClumsyComponent> ent, ref KsShooterFireAttemptEvent /* KS14: SelfBeforeGunShotEvent -> raised before the gun gives up any ammo */ args)
     {
         // Clumsy people sometimes can't shoot :(
 
@@ -112,8 +116,22 @@ public sealed partial class ClumsySystem : EntitySystem
         if (args.Gun.Comp.ClumsyProof)
             return;
 
-        if (!SharedRandomExtensions.PredictedProb(_timing, ent.Comp.ClumsyDefaultCheck, GetNetEntity(ent)))
+        // KS14 start: seeded by the gun as well, so it isn't the same roll as anything else clumsy this tick. Gun first, as the
+        //      trigger spasm's grip rolls on the shooter and then the gun.
+        var backfireRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_timing.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(args.Gun.Owner, EntityManager),
+            KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager));
+        if (!backfireRandom.Prob(ent.Comp.ClumsyDefaultCheck))
             return;
+        // KS14 end
+
+        // KS14 start: the whole shot is called off, the gun untouched, and the shooting ends, as dropping the gun does
+        //      upstream. Before the stun, so going down to it doesn't clench the shooter's hand on a trigger still held.
+        //      Also ends a clench that was already firing.
+        args.Cancelled = true;
+        _gun.KsInterruptShooting(args.Gun);
+        // KS14 end
 
         if (ent.Comp.GunShootFailDamage != null)
             _damageable.ChangeDamage(ent.Owner, ent.Comp.GunShootFailDamage, origin: ent);
@@ -125,7 +143,7 @@ public sealed partial class ClumsySystem : EntitySystem
         _audio.PlayPvs(ent.Comp.ClumsySound, ent);
 
         _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.GunFailedMessage), ent, ent);
-        args.Cancel();
+        /* args.Cancel(); */ // KS14: moved up, before the stun
     }
 
     private void OnBeforeClimbEvent(Entity<ClumsyComponent> ent, ref SelfBeforeClimbEvent args)

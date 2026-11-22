@@ -7,8 +7,10 @@ uniform highp vec2[32] drops_data;
 // x = size
 // y = velocity
 
-uniform highp float distortion_strength = 0.4;
-uniform highp float chroma_strength = 0.005;
+// No initialisers: GLSL ES (compatibility mode) refuses them. Give a prototype for this shader params of
+//      distortion_strength 0.4 and chroma_strength 0.005.
+uniform highp float distortion_strength;
+uniform highp float chroma_strength;
 
 void fragment()
 {
@@ -88,16 +90,16 @@ void fragment()
         dir * chroma * chroma_strength;
 
     highp vec4 base =
-        texture(SCREEN_TEXTURE, refracted_uv);
+        texture2D(SCREEN_TEXTURE, refracted_uv);
 
     highp float r =
-        texture(SCREEN_TEXTURE, refracted_uv + chromaOffset).r;
+        texture2D(SCREEN_TEXTURE, refracted_uv + chromaOffset).r;
 
     highp float g =
-        texture(SCREEN_TEXTURE, refracted_uv).g;
+        texture2D(SCREEN_TEXTURE, refracted_uv).g;
 
     highp float b =
-        texture(SCREEN_TEXTURE, refracted_uv - chromaOffset).b;
+        texture2D(SCREEN_TEXTURE, refracted_uv - chromaOffset).b;
 
     highp vec4 col =
         vec4(r, g, b, base.a);

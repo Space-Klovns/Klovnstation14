@@ -5,3 +5,6 @@
   id: KsSinkingCut
   kind: source
   path: "/Textures/_KS14/Shaders/sinking_cut.swsl"
+  params:
+    c: 0.3
+    alphaModifier: 0.2

@@ -47,7 +47,7 @@ public sealed partial class GunSystem : SharedGunSystem
 
         var filter = Filter.Pvs(gunUid, entityManager: EntityManager);
 
-        if (TryComp<ActorComponent>(user, out var actor))
+        if (TryComp<ActorComponent>(KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */, out var actor))
             filter.RemovePlayer(actor.PlayerSession);
 
         RaiseNetworkEvent(message, filter);

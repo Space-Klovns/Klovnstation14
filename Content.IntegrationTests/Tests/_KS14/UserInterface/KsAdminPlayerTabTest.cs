@@ -79,4 +79,75 @@ public sealed class KsAdminPlayerTabTest : GameTest
             menu.Close();
         });
     }
+
+    /// <summary>
+    ///     A handful of players in a short window, as in the issue: five players and four rows, with no scrollbar to reach
+    ///         the fifth. At every height, each player has a row that is either in sight or can be scrolled to.
+    /// </summary>
+    [TestCase(false, 1f)]
+    [TestCase(false, 1.25f)]
+    [TestCase(true, 1f)]
+    [TestCase(true, 1.25f)]
+    public async Task EveryPlayerFitsOrCanBeScrolledTo(bool tgui, float uiScale)
+    {
+        const int few = 4;
+
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await OverrideCVar(Side.Client, CVars.ResAutoScaleEnabled, false);
+        await OverrideCVar(Side.Client, CVars.DisplayUIScale, uiScale);
+
+        AdminMenuWindow menu = default!;
+        await Client.WaitPost(() =>
+        {
+            var controller = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<AdminUIController>();
+            menu = (AdminMenuWindow) typeof(AdminUIController)
+                .GetField("_window", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(controller)!;
+        });
+        await Server.AddDummySessions(few);
+        await Server.WaitPost(() => Server.ResolveDependency<IAdminManager>().PromoteHost(ServerSession!));
+        await Pair.RunTicksSync(20);
+
+        var tab = menu.PlayerTabControl;
+        await Client.WaitPost(() =>
+        {
+            menu.OpenCentered();
+            ((TabContainer) tab.Parent!).CurrentTab = tab.GetPositionInParent();
+        });
+        await Pair.RunTicksSync(10);
+
+        var players = 0;
+        await Client.WaitPost(() => players = tab.SearchList.Data.Count);
+        Assert.That(players, Is.EqualTo(few + 1), "every player, the host included, is in the list's data");
+
+        for (var height = (int) menu.MinSize.Y; height <= 420; height += 10)
+        {
+            var windowHeight = height;
+            await Client.WaitPost(() => menu.SetSize = new System.Numerics.Vector2(menu.MinSize.X, windowHeight));
+            await Pair.RunTicksSync(5);
+
+            var scrolls = false;
+            await Client.WaitPost(() =>
+            {
+                var scrollBar = tab.SearchList.Children.OfType<VScrollBar>().Single();
+                scrolls = scrollBar.Visible;
+                if (scrolls)
+                    scrollBar.Value = scrollBar.MaxValue;
+            });
+            if (scrolls)
+                await Pair.RunTicksSync(5);
+
+            await Client.WaitAssertion(() =>
+            {
+                var list = tab.SearchList;
+                var rows = list.Children.OfType<ListContainerButton>().ToList();
+                var last = rows.SingleOrDefault(row => row.Index == players - 1);
+                Assert.That(last, Is.Not.Null, $"at a window {windowHeight} high, the last player has no row (scrollbar: {scrolls})");
+                Assert.That(last!.GlobalPixelRect.Bottom, Is.LessThanOrEqualTo(list.GlobalPixelRect.Bottom),
+                    $"at a window {windowHeight} high, the last player's row is cut off with no way to scroll to it: row {last.GlobalPixelRect}, list {list.GlobalPixelRect}, scrollbar: {scrolls}");
+            });
+        }
+
+        await Client.WaitPost(() => menu.Close());
+    }
 }

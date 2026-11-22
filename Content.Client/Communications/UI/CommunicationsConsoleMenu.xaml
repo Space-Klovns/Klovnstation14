@@ -22,7 +22,9 @@
             SeparationOverride="4">
 
             <!-- AnnouncePart -->
+            <!-- KS14: KsButtonStack spaces the buttons under tgui -->
             <BoxContainer Orientation="Vertical"
+                StyleClasses="KsButtonStack"
                 Margin="0 2">
 
                 <Button Name="AnnounceButton"

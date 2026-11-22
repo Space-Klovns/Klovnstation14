@@ -3,6 +3,7 @@ using Content.Server._KS14.Projectiles;
 using Content.Server.Movement.Components;
 using Content.Server.Movement.Systems;
 using Content.Shared._KS14.Weapons.Hitscan;
+using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
@@ -32,6 +33,7 @@ public sealed partial class KsHitscanLagCompensationSystem : EntitySystem
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private LagCompProjectileSystem _lagCompProjectileSystem = default!;
+    [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -60,7 +62,8 @@ public sealed partial class KsHitscanLagCompensationSystem : EntitySystem
     private void OnModifyRaycastResults(ref KsModifyHitscanRaycastResultsEvent args)
     {
         // Only a player's shot: an NPC's or a turret's is fired on the server, against what the server has.
-        if (!_playerManager.TryGetSessionByEntity(args.Shooter, out var shooterSession))
+        if (_gunSystem.KsGetPredictingUser(args.Shooter) is not { } predictingUid || // a mech shoots as itself, piloted by the player whose shot it is
+            !_playerManager.TryGetSessionByEntity(predictingUid, out var shooterSession))
             return;
 
         // Ping, not a time the client sends: see LagCompProjectileSystem.OnShotProjectile.
