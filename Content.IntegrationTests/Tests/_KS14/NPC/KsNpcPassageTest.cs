@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
-using Content.Server._KS14.NPC.Ladders;
+using Content.Server._KS14.NPC.Passages;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.Ladders;
 using Content.Shared.Atmos;
+using Content.Shared._KS14.NPC.Passages;
 using Content.Shared.NPC;
+using Content.Shared.Teleportation.Components;
+using Content.Shared.Teleportation.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -19,17 +22,25 @@ using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 namespace Content.IntegrationTests.Tests._KS14.NPC;
 
 /// <summary>
-///     An NPC steering for somewhere on another map gets there by ladder.
+///     An NPC steering for somewhere on another map gets there by a passage: a ladder, a portal.
 /// </summary>
-[TestOf(typeof(KsNpcLadderSystem))]
-public sealed class KsNpcLadderTest : GameTest
+[TestOf(typeof(KsNpcPassageSystem))]
+public sealed class KsNpcPassageTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
+    private static readonly EntProtoId LadderUp = "KsLadderWall";
+    private static readonly EntProtoId LadderDown = "KsLadderFloor";
+    private static readonly EntProtoId StockPortal = "PortalRed";
+    private static readonly EntProtoId ViewPortal = "KsViewPortal";
+
     // Ids that exist only in the test prototypes below.
-    private readonly EntProtoId _walker = "KsNpcLadderTestWalker";
-    private readonly EntProtoId _ladder = "KsNpcLadderTestLadder";
-    private readonly EntProtoId _slowLadder = "KsNpcLadderTestSlowLadder";
+    private readonly EntProtoId _walker = "KsNpcPassageTestWalker";
+    private readonly EntProtoId _ladder = "KsNpcPassageTestLadder";
+    private readonly EntProtoId _slowLadder = "KsNpcPassageTestSlowLadder";
+    private readonly EntProtoId _portal = "KsNpcPassageTestPortal";
+    private readonly EntProtoId _sameMapPortal = "KsNpcPassageTestSameMapPortal";
+    private readonly EntProtoId _viewPortal = "KsNpcPassageTestViewPortal";
 
     private static readonly Vector2i Min = new(-7, -3);
     private static readonly Vector2i Max = new(7, 3);
@@ -43,18 +54,78 @@ public sealed class KsNpcLadderTest : GameTest
     private const string Prototypes = @"
 - type: entity
   parent: MobHuman
-  id: KsNpcLadderTestWalker
+  id: KsNpcPassageTestWalker
 
 - type: entity
-  id: KsNpcLadderTestLadder
+  id: KsNpcPassageTestLadder
   components:
   - type: KsLadder
+  - type: KsNpcPassage
+    range: 1.25
 
 - type: entity
-  id: KsNpcLadderTestSlowLadder
+  id: KsNpcPassageTestSlowLadder
   components:
   - type: KsLadder
     useDelay: 1
+  - type: KsNpcPassage
+    range: 1.25
+
+# A portal that takes whatever touches it, and only to its own map: across maps it fizzles.
+- type: entity
+  id: KsNpcPassageTestSameMapPortal
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      portalFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: '-0.25,-0.48,0.25,0.48'
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+        hard: false
+  - type: Portal
+  - type: KsNpcPassage
+
+- type: entity
+  parent: KsNpcPassageTestSameMapPortal
+  id: KsNpcPassageTestPortal
+  components:
+  - type: Portal
+    canTeleportToOtherMaps: true
+
+# One that carries across whatever crosses its doorway, and does nothing to what only touches it.
+- type: entity
+  parent: KsNpcPassageTestSameMapPortal
+  id: KsNpcPassageTestViewPortal
+  components:
+  - type: Fixtures
+    fixtures:
+      portalFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: '-0.25,-0.48,0.25,0.48'
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+        hard: false
+      ksPortalSensor:
+        shape:
+          !type:PhysShapeAabb
+          bounds: '-1,-1,1,1'
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+        hard: false
+  - type: KsPortalView
 ";
 
     /// <summary>
@@ -106,6 +177,17 @@ public sealed class KsNpcLadderTest : GameTest
         var firstUid = SpawnAt(entManager, ladder, firstGridUid, firstTile.X, firstTile.Y);
         var secondUid = SpawnAt(entManager, ladder, secondGridUid, secondTile.X, secondTile.Y);
         entManager.System<KsLadderSystem>().Link(firstUid, secondUid);
+    }
+
+    /// <summary>
+    ///     A portal on each of two floors, linked.
+    /// </summary>
+    private void LinkPortals(EntProtoId portal, EntityUid firstGridUid, Vector2i firstTile, EntityUid secondGridUid, Vector2i secondTile)
+    {
+        var entManager = Pair.Server.EntMan;
+        var firstUid = SpawnAt(entManager, portal, firstGridUid, firstTile.X, firstTile.Y);
+        var secondUid = SpawnAt(entManager, portal, secondGridUid, secondTile.X, secondTile.Y);
+        entManager.System<LinkedEntitySystem>().TryLink(firstUid, secondUid);
     }
 
     private EntityUid SendWalker(EntityUid gridUid, Vector2i tile, EntityCoordinates destination)
@@ -208,6 +290,83 @@ public sealed class KsNpcLadderTest : GameTest
 
         var status = await WaitForWalker(walkerUid);
         await AssertArrived(walkerUid, destination, status);
+    }
+
+    /// <summary>
+    ///     Sent to a spot on another map that a portal leads to, it walks into the portal and on from the other one:
+    ///         whether the portal takes what touches it or what crosses its doorway.
+    /// </summary>
+    [Test]
+    public async Task TestWalkerTakesAPortalToAnotherMap([Values] bool viewPortal)
+    {
+        var server = Pair.Server;
+        var firstGridUid = await MakeFloor();
+        var secondGridUid = await MakeFloor();
+        var destination = new EntityCoordinates(secondGridUid, new Vector2(5.5f, 2.5f));
+        EntityUid walkerUid = default;
+
+        await server.WaitPost(() =>
+        {
+            LinkPortals(viewPortal ? _viewPortal : _portal, firstGridUid, new Vector2i(5, 0), secondGridUid, new Vector2i(-5, -2));
+            walkerUid = SendWalker(firstGridUid, new Vector2i(-5, 0), destination);
+        });
+
+        var status = await WaitForWalker(walkerUid);
+        await AssertArrived(walkerUid, destination, status);
+    }
+
+    /// <summary>
+    ///     A portal that fizzles when it is asked to cross maps is no way to another map: it is left alone, and there
+    ///         is no path.
+    /// </summary>
+    [Test]
+    public async Task TestWalkerLeavesAPortalThatCannotCrossMaps()
+    {
+        var server = Pair.Server;
+        var firstGridUid = await MakeFloor();
+        var secondGridUid = await MakeFloor();
+        var destination = new EntityCoordinates(secondGridUid, new Vector2(5.5f, 2.5f));
+        EntityUid walkerUid = default;
+        EntityUid portalUid = default;
+
+        await server.WaitPost(() =>
+        {
+            LinkPortals(_sameMapPortal, firstGridUid, new Vector2i(5, 0), secondGridUid, new Vector2i(-5, -2));
+            portalUid = server.EntMan.GetComponent<TransformComponent>(firstGridUid).ChildEnumerator.MoveNext(out var childUid) ? childUid : default;
+            walkerUid = SendWalker(firstGridUid, new Vector2i(-5, 0), destination);
+        });
+
+        var status = await WaitForWalker(walkerUid);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(status, Is.EqualTo(SteeringStatus.NoPath));
+            Assert.That(server.EntMan.Deleted(portalUid), Is.False, "the portal should not have been walked into, which fizzles it out");
+            Assert.That(server.EntMan.GetComponent<TransformComponent>(walkerUid).GridUid, Is.EqualTo(firstGridUid));
+        });
+    }
+
+    /// <summary>
+    ///     The ladders and portals of the game are passages: what a mapper places, an NPC takes. The portals get it
+    ///         from a partial prototype, which stops applying without a word if upstream renames theirs.
+    /// </summary>
+    [Test]
+    public async Task TestLaddersAndPortalsAreSetUpAsPassages()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            foreach (var id in new[] { LadderUp, LadderDown, StockPortal, ViewPortal })
+            {
+                var prototype = server.ProtoMan.Index(id);
+                Assert.That(prototype.TryComp<KsNpcPassageComponent>(out _, server.EntMan.ComponentFactory), Is.True,
+                    $"{id} should be a passage for NPCs");
+            }
+
+            Assert.That(server.ProtoMan.Index(StockPortal).TryComp<PortalComponent>(out _, server.EntMan.ComponentFactory), Is.True,
+                "and the stock portal should still be a portal");
+        });
     }
 
     /// <summary>

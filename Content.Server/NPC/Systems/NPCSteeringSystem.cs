@@ -229,7 +229,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         component.PathfindToken = null;
         RemComp<NPCSteeringComponent>(uid);
         RemComp<NpcBackgroundMoveComponent>(uid); // KS14
-        _ksNpcLadderSystem.Clear(uid); // KS14
+        _ksNpcPassageSystem.Clear(uid); // KS14
         _npcDoorSystem.StopSteeringBreach(uid); // KS14: a door it was forcing on the way: the tool goes back now, not after whatever comes next has run with it in hand
     }
 
@@ -264,7 +264,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         Parallel.For(0, index, options, i =>
         {
             var (uid, steering, mover, xform) = npcs[i];
-            KsSteerByLadder/* KS14: Steer -> KsSteerByLadder, which is Steer unless its destination is on another map */(uid, steering, mover, xform, frameTime, curTime);
+            KsSteerByPassage/* KS14: Steer -> KsSteerByPassage, which is Steer unless its destination is on another map */(uid, steering, mover, xform, frameTime, curTime);
         });
 
         ActiveSteeringGauge.Set(_activeSteeringCount);
@@ -518,7 +518,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         }
 
         steering.PathfindToken = new CancellationTokenSource();
-        var ksDestination = steering.Coordinates; // KS14: what this path is to, which is not its destination for good when it is going by ladder; see KsSteerByLadder
+        var ksDestination = steering.Coordinates; // KS14: what this path is to, which is not its destination for good when it is going by ladder or portal; see KsSteerByPassage
 
         var flags = _pathfindingSystem.GetFlags(uid);
         var dangerVersion = _pathfindingSystem.TileDangerVersion; // KS14: see NoteDangerOnPath

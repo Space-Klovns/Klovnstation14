@@ -21,7 +21,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     private SharedTransformSystem _transform = default!;
     [Dependency] private Interaction.InteractionSystem _interactionSystem = default!; // KS14
     [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
-    [Dependency] private Content.Server._KS14.NPC.Ladders.KsNpcLadderSystem _npcLadderSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.NPC.Passages.KsNpcPassageSystem _npcPassageSystem = default!; // KS14
 
     /// <summary>
     /// When to shut the task down.
@@ -125,19 +125,19 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var targetMapCoords = _transform.ToMapCoordinates(targetCoordinates);
         var distance = (targetMapCoords.Position - ownerMapCoords.Position).Length();
 
-        // KS14 start: on another map there is no distance to it, and no path: there is a way by ladder, which steering
-        //      takes (NPCSteeringSystem.KsSteerByLadder), or there is none
+        // KS14 start: on another map there is no distance to it, and no path: there is a way by ladder or portal, which
+        //      steering takes (NPCSteeringSystem.KsSteerByPassage), or there is none
         if (targetMapCoords.MapId != ownerMapCoords.MapId)
         {
             if (xform.MapUid is not { } ownerMapUid ||
                 _transform.GetMap(targetCoordinates) is not { } targetMapUid ||
-                !_npcLadderSystem.HasRoute(ownerMapUid, targetMapUid))
+                !_npcPassageSystem.HasRoute(ownerMapUid, targetMapUid))
                 return (false, null);
 
-            var ladderEffects = new Dictionary<string, object>();
+            var passageEffects = new Dictionary<string, object>();
             if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
-                ladderEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
-            return (true, ladderEffects);
+                passageEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
+            return (true, passageEffects);
         }
         // KS14 end
 
