@@ -41,6 +41,7 @@ public sealed partial class VehicleSystem : EntitySystem
 
     [Dependency] private EntityQuery<AppearanceComponent> _appearanceQuery;
     [Dependency] private EntityQuery<HandsComponent> _handsQuery;
+    [Dependency] private EntityQuery<Content.Shared.Damage.Components.InjurableComponent> _injurableQuery; // KS14
     [Dependency] private EntityQuery<InputMoverComponent> _inputMoverQuery;
     [Dependency] private EntityQuery<InteractionRelayComponent> _interactionRelayQuery;
     [Dependency] private EntityQuery<MovementRelayTargetComponent> _movementRelayQuery;
@@ -49,6 +50,9 @@ public sealed partial class VehicleSystem : EntitySystem
     [Dependency] private EntityQuery<VehicleHandBlockerComponent> _handBlockerQuery;
     [Dependency] private EntityQuery<VehicleOperatorComponent> _operatorQuery;
 
+    // KS14: moved to OnDamageDealt below. Before the vehicle's resistances, cancellation and damage container, the
+    //      operator took in full every type the vehicle can't (radiation and poison on a mech).
+    /*
     /// <remarks>
     /// We subscribe to BeforeDamageChangedEvent so that we can access the damage value before the container is applied.
     /// </remarks>
@@ -68,6 +72,39 @@ public sealed partial class VehicleSystem : EntitySystem
 
         _damageable.TryChangeDamage(operatorUid, damage, origin: args.Origin);
     }
+    */
+
+    // KS14 start: transfer what the vehicle really takes, as mechs did before the vehicle system
+    [SubscribeLocalEvent]
+    private void OnDamageDealt(Entity<VehicleComponent> ent, ref DamageDealtEvent args)
+    {
+        if (!ent.Comp.TransferDamage || !args.Damage.AnyPositive() || ent.Comp.Operator is not { } operatorUid)
+            return;
+
+        var damage = DamageSpecifier.GetPositive(args.Damage);
+
+        // DamageDealtEvent is raised before the damage container drops what it doesn't take, so drop it here too.
+        if (_injurableQuery.TryComp(ent, out var injurable))
+        {
+            foreach (var type in new List<Robust.Shared.Prototypes.ProtoId<Content.Shared.Damage.Prototypes.DamageTypePrototype>>(damage.DamageDict.Keys))
+            {
+                if (!_damageable.KsContainerSupportsType(injurable.DamageContainer, type))
+                    damage.DamageDict.Remove(type);
+            }
+        }
+
+        if (damage.Empty)
+            return;
+
+        if (ent.Comp.TransferDamageModifier is { } modifierSet)
+        {
+            // Reduce damage to the operator via the specified modifier, if provided.
+            damage = DamageSpecifier.ApplyModifierSet(damage, modifierSet);
+        }
+
+        _damageable.TryChangeDamage(operatorUid, damage, origin: args.Origin);
+    }
+    // KS14 end
 
     [SubscribeLocalEvent]
     private void OnVehicleUpdateCanMove(Entity<VehicleComponent> ent, ref UpdateCanMoveEvent args)
@@ -334,6 +371,13 @@ public sealed partial class VehicleSystem : EntitySystem
             (!_handsQuery.TryComp(uid, out var hands) ||
              _hands.GetHandCount((uid, hands)) < handBlocker.BlockedHands))
             return false;
+
+        // KS14 start: let fork systems veto operating, e.g. restraints on a vehicle that needs no hands
+        var ksCanOperateEv = new Content.Shared._KS14.Vehicle.KsCanOperateVehicleEvent(entity.Owner);
+        RaiseLocalEvent(uid, ref ksCanOperateEv);
+        if (ksCanOperateEv.Cancelled)
+            return false;
+        // KS14 end
 
         return _actionBlocker.CanConsciouslyPerformAction(uid);
     }
