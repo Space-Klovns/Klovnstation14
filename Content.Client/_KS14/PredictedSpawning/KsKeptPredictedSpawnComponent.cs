@@ -78,6 +78,13 @@ public sealed partial class KsKeptPredictedSpawnComponent : Component
     public GameTick SpawnTick;
 
     /// <summary>
+    ///     This client's id for the shot, which outlives this copy: the server's hits of the shot arrive after it is
+    ///         gone, and what this copy predicted of them (pending damage) is found by it.
+    /// </summary>
+    [ViewVariables]
+    public int ShotId;
+
+    /// <summary>
     ///     The impacts this copy has played: what it hit, and where.
     /// </summary>
     [ViewVariables]

@@ -10,7 +10,7 @@ void vertex() {
 void fragment()
 {
     highp vec4 targetc = zTexture(UV);
-    highp vec4 maskc = texture(maskTexture, maskUVOut); //texture2D(maskTexture, maskUVOut);
+    highp vec4 maskc = texture2D(maskTexture, maskUVOut);
 
     targetc.a *= maskc.a;
     COLOR = targetc;

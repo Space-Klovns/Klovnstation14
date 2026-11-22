@@ -1133399,7 +1133399,7 @@ entities:
     - type: Transform
       parent: 1
       pos: -1.521272,2.4002576
-- proto: ScenarioNightVisionGogglesBasicWhite
+- proto: ScenarioNightVisionGogglesAdvanced
   entities:
   - uid: 2303
     components:

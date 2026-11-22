@@ -275,7 +275,9 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         if (wasAscending)
             RaiseLaunched(entity.Owner, ascending: false);
 
-        SpawnTrail(entity, activeComponent, transformComponent, curTime, entity.Comp.FallDuration);
+        // A pod seen only for the end of its fall leaves its trail only over that end.
+        var visibleDescent = GetVisibleDescent(entity.Comp);
+        SpawnTrail(entity, activeComponent, transformComponent, curTime + entity.Comp.FallDuration - visibleDescent, visibleDescent);
     }
 
     /// <summary>
@@ -286,7 +288,7 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         Entity<SupplyPodComponent> entity,
         ActiveSupplyPodComponent activeComponent,
         TransformComponent transformComponent,
-        TimeSpan curTime,
+        TimeSpan revealStartTime,
         TimeSpan revealDuration)
     {
         if (entity.Comp.TrailProto is not { } trailProto)
@@ -305,7 +307,7 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         }
 
         trailComponent.Length = (int)MathF.Ceiling(entity.Comp.Height / trailComponent.Spacing);
-        trailComponent.RevealStartTime = curTime;
+        trailComponent.RevealStartTime = revealStartTime;
         trailComponent.RevealDuration = revealDuration;
 
         // Pointing the trail at the pod itself makes the reveal track the pod's animated position

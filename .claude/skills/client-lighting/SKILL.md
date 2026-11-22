@@ -22,25 +22,28 @@ Everything below is `OverlaySpace.BeforeLighting`, which Clyde runs inside `Draw
 
 **Skipped entirely** (so none of this draws) when the light manager is disabled, the eye has `DrawLight == false`, the map has lighting disabled, or the eye is in nullspace. Do not hang non-glow logic off these overlays.
 
-ZIndex chain (arithmetic from the constants; `ContentZIndex` fields):
+ZIndex chain. Every overlay that sets a `ContentZIndex` takes it from a per-space enum in `Content.Client/_KS14/OverlayZIndex/` (`BeforeLightingZIndex` for this chain, plus `WorldSpaceBelowEntitiesZIndex`, `WorldSpaceBelowFovZIndex` and, for the one space where the index is a `DrawDepth`, `WorldSpaceEntitiesZIndex`). The enums have **no values**: the order the members are written in is the draw order, and `member.ToZIndex()` (`OverlayZIndexExtensions`) gives the index, counted from the enum's `Default` member, which stands for overlays that set no ZIndex (drawn as 0). To add an overlay, add a member in the right place; never write a number. `BeforeLightingZIndex`, in draw order (index in brackets):
 
-| Overlay | Defined as | Value |
+| Member | Overlay | Index |
 | --- | --- | --- |
-| `BeforeLightTargetOverlay` | `-11` (KS14 changed upstream -10) | -11 |
-| `RoofOverlay` | Before + 1 | -10 |
-| `EmissiveOverlay` | Before + 2 | -9 |
-| `TileEmissionOverlay` | Roof + 1 | -9 |
-| `KsLaserSightEmissiveOverlay` | Before + 2 | -9 |
-| `KsZLevelLightBufferOverlay` | LightBlur - 1 | -9 |
-| `LightBlurOverlay` | TileEmission + 1 | -8 |
-| `AfterLightTargetOverlay` | LightBlur + 1 | -7 |
-| `AmbientOcclusionOverlay`, `SunShadowOverlay` | After + 1 | -6 |
+| `BeforeLightTarget` | `BeforeLightTargetOverlay` | -9 |
+| `Roof` | `RoofOverlay` | -8 |
+| `Emissive` | `EmissiveOverlay` | -7 |
+| `LaserSightEmissive` | `KsLaserSightEmissiveOverlay` | -6 |
+| `TileEmission` | `TileEmissionOverlay` | -5 |
+| `ZLevelLightBuffer` | `KsZLevelLightBufferOverlay` | -4 |
+| `LightBlur` | `LightBlurOverlay` | -3 |
+| `AfterLightTarget` | `AfterLightTargetOverlay` | -2 |
+| `SunShadow` | `SunShadowOverlay` | -1 |
+| `Default` | overlays with no ZIndex; the night vision overlay (`WorldSpaceBelowFovZIndex.PhosphorNightVision`, 2) draws its light after it | 0 |
+
+`AmbientOcclusionOverlay` is in `WorldSpaceBelowEntities`, a different space, with its own `WorldSpaceBelowEntitiesZIndex`.
 
 Rules that fall out of it:
 
-- **A glow overlay must sit strictly between `BeforeLightTarget` (-11, which clears the enlarged target) and `LightBlur` (-8, which blurs it): ZIndex in [-10, -9].** At or above -8 it is drawn after the blur (unblurred) or, worse, after `AfterLightTarget` (-7, which has already copied the target into the light RT) and does nothing.
-- Ties are unstable (`List.Sort`, overlays skill section 1). The -9 tie between the glow overlays is harmless because they all add light into the same target. A tie with `LightBlur` is not: `KsLaserSightEmissiveOverlay` used to be `Before + 3 = -8` and tied with `LightBlurOverlay`, so the laser glow could run after the blur. It is now `+ 2` (-9).
-- Express your ZIndex relative to the constants (`BeforeLightTargetOverlay.ContentZIndex + 2`), and keep it below `LightBlurOverlay.ContentZIndex`. If you need strict ordering against another glow overlay you must re-space the chain, not rely on a tie.
+- **A glow overlay must be written after `BeforeLightTarget` (which clears the enlarged target) and before `LightBlur` (which blurs it).** At or after `LightBlur` it is drawn after the blur (unblurred) or, worse, after `AfterLightTarget` (which has already copied the target into the light RT) and does nothing.
+- The members have distinct indices, so there are no ties to flip. (They used to be written as arithmetic from constants, and the glow overlays tied at one value; `KsLaserSightEmissiveOverlay` once tied with `LightBlurOverlay` and could draw after the blur.) Glow overlays only add light, so their order among themselves does not matter.
+- Add a `BeforeLightingZIndex` member between `BeforeLightTarget` and `LightBlur`, and take `ContentZIndex` from `member.ToZIndex()`.
 
 ### What each stage does
 
@@ -55,7 +58,7 @@ Rules that fall out of it:
 public sealed partial class KsExampleGlowOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
-    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;   // -9; must stay < LightBlur (-8)
+    public static readonly int ContentZIndex = BeforeLightingZIndex.ExampleGlow.ToZIndex();   // a member between BeforeLightTarget and LightBlur
 
     public KsExampleGlowOverlay() { ZIndex = ContentZIndex; }
 
@@ -148,7 +151,7 @@ Constraints:
 ## 7. Debugging checklist
 
 - Nothing draws: lighting off for the map/eye (BeforeLighting is skipped); `GetOverlay<BeforeLightTargetOverlay>()` threw because it is not registered; or `GetCachedForViewport` threw because BeforeLightTarget's `Draw` has not yet run for that viewport (ZIndex not above -11).
-- Glow appears but sharp: your ZIndex is >= `LightBlur` (-8), or a tie flipped.
+- Glow appears but sharp: your `BeforeLightingZIndex` member is written at or after `LightBlur`.
 - Glow wrong size or offset: missing the `lightScale` factor, or the transform is not applied inside the `RenderInRenderTarget` callback.
 - Earlier glow disappears: you passed a clear colour to `RenderInRenderTarget`.
 - Glow clipped at the screen edge: you culled with `args.WorldBounds` instead of `EnlargedBounds`.

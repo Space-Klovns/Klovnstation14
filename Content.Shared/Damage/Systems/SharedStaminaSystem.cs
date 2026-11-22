@@ -197,6 +197,10 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
     private void OnProjectileHit(EntityUid uid, StaminaDamageOnCollideComponent component, ref ProjectileHitEvent args)
     {
+        // KS14: a client's kept copy of its own shot leaves the target to the server's hit
+        if (args.KsPreviewOnly)
+            return;
+
         OnCollide(uid, component, args.Target);
     }
 

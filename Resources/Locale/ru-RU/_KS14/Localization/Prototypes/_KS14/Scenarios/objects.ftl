@@ -12,9 +12,8 @@ ent-PinpointerScenarioObjective = пинпойнтер
 ent-ScenarioNightVisionGogglesBasic = очки ночного видения
     .desc = Я ничего не вижу. Обычный, дешёвый усилитель изображения.
 # Resources\Prototypes\_KS14\Scenarios\objects.yml
-ent-ScenarioNightVisionGogglesBasicWhite = очки ночного видения
+ent-ScenarioNightVisionGogglesAdvanced = усовершенствованные очки ночного видения
     .desc = Я ничего не вижу. Обычный, дешёвый усилитель изображения. Вместо зелёного фосфора установлен белый, что обеспечивает лучшую видимость.
-    .suffix = Белый
 # Resources\Prototypes\_KS14\Scenarios\objects.yml
 ent-ToolboxSyndicateTurret = развертываемая турель синдиката
     .desc = Зловеще выглядящий ящик с инструментами, наполненный элитным снаряжением синдиката.

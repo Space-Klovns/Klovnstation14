@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Physics;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -25,7 +26,7 @@ public sealed partial class RoofOverlay : Overlay
 
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
 
-    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.Roof.ToZIndex(); // KS14: BeforeLightTargetOverlay.ContentZIndex + 1 -> BeforeLightingZIndex.Roof
 
     public RoofOverlay(IEntityManager entManager)
     {

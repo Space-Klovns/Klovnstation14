@@ -48,7 +48,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 {
     [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
     [Dependency] private _KS14.FarSound.FarSoundSystem _farsoundSystem = default!;// KS14
-    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
+    [Dependency] protected _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -181,7 +181,14 @@ public abstract partial class SharedGunSystem : EntitySystem
         // KS14 ghetto mech port end
         // TODO: once mlgguns come out nuke this entire file and start from scratch
 
-        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        // KS14 start: where to shoot is the client's word, and a position's NaN arrives as sent (only float fields are
+        //      flushed): it went on into the shot's direction, the projectile's velocity and every lookup along the way.
+        var ksShootCoordinates = GetCoordinates(msg.Coordinates);
+        if (!TransformSystem.IsValid(ksShootCoordinates))
+            return;
+        // KS14 end
+
+        userGun.Comp.ShootCoordinates = ksShootCoordinates /* KS14: GetCoordinates(msg.Coordinates) -> checked above */;
         userGun.Comp.Target = GetEntity(msg.Target);
         // KS14 start: the projectiles of this shot are the sender's own prediction, kept by their client
         using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))
@@ -397,7 +404,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         {
             if (attemptEv.Message != null)
             {
-                PopupSystem.PopupClient(attemptEv.Message, gun, user);
+                PopupSystem.PopupClient(attemptEv.Message, gun, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
             }
             gun.Comp.BurstActivated = false;
             gun.Comp.BurstShotsCount = 0;
@@ -405,6 +412,9 @@ public abstract partial class SharedGunSystem : EntitySystem
             DirtyFields(gun!, null, nameof(GunComponent.BurstActivated), nameof(GunComponent.BurstShotsCount), nameof(GunComponent.NextFire)); // KS14: field deltas only send dirtied fields
             return false;
         }
+
+        if (shots > 0 && KsShotCalledOff(user, gun, newNextFire)) // KS14: a clumsy backfire calls the shot off before any ammo is taken
+            return false;
 
         var fromCoordinates = fromCoordinatesOverride ?? Transform(user).Coordinates;
         // Remove ammo
@@ -450,14 +460,14 @@ public abstract partial class SharedGunSystem : EntitySystem
             {
                 // KS14 start: keep the default empty-gun message unformatted for the recipient.
                 if (ev.Reason == null)
-                    PopupSystem.PopupCursor(KsPopupMessage.Create("gun-magazine-fired-empty"), user);
+                    PopupSystem.PopupCursor(KsPopupMessage.Create("gun-magazine-fired-empty"), KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
                 else
-                    PopupSystem.PopupCursor(ev.Reason, user);
+                    PopupSystem.PopupCursor(ev.Reason, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
                 // KS14 end
 
                 // MNET14: ent-popup
                 if (gun.Comp.EmptyFireLoc is { } emptyFireLoc)
-                    PopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(emptyFireLoc), user, user);
+                    PopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(emptyFireLoc), user, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
 
                 // Don't spam safety sounds at gun fire rate, play it at a reduced rate.
                 // May cause prediction issues? Needs more tweaking
@@ -465,7 +475,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                 // MNET14: commented out
                 // gun.NextFire = TimeSpan.FromSeconds(Math.Max(lastFire.TotalSeconds + SafetyNextFire, gun.NextFire.TotalSeconds));
 
-                Audio.PlayPredicted(gun.Comp.SoundEmpty, gun.Owner, user);
+                Audio.PlayPredicted(gun.Comp.SoundEmpty, gun.Owner, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
                 return false;
             }
 
@@ -627,7 +637,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     else
                     {
                         userImpulse = false;
-                        Audio.PlayPredicted(gun.Comp.SoundEmpty, gun, user);
+                        Audio.PlayPredicted(gun.Comp.SoundEmpty, gun, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
                     }
 
                     // Something like ballistic might want to leave it in the container still
@@ -659,7 +669,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     RaiseLocalEvent(ent.Value, ref hitscanEv);
                     PredictedQueueDel/* KS14: made queued */(ent);
 
-                    Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
+                    Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
                     _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
                     _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f, source: user); // KS14: ANK: AI sensors
                     break;
@@ -669,7 +679,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             // <Trauma>
             if (userImpulse)
-                Recoil(user, mapDirection, gun.Comp.CameraRecoilScalarModified);
+                Recoil(KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */, mapDirection, gun.Comp.CameraRecoilScalarModified);
             // </Trauma>
         }
 
@@ -693,6 +703,13 @@ public abstract partial class SharedGunSystem : EntitySystem
             // Once per shot, where AmmoShotEvent above is raised again for every cartridge.
             var firedProjectilesEv = new _KS14.Weapons.Ranged.KsGunFiredProjectilesEvent(shotProjectiles, user);
             RaiseLocalEvent(gun, ref firedProjectilesEv);
+        }
+
+        // The same once per shot on whoever fired, hitscan included, for abilities of the shooter rather than the gun.
+        if (user is { } ksShooterUid)
+        {
+            var shooterFiredEv = new _KS14.Weapons.Ranged.KsShooterFiredGunEvent(gun, shotProjectiles);
+            RaiseLocalEvent(ksShooterUid, ref shooterFiredEv);
         }
         // KS14 end
 
@@ -723,7 +740,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             }
 
             MuzzleFlash(gun, ammoComp, mapDirection.ToAngle(), user);
-            Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
+            Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, KsGetPredictingUser(user) /* KS14: user -> its predicting user, a mech's pilot */);
             _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
         }
     }
@@ -892,6 +909,13 @@ public abstract partial class SharedGunSystem : EntitySystem
         );
 
         RaiseLocalEvent(gun, ref ev);
+
+        // KS14 start: whoever holds the gun in a hand may modify it too (perk buffs); they refresh it as they gain or
+        //      lose a say. Only a hand: a gun in a pocket, a belt or a pneumatic cannon isn't being fired by its owner
+        if (Containers.TryGetContainingContainer(gun.Owner, out var ksHolderContainer) &&
+            _hands.IsHolding(ksHolderContainer.Owner, gun.Owner))
+            RaiseLocalEvent(ksHolderContainer.Owner, ref ev);
+        // KS14 end
 
         if (comp.SoundGunshotModified != ev.SoundGunshot)
         {

@@ -2,3 +2,6 @@
   id: PhosphorNightVision
   kind: source
   path: "/Textures/_Mono/Shaders/phosphornightvision.swsl"
+  params:
+    FREEDOM: 0.07
+    WIPE_FEATHER: 0.25

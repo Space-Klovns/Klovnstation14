@@ -13,9 +13,8 @@ ent-ScenarioNightVisionGogglesBasic = night vision goggles
     .desc = Я не вижу нихуя. A generic, cheap image intensifier.
 
 # Resources\Prototypes\_KS14\Scenarios\objects.yml
-ent-ScenarioNightVisionGogglesBasicWhite = night vision goggles
+ent-ScenarioNightVisionGogglesAdvanced = advanced night vision goggles
     .desc = Я не вижу нихуя. A generic, cheap image intensifier. White phosphorus is installed instead of green phosphorus, providing better visual clarity.
-    .suffix = White
 
 # Resources\Prototypes\_KS14\Scenarios\objects.yml
 ent-ToolboxSyndicateTurret = deployable syndicate turret

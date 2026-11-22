@@ -3096,3 +3096,64 @@ Entries:
         instantly.
   id: 277
   time: '2026-11-18T19:53:47.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Health no longer flickers when you are shot, or on the people you shoot.
+    - type: Fix
+      message: >-
+        Your bullets no longer bend away from where you fired them during
+        sustained fire.
+    - type: Fix
+      message: >-
+        Lasers and other hitscan weapons now hit a moving target you saw them
+        hit, as bullets do.
+    - type: Fix
+      message: Health no longer twitches once a second from passive regeneration.
+    - type: Fix
+      message: >-
+        Blood stains from shooting someone no longer flicker, appear late, or
+        change a moment after they appear.
+  id: 278
+  time: '2026-11-21T19:47:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: Mobs no longer get the Open/Close eyes action.
+    - type: Fix
+      message: Mech weapons now fire instantly for the pilot, like other guns.
+    - type: Fix
+      message: >-
+        A clumsy backfire no longer uses up or drops your ammo or leaves a
+        frozen laser bolt behind, and no longer repeats hundreds of times while
+        you are down.
+    - type: Tweak
+      message: Clumsy people no longer keep a grip on the trigger when they go down.
+    - type: Tweak
+      message: Firing a mech's weapons now shakes the pilot's camera.
+    - type: Fix
+      message: >-
+        The material silo shows every linked machine in green, even ones far
+        away.
+    - type: Tweak
+      message: >-
+        The autolathe's build queue is now a column on the right, like the
+        protolathe's.
+    - type: Fix
+      message: Buttons stacked on top of each other no longer touch.
+    - type: Fix
+      message: >-
+        Selected tabs no longer show a stray line colour in their rounded
+        corners.
+    - type: Fix
+      message: The game no longer crashes at startup in compatibility mode.
+    - type: Tweak
+      message: >-
+        Frozen puddles now look like the puddle they froze from, instead of
+        covering the whole tile.
+    - type: Tweak
+      message: >-
+        Puddles and ice now vanish quickly in vacuum and slowly outdoors, and
+        supercooled puddles freeze onto nearby ice.
+  id: 279
+  time: '2026-11-22T18:37:10.0000000+00:00'

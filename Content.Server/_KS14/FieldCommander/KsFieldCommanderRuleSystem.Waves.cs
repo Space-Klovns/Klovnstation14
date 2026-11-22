@@ -56,11 +56,13 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///         purchase would put more than <paramref name="capacity"/> units in the field. Returns the indices bought
     ///         into <paramref name="purchases"/> and what was left of the budget.
     /// </summary>
+    /// <param name="doctrine">Reweights the assets by their tags, if given.</param>
     public float BuyAssets(KsFieldCommanderRuleComponent component,
         float budget,
         int capacity,
         Dictionary<int, int> aliveByAsset,
-        List<int> purchases)
+        List<int> purchases,
+        KsFieldCommanderDoctrine? doctrine = null)
     {
         var candidates = new List<int>();
 
@@ -73,18 +75,16 @@ public sealed partial class KsFieldCommanderRuleSystem
             {
                 var asset = component.Assets[i];
 
-                if (asset.MinPhase > component.PhaseIndex ||
+                var weight = GetAssetWeight(asset, doctrine);
+                if (asset.Disabled ||
+                    asset.MinPhase > component.PhaseIndex ||
                     asset.Cost > budget ||
-                    asset.Count > capacity ||
-                    asset.Weight <= 0f)
-                    continue;
-
-                if (asset.MaxAlive > 0 &&
-                    aliveByAsset.GetValueOrDefault(i) + asset.Count > asset.MaxAlive)
+                    !(weight > 0f) ||
+                    !CanFieldAsset(asset, i, capacity, aliveByAsset))
                     continue;
 
                 candidates.Add(i);
-                totalWeight += asset.Weight;
+                totalWeight += weight;
             }
 
             if (candidates.Count == 0)
@@ -94,7 +94,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             var picked = candidates[^1];
             foreach (var candidate in candidates)
             {
-                roll -= component.Assets[candidate].Weight;
+                roll -= GetAssetWeight(component.Assets[candidate], doctrine);
                 if (roll > 0f)
                     continue;
 
@@ -180,16 +180,17 @@ public sealed partial class KsFieldCommanderRuleSystem
     private int CountLivingUnits(EntityUid ruleUid, Dictionary<int, int>? aliveByAsset)
     {
         var count = 0;
-        var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent, MobStateComponent>();
-        while (query.MoveNext(out var unitComponent, out var mobStateComponent))
+        // Not only mobs: a unit with no mob state, like a borg that is destroyed rather than killed, counts too.
+        var query = EntityQueryEnumerator<KsFieldCommanderUnitComponent>();
+        while (query.MoveNext(out var unitUid, out var unitComponent))
         {
             if (unitComponent.RuleUid != ruleUid ||
-                mobStateComponent.CurrentState == MobState.Dead)
+                !IsUnitAlive((unitUid, unitComponent)))
                 continue;
 
             count++;
 
-            if (aliveByAsset != null)
+            if (aliveByAsset != null && !unitComponent.Mobik && unitComponent.AftermathStep < 0)
                 aliveByAsset[unitComponent.AssetIndex] = aliveByAsset.GetValueOrDefault(unitComponent.AssetIndex) + 1;
         }
 
@@ -201,12 +202,13 @@ public sealed partial class KsFieldCommanderRuleSystem
     #region Waves
 
     /// <summary>
-    ///     Schedules the next wave, and tells the HUD.
+    ///     Schedules the next wave, and tells the HUD and the ghosts waiting for its respawn window.
     /// </summary>
     private void SetNextWave(KsFieldCommanderRuleComponent component, TimeSpan time)
     {
         component.NextWaveTime = time;
         UpdateWaveStatus(component);
+        RefreshRespawnWindow();
     }
 
     /// <summary>
@@ -231,6 +233,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var statusComponent = EnsureComp<KsFieldCommanderWaveStatusComponent>(mapUid);
         statusComponent.Wave = component.WavesSent;
         statusComponent.NextWaveTime = component.NextWaveTime == TimeSpan.MaxValue ? null : component.NextWaveTime;
+        statusComponent.Paused = component.PausedAt != null;
         Dirty(mapUid, statusComponent);
     }
 
@@ -264,15 +267,48 @@ public sealed partial class KsFieldCommanderRuleSystem
         var budgetScale = GetEndlessBudgetScale(rule.Comp);
         var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
-        var leftover = BuyAssets(rule.Comp, budget, capacity, aliveByAsset, purchases);
+        KsFieldCommanderDoctrine? doctrine = null;
+        float leftover;
+
+        // A wave written out in advance comes in place of what the budget would buy, and costs nothing.
+        string? queuedAnnouncement = null;
+        if (TryTakeQueuedWave(rule, rule.Comp.HardMaxAlive - CountLivingUnits(rule.Owner, null), purchases, out var queuedWave))
+        {
+            queuedAnnouncement = string.IsNullOrWhiteSpace(queuedWave!.Announcement) ? null : queuedWave.Announcement;
+
+            // Nothing spent, and nothing saved up either: the budget carried in stays as it was.
+            rule.Comp.DoctrineIndex = -1;
+            leftover = rule.Comp.CarriedBudget;
+        }
+        // The ending: the commander has nothing left to buy with, only an admin's queued wave still goes (see .Mobik).
+        else if (IsMobikEnding(rule.Comp))
+        {
+            return;
+        }
+        else
+        {
+            rule.Comp.DoctrineIndex = PickDoctrine(rule.Comp);
+            doctrine = rule.Comp.DoctrineIndex >= 0 ? rule.Comp.Doctrines[rule.Comp.DoctrineIndex] : null;
+
+            // What has to come first, charged to the budget; then whatever the doctrine spends of the rest. What it
+            //      holds back is left over, to carry.
+            var guaranteedCost = BuyGuaranteedAssets(rule.Comp, rule.Comp.WavesSent + 1, ref capacity, aliveByAsset, purchases);
+            var available = budget - guaranteedCost;
+            var spendable = GetSpendableBudget(available, doctrine);
+            leftover = available - (spendable - BuyAssets(rule.Comp, spendable, capacity, aliveByAsset, purchases, doctrine));
+        }
 
         var arrivalSum = Vector2.Zero;
         var arrivalCount = 0;
         var sent = Deliver(rule, purchases, battlefield, ref arrivalSum, ref arrivalCount);
 
+        // A queued wave that could not go waits for the next.
+        if (sent == 0 && queuedWave != null)
+            rule.Comp.QueuedWaves.Insert(0, queuedWave);
+
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
-        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget * budgetScale);
+        rule.Comp.CarriedBudget = Math.Clamp(sent > 0 || queuedWave != null ? leftover : budget, 0f, MathF.Max(0f, phase.Budget * budgetScale));
 
         var struck = _robustRandom.Prob(Math.Clamp(phase.StrikeChance, 0f, 1f)) && TryStrike(rule.Comp, battlefield);
 
@@ -280,6 +316,11 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
+
+        // A queued wave buys no guaranteed assets, so it leaves the phase's first ones to come with the next.
+        if (queuedWave == null)
+            rule.Comp.PhaseWavesSent++;
+
         if (rule.Comp.Endless)
             rule.Comp.EndlessWavesSent++;
 
@@ -293,8 +334,14 @@ public sealed partial class KsFieldCommanderRuleSystem
             ? GetCompassDirection(arrivalSum / arrivalCount - GetBaseCentre(rule.Comp, battlefield.Anchors))
             : string.Empty;
 
-        Transmit(rule.Comp, PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
+        if (queuedAnnouncement != null)
+            AnnounceQueuedWave(rule.Comp, queuedAnnouncement);
+
+        Transmit(rule.Comp, queuedAnnouncement != null ? null : PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
             ("count", sent), ("direction", direction), ("number", rule.Comp.WavesSent));
+
+        if (doctrine != null)
+            Transmit(rule.Comp, doctrine.Announcement, major: false, doctrine.Intel);
 
         // Once each for whatever came, however many of it.
         var reported = new HashSet<KsFieldCommanderAsset>();
@@ -376,15 +423,10 @@ public sealed partial class KsFieldCommanderRuleSystem
             coordinates = footCoordinates;
         }
         // Nowhere out of sight to walk in from, or meant to come by air anyway.
-        else if (TryFindPlacement(component, battlefield,
-                     component.MinPodObjectiveDistance, component.MaxSpawnDistance,
-                     minObjectiveDistance: component.MinPodObjectiveDistance,
-                     minDefenderDistance: component.MinPodDefenderDistance,
-                     hidden: false,
-                     out var podCoordinates))
+        else if (TryLandPod(component, battlefield, out var podCoordinates, out var landedPodUid))
         {
             coordinates = podCoordinates;
-            podUid = SpawnAtPosition(component.PodPrototype, podCoordinates);
+            podUid = landedPodUid;
         }
         else
         {
@@ -394,6 +436,34 @@ public sealed partial class KsFieldCommanderRuleSystem
         arrivalSum += _transformSystem.ToMapCoordinates(coordinates).Position;
         arrivalCount++;
         return SpawnGroup(rule, group, coordinates, podUid);
+    }
+
+    /// <summary>
+    ///     Finds where a pod may land and spawns it there, for its passengers to board. False, with nothing spawned, if
+    ///         there is nowhere.
+    /// </summary>
+    private bool TryLandPod(KsFieldCommanderRuleComponent component, Battlefield battlefield, out EntityCoordinates coordinates, out EntityUid podUid)
+    {
+        podUid = default;
+        if (!TryFindPlacement(component, battlefield,
+                component.MinPodObjectiveDistance, component.MaxSpawnDistance,
+                minObjectiveDistance: component.MinPodObjectiveDistance,
+                minDefenderDistance: component.MinPodDefenderDistance,
+                hidden: false,
+                out coordinates))
+            return false;
+
+        podUid = SpawnAtPosition(component.PodPrototype, coordinates);
+        return true;
+    }
+
+    /// <summary>
+    ///     Puts a unit in a pod, or beside it if it will not go in.
+    /// </summary>
+    private void BoardPod(EntityUid unitUid, EntityUid podUid)
+    {
+        if (!_supplyPodPassengerSystem.TryBoard(unitUid, podUid))
+            Log.Warning($"{ToPrettyString(unitUid)} could not board {ToPrettyString(podUid)}, and arrives beside it.");
     }
 
     private int SpawnGroup(Entity<KsFieldCommanderRuleComponent> rule, List<int> group, EntityCoordinates coordinates, EntityUid? podUid)
@@ -410,8 +480,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
                 spawned++;
 
-                if (podUid is { } pod && !_supplyPodPassengerSystem.TryBoard(unitUid, pod))
-                    Log.Warning($"{ToPrettyString(unitUid)} could not board {ToPrettyString(pod)}, and arrives beside it.");
+                if (podUid is { } pod)
+                    BoardPod(unitUid, pod);
             }
         }
 
@@ -424,9 +494,28 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// <param name="holdPosition">
     ///     Never gives it orders, whatever its asset says: it fights whoever comes, and nothing sends it away.
     /// </param>
-    private EntityUid? SpawnUnit(Entity<KsFieldCommanderRuleComponent> rule, int assetIndex, EntityCoordinates coordinates, bool holdPosition = false)
+    /// <param name="countSent">Whether it counts as sent: not for one sent again in place of a stuck one.</param>
+    private EntityUid? SpawnUnit(Entity<KsFieldCommanderRuleComponent> rule,
+        int assetIndex,
+        EntityCoordinates coordinates,
+        bool holdPosition = false,
+        bool countSent = true)
     {
-        var asset = rule.Comp.Assets[assetIndex];
+        return SpawnAssetUnit(rule, rule.Comp.Assets[assetIndex], assetIndex, coordinates, mobik: false, holdPosition, countSent);
+    }
+
+    /// <summary>
+    ///     Spawns one unit of <paramref name="asset"/> on the commander's side: one of its assets, at
+    ///         <paramref name="assetIndex"/>, or else the <paramref name="mobik"/>.
+    /// </summary>
+    private EntityUid? SpawnAssetUnit(Entity<KsFieldCommanderRuleComponent> rule,
+        KsFieldCommanderAsset asset,
+        int assetIndex,
+        EntityCoordinates coordinates,
+        bool mobik,
+        bool holdPosition,
+        bool countSent)
+    {
         EntityUid unitUid;
 
         if (asset.Humanoid is { } humanoid)
@@ -444,10 +533,36 @@ public sealed partial class KsFieldCommanderRuleSystem
         var unitComponent = EnsureComp<KsFieldCommanderUnitComponent>(unitUid);
         unitComponent.RuleUid = rule.Owner;
         unitComponent.AssetIndex = assetIndex;
+        unitComponent.Mobik = mobik;
         unitComponent.GiveOrders = asset.GiveOrders && !holdPosition;
+        unitComponent.HoldPosition = holdPosition;
+        ResetStuck(unitComponent);
+        BlockRcdForSentUnit(rule.Comp);
 
-        rule.Comp.UnitsSent++;
+        if (countSent)
+            rule.Comp.UnitsSent++;
+
         return unitUid;
+    }
+
+    /// <summary>
+    ///     What a unit was sent as: one of the assets, or the mobik. False if its asset is gone, the list having been
+    ///         changed since.
+    /// </summary>
+    private static bool TryGetUnitAsset(KsFieldCommanderRuleComponent component,
+        KsFieldCommanderUnitComponent unitComponent,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out KsFieldCommanderAsset? asset)
+    {
+        if (unitComponent.Mobik)
+            asset = component.Mobik?.Unit;
+        else if (unitComponent.AftermathStep >= 0)
+            asset = TryGetAftermathAsset(component, unitComponent.AftermathStep, unitComponent.AftermathGroup, unitComponent.AssetIndex);
+        else if (unitComponent.AssetIndex >= 0 && unitComponent.AssetIndex < component.Assets.Count)
+            asset = component.Assets[unitComponent.AssetIndex];
+        else
+            asset = null;
+
+        return asset != null;
     }
 
     #endregion

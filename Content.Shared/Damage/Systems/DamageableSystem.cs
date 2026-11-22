@@ -21,6 +21,7 @@ public sealed partial class DamageableSystem : EntitySystem
     [Dependency] private IConfigurationManager _config = default!;
     [Dependency] private SharedChemistryGuideDataSystem _chemistryGuideData = default!;
     [Dependency] private SharedExplosionSystem _explosion = default!;
+    [Dependency] private _KS14.Damage.Pending.KsPendingDamageSystem _ksPendingDamageSystem = default!; // KS14
 
     [Dependency] private EntityQuery<AppearanceComponent> _appearanceQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
@@ -66,6 +67,20 @@ public sealed partial class DamageableSystem : EntitySystem
                 new DamageVisualizerGroupData(ent.Comp.DamagePerGroup.Keys.ToList()),
                 appearance
             );
+
+            if (ent.Comp.Displacement != null)
+            {
+                _appearance.SetData(
+                    ent,
+                    DamageVisualizerKeys.Displacement,
+                    ent.Comp.Displacement.Value.Id,
+                    appearance
+                );
+            }
+            else
+            {
+                _appearance.RemoveData(ent, DamageVisualizerKeys.Displacement);
+            }
         }
 
         // TODO DAMAGE
@@ -93,5 +108,18 @@ public sealed partial class DamageableSystem : EntitySystem
             }
         }
         return damageTypes;
+    }
+
+    public void CopyComponent(Entity<DamageableComponent?> entity, EntityUid clone)
+    {
+        if (!Resolve(entity, ref entity.Comp, false))
+            return;
+
+        // Don't clone current damage values.
+        var cloneComp = EnsureComp<DamageableComponent>(clone);
+        cloneComp.Displacement = entity.Comp.Displacement;
+        cloneComp.DamageModifierSetId = entity.Comp.DamageModifierSetId;
+        cloneComp.RadiationDamageTypeIDs = new (entity.Comp.RadiationDamageTypeIDs);
+        Dirty(clone, cloneComp);
     }
 }

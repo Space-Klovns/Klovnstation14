@@ -27,6 +27,7 @@ public sealed partial class OreSiloSystem : SharedOreSiloSystem
             return;
         _clientLookup.Clear();
         _clientInformation.Clear();
+        var linked = new HashSet<NetEntity>(); // KS14: the window's linked rows, see OreSiloBuiState.KsLinked
 
         var xform = Transform(ent);
 
@@ -71,9 +72,10 @@ public sealed partial class OreSiloSystem : SharedOreSiloSystem
                 ("inRange", inRange));
 
             _clientInformation.Add((netEnt, txt, beacon));
+            linked.Add(netEnt); // KS14
         }
 
-        _userInterface.SetUiState(ent.Owner, OreSiloUiKey.Key, new OreSiloBuiState(_clientInformation));
+        _userInterface.SetUiState(ent.Owner, OreSiloUiKey.Key, new OreSiloBuiState(_clientInformation) { KsLinked = linked } /* KS14: added KsLinked */);
     }
 
     public override void Update(float frameTime)

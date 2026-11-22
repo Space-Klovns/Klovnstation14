@@ -19,4 +19,19 @@ public sealed partial class KsFieldCommanderDamageLedgerComponent : Component
     /// </summary>
     [ViewVariables]
     public float OtherDamage;
+
+    /// <summary>
+    ///     The part of <see cref="OtherDamage"/> the commander's side dealt (<see cref="KsFieldCommanderRuleSystem.IsAttackerHit"/>),
+    ///         as against the world's and the entity's own. What a medic is paid for healing, when only that pays.
+    /// </summary>
+    [ViewVariables]
+    public float AttackerDamage;
+
+    /// <summary>
+    ///     The part of <see cref="Damage"/> brought back from a death record at a revive
+    ///         (<see cref="KsFieldCommanderRuleSystem.RestoreLedger"/>): already charged as a teamkill at that death, so
+    ///         not charged again at the next, but still the defenders' doing for a medic healing it.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<NetUserId, float> SettledDamage = new();
 }

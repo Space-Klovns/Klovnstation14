@@ -17,6 +17,7 @@ humanoid-marking-modifier-respect-limits = Учитывать ограничен
 markings-layer-Chest = Туловище
 
 markings-layer-Eyes = Глаза
+markings-layer-OverEyes = Поверх глаз
 
 markings-layer-FacialHair = Лицевая растительность
 

@@ -248,5 +248,9 @@ public record struct ProjectileReflectAttemptEvent(EntityUid ProjUid, Projectile
 /// <summary>
 /// Raised when a projectile hits an entity
 /// </summary>
+/// <param name="KsPreviewOnly">
+/// KS14: the hit of a client's kept copy of its own shot, which the server never corrects: a handler may change
+/// <paramref name="Damage"/> as ever, but must leave <paramref name="Target"/>'s state alone. The server's hit does that.
+/// </param>
 [ByRefEvent]
-public record struct ProjectileHitEvent(DamageSpecifier Damage, EntityUid Target, EntityUid? Shooter = null);
+public record struct ProjectileHitEvent(DamageSpecifier Damage, EntityUid Target, EntityUid? Shooter = null, bool KsPreviewOnly = false /* KS14: added */);

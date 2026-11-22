@@ -1,0 +1,76 @@
+<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    xmlns:mortar="clr-namespace:Content.Client._KS14.Mortar"
+    xmlns:viewport="clr-namespace:Content.Client.Viewport"
+    xmlns:tg="clr-namespace:Content.Client._KS14.Tgui.Controls"
+    xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+    Title="{Loc ks-mortar-window-title}">
+    <!-- Sections as the S.P.A.M. window's: a tgui Section body under tgui, a flat panel under Baron, each headed. -->
+    <BoxContainer Name="RootBox" Orientation="Vertical" Margin="6" SeparationOverride="6">
+        <BoxContainer Orientation="Horizontal" SeparationOverride="6" VerticalExpand="True">
+            <tg:KsSectionPanel BaronColor="#1B1B1E" HorizontalExpand="True" VerticalExpand="True">
+                <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+                    <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                        <Label Text="{Loc ks-mortar-window-section-aim}" StyleClasses="LabelHeading" HorizontalExpand="True" />
+                        <Label Name="RangeLabel" Access="Public" StyleClasses="LabelWeak" VerticalAlignment="Center" />
+                    </BoxContainer>
+                    <mortar:KsMortarAimControl Name="AimPlot" Access="Public" MinSize="240 240" HorizontalExpand="True" VerticalExpand="True" />
+                </BoxContainer>
+            </tg:KsSectionPanel>
+            <tg:KsSectionPanel Name="SightBox" Access="Public" BaronColor="#1B1B1E" HorizontalExpand="True" SizeFlagsStretchRatio="0.75" Visible="False">
+                <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+                    <Label Text="{Loc ks-mortar-window-sight}" StyleClasses="LabelHeading" />
+                    <!-- Square, centred, growing with the section; at least as tall as the plot's least. -->
+                    <mortar:KsMortarSquareBox MinSize="180 180" VerticalExpand="True" RectClipContent="True">
+                        <PanelContainer MouseFilter="Ignore">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BackgroundColor="#000000" />
+                            </PanelContainer.PanelOverride>
+                        </PanelContainer>
+                        <Label Name="SightNoPicture" Text="{Loc ks-mortar-window-sight-no-picture}" HorizontalAlignment="Center" VerticalAlignment="Center" StyleClasses="LabelWeak" />
+                        <viewport:ScalingViewport Name="SightView" Access="Public" MouseFilter="Ignore" Visible="False" />
+                        <mortar:KsMortarSightReticle Name="SightReticle" />
+                    </mortar:KsMortarSquareBox>
+                </BoxContainer>
+            </tg:KsSectionPanel>
+        </BoxContainer>
+        <tg:KsSectionPanel BaronColor="#1B1B1E">
+            <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+                <Label Text="{Loc ks-mortar-window-section-adjust}" StyleClasses="LabelHeading" />
+                <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                    <tg:KsTguiLabeledList HorizontalExpand="True" VerticalAlignment="Center">
+                        <tg:KsTguiLabeledListItem Label="{Loc ks-mortar-window-bearing}" VerticalAlign="Middle">
+                            <BoxContainer Orientation="Horizontal">
+                                <tg:KsTguiButton Name="BearingDownButton" Access="Public" />
+                                <LineEdit Name="BearingEdit" Access="Public" MinWidth="80" />
+                                <tg:KsTguiButton Name="BearingUpButton" Access="Public" Margin="2 0 0 0" />
+                            </BoxContainer>
+                        </tg:KsTguiLabeledListItem>
+                        <tg:KsTguiLabeledListItem Label="{Loc ks-mortar-window-distance}" VerticalAlign="Middle">
+                            <BoxContainer Orientation="Horizontal">
+                                <tg:KsTguiButton Name="DistanceDownButton" Access="Public" />
+                                <LineEdit Name="DistanceEdit" Access="Public" MinWidth="80" />
+                                <tg:KsTguiButton Name="DistanceUpButton" Access="Public" Margin="2 0 0 0" />
+                            </BoxContainer>
+                        </tg:KsTguiLabeledListItem>
+                        <tg:KsTguiLabeledListItem Name="AimItem" Access="Public" Label="{Loc ks-mortar-window-aim}" />
+                    </tg:KsTguiLabeledList>
+                    <tg:KsTguiDirectionPad Name="NudgePad" Access="Public" VerticalAlignment="Center" ToolTip="{Loc ks-mortar-window-nudge-tooltip}" />
+                </BoxContainer>
+            </BoxContainer>
+        </tg:KsSectionPanel>
+        <tg:KsSectionPanel BaronColor="#1B1B1E">
+            <BoxContainer Orientation="Vertical" Margin="6" SeparationOverride="6">
+                <Label Text="{Loc ks-mortar-window-section-status}" StyleClasses="LabelHeading" />
+                <tg:KsTguiLabeledList>
+                    <tg:KsTguiLabeledListItem Name="RoundsItem" Access="Public" Label="{Loc ks-mortar-window-shells}" />
+                    <tg:KsTguiLabeledListItem Label="{Loc ks-mortar-window-reload}" VerticalAlign="Middle">
+                        <tg:KsTguiProgressBar Name="ReloadBar" Access="Public" HorizontalExpand="True" MinValue="0" MaxValue="1" />
+                    </tg:KsTguiLabeledListItem>
+                </tg:KsTguiLabeledList>
+                <tg:KsTguiButton Name="FireButton" Access="Public" Text="{Loc ks-mortar-window-fire}" Color="Danger" Fluid="True" LeftAligned="False" MinHeight="28" />
+            </BoxContainer>
+        </tg:KsSectionPanel>
+    </BoxContainer>
+</controls:FancyWindow>

@@ -107,3 +107,6 @@ ArgonCanisterBroken: EncaliteCanisterBroken
 ComputerSalvageJobBoard: null
 SalvageJobBoardComputerCircuitboard: null
 PaperSalvageJobLabel: null
+
+#2026-11-23 White-phosphor scenario NVGs renamed to the advanced variant
+ScenarioNightVisionGogglesBasicWhite: ScenarioNightVisionGogglesAdvanced

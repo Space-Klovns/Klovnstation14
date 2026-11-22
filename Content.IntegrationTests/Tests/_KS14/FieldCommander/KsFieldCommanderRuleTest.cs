@@ -290,6 +290,40 @@ public sealed class KsFieldCommanderRuleTest : GameTest
         Assert.That(strikes, Is.GreaterThan(0), "the defender out in the open should have been struck");
     }
 
+    /// <summary>
+    ///     The warning that follows a strike is signed by the commander, as its own taunts are, not by Field Operations
+    ///         as the rest of the intelligence is.
+    /// </summary>
+    [Test]
+    public async Task StrikeWarningIsSignedByTheCommander()
+    {
+        var server = Pair.Server;
+        await SetUpOutpost();
+        EntityUid ruleUid = default;
+
+        await server.WaitPost(() =>
+        {
+            ruleUid = KsFieldCommanderTestHelpers.StartRules(server, _commanderRule).CommanderUid;
+        });
+
+        // However long it takes the commander to strike, up to a generous cap; the warning waits its intel delay.
+        var warnings = new List<KsFieldCommanderPendingIntel>();
+        for (var second = 0; second < 30 && warnings.Count == 0; second++)
+        {
+            await RunSeconds(1f);
+            await server.WaitPost(() =>
+            {
+                var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+                Assert.That(ruleComponent.StrikeWarning, Is.Not.Null, "precondition: the rule warns of its strikes");
+                var warning = server.ResolveDependency<Robust.Shared.Localization.ILocalizationManager>().GetString(ruleComponent.StrikeWarning!.Value);
+                warnings.AddRange(ruleComponent.PendingIntel.Where(intel => intel.Message == warning));
+            });
+        }
+
+        Assert.That(warnings, Is.Not.Empty, "a strike should have queued its warning");
+        Assert.That(warnings.All(intel => intel.FromCommander), Is.True, "the strike warning should be signed by the commander");
+    }
+
     [Test]
     public async Task OneLostObjectiveOrUnitDoesNotEndTheRound()
     {

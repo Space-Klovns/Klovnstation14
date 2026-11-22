@@ -189,7 +189,8 @@ public sealed partial class DamageableSystem
     {
         args.State = new DamageableComponentState(
             _netMan.IsServer ? ent.Comp.Damage : ent.Comp.Damage.Clone(),
-            ent.Comp.DamageModifierSetId
+            ent.Comp.DamageModifierSetId,
+            ent.Comp.Displacement
         );
     }
 
@@ -199,6 +200,7 @@ public sealed partial class DamageableSystem
             return;
 
         ent.Comp.DamageModifierSetId = state.ModifierSetId;
+        ent.Comp.Displacement = state.Displacement;
 
         // Has the damage actually changed?
         var newDamage = state.Damage.Clone();
@@ -279,6 +281,15 @@ public sealed class DamageModifyEvent(DamageSpecifier damage, EntityUid? origin 
     ///     Contains the entity which caused the damage, if any was responsible.
     /// </summary>
     public readonly EntityUid? Origin = origin;
+
+    // KS14 start
+    /// <summary>
+    ///     Raised to ask what the damage would become, by <see cref="DamageableSystem.PreviewDamage"/>: none is about to
+    ///         be dealt. A handler that does more than change <see cref="Damage"/> (a shield that takes what it blocks)
+    ///         changes it as it would and does nothing else.
+    /// </summary>
+    public bool KsPreviewOnly;
+    // KS14 end
 }
 
 /// <summary>

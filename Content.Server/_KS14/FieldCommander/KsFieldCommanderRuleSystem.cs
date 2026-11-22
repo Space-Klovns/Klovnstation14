@@ -1,3 +1,4 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared.Damage.Systems;
 using Content.Server._KS14.KillCredit;
@@ -15,9 +16,10 @@ using Content.Shared._KS14.Scenario.Components;
 using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Maps;
-using Content.Shared.Mobs;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
@@ -34,7 +36,8 @@ namespace Content.Server._KS14.FieldCommander;
 ///     Split by concern: <c>.Waves</c> buys and sends units, <c>.Placement</c> finds where things go and keeps the
 ///         safe zones, <c>.Orders</c> and <c>.Strikes</c> are what the units and missiles are pointed at,
 ///         <c>.Uplink</c> the final objective, <c>.Announcements</c> both sides' transmissions, <c>.Fog</c> the play
-///         area, <c>.Points</c> the defenders' requisition points and <c>.Admin</c> the console API.
+///         area, <c>.Points</c> the defenders' requisition points, <c>.Perks</c> their perks, <c>.Respawn</c> when dead
+///         defenders may respawn, <c>.Mobik</c> the ending and <c>.Admin</c> the console API.
 /// </remarks>
 public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldCommanderRuleComponent>
 {
@@ -59,12 +62,30 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.FieldCommanderHealAttackerDamageOnly, value => _medicalAttackerDamageOnly = value, invokeImmediately: true);
+        InitializeRespawn();
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        ShutdownRespawn();
+    }
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
         base.Started(uid, component, gameRule, args);
 
         component.NextOrderTime = _gameTiming.CurTime + component.OrderInterval;
+        RefreshRespawnWindow();
     }
 
     protected override void Ended(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleEndedEvent args)
@@ -73,15 +94,22 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         // A rule ended mid-round, by an admin, takes its fog and no-build zones with it.
         ClearFog(component);
+        ClearRcdBlock(component);
         ClearWaveStatus(component);
         AllowBuildingInSafeZones(component);
+        RestoreAftermathLights(component);
+        RefreshRespawnWindow();
     }
 
     protected override void ActiveTick(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, float frameTime)
     {
         base.ActiveTick(uid, component, gameRule, frameTime);
 
-        if (!component.Prepared && !TryPrepare(component))
+        if (!component.Prepared && !TryPrepare((uid, component)))
+            return;
+
+        // The commander's clock is stopped: nothing it schedules comes due, though its units fight on.
+        if (component.PausedAt != null)
             return;
 
         var curTime = _gameTiming.CurTime;
@@ -97,19 +125,28 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         SendDueIntel(component, curTime);
 
-        while (component.PhaseIndex + 1 < component.Phases.Count &&
-               elapsed >= component.Phases[component.PhaseIndex + 1].Start)
+        // The ending has its own steps, and no more phases or waves of the commander's own (see .Mobik).
+        if (IsMobikEnding(component))
         {
-            EnterPhase((uid, component), component.PhaseIndex + 1, curTime);
+            UpdateMobik((uid, component), curTime);
         }
+        else
+        {
+            while (component.PhaseIndex + 1 < component.Phases.Count &&
+                   elapsed >= component.Phases[component.PhaseIndex + 1].Start)
+            {
+                EnterPhase((uid, component), component.PhaseIndex + 1, curTime);
+            }
 
-        if (curTime >= component.NextWaveTime)
-            ForceWave((uid, component));
+            if (curTime >= component.NextWaveTime)
+                ForceWave((uid, component));
+        }
 
         if (curTime >= component.NextOrderTime)
         {
             component.NextOrderTime = curTime + component.OrderInterval;
             GiveOrders((uid, component));
+            RefreshRcdBlock((uid, component));
         }
 
         UpdateUplink(component, curTime);
@@ -120,8 +157,9 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     ///         next tick, until the map with the defenders' objectives is there and a scenario rule is running to count
     ///         the commander's side.
     /// </summary>
-    private bool TryPrepare(KsFieldCommanderRuleComponent component)
+    private bool TryPrepare(Entity<KsFieldCommanderRuleComponent> rule)
     {
+        var component = rule.Comp;
         var objectiveUids = new List<EntityUid>();
         var objectiveQuery = EntityQueryEnumerator<ScenarioObjectiveComponent>();
         while (objectiveQuery.MoveNext(out var objectiveUid, out var objectiveComponent))
@@ -141,19 +179,20 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         FindSafeZones(component);
         ForbidBuildingInSafeZones(component);
-        PrepareExistingDefenders(component);
+        PrepareExistingDefenders(rule);
         RaiseFog(component);
         PrepareWaveStatus(component);
+        RefreshRcdBlock(rule);
         component.Prepared = true;
         return true;
     }
 
     /// <summary>
-    ///     How far along the timeline the rule is, counting any phase set by hand.
+    ///     How far along the timeline the rule is, counting any phase set by hand, and standing still while paused.
     /// </summary>
     private static TimeSpan GetElapsed(KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, TimeSpan curTime)
     {
-        return curTime - gameRule.ActivatedAt + component.TimeOffset;
+        return (component.PausedAt ?? curTime) - gameRule.ActivatedAt + component.TimeOffset;
     }
 
     /// <summary>
@@ -166,7 +205,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (phaseIndex < 0 || phaseIndex >= component.Phases.Count)
             return;
 
-        var curTime = _gameTiming.CurTime;
+        var curTime = GetCommanderTime(component);
         component.TimeOffset += component.Phases[phaseIndex].Start - GetElapsed(component, rule.Comp2, curTime);
         EnterPhase((rule.Owner, component), phaseIndex, curTime);
     }
@@ -179,7 +218,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, _gameTiming.CurTime));
+        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, GetCommanderTime(rule.Comp)));
         SendWave(rule, phase);
     }
 
@@ -189,7 +228,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     public void ForceUplink(Entity<KsFieldCommanderRuleComponent> rule)
     {
         var phase = TryGetPhase(rule.Comp, out var currentPhase) ? currentPhase : new KsFieldCommanderPhase();
-        DeployUplink(rule, phase, _gameTiming.CurTime);
+        DeployUplink(rule, phase, GetCommanderTime(rule.Comp));
     }
 
     private static bool TryGetPhase(KsFieldCommanderRuleComponent component, out KsFieldCommanderPhase phase)
@@ -225,6 +264,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     private void EnterPhase(Entity<KsFieldCommanderRuleComponent> rule, int phaseIndex, TimeSpan curTime)
     {
         rule.Comp.PhaseIndex = phaseIndex;
+        rule.Comp.PhaseWavesSent = 0;
         var phase = rule.Comp.Phases[phaseIndex];
 
         SetNextWave(rule.Comp, ScheduleWave(phase, curTime + phase.FirstWaveDelay));
@@ -245,25 +285,17 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     }
 
     [SubscribeLocalEvent]
-    private void OnUnitMobStateChanged(Entity<KsFieldCommanderUnitComponent> entity, ref MobStateChangedEvent args)
-    {
-        if (args.NewMobState != MobState.Dead ||
-            !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
-            return;
-
-        ruleComponent.UnitsKilled++;
-        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity);
-    }
-
-    [SubscribeLocalEvent]
     private void OnPassengerDisembarked(Entity<KsFieldCommanderUnitComponent> entity, ref KsSupplyPodPassengerDisembarkedEvent args)
     {
+        // The time in the pod is no time spent stuck.
+        ResetStuck(entity.Comp);
+
         if (!entity.Comp.GiveOrders ||
             !TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
             return;
 
         // Straight out of the pod and at them, rather than standing about until the next round of orders.
-        OrderUnit(ruleComponent, entity.Owner, SurveyBattlefield(ruleComponent));
+        OrderUnit(ruleComponent, entity, SurveyBattlefield(ruleComponent));
     }
 
     [SubscribeLocalEvent]
@@ -277,7 +309,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
                 OnUplinkLost((ruleUid, ruleComponent));
 
                 // Only a win over the uplink leads on; one that lasted to call down its bombardment ends the round.
-                if (ruleComponent.UplinkDestroyedTime != null)
+                //      The failed commander comes first, if there is one; the vote then follows his death.
+                if (ruleComponent.UplinkDestroyedTime != null && !TryBeginMobik((ruleUid, ruleComponent)))
                     TryStartEndlessVote((ruleUid, ruleComponent));
                 continue;
             }
@@ -324,5 +357,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         {
             args.AddLine(Loc.GetString("ks-fieldcommander-roundend-uplink-bombarded"));
         }
+
+        if (component.MobikKilled)
+            args.AddLine(Loc.GetString("ks-fieldcommander-roundend-mobik-killed"));
     }
 }

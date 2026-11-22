@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client._KS14.OverlayZIndex;
 using Content.Client.Light;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
@@ -39,10 +40,10 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
     ///     The last thing to add light before the blur, so that what it adds gets blurred.
     /// </summary>
     /// <remarks>
-    ///     This ties with <see cref="TileEmissionOverlay"/>, which is harmless: both only add light, and
-    ///         addition does not care which order it happens in.
+    ///     Written after <see cref="TileEmissionOverlay"/> in <see cref="BeforeLightingZIndex"/>, but both only add
+    ///         light, and addition does not care which order it happens in.
     /// </remarks>
-    public const int ContentZIndex = LightBlurOverlay.ContentZIndex - 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.ZLevelLightBuffer.ToZIndex();
 
     /// <summary>
     ///     <see cref="SharedPointLightComponent"/>'s own defaults, which have no named constants to borrow.
@@ -136,6 +137,13 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
         var debugFlat = _lightBufferSystem.DebugFlat;
         var shader = _shader;
 
+        // A Vector3, not a Color: a colour uniform is converted to linear on the way in, and the light map holds
+        //      the ambient colour as it is.
+        _zLevelSystem.TryGetZLevelAbove(mapUid, out var aboveEntity);
+        var sharedAmbient = aboveEntity is { } above
+            ? KsZLevelLightLeak.GetSharedAmbient(GetAmbient(above.Owner), GetAmbient(mapUid))
+            : Vector3.Zero;
+
         Composite(aboveCapture, aboveDim, maskWeight: 1f);
 
         void Composite(KsZLevelLightCapture capture, float dim, float maskWeight)
@@ -148,6 +156,7 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
             shader.SetParameter("MASK_TEXTURE", capture.Colour.Texture);
             shader.SetParameter("dim", dim);
             shader.SetParameter("maskWeight", maskWeight);
+            shader.SetParameter("sharedAmbient", sharedAmbient);
 
             worldHandle.RenderInRenderTarget(
                 target,
@@ -170,6 +179,11 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
                 null
             );
         }
+    }
+
+    private Color GetAmbient(EntityUid mapUid)
+    {
+        return _entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ?? MapLightComponent.DefaultColor;
     }
 
     /// <summary>

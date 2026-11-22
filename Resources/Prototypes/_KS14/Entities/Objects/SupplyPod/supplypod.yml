@@ -292,12 +292,18 @@
   parent: [ SupplyPodMissileNtBase, BaseSupplyPodExplosive ]
   id: SupplyPodMissileNtExplosive
   suffix: Armed
+  components:
+  - type: SupplyPodLandingZone # hostile: marks the blast, not a delivery
+    indicatorProto: KsStrikeWarning
 
 # syndie
 - type: entity
   parent: [ SupplyPodMissileSyndicateBase, BaseSupplyPodExplosive ]
   id: SupplyPodMissileSyndicateExplosive
   suffix: Armed
+  components:
+  - type: SupplyPodLandingZone # hostile: marks the blast, not a delivery
+    indicatorProto: KsStrikeWarning
 
 - type: explosion
   id: KsSupplyPodMissile

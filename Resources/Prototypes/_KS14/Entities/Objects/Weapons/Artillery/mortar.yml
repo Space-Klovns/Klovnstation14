@@ -1,0 +1,168 @@
+# A light mortar (KsMortarComponent): set up by its crewman (KsMortarCrewComponent) and never moved after, fired by the
+#     crewman or, once it has none, by anyone through its window. Its shells are supply pods, as the cruise missiles are
+#     (Objects/SupplyPod/supplypod.yml): spawned where they are to land, they fall for the whole of their flight with their landing zone
+#     marked on the ground the whole way, and go off as they land. Each is seen only for the end of its fall, as long as its
+#     incoming clip (kept between the mortar's minDescentTime and maxDescentTime). Where one lands, its travel is heard,
+#     then one of KsMortarIncoming, ending as it lands.
+
+- type: soundCollection
+  id: KsMortarIncoming
+  files:
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming01.ogg
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming03.ogg
+  - /Audio/_KS14/Weapons/Mortar/new_artillery_incoming04.ogg
+
+- type: entity
+  parent: SupplyPod
+  id: KsMortarShell
+  name: mortar shell
+  description: Incoming!
+  categories: [ HideSpawnMenu ]
+  save: false
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Artillery/mortar.rsi
+    drawdepth: Effects
+    offset: 0,0
+    layers:
+    - state: shell # nose-down in the art, as it is only ever seen falling
+  - type: SupplyPod
+    height: 30
+    fallDuration: 2s # the mortar sets it to the whole flight, and its descent to the end of it, and plays its sounds itself
+    fallSound: null
+    angularDeviation: 10
+    trailProto: KsMortarShellTrail
+  - type: SupplyPodLandingZone
+    indicatorProto: KsMortarWarning
+  - type: SupplyPodDrawDepth
+    transitDrawDepth: Effects
+    landedDrawDepth: Effects
+  - type: TriggerOnSupplyPodLanded
+  # An ordinary blast, the Default explosion, walls, windows and doors taking it like anything else; no floor torn up.
+  #     Square on a defender in the vendor's armour it crits them a fifth of the way into the crit window; a tile off it
+  #     leaves them standing (KsMortarShellDamageTest).
+  - type: ExplosionOnTrigger
+    explosionType: Default
+    maxTileIntensity: 9
+    totalIntensity: 54
+    intensitySlope: 3
+    maxTileBreak: 0
+    canCreateVacuum: false
+  - type: DeleteOnTrigger
+
+# Where a mortar shell is coming down: a strike warning (Effects/SupplyPod/strike_warning.yml) toned down, a mortar
+#     being the lesser threat. A thin, broken amber ring on the blast's rim and a small cross, nothing filled in, no
+#     chevrons, pulsing slower and never as faint.
+- type: entity
+  id: KsMortarWarning
+  categories: [ HideSpawnMenu ]
+  name: mortar warning
+  description: A dashed ring marking where a mortar shell is coming down. Best not to stand in it.
+  save: false
+  components:
+  - type: Sprite
+    sprite: /Textures/_KS14/Objects/Weapons/Artillery/mortar_warning.rsi
+    drawdepth: Gasses # over a tank's turret (Overdoors), under the shell coming down (Effects)
+    layers:
+    - state: ring
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Area ]
+    - state: cross
+      shader: unshaded
+      map: [ enum.KsStrikeWarningLayers.Reticle ]
+  - type: SupplyPodLandingZoneIndicator
+  - type: KsStrikeWarning
+    pulseStartFrequency: 0.6
+    pulseEndFrequency: 2
+    pulseMinimumAlpha: 0.6
+
+# Limited-ammo immovable mortar that requires you to choose a bearing and distance to fire. Put down on its own (by an
+#     admin, or on a map) it is anyone's to fire and stays until destroyed; dissolveWhenAbandoned makes one left behind by
+#     an NPC crew go once nobody uses it. Its window has a sight: a little live view of where it is aimed
+#     (KsMortarSightEye, sightRadius tiles around the aim).
+- type: entity
+  id: KsMortar
+  name: mortar
+  description: A light mortar, dug in where it stands. Or sits, rather.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Artillery/mortar.rsi
+    drawdepth: SmallObjects
+    state: mortar
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures # stops bullets, not people: its crewman stands on it
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.3
+        density: 100
+        layer:
+        - BulletImpassable
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: KsMortar
+    shell: KsMortarShell
+    fireSound:
+      path: /Audio/_KS14/Weapons/Mortar/fire1.ogg
+      params:
+        volume: 4
+    farFireSound:
+      sound:
+        path: /Audio/_KS14/Weapons/Mortar/fire1.ogg
+        params:
+          volume: 6
+          pitch: 0.8
+      range: 15,150
+    travelSound:
+      path: /Audio/_KS14/Weapons/Mortar/gun_mortar_travel.ogg
+      params:
+        maxDistance: 20
+    incomingSound:
+      collection: KsMortarIncoming
+      params:
+        volume: 4
+        maxDistance: 20
+    flightTime: 5
+    sightRadius: 5
+    loadSound:
+      path: /Audio/_KS14/Weapons/Mortar/mortarload.ogg
+  - type: ActivatableUI
+    key: enum.KsMortarUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.KsMortarUiKey.Key:
+        type: KsMortarBoundUserInterface
+
+# The eye of a mortar's sight: spawned at the aim of each player with its window open, who is sent what is around it,
+#     and deleted when they close it (KsMortarSystem.Sight.cs). Stays on the map, never on a grid, so that nothing it
+#     passes over takes it with it.
+- type: entity
+  id: KsMortarSightEye
+  categories: [ HideSpawnMenu ]
+  name: mortar sight
+  description: Where a mortar is aimed, as seen through its sight.
+  save: false
+  components:
+  - type: Transform
+    gridTraversal: false
+  - type: Eye
+    drawFov: false

@@ -9,6 +9,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -38,7 +39,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
     public AmbientOcclusionOverlay()
     {
         IoCManager.InjectDependencies(this);
-        ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
+        ZIndex = WorldSpaceBelowEntitiesZIndex.AmbientOcclusion.ToZIndex(); // KS14: AfterLightTargetOverlay.ContentZIndex + 1 -> WorldSpaceBelowEntitiesZIndex.AmbientOcclusion
         SubscribeCVars(); // KS14: cache cvars rather than reading them every frame
     }
 

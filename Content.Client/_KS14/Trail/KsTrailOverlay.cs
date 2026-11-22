@@ -148,8 +148,8 @@ public sealed partial class KsTrailOverlay : Overlay
 
             var texture = _spriteSystem.GetFrame(spriteSpecifier, curTime);
 
-            // Native size, never stretched - the trail loops the sprite instead of resizing it.
-            var worldSize = (Vector2)texture.Size / (float)EyeManager.PixelsPerMeter;
+            // Native length, never stretched - the trail loops the sprite instead of resizing it - and its own width.
+            var worldSize = _trailSystem.GetTileSize(trailComponent, (Vector2)texture.Size / (float)EyeManager.PixelsPerMeter);
             var box = Box2.CenteredAround(_trailSystem.GetTileOffset(trailComponent, index), worldSize);
 
             worldHandle.DrawTextureRect(texture, box, trailComponent.Color.WithAlpha(alpha));

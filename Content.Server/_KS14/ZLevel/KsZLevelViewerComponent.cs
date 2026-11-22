@@ -18,22 +18,19 @@ public sealed partial class KsZLevelViewerComponent : Component
     public ICommonSession Session;
 
     /// <summary>
-    ///     Should be treated as undefined and not used, if <see cref="Active"/>
-    ///         is false.
+    ///     The entities loading the z-levels below for this player, one a level, the nearest level first. As many as
+    ///         there are levels below, up to <see cref="Content.Shared._KS14.CCVar.KsCCVars.ZLevelPvsLevelsBelow"/>.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid ViewSubscriberUid;
-
-    [ViewVariables(VVAccess.ReadOnly)]
-    public bool Active;
+    public List<EntityUid> BelowViewSubscriberUids = [];
 
     /// <summary>
     ///     The same again for the z-level directly above, which is only ever sent so that light can fall from
     ///         it - nothing up there is drawn.
     /// </summary>
     /// <remarks>
-    ///     Kept separate rather than folded into a list because the two have different lifetimes: the one
-    ///         below follows the player around the whole round, and this one appears and disappears with a
+    ///     Kept separate rather than folded into the list because the two have different lifetimes: the ones
+    ///         below follow the player around the whole round, and this one appears and disappears with a
     ///         cvar.
     /// </remarks>
     [ViewVariables(VVAccess.ReadOnly)]

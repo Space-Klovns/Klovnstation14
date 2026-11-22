@@ -1,5 +1,6 @@
 ﻿using Content.Shared.DoAfter;
 using Content.Shared.Mech.Components;
+using Robust.Shared.GameStates; // KS14
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Mech.Equipment.Components;
@@ -7,7 +8,7 @@ namespace Content.Shared.Mech.Equipment.Components;
 /// <summary>
 /// A piece of equipment that can be installed into <see cref="MechComponent"/>
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState] // KS14: networked, the pilot's client predicts a mech weapon's shot and needs its owner
 public sealed partial class MechEquipmentComponent : Component
 {
     /// <summary>
@@ -18,7 +19,7 @@ public sealed partial class MechEquipmentComponent : Component
     /// <summary>
     /// The mech that the equipment is inside of.
     /// </summary>
-    [ViewVariables] public EntityUid? EquipmentOwner;
+    [ViewVariables, AutoNetworkedField /* KS14: added */] public EntityUid? EquipmentOwner;
 }
 
 /// <summary>

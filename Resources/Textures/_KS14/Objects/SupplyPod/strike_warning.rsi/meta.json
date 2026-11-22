@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made for Klovnstation 14",
+  "size": {
+    "x": 224,
+    "y": 224
+  },
+  "metaAtlas": false,
+  "states": [
+    {
+      "name": "area"
+    },
+    {
+      "name": "reticle"
+    },
+    {
+      "name": "chevrons"
+    }
+  ]
+}

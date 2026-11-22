@@ -73,14 +73,11 @@
   - type: Inventory
     templateId: human
   - type: Hands
-    hands:
+    startingHands:
       right:
         location: Right
       left:
         location: Left
-    sortedHands:
-    - right
-    - left
 
   - type: Speech
     speechSounds: Alto

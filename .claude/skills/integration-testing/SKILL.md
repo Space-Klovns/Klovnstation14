@@ -111,6 +111,12 @@ local uid number, as in CONTRIBUTING §4 ("ViewVariables").
   client after a tick.
 - A `CLIENT` cvar can only be set with `Side.Client`. Setting it on the server is silently ignored (CONTRIBUTING §6).
 - Toggle the feature within the test and assert both ways. "Nothing happens while it's off" is half of the proof.
+- **A recycled pair turns changed defaults into explicit values.** Before reuse, the pool resets every cvar a test
+  changed by calling `SetCVar` with the old value (the log reads `Resetting cvar <name> to <value>`). An explicit
+  value outranks any default, so after a test that changes a *default* (`OverrideDefault`, loading a config preset),
+  that cvar ignores every later default on the pair: a later preset loads cleanly and the cvar still keeps the old
+  value. Whether two tests share a pair depends on batch order, so the failure shows up in CI and not alone.
+  Give such a fixture `Fresh = true, Destructive = true` (`KsConfigPresetTest`).
 
 ### Mechanics that cost a lookup
 

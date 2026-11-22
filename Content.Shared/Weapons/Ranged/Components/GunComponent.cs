@@ -65,6 +65,7 @@ public sealed partial class GunComponent : Component
     /// Used for recoil purposes.
     /// </summary>
     [DataField]
+    [AutoNetworkedField] // KS14: with CurrentAngle, or a client's predicted spread parts from the server's
     public TimeSpan LastFire = TimeSpan.Zero;
 
     /// <summary>

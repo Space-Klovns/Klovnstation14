@@ -14,21 +14,21 @@ uniform highp float CONE_FEATHER;         // Softness of the side edges in degre
 uniform highp float CONE_DISTANCE;         // How far the cone reaches from center (0–1 of screen).
 uniform highp float CONE_DISTANCE_FEATHER; // Soft fade at the cone’s end (0–1 of screen).
 uniform highp float VIEW_ANGLE;            // Rotation of the cone in radians.
-uniform highp float FREEDOM = 0.07; // KS14: Radius of the fade-out of cone, at the same origin as the cone.
+uniform highp float FREEDOM; // KS14: Radius of the fade-out of cone, at the same origin as the cone. 0.07 by default, from the prototype: GLSL ES (compatibility mode) refuses uniform initialisers
 uniform highp vec2 ZOOM; // KS14
 uniform highp vec2 PLAYER_POSITION; // KS14: where the viewer is, in this target's pixels (origin bottom-left)
 
 uniform highp float TIME_FRACTION;         // signed time fraction, -1..1 (see spec)
-uniform highp float WIPE_FEATHER = 0.25;   // softness of the top-to-bottom wipe edge, in UV units
+uniform highp float WIPE_FEATHER /* KS14: = 0.25 -> the prototype's params, GLSL ES refuses uniform initialisers */;   // softness of the top-to-bottom wipe edge, in UV units
 
 const highp float PI = 3.14159265359;
 const highp float TAU = 6.28318530718;
 
 const highp float staticBase = 0.7;
-const highp float staticMul = 2;
+const highp float staticMul = 2.0; // KS14: 2 -> 2.0, GLSL ES has no implicit int to float
 const highp float staticEnvironmentalFactor = 0.0002;
 
-const highp float BASE_LIGHT_MUL = 2; // bruh
+const highp float BASE_LIGHT_MUL = 2.0 /* KS14: 2 -> 2.0, GLSL ES has no implicit int to float */; // bruh
 
 // Cone mask.
 // Returns 1.0 inside the cone, 0.0 outside, with smooth edges.
@@ -82,7 +82,7 @@ highp float coneMask(
     highp float angleMask = smoothstep(-featherPixels, 0.0, edgePixelDist);
 
     highp float scaledFreedom = FREEDOM * min(screenSize.x, screenSize.y);
-    highp float freedomMask = 1 - smoothstep(
+    highp float freedomMask = 1.0 /* KS14: 1 -> 1.0, GLSL ES has no implicit int to float */ - smoothstep(
         scaledFreedom * CONE_DISTANCE_FEATHER,
         scaledFreedom,
         dist
@@ -143,7 +143,7 @@ void fragment()
     // zTextureSpec, since that function may apply a color-space decode or
     // other processing meant only for the blur/NV math -- we want this
     // path to be bit-for-bit what's already on screen.
-    highp vec4 scenePlain = texture(SCREEN_TEXTURE, UV);
+    highp vec4 scenePlain = texture2D/* KS14: texture -> texture2D, GLSL ES 1.0 has no texture() */(SCREEN_TEXTURE, UV);
 
     // --- Time-driven top-to-bottom wipe ---
     highp float a = clamp(abs(TIME_FRACTION), 0.0, 1.0);

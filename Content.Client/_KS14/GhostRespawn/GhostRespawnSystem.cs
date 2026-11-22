@@ -14,17 +14,28 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
     /// </summary>
     public TimeSpan? LocalRespawnTime { get; private set; }
 
+    /// <summary>
+    ///     What holds the local client's respawn back past <see cref="LocalRespawnTime"/>, if anything.
+    /// </summary>
+    public GhostRespawnGate? LocalGate { get; private set; }
+
     public bool LocalEnabled { get; private set; }
 
-    /// <summary>
-    ///     Invoked with the new time that respawn will be allowed at.
-    ///         If null, respawn is not allowed.
-    /// </summary>
-    public event Action<TimeSpan?>? LocalRespawnTimeUpdated;
+    private bool _cvarEnabled;
 
     /// <summary>
-    ///     Invoked with the new time that respawn will be allowed at.
-    ///         If null, respawn is not allowed.
+    ///     The server's word on <see cref="LocalEnabled"/>, while it differs from the cvar (a gamerule forcing it).
+    /// </summary>
+    private bool? _enabledOverride;
+
+    /// <summary>
+    ///     Invoked with the new time that respawn will be allowed at, and what else holds it back.
+    ///         If the time is null, respawn is not allowed.
+    /// </summary>
+    public event Action<TimeSpan?, GhostRespawnGate?>? LocalRespawnTimeUpdated;
+
+    /// <summary>
+    ///     Invoked with whether respawning is enabled, when that changes.
     /// </summary>
     public event Action<bool>? LocalEnabledUpdated;
 
@@ -32,20 +43,34 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
     {
         base.Initialize();
 
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, OnEnabledChanged, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnEnabled, OnEnabledChanged, invokeImmediately: true);
     }
 
     private void OnEnabledChanged(bool enabled)
     {
-        LocalEnabled = enabled;
-        LocalEnabledUpdated?.Invoke(enabled);
+        _cvarEnabled = enabled;
+        UpdateEnabled();
+    }
+
+    [SubscribeNetworkEvent]
+    private void OnEnabledMessage(GhostRespawnEnabledMessage message)
+    {
+        _enabledOverride = message.Enabled;
+        UpdateEnabled();
+    }
+
+    private void UpdateEnabled()
+    {
+        LocalEnabled = _enabledOverride ?? _cvarEnabled;
+        LocalEnabledUpdated?.Invoke(LocalEnabled);
     }
 
     [SubscribeNetworkEvent]
     private void OnTimeMessage(GhostRespawnTimeMessage message)
     {
         LocalRespawnTime = message.Time;
-        LocalRespawnTimeUpdated?.Invoke(message.Time);
+        LocalGate = message.Gate;
+        LocalRespawnTimeUpdated?.Invoke(message.Time, message.Gate);
     }
 
     public void RequestRespawn()

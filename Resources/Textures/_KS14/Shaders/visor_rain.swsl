@@ -24,8 +24,9 @@ uniform highp vec2[32] drop_trails;
 // How densely the fine mist covers the visor, 0 to 1.
 uniform highp float mist;
 
-// How strongly water magnifies the view behind it. Kept low: a film of water on a visor, not a bead.
-uniform highp float lens_strength = 0.1;
+// How strongly water magnifies the view behind it. Kept low: a film of water on a visor, not a bead. Set by the
+//      KsVisorRain prototype's params: GLSL ES (compatibility mode) refuses a uniform initialiser.
+uniform highp float lens_strength;
 
 // The smaller of two distances, blended over k so that where two shapes meet there's no crease.
 highp float smoothMin(highp float a, highp float b, highp float k)

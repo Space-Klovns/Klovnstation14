@@ -2,6 +2,7 @@ using System;
 using Content.Shared._KS14.Light;
 using Content.Shared._KS14.ZLevel.Light;
 using NUnit.Framework;
+using Robust.Shared.Maths;
 
 namespace Content.Tests.Shared._KS14.ZLevel;
 
@@ -214,6 +215,43 @@ public sealed class KsZLevelLightLeakTests
         Assert.That(KsZLevelLightLeak.GetHoleFactor(Radius * 2f, Radius, Falloff, CurveFactor),
             Is.Zero,
             "a gap outside the light's radius has no light arriving at it to pass on");
+    }
+
+    /// <summary>
+    ///     Two levels under the same sky: all of the upper one's ambient light is shared, so none of it is carried
+    ///         down to light the lower one twice.
+    /// </summary>
+    [Test]
+    public void GetSharedAmbient_IsAllOfItUnderTheSameSky()
+    {
+        var sky = new Color(0.8f, 0.6f, 0.3f);
+        var shared = KsZLevelLightLeak.GetSharedAmbient(sky, sky);
+
+        Assert.That(shared, Is.EqualTo(new System.Numerics.Vector3(sky.R, sky.G, sky.B)),
+            "the lower level has all of this light by itself already");
+    }
+
+    /// <summary>
+    ///     A dark level under a lit one shares nothing with it, so the upper one's ambient light falls into it whole.
+    /// </summary>
+    [Test]
+    public void GetSharedAmbient_IsNothingForADarkLevelBelow()
+    {
+        var shared = KsZLevelLightLeak.GetSharedAmbient(new Color(0.8f, 0.6f, 0.3f), Color.Black);
+
+        Assert.That(shared, Is.EqualTo(System.Numerics.Vector3.Zero),
+            "a level with no ambient light of its own should be lit by what falls from the one above");
+    }
+
+    /// <summary>
+    ///     Channel by channel: never more than the upper level has, whatever the lower one does.
+    /// </summary>
+    [Test]
+    public void GetSharedAmbient_IsNeverMoreThanEitherHas()
+    {
+        var shared = KsZLevelLightLeak.GetSharedAmbient(new Color(0.2f, 0.9f, 0.5f), new Color(0.7f, 0.1f, 0.5f));
+
+        Assert.That(shared, Is.EqualTo(new System.Numerics.Vector3(0.2f, 0.1f, 0.5f)));
     }
 
     [Test]

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Client._KS14.OverlayZIndex;
 using Content.Client.Graphics;
 using Content.Client.Light;
 using Content.Shared._KS14;
@@ -58,7 +59,7 @@ public sealed partial class EmissiveOverlay : Overlay
     private const int LowerLevelBloomDivisor = 4;
     private readonly List<EmissiveDraw> _draws = [];
 
-    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.Emissive.ToZIndex();
 
     public EmissiveOverlay()
     {

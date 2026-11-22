@@ -72,7 +72,7 @@ namespace Content.IntegrationTests.Tests.GameObjects.Components
                         {
                             componentsValidated++;
 
-                            var componentType = component.GetNode("type").AsString();
+                            var componentType = component.Children.First(pair => pair.Key is YamlScalarNode { Value: "type" }).Value.AsString(); // KS14: was GetNode("type"), which misses the key a partial's "- !Remove type: X" tags
                             var clientAvailability = cComponentFactory.GetComponentAvailability(componentType);
                             var serverAvailability = sComponentFactory.GetComponentAvailability(componentType);
 

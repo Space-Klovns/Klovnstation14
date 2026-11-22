@@ -136,6 +136,16 @@ namespace Content.Shared.Decals
 
             return TryAddDecal(decal, coordinates, out decalId);
         }
+
+        /// <summary>
+        ///     For a prediction that runs once and is never run again (the hit of a client's kept copy of its own
+        ///         bullet): on a client, shows the decal until the server's own arrives, apart from the networked
+        ///         chunk a state would wipe it from. Nothing on the server, which places its own with
+        ///         <see cref="TryAddDecal(Decal, EntityCoordinates, out DecalIndex)"/>.
+        /// </summary>
+        public virtual void KsAddKeptPredictedDecal(string id, EntityCoordinates coordinates, Color? color = null, Angle? rotation = null, bool cleanable = false)
+        {
+        }
         // KS14 end
 
     }

@@ -3,6 +3,7 @@ using Content.Client._KS14.AdminMusic;
 using Content.Client._KS14.IoC;
 using Content.Client._KS14.TTS;
 using Content.Client._KS14.Voice;
+using Content.Shared._KS14.Configuration;
 using Content.Shared._KS14.IoC;
 using Content.Shared.CCVar;
 using Robust.Client;
@@ -58,27 +59,48 @@ internal sealed partial class KsEntryPoint : GameClient
         _prototypeManager.RegisterIgnore("ksLlmTool");
     }
 
+    /// <summary>
+    ///     Presets this client has loaded, so the server's list, which arrives on connecting, only adds the rest.
+    /// </summary>
+    private readonly HashSet<string> _loadedConfigPresets = new();
+
+    private ISawmill _configPresetSawmill = default!;
+
     // LCDC FUTURE: Remove this if configpresets gets to client on upstream
+    /// <summary>
+    ///     Loads this client's own presets (and <c>KS14/ks14_base</c>) now, and the server's when it sends its
+    ///         <see cref="CCVars.ConfigPresets"/>, which is replicated. Only the cvars the client registers are set:
+    ///         a preset is mostly server cvars, but may set a client one too, such as <c>audio.default_concurrent</c>.
+    /// </summary>
     private void LoadConfigPresets()
     {
-        var sawmill = _logManager.GetSawmill("configpreset");
+        _configPresetSawmill = _logManager.GetSawmill("configpreset");
+
         var presets = _configurationManager.GetCVar(CCVars.ConfigPresets).Split(',').ToList();
         presets.Add("KS14/ks14_base");
+        LoadConfigPresets(presets);
 
-        foreach (var preset in presets)
+        // The entry point lives as long as the process, so this never needs unsubscribing.
+        _configurationManager.OnValueChanged(CCVars.ConfigPresets, value => LoadConfigPresets(value.Split(',')));
+    }
+
+    private void LoadConfigPresets(IEnumerable<string> presets)
+    {
+        foreach (var rawPreset in presets)
         {
-            if (preset.IsWhiteSpace())
+            var preset = rawPreset.Trim();
+            if (preset.Length == 0 || !_loadedConfigPresets.Add(preset))
                 continue;
 
             var path = $"{ConfigPresetsDir}{preset}.toml";
             if (!_resourceManager.TryContentFileRead(path, out var file))
             {
-                sawmill.Error("Unable to load config preset {Preset}!", path);
+                _configPresetSawmill.Error("Unable to load config preset {Preset}!", path);
                 continue;
             }
 
-            _configurationManager.LoadDefaultsFromTomlStream(file);
-            sawmill.Info("Loaded config preset: {Preset}", path);
+            KsConfigPresets.LoadDefaults(_configurationManager, file, _configPresetSawmill);
+            _configPresetSawmill.Info("Loaded config preset: {Preset}", path);
         }
     }
 

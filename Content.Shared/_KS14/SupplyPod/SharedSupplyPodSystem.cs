@@ -18,6 +18,36 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
         args.Cancelled = true;
     }
 
+    /// <summary>
+    ///     How long a pod takes to fall. Set before it starts falling - on a pod spawned uninitialised, as one starts falling at
+    ///         map init - for it to take effect.
+    /// </summary>
+    public void SetFallDuration(Entity<SupplyPodComponent> pod, TimeSpan duration)
+    {
+        pod.Comp.FallDuration = duration;
+    }
+
+    /// <summary>
+    ///     How much of the end of its fall a pod is seen falling (<see cref="SupplyPodComponent.DescentDuration"/>); null for
+    ///         the whole fall. Set before it starts falling, as with <see cref="SetFallDuration"/>.
+    /// </summary>
+    public void SetDescentDuration(Entity<SupplyPodComponent> pod, TimeSpan? duration)
+    {
+        pod.Comp.DescentDuration = duration;
+        Dirty(pod);
+    }
+
+    /// <summary>
+    ///     How long the pod is seen falling for: its <see cref="SupplyPodComponent.DescentDuration"/>, kept within its fall.
+    /// </summary>
+    public static TimeSpan GetVisibleDescent(SupplyPodComponent supplyPodComponent)
+    {
+        if (supplyPodComponent.DescentDuration is not { } descent)
+            return supplyPodComponent.FallDuration;
+
+        return descent < TimeSpan.Zero ? TimeSpan.Zero : descent > supplyPodComponent.FallDuration ? supplyPodComponent.FallDuration : descent;
+    }
+
     protected virtual void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
     {
         RaiseLaunched(entity.Owner, entity.Comp.Ascending);

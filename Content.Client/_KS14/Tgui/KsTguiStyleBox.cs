@@ -129,18 +129,24 @@ public sealed class KsTguiStyleBox : StyleBox
         {
             var border = BorderColor * handle.Modulate;
 
+            // A border on only some sides stops at the corners, so it has no outer edge of its own to soften.
+            var allSides = thickness.Left > 0f && thickness.Top > 0f && thickness.Right > 0f && thickness.Bottom > 0f;
+
+            // The solid loop's arcs are pulled in by the soft edge. A partial border's inner loop is pulled in alike, so on a
+            //      corner between two bare sides the two loops are one and the strip between them has no area. On the true arc,
+            //      that corner got a crescent of border colour outside the background's rounding: a tab's underline showed in both
+            //      of its top corners.
             var innerBox = KsTguiGeometry.Deflate(box, thickness.Left, thickness.Top, thickness.Right, thickness.Bottom);
             KsTguiGeometry.RoundedLoop(innerBox,
                 MathF.Max(RadiusTopLeft * uiScale - MathF.Max(thickness.Left, thickness.Top), 0f),
                 MathF.Max(RadiusTopRight * uiScale - MathF.Max(thickness.Right, thickness.Top), 0f),
                 MathF.Max(RadiusBottomRight * uiScale - MathF.Max(thickness.Right, thickness.Bottom), 0f),
                 MathF.Max(RadiusBottomLeft * uiScale - MathF.Max(thickness.Left, thickness.Bottom), 0f),
-                segments, 0f, _innerLoop);
+                segments, allSides ? 0f : -CornerSoftness, _innerLoop);
 
             WriteStrip(_innerLoop, border, _solidLoop, border, loopLength, ref written);
 
-            // A border on only some sides stops at the corners, so it has no outer edge of its own to soften.
-            if (thickness.Left > 0f && thickness.Top > 0f && thickness.Right > 0f && thickness.Bottom > 0f)
+            if (allSides)
                 WriteStrip(_solidLoop, border, _softLoop, border.WithAlpha(0f), loopLength, ref written);
         }
 

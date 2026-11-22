@@ -6,7 +6,8 @@ namespace Content.Shared._KS14.Trail;
 
 /// <summary>
 ///     Draws a 'trail' out of this entity: <see cref="StartSprite"/> at the first tile,
-///         then <see cref="Sprite"/> repeated at its native size for every tile after that.
+///         then <see cref="Sprite"/> repeated at its native length, <see cref="WidthScale"/> of its native width, for
+///         every tile after that.
 ///     The trail runs along this entity's local 'up' axis, in its parent's frame, so it
 ///         rides whatever grid it was spawned on.
 /// </summary>
@@ -32,7 +33,7 @@ public sealed partial class KsTrailComponent : Component
     public SpriteSpecifier? StartSprite;
 
     /// <summary>
-    ///     Repeated at tile indices 2..<see cref="Length"/>, always at its native size.
+    ///     Repeated at tile indices 2..<see cref="Length"/>, at its native length along the trail.
     /// </summary>
     [DataField(required: true), AutoNetworkedField]
     public SpriteSpecifier Sprite = default!;
@@ -42,6 +43,13 @@ public sealed partial class KsTrailComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public int Length = 1;
+
+    /// <summary>
+    ///     How wide each tile is drawn, across the trail, as a multiple of its sprite's native width. Along the trail it
+    ///         always keeps its native size.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float WidthScale = 1f;
 
     /// <summary>
     ///     Distance, in world units, between the centres of two consecutive tiles.

@@ -5,6 +5,7 @@ using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
 using Content.Shared.Trigger.Components.Triggers;
 using Content.Shared.Trigger.Systems;
+using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -29,13 +30,14 @@ namespace Content.Server._KS14.Projectiles;
 /// closest thing first all fall out of normal physics simulation instead of being reimplemented by hand.
 /// Each ghost is re-rewound every tick so it stays a constant lag-duration behind its real target instead
 /// of staying frozen at the position it was spawned at, keeping it accurate for the whole projectile flight.
-/// Only covers physical projectiles; hitscan has its own path.
+/// Only covers physical projectiles; hitscan has its own path (<see cref="Content.Server._KS14.Weapons.Hitscan.KsHitscanLagCompensationSystem"/>).
 /// </summary>
 public sealed partial class LagCompProjectileSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private PredictedProjectileSystem _projectile = default!;
+    [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private FixtureSystem _fixtures = default!;
@@ -51,7 +53,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
     // Generous upper bound on mob hitbox radii, padding the broadphase lookup so a target whose center sits
     // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
-    private const float MaxHitboxRadius = 2.5f;
+    public const float MaxHitboxRadius = 2.5f;
 
     // The least the search assumes a mob could have moved per second of the lag window: base sprint speed (see
     //      MovementSpeedModifierComponent.DefaultBaseSprintSpeed). Not lower even when every mob is slow now, since a mob
@@ -78,13 +80,15 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
 
-        if (!_lagCompensationQuery.HasComp(shooterUid))
+        // A mech shoots as itself, and is piloted by the player whose shot it is.
+        if (_gunSystem.KsGetPredictingUser(shooterUid) is not { } predictingUid ||
+            !_lagCompensationQuery.HasComp(predictingUid))
             return;
 
         // Only a real player's shot needs compensating - NPCs/turrets simulate entirely server-side already,
         // so there's no client round trip to correct for. This also gives us that player's session, which is
         // the only server-trusted source of latency we have (see the CurTime comment below).
-        if (!_playerManager.TryGetSessionByEntity(shooterUid, out var shooterSession))
+        if (!_playerManager.TryGetSessionByEntity(predictingUid, out var shooterSession))
             return;
 
         // IMPORTANT: a client-sent IGameTiming.CurTime is NOT comparable to the server's. RobustToolbox
@@ -256,7 +260,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// least <see cref="MinCompensationSpeed"/>: the furthest a target can have got from where the shooter saw it, per
     /// second of lag. Bounds the search for targets, so a mob sped up past base sprint speed is still found.
     /// </summary>
-    private float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
+    public float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
     {
         RefreshMapSpeeds();
 
@@ -351,7 +355,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// Returns the coordinates an entity's <see cref="LagCompensationComponent"/> recorded closest to
     /// <paramref name="targetTime"/>, falling back to its current position if it has no history.
     /// </summary>
-    private static EntityCoordinates GetCompensatedCoordinates(Entity<LagCompensationComponent, TransformComponent> entity, TimeSpan targetTime)
+    public static EntityCoordinates GetCompensatedCoordinates(Entity<LagCompensationComponent, TransformComponent> entity, TimeSpan targetTime)
     {
         var (_, lagCompensationComponent, targetTransformComponent) = entity;
 

@@ -108,6 +108,26 @@ public sealed partial class KsFieldCommanderUplinkCommand : KsFieldCommanderComm
     }
 }
 
+/// <summary>
+///     Announces the failed commander and sends him in as a mobik now, which begins the round's ending.
+/// </summary>
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderMobikCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcmobik";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        foreach (var rule in GetRules(shell))
+        {
+            if (FieldCommanderRuleSystem.TrySendMobik((rule.Owner, rule.Comp1)))
+                shell.WriteLine(Loc.GetString("cmd-ks_fcmobik-sent"));
+            else
+                shell.WriteError(Loc.GetString("cmd-ks_fcmobik-refused"));
+        }
+    }
+}
+
 [AdminCommand(AdminFlags.Round)]
 public sealed partial class KsFieldCommanderPointsCommand : KsFieldCommanderCommandBase
 {
@@ -173,5 +193,87 @@ public sealed partial class KsFieldCommanderStatusCommand : KsFieldCommanderComm
     {
         foreach (var rule in GetRules(shell))
             shell.WriteLine(FieldCommanderRuleSystem.GetStatus(rule));
+    }
+}
+
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderStuckCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcstuck";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        // ks_fcstuck [seconds]
+        if (args.Length > 1)
+        {
+            shell.WriteError(Loc.GetString("shell-wrong-arguments-number"));
+            return;
+        }
+
+        var seconds = 0f;
+        if (args.Length == 1 && (!float.TryParse(args[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out seconds) || !float.IsFinite(seconds)))
+        {
+            shell.WriteError(Loc.GetString("shell-argument-must-be-number"));
+            return;
+        }
+
+        var minimum = TimeSpan.FromSeconds(Math.Clamp(seconds, 0f, 86400f));
+
+        foreach (var rule in GetRules(shell))
+        {
+            var lines = FieldCommanderRuleSystem.DescribeStuckUnits(rule.Owner, minimum);
+            if (lines.Count == 0)
+            {
+                shell.WriteLine(Loc.GetString("cmd-ks_fcstuck-none"));
+                continue;
+            }
+
+            shell.WriteLine(Loc.GetString("cmd-ks_fcstuck-count", ("count", lines.Count)));
+            foreach (var line in lines)
+                shell.WriteLine(line);
+        }
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length == 1
+            ? CompletionResult.FromHint(Loc.GetString("cmd-ks_fcstuck-hint"))
+            : CompletionResult.Empty;
+    }
+}
+
+[AdminCommand(AdminFlags.Round)]
+public sealed partial class KsFieldCommanderRcdBlockCommand : KsFieldCommanderCommandBase
+{
+    public override string Command => "ks_fcrcdblock";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        bool? block = null;
+        if (args.Length > 0)
+        {
+            if (!bool.TryParse(args[0], out var parsed))
+            {
+                shell.WriteError(Loc.GetString("cmd-ks_fcrcdblock-help"));
+                return;
+            }
+
+            block = parsed;
+        }
+
+        foreach (var rule in GetRules(shell))
+        {
+            if (block is { } newBlock)
+                FieldCommanderRuleSystem.SetBlockRcdDuringWaves((rule.Owner, rule.Comp1), newBlock);
+
+            shell.WriteLine(Loc.GetString("cmd-ks_fcrcdblock-state", ("block", rule.Comp1.BlockRcdDuringWaves)));
+        }
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length == 1
+            ? CompletionResult.FromOptions(["true", "false"])
+            : CompletionResult.Empty;
     }
 }

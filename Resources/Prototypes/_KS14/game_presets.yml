@@ -53,5 +53,7 @@
   rules:
   - KsScenarioFieldCommander
   - KsFieldCommanderRule
+  - KsFieldCommanderGhostRespawn
   - KsFieldCommanderWeather
   - KsFieldCommanderLitterDespawn
+  - KsFieldCommanderBloodEvaporation

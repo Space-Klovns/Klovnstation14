@@ -28,6 +28,11 @@
     thresholds: [ 2, 3 ]
   - type: StackPrice
     price: 5
+  # Click a tile to stack a wall there, from as many bags as the construction recipe takes.
+  - type: KsPlaceOnTile
+    prototype: KsSandbagWall
+    doAfter: 2
+    stackCost: 5
   - type: GuideHelp
     guides:
     - KsFortifications
@@ -71,8 +76,13 @@
         density: 60
         mask:
         - FullTileMask
+        # A low wall: it stops anyone walking, and a bullet aimed at it, but not anyone climbing over it, as a table
+        #     doesn't (ClimbSystem lets a climber through MidImpassable and LowImpassable only). Opaque keeps aimed
+        #     lasers hitting it.
         layer:
-        - WallLayer
+        - HalfWallLayer
+        - BulletImpassable
+        - Opaque
   - type: Damageable
     damageModifierSet: Wood
   - type: Injurable
@@ -90,6 +100,7 @@
             max: 3
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+  - type: Climbable
   # Cover to shoot over: bullets pass unless they're aimed at the sandbags themselves, as with tables.
   - type: RequireProjectileTarget
   # Pulled apart by hand, for all five bags back.

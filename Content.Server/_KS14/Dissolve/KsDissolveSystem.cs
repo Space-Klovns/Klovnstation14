@@ -21,16 +21,24 @@ public sealed partial class KsDissolveSystem : EntitySystem
     [Dependency] private EntityQuery<KsDissolveComponent> _dissolveQuery = default!;
 
     /// <summary>
-    ///     Starts dissolving an entity, and deletes it afterwards. Does nothing if it is already dissolving.
+    ///     Starts dissolving an entity, and deletes it afterwards. Does nothing if it is already dissolving; one
+    ///         materialising turns round.
     /// </summary>
     /// <param name="uid">The entity.</param>
     /// <param name="duration">How long the dissolve takes, or the component's default.</param>
     public void Dissolve(EntityUid uid, TimeSpan? duration = null)
     {
-        if (TerminatingOrDeleted(uid) || _dissolveQuery.HasComp(uid))
+        if (TerminatingOrDeleted(uid))
             return;
 
-        var dissolveComponent = AddComp<KsDissolveComponent>(uid);
+        // One still materialising turns round and dissolves from now.
+        if (!_dissolveQuery.TryComp(uid, out var dissolveComponent))
+            dissolveComponent = AddComp<KsDissolveComponent>(uid);
+        else if (dissolveComponent.Reverse)
+            dissolveComponent.Reverse = false;
+        else
+            return;
+
         dissolveComponent.StartTime = _gameTiming.CurTime;
         if (duration is { } customDuration)
             dissolveComponent.Duration = customDuration;
@@ -48,6 +56,53 @@ public sealed partial class KsDissolveSystem : EntitySystem
             dissolveComponent.OwnsDespawn = true;
         }
     }
+
+    /// <summary>
+    ///     Makes an entity materialise: the dissolve played backwards, from nothing to whole. The entity is kept and
+    ///         the component taken off once it has finished. Does nothing if it is already dissolving away; restarts
+    ///         one already materialising (on the server's clock).
+    /// </summary>
+    /// <param name="uid">The entity, usually just spawned.</param>
+    /// <param name="duration">How long it takes, or the component's default.</param>
+    public void Materialise(EntityUid uid, TimeSpan? duration = null)
+    {
+        if (TerminatingOrDeleted(uid))
+            return;
+
+        // Already materialising: it carries on, from now.
+        if (!_dissolveQuery.TryComp(uid, out var dissolveComponent))
+            dissolveComponent = AddComp<KsDissolveComponent>(uid);
+        else if (!dissolveComponent.Reverse)
+            return;
+
+        dissolveComponent.Reverse = true;
+        dissolveComponent.StartTime = _gameTiming.CurTime;
+        if (duration is { } customDuration)
+            dissolveComponent.Duration = customDuration;
+        Dirty(uid, dissolveComponent);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        // A finished materialise leaves the entity whole: the component goes, a moment late as for a dissolve.
+        var curTime = _gameTiming.CurTime;
+        var query = EntityQueryEnumerator<KsDissolveComponent>();
+        while (query.MoveNext(out var uid, out var dissolveComponent))
+        {
+            if (dissolveComponent.Reverse &&
+                dissolveComponent.LifeStage <= ComponentLifeStage.Running &&
+                curTime >= dissolveComponent.StartTime + dissolveComponent.Duration + Linger)
+                RemCompDeferred<KsDissolveComponent>(uid);
+        }
+    }
+
+    /// <summary>
+    ///     Whether the entity is materialising, not yet whole.
+    /// </summary>
+    public bool IsMaterialising(EntityUid uid)
+        => _dissolveQuery.TryComp(uid, out var dissolveComponent) && dissolveComponent.Reverse;
 
     /// <summary>
     ///     Calls a dissolve off: the entity stays, and the clients draw it whole again as the component goes. Does
@@ -76,6 +131,9 @@ public sealed partial class KsDissolveSystem : EntitySystem
         Cancel(entity.AsNullable());
     }
 
+    /// <summary>
+    ///     Whether the entity is dissolving away, to be deleted.
+    /// </summary>
     public bool IsDissolving(EntityUid uid)
-        => _dissolveQuery.HasComp(uid);
+        => _dissolveQuery.TryComp(uid, out var dissolveComponent) && !dissolveComponent.Reverse;
 }

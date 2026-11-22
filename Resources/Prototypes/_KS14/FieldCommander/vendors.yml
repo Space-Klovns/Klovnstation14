@@ -39,6 +39,13 @@
         amount: 4
       - id: BruteAutoInjector
         amount: 1
+    # Only a defender holding the Tank perk can take it; everyone else sees it greyed out.
+    - name: Tank Perk
+      choices: { KsTankArmor: 1 }
+      entries:
+      - id: ClothingOuterArmorBulletproof
+        ksRequiredPerk: KsPerkTank
+        replaceSlot: [ OUTERCLOTHING ]
 
 - type: entity
   parent: ScenarioVendorBundleNanoplantNtBase

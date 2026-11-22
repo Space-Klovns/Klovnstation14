@@ -1,8 +1,12 @@
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.Forensics;
 using Content.Server.Speech.EntitySystems;
+using Content.Shared.Atmos.Components;
 using Content.Shared.Cloning.Events;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Clothing.EntitySystems;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Inventory;
 using Content.Shared.Labels.Components;
@@ -11,6 +15,8 @@ using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Nutrition.Components;
+using Content.Shared.Nutrition.EntitySystems;
 using Content.Shared.Paper;
 using Content.Shared.Speech.Components;
 using Content.Shared.Stacks;
@@ -38,6 +44,9 @@ public sealed partial class CloningSystem
     [Dependency] private MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] private SharedChameleonClothingSystem _chameleonClothing = default!;
     [Dependency] private PullingSystem _pulling = default!;
+    [Dependency] private SharedCreamPieSystem _creampie = default!;
+    [Dependency] private FlammableSystem _flammable = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
 
     public override void Initialize()
     {
@@ -62,6 +71,9 @@ public sealed partial class CloningSystem
         SubscribeLocalEvent<InventoryComponent, CloningEvent>(OnCloneInventory);
         SubscribeLocalEvent<MovementSpeedModifierComponent, CloningEvent>(OnCloneMovementSpeedModifier);
         SubscribeLocalEvent<PullerComponent, CloningEvent>(OnClonePuller);
+        SubscribeLocalEvent<CreamPiedComponent, CloningEvent>(OnCloneCreamPied);
+        SubscribeLocalEvent<FlammableComponent, CloningEvent>(OnCloneFlammable);
+        SubscribeLocalEvent<DamageableComponent, CloningEvent>(OnCloneDamageable);
     }
 
     private void OnCloneItemStack(Entity<StackComponent> ent, ref CloningItemEvent args)
@@ -148,5 +160,29 @@ public sealed partial class CloningSystem
             return;
 
         _pulling.CopyPullerComponent(ent.AsNullable(), args.CloneUid);
+    }
+
+    private void OnCloneCreamPied(Entity<CreamPiedComponent> ent, ref CloningEvent args)
+    {
+        if (!args.Settings.EventComponents.Contains(Factory.GetRegistration(ent.Comp.GetType()).Name))
+            return;
+
+        _creampie.CopyComponent(ent.AsNullable(), args.CloneUid);
+    }
+
+    private void OnCloneFlammable(Entity<FlammableComponent> ent, ref CloningEvent args)
+    {
+        if (!args.Settings.EventComponents.Contains(Factory.GetRegistration(ent.Comp.GetType()).Name))
+            return;
+
+        _flammable.CopyComponent(ent.AsNullable(), args.CloneUid);
+    }
+
+    private void OnCloneDamageable(Entity<DamageableComponent> ent, ref CloningEvent args)
+    {
+        if (!args.Settings.EventComponents.Contains(Factory.GetRegistration(ent.Comp.GetType()).Name))
+            return;
+
+        _damageable.CopyComponent(ent.AsNullable(), args.CloneUid);
     }
 }

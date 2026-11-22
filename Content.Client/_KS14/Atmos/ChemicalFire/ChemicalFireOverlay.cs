@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Client._KS14.Graphics;
+using Content.Client._KS14.OverlayZIndex;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -224,7 +225,7 @@ public sealed partial class ChemicalFireUnderOverlay(ShaderInstance unshadedShad
     ///     Where an object on the floor would draw: drawn before every sprite at this depth or above, so mobs and
     ///         items in the fire cover it.
     /// </summary>
-    public const int ContentZIndex = (int)Shared.DrawDepth.DrawDepth.Objects;
+    public const int ContentZIndex = (int)WorldSpaceEntitiesZIndex.ChemicalFireUnder;
 
     protected override string GetState(ChemicalFireComponent fireComponent) => fireComponent.UnderState;
 }
@@ -243,7 +244,7 @@ public sealed partial class ChemicalFireOverOverlay(ShaderInstance unshadedShade
     ///         Drawing this half above gas as well would leave gas on the tile hiding only the <c>under</c>
     ///         half, and chemfires make or burn in visible gas themselves (water vapour, plasma).
     /// </remarks>
-    public const int ContentZIndex = (int)Shared.DrawDepth.DrawDepth.Overdoors;
+    public const int ContentZIndex = (int)WorldSpaceEntitiesZIndex.ChemicalFireOver;
 
     protected override string GetState(ChemicalFireComponent fireComponent) => fireComponent.OverState;
 }

@@ -3,6 +3,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Timing;
 using Robust.Shared.Network;
 // </Trauma>
+using System.Linq; // KS14
 using System.Numerics;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Components;
@@ -45,10 +46,26 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
         var shooter = args.Shooter ?? args.Gun;
         var mapCords = _transform.ToMapCoordinates(args.FromCoordinates);
         var ray = new CollisionRay(mapCords.Position, args.ShotDirection, (int)ent.Comp.CollisionMask);
-        var rayCastResults = _physics.IntersectRay(mapCords.MapId, ray, ent.Comp.MaxDistance, shooter, false);
+        var rayCastResults = _physics.IntersectRay(mapCords.MapId, ray, ent.Comp.MaxDistance, shooter, false).ToList() /* KS14: added, changed below */;
+
+        // KS14 start: the server takes a lagging player's shot against where they saw each mob, not where it is now
+        if (_net.IsServer && args.Shooter is { } ksShooterUid)
+        {
+            var ksResultsEv = new _KS14.Weapons.Hitscan.KsModifyHitscanRaycastResultsEvent(
+                ksShooterUid,
+                mapCords.MapId,
+                mapCords.Position,
+                args.ShotDirection.Normalized(),
+                ent.Comp.MaxDistance,
+                (int)ent.Comp.CollisionMask,
+                rayCastResults);
+            RaiseLocalEvent(ref ksResultsEv);
+        }
+        // KS14 end
+
         // KS14 start: an operator's shots pass through the vehicle they fire from
         if (_vehicleSystem.GetOperatedVehicleOrNull(shooter) is { } ksShooterVehicleUid)
-            rayCastResults = System.Linq.Enumerable.Where(rayCastResults, hit => hit.HitEntity != ksShooterVehicleUid);
+            rayCastResults.RemoveAll(hit => hit.HitEntity == ksShooterVehicleUid);
         // KS14 end
 
         var target = args.Target;

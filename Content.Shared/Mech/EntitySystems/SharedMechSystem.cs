@@ -230,6 +230,7 @@ public abstract partial class SharedMechSystem : EntitySystem
             return;
 
         equipmentComponent.EquipmentOwner = uid;
+        Dirty(toInsert, equipmentComponent); // KS14: networked
         _container.Insert(toInsert, component.EquipmentContainer);
         var ev = new MechEquipmentInsertedEvent(uid);
         RaiseLocalEvent(toInsert, ref ev);
@@ -273,7 +274,12 @@ public abstract partial class SharedMechSystem : EntitySystem
             CycleEquipment(uid, component);
 
         if (forced && equipmentComponent != null)
+        // KS14 start: networked
+        {
             equipmentComponent.EquipmentOwner = null;
+            Dirty(toRemove, equipmentComponent);
+        }
+        // KS14 end
 
         _container.Remove(toRemove, component.EquipmentContainer);
         UpdateUserInterface(uid, component);
