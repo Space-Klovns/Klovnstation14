@@ -1,6 +1,6 @@
 ---
 name: localization
-description: How text follows each client's language in this repo - KsPopupMessage and deferred popup arguments (KsPopupPrototypeName, KsPopupMessageList), popup audience and the recipient filter, prediction and network flow, ContentLocalizationManager for prototype names and descriptions, server culture scopes for examine and verb responses, ent- translation files and inheritance, the packaged prototype-name cache, adding cultures, and the localisation tests. Use when writing any popup, examine text, verb label or prototype name a player sees, adding or translating .ftl files, adding ent- entries, adding a culture, or when text shows in the wrong language, freezes the server's English, mixes languages, or a popup shows twice or not at all.
+description: How text follows each client's language in this repo - KsPopupMessage and deferred popup arguments (KsPopupPrototypeName, KsPopupMessageList), popup audience and the recipient filter, prediction and network flow, ContentLocalizationManager for prototype names and descriptions, server culture scopes for examine and verb responses, ent- translation files and inheritance, where locale files go and how their folders and files are named, the packaged prototype-name cache, adding cultures, and the localisation tests. Use when writing any popup, examine text, verb label or prototype name a player sees, adding, naming, moving or translating .ftl files, adding ent- entries, adding a culture, or when text shows in the wrong language, freezes the server's English, mixes languages, or a popup shows twice or not at all.
 ---
 
 # Localisation
@@ -228,8 +228,7 @@ using (_contentLocalizationManager.BeginCultureScope(requestedCulture))
 - **Every new prototype gets an `ent-<ExactId>` entry in `en-US` and `ru-RU`**, with `.desc` for the description and
   the prototype's path as a comment above it. A `localizationId`, inherited or not, overrides the key. Ids are case
   sensitive.
-- Fork translations live under `Resources/Locale/<culture>/_KS14/`, mirroring the prototype paths, not one big file per
-  module. Translated upstream trees are extended in place.
+- Where the file goes is under *Where files go* below. Translated upstream trees are extended in place.
 
 ```ftl
 # Resources\Prototypes\_KS14\Entities\Objects\Devices\example.yml
@@ -251,6 +250,55 @@ ent-KsExampleDevice = пример устройства
   `Loc.HasString(...)` to test for a *native* translation: an English fallback hides a missing one.
   `KsFluentMessageIndex` records native presence for the resolver.
 - Prototype metadata is static text: put per-use variables in a separate examine or popup message.
+
+## Where files go
+
+Everything of the fork's is under `Resources/Locale/<culture>/_KS14/`, in two trees with two naming rules.
+`KsLocaleLayoutTest` fails on a file that breaks them; nothing else would notice, as every `.ftl` under a culture is
+loaded wherever it is.
+
+```text
+Resources/Locale/en-US/_KS14/
+  field-commander/                 messages: one folder a feature
+    field-commander.ftl              the feature's own strings, named after it
+    admin-window.ftl                 one file a topic once there are several
+    commands.ftl                     its console commands
+  mortar/mortar.ftl                a small feature is one file
+  commands/copygrid.ftl            a command belonging to no feature, a file each
+  tgui/air-alarm.ftl               one file a window
+  sensors.ftl                      (old: a new file goes in a folder)
+  Localization/
+    options.ftl                    registers the culture (Cultures and reloads)
+    Prototypes/                    ent- entries, and only them
+      _KS14/Entities/Objects/Weapons/Artillery/mortar.ftl
+      _KsModule/Entities/Mobs/Operative/pointman.ftl
+    Missing/                       ru-RU only: upstream strings its Russian tree lacks
+```
+
+- **Messages: `_KS14/<feature>/<topic>.ftl`, lowercase kebab-case throughout**, folders and files alike:
+  `ghost-role-notice/ghost-role-notice.ftl`, never `Mortar/`, `salvage_tablet/` or `pump_heat.ftl`. The feature is
+  the one the code is filed under (`Content.Shared/_KS14/FieldCommander/` is `field-commander/`), not the type of
+  thing: no `popups/` or `components/` folder. Subfolders only where upstream has the same ones
+  (`station-events/events/`, `guidebook/chemistry/`).
+- **A folder that differs from another only by case is one folder on Windows and two on Linux**, so `RCD/` beside
+  `rcd/` works on your machine and splits in CI and on the server. To change only the case of a tracked folder, go
+  through a temporary name (`git mv RCD rcd-tmp && git mv rcd-tmp rcd`), and rename the folder on disk too.
+- **Same path in every culture.** `en-US/_KS14/npc/meters.ftl` has a `ru-RU/_KS14/npc/meters.ftl` with the same keys,
+  debug and command strings included. A file in one culture alone fails the test.
+- **Prototype names: `_KS14/Localization/Prototypes/<the prototype's path>.ftl`.** Take the path of the YAML file
+  under `Resources/Prototypes/`, casing and underscores as they are, and change the extension:
+  `Prototypes/_KS14/Entities/Vehicles/Lawnmower/lawn_mower.yml` is
+  `Localization/Prototypes/_KS14/Entities/Vehicles/Lawnmower/lawn_mower.ftl`. This tree is not kebab-case, as it follows
+  the prototypes. The first line is a comment with the YAML file's path, then one `ent-` entry a prototype, in the
+  file's order. Prototypes from other forks' folders (`_FarHorizons`, `_EinsteinEngines`) and the private module
+  (`_KsModule`) go in the same tree under their own folder; an upstream prototype's Russian name goes under
+  `Prototypes/Entities/...`.
+- **No `ent-` entry in a feature's message file**, however small the feature: a ladder's name is in
+  `Localization/Prototypes/.../ladders.ftl` and "this ladder leads nowhere" in `ladders/ladders.ftl`.
+- **Keys carry the feature too**: `ks-<feature>-<what>` (`ks-ladder-not-linked`), `cmd-<command>-desc` and
+  `cmd-<command>-help` for a command, which `LocalizedCommands` looks up by those names.
+- **`ru-RU/_KS14/Localization/Missing/`** holds Russian for upstream strings that upstream's own Russian tree lacks,
+  at upstream's path for the English file (`Missing/ghost/ghost-gui.ftl`). It has no English counterpart.
 
 ## The packaged cache
 
@@ -290,6 +338,7 @@ Tests in `Content.IntegrationTests/Tests/_KS14/Localization/`:
 | `KsPrototypeNameCacheTests` | Packaged/runtime parity, resolver behaviour |
 | `KsClientLocalizationTests` | Culture discovery and switching, prototype metadata, nested examine text |
 | `KsVerbLocalizationTests` | Verb labels, action culture boundaries |
+| `KsLocaleLayoutTest` | Where files go: kebab-case message paths, the same path in English and Russian, `ent-` entries only under `Localization/Prototypes/` |
 
 Plus `SandboxTest` whenever you add an argument type or cache API. For a changed message, check an English server with
 clients in two cultures, a predicted action and its confirmation, nested labels, private and broadcast audiences,

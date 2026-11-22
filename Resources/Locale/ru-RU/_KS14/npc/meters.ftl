@@ -1,0 +1,10 @@
+cmd-ks_setmeter-desc = Задаёт показатель (например, осторожность) NPC и всем в его отряде, если он в отряде.
+cmd-ks_setmeter-help = ks_setmeter <NPC> <показатель> <значение>
+cmd-ks_setmeter-invalid-entity = Сущность, соответствующая '{$entity}', не найдена.
+cmd-ks_setmeter-invalid-meter = Показателя с названием '{$meter}' нет.
+cmd-ks_setmeter-invalid-value = '{$value}' не является числом.
+cmd-ks_setmeter-entity-hint = NPC (задаётся всему его отряду, если он в отряде)
+cmd-ks_setmeter-meter-hint = показатель
+cmd-ks_setmeter-value-hint = значение (ограничивается диапазоном показателя)
+cmd-ks_setmeter-set-single = { $meter } у { $entity } теперь { $value }.
+cmd-ks_setmeter-set-squad = { $meter } у отряда { $entity } теперь { $value } (участников: { $count }).
