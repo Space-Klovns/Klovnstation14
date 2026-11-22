@@ -367,7 +367,7 @@ A networked component's state goes to every player who can see the entity, and a
 **`SendOnlyToOwner`**: an override on the component, nothing else. For what only the player in that body should know (`AlertsComponent`, `ChangelingIdentityComponent`).
 
 ```csharp
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent]
 public sealed partial class AlertsComponent : Component
 {
     public override bool SendOnlyToOwner => true;
@@ -382,7 +382,7 @@ public override bool SessionSpecific => true; // on the component
 [SubscribeLocalEvent]
 private void OnGetStateAttempt(Entity<RevolutionaryComponent> entity, ref ComponentGetStateAttemptEvent args)
 {
-    args.Cancelled = !CanSeeRevolutionaries(args.Player);
+    args.Cancelled = !CanGetState(args.Player); // SharedRevolutionarySystem: revs, and whoever sees antag icons
 }
 ```
 
