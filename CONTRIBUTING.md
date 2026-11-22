@@ -354,6 +354,23 @@ Everything under `Robust.{Shared,Client,Server}/GameObjects/`, subfolders includ
 
 **Engine version**: the `RobustToolbox` submodule is pinned, currently v295.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every version in between and check whether upstream SS14 already shipped the content-side fix (porting it is cheaper and keeps merges clean). Bumps bring new debug assertions, so run the tests in Debug as well as building Release (§5).
 
+### Component state that differs per player
+
+A networked component's state goes to every player who can see the entity. Three ways to change that, cheapest first, all in `PvsSystem.GetStates`:
+
+| | Write | Effect | For |
+| --- | --- | --- | --- |
+| Owner only | `public override bool SendOnlyToOwner => true;` on the component | Sent only to the player whose attached entity is this entity. One comparison, no event. | A player's own private data, on their body (`AlertsComponent`, `ChangelingIdentityComponent`) |
+| Who gets it | `public override bool SessionSpecific => true;` plus a `ComponentGetStateAttemptEvent` handler that sets `args.Cancelled` | The event is raised for each player on each send; cancelled, that player is sent nothing of the component. All or nothing. | Hiding a whole component from some players (`RevolutionaryComponent`, `FollowedComponent`) |
+| What it says | A hand-written `ComponentGetState` handler that reads `args.Player` | Each player gets a state built for them. Needs neither override. | One answer about the receiving player (`KsFactionCollisionSystem.OnGetState`, `KsAmmoPickupSystem.OnGetState`) |
+
+- **`SessionSpecific` alone does nothing**: without a `ComponentGetStateAttemptEvent` handler nothing is ever cancelled. It doesn't make state per-player; `args.Player` does that with or without it.
+- **`args.Player` is null** for a replay's state: handle it, usually as "nobody" (send the public answer).
+- **Nothing is sent again until the component is dirtied**, and the answer usually depends on something else: the receiving player's side, body or antag status. The engine dirties a component with either override only when a player attaches to *that entity* (`ServerMetaDataSystem.OnActorPlayerAttach`). Everything else is yours: `Dirty` every affected component when what the answer depends on changes (`SharedRevolutionarySystem.DirtyRevComps`, `KsFactionCollisionSystem`'s resend on a change of side or body). Forgotten, a client keeps an answer that was true once, silently.
+- **Cancelling later does not take it back**: a player already sent the component keeps their last state; a cancelled send is just no send.
+- **Auto-generated state can't do the third**: `[AutoGenerateComponentState]` builds one state for everyone. Write `ComponentGetState` and `ComponentHandleState` by hand, with a `[Serializable, NetSerializable]` state class.
+- **Use these, not a networked field, for anything that must stay hidden**: every networked field is readable by a modified client. NPC factions are not sent at all for this reason (the `prediction` skill).
+
 ### Events
 
 A system that owns state raises; any system that cares subscribes. A new behaviour adds a subscription and changes nothing in the raiser.

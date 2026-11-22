@@ -129,7 +129,8 @@ wrongly, and the same way every time: a defender's own bullet went through every
 player the answer about themselves instead, in a per-player state (`ComponentGetState.Player`):
 `NpcFactionMemberComponent.KsLocalPlayerShotsPass` for whose shots pass through whom (`KsFactionCollisionSystem`),
 `KsAmmoPickupComponent.LocalPlayerMayTake` for a pickup. What the answer depends on changing (the player's side or
-body) means sending it again. `KsFactionCollisionPredictionTest`.
+body) means sending it again. `KsFactionCollisionPredictionTest`. `SendOnlyToOwner`, `SessionSpecific` and
+per-player states are compared in CONTRIBUTING §4, *Component state that differs per player*.
 
 ## Vapors and tile reactions
 
