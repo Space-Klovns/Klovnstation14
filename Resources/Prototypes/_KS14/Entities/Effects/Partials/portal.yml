@@ -1,0 +1,5 @@
+# NPCs take a linked portal to get to another map (KsNpcPassageSystem).
+- type: !PartialOnly entity
+  id: BasePortal
+  components:
+  - type: KsNpcPassage

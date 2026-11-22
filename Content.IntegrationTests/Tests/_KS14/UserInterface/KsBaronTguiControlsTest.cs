@@ -204,6 +204,62 @@ public sealed class KsBaronTguiControlsTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     A coloured button disabled is dimmed as tgui dims it, text and face, under both themes; under Baron its face is the
+    ///         tgui colour (button_3 tinted up to it), not a dark strip a third as bright.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ADisabledColouredButtonIsDimmedTextAndAll(bool tgui)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        DefaultWindow window = null;
+        KsTguiButton enabled = null;
+        KsTguiButton disabled = null;
+        await Client.WaitPost(() =>
+        {
+            var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            enabled = new KsTguiButton { Text = "Fire", Color = KsTguiColor.Danger };
+            disabled = new KsTguiButton { Text = "Fire", Color = KsTguiColor.Danger, Disabled = true };
+            root.AddChild(enabled);
+            root.AddChild(disabled);
+            window = new DefaultWindow { Title = "Buttons" };
+            window.Contents.AddChild(root);
+            window.OpenCentered();
+        });
+        await Pair.RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            foreach (var control in new Control[] { enabled, disabled, enabled.Label, disabled.Label })
+                control.ForceRunStyleUpdate();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(FontColor(enabled.Label), Is.EqualTo(KsTguiColors.Text(KsTguiColor.Danger)), "enabled text");
+                Assert.That(FontColor(disabled.Label), Is.EqualTo(KsTguiColors.DisabledText(KsTguiColor.Danger)),
+                    "a disabled button's text is dimmed as tgui's opacity .5 dims it");
+
+                if (!tgui)
+                {
+                    Assert.That(Modulate(enabled), Is.EqualTo(KsBaronUiSheetlet.FaceTintOf(KsTguiColors.Element(KsTguiColor.Danger))),
+                        "Baron's face is tg's colour");
+                    Assert.That(Modulate(disabled), Is.EqualTo(KsBaronUiSheetlet.FaceTintOf(KsTguiColors.Disabled(KsTguiColor.Danger))),
+                        "Baron's disabled face is tg's disabled colour");
+                }
+            });
+
+            window.Close();
+        });
+    }
+
+    private static Color FontColor(Label label)
+    {
+        return label.TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var color) ? color : Color.White;
+    }
+
     private static Color Modulate(Control control)
     {
         return control.TryGetStyleProperty<Color>(Control.StylePropertyModulateSelf, out var color) ? color : Color.White;

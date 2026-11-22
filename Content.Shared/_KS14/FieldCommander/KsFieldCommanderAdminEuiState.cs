@@ -20,6 +20,7 @@ public sealed class KsFieldCommanderAdminStatusData
     public float CarriedBudget;
     public int WavesSent;
     public bool Paused;
+    public bool BlockRcdDuringWaves;
     public LocId? DoctrineName;
 
     /// <summary>
@@ -159,6 +160,15 @@ public sealed class KsFieldCommanderAdminRefreshMessage(NetEntity rule) : KsFiel
 public sealed class KsFieldCommanderAdminSetPausedMessage(NetEntity rule, bool paused) : KsFieldCommanderAdminEuiMessage(rule)
 {
     public bool Paused = paused;
+}
+
+/// <summary>
+///     Whether nobody may use an RCD while a wave is on the field.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsFieldCommanderAdminSetBlockRcdMessage(NetEntity rule, bool block) : KsFieldCommanderAdminEuiMessage(rule)
+{
+    public bool Block = block;
 }
 
 [Serializable, NetSerializable]

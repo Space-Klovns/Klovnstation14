@@ -1,4 +1,4 @@
-# The Support perk's companion (KsCompanions, mode Attached, in Resources/Prototypes/_KS14/Perks/perks.yml).
+# The Support perk's companion (KsCompanions, mode Hover, in Resources/Prototypes/_KS14/Perks/perks.yml).
 
 - type: entity
   parent: BulletLaser
@@ -15,7 +15,7 @@
 - type: entity
   id: KsMobCompanionShoulderTurret
   name: shoulder turret
-  description: A little hovering turret that rides on its owner's shoulder and plinks at the enemy with energy bolts.
+  description: A little hovering turret that keeps by its owner's shoulder and plinks at the enemy with energy bolts.
   components:
   - type: Sprite
     sprite: _KS14/Mobs/Companions/shoulder_turret.rsi
@@ -23,7 +23,8 @@
     layers:
     - state: turret
   # Hit by bullets and lasers, but never in the way of its owner or anyone else walking: nothing collides with it
-  #     but what is shot or thrown. Made static once it is attached, so nothing pushes it off its owner's shoulder.
+  #     but what is shot or thrown. Its companion system sets its velocity every tick, so a push is undone at once.
+  #     Not Kinematic: a kinematic body is never weightless (SharedGravitySystem), which would stop FloatingVisuals.
   - type: Physics
     bodyType: KinematicController
   - type: Fixtures

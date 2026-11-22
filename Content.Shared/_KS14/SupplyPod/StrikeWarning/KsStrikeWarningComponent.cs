@@ -57,10 +57,24 @@ public sealed partial class KsStrikeWarningComponent : Component
     public float PulseMinimumAlpha = 0.35f;
 }
 
+/// <summary>
+///     The layers the client drives; a marker may leave any out.
+/// </summary>
 [Serializable, NetSerializable]
 public enum KsStrikeWarningLayers : byte
 {
+    /// <summary>
+    ///     The marked area, or only its rim: scaled to the blast, pulsing.
+    /// </summary>
     Area,
+
+    /// <summary>
+    ///     The crosshair: scaled with the area, pulsing.
+    /// </summary>
     Reticle,
+
+    /// <summary>
+    ///     Closing in on the rim over the countdown.
+    /// </summary>
     Chevrons,
 }

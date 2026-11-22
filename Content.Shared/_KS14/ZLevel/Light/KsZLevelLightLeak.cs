@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared._KS14.Light;
 
 namespace Content.Shared._KS14.ZLevel.Light;
@@ -25,6 +26,23 @@ public static class KsZLevelLightLeak
     ///         energy the stand-in would arrive with go to zero together.
     /// </remarks>
     public const float MinimumReach = 0.25f;
+
+    /// <summary>
+    ///     The ambient light a z-level and the one above it have in common, which the light map of the upper one must
+    ///         not carry down: channel by channel, the lesser of the two.
+    /// </summary>
+    /// <remarks>
+    ///     Ambient light is the sky's, and reaches every level that has it by itself. A light map has it added in, so
+    ///         carried down whole it would light the level below with the sky a second time. What the upper level has
+    ///         over the lower one does fall: daylight through a hole into a cave, which has none of its own.
+    /// </remarks>
+    public static Vector3 GetSharedAmbient(Color upperAmbient, Color lowerAmbient)
+    {
+        return new Vector3(
+            MathF.Min(upperAmbient.R, lowerAmbient.R),
+            MathF.Min(upperAmbient.G, lowerAmbient.G),
+            MathF.Min(upperAmbient.B, lowerAmbient.B));
+    }
 
     /// <summary>
     ///     How much of a light reaches a gap in the floor it stands on, measured against what reaches the

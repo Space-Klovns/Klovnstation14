@@ -19,6 +19,13 @@ public sealed partial class KsTrailSystem : EntitySystem
         => new(0f, trailComponent.Spacing * index);
 
     /// <summary>
+    ///     Size of one tile in the trail's own frame, from its sprite's native size in world units: narrowed or widened
+    ///         across the trail (local X) by <see cref="KsTrailComponent.WidthScale"/>, never stretched along it.
+    /// </summary>
+    public Vector2 GetTileSize(KsTrailComponent trailComponent, Vector2 nativeSize)
+        => new(nativeSize.X * trailComponent.WidthScale, nativeSize.Y);
+
+    /// <summary>
     ///     Number of tiles the overlay should actually walk for this trail.
     /// </summary>
     public int GetDrawLength(KsTrailComponent trailComponent)
@@ -40,6 +47,11 @@ public sealed partial class KsTrailSystem : EntitySystem
             return 0f;
 
         var alpha = trailComponent.Color.A;
+
+        // Nothing of a revealed trail shows before its reveal starts, wherever its source is: a source kept out of
+        //      sight until then (a supply pod seen only for the end of its fall) has its trail kept out of sight with it.
+        if (trailComponent.RevealDuration > TimeSpan.Zero && curTime < trailComponent.RevealStartTime)
+            return 0f;
 
         // Progressive reveal: the tile furthest from the origin shows up first, so the trail
         // appears to be drawn by whatever is travelling down it.

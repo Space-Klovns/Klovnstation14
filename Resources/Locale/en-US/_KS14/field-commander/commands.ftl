@@ -61,3 +61,10 @@ cmd-ks_fcperk-help = ks_fcperk <player> <perk>
 cmd-ks_fcperk-hint-perk = <perk>
 cmd-ks_fcperk-unknown = There is no perk "{ $perk }".
 cmd-ks_fcperk-done = { $player }'s perk is now { $perk }.
+
+cmd-ks_fcrcdblock-desc = Says whether RCDs are blocked while a field commander wave is on the field, or sets it.
+cmd-ks_fcrcdblock-help = ks_fcrcdblock [true|false]
+cmd-ks_fcrcdblock-state = { $block ->
+    [true] RCDs are blocked while a wave is on the field.
+   *[false] RCDs work during waves.
+}

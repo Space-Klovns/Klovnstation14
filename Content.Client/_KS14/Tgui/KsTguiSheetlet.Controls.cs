@@ -182,6 +182,10 @@ public sealed partial class KsTguiSheetlet
             CButton().Class(styleClass).PseudoPressed().Modulate(KsTguiColors.Pressed(color)),
             CButton().Class(styleClass).PseudoDisabled().Modulate(KsTguiColors.Disabled(color)),
             CButton().Class(styleClass).ParentOf(E<Label>()).FontColor(text),
+
+            // tgui dims the whole disabled button, text and icon too, not only its face; with only the face dimmed a
+            //      disabled red button read as a slightly darker enabled one.
+            CButton().Class(styleClass).PseudoDisabled().ParentOf(E<Label>()).FontColor(KsTguiColors.DisabledText(color)),
         });
     }
 

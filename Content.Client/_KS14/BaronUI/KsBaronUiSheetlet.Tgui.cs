@@ -80,14 +80,16 @@ public sealed partial class KsBaronUiSheetlet
         rules.Add(E<Label>().Class(Button.StyleClassButton).Class(KsTguiSheetlet.StyleClassButtonLabelLeft)
             .AlignMode(Label.AlignMode.Left));
 
-        // Coloured: button_3 tinted towards the tgui colour's hue, so the chrome stays Baron's and the meaning stays tgui's.
+        // Coloured: button_3 tinted so that its face is the tgui colour itself, so the chrome stays Baron's and the button is
+        //      as bright as tgui's. A hue tint over button_3's dark brown face could only darken it, to about a third: a
+        //      red Fire came out a thin dark strip inside the texture's black rim.
         for (var i = 0; i < KsTguiColors.Count; i++)
         {
             var color = (KsTguiColor)i;
             if (color is KsTguiColor.Default or KsTguiColor.Transparent)
                 continue;
 
-            AddTintedButtonRules(rules, KsTguiColors.ButtonClass(color), TintOf(KsTguiColors.Element(color)));
+            AddFaceTintedButtonRules(rules, color);
         }
 
         // Selected: Baron's green, a hue no plain button has, with brighter text so it reads at a glance.
@@ -111,6 +113,46 @@ public sealed partial class KsBaronUiSheetlet
         ContainerButton.StylePseudoClassPressed,
         ContainerButton.StylePseudoClassDisabled,
     ];
+
+    /// <summary>
+    ///     A coloured button: each state's face is tgui's colour for that state, and disabled dims the text as tgui does.
+    /// </summary>
+    private static void AddFaceTintedButtonRules(List<StyleRule> rules, KsTguiColor color)
+    {
+        var styleClass = KsTguiColors.ButtonClass(color);
+        rules.AddRange(new StyleRule[]
+        {
+            E<KsTguiButton>().Class(styleClass).PseudoNormal().Modulate(FaceTintOf(KsTguiColors.Element(color))),
+            E<KsTguiButton>().Class(styleClass).PseudoHovered().Modulate(FaceTintOf(KsTguiColors.Hovered(color))),
+            E<KsTguiButton>().Class(styleClass).PseudoPressed().Modulate(FaceTintOf(KsTguiColors.Pressed(color))),
+            E<KsTguiButton>().Class(styleClass).PseudoDisabled().Modulate(FaceTintOf(KsTguiColors.Disabled(color))),
+            E<KsTguiButton>().Class(styleClass).ParentOf(E<Label>()).FontColor(KsTguiColors.Text(color)),
+            E<KsTguiButton>().Class(styleClass).PseudoDisabled().ParentOf(E<Label>()).FontColor(KsTguiColors.DisabledText(color)),
+        });
+    }
+
+    /// <summary>
+    ///     The face of button_3, where it is flat: what <see cref="FaceTintOf"/> divides by.
+    /// </summary>
+    public static readonly Color ButtonFace = Color.FromHex("#564D45");
+
+    /// <summary>
+    ///     The modulate that turns button_3's face into <paramref name="face"/>: the face divided out in linear light, where the
+    ///         engine multiplies, then encoded back. Above 1 where the colour is brighter than the texture, which the shader
+    ///         takes as it is; the rim and its shading scale with it.
+    /// </summary>
+    public static Color FaceTintOf(Color face)
+    {
+        return new Color(Ratio(face.R, ButtonFace.R), Ratio(face.G, ButtonFace.G), Ratio(face.B, ButtonFace.B));
+
+        static float Ratio(float wanted, float texture)
+        {
+            return Encode(Decode(wanted) / Decode(texture));
+        }
+
+        static float Decode(float c) => c <= 0.04045f ? c / 12.92f : MathF.Pow((c + 0.055f) / 1.055f, 2.4f);
+        static float Encode(float c) => c <= 0.0031308f ? c * 12.92f : 1.055f * MathF.Pow(c, 1f / 2.4f) - 0.055f;
+    }
 
     private static void AddTintedButtonRules(List<StyleRule> rules, string styleClass, Color tint)
     {

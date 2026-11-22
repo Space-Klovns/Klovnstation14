@@ -25,7 +25,7 @@ namespace Content.Server._KS14.Mortar;
 
 /// <summary>
 ///     Sets mortars up (<see cref="KsMortarCrewComponent"/>), fires them (<see cref="KsMortarComponent"/>), hands an abandoned one
-///         to whoever picks it up, and dissolves it once nobody does. The shell does the rest: it is a supply pod, which marks
+///         to whoever picks it up, and dissolves it once nobody does, if it is one that dissolves. The shell does the rest: it is a supply pod, which marks
 ///         where it lands for as long as it falls.
 /// </summary>
 public sealed partial class KsMortarSystem : EntitySystem
@@ -39,6 +39,7 @@ public sealed partial class KsMortarSystem : EntitySystem
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private Robust.Shared.Containers.SharedContainerSystem _containerSystem = default!;
     [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private EntityQuery<KsMortarComponent> _mortarQuery = default!;
     [Dependency] private EntityQuery<KsMortarCrewComponent> _crewQuery = default!;
@@ -54,7 +55,14 @@ public sealed partial class KsMortarSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    ///     Past this range, hostiles are found by going through every faction member rather than by a lookup over the whole
+    ///         circle: at hundreds of tiles that lookup walks every entity on a good part of the map, each search.
+    /// </summary>
+    private const float LookupRangeLimit = 64f;
+
     private readonly List<(EntityUid Uid, Vector2 Position)> _candidates = new();
+    private readonly HashSet<EntityUid> _hostiles = new();
 
     #region Crew
 
@@ -138,17 +146,31 @@ public sealed partial class KsMortarSystem : EntitySystem
     #region Mortar
 
     /// <summary>
-    ///     Nobody's until a crewman claims it, the same tick it sets it up: one put down any other way is abandoned from the start.
+    ///     Nobody's until a crewman claims it, the same tick it sets it up: one put down any other way is anyone's from the
+    ///         start, and, if it dissolves when abandoned, abandoned from the start.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsMortarComponent> entity, ref MapInitEvent args)
     {
-        entity.Comp.IdleEndsAt = _gameTiming.CurTime + (entity.Comp.Rounds > 0 ? entity.Comp.IdleTime : entity.Comp.EmptyTime);
+        StartIdle(entity);
+    }
+
+    /// <summary>
+    ///     Gives a mortar that dissolves when abandoned its idle time from now, or its short one once it has nothing left.
+    /// </summary>
+    private void StartIdle(Entity<KsMortarComponent> mortar)
+    {
+        if (!mortar.Comp.DissolveWhenAbandoned)
+            return;
+
+        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
     }
 
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsMortarComponent> entity, ref ComponentShutdown args)
     {
+        CloseAllSights(entity);
+
         if (entity.Comp.CrewUid is { } crewUid)
             ReleaseCrew(entity, crewUid);
     }
@@ -187,6 +209,9 @@ public sealed partial class KsMortarSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnUiOpened(Entity<KsMortarComponent> entity, ref BoundUIOpenedEvent args)
     {
+        if (args.UiKey.Equals(KsMortarUiKey.Key))
+            OpenSight(entity, args.Actor);
+
         RestartIdle(entity);
         UpdateUi(entity);
     }
@@ -228,10 +253,8 @@ public sealed partial class KsMortarSystem : EntitySystem
         distance = Math.Clamp(distance, mortar.Comp.MinRange, mortar.Comp.MaxRange);
 
         // Zero is north, and it turns clockwise.
-        var theta = bearing.Theta;
-        var direction = new Vector2((float) Math.Sin(theta), (float) Math.Cos(theta));
         var origin = _transformSystem.GetMapCoordinates(mortar);
-        Launch(mortar, new MapCoordinates(origin.Position + direction * distance, origin.MapId), userUid, now);
+        Launch(mortar, new MapCoordinates(origin.Position + KsMortarAim.ToOffset(bearing, distance), origin.MapId), userUid, now);
 
         // Whoever fires it is whose it is now.
         if (_factionQuery.TryComp(userUid, out var userFactions))
@@ -254,11 +277,12 @@ public sealed partial class KsMortarSystem : EntitySystem
         mortar.Comp.Rounds--;
         var landing = new MapCoordinates(aim.Position + _robustRandom.NextVector2(mortar.Comp.Spread), aim.MapId);
 
-        // Spawned where it lands, falling for the whole flight: its landing zone is marked from now until it lands.
+        // Spawned where it lands, falling for the whole flight, so that its landing zone is marked from now until it lands
+        //      and it lands whatever becomes of the mortar; but seen falling only at the end of it, for as long as its
+        //      incoming clip lasts, kept to the mortar's bounds.
         var flight = mortar.Comp.FlightTime;
         var shellUid = EntityManager.CreateEntityUninitialized(mortar.Comp.Shell, landing);
-        if (_supplyPodQuery.TryComp(shellUid, out var supplyPodComponent))
-            _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
+        var clipLength = (TimeSpan?) null;
 
         // The incoming clip ends as it lands, whichever one it is, over the end of the travel; one longer than the flight
         //      starts with it.
@@ -267,8 +291,17 @@ public sealed partial class KsMortarSystem : EntitySystem
             var shellComponent = EnsureComp<KsMortarShellComponent>(shellUid);
             shellComponent.IncomingSound = _audioSystem.ResolveSound(incomingSound);
             var length = _audioSystem.GetAudioLength(shellComponent.IncomingSound);
+            clipLength = length;
             shellComponent.IncomingAt = now + flight - (length < flight ? length : flight);
         }
+
+        if (_supplyPodQuery.TryComp(shellUid, out var supplyPodComponent))
+        {
+            _supplyPodSystem.SetFallDuration((shellUid, supplyPodComponent), flight);
+            _supplyPodSystem.SetDescentDuration((shellUid, supplyPodComponent), GetDescentTime(mortar.Comp, clipLength));
+        }
+
+        EnsureComp<KsMortarFallOfShotComponent>(shellUid).MortarUid = mortar.Owner;
 
         EntityManager.InitializeAndStartEntity(shellUid);
         _killCreditSystem.SetSender(shellUid, firerUid);
@@ -282,14 +315,29 @@ public sealed partial class KsMortarSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Its crewman dead or gone: it belongs to nobody, which its old side is hostile to, and dissolves unless used.
+    ///     How long a shell is seen falling: as long as its incoming clip, or the least it may be without one, kept between
+    ///         <see cref="KsMortarComponent.MinDescentTime"/> and <see cref="KsMortarComponent.MaxDescentTime"/>, and to the
+    ///         flight.
+    /// </summary>
+    public static TimeSpan GetDescentTime(KsMortarComponent mortarComponent, TimeSpan? clipLength)
+    {
+        var min = mortarComponent.MinDescentTime;
+        var max = mortarComponent.MaxDescentTime < min ? min : mortarComponent.MaxDescentTime;
+        var descent = clipLength ?? min;
+        descent = descent < min ? min : descent > max ? max : descent;
+        return descent > mortarComponent.FlightTime ? mortarComponent.FlightTime : descent;
+    }
+
+    /// <summary>
+    ///     Its crewman dead or gone: it belongs to nobody, which its old side is hostile to, and, if it dissolves when
+    ///         abandoned, does so unless used.
     /// </summary>
     private void Abandon(Entity<KsMortarComponent> mortar)
     {
         mortar.Comp.CrewUid = null;
         SetFactions(mortar, mortar.Comp.AbandonedFactions);
         EnsureComp<KsNpcTargetPriorityComponent>(mortar).Priority = mortar.Comp.AbandonedPriority;
-        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
+        StartIdle(mortar);
     }
 
     /// <summary>
@@ -300,7 +348,7 @@ public sealed partial class KsMortarSystem : EntitySystem
         if (IsCrewed(mortar.Comp))
             return;
 
-        mortar.Comp.IdleEndsAt = _gameTiming.CurTime + (mortar.Comp.Rounds > 0 ? mortar.Comp.IdleTime : mortar.Comp.EmptyTime);
+        StartIdle(mortar);
     }
 
     private void SetFactions(EntityUid uid, HashSet<ProtoId<NpcFactionPrototype>> factions)
@@ -310,11 +358,53 @@ public sealed partial class KsMortarSystem : EntitySystem
         _npcFactionSystem.AddFactions(target, new HashSet<ProtoId<NpcFactionPrototype>>(factions));
     }
 
+    /// <summary>
+    ///     Its shell down: where it landed goes on its mortar's fall of shot, if the mortar is still there to keep it.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnShellLanded(Entity<KsMortarFallOfShotComponent> entity, ref SupplyPodLandedEvent args)
+    {
+        if (entity.Comp.MortarUid is not { } mortarUid ||
+            TerminatingOrDeleted(mortarUid) ||
+            !_mortarQuery.TryComp(mortarUid, out var mortarComponent))
+            return;
+
+        var landing = _transformSystem.GetMapCoordinates(entity);
+        var origin = _transformSystem.GetMapCoordinates(mortarUid);
+        if (landing.MapId != origin.MapId)
+            return;
+
+        RecordImpact((mortarUid, mortarComponent), landing.Position - origin.Position);
+    }
+
+    /// <summary>
+    ///     Keeps <paramref name="offset"/> (from the mortar) as its newest impact, dropping the oldest past its
+    ///         <see cref="KsMortarComponent.MaxImpacts"/>.
+    /// </summary>
+    private void RecordImpact(Entity<KsMortarComponent> mortar, Vector2 offset)
+    {
+        var impacts = mortar.Comp.Impacts;
+        impacts.Add(offset);
+
+        var excess = impacts.Count - Math.Max(0, mortar.Comp.MaxImpacts);
+        if (excess > 0)
+            impacts.RemoveRange(0, excess);
+
+        UpdateUi(mortar);
+    }
+
     private void UpdateUi(Entity<KsMortarComponent> mortar)
     {
         _uiSystem.SetUiState(mortar.Owner,
             KsMortarUiKey.Key,
-            new KsMortarBuiState(mortar.Comp.Rounds, mortar.Comp.MinRange, mortar.Comp.MaxRange, mortar.Comp.NextFire));
+            new KsMortarBuiState(mortar.Comp.Rounds,
+                mortar.Comp.MinRange,
+                mortar.Comp.MaxRange,
+                mortar.Comp.Spread,
+                mortar.Comp.NextFire,
+                mortar.Comp.ManualCooldown,
+                new List<Vector2>(mortar.Comp.Impacts),
+                mortar.Comp.SightRadius));
     }
 
     #endregion
@@ -342,6 +432,9 @@ public sealed partial class KsMortarSystem : EntitySystem
         var query = EntityQueryEnumerator<KsMortarComponent>();
         while (query.MoveNext(out var uid, out var mortarComponent))
         {
+            if (mortarComponent.Sights.Count > 0)
+                UpdateSights((uid, mortarComponent), now);
+
             if (mortarComponent.CrewUid is { } crewUid)
             {
                 // A crewman down leaves it be, ready for whoever comes to it: put off a second at a time, it never was.
@@ -396,7 +489,28 @@ public sealed partial class KsMortarSystem : EntitySystem
         var maxRangeSquared = settings.MaxRange * settings.MaxRange;
 
         _candidates.Clear();
-        foreach (var hostileUid in _npcFactionSystem.GetNearbyHostiles((factions.Owner, factions.Comp, null), settings.MaxRange))
+        _hostiles.Clear();
+        if (settings.MaxRange <= LookupRangeLimit)
+        {
+            _npcFactionSystem.GetNearbyHostiles((factions.Owner, factions.Comp, null), settings.MaxRange, _hostiles);
+        }
+        else
+        {
+            var memberQuery = EntityQueryEnumerator<NpcFactionMemberComponent, TransformComponent>();
+            while (memberQuery.MoveNext(out var memberUid, out _, out var memberTransform))
+            {
+                // On this map, hostile, and not in a container, which the lookup above leaves out too: someone buckled or
+                //     riding is a target at any range. The range is checked below.
+                if (memberTransform.MapID != origin.MapId ||
+                    _containerSystem.IsEntityInContainer(memberUid) ||
+                    !_npcFactionSystem.IsEntityHostile((factions.Owner, factions.Comp, null), memberUid))
+                    continue;
+
+                _hostiles.Add(memberUid);
+            }
+        }
+
+        foreach (var hostileUid in _hostiles)
         {
             if (_mobStateQuery.TryComp(hostileUid, out var hostileMobState) && _mobStateSystem.IsDead(hostileUid, hostileMobState))
                 continue;

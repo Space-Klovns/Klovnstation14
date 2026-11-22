@@ -31,3 +31,4 @@
         - MidImpassable
         hard: false
   - type: KsPortalView
+  - type: KsNpcPassage

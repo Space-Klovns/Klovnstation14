@@ -109,12 +109,16 @@
   - type: KsAmmoDropAbility
     chance: 0.2
     pickup: KsAmmoPickup
-  # Up by one shoulder, in the owner's frame, so it turns with them.
+  # Hovers up by one shoulder, in the grid's frame, so it doesn't swing round as they turn. Trails a walking owner by
+  #     about speed / stiffness (half a tile at a run) and settles; snaps to them from further than a few tiles.
   - type: KsCompanions
     companions:
     - prototype: KsMobCompanionShoulderTurret
-      mode: Attached
+      mode: Hover
       offset: -0.3, 0.25
+      hoverStiffness: 8
+      hoverMaxSpeed: 10
+      hoverSnapDistance: 4
       respawnDelay: 45
   # 1.5 s from the call to the rally: long enough to see the ring and step in.
   - type: KsRallyAbility

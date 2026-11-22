@@ -21,6 +21,12 @@ uniform highp float dim;
 //      where it is brightest and leave a shaft lit only through the holes in the floor under it.
 uniform highp float maskWeight;
 
+// The ambient light this z-level and the one the light came from have in common. A light map has its level's
+//      ambient light in it, and the level being lit already has its own: only what is over that is carried.
+// In the light map's own units, which are the ambient colour as it is, unconverted: it is what the target was
+//      cleared to.
+uniform highp vec3 sharedAmbient;
+
 void fragment()
 {
     highp vec4 light = zTexture(UV);
@@ -28,5 +34,7 @@ void fragment()
     // Only alpha is read, which carries no colour space with it, so the raw sample is the right one here.
     highp float blocked = texture2D(MASK_TEXTURE, UV).a * maskWeight;
 
-    COLOR = vec4(light.rgb * dim * (1.0 - blocked), 1.0);
+    highp vec3 carried = max(light.rgb - sharedAmbient, vec3(0.0));
+
+    COLOR = vec4(carried * dim * (1.0 - blocked), 1.0);
 }

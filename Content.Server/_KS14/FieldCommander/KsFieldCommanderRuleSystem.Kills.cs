@@ -18,7 +18,12 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Brought back: killing it again is a new kill.
         if (args.OldMobState == MobState.Dead)
+        {
             entity.Comp.Killed = false;
+
+            if (TryComp<KsFieldCommanderRuleComponent>(entity.Comp.RuleUid, out var ruleComponent))
+                RefreshRcdBlock((entity.Comp.RuleUid, ruleComponent));
+        }
     }
 
     /// <summary>
@@ -46,6 +51,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         ruleComponent.UnitsKilled++;
+        RefreshRcdBlock((unit.Comp.RuleUid, ruleComponent));
         RewardUnitKill((unit.Comp.RuleUid, ruleComponent), unit);
 
         if (unit.Comp.Mobik)

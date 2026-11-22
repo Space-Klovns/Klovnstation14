@@ -4,7 +4,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Shared._KS14.Companions;
 
 /// <summary>
-///     The companions an entity keeps: each one is spawned beside it (or on it), takes its side, and comes back a while
+///     The companions an entity keeps: each one is spawned beside it (or hovering by it), takes its side, and comes back a while
 ///         after being destroyed. Worked by the server's <c>KsCompanionSystem</c>; a perk gives it as a component.
 /// </summary>
 /// <remarks>
@@ -40,10 +40,32 @@ public sealed partial class KsCompanionEntry
     public KsCompanionMode Mode = KsCompanionMode.Follow;
 
     /// <summary>
-    ///     <see cref="KsCompanionMode.Attached"/> only: where on the owner it sits, in the owner's frame.
+    ///     <see cref="KsCompanionMode.Hover"/> only: where it hovers from the owner, in the frame of the grid (or map)
+    ///         the owner is on, so it doesn't swing round as the owner turns.
     /// </summary>
     [DataField]
     public Vector2 Offset;
+
+    /// <summary>
+    ///     <see cref="KsCompanionMode.Hover"/> only: how fast it closes on its hover point, per second: it moves at
+    ///         this times the distance left, so it trails a walking owner by about speed / stiffness and settles.
+    /// </summary>
+    [DataField]
+    public float HoverStiffness = 8f;
+
+    /// <summary>
+    ///     <see cref="KsCompanionMode.Hover"/> only: the fastest it moves to catch up, in metres per second, over the
+    ///         owner's grid.
+    /// </summary>
+    [DataField]
+    public float HoverMaxSpeed = 10f;
+
+    /// <summary>
+    ///     <see cref="KsCompanionMode.Hover"/> only: further than this from its hover point (the owner teleported, or
+    ///         left it behind), or on another map, it is put there at once instead.
+    /// </summary>
+    [DataField]
+    public float HoverSnapDistance = 4f;
 
     /// <summary>
     ///     How long after being destroyed it comes back.
@@ -78,8 +100,9 @@ public enum KsCompanionMode : byte
     Follow,
 
     /// <summary>
-    ///     Rides on the owner at <see cref="KsCompanionEntry.Offset"/>, parented to it with a static body that nothing
-    ///         can push, and put back there if anything else moves it.
+    ///     Hovers by the owner at <see cref="KsCompanionEntry.Offset"/>: beside it on the same grid or map, never its
+    ///         child, so it keeps its own facing. Its velocity is set every tick before physics steps, after its hover
+    ///         point, so nothing pushes it off; it is put there at once when it is too far or on another map.
     /// </summary>
-    Attached,
+    Hover,
 }

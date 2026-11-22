@@ -55,6 +55,7 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
 
         PauseButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminSetPausedMessage(rule, !_paused));
         ForceWaveButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminForceWaveMessage(rule));
+        BlockRcdButton.OnToggled += args => Send(rule => new KsFieldCommanderAdminSetBlockRcdMessage(rule, args.Pressed));
         SendMobikButton.OnPressed += _ => Send(rule => new KsFieldCommanderAdminSendMobikMessage(rule));
         RefreshButton.OnPressed += _ => RequestRefresh();
         AddAssetButton.OnPressed += _ => AddAsset();
@@ -177,6 +178,7 @@ public sealed partial class KsFieldCommanderAdminWindow : FancyWindow
         PausedLabel.Text = Loc.GetString("ks-fieldcommander-admin-status-paused", ("paused", status.Paused));
         PausedLabel.FontColorOverride = status.Paused ? Color.Orange : null;
         PauseButton.Text = Loc.GetString(status.Paused ? "ks-fieldcommander-admin-unpause" : "ks-fieldcommander-admin-pause");
+        BlockRcdButton.Pressed = status.BlockRcdDuringWaves;
 
         RebuildQueue(status);
     }
