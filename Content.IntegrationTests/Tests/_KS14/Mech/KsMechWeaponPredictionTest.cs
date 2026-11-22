@@ -9,6 +9,7 @@ using Content.Shared.Mech.EntitySystems;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.Projectiles;
+using Content.Shared.Vehicle.Systems;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared;
@@ -52,7 +53,14 @@ public sealed class KsMechWeaponPredictionTest : InteractionTest
   - type: Physics
     bodyType: KinematicController
   - type: Appearance
+  - type: InputMover
   - type: Mech
+  - type: Vehicle
+  - type: ContainerContainer
+    containers:
+      mech-pilot-slot: !type:ContainerSlot
+  - type: ContainerVehicle
+    containerId: mech-pilot-slot
   - type: ContainerFill
     containers:
       mech-battery-slot:
@@ -95,7 +103,7 @@ public sealed class KsMechWeaponPredictionTest : InteractionTest
             weaponUid = SEntMan.SpawnEntity(_testWeapon, playerCoordinates);
             mechSystem.InsertEquipment(mechUid, weaponUid);
             mechSystem.CycleEquipment(mechUid);
-            Assert.That(mechSystem.TryInsert(mechUid, SPlayer), "the player could not board the mech");
+            Assert.That(SEntMan.System<VehicleSystem>().TryEnter(mechUid, SPlayer), "the player could not board the mech");
         });
 
         await SetCombatMode(true);
