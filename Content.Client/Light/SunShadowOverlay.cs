@@ -7,6 +7,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -33,7 +34,7 @@ public sealed partial class SunShadowOverlay : Overlay
         _xformSys = _entManager.System<SharedTransformSystem>();
         _mapSys = _entManager.System<SharedMapSystem>();
         _lookup = _entManager.System<EntityLookupSystem>();
-        ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
+        ZIndex = BeforeLightingZIndex.SunShadow.ToZIndex(); // KS14: AfterLightTargetOverlay.ContentZIndex + 1 -> BeforeLightingZIndex.SunShadow
     }
 
     private List<Entity<MapGridComponent>> _grids = new();

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client._KS14.OverlayZIndex;
 using Content.Client.Light;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
@@ -39,10 +40,10 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
     ///     The last thing to add light before the blur, so that what it adds gets blurred.
     /// </summary>
     /// <remarks>
-    ///     This ties with <see cref="TileEmissionOverlay"/>, which is harmless: both only add light, and
-    ///         addition does not care which order it happens in.
+    ///     Written after <see cref="TileEmissionOverlay"/> in <see cref="BeforeLightingZIndex"/>, but both only add
+    ///         light, and addition does not care which order it happens in.
     /// </remarks>
-    public const int ContentZIndex = LightBlurOverlay.ContentZIndex - 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.ZLevelLightBuffer.ToZIndex();
 
     /// <summary>
     ///     <see cref="SharedPointLightComponent"/>'s own defaults, which have no named constants to borrow.

@@ -1,6 +1,7 @@
 using Content.Client.Graphics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -14,7 +15,7 @@ public sealed partial class LightBlurOverlay : Overlay
     [Dependency] private IClyde _clyde = default!;
     [Dependency] private IOverlayManager _overlay = default!;
 
-    public const int ContentZIndex = TileEmissionOverlay.ContentZIndex + 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.LightBlur.ToZIndex(); // KS14: TileEmissionOverlay.ContentZIndex + 1 -> BeforeLightingZIndex.LightBlur
 
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 

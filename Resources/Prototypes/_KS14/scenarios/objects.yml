@@ -59,6 +59,8 @@
     sprite: _KS14/Clothing/Eyes/Goggles/nightvision.rsi
   - type: PhosphorNightVision
     isCone: true
+    coneDistance: 3 # since this is measured in screens, value of 2 effectively removes the distance gate
+    coneFeather: 1.5
     action: ActionTogglePhosphorNightVision
     phosphorColor: "#00FF00"
     lightingColor: "#FFFFFF32"
@@ -77,10 +79,9 @@
 
 - type: entity
   parent: ScenarioNightVisionGogglesBasic
-  id: ScenarioNightVisionGogglesBasicWhite
-  name: night vision goggles
+  id: ScenarioNightVisionGogglesAdvanced
+  name: advanced night vision goggles
   description: Я не вижу нихуя. A generic, cheap image intensifier. White phosphorus is installed instead of green phosphorus, providing better visual clarity.
-  suffix: White
   components:
   - type: Sprite
     layers:
@@ -94,3 +95,4 @@
   - type: PhosphorNightVision
     phosphorColor: "#d2e6f5"
     lightingColor: "#FFFFFF28"
+    amplification: 40 # much less than green NVGs

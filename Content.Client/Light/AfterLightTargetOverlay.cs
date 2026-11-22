@@ -1,6 +1,7 @@
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -13,7 +14,7 @@ public sealed partial class AfterLightTargetOverlay : Overlay
 
     [Dependency] private IOverlayManager _overlay = default!;
 
-    public const int ContentZIndex = LightBlurOverlay.ContentZIndex + 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.AfterLightTarget.ToZIndex(); // KS14: LightBlurOverlay.ContentZIndex + 1 -> BeforeLightingZIndex.AfterLightTarget
 
     public AfterLightTargetOverlay()
     {

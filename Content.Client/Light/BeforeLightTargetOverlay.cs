@@ -1,6 +1,7 @@
 using Content.Client.Graphics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -22,7 +23,7 @@ public sealed partial class BeforeLightTargetOverlay : Overlay
     /// </summary>
     private float _skirting = 2f;
 
-    public const int ContentZIndex = -11; // KS14: -10 => -11, to make space for EmissiveOverlay thats now after this and RoofOverlay
+    public static readonly int ContentZIndex = BeforeLightingZIndex.BeforeLightTarget.ToZIndex(); // KS14: -10 -> BeforeLightingZIndex.BeforeLightTarget, which is first in the light chain, to make space for EmissiveOverlay thats now after this and RoofOverlay
 
     public BeforeLightTargetOverlay()
     {

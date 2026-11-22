@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Light;
 
@@ -23,7 +24,7 @@ public sealed partial class TileEmissionOverlay : Overlay
 
     private List<Entity<MapGridComponent>> _grids = new();
 
-    public const int ContentZIndex = RoofOverlay.ContentZIndex + 1;
+    public static readonly int ContentZIndex = BeforeLightingZIndex.TileEmission.ToZIndex(); // KS14: RoofOverlay.ContentZIndex + 1 -> BeforeLightingZIndex.TileEmission
 
     public TileEmissionOverlay(IEntityManager entManager)
     {

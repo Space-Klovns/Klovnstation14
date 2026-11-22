@@ -12,6 +12,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client.Overlays;
 
@@ -44,7 +45,7 @@ public sealed partial class StencilOverlay : Overlay
 
     public StencilOverlay(ParallaxSystem parallax, SharedTransformSystem transform, SharedMapSystem map, SpriteSystem sprite, WeatherSystem weather, StatusEffectsSystem statusEffects)
     {
-        ZIndex = ParallaxSystem.ParallaxZIndex + 1;
+        ZIndex = WorldSpaceBelowFovZIndex.Weather.ToZIndex(); // KS14: ParallaxSystem.ParallaxZIndex + 1 -> WorldSpaceBelowFovZIndex.Weather
         _parallax = parallax;
         _transform = transform;
         _map = map;

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client._KS14.OverlayZIndex;
 using Content.Client.Light;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
@@ -14,9 +15,9 @@ public sealed partial class KsLaserSightEmissiveOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> Shader = "Emissive";
 
-    // Shares EmissiveOverlay's slot (+2): +3 tied with LightBlurOverlay (-8), and the overlay sort is unstable on
-    //      ties, so the glow could be drawn after the blur. Strictly between Roof (-10) and LightBlur (-8).
-    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
+    // Has to be before LightBlurOverlay in BeforeLightingZIndex: a tie with it was unstable, so the glow could be drawn
+    //      after the blur.
+    public static readonly int ContentZIndex = BeforeLightingZIndex.LaserSightEmissive.ToZIndex();
 
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private KsLaserSightOverlaySystem _laserSightOverlaySystem = default!;

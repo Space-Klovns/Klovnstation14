@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Timing;
 using Robust.Client.GameObjects;
 using Content.Shared._KS14.PhosphorNightVision;
+using Content.Client._KS14.OverlayZIndex; // KS14
 
 namespace Content.Client._Mono.Overlays;
 
@@ -118,6 +119,15 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     /// </summary>
     public override OverlaySpace Space => LightSpace | ShaderSpace;
     public override bool RequestScreenTexture => true;
+
+    // KS14 start: see WorldSpaceBelowFovZIndex.PhosphorNightVision for why it sits where it does
+    public static readonly int ContentZIndex = WorldSpaceBelowFovZIndex.PhosphorNightVision.ToZIndex();
+
+    public PhosphorNightVisionOverlay()
+    {
+        ZIndex = ContentZIndex;
+    }
+    // KS14 end
 
     public void Initialise()
     {
