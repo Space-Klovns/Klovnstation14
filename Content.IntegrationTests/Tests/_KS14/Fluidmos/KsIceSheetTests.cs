@@ -161,6 +161,10 @@ public sealed class KsIceSheetTests : GameTest
 
             // Before the cold air gets at it.
             Assert.That(puddle.Temperature, Is.EqualTo(water.MeltingPoint).Within(0.05f), "The freezing puddle did not plateau at its melting point.");
+
+            // And it does not get at it: the sheet is only there after a tick, and the puddles' once-a-second exchange
+            //      with the air, landing on that tick, froze more than the puddle's own heat paid for.
+            TileAir(testMap).Temperature = water.MeltingPoint;
         });
         await server.WaitRunTicks(1);
 
