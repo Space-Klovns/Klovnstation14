@@ -167,8 +167,9 @@ carry). Their icons are tgstation's midnight HUD's `act_throw`/`act_resist`, in
 
 ## Combat mode sounds
 
-Turning combat mode on or off plays tgstation's `ui_togglecombat.ogg` / `ui_toggleoffcombat.ogg`, heard only by the
+Turning combat mode on or off can play a custom sound (based on datafields), heard only by the
 player who toggled it, at tgstation's 25% scaled by the interface volume setting.
+Originally, tgstation's `ui_togglecombat.ogg` / `ui_toggleoffcombat.ogg` were used for this; these were removed because the origin of these sounds is unacceptable. DO NOT RE-ADD THEM.
 
 ## Extending it
 
