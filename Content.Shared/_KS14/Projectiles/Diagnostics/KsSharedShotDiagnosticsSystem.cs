@@ -90,6 +90,16 @@ public abstract partial class KsSharedShotDiagnosticsSystem : EntitySystem
 }
 
 /// <summary>
+///     The server tells a client, whose admin ran <c>ks_shotdiag</c>, to gather its half: about <paramref name="Target"/>,
+///         or whoever its cursor is on.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsShotDiagnosticsStartEvent(NetEntity? target) : EntityEventArgs
+{
+    public readonly NetEntity? Target = target;
+}
+
+/// <summary>
 ///     A client asks what the server has about <paramref name="Target"/>. Answered only for an admin with the debug flag.
 /// </summary>
 [Serializable, NetSerializable]

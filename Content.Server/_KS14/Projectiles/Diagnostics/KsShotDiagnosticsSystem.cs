@@ -11,12 +11,22 @@ using Robust.Shared.Player;
 namespace Content.Server._KS14.Projectiles.Diagnostics;
 
 /// <summary>
-///     Answers a client's <c>ks_shotdiag</c> with what the server has about an entity.
+///     The server's half of <c>ks_shotdiag</c>: tells the caller's client to gather its half, and answers it with what the
+///         server has about the entity.
 /// </summary>
 public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSystem
 {
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+
+    /// <summary>
+    ///     Has <paramref name="session"/>'s client gather and print its half, about <paramref name="target"/> or whoever
+    ///         its cursor is on.
+    /// </summary>
+    public void Start(ICommonSession session, NetEntity? target)
+    {
+        RaiseNetworkEvent(new KsShotDiagnosticsStartEvent(target), session);
+    }
 
     [SubscribeNetworkEvent]
     private void OnRequest(KsShotDiagnosticsRequestEvent ev, EntitySessionEventArgs args)

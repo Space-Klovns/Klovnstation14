@@ -16,7 +16,7 @@ using Robust.Shared.Map;
 namespace Content.Client._KS14.Projectiles.Diagnostics;
 
 /// <summary>
-///     The client's half of <c>ks_shotdiag</c>: finds who the cursor is on, gathers what this client has about them, asks
+///     The client's half of <c>ks_shotdiag</c>, when the server says to (the command is the server's, and an admin's): finds who the cursor is on, gathers what this client has about them, asks
 ///         the server for what it has, and prints the two side by side with the differences marked.
 /// </summary>
 public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSystem
@@ -41,11 +41,30 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
     /// </summary>
     private readonly Dictionary<NetEntity, (List<string> Keys, List<string> Values)> _awaiting = new();
 
+    [SubscribeNetworkEvent]
+    private void OnStart(KsShotDiagnosticsStartEvent ev)
+    {
+        if (ev.Target is { } givenNetEntity)
+        {
+            if (TryGetEntity(givenNetEntity, out var givenUid))
+                Diagnose(givenUid.Value, clickedUid: null, clickLookedUp: false);
+            else
+                _consoleHost.WriteError(null, Loc.GetString("cmd-ks_shotdiag-bad-target", ("target", givenNetEntity.ToString())));
+
+            return;
+        }
+
+        if (FindTarget(out var clickedUid) is { } targetUid)
+            Diagnose(targetUid, clickedUid, clickLookedUp: true);
+        else
+            _consoleHost.WriteError(null, Loc.GetString("cmd-ks_shotdiag-no-target"));
+    }
+
     /// <summary>
     ///     Whoever the cursor is on, as a shot fired now would take it, or failing that the mob nearest the cursor.
     /// </summary>
     /// <param name="clickedUid">What a click here resolves to: what a shot fired now would be aimed at.</param>
-    public EntityUid? FindTarget(out EntityUid? clickedUid)
+    private EntityUid? FindTarget(out EntityUid? clickedUid)
     {
         clickedUid = null;
 
@@ -79,7 +98,7 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
     ///         the answer arrives.
     /// </summary>
     /// <param name="clickedUid">What a click at the cursor resolves to, if that was looked up.</param>
-    public void Diagnose(EntityUid targetUid, EntityUid? clickedUid, bool clickLookedUp)
+    private void Diagnose(EntityUid targetUid, EntityUid? clickedUid, bool clickLookedUp)
     {
         var keys = new List<string>();
         var values = new List<string>();
