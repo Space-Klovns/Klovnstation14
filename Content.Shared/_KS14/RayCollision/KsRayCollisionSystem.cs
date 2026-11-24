@@ -38,7 +38,7 @@ namespace Content.Shared._KS14.RayCollision;
 ///             Only until it has left the thing behind (<see cref="ForgetLeftBehind"/>): one turned back onto something it
 ///             hit before hits it again.
 ///     </para>
-    ///     <para>
+///     <para>
 ///         What an entity was aimed at (<see cref="SetAimedAt"/>) is collided with even while its collision is switched
 ///             off: a corpse is given <see cref="CollisionWakeComponent"/>, which switches a body's collision off
 ///             while it is asleep on a grid and touching nothing, and no ray or contact finds it then. Each side

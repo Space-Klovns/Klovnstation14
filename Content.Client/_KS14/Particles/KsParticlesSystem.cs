@@ -137,17 +137,20 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
     public override EntityUid? SpawnPvs(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates) => null;
 
-    public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source)
+    public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source, bool once = false)
     {
         // Not gated on IsFirstTimePredicted: a kept projectile's hit can land on a re-predicted tick, and happens
         //      once. A re-prediction of the same spawn is the same prototype, source and tick instead.
         // Nor on ApplyingState: a kept projectile's hit can land during the state reset, which raises its
         //      collisions, and that is prediction too.
         var tick = _gameTiming.CurTick;
-        foreach (var predictedEffect in _predictedEffects)
+        if (!once)
         {
-            if (predictedEffect.Prototype == prototype && predictedEffect.Source == source && predictedEffect.Tick == tick)
-                return null;
+            foreach (var predictedEffect in _predictedEffects)
+            {
+                if (predictedEffect.Prototype == prototype && predictedEffect.Source == source && predictedEffect.Tick == tick)
+                    return null;
+            }
         }
 
         var uid = SpawnAttachedTo(ParticlesEntity, coordinates);

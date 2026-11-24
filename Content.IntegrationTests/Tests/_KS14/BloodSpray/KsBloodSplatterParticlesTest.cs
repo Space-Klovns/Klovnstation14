@@ -269,6 +269,62 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
     }
 
     /// <summary>
+    ///     Every pellet of a shotgun's shot hits on one tick. A client's kept copies of them spray once each, and each of
+    ///         the server's sprays is hidden when it arrives: the hit does not spray again a round trip later.
+    /// </summary>
+    [Test]
+    public async Task EveryKeptHitOfOneTickHidesAServersCopy()
+    {
+        const int hits = 3;
+
+        var testMap = await Pair.CreateTestMap();
+        var exitDirection = new Vector2(0f, 1f);
+
+        EntityUid mobUid = default;
+        await Server.WaitPost(() => mobUid = SEntMan.SpawnEntity(_mob, new MapCoordinates(Vector2.Zero, testMap.MapId)));
+        await RunTicksSync(5);
+
+        var clientMobUid = ToClientUid(mobUid);
+        await Client.WaitAssertion(() =>
+        {
+            var bloodstreamComponent = CEntMan.GetComponent<BloodstreamComponent>(clientMobUid);
+            var bloodSpraySystem = CEntMan.System<BloodSpraySystem>();
+
+            for (var hit = 0; hit < hits; hit++)
+            {
+                using (bloodSpraySystem.BeginHit(seed: hit, kept: true))
+                    bloodSpraySystem.HandleBleedEffects((clientMobUid, bloodstreamComponent), 20f, exitDirection);
+            }
+
+            Assert.That(ClientEmitters(SplatterMist, clientSide: true), Has.Count.EqualTo(hits), "not every kept hit of the tick sprayed");
+        });
+
+        await Server.WaitPost(() =>
+        {
+            var bloodstreamComponent = SEntMan.GetComponent<BloodstreamComponent>(mobUid);
+            for (var hit = 0; hit < hits; hit++)
+            {
+                SEntMan.System<BloodSpraySystem>().HandleBleedEffects((mobUid, bloodstreamComponent), 20f, exitDirection);
+            }
+        });
+        await RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var particlesSystem = CEntMan.System<KsParticlesSystem>();
+            Assert.Multiple(() =>
+            {
+                foreach (var prototype in new[] { SplatterMist, SplatterSprite })
+                {
+                    var serverCopies = ClientEmitters(prototype, clientSide: false);
+                    Assert.That(serverCopies, Has.Count.EqualTo(hits), $"precondition: {prototype}: the server's copies arrived");
+                    Assert.That(serverCopies.Count(particlesSystem.IsHiddenHere), Is.EqualTo(hits), $"{prototype}: a server's copy is shown beside the client's own");
+                }
+            });
+        });
+    }
+
+    /// <summary>
     ///     A lost limb's gore is thrown after the limb, faster for a harder throw, within limits.
     /// </summary>
     [Test]

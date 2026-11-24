@@ -437,7 +437,8 @@ public sealed partial class BloodSpraySystem : EntitySystem
     /// </summary>
     private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid sourceUid, EntityCoordinates coordinates, Color bloodColor, Angle? localRotation, float speed, float amount = 1f, float scale = 1f)
     {
-        if (_particlesSystem.SpawnPredictedEffect(prototype, coordinates, sourceUid) is not { } emitterUid)
+        // A kept copy's hit is run once, so each is a spray of its own: every pellet of a shot hits on the one tick.
+        if (_particlesSystem.SpawnPredictedEffect(prototype, coordinates, sourceUid, once: _keptHit) is not { } emitterUid)
             return;
 
         _particlesSystem.SetColor(emitterUid, bloodColor);

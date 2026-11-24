@@ -90,8 +90,15 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
     ///     What the effect is about (the mob that was hit): with the prototype and the tick, it tells a re-prediction
     ///         of this spawn from a second spawn.
     /// </param>
+    /// <param name="once">
+    ///     The caller makes sure this runs once, so another of the same prototype, source and tick is a second spawn and
+    ///         not a re-prediction: a kept projectile's hit
+    ///         (<see cref="KsSharedPredictedSpawnSystem.IsFirstTimePredicted(EntityUid)"/>). Every pellet of a shotgun's
+    ///         shot hits on one tick, and the server sprays for each: taken for one spawn here, all but one of the
+    ///         server's were left showing, and the hit sprayed again when they arrived.
+    /// </param>
     /// <returns>The new emitter, or null on a client re-predicting a spawn it already made.</returns>
-    public abstract EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source);
+    public abstract EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source, bool once = false);
 
     #endregion
 
