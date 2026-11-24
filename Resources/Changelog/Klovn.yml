@@ -3157,3 +3157,19 @@ Entries:
         supercooled puddles freeze onto nearby ice.
   id: 279
   time: '2026-11-22T18:37:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Wheelchairs, the janicart and office chairs can now be ridden, and
+        wheelchairs can be printed at the medical techfab.
+    - type: Tweak
+      message: Lawnmowers and mechs run on the new vehicle system.
+    - type: Fix
+      message: Shots fired while riding a vehicle no longer hit that vehicle.
+    - type: Fix
+      message: Handcuffed people can no longer drive vehicles.
+    - type: Fix
+      message: Mech pilots no longer take damage the mech itself is immune to.
+  id: 280
+  time: '2026-11-24T10:09:26.0000000+00:00'
