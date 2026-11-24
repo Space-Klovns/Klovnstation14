@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._KS14.PopupLocalization;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
 using Content.Shared.Camera;
@@ -16,6 +17,7 @@ using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Content.Shared.Vehicle.Components;
 using Content.Shared.Zombies;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
@@ -77,15 +79,50 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
                 ProcessContacts(entity, riderUid, moverComponent.WishDir.Normalized());
 
             if (crushed)
+            {
                 _audioSystem.PlayPredicted(bladesComponent.CrushSound, uid, riderUid);
+                bladesComponent.NextDriveSound = _gameTiming.CurTime + bladesComponent.DriveSoundInterval;
+            }
             else if (moving && _gameTiming.CurTime >= bladesComponent.NextDriveSound)
-                _audioSystem.PlayPredicted(bladesComponent.DriveSound, uid, riderUid);
-            else
-                continue;
+            {
+                var (driveSound, driveSoundLength) = PickDriveSound((uid, bladesComponent));
+                _audioSystem.PlayPredicted(driveSound, uid, riderUid);
 
-            bladesComponent.NextDriveSound = _gameTiming.CurTime + bladesComponent.DriveSoundInterval;
+                // A tick early: the next clip can only start on a tick, and starting it on the first tick after this
+                //      one ends would leave up to a tick of silence between them.
+                bladesComponent.NextDriveSound = _gameTiming.CurTime + driveSoundLength - _gameTiming.TickPeriod;
+            }
+            else
+            {
+                continue;
+            }
+
             Dirty(uid, bladesComponent);
         }
+    }
+
+    /// <summary>
+    ///     Picks the drive clip to play and how long it lasts, so the next one can follow straight on. The clip is
+    ///         picked from what client and server agree on, so the rider's prediction plays the same one and waits as
+    ///         long.
+    /// </summary>
+    private (SoundSpecifier Sound, TimeSpan Length) PickDriveSound(Entity<KsLawnmowerBladesComponent> mower)
+    {
+        var sound = mower.Comp.DriveSound;
+        if (sound is SoundCollectionSpecifier { Collection: { } collectionId } &&
+            ProtoMan.Index<SoundCollectionPrototype>(collectionId).PickFiles is { Count: > 0 } files)
+        {
+            var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+                (int) _gameTiming.CurTick.Value,
+                KsSharedRandomExtensions.GetNetId(mower.Owner, EntityManager));
+            sound = new SoundPathSpecifier(files[predictedRandom.Next(files.Count)], sound.Params);
+        }
+
+        if (sound is not SoundPathSpecifier pathSound)
+            return (sound, mower.Comp.DriveSoundInterval);
+
+        var length = _audioSystem.GetAudioLength(new ResolvedPathSpecifier(pathSound.Path.ToString()));
+        return (sound, length > TimeSpan.Zero ? length : mower.Comp.DriveSoundInterval);
     }
 
     /// <summary>
