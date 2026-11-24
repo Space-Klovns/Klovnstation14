@@ -14,6 +14,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._KS14.Projectiles;
@@ -302,5 +303,54 @@ public sealed class KsDownedTargetPredictionTest : InteractionTest
         }
 
         Assert.That(hits, Is.EqualTo(shotsPerBurst), "not every shot of the burst hit the one clicked on");
+    }
+
+    /// <summary>
+    ///     A corpse lying still on a grid has its collision switched off while its body is asleep
+    ///         (<see cref="CollisionWakeComponent"/>, which the dead are given). A shot aimed at it hits it all the same, on
+    ///         the client as on the server.
+    /// </summary>
+    [Test]
+    public async Task ShotHitsACorpseClickedOnWhoseBodyIsAsleep()
+    {
+        await ArmPlayer();
+        // On a grid: off one, collision is never switched off.
+        await Server.WaitPost(() =>
+        {
+            var mapSystem = SEntMan.System<SharedMapSystem>();
+            var position = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            var tile = new Tile(Server.ResolveDependency<ITileDefinitionManager>()["Plating"].TileId);
+            for (var x = 0f; x <= TargetDistance + 1f; x++)
+            {
+                mapSystem.SetTile(MapData.Grid, mapSystem.WorldToTile(MapData.Grid, MapData.Grid.Comp, position + new Vector2(x, 0f)), tile);
+            }
+        });
+        await RunTicks(5);
+
+        var targetUid = await SpawnDownedTarget(DownedBy.Dead);
+
+        var asleep = false;
+        for (var second = 0; second < 20 && !asleep; second++)
+        {
+            await RunSeconds(1f);
+            await Server.WaitPost(() => asleep = !SEntMan.GetComponent<PhysicsComponent>(targetUid).CanCollide);
+        }
+
+        var clientAsleep = false;
+        await Client.WaitPost(() => clientAsleep = !CEntMan.GetComponent<PhysicsComponent>(ToClient(targetUid)).CanCollide);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(asleep, "precondition: the corpse's collision is off on the server");
+            Assert.That(clientAsleep, "precondition: the corpse's collision is off on the client");
+        }
+
+        var (serverDealt, clientPending, clientCopyFlewPast) = await Shoot(targetUid, clickedOn: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(serverDealt, Is.GreaterThan(FixedPoint2.Zero), "the server's shot did not hit the corpse clicked on");
+            Assert.That(clientPending, Is.GreaterThan(FixedPoint2.Zero), "the client's copy of the shot did not hit the corpse clicked on");
+            Assert.That(clientCopyFlewPast, Is.False, "the client's copy of the shot flew over the corpse clicked on");
+        }
     }
 }

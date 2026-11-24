@@ -38,6 +38,7 @@ public abstract partial class SharedGunSystem
             var targeted = EnsureComp<TargetedProjectileComponent>(uid);
             targeted.Target = target;
             Dirty(uid, targeted);
+            _ksRayCollisionSystem.SetAimedAt(uid, target); // KS14: hits it even while its collision is off for being asleep, as a corpse's is
         }
 
         // Do a throw
