@@ -1,10 +1,12 @@
 using Content.Shared.Mech.Components;
+using Content.Shared.Vehicle.Components;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
 
 public abstract partial class SharedGunSystem
 {
     [Dependency] private EntityQuery<MechComponent> _ksMechQuery = default!;
+    [Dependency] private EntityQuery<VehicleComponent> _ksVehicleQuery = default!;
 
     /// <summary>
     ///     The entity whose client predicts a shot fired by <paramref name="shooterUid"/>: a mech's pilot for the mech,
@@ -15,8 +17,9 @@ public abstract partial class SharedGunSystem
     public EntityUid? KsGetPredictingUser(EntityUid? shooterUid)
     {
         if (shooterUid is { } mechUid &&
-            _ksMechQuery.TryComp(mechUid, out var mechComponent) &&
-            mechComponent.PilotSlot?.ContainedEntity is { } pilotUid)
+            _ksMechQuery.HasComp(mechUid) &&
+            _ksVehicleQuery.TryComp(mechUid, out var vehicleComponent) &&
+            vehicleComponent.Operator is { } pilotUid)
         {
             return pilotUid;
         }

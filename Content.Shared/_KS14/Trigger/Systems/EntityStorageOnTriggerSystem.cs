@@ -26,7 +26,7 @@ public sealed partial class EntityStorageOnTriggerSystem : XOnTriggerSystem<Enti
                     !_entityStorageSystem.CanOpen(userUid, targetUid, silent: true /* intentional */, component: entityStorageComponent))
                     return;
 
-                _entityStorageSystem.OpenStorage(targetUid, component: entityStorageComponent);
+                _entityStorageSystem.OpenStorage((targetUid, entityStorageComponent));
                 args.Handled = true;
                 break;
             case StorageAction.Close:
@@ -34,7 +34,7 @@ public sealed partial class EntityStorageOnTriggerSystem : XOnTriggerSystem<Enti
                     !_entityStorageSystem.CanClose(targetUid, userUid, silent: true /* intentional */))
                     return;
 
-                _entityStorageSystem.CloseStorage(targetUid, component: entityStorageComponent);
+                _entityStorageSystem.CloseStorage((targetUid, entityStorageComponent));
                 args.Handled = true;
                 break;
         }

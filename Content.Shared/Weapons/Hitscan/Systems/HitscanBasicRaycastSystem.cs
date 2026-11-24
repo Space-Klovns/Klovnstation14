@@ -30,6 +30,7 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
     [Dependency] private SharedContainerSystem _container = default!;
     [Dependency] private ISharedAdminLogManager _log = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private Content.Shared.Vehicle.Systems.VehicleSystem _vehicleSystem = default!; // KS14
 
     [Dependency] private EntityQuery<HitscanBasicVisualsComponent> _visualsQuery = default!;
 
@@ -60,6 +61,11 @@ public sealed partial class HitscanBasicRaycastSystem : EntitySystem
                 rayCastResults);
             RaiseLocalEvent(ref ksResultsEv);
         }
+        // KS14 end
+
+        // KS14 start: an operator's shots pass through the vehicle they fire from
+        if (_vehicleSystem.GetOperatedVehicleOrNull(shooter) is { } ksShooterVehicleUid)
+            rayCastResults.RemoveAll(hit => hit.HitEntity == ksShooterVehicleUid);
         // KS14 end
 
         var target = args.Target;

@@ -197,7 +197,7 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 
         // Whatever is standing in the pod rides along, and nothing gets at the cargo mid-flight.
         if (TryComp<EntityStorageComponent>(entity.Owner, out var entityStorageComponent))
-            _entityStorageSystem.CloseStorage(entity.Owner, entityStorageComponent);
+            _entityStorageSystem.CloseStorage((entity.Owner, entityStorageComponent));
 
         if (TryComp<LockComponent>(entity.Owner, out var lockComponent))
             _lockSystem.Lock(entity.Owner, null, lockComponent);

@@ -99,6 +99,10 @@ public sealed partial class KsLawnmowerBladesComponent : Component
     [DataField]
     public FixedPoint2 BleedAmount = 4;
 
+    /// <summary>
+    ///     How long after a crush the drive sound starts again, and how long a drive clip is taken to last if its
+    ///         length can't be read. Otherwise each drive clip is followed straight on by the next.
+    /// </summary>
     [DataField]
     public TimeSpan DriveSoundInterval = TimeSpan.FromSeconds(0.8);
 

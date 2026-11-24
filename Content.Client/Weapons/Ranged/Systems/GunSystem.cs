@@ -173,8 +173,9 @@ public sealed partial class GunSystem : SharedGunSystem
 
         var entity = entityNull.Value;
 
-        if (TryComp<MechPilotComponent>(entity, out var mechPilot)) // Goobstation
-            entity = mechPilot.Mech;
+        if (TryComp<Content.Shared.Vehicle.Components.VehicleOperatorComponent>(entity, out var vehicleOperator) && // KS14: MechPilot -> VehicleOperator
+            vehicleOperator.Vehicle is { } mechUid && HasComp<MechComponent>(mechUid)) // Goobstation
+            entity = mechUid;
 
         if (!TryGetGun(entity, out var gun))
         {
