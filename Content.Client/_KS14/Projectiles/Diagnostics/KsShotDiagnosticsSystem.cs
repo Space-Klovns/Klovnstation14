@@ -49,7 +49,7 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
             if (TryGetEntity(givenNetEntity, out var givenUid))
                 Diagnose(givenUid.Value, clickedUid: null, clickLookedUp: false);
             else
-                _consoleHost.WriteError(null, Loc.GetString("cmd-ks_shotdiag-bad-target", ("target", givenNetEntity.ToString())));
+                _consoleHost.WriteError(null, Loc.GetString("ks-shotdiag-command-bad-target", ("target", givenNetEntity.ToString())));
 
             return;
         }
@@ -57,7 +57,7 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
         if (FindTarget(out var clickedUid) is { } targetUid)
             Diagnose(targetUid, clickedUid, clickLookedUp: true);
         else
-            _consoleHost.WriteError(null, Loc.GetString("cmd-ks_shotdiag-no-target"));
+            _consoleHost.WriteError(null, Loc.GetString("ks-shotdiag-command-no-target"));
     }
 
     /// <summary>
@@ -150,12 +150,12 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
         var clientWidth = Math.Max("client".Length, rows.Max(row => row.Client.Length));
 
         var builder = new StringBuilder();
-        builder.AppendLine(Loc.GetString("cmd-ks_shotdiag-header",
+        builder.AppendLine(Loc.GetString("ks-shotdiag-command-header",
             ("entity", TryGetEntity(ev.Target, out var targetUid) ? ToPrettyString(targetUid.Value).ToString() : ev.Target.ToString()),
             ("tick", _gameTiming.CurTick.Value.ToString(CultureInfo.InvariantCulture))));
 
         if (ev.Refused)
-            builder.AppendLine(Loc.GetString("cmd-ks_shotdiag-refused"));
+            builder.AppendLine(Loc.GetString("ks-shotdiag-command-refused"));
 
         builder.AppendLine($"  {"".PadRight(keyWidth)}  {"client".PadRight(clientWidth)}  server");
 
@@ -174,7 +174,7 @@ public sealed partial class KsShotDiagnosticsSystem : KsSharedShotDiagnosticsSys
         }
 
         if (!ev.Refused)
-            builder.Append(Loc.GetString("cmd-ks_shotdiag-differences", ("count", differences)));
+            builder.Append(Loc.GetString("ks-shotdiag-command-differences", ("count", differences)));
 
         _consoleHost.WriteLine(null, builder.ToString().TrimEnd());
     }

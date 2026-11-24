@@ -21,6 +21,10 @@ public sealed partial class KsShotDiagnosticsCommand : LocalizedEntityCommands
 
     public override string Command => "ks_shotdiag";
 
+    // Looked up by name: the base's ids are built from the command's, whose underscore no locale id may have.
+    public override string Description => Loc.GetString("ks-shotdiag-command-desc");
+    public override string Help => Loc.GetString("ks-shotdiag-command-help");
+
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (shell.Player is not { } session)
@@ -31,7 +35,7 @@ public sealed partial class KsShotDiagnosticsCommand : LocalizedEntityCommands
 
         if (args.Length > 1)
         {
-            shell.WriteError(Loc.GetString("cmd-ks_shotdiag-help"));
+            shell.WriteError(Loc.GetString("ks-shotdiag-command-help"));
             return;
         }
 
@@ -40,7 +44,7 @@ public sealed partial class KsShotDiagnosticsCommand : LocalizedEntityCommands
         {
             if (!NetEntity.TryParse(args[0], out var given) || !EntityManager.TryGetEntity(given, out _))
             {
-                shell.WriteError(Loc.GetString("cmd-ks_shotdiag-bad-target", ("target", args[0])));
+                shell.WriteError(Loc.GetString("ks-shotdiag-command-bad-target", ("target", args[0])));
                 return;
             }
 
