@@ -27,6 +27,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Lawnmower;
 
+// TODO KS14: rename this to KsSharedLawnmowerBladesSystem and note in CONTRIBUTING.md how `Shared` prefix goes after the `Ks` prefix
 /// <summary>
 ///     Runs the mower's blades. The rider's client predicts its own mower; the server handles the rest.
 /// </summary>
@@ -101,6 +102,7 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
         }
     }
 
+    // TODO KS14: maybe generalise this code into its own system.
     /// <summary>
     ///     Picks the drive clip to play and how long it lasts, so the next one can follow straight on. The clip is
     ///         picked from what client and server agree on, so the rider's prediction plays the same one and waits as
@@ -113,7 +115,7 @@ public abstract partial class SharedKsLawnmowerBladesSystem : EntitySystem
             ProtoMan.Index<SoundCollectionPrototype>(collectionId).PickFiles is { Count: > 0 } files)
         {
             var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
-                (int) _gameTiming.CurTick.Value,
+                (int)_gameTiming.CurTick.Value,
                 KsSharedRandomExtensions.GetNetId(mower.Owner, EntityManager));
             sound = new SoundPathSpecifier(files[predictedRandom.Next(files.Count)], sound.Params);
         }
