@@ -54,6 +54,8 @@ public abstract partial class SharedDoorSystem : EntitySystem
     /// </summary>
     private readonly HashSet<Entity<DoorComponent>> _activeDoors = new();
 
+    private readonly List<Entity<DoorComponent>> _doorsToUpdate = new(); // KS14: snapshot active doors without allocating every tick
+
     private readonly HashSet<Entity<PhysicsComponent>> _doorIntersecting = new();
 
     public override void Initialize()
@@ -751,7 +753,14 @@ public abstract partial class SharedDoorSystem : EntitySystem
     {
         var time = GameTiming.CurTime;
 
-        foreach (var ent in _activeDoors.ToList())
+        // KS14 start: door transitions can mutate the active set while it is being processed.
+        if (_activeDoors.Count == 0)
+            return;
+
+        _doorsToUpdate.Clear();
+        _doorsToUpdate.AddRange(_activeDoors);
+        // KS14 end
+        foreach (var ent in _doorsToUpdate) /* KS14: reuse the snapshot */
         {
             var door = ent.Comp;
             if (door.Deleted || door.NextStateChange == null)
@@ -774,6 +783,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
                 CheckDoorBump((ent, door, doorBody));
             }
         }
+        _doorsToUpdate.Clear(); // KS14: release component references between ticks
     }
 
     /// <summary>

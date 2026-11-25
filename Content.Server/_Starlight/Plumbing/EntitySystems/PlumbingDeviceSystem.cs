@@ -37,6 +37,7 @@ public sealed partial class PlumbingDeviceSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
 
     private EntityQuery<TransformComponent> _xformQuery;
+    private readonly List<(EntityUid Uid, PlumbingDeviceComponent Device)> _devicesToUpdate = new(); // KS14: reuse the shuffle buffer
 
     private static readonly ProtoId<TagPrototype> PlungerTag = "Plunger";
 
@@ -64,31 +65,33 @@ public sealed partial class PlumbingDeviceSystem : EntitySystem
 
         var curTime = _timing.CurTime;
 
-        var devicesToUpdate = new List<(EntityUid Uid, PlumbingDeviceComponent Device)>();
+        _devicesToUpdate.Clear(); // KS14: rebuild the snapshot for this tick
 
         var query = EntityQueryEnumerator<PlumbingDeviceComponent>();
         while (query.MoveNext(out var uid, out var device))
         {
-            // Cached query for better performance
-            if (device.RequireAnchored && (!_xformQuery.TryGetComponent(uid, out var xform) || !xform.Anchored))
-                continue;
-
+            // KS14 start: skip devices on cooldown before resolving their transforms.
             if (curTime < device.NextUpdateTime)
                 continue;
 
-            devicesToUpdate.Add((uid, device));
+            if (device.RequireAnchored && (!_xformQuery.TryGetComponent(uid, out var xform) || !xform.Anchored))
+                continue;
+
+            // KS14 end
+            _devicesToUpdate.Add((uid, device));
         }
 
         // Shuffle to ensure fair distribution when multiple devices pull from same network
-        _random.Shuffle(devicesToUpdate);
+        _random.Shuffle(_devicesToUpdate); // KS14: reused snapshot
 
-        foreach (var (uid, device) in devicesToUpdate)
+        foreach (var (uid, device) in _devicesToUpdate) // KS14: reused snapshot
         {
             device.NextUpdateTime = curTime + device.UpdateInterval;
 
             var ev = new PlumbingDeviceUpdateEvent((float)device.UpdateInterval.TotalSeconds);
             RaiseLocalEvent(uid, ref ev);
         }
+        _devicesToUpdate.Clear(); // KS14: release component references between ticks
     }
 
     /// <summary>

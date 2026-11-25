@@ -19,21 +19,21 @@ public sealed partial class MassDriverSecurityWireAction : ComponentWireAction<M
     public override bool Cut(EntityUid user, Wire wire, MassDriverComponent component)
     {
         WiresSystem.TryCancelWireAction(wire.Owner, PulseTimeoutKey.Key);
-        component.Hacked = true;
+        SetHacked(wire.Owner, component, true);
 
         return true;
     }
 
     public override bool Mend(EntityUid user, Wire wire, MassDriverComponent component)
     {
-        component.Hacked = false;
+        SetHacked(wire.Owner, component, false);
 
         return true;
     }
 
     public override void Pulse(EntityUid user, Wire wire, MassDriverComponent component)
     {
-        component.Hacked = true;
+        SetHacked(wire.Owner, component, true);
         WiresSystem.StartWireAction(wire.Owner, _pulseTimeout, PulseTimeoutKey.Key, new TimedWireEvent(AwaitPulseCancel, wire));
     }
 
@@ -47,7 +47,16 @@ public sealed partial class MassDriverSecurityWireAction : ComponentWireAction<M
     {
         if (!wire.IsCut
             && EntityManager.TryGetComponent<MassDriverComponent>(wire.Owner, out var driver))
-            driver.Hacked = false;
+            SetHacked(wire.Owner, driver, false);
+    }
+
+    private void SetHacked(EntityUid uid, MassDriverComponent component, bool hacked)
+    {
+        if (component.Hacked == hacked)
+            return;
+
+        component.Hacked = hacked;
+        EntityManager.Dirty(uid, component);
     }
 
     private enum PulseTimeoutKey : byte

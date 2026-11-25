@@ -15,6 +15,8 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedAmbientSoundSystem _audioSystem = default!;
 
+    private readonly HashSet<EntityUid> _targets = new();
+
     #region Logic
 
     /// <summary>
@@ -44,7 +46,6 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
         base.Update(frameTime);
 
         var query = EntityQueryEnumerator<ActiveMassDriverComponent, MassDriverComponent>();
-        var entities = new HashSet<EntityUid>(); // Reuse this hashset for all drivers
 
         while (query.MoveNext(out var uid, out var activeMassDriver, out var massDriver))
         {
@@ -53,14 +54,13 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
                 continue;
 
             activeMassDriver.NextUpdateTime = _timing.CurTime + activeMassDriver.UpdateDelay;
-            Dirty(uid, massDriver);
 
-            entities.Clear();
-            _lookup.GetEntitiesIntersecting(uid, entities);
+            _targets.Clear();
+            _lookup.GetEntitiesIntersecting(uid, _targets);
 
             // Remove anchored entities since we can't throw them
-            entities.RemoveWhere(e => Transform(e).Anchored);
-            int entitiesCount = entities.Count;
+            _targets.RemoveWhere(e => Transform(e).Anchored);
+            int entitiesCount = _targets.Count;
 
             if (entitiesCount == 0)
             {
@@ -72,7 +72,6 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
                     activeMassDriver.NextThrowTime = TimeSpan.Zero;
                     _appearance.SetData(uid, MassDriverVisuals.Launching, false);
                     ChangePowerLoad(uid, massDriver, massDriver.MassDriverPowerLoad);
-                    Dirty(uid, massDriver);
                 }
                 if (massDriver.Mode == MassDriverMode.Manual)
                     RemComp<ActiveMassDriverComponent>(uid);
@@ -83,7 +82,6 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
             if (activeMassDriver.NextThrowTime == TimeSpan.Zero)
             {
                 activeMassDriver.NextThrowTime = _timing.CurTime + massDriver.ThrowDelay;
-                Dirty(uid, massDriver);
                 continue;
             }
 
@@ -91,7 +89,7 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
             ChangePowerLoad(uid, massDriver, massDriver.LaunchPowerLoad);
             _appearance.SetData(uid, MassDriverVisuals.Launching, true);
 
-            ThrowEntities(uid, massDriver, entities, entitiesCount);
+            ThrowEntities(uid, massDriver, _targets, entitiesCount);
 
             if (TryComp<AmbientSoundComponent>(uid, out var ambientSound))
                 _audioSystem.SetAmbience(uid, true, ambientSound);
