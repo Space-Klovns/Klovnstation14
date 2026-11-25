@@ -16,3 +16,4 @@ ascension-peak-court = You stand at the peak of cultivation, but you serve the c
 ascension-site-chosen = Heaven will only receive your last step at one place: {$place}. Go there and try again, and know that the whole station will be told where you are.
 ascension-site-far = Heaven will only receive your last step at {$place}. You're not there.
 ascension-final-step-warning = {CAPITALIZE(THE($user))} is attempting to ascend at {$place}! Stop them before they reach the peak!
+ascension-court-no-site = Bound to the court, you take this last step wherever you stand: heaven asks no pilgrimage of those who serve the throne, and the station is not told.

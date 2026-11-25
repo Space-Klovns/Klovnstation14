@@ -4,7 +4,7 @@ treasure-bloom = A fragrance of pure qi brushes your senses. A heavenly treasure
 treasure-digging = {CAPITALIZE(THE($user))} kneels and begins to carefully dig up {THE($target)}.
 treasure-plucked = {CAPITALIZE(THE($user))} plucks the glowing spirit herb!
 treasure-claimed = The fragrance of the heavenly treasure fades. Someone has claimed it.
-treasure-eaten-cultivator = Heavenly qi floods your foundation!
+treasure-eaten-cultivator = Heavenly qi floods your foundation! (+{$insight} insight, qi refilled)
 treasure-eaten-body = Heavenly qi sinks into your bones as tempering!
 treasure-eaten-mortal = It tastes like morning dew and lightning. You feel wonderful.
 

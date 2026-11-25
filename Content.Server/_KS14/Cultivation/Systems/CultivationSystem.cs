@@ -709,8 +709,8 @@ public sealed partial class CultivationSystem : EntitySystem
             type: PopupType.Medium);
         if (entity.Comp.Realm > CultivationRealm.QiCondensation)
             readinessFactors.Add(new ReadinessFactor("realm", effective - readiness));
-        _noticeSystem.Notify(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", entity.Comp.BaseReadiness),
-            ("factors", _readinessSystem.Describe(readinessFactors))), type: PopupType.Small, alsoToChat: true);
+        _noticeSystem.ChatOnly(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", entity.Comp.BaseReadiness),
+            ("factors", _readinessSystem.Describe(readinessFactors))));
         var (strikeChance, strikeDamage) = BreakthroughLightning(entity.Comp.Realm);
         _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Realm >= CultivationRealm.GoldenCore ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
             ("chance", (int)(strikeChance * 100)), ("damage", (int)strikeDamage)), type: PopupType.Medium);
@@ -970,7 +970,7 @@ public sealed partial class CultivationSystem : EntitySystem
         {
             _noticeSystem.Notify(userUid, Loc.GetString(law.RootDescription), type: PopupType.Small);
             // A first law starts the path: a few lines on how to walk it, kept in chat.
-            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-guide-qi"), PopupType.Small, alsoToChat: true);
+            _noticeSystem.ChatOnly(userUid, Loc.GetString("cultivation-guide-qi"));
         }
 
         return true;

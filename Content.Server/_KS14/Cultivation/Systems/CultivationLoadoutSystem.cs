@@ -30,6 +30,42 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
     [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
 
+    private readonly Dictionary<EntityUid, List<EntityUid>> _justLearned = new();
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        if (_justLearned.Count == 0)
+            return;
+
+        foreach (var (uid, actions) in _justLearned)
+        {
+            if (TerminatingOrDeleted(uid))
+                continue;
+
+            var lines = new List<string>();
+            foreach (var actionUid in actions)
+            {
+                if (TerminatingOrDeleted(actionUid))
+                    continue;
+
+                var category = CompOrNull<CultivationArtCategoryComponent>(actionUid)?.Category ?? CultivationArtCategory.Utility;
+                lines.Add(Loc.GetString("cultivation-art-learned-line", ("technique", Name(actionUid)),
+                    ("category", Loc.GetString($"cultivation-art-category-{category}"))));
+            }
+
+            if (lines.Count == 0)
+                continue;
+
+            _noticeSystem.Notify(uid, lines.Count == 1
+                ? Loc.GetString("cultivation-art-learned-one", ("technique", Name(actions[^1])))
+                : Loc.GetString("cultivation-art-learned-many", ("count", lines.Count)), PopupType.Medium);
+            _noticeSystem.ChatOnly(uid, Loc.GetString("cultivation-art-learned-chat", ("list", string.Join("\n", lines))));
+        }
+
+        _justLearned.Clear();
+    }
+
     public override void Initialize()
     {
         base.Initialize();
@@ -116,9 +152,10 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         loadout.Comp.Learned.Add(args.Action);
         // Learned into its category menu, not onto the bar: the bar stays the four menus and the player's favourites.
         SetOnBar(entity, args.Action, false);
-        var category = CompOrNull<CultivationArtCategoryComponent>(args.Action)?.Category ?? CultivationArtCategory.Utility;
-        _noticeSystem.Notify(entity, Loc.GetString("cultivation-art-learned", ("technique", Name(args.Action)),
-            ("category", Loc.GetString($"cultivation-art-category-{category}"))), PopupType.Medium);
+        // Several are often learned at once (a breakthrough, a new law): they're told together, once, next tick.
+        if (!_justLearned.TryGetValue(entity, out var learnedNow))
+            _justLearned[entity] = learnedNow = new List<EntityUid>();
+        learnedNow.Add(args.Action);
 
         Dirty(loadout);
     }

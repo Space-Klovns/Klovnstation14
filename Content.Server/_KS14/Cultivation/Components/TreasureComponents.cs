@@ -37,6 +37,12 @@ public sealed partial class SpiritHerbComponent : Component
     [DataField]
     public float Insight = 40f;
 
+    /// <summary>
+    ///     At least this share of the insight the eater's realm needs.
+    /// </summary>
+    [DataField]
+    public float InsightShare = 0.1f;
+
     [DataField]
     public float Tempering = 25f;
 }

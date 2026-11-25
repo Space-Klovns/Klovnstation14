@@ -263,6 +263,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         flyingComponent.ReturnAt = null;
 
         _visualsSystem.Art(CultivationVisualsSystem.ArtGoldMotes, entity);
+        // Out of the hand first: a held item can't be thrown, and would just stay there.
+        _handsSystem.TryDrop(entity.Owner, artifactUid, checkActionBlocker: false, doDropInteraction: false);
         _throwingSystem.TryThrow(artifactUid, target, baseThrowSpeed: 20f, user: entity, recoil: false);
         _audioSystem.PlayPvs(SwordDrawSound, entity);
     }

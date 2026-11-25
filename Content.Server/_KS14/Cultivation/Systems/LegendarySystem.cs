@@ -132,16 +132,17 @@ public sealed partial class LegendarySystem : EntitySystem
 
         foreach (var victimUid in args.HitEntities)
         {
-            if (!HasComp<MobStateComponent>(victimUid))
-            {
-                OnStructureHit(entity, victimUid, args.User);
-                continue;
-            }
-
+            // An awakened saber's next blow is the Dragon Slaying Strike, whatever it lands on: a wall or a door too.
             if (TryComp<DragonSaberComponent>(entity, out var saberComponent) && _gameTiming.CurTime < saberComponent.AwakeUntil)
             {
                 saberComponent.AwakeUntil = TimeSpan.Zero;
                 DragonSlayingStrike((entity, saberComponent), args.User, victimUid);
+                continue;
+            }
+
+            if (!HasComp<MobStateComponent>(victimUid))
+            {
+                OnStructureHit(entity, victimUid, args.User);
                 continue;
             }
 

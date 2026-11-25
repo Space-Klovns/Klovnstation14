@@ -5,7 +5,11 @@ cultivation-loadout-pinned = {$technique} (always on your bar, no slot needed): 
 
 cultivation-technique-grown = Your {$old} has grown into {$new}.
 
-cultivation-art-learned = You learn {$technique}. Find it in your {$category} menu, or make it a favourite to keep it on your bar.
+cultivation-art-learned-one = You learn {$technique}. It's in your arts menus.
+cultivation-art-learned-many = You learn {$count} new arts. They're in your arts menus.
+cultivation-art-learned-line = • {$technique}: {$category}
+cultivation-art-learned-chat = New arts, each in its category menu (make favourites to keep them on your bar):
+    {$list}
 cultivation-art-category-Offensive = Offensive Arts
 cultivation-art-category-Defensive = Defensive Arts
 cultivation-art-category-Mobility = Movement Arts

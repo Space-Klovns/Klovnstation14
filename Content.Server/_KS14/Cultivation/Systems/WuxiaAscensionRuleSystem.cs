@@ -223,7 +223,15 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
     /// </summary>
     public bool IsContenderFinalStep(EntityUid uid, bool lastStep)
     {
-        return lastStep && Active() && !CourtBound(uid);
+        if (!lastStep || !Active())
+            return false;
+
+        if (!CourtBound(uid))
+            return true;
+
+        // Those bound to the court can't win the round, so heaven asks no pilgrimage of them; say so, so it isn't a mystery.
+        _noticeSystem.Notify(uid, Loc.GetString("ascension-court-no-site"), PopupType.Medium);
+        return false;
     }
 
     /// <summary>
@@ -264,15 +272,14 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
 
     private bool PickSite(EntityUid uid, AscensionSiteComponent site)
     {
-        var station = _stationSystem.GetOwningStation(uid);
+        // Any beacon on the contender's own map. Not just the station's own grids: on Saltern the station is a grid
+        //     of its own on a planet map, and its beacons don't count as the station's.
+        var mapUid = Transform(uid).MapUid;
         var candidates = new List<EntityUid>();
         var query = EntityQueryEnumerator<Content.Shared.Pinpointer.NavMapBeaconComponent, TransformComponent>();
         while (query.MoveNext(out var beaconUid, out var beacon, out var xform))
         {
-            if (!beacon.Enabled || !xform.Anchored || xform.GridUid == null)
-                continue;
-
-            if (station != null && _stationSystem.GetOwningStation(beaconUid, xform) != station)
+            if (!beacon.Enabled || !xform.Anchored || xform.GridUid == null || xform.MapUid != mapUid)
                 continue;
 
             candidates.Add(beaconUid);

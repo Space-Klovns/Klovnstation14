@@ -250,9 +250,12 @@ public sealed partial class HeavenlyTreasureSystem : EntitySystem
         if (TryComp<CultivatorComponent>(eaterUid, out var cultivatorComponent))
         {
             _sharedCultivationSystem.HealInternalInjury((eaterUid, cultivatorComponent), entity.Comp.InjuryHeal);
-            _sharedCultivationSystem.AddInsight((eaterUid, cultivatorComponent), entity.Comp.Insight);
+            // A share of what the current realm needs, so it matters as much at Golden Core as at Qi Condensation.
+            var required = _sharedCultivationSystem.GetInsightRequired(cultivatorComponent) ?? 0f;
+            var insight = MathF.Max(entity.Comp.Insight, required * entity.Comp.InsightShare);
+            _sharedCultivationSystem.AddInsight((eaterUid, cultivatorComponent), insight);
             _sharedCultivationSystem.AddQi((eaterUid, cultivatorComponent), _sharedCultivationSystem.GetMaxQi(cultivatorComponent));
-            _noticeSystem.Notify(eaterUid, Loc.GetString("treasure-eaten-cultivator"), PopupType.Large);
+            _noticeSystem.Notify(eaterUid, Loc.GetString("treasure-eaten-cultivator", ("insight", (int)insight)), PopupType.Large);
         }
         else if (TryComp<BodyCultivatorComponent>(eaterUid, out var bodyComponent) && bodyComponent.Committed)
         {

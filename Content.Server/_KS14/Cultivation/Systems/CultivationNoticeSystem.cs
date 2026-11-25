@@ -54,6 +54,18 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Put a message in this entity's chat only, with no popup: for longer text, which can use markup.
+    /// </summary>
+    public void ChatOnly(EntityUid uid, string message)
+    {
+        if (!TryComp<ActorComponent>(uid, out var actorComponent))
+            return;
+
+        _chatManager.ChatMessageToOne(ChatChannel.Server, message, message, EntityUid.Invalid, hideChat: false,
+            actorComponent.PlayerSession.Channel, colorOverride: NoticeColor);
+    }
+
+    /// <summary>
     ///     Show a message over this entity to everyone who can see it, after any already waiting there.
     /// </summary>
     public void Announce(EntityUid uid, string message, PopupType type = PopupType.Small)

@@ -656,8 +656,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         var stagePenalty = SharedBodyCultivationSystem.TribulationPenalty(entity.Comp.Stage);
         if (stagePenalty > 0)
             readinessFactors.Add(new ReadinessFactor("stage", -stagePenalty));
-        _noticeSystem.Notify(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", 40),
-            ("factors", _readinessSystem.Describe(readinessFactors))), type: PopupType.Small, alsoToChat: true);
+        _noticeSystem.ChatOnly(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", 40),
+            ("factors", _readinessSystem.Describe(readinessFactors))));
         var (strikeChance, strikeDamage) = SharedBodyCultivationSystem.TribulationLightning(entity.Comp.Stage);
         if (strikeChance > 0f)
             _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= BodyCultivatorComponent.MaxStage - 1 ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
@@ -824,7 +824,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         }
 
         // How to walk the path, kept in chat.
-        _noticeSystem.Notify(args.User, Loc.GetString("body-guide"), PopupType.Small, alsoToChat: true);
+        _noticeSystem.ChatOnly(args.User, Loc.GetString("body-guide"));
     }
 
     #endregion

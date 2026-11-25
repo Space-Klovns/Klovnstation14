@@ -468,7 +468,6 @@
     layers:
     - state: sword_ride
       shader: unshaded
-      offset: 0, -0.35
   - type: PointLight
     color: "#d8f0ff"
     radius: 2

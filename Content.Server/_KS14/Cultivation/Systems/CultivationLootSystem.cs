@@ -229,16 +229,11 @@ public sealed partial class CultivationLootSystem : EntitySystem
     /// </summary>
     public List<EntityCoordinates> MaintenanceSpots(EntityUid gridUid)
     {
-        var spots = new List<EntityCoordinates>();
-        var query = EntityQueryEnumerator<DoorComponent, MetaDataComponent, TransformComponent>();
-        while (query.MoveNext(out _, out _, out var metaData, out var transformComponent))
-        {
-            if (transformComponent.GridUid != gridUid || metaData.EntityPrototype?.ID.StartsWith("AirlockMaint") != true)
-                continue;
-
-            if (FreeBeside(gridUid, transformComponent.Coordinates) is { } spot)
-                spots.Add(spot);
-        }
+        // Some stations aren't one grid: Saltern's main grid is the planet surface, with the station a grid of its own
+        //     on the same map. Look at every grid on the map.
+        var spots = SpotsBeside(gridUid, "AirlockMaint");
+        if (spots.Count == 0)
+            spots = SpotsBeside(gridUid, "Airlock");
 
         return spots;
     }
@@ -246,13 +241,15 @@ public sealed partial class CultivationLootSystem : EntitySystem
     private List<EntityCoordinates> SpotsBeside(EntityUid gridUid, string prototypePrefix)
     {
         var spots = new List<EntityCoordinates>();
+        var mapUid = Transform(gridUid).MapUid;
         var query = EntityQueryEnumerator<MetaDataComponent, TransformComponent>();
         while (query.MoveNext(out _, out var metaData, out var transformComponent))
         {
-            if (transformComponent.GridUid != gridUid || metaData.EntityPrototype?.ID.StartsWith(prototypePrefix) != true)
+            if (transformComponent.GridUid is not { } onGrid || transformComponent.MapUid != mapUid
+                || metaData.EntityPrototype?.ID.StartsWith(prototypePrefix) != true)
                 continue;
 
-            if (FreeBeside(gridUid, transformComponent.Coordinates) is { } spot)
+            if (FreeBeside(onGrid, transformComponent.Coordinates) is { } spot)
                 spots.Add(spot);
         }
 

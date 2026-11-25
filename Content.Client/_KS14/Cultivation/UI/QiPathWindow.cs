@@ -32,14 +32,14 @@ public sealed partial class QiPathWindow : FancyWindow
         IoCManager.InjectDependencies(this);
         Title = Loc.GetString("qi-path-window-title");
         MinSize = new Vector2(470, 380);
-        SetSize = new Vector2(500, 520);
+        SetSize = new Vector2(520, 520);
 
         var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(10, 6), SeparationOverride = 6 };
         _header = new RichTextLabel();
         root.AddChild(_header);
         root.AddChild(new RichTextLabel { Text = Loc.GetString("qi-path-window-hint"), Modulate = Muted });
 
-        _realms = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 10 };
+        _realms = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 12 };
         var scroll = new ScrollContainer { VerticalExpand = true, HScrollEnabled = false };
         scroll.AddChild(_realms);
         root.AddChild(scroll);
@@ -78,14 +78,14 @@ public sealed partial class QiPathWindow : FancyWindow
         {
             var reached = realm <= cultivator.Realm;
             var section = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 2 };
-            var title = new RichTextLabel();
-            var realmName = Loc.GetString($"cultivation-realm-{realm}");
-            title.SetMessage(FormattedMessage.FromMarkupOrThrow(reached
-                ? $"[bold][color={Gold.ToHex()}]{realmName}[/color][/bold]"
-                : $"[bold][color={Locked.ToHex()}]{realmName}[/color][/bold]"));
-            section.AddChild(title);
+            section.AddChild(new Label
+            {
+                Text = Loc.GetString($"cultivation-realm-{realm}"),
+                FontColorOverride = reached ? Gold : Locked,
+                StyleClasses = { "LabelSubText" },
+            });
 
-            var chips = new GridContainer { Columns = 3, HSeparationOverride = 10, VSeparationOverride = 0, Margin = new Thickness(12, 0, 0, 0) };
+            var chips = new GridContainer { Columns = 3, HSeparationOverride = 12, VSeparationOverride = 2, Margin = new Thickness(12, 0, 0, 0) };
             foreach (var action in byRealm.GetValueOrDefault(realm) ?? new List<EntProtoId>())
                 chips.AddChild(Chip(action, reached));
 
@@ -108,14 +108,14 @@ public sealed partial class QiPathWindow : FancyWindow
     private Control Chip(EntProtoId action, bool unlocked)
     {
         var name = _prototypeManager.TryIndex(action, out var prototype) ? prototype.Name : action.Id;
-        var label = new RichTextLabel
+        return new Label
         {
+            Text = name,
+            MinWidth = 140,
+            ClipText = true,
             MouseFilter = MouseFilterMode.Stop,
             ToolTip = prototype?.Description ?? string.Empty,
+            FontColorOverride = unlocked ? Color.White : Locked,
         };
-        label.SetMessage(FormattedMessage.FromMarkupOrThrow(unlocked
-            ? FormattedMessage.EscapeText(name)
-            : $"[color={Locked.ToHex()}]{FormattedMessage.EscapeText(name)}[/color]"));
-        return label;
     }
 }

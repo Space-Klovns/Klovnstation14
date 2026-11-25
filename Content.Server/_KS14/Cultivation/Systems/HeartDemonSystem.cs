@@ -25,6 +25,7 @@ namespace Content.Server._KS14.Cultivation.Systems;
 /// </summary>
 public sealed partial class HeartDemonSystem : EntitySystem
 {
+    [Dependency] private Content.Shared.NPC.Systems.NpcFactionSystem _npcFactionSystem = default!;
     private static readonly EntProtoId HeartDemonPrototype = "KsHeartDemon";
     private static readonly TimeSpan DefaultLifetime = TimeSpan.FromSeconds(90);
     private static readonly SoundSpecifier SummonSound = new SoundPathSpecifier("/Audio/Magic/disintegrate.ogg");
@@ -93,6 +94,8 @@ public sealed partial class HeartDemonSystem : EntitySystem
         demonComponent.BonusDamage = 6f + 8f * tier;
         _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(100 + 60 * tier), MobState.Critical);
         _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(200 + 60 * tier), MobState.Dead);
+        // It hunts its host for as long as it lives: a lasting grudge, not retaliation that wears off.
+        _npcFactionSystem.AggroEntity(demonUid, hostUid);
         if (TryComp<NPCRetaliationComponent>(demonUid, out var retaliationComponent))
             _npcRetaliationSystem.TryRetaliate((demonUid, retaliationComponent), hostUid);
 
