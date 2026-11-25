@@ -397,6 +397,7 @@ public sealed class KsParticleEmitterTest : GameTest
         await Client.WaitAssertion(() =>
         {
             Steps(starved, 5);
+            Assert.That(starved.Comp2.Particles, Is.Empty, "no particle storage is needed at zero density");
             Assert.That(starved.Comp2.Alive, Is.EqualTo(0), "at density 0 nothing spawns");
         });
 

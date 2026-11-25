@@ -70,7 +70,8 @@ public sealed partial class KsParticleEmitterComponent : Component
     [ViewVariables]
     public bool UsesZ;
 
-    public System.Random Random = new();
+    // Seeded when a visible prototype is configured, before its first simulation step.
+    public System.Random Random = default!;
 
     /// <summary>
     ///     The walls near the emitter, for a prototype with <see cref="KsParticlesPrototype.Collision"/>. Null for
