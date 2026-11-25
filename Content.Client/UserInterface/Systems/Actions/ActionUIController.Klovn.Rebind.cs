@@ -17,12 +17,16 @@ public sealed partial class ActionUIController
     /// <returns>True if this click started rebinding the slot's key.</returns>
     private bool TryStartSlotRebind(ActionButton button)
     {
-        if (!_input.IsKeyDown(Keyboard.Key.Shift) || _container == null || !_container.TryGetButtonIndex(button, out var index))
+        if (_container == null || !_container.TryGetButtonIndex(button, out var index))
             return false;
 
         var hotbarKeys = ContentKeyFunctions.GetHotbarBoundKeys();
         if (index < 0 || index >= hotbarKeys.Length)
             return false;
+
+        // Shift-click comes through as more than one function; the second is the same request.
+        if (_rebindingSlot == hotbarKeys[index])
+            return true;
 
         CancelSlotRebind();
         _rebindingSlot = hotbarKeys[index];

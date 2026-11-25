@@ -19,7 +19,7 @@ public sealed partial class ActionUIController
     /// <returns>True if this click popped the slot's action out.</returns>
     private bool TryFloatAction(ActionButton button)
     {
-        if (!_input.IsKeyDown(Keyboard.Key.Alt) || _actionsSystem == null || button.Action is not { } action
+        if (_actionsSystem == null || button.Action is not { } action
             || IsFolderAction(button))
             return false;
 

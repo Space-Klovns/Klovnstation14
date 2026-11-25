@@ -173,6 +173,16 @@ public sealed partial class ActionButton : Control, IEntityControl
 
     private void OnPressed(GUIBoundKeyEventArgs args)
     {
+        // KS14 start: shift-click (examine) and alt-click (alt-use) reach the bar too, to bind a key or float the button
+        if (args.Function == EngineKeyFunctions.TextCursorSelect
+            || args.Function == Content.Shared.Input.ContentKeyFunctions.ExamineEntity
+            || args.Function == Content.Shared.Input.ContentKeyFunctions.AltActivateItemInWorld)
+        {
+            ActionPressed?.Invoke(args, this);
+            return;
+        }
+        // KS14 end
+
         if (args.Function != EngineKeyFunctions.UIClick && args.Function != EngineKeyFunctions.UIRightClick)
             return;
 

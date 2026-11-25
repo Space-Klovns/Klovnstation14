@@ -596,15 +596,25 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             return;
         }
 
-        if (args.Function != EngineKeyFunctions.UIClick)
-            return;
-
-        // KS14: shift-click a slot to bind it to a key, alt-click to pop it out as a floating button
-        if (TryStartSlotRebind(button) || TryFloatAction(button))
+        // KS14 start: shift-click a slot to bind it to a key, alt-click to pop it out as a floating button. Those
+        // clicks arrive as examine and alt-use, never as a plain UIClick.
+        if (args.Function == EngineKeyFunctions.TextCursorSelect || args.Function == ContentKeyFunctions.ExamineEntity)
         {
-            args.Handle();
+            if (TryStartSlotRebind(button))
+                args.Handle();
             return;
         }
+
+        if (args.Function == ContentKeyFunctions.AltActivateItemInWorld)
+        {
+            if (TryFloatAction(button))
+                args.Handle();
+            return;
+        }
+        // KS14 end
+
+        if (args.Function != EngineKeyFunctions.UIClick)
+            return;
 
         HandleActionPressed(args, button);
     }
