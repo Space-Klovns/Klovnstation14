@@ -37,6 +37,12 @@ public sealed partial class JianghuSystem
     private static readonly TimeSpan DuelInsightCooldown = TimeSpan.FromMinutes(2);
 
     private const float AcceptRange = 6f;
+
+    /// <summary>
+    ///     The duel's questions stay open as far apart as a challenge can be accepted from, rather than the UI's default 2 m:
+    ///         the challenge itself reaches further than that, so the window would otherwise shut the moment it opened.
+    /// </summary>
+    private static readonly McqDialogueSettings DialogueSettings = new() { Range = AcceptRange };
     private const float FleeRange = 12f;
     private const float SpectatorRange = 7f;
 
@@ -123,7 +129,7 @@ public sealed partial class JianghuSystem
             {
                 new("jianghu-duel-option-wager", WagerOption),
                 new("jianghu-duel-option-no-wager", NoWagerOption),
-            });
+            }, DialogueSettings);
             return true;
         }
 
@@ -153,7 +159,8 @@ public sealed partial class JianghuSystem
     [SubscribeLocalEvent]
     private void OnChallengerWagerChosen(Entity<DuelChallengedComponent> entity, ref McqDialogueSelectedEvent args)
     {
-        if (args.Actor != entity.Comp.Challenger || !TryComp<DuelChallengeComponent>(args.Actor, out var challengeComponent))
+        if (args.Actor != entity.Comp.Challenger || !TryComp<DuelChallengeComponent>(args.Actor, out var challengeComponent)
+            || challengeComponent.Sent)
             return;
 
         if (args.Id == WagerOption)
@@ -162,9 +169,23 @@ public sealed partial class JianghuSystem
         SendChallenge((args.Actor, challengeComponent));
     }
 
+    /// <summary>
+    ///     The challenger closed the wager question without answering: the challenge goes out with nothing wagered.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnChallengerWagerClosed(Entity<DuelChallengedComponent> entity, ref McqDialogueClosedEvent args)
+    {
+        if (args.Actor != entity.Comp.Challenger || !TryComp<DuelChallengeComponent>(args.Actor, out var challengeComponent)
+            || challengeComponent.Sent || challengeComponent.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        SendChallenge((args.Actor, challengeComponent));
+    }
+
     private void SendChallenge(Entity<DuelChallengeComponent> challenger)
     {
         var opponentUid = challenger.Comp.Target;
+        challenger.Comp.Sent = true;
         challenger.Comp.ExpiresAt = _gameTiming.CurTime + ChallengeTimeout;
         _noticeSystem.Announce(challenger, Loc.GetString("jianghu-duel-challenge", ("user", challenger.Owner), ("target", opponentUid)), type: PopupType.Medium);
 
@@ -172,7 +193,7 @@ public sealed partial class JianghuSystem
         if (WagerCandidate(opponentUid) != null)
             options.Add(new McqDialogueData("jianghu-duel-option-accept-wager", AcceptWagerOption));
         options.Add(new McqDialogueData("jianghu-duel-option-refuse", RefuseOption));
-        _mcqDialogueSystem.StartDialogue(challenger, opponentUid, options);
+        _mcqDialogueSystem.StartDialogue(challenger, opponentUid, options, DialogueSettings);
     }
 
     /// <summary>
@@ -182,9 +203,10 @@ public sealed partial class JianghuSystem
     private void OnChallengeAnswered(Entity<DuelChallengeComponent> entity, ref McqDialogueSelectedEvent args)
     {
         var opponentUid = entity.Comp.Target;
-        if (args.Actor != opponentUid)
+        if (args.Actor != opponentUid || entity.Comp.Answered)
             return;
 
+        entity.Comp.Answered = true;
         if (args.Id == RefuseOption)
         {
             _noticeSystem.Announce(opponentUid, Loc.GetString("jianghu-duel-refused", ("user", opponentUid), ("target", entity.Owner)));
@@ -204,6 +226,22 @@ public sealed partial class JianghuSystem
         RemComp<DuelChallengeComponent>(entity);
         RemComp<DuelChallengedComponent>(opponentUid);
         StartDuel(entity, opponentUid);
+    }
+
+    /// <summary>
+    ///     The one challenged closed the window without answering: that's a refusal, and the challenger is told at once
+    ///         rather than left waiting.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnChallengeWindowClosed(Entity<DuelChallengeComponent> entity, ref McqDialogueClosedEvent args)
+    {
+        if (args.Actor != entity.Comp.Target || !entity.Comp.Sent || entity.Comp.Answered
+            || entity.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        entity.Comp.Answered = true;
+        _noticeSystem.Notify(entity, Loc.GetString("jianghu-duel-ignored", ("target", entity.Comp.Target)));
+        CancelChallenge(entity);
     }
 
     private void CancelChallenge(Entity<DuelChallengeComponent> challenger)

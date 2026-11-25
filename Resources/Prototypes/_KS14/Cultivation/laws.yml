@@ -12,8 +12,6 @@
     action: ActionCultivationSwordRain
   - realm: QiCondensation
     action: ActionCultivationBindArtifact
-  - realm: QiCondensation
-    action: ActionCultivationArtifactStrike
   - realm: GoldenCore
     action: ActionCultivationSwordRiding
   - realm: NascentSoul

@@ -39,13 +39,13 @@ public sealed partial class CultivationActionPredictionSystem : EntitySystem
         {
             case IQiCostEvent qiCost when qiCost.QiCost > 0f && _cultivatorQuery.TryComp(user, out var cultivator) && cultivator.Qi < qiCost.QiCost:
                 args.Cancelled = true;
-                Refuse(user, "cultivation-not-enough-qi");
+                Refuse(user, Loc.GetString("cultivation-not-enough-qi-for", ("qi", (int)cultivator.Qi), ("cost", (int)qiCost.QiCost)));
                 break;
             // As the server checks: a part left to forge, but nothing banked to forge it with.
             case BodyForgeActionEvent when _bodyCultivatorQuery.TryComp(user, out var body) && body.Tempering < 1f
                                            && _bodySystem.WeakestGroup(body) != null:
                 args.Cancelled = true;
-                Refuse(user, "body-forge-no-tempering");
+                Refuse(user, Loc.GetString("body-forge-no-tempering"));
                 break;
         }
     }
@@ -53,6 +53,6 @@ public sealed partial class CultivationActionPredictionSystem : EntitySystem
     private void Refuse(EntityUid user, string message)
     {
         if (_gameTiming.IsFirstTimePredicted)
-            _popupSystem.PopupClient(Loc.GetString(message), user, user, PopupType.SmallCaution);
+            _popupSystem.PopupClient(message, user, user, PopupType.SmallCaution);
     }
 }

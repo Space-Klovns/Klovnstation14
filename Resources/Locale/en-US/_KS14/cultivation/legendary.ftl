@@ -7,7 +7,7 @@ legendary-trait-crushes-tempered = The more tempered the body it strikes, the ha
 legendary-legend = [italic]{$legend}[/italic]
 legendary-cuts-golden-body = The blade cuts through {THE($target)}'s golden body like silk!
 legendary-omen = A treasure's light rises from somewhere {$where}. Something legendary lies unclaimed.
-legendary-sealed = The eight trigrams lock your meridians. Your cultivation is sealed!
+legendary-sealed = Sealed by the Bagua Mirror: the eight trigrams lock your meridians, and your cultivation can't be used until the seal fades!
 
 ## Ganjiang and Moye
 

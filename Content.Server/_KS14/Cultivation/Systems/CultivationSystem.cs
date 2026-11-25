@@ -20,6 +20,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Cultivation.Systems;
 
@@ -40,28 +41,7 @@ public sealed partial class CultivationSystem : EntitySystem
     /// <summary>
     ///     Techniques every cultivator comes to, by the realm that opens them.
     /// </summary>
-    public static readonly (EntProtoId Action, CultivationRealm Realm)[] UniversalTechniques =
-    {
-        ("ActionCultivationSpiritualSense", CultivationRealm.QiCondensation),
-        ("ActionJianghuDuel", CultivationRealm.QiCondensation),
-        ("ActionCultivationEmptyPalm", CultivationRealm.QiCondensation),
-        ("ActionCultivationQinggong", CultivationRealm.QiCondensation),
-        ("ActionCultivationWriteTalisman", CultivationRealm.QiCondensation),
-        ("ActionCultivationRealmPressure", CultivationRealm.FoundationEstablishment),
-        ("ActionJianghuFoundSect", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationAcupointSealing", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationTransmitLaw", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationConcealment", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationForcedCirculation", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationForgetLaw", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationGatheringArray", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationBarrierArray", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationAlarmArray", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationBeastContract", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationSummonBeast", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationVoidStep", CultivationRealm.GoldenCore),
-        ("ActionCultivationBodyOutsideBody", CultivationRealm.NascentSoul),
-    };
+    public static (EntProtoId Action, CultivationRealm Realm)[] UniversalTechniques => CultivationTechniqueLists.Universal;
 
     private static readonly SoundSpecifier ThunderSound = new SoundPathSpecifier("/Audio/Magic/rumble.ogg");
     private static readonly EntProtoId TribulationCloud = "KsTribulationCloud";
@@ -91,6 +71,8 @@ public sealed partial class CultivationSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private SacredSiteSystem _sacredSiteSystem = default!;
+    [Dependency] private CultivationReadinessSystem _readinessSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private HeartDemonSystem _heartDemonSystem = default!;
@@ -141,7 +123,49 @@ public sealed partial class CultivationSystem : EntitySystem
                 * (_greatSageQuery.TryComp(uid, out var greatSageComponent) ? greatSageComponent.QiRegenMultiplier : 1f);
 
             _cultivationSystem.AddQi((uid, cultivatorComponent), regen);
+            RefreshReadyGlow((uid, cultivatorComponent));
+            RefreshAffordable((uid, cultivatorComponent));
         }
+    }
+
+    /// <summary>
+    ///     Grey out the techniques they can't pay for right now, and light them back up once their qi recovers.
+    /// </summary>
+    public void RefreshAffordable(Entity<CultivatorComponent> entity)
+    {
+        foreach (var actionUid in entity.Comp.TechniqueActions.Values)
+        {
+            if (_actionsSystem.GetEvent(actionUid) is IQiCostEvent { QiCost: > 0f } qiCost)
+                _actionsSystem.SetEnabled(actionUid, entity.Comp.Qi >= qiCost.QiCost);
+        }
+    }
+
+    private static readonly SpriteSpecifier MeditateIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "meditate");
+    private static readonly SpriteSpecifier BreakthroughIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "breakthrough");
+    private static readonly SoundSpecifier ReadySound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
+
+    /// <summary>
+    ///     Once there's insight enough for the next realm, the Meditate button turns gold into Break Through, with a chime
+    ///         and a word, once. It turns back after the breakthrough (or if the insight is lost).
+    /// </summary>
+    private void RefreshReadyGlow(Entity<CultivatorComponent> entity)
+    {
+        var ready = ReadyToBreakThrough(entity);
+        if (ready == entity.Comp.ReadyGlow)
+            return;
+
+        _cultivationSystem.SetReadyGlow(entity.Comp, ready);
+        if (entity.Comp.MeditateActionEntity is { } actionUid)
+        {
+            _actionsSystem.SetIcon(actionUid, ready ? BreakthroughIcon : MeditateIcon);
+            _actionsSystem.SetIconColor(actionUid, ready ? Color.Gold : Color.White);
+        }
+
+        if (!ready)
+            return;
+
+        _audioSystem.PlayGlobal(ReadySound, entity);
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-ready-to-break-through"), PopupType.Medium);
     }
 
     /// <summary>
@@ -169,11 +193,10 @@ public sealed partial class CultivationSystem : EntitySystem
     {
         _cultivationSystem.SetNextRegen(entity.Comp, _gameTiming.CurTime + RegenInterval);
 
+        // One button for both: it meditates, and once there's insight enough it breaks through instead.
         EntityUid? meditateAction = null;
-        EntityUid? breakthroughAction = null;
         _actionsSystem.AddAction(entity, ref meditateAction, entity.Comp.MeditateAction);
-        _actionsSystem.AddAction(entity, ref breakthroughAction, entity.Comp.BreakthroughAction);
-        _cultivationSystem.SetMeditateActions(entity.Comp, meditateAction, breakthroughAction);
+        _cultivationSystem.SetMeditateAction(entity.Comp, meditateAction);
 
         GrantTechniques(entity);
         _cultivationSystem.UpdateAlerts(entity);
@@ -269,7 +292,9 @@ public sealed partial class CultivationSystem : EntitySystem
     /// <returns>True if the technique was newly granted.</returns>
     private bool GrantTechnique(Entity<CultivatorComponent> entity, EntProtoId action)
     {
-        if (_cultivationSystem.HasTechnique(entity.Comp, action))
+        // Outgrown: the stronger technique it grew into is already known.
+        if (_cultivationSystem.HasTechnique(entity.Comp, action)
+            || CultivationUpgrades.UpgradeOf(action) is { } upgrade && _cultivationSystem.HasTechnique(entity.Comp, upgrade))
             return false;
 
         EntityUid? actionUid = null;
@@ -277,7 +302,21 @@ public sealed partial class CultivationSystem : EntitySystem
             return false;
 
         _cultivationSystem.RecordTechnique(entity.Comp, action, actionUid.Value);
-        _loadoutSystem.Learned(entity, actionUid.Value);
+
+        // It grows out of one they had: it takes that one's place. Otherwise it's filed like any new technique.
+        var replaced = false;
+        foreach (var (chainUpgrade, replaces) in CultivationUpgrades.Chains)
+        {
+            if (chainUpgrade != action || _cultivationSystem.ForgetTechnique(entity.Comp, replaces) is not { } oldUid)
+                continue;
+
+            _loadoutSystem.Replace(entity, oldUid, actionUid.Value);
+            replaced = true;
+        }
+
+        if (!replaced)
+            _loadoutSystem.Learned(entity, actionUid.Value);
+
         return true;
     }
 
@@ -307,6 +346,22 @@ public sealed partial class CultivationSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    ///     Whether they could pay for a technique right now, without paying. Says why not if they can't.
+    /// </summary>
+    public bool HasQi(EntityUid userUid, float qiCost)
+    {
+        if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent) || IsSealed(userUid))
+            return false;
+
+        if (cultivatorComponent.Qi >= qiCost)
+            return true;
+
+        _noticeSystem.Notify(userUid, Loc.GetString("cultivation-not-enough-qi-for", ("qi", (int)cultivatorComponent.Qi), ("cost", (int)qiCost)),
+            type: PopupType.SmallCaution);
+        return false;
+    }
+
     public bool TryUseTechnique(EntityUid userUid, float qiCost)
     {
         if (!_cultivatorQuery.TryComp(userUid, out var cultivatorComponent))
@@ -317,8 +372,15 @@ public sealed partial class CultivationSystem : EntitySystem
 
         if (!_cultivationSystem.TrySpendQi((userUid, cultivatorComponent), qiCost))
         {
-            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-not-enough-qi"), type: PopupType.SmallCaution);
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-not-enough-qi-for", ("qi", (int)cultivatorComponent.Qi), ("cost", (int)qiCost)),
+                type: PopupType.SmallCaution);
             return false;
+        }
+
+        if (qiCost > 0f)
+        {
+            _cultivationSystem.SetLastTechnique(cultivatorComponent, _gameTiming.CurTime);
+            RefreshAffordable((userUid, cultivatorComponent));
         }
 
         // Any technique gives away a concealed cultivator.
@@ -443,7 +505,19 @@ public sealed partial class CultivationSystem : EntitySystem
             return;
 
         args.Handled = true;
-        StartMeditation(entity);
+        if (ReadyToBreakThrough(entity))
+            TryBreakthrough(entity);
+        else
+            StartMeditation(entity);
+    }
+
+    /// <summary>
+    ///     Whether they have all the insight their next step needs (and there is a next step).
+    /// </summary>
+    public bool ReadyToBreakThrough(Entity<CultivatorComponent> entity)
+    {
+        return _cultivationSystem.GetInsightRequired(entity.Comp) is { } required && !AtAscensionPeak(entity)
+            && entity.Comp.Insight >= required;
     }
 
     public bool StartMeditation(Entity<CultivatorComponent> entity)
@@ -474,6 +548,7 @@ public sealed partial class CultivationSystem : EntitySystem
 
         // Where they sit matters: a mat, the five elements around it, being alone, and the station's wild qi.
         var insightMultiplier = multiplier * _siteSystem.Evaluate(entity).Multiplier * _ringSystem.InsightMultiplier(entity)
+            * _sacredSiteSystem.Multiplier(entity)
             + _siteSystem.StationQiCycle(entity);
         if (entity.Comp.ForcedCirculation)
         {
@@ -526,28 +601,49 @@ public sealed partial class CultivationSystem : EntitySystem
     /// </summary>
     public int BreakthroughReadiness(Entity<CultivatorComponent> entity)
     {
-        var readiness = entity.Comp.BaseReadiness - entity.Comp.ReadinessPerInjury * entity.Comp.InternalInjury;
-        if (QiSourceMultiplier(entity) > 1f)
-            readiness += 15;
-        if (entity.Comp.Qi >= _cultivationSystem.GetMaxQi(entity.Comp) * 0.9f)
-            readiness += 10;
-        if (entity.Comp.DaoHeartTempered)
-            readiness += 15;
-        readiness += _siteSystem.Evaluate(entity).ReadinessBonus;
+        return BreakthroughReadiness(entity, out _);
+    }
 
+    /// <summary>
+    ///     How ready they are, and what went into it, for the breakdown shown to them.
+    /// </summary>
+    public int BreakthroughReadiness(Entity<CultivatorComponent> entity, out List<ReadinessFactor> factors)
+    {
+        factors = new List<ReadinessFactor>();
+        if (entity.Comp.InternalInjury > 0)
+            factors.Add(new ReadinessFactor("injury", -entity.Comp.ReadinessPerInjury * entity.Comp.InternalInjury));
+        if (QiSourceMultiplier(entity) > 1f)
+            factors.Add(new ReadinessFactor("qi-source", 15));
+
+        var maxQi = _cultivationSystem.GetMaxQi(entity.Comp);
+        if (entity.Comp.Qi >= maxQi * 0.9f)
+            factors.Add(new ReadinessFactor("full-qi", 10));
+        else if (entity.Comp.Qi < maxQi * 0.5f)
+            factors.Add(new ReadinessFactor("low-qi", -10));
+
+        if (entity.Comp.DaoHeartTempered)
+            factors.Add(new ReadinessFactor("dao-heart", 15));
+
+        var siteBonus = _siteSystem.Evaluate(entity).ReadinessBonus;
+        if (siteBonus != 0)
+            factors.Add(new ReadinessFactor("site", siteBonus));
+
+        _readinessSystem.AddCommonPenalties(entity, factors, entity.Comp.LastTechniqueAt, entity.Comp.LastBreakthroughAt);
+
+        var readiness = CultivationReadinessSystem.Total(entity.Comp.BaseReadiness, factors);
         var ev = new CultivationBreakthroughReadinessEvent(readiness);
         RaiseLocalEvent(entity, ref ev);
+        if (ev.Readiness != readiness)
+            factors.Add(new ReadinessFactor("other", ev.Readiness - readiness));
+
         return ev.Readiness;
     }
 
-    [SubscribeLocalEvent]
-    private void OnBreakthroughAction(Entity<CultivatorComponent> entity, ref CultivationBreakthroughActionEvent args)
+    /// <summary>
+    ///     Try to break through to the next realm (or, at Nascent Soul, to ascend), telling them why not if they can't.
+    /// </summary>
+    public void TryBreakthrough(Entity<CultivatorComponent> entity)
     {
-        if (args.Handled)
-            return;
-
-        args.Handled = true;
-
         if (_cultivationSystem.GetInsightRequired(entity.Comp) is not { } required || AtAscensionPeak(entity))
         {
             _noticeSystem.Notify(entity, Loc.GetString(AtAscensionPeak(entity) ? "cultivation-at-peak-ascension" : "cultivation-at-peak"),
@@ -590,7 +686,7 @@ public sealed partial class CultivationSystem : EntitySystem
         if (lastStep && !_ascensionRuleSystem.CheckFinalSite(entity))
             return false;
 
-        var readiness = BreakthroughReadiness(entity);
+        var readiness = BreakthroughReadiness(entity, out var readinessFactors);
         var cycle = lastStep ? entity.Comp.BreakthroughCycle * WuxiaAscensionRuleSystem.FinalStepSlowdown : entity.Comp.BreakthroughCycle;
         var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new CultivationBreakthroughDoAfterEvent(), entity)
         {
@@ -611,6 +707,10 @@ public sealed partial class CultivationSystem : EntitySystem
         _noticeSystem.Notify(entity, Loc.GetString(effective >= 70 ? "cultivation-readiness-stable" : "cultivation-readiness-risky",
             ("readiness", effective), ("chance", (int)(SharedCultivationSystem.BreakthroughChance(readiness, entity.Comp.Realm) * 100))),
             type: PopupType.Medium);
+        if (entity.Comp.Realm > CultivationRealm.QiCondensation)
+            readinessFactors.Add(new ReadinessFactor("realm", effective - readiness));
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", entity.Comp.BaseReadiness),
+            ("factors", _readinessSystem.Describe(readinessFactors))), type: PopupType.Small, alsoToChat: true);
         var (strikeChance, strikeDamage) = BreakthroughLightning(entity.Comp.Realm);
         _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Realm >= CultivationRealm.GoldenCore ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
             ("chance", (int)(strikeChance * 100)), ("damage", (int)strikeDamage)), type: PopupType.Medium);
@@ -867,7 +967,11 @@ public sealed partial class CultivationSystem : EntitySystem
             ("law", Loc.GetString(law.Name))), type: PopupType.Medium);
 
         if (isRoot)
+        {
             _noticeSystem.Notify(userUid, Loc.GetString(law.RootDescription), type: PopupType.Small);
+            // A first law starts the path: a few lines on how to walk it, kept in chat.
+            _noticeSystem.Notify(userUid, Loc.GetString("cultivation-guide-qi"), PopupType.Small, alsoToChat: true);
+        }
 
         return true;
     }

@@ -137,12 +137,12 @@ public sealed partial class CultivationSpringMendingActionEvent : EntityTargetAc
 }
 
 /// <summary>
-///     Heal yourself and every friend around you.
+///     Spring Mending grown: heal someone and every friend around them, yourself included if you're close.
 /// </summary>
-public sealed partial class CultivationMyriadSpringActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
+public sealed partial class CultivationMyriadSpringActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
-    public float QiCost { get; set; } = 45f;
+    public float QiCost { get; set; } = 30f;
 
     [DataField]
     public float Range = 4f;

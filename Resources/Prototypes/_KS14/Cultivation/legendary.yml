@@ -370,11 +370,9 @@
   - type: QiankunPouch
   - type: ActionGrant
     actions:
-    - ActionKsQiankunSwallow
     - ActionKsQiankunRelease
   - type: ItemActionGrant
     actions:
-    - ActionKsQiankunSwallow
     - ActionKsQiankunRelease
   - type: ContainerContainer
     containers:
@@ -389,6 +387,8 @@
   name: Heaven-Cleaving Stroke
   description: Loose a blade of pale light fourteen tiles long and three wide that slices through people, doors and even reinforced walls.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: heaven_reliant }
@@ -404,6 +404,8 @@
   name: Thirteen Thousand Jin
   description: Grown, stretch the staff to the heavens and bring it down on a spot up to ten tiles away, smashing a three-wide path through everything, walls included.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 25
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: ruyi_staff }
@@ -419,6 +421,8 @@
   name: Pluck Hairs
   description: Pluck a few hairs and blow on them. Two copies of you leap out and fight someone for ten seconds.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 45
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: ruyi_needle }
@@ -438,6 +442,8 @@
   name: Call Their Name
   description: Point the gourd at someone up to nine tiles away and call their name. If they answer within a few seconds, they're inside.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 60
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: purple_gold_gourd }
@@ -457,6 +463,8 @@
   name: Hurricane
   description: Loose a hurricane nine tiles deep that hurls everyone ten tiles away, snuffs out fire and shatters glass.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 15
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: plantain_fan }
@@ -472,6 +480,8 @@
   name: Firestorm
   description: Fan the flames the other way. Every fire in front of you roars into a firestorm racing away from you.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 15
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: plantain_fan }
@@ -483,22 +493,12 @@
 
 - type: entity
   parent: BaseActionCultivation
-  id: ActionKsQiankunSwallow
-  name: Swallow Heaven and Earth
-  description: Every loose item within five tiles flies into the pouch.
-  components:
-  - type: Action
-    useDelay: 20
-    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: qiankun_pouch }
-  - type: InstantAction
-    event: !type:QiankunSwallowActionEvent
-
-- type: entity
-  parent: BaseActionCultivation
   id: ActionKsQiankunRelease
-  name: Release Heaven and Earth
-  description: Everything in the pouch comes flying out at a spot.
+  name: Heaven and Earth
+  description: 'Click at your own feet to swallow heaven and earth: every loose item within five tiles flies into the pouch. Click anywhere else and everything in the pouch comes flying out at that spot.'
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: qiankun_pouch }
@@ -542,6 +542,8 @@
   name: Nine Yin White Bone Claw
   description: Rake someone beside you with five bone-white fingers. Heavy damage, tears a cultivator's meridians, and leaves them reeling.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: nine_yin_claw }
@@ -560,6 +562,8 @@
   name: Command of the Wumu Yishu
   description: Rally yourself and the three people nearest you into a battle formation for 30 seconds. They move faster and take half the stamina damage.
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 120
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: wumu_command }
@@ -757,6 +761,8 @@
   name: Seven Stars of the Northern Dipper
   description: Release the lit stars (three or more) to fall in the shape of the Northern Dipper where you aim. With all seven, the last is a great star that knocks everyone around it down.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 2
     icon: { sprite: _KS14/Cultivation/legendary.rsi, state: seven_star_sword }

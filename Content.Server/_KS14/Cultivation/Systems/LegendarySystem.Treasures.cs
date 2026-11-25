@@ -524,16 +524,10 @@ public sealed partial class LegendarySystem
 
     /// <summary>
     ///     Swallow Heaven and Earth: every loose thing within five tiles flies into the pouch.
-    ///     Used from its own action, so using the pouch in hand opens it like any bag.
+    ///     Used from the pouch's action, so using the pouch in hand opens it like any bag.
     /// </summary>
-    [SubscribeLocalEvent]
-    private void OnPouchSwallow(Entity<QiankunPouchComponent> entity, ref QiankunSwallowActionEvent args)
+    private void PouchSwallow(Entity<QiankunPouchComponent> entity, EntityUid user)
     {
-        if (args.Handled)
-            return;
-
-        args.Handled = true;
-        var user = args.Performer;
         var now = _gameTiming.CurTime;
         if (now < entity.Comp.NextSwallow)
         {
@@ -558,12 +552,23 @@ public sealed partial class LegendarySystem
     }
 
     /// <summary>
-    ///     Release Heaven and Earth: everything inside comes flying out at a spot.
+    ///     Heaven and Earth, one button: used at your own feet it swallows; used anywhere else, everything inside comes
+    ///         flying out at that spot.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnPouchRelease(Entity<QiankunPouchComponent> entity, ref QiankunReleaseActionEvent args)
     {
-        if (args.Handled || !TryComp<StorageComponent>(entity, out var storageComponent))
+        if (args.Handled)
+            return;
+
+        if (_transformSystem.InRange(args.Target, Transform(args.Performer).Coordinates, 1.5f))
+        {
+            args.Handled = true;
+            PouchSwallow(entity, args.Performer);
+            return;
+        }
+
+        if (!TryComp<StorageComponent>(entity, out var storageComponent))
             return;
 
         var stored = storageComponent.Container.ContainedEntities.ToList();

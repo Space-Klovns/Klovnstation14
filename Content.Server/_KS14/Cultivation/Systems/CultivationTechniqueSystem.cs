@@ -299,20 +299,28 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.WoodBloom(entity, 2.5f, 18);
-        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
-        _visualsSystem.Wave(entity, FxColour.Wood, big: true);
-        _visualsSystem.Motes(entity, FxColour.Wood, TimeSpan.FromSeconds(3));
-        _damageableSystem.HealEvenly(entity.Owner, FixedPoint2.New(-args.Heal * _cultivationSystem.Power(entity)), origin: entity);
-        foreach (var friendUid in MobsAround(entity, args.Range))
+        var heal = FixedPoint2.New(-args.Heal * _cultivationSystem.Power(entity));
+        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
+        _visualsSystem.WoodBloom(args.Target, 2.5f, 18);
+        _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, args.Target);
+        _visualsSystem.Wave(args.Target, FxColour.Wood, big: true);
+        _visualsSystem.Motes(args.Target, FxColour.Wood, TimeSpan.FromSeconds(3));
+
+        // The one chosen, then every friend around them (the caster too, if they're close enough).
+        var healed = new HashSet<EntityUid> { args.Target };
+        _damageableSystem.HealEvenly(args.Target, heal, origin: entity);
+        foreach (var friendUid in MobsAround(args.Target, args.Range))
         {
-            if (_sharedCultivationSystem.IsAlly(entity, friendUid))
-                _damageableSystem.HealEvenly(friendUid, FixedPoint2.New(-args.Heal * _cultivationSystem.Power(entity)), origin: entity);
+            if ((friendUid == entity.Owner || _sharedCultivationSystem.IsAlly(entity, friendUid)) && healed.Add(friendUid))
+                _damageableSystem.HealEvenly(friendUid, heal, origin: entity);
         }
 
-        _audioSystem.PlayPvs(HealSound, entity);
-        _audioSystem.PlayPvs(RustleSound, entity);
-        _noticeSystem.Announce(entity, Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner)), type: PopupType.Medium);
+        if (_sharedCultivationSystem.HasRoot(entity, CultivationElement.Wood))
+            _sharedCultivationSystem.HealInternalInjury(args.Target);
+
+        _audioSystem.PlayPvs(HealSound, args.Target);
+        _audioSystem.PlayPvs(RustleSound, args.Target);
+        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-myriad-spring", ("user", entity.Owner), ("target", args.Target)), type: PopupType.Medium);
     }
 
     #endregion

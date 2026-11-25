@@ -12,25 +12,18 @@ namespace Content.Server._KS14.Cultivation.Systems;
 
 /// <summary>
 ///     Keeps a cultivator's action bar short. Every technique, body art, martial art and jianghu action they learn is
-///         filed here; only <see cref="CultivationLoadoutComponent.Slots"/> of them sit on the bar at once. The
-///         Techniques button opens a radial menu of everything they know, where a click equips or puts away a
-///         technique. A put-away technique keeps its cooldown.
+///         filed here and listed in one of four category menus (offensive, defensive, mobility, utility), whose buttons
+///         are always on the bar; picking an art there uses it. Every art stays attached, so it can be used from the
+///         menu, but only favourites (up to <see cref="CultivationLoadoutComponent.Slots"/>) also sit on the bar, chosen
+///         in the Favourites menu. An art off the bar keeps its cooldown.
 /// </summary>
 public sealed partial class CultivationLoadoutSystem : EntitySystem
 {
     public static readonly EntProtoId MenuAction = "ActionKsTechniques";
 
-    /// <summary>
-    ///     Techniques for outside a fight. They're learned into the Techniques menu without being put on the bar.
-    /// </summary>
-    private static readonly HashSet<string> UtilityTechniques = new()
+    public static readonly EntProtoId[] CategoryMenuActions =
     {
-        "ActionCultivationSpiritualSense", "ActionJianghuDuel", "ActionCultivationWriteTalisman", "ActionJianghuFoundSect",
-        "ActionCultivationTransmitLaw", "ActionCultivationForgetLaw", "ActionCultivationGatheringArray",
-        "ActionCultivationBarrierArray", "ActionCultivationAlarmArray", "ActionCultivationBeastContract",
-        "ActionCultivationSummonBeast", "ActionCultivationConcealment", "ActionJianghuDeclareRivalry",
-        "ActionJianghuSectTransmission", "ActionBodyDisciple", "ActionBodyRemold", "ActionBodyBoneSetting",
-        "ActionWuxiaRecallTeachings",
+        "ActionKsArtsOffensive", "ActionKsArtsDefensive", "ActionKsArtsMobility", "ActionKsArtsUtility",
     };
 
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
@@ -56,7 +49,24 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
             _uiSystem.SetUi((uid, ui), TechniqueLoadoutUiKey.Key, new InterfaceData("TechniqueLoadoutBoundUserInterface"));
 
         if (loadout.MenuAction == null || TerminatingOrDeleted(loadout.MenuAction))
+        {
+            // Reached from the category menus, not the bar.
             loadout.MenuAction = _actionsSystem.AddAction(uid, MenuAction);
+            if (loadout.MenuAction is { } menuAction)
+                _actionsSystem.SetAutoPopulate(menuAction, false);
+        }
+
+        loadout.CategoryActions.RemoveAll(action => TerminatingOrDeleted(action));
+        if (loadout.CategoryActions.Count == 0)
+        {
+            foreach (var categoryAction in CategoryMenuActions)
+            {
+                if (_actionsSystem.AddAction(uid, categoryAction) is { } added)
+                    loadout.CategoryActions.Add(added);
+            }
+
+            Dirty(uid, loadout);
+        }
 
         loadout.Slots = SlotsFor(uid);
         return (uid, loadout);
@@ -93,18 +103,6 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
 
         Prune((uid, loadout));
         loadout.Slots = SlotsFor(uid);
-        foreach (var actionUid in loadout.Learned)
-        {
-            if (loadout.Equipped.Count >= loadout.Slots)
-                break;
-
-            if (loadout.Equipped.Contains(actionUid))
-                continue;
-
-            _actionsSystem.AddActionDirect(uid, actionUid);
-            loadout.Equipped.Add(actionUid);
-        }
-
         Dirty(uid, loadout);
     }
 
@@ -116,22 +114,11 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
             return;
 
         loadout.Comp.Learned.Add(args.Action);
-        // Utility techniques never take a slot by themselves: they wait in the menu, so the bar fills with fighting
-        //     techniques first.
-        if (MetaData(args.Action).EntityPrototype?.ID is { } protoId && UtilityTechniques.Contains(protoId))
-        {
-            _actionsSystem.RemoveAction(entity.Owner, args.Action);
-        }
-        else if (loadout.Comp.Equipped.Count < loadout.Comp.Slots)
-        {
-            loadout.Comp.Equipped.Add(args.Action);
-        }
-        else
-        {
-            // No room on the bar: it waits in the Techniques menu.
-            _actionsSystem.RemoveAction(entity.Owner, args.Action);
-            _noticeSystem.Notify(entity, Loc.GetString("cultivation-loadout-stored", ("technique", Name(args.Action))), PopupType.Medium);
-        }
+        // Learned into its category menu, not onto the bar: the bar stays the four menus and the player's favourites.
+        SetOnBar(entity, args.Action, false);
+        var category = CompOrNull<CultivationArtCategoryComponent>(args.Action)?.Category ?? CultivationArtCategory.Utility;
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-art-learned", ("technique", Name(args.Action)),
+            ("category", Loc.GetString($"cultivation-art-category-{category}"))), PopupType.Medium);
 
         Dirty(loadout);
     }
@@ -163,7 +150,7 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         Prune(entity);
         if (entity.Comp.Equipped.Remove(actionUid.Value))
         {
-            _actionsSystem.RemoveAction(entity.Owner, actionUid.Value);
+            SetOnBar(entity, actionUid.Value, false);
         }
         else if (entity.Comp.Equipped.Count >= entity.Comp.Slots)
         {
@@ -172,7 +159,7 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         }
         else
         {
-            _actionsSystem.AddActionDirect(entity.Owner, actionUid.Value);
+            SetOnBar(entity, actionUid.Value, true);
             entity.Comp.Equipped.Add(actionUid.Value);
         }
 
@@ -195,10 +182,19 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
         if (!loadout.Comp.Pinned.Contains(actionUid))
             loadout.Comp.Pinned.Add(actionUid);
 
+        SetOnBar(uid, actionUid, true);
+        Dirty(loadout);
+    }
+
+    /// <summary>
+    ///     Keep an art attached (so it can be used from its menu) and on or off the bar.
+    /// </summary>
+    private void SetOnBar(EntityUid uid, EntityUid actionUid, bool onBar)
+    {
         if (!TryComp<ActionComponent>(actionUid, out var action) || action.AttachedEntity != uid)
             _actionsSystem.AddActionDirect(uid, actionUid);
 
-        Dirty(loadout);
+        _actionsSystem.SetAutoPopulate(actionUid, onBar);
     }
 
     private void Prune(Entity<CultivationLoadoutComponent> entity)
@@ -237,6 +233,36 @@ public sealed partial class CultivationLoadoutSystem : EntitySystem
             _actionsSystem.RemoveAction(uid, action);
 
         QueueDel(action);
+    }
+
+    /// <summary>
+    ///     A technique has grown into a stronger one: the new one takes the old one's place, on the bar if it was there
+    ///         (or pinned, if it was pinned), and the old one is gone.
+    /// </summary>
+    public void Replace(EntityUid uid, EntityUid oldActionUid, EntityUid newActionUid)
+    {
+        if (TerminatingOrDeleted(oldActionUid) || TerminatingOrDeleted(newActionUid))
+            return;
+
+        var loadout = EnsureLoadout(uid);
+        if (!loadout.Comp.Learned.Contains(newActionUid))
+            loadout.Comp.Learned.Add(newActionUid);
+
+        if (loadout.Comp.Pinned.Remove(oldActionUid))
+        {
+            Pin(uid, newActionUid);
+        }
+        else if (loadout.Comp.Equipped.Contains(oldActionUid))
+        {
+            // Into the old one's slot, so a full bar doesn't push the upgrade into the menu.
+            loadout.Comp.Equipped.Remove(newActionUid);
+            loadout.Comp.Equipped.Insert(loadout.Comp.Equipped.IndexOf(oldActionUid), newActionUid);
+            SetOnBar(uid, newActionUid, true);
+        }
+
+        Forget(uid, oldActionUid);
+        _noticeSystem.Notify(uid, Loc.GetString("cultivation-technique-grown", ("old", Name(oldActionUid)), ("new", Name(newActionUid))),
+            PopupType.Medium);
     }
 
     /// <summary>

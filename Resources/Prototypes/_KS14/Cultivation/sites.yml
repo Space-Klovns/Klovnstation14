@@ -192,3 +192,29 @@
   targetNode: done
   category: construction-category-misc
   objectType: Item
+
+# Where heaven and earth's qi wells up for a while in the wuxia gamemodes (SacredSiteSystem): meditating or forging
+# within three tiles goes twice as fast. It moves every ten minutes.
+- type: entity
+  id: KsSacredSite
+  categories: [ HideSpawnMenu ]
+  name: sacred site
+  description: Heaven and earth's qi wells up here. Meditating or forging your body within three tiles goes twice as fast, for now.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/sacred_site.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    scale: 2, 2
+    layers:
+    - state: site
+      shader: unshaded
+  - type: PointLight
+    color: "#ffc24a"
+    radius: 5
+    energy: 2
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Transform
+    anchored: true

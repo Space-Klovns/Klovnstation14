@@ -342,6 +342,7 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
 
         var oldStage = entity.Comp.Stage;
         entity.Comp.Stage++;
+        entity.Comp.LastTribulationAt = _gameTiming.CurTime;
         Dirty(entity);
         Recalculate((entity, entity.Comp));
 
@@ -532,6 +533,21 @@ public sealed partial class SharedBodyCultivationSystem : EntitySystem
     public void RecordTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto, EntityUid actionUid)
     {
         bodyCultivator.Techniques[actionProto] = actionUid;
+    }
+
+    public void SetLastArt(BodyCultivatorComponent bodyCultivator, TimeSpan time)
+    {
+        bodyCultivator.LastArtAt = time;
+    }
+
+    public void SetReadyGlow(BodyCultivatorComponent bodyCultivator, bool ready)
+    {
+        bodyCultivator.ReadyGlow = ready;
+    }
+
+    public EntityUid? ForgetTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto)
+    {
+        return bodyCultivator.Techniques.Remove(actionProto, out var actionUid) ? actionUid : null;
     }
 
     public bool HasTechnique(BodyCultivatorComponent bodyCultivator, EntProtoId actionProto)

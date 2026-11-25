@@ -120,7 +120,7 @@ public sealed partial class CultivatorComponent : Component
     ///     Readiness before anything else is counted. 70 or more always succeeds.
     /// </summary>
     [DataField]
-    public int BaseReadiness = 50;
+    public int BaseReadiness = 40;
 
     [DataField]
     public int ReadinessPerInjury = 20;
@@ -156,13 +156,25 @@ public sealed partial class CultivatorComponent : Component
     public EntProtoId MeditateAction = "ActionCultivationMeditate";
 
     [DataField]
-    public EntProtoId BreakthroughAction = "ActionCultivationBreakthrough";
-
-    [DataField]
     public EntityUid? MeditateActionEntity;
 
+    /// <summary>
+    ///     Whether the Meditate button is showing that a breakthrough is ready.
+    /// </summary>
     [DataField]
-    public EntityUid? BreakthroughActionEntity;
+    public bool ReadyGlow;
+
+    /// <summary>
+    ///     When they last used a technique: qi stays unsettled for a minute after.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan LastTechniqueAt;
+
+    /// <summary>
+    ///     When they last broke through: the new foundation takes a few minutes to steady.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan LastBreakthroughAt;
 
     /// <summary>
     ///     Technique actions granted by laws, keyed by the action prototype so each is granted once.

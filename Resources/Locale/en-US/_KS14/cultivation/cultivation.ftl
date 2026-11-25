@@ -27,6 +27,7 @@ alerts-ks-internal-injury-desc = Heavy blows have bruised your meridians. Qi ret
 ## Core
 
 cultivation-not-enough-qi = Your dantian is too empty for that.
+cultivation-not-enough-qi-for = Not enough qi: you have {$qi}, it takes {$cost}.
 cultivation-backlash = Your bruised meridians twist as the qi forces its way through!
 cultivation-internal-injury = The blow shakes your meridians. You taste blood.
 cultivation-injury-eased = The knot in your meridians loosens.
@@ -77,7 +78,7 @@ cultivation-still-water = Still water closes around {THE($user)}.
 cultivation-ward-wave = The still water around {THE($user)} heaves and crashes outward!
 cultivation-tidal-surge = A tidal surge bursts out from {THE($user)}!
 cultivation-spring-mending = Warm green qi flows from {THE($user)} into {THE($target)}.
-cultivation-myriad-spring = A myriad springs well up around {THE($user)}.
+cultivation-myriad-spring = Springs well up around {THE($target)} as {THE($user)} pours out spring qi.
 cultivation-rooted-stance = {CAPITALIZE(THE($user))} sinks into a rooted stance, immovable as a mountain.
 cultivation-mountain-collapse = {CAPITALIZE(THE($user))} brings the mountain down!
 
@@ -97,3 +98,45 @@ heart-demon-not-yours = The demon is gone, but you weren't there to face it. You
 heart-demon-returns = {CAPITALIZE(THE($host))}'s heart demon climbs back inside {OBJECT($host)}!
 cultivation-self = [color=#9fd4b8]Cultivation:[/color] {$realm}. Qi {$qi}/{$maxQi}. Insight {$insight}/{$required} to break through.
 cultivation-self-peak = [color=#9fd4b8]Cultivation:[/color] {$realm}, the peak. Qi {$qi}/{$maxQi}.
+cultivation-ready-to-break-through = You hold all the insight this realm can give. Your Meditate button has turned gold: press it to break through.
+cultivation-formation-dialogue-title = Arrays
+cultivation-formation-dialogue-prompt = Which array will you inscribe at your feet?
+cultivation-formation-option-gathering = Gathering Array: meditate far faster inside (2 min)
+cultivation-formation-option-barrier = Barrier Array: qi walls only friends can pass (1 min)
+cultivation-formation-option-alarm = Alarm Array: warns you when strangers step in (5 min)
+cultivation-sacred-site-appears = Heaven and earth's qi wells up at {$place}! Meditating or forging the body there goes twice as fast, until it moves on.
+cultivation-readiness-breakdown = Readiness starts at {$base}: {$factors}.
+cultivation-readiness-factor-none = nothing helping or hurting
+cultivation-readiness-factor-injury = internal injuries
+cultivation-readiness-factor-qi-source = at a qi source
+cultivation-readiness-factor-full-qi = full dantian
+cultivation-readiness-factor-low-qi = dantian under half
+cultivation-readiness-factor-dao-heart = tempered Dao heart
+cultivation-readiness-factor-site = the place you sit
+cultivation-readiness-factor-hurt = wounds
+cultivation-readiness-factor-hungry = hungry
+cultivation-readiness-factor-thirsty = thirsty
+cultivation-readiness-factor-unsettled = qi unsettled (an art used in the last minute)
+cultivation-readiness-factor-unsteady = foundation unsteady (last step under five minutes ago)
+cultivation-readiness-factor-disturbed = strangers close by
+cultivation-readiness-factor-other = everything else (pills, inheritances, the Mandate, taint)
+cultivation-readiness-factor-realm = heaven tests this realm harder
+cultivation-readiness-factor-stage = heaven tests this stage harder
+cultivation-readiness-factor-fed = well fed
+cultivation-readiness-factor-mountain = Mountain stance
+cultivation-readiness-factor-rested = rested
+cultivation-readiness-factor-exhausted = exhausted
+cultivation-guide-qi = [bold]The path of qi, in brief:[/bold]
+    • [bold]Meditate[/bold] (your first button) to gather insight and refill your qi. Your qi and insight show at the side of your screen.
+    • When your insight is full the Meditate button turns gold: press it to [bold]break through[/bold]. Be fed, unhurt, calm and alone first; heaven tests the careless.
+    • Your techniques are in the [bold]Offensive, Defensive, Movement and Utility Arts[/bold] menus on your bar. They open at your mouse; pick one to use it.
+    • Put favourites on your bar from Utility → Favourites, then bind them to keys.
+    • A dimmed art can't be used right now: not enough qi, or still cooling down.
+qi-path-examine-verb = Path of qi
+qi-path-examine-verb-message = See your realm and the techniques each realm brings.
+qi-path-window-title = Your Path of Qi
+qi-path-window-header = [bold]{$realm}[/bold]   [color=#8ad0ff]{$qi} qi[/color]   {$peak ->
+        [true] [color=#e8c060]at the peak[/color]
+       *[false] [color=#d8b46a]{$insight} / {$required} insight[/color]
+    }
+qi-path-window-hint = Each realm opens new techniques. Greyed ones are still ahead. Hover a technique to see what it does.

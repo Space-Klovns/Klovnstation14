@@ -7,6 +7,8 @@ using Content.Shared._KS14.Cultivation.Body;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Systems;
 using Content.Shared.Actions;
+using Content.Shared.Actions.Components;
+using Content.Shared._KS14.McqDialogue;
 using Content.Shared.Damage.Systems;
 using Content.Shared.DoAfter;
 using Content.Shared.FixedPoint;
@@ -71,6 +73,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private CultivationVisualsSystem _visualsSystem = default!;
     [Dependency] private CultivationNoticeSystem _noticeSystem = default!;
+    [Dependency] private Content.Shared._KS14.McqDialogue.McqDialogueSystem _mcqDialogueSystem = default!;
     [Dependency] private SharedStaminaSystem _staminaSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
@@ -538,12 +541,66 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnInscribeFormation(Entity<CultivatorComponent> entity, ref InscribeFormationActionEvent args)
     {
-        if (args.Handled || !_cultivationSystem.TryUseTechnique(entity, args.QiCost))
+        if (args.Handled)
+            return;
+
+        // One Arrays button: ask which. The cost and the cooldown come when one is chosen.
+        if (args.Formation is not { } formation)
+        {
+            if (!_cultivationSystem.HasQi(entity, args.QiCost))
+                return;
+
+            var choice = EnsureComp<FormationChoiceComponent>(entity);
+            choice.Action = args.Action.Owner;
+            choice.QiCost = args.QiCost;
+            _mcqDialogueSystem.StartDialogue(entity, entity, new McqDialogueData[]
+            {
+                new("cultivation-formation-option-gathering", FormationOptionPrefix + CultivationFormation.Gathering),
+                new("cultivation-formation-option-barrier", FormationOptionPrefix + CultivationFormation.Barrier),
+                new("cultivation-formation-option-alarm", FormationOptionPrefix + CultivationFormation.Alarm),
+            }, FormationDialogue);
+            return;
+        }
+
+        if (!_cultivationSystem.TryUseTechnique(entity, args.QiCost))
             return;
 
         args.Handled = true;
+        Inscribe(entity, formation);
+    }
+
+    private const string FormationOptionPrefix = "formation-";
+
+    private static readonly McqDialogueSettings FormationDialogue = new()
+    {
+        Title = "cultivation-formation-dialogue-title",
+        Prompt = "cultivation-formation-dialogue-prompt",
+        Range = 0f,
+    };
+
+    [SubscribeLocalEvent]
+    private void OnFormationChosen(Entity<FormationChoiceComponent> entity, ref McqDialogueSelectedEvent args)
+    {
+        if (args.Actor != entity.Owner || !args.Id.StartsWith(FormationOptionPrefix)
+            || !Enum.TryParse<CultivationFormation>(args.Id[FormationOptionPrefix.Length..], out var formation))
+            return;
+
+        var actionUid = entity.Comp.Action;
+        var qiCost = entity.Comp.QiCost;
+        RemCompDeferred<FormationChoiceComponent>(entity);
+        if (!TryComp<CultivatorComponent>(entity, out var cultivatorComponent)
+            || !_cultivationSystem.TryUseTechnique(entity, qiCost))
+            return;
+
+        Inscribe((entity.Owner, cultivatorComponent), formation);
+        if (actionUid.IsValid() && TryComp<ActionComponent>(actionUid, out var actionComponent) && actionComponent.UseDelay is { } useDelay)
+            _actionsSystem.SetCooldown(actionUid, useDelay);
+    }
+
+    private void Inscribe(Entity<CultivatorComponent> entity, CultivationFormation formation)
+    {
         var coordinates = Transform(entity).Coordinates.SnapToGrid(EntityManager);
-        switch (args.Formation)
+        switch (formation)
         {
             case CultivationFormation.Gathering:
                 Spawn(GatheringArrayPrototype, coordinates);
@@ -558,7 +615,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         }
 
         _audioSystem.PlayPvs(WriteSound, entity);
-        _noticeSystem.Announce(entity, Loc.GetString($"cultivation-formation-{args.Formation}", ("user", entity.Owner)), type: PopupType.Medium);
+        _noticeSystem.Announce(entity, Loc.GetString($"cultivation-formation-{formation}", ("user", entity.Owner)), type: PopupType.Medium);
     }
 
     /// <summary>
@@ -631,4 +688,17 @@ public sealed partial class AlarmArrayComponent : Component
 
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextScan;
+}
+
+/// <summary>
+///     Someone pressed the Arrays button and is choosing which array to inscribe.
+/// </summary>
+[RegisterComponent]
+public sealed partial class FormationChoiceComponent : Component
+{
+    [DataField]
+    public EntityUid Action;
+
+    [DataField]
+    public float QiCost;
 }

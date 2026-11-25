@@ -395,7 +395,7 @@ public sealed partial class JianghuSystem
         {
             new("jianghu-oath-option-swear", SwearOption),
             new("jianghu-oath-option-refuse", RefuseOathOption),
-        });
+        }, new McqDialogueSettings { Range = 4f });
     }
 
     [SubscribeLocalEvent]

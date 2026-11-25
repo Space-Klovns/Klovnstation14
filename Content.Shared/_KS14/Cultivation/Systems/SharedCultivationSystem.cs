@@ -14,6 +14,7 @@ public sealed partial class SharedCultivationSystem : EntitySystem
 {
 
     [Dependency] private AlertsSystem _alertsSystem = default!;
+    [Dependency] private Robust.Shared.Timing.IGameTiming _gameTiming = default!;
     [Dependency] private EntityQuery<CultivatorComponent> _cultivatorQuery = default!;
 
     #region Pure rules
@@ -168,6 +169,8 @@ public sealed partial class SharedCultivationSystem : EntitySystem
 
         var oldRealm = entity.Comp.Realm;
         entity.Comp.Realm = realm;
+        if (realm > oldRealm)
+            entity.Comp.LastBreakthroughAt = _gameTiming.CurTime;
         entity.Comp.Insight = 0f;
         entity.Comp.Qi = GetMaxQi(entity.Comp);
         Dirty(entity);
@@ -304,10 +307,19 @@ public sealed partial class SharedCultivationSystem : EntitySystem
         cultivator.NextRegen = next;
     }
 
-    public void SetMeditateActions(CultivatorComponent cultivator, EntityUid? meditate, EntityUid? breakthrough)
+    public void SetLastTechnique(CultivatorComponent cultivator, TimeSpan time)
+    {
+        cultivator.LastTechniqueAt = time;
+    }
+
+    public void SetReadyGlow(CultivatorComponent cultivator, bool ready)
+    {
+        cultivator.ReadyGlow = ready;
+    }
+
+    public void SetMeditateAction(CultivatorComponent cultivator, EntityUid? meditate)
     {
         cultivator.MeditateActionEntity = meditate;
-        cultivator.BreakthroughActionEntity = breakthrough;
     }
 
     public void RecordTechnique(CultivatorComponent cultivator, EntProtoId actionProto, EntityUid actionUid)

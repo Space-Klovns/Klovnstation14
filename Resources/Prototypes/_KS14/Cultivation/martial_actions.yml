@@ -6,6 +6,8 @@
   name: Eighteen Dragon-Subduing Palms
   description: A palm that hits like a charging dragon. Each palm on the same target within four seconds hits harder and throws them further; the fifth floors them. 15 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 1.5
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: dragon_palm }
@@ -23,6 +25,8 @@
   name: Six Meridians Divine Sword
   description: Fire sword qi from your fingertips. 10 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 1.5
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: six_meridians }
@@ -39,6 +43,8 @@
   name: Northern Darkness Divine Skill
   description: Drink in another's qi as the sea takes in rivers. A mortal, with no qi to give, is drained of strength instead.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 15
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: northern_darkness }
@@ -56,6 +62,8 @@
   name: Star-Absorbing Great Method
   description: A dark art. Tear away another's qi and insight and heal yourself on it. Stolen qi sometimes fights back.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: star_absorbing }
@@ -73,6 +81,8 @@
   name: Great Shift of Heaven and Earth
   description: For six seconds, turn up to three projectiles back on whoever loosed them. 30 qi.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 25
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: great_shift }
@@ -87,6 +97,8 @@
   name: Golden Bell Shield
   description: Harden your skin for ten seconds, turning aside two fifths of every physical blow. Costs stamina.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 25
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: golden_bell }
@@ -99,6 +111,8 @@
   name: Graceful Waves Steps
   description: Light, quick footwork for eight seconds. Costs stamina.
   components:
+  - type: CultivationArtCategory
+    category: Mobility
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: graceful_steps }
@@ -111,6 +125,8 @@
   name: Ladder-Cloud Leap
   description: Spring off the air itself and land up to five tiles away. Costs stamina.
   components:
+  - type: CultivationArtCategory
+    category: Mobility
   - type: Action
     useDelay: 12
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: ladder_cloud }
@@ -126,6 +142,8 @@
   name: Nine Swords of Dugu
   description: For three seconds, read the next blow from someone close. It never lands, and they are cut and knocked down. Costs stamina.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 15
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: dugu_counter }
@@ -138,6 +156,8 @@
   name: Recall Teachings
   description: Remember the combos of your fighting style. Punch, shove and grab the same opponent in the right order to land them.
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 1
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: recall_teachings }

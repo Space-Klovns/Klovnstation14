@@ -28,6 +28,7 @@ using Content.Shared._KS14.Explosion.Shockwave;
 using Content.Shared.Camera;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Cultivation.Body;
 
@@ -56,6 +57,7 @@ public sealed partial class BodyArtSystem : EntitySystem
     private const float ArtDamageMultiplier = 1.6f;
 
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private Content.Shared.Actions.SharedActionsSystem _actionsSystem = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private DecalSystem _decalSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -134,6 +136,7 @@ public sealed partial class BodyArtSystem : EntitySystem
         }
 
         _bodySystem.AddExhaustion(entity.AsNullable(), exhaustion);
+        _bodySystem.SetLastArt(entity.Comp, _gameTiming.CurTime);
         _visualsSystem.Cast(entity, colour);
         // Practising an art pushes the body too.
         _bodySystem.AddTempering(entity.AsNullable(), exhaustion * 0.2f * BodyCultivationSystem.TrainingRate, trainingSource: "practice", cooldown: TimeSpan.FromSeconds(5));
@@ -807,14 +810,25 @@ public sealed partial class BodyArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        if (_bodySystem.GetStance(entity) == args.Stance)
+        var current = _bodySystem.GetStance(entity);
+        var next = args.Stance is { } chosen
+            ? (current == chosen ? (BodyStance?) null : chosen)
+            : current switch
+            {
+                null => BodyStance.Thunderclap,
+                BodyStance.Thunderclap => BodyStance.Mountain,
+                _ => null,
+            };
+
+        if (next is not { } stance)
         {
             _bodySystem.SetStance(entity, null);
+            RefreshStanceIcon(entity);
             _noticeSystem.Notify(entity, Loc.GetString("body-stance-relax"));
             return;
         }
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, entity, TimeSpan.FromSeconds(2), new BodyStanceDoAfterEvent(args.Stance), entity)
+        var doAfterArgs = new DoAfterArgs(EntityManager, entity, TimeSpan.FromSeconds(2), new BodyStanceDoAfterEvent(stance), entity)
         {
             BreakOnMove = true,
             NeedHand = false,
@@ -832,7 +846,25 @@ public sealed partial class BodyArtSystem : EntitySystem
 
         args.Handled = true;
         _bodySystem.SetStance(entity, args.Stance);
+        RefreshStanceIcon(entity);
         _noticeSystem.Notify(entity, Loc.GetString($"body-stance-{args.Stance}"), type: PopupType.Medium);
+    }
+
+    public static readonly EntProtoId StanceAction = "ActionBodyStance";
+    private static readonly SpriteSpecifier ThunderclapIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "body_thunderclap");
+    private static readonly SpriteSpecifier MountainIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "body_mountain");
+
+    /// <summary>
+    ///     The Stance button shows the stance held, lit; out of any stance it shows the Thunderclap, dimmed, as the next.
+    /// </summary>
+    private void RefreshStanceIcon(Entity<BodyCultivatorComponent> entity)
+    {
+        if (_bodySystem.GetTechnique(entity.Comp, StanceAction) is not { } actionUid)
+            return;
+
+        var stance = _bodySystem.GetStance(entity);
+        _actionsSystem.SetIcon(actionUid, stance == BodyStance.Mountain ? MountainIcon : ThunderclapIcon);
+        _actionsSystem.SetIconColor(actionUid, stance == null ? Color.Gray : Color.White);
     }
 
     [SubscribeLocalEvent]

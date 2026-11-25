@@ -11,7 +11,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationMeditate
   name: Meditate
-  description: Sit still and circulate your qi. Each cycle gathers insight and qi, and every second cycle eases an internal injury. Keeps going until there's nothing left to gain or you move.
+  description: Sit still and circulate your qi. Each cycle gathers insight and qi, and every second cycle eases an internal injury. Keeps going until there's nothing left to gain or you move. Once you have all the insight your next realm needs, the button glows gold and pressing it breaks through instead, fifteen still seconds forcing open the next realm.
   components:
   - type: Action
     priority: -10
@@ -19,19 +19,6 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: meditate }
   - type: InstantAction
     event: !type:CultivationMeditateActionEvent
-
-- type: entity
-  parent: BaseActionCultivation
-  id: ActionCultivationBreakthrough
-  name: Break Through
-  description: With enough insight, spend fifteen still seconds forcing open the next realm. Internal injuries make a qi deviation far more likely.
-  components:
-  - type: Action
-    priority: -9
-    useDelay: 5
-    icon: { sprite: _KS14/Cultivation/actions.rsi, state: breakthrough }
-  - type: InstantAction
-    event: !type:CultivationBreakthroughActionEvent
 
 # Metal
 
@@ -41,6 +28,8 @@
   name: Flying Sword Qi
   description: Hurl a blade of sword qi. 15 qi. Metal Root fans out three blades.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 3
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: flying_sword }
@@ -56,6 +45,8 @@
   name: Sword Rain
   description: Loose a cone of five blades of sword qi. 40 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: sword_rain }
@@ -73,6 +64,8 @@
   name: Burning Palm
   description: Strike with a palm wreathed in flame, burning and igniting the target. 15 qi. Fire Root makes the flames catch twice as hard.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 6
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: burning_palm }
@@ -90,6 +83,8 @@
   name: Sea of Flames
   description: Set everyone around you who isn't a friend ablaze. 45 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 30
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: sea_of_flames }
@@ -104,6 +99,8 @@
   name: Still Water Ward
   description: Wrap yourself in still water for ten seconds, halving incoming damage. 20 qi. Water Root releases the soaked-up force as a wave when it ends.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: still_water }
@@ -116,6 +113,8 @@
   name: Tidal Surge
   description: A surge of water throws everyone around you who isn't a friend away and off their feet. 40 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 25
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: tidal_surge }
@@ -130,6 +129,8 @@
   name: Spring Mending
   description: Pour spring qi into yourself or someone else to mend their wounds. 20 qi. Wood Root also eases an internal injury and lets some of the warmth flow back to you.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 8
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: spring_mending }
@@ -145,12 +146,19 @@
   parent: BaseActionCultivation
   id: ActionCultivationMyriadSpring
   name: Myriad Spring
-  description: Heal yourself and every friend around you. 45 qi.
+  description: Spring Mending grown. Pour spring qi into yourself or someone else and every friend around them, you included if you're close. 30 qi. Wood Root also eases the one you chose of an internal injury.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
-    useDelay: 30
+    useDelay: 12
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: myriad_spring }
-  - type: InstantAction
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: true
+    whitelist:
+      components:
+      - MobState
     event: !type:CultivationMyriadSpringActionEvent
 
 # Earth
@@ -161,6 +169,8 @@
   name: Rooted Mountain Stance
   description: Root yourself for fifteen seconds, taking a quarter less damage but moving slowly. 10 qi. Earth Root takes two fifths less.
   components:
+  - type: CultivationArtCategory
+    category: Defensive
   - type: Action
     useDelay: 20
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: rooted_stance }
@@ -173,6 +183,8 @@
   name: Mountain Collapse
   description: Bring the mountain down on everyone close who isn't a friend, battering them and knocking them flat. 40 qi.
   components:
+  - type: CultivationArtCategory
+    category: Offensive
   - type: Action
     useDelay: 25
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: mountain_collapse }

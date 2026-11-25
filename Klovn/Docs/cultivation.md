@@ -20,11 +20,15 @@ and injury alerts stay in step.
   do-after, each with a chance of tribulation lightning (lightning rods nearby take most of it). The storm grows with
   the realm being left (`CultivationSystem.BreakthroughLightning`): 30/45/60% a cycle for 6/14/22 shock, and the last
   cycle of the step into Nascent Soul always strikes. Readiness
-  (`CultivationSystem.BreakthroughReadiness`) is 50, minus 20 per injury, plus bonuses for a qi source, nearly full
-  qi and a tempered Dao heart; every realm already climbed takes 20 off, and 70 effective is certain. The odds and the
+  (`CultivationSystem.BreakthroughReadiness`) is 40, minus 20 per injury, plus bonuses for a qi source, nearly full
+  qi and a tempered Dao heart, then the penalties every path shares (`CultivationReadinessSystem`): wounds (−1 per 2
+  damage, up to −20), hungry −10, thirsty −10, qi under half −10, an art used in the last minute −10, the last step
+  under five minutes ago −15, and each stranger within 3 tiles −5 (up to −15). Every realm already climbed takes 20
+  off, and 70 effective is certain. The breakdown is written to chat when it starts. The odds and the
   storm are told to the cultivator when it starts. Anything else can add to it through
   `CultivationBreakthroughReadinessEvent`. A failure (a qi deviation) halves insight, injures, and may tear loose a
   heart demon (`HeartDemonSystem`): kill it close by and the Dao heart is tempered, let it go and it costs more.
+- **One button:** Meditate becomes Break Through (gold, with a chime) once insight is full.
 - **Ascension:** at Nascent Soul with full insight, the breakthrough action begins a 20-cycle tribulation. Surviving
   it leaves the round as an immortal.
 - **Internal injury:** any single blow of 15 or more damage adds a stack (up to three). Stacks slow qi recovery and
@@ -131,7 +135,7 @@ exhausts, CrushesTempered hits harder the higher the stage. Powers are in-hand u
 - **Plantain Fan**: Hurricane (a cone), Typhoon (in hand, all around), Firestorm (whips fires onward).
 - **Bagua Mirror**: the Eight Trigrams Seal (`CultivationSealedComponent`, checked by techniques, body arts and martial
   arts) on cultivators in sight, burns the undead and demonic, flashes everyone else; reflects shots while held.
-- **Qiankun Pouch**: a huge storage; Swallow Heaven and Earth in hand, Release Heaven and Earth as an action; someone
+- **Qiankun Pouch**: a huge storage; one Heaven and Earth action: at your own feet it swallows, anywhere else it releases; someone
   beside its holder can hide in its world (alt verb on the holder).
 - **Xuanyuan Sword**: answers only to the Son of Heaven (`SonOfHeavenComponent`, given by the Mandate of Heaven);
   anyone else is burned picking it up.
@@ -315,8 +319,9 @@ The other road: the flesh itself is tempered instead of gathering qi. `BodyCulti
   ears, heart, lungs, liver, stomach). Raising a part to level `n` costs `2 + n`. Parts can go one level past the
   current stage. Each forging cycle pours 5 tempering and takes 5 seconds, or 2.5 in the wuxia gamemodes.
 - **Tribulation of Flesh:** once every part is past the stage, a repeating do-after cracks the bones for a while
-  and then rolls readiness. Readiness is 50, +10 fed, +10 rested (exhaustion under 10), +10 in the Mountain stance,
-  +10 on a meditation mat, +5 secluded, −20 badly hurt; from stage 4 each stage takes 4 off, and the step into stage 9 takes 25
+  and then rolls readiness. Readiness is 40, +10 fed, +10 rested (exhaustion under 10, −10 over 50), +10 in the
+  Mountain stance, +10 on a meditation mat, +5 secluded, then the shared penalties above (a body art in the last minute
+  counts as unsettled). Forge the Body turns gold into the Tribulation once every part is ready; from stage 4 each stage takes 4 off, and the step into stage 9 takes 25
   (`SharedBodyCultivationSystem.TribulationPenalty`); 70 effective always succeeds. From stage 4 heaven's lightning
   falls during it too (`TribulationLightning`: 20% a cycle +6% per stage, 5 + 1.75 × stage shock), and the last cycle of
   the step into stage 9 always strikes. Each cycle cracks the bones for 3 + stage/2. A failure exhausts, knocks down and, from stage 4, hurts. Success raises the
@@ -440,3 +445,30 @@ The sprites are hand-placed pixel art fitted to the human body parts.
 - `MandateTest`: the Mandate of Heaven;
 - `AscensionTest`: the Ascension gamemode's path choice and its Supreme Sovereign;
 - `CultivationLocaleTest`: every cultivation locale key resolves.
+
+## Arts menus and the bar
+
+`CultivationLoadoutSystem` gives anyone who learns an art four category buttons (`ActionKsArts*`): Offensive,
+Defensive, Movement and Utility Arts. Each opens a radial menu at the mouse (`CultivationArtsMenuSystem`, client) of
+every art of that kind (`CultivationArtCategoryComponent` on the action) and picking one uses it. Learned arts stay
+attached but off the bar (`ActionComponent.AutoPopulate` false, honoured by the action bar while playing); the
+Favourites menu (in Utility) puts up to 5-7 on the bar. Qi arts the cultivator can't afford are disabled (greyed).
+While aiming a cultivation art the cursor icon turns red out of range (`KsAimRangeOverlay`). On the action bar,
+shift-click a slot then press a key to bind it, and alt-click a slot to pop it out as a floating button
+(`ActionUIController.Klovn.Rebind/Floating`).
+
+Merged buttons: Meditate/Break Through, Forge/Tribulation, one Stance button cycling Thunderclap, Mountain, none,
+one Arrays button asking which array, one Spirit Beast button (on an animal: contract; on yourself: summon), and
+Returning Iron for the bound artifact (holding an unbound item: bind; holding the artifact: hurl it where clicked,
+hurting only whoever it hits for 1.5x its own blow plus 0.75x per realm, then it flies home; empty-handed: recall).
+Spring Mending grows into Myriad Spring (`CultivationUpgrades`): a targeted heal on someone and every friend around them.
+
+The Path of qi examine button opens a window of each realm and the techniques it brings; the Body powers window lists
+the arts by stage. Reading a first law or the body primer writes a short guide to chat.
+
+## The Sacred Site
+
+In the wuxia gamemodes (`SacredSiteSystem`) heaven and earth's qi wells up at a random station nav beacon from three
+minutes in, moving every ten minutes, and the station is told where each time. Meditating or forging the body within
+three tiles of it goes twice as fast.
+

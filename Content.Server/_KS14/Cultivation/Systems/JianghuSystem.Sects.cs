@@ -375,7 +375,7 @@ public sealed partial class JianghuSystem
         {
             new("jianghu-petition-option-accept", PetitionAcceptOption),
             new("jianghu-petition-option-refuse", PetitionRefuseOption),
-        });
+        }, new McqDialogueSettings { Range = 0f }); // the master answers from wherever they are
     }
 
     [SubscribeLocalEvent]

@@ -41,6 +41,13 @@ public sealed partial class SpiritBeastSystem : EntitySystem
         if (args.Handled)
             return;
 
+        // Used on yourself: call your beast to your side.
+        if (args.Target == entity.Owner)
+        {
+            args.Handled = Summon(entity, args.SummonQiCost, args.SummonRange);
+            return;
+        }
+
         var beastUid = args.Target;
         if (!TryComp<HTNComponent>(beastUid, out var htnComponent) || HasComp<HumanoidProfileComponent>(beastUid)
             || _mobStateSystem.IsDead(beastUid))
@@ -78,31 +85,27 @@ public sealed partial class SpiritBeastSystem : EntitySystem
         _noticeSystem.Announce(beastUid, Loc.GetString("cultivation-beast-contracted", ("user", entity.Owner), ("target", beastUid)), type: PopupType.Medium);
     }
 
-    [SubscribeLocalEvent]
-    private void OnSummonBeast(Entity<CultivatorComponent> entity, ref SummonBeastActionEvent args)
+    private bool Summon(Entity<CultivatorComponent> entity, float qiCost, float range)
     {
-        if (args.Handled)
-            return;
-
         if (!TryComp<SpiritBeastMasterComponent>(entity, out var masterComponent) || masterComponent.Beast is not { } beastUid
             || TerminatingOrDeleted(beastUid) || _mobStateSystem.IsDead(beastUid))
         {
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-beast-none"));
-            return;
+            return false;
         }
 
-        if (!_transformSystem.InRange((beastUid, null), (entity.Owner, null), args.Range))
+        if (!_transformSystem.InRange((beastUid, null), (entity.Owner, null), range))
         {
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-beast-too-far"));
-            return;
+            return false;
         }
 
-        if (!_cultivationSystem.TryUseTechnique(entity, args.QiCost))
-            return;
+        if (!_cultivationSystem.TryUseTechnique(entity, qiCost))
+            return false;
 
-        args.Handled = true;
         _transformSystem.SetCoordinates(beastUid, Transform(entity).Coordinates);
         _noticeSystem.Announce(beastUid, Loc.GetString("cultivation-beast-summoned", ("target", beastUid)), type: PopupType.Medium);
+        return true;
     }
 
     /// <summary>

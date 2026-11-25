@@ -1,3 +1,4 @@
+using Content.Server._KS14.Cultivation.Components;
 using System.Numerics;
 using Content.Server._KS14.Cultivation.Body;
 using Content.Server.Atmos.EntitySystems;
@@ -15,6 +16,7 @@ using Content.Shared.Projectiles;
 using Content.Shared.StepTrigger.Components;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
+using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Robust.Server.Audio;
 using Robust.Shared.Audio;
@@ -85,6 +87,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private Robust.Shared.Containers.SharedContainerSystem _containerSystem = default!;
 
     private readonly HashSet<Entity<MobStateComponent>> _mobs = new();
     private readonly HashSet<Entity<PlantHolderComponent>> _plants = new();
@@ -94,6 +97,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         base.Update(frameTime);
 
         var currentTime = _gameTiming.CurTime;
+
+        UpdateFlyingArtifacts(currentTime);
 
         var ridingEnumerator = EntityQueryEnumerator<SwordRidingComponent>();
         while (ridingEnumerator.MoveNext(out var uid, out var ridingComponent))
@@ -176,6 +181,15 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
     #region Metal: the bound artifact
 
+    /// <summary>
+    ///     How hard a hurled artifact hits, as a multiple of its own blow: half again at Qi Condensation, three quarters
+    ///         more per realm above.
+    /// </summary>
+    public static float ArtifactMultiplier(CultivationRealm realm) => 1.5f + 0.75f * (float)realm;
+
+    private const float ArtifactReturnRange = 30f;
+    private static readonly TimeSpan ArtifactReturnDelay = TimeSpan.FromSeconds(1);
+
     [SubscribeLocalEvent]
     private void OnBindArtifact(Entity<CultivatorComponent> entity, ref BindArtifactActionEvent args)
     {
@@ -183,8 +197,20 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         var bearerComponent = EnsureComp<ArtifactBearerComponent>(entity);
+        var artifact = bearerComponent.Artifact is { } bound && !TerminatingOrDeleted(bound) ? bound : (EntityUid?) null;
 
-        // An item in hand: bind it. Empty hands: call the bound artifact back.
+        // Holding the bound artifact: hurl it.
+        if (artifact is { } heldArtifact && _handsSystem.IsHolding(entity.Owner, heldArtifact))
+        {
+            if (!_cultivationSystem.TryUseTechnique(entity, args.ThrowQiCost))
+                return;
+
+            args.Handled = true;
+            HurlArtifact(entity, heldArtifact, args.Target);
+            return;
+        }
+
+        // Holding something else: bind it.
         if (_handsSystem.TryGetActiveItem(entity.Owner, out var heldUid))
         {
             if (!_cultivationSystem.TryUseTechnique(entity, args.QiCost))
@@ -197,7 +223,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
         }
 
-        if (bearerComponent.Artifact is not { } artifactUid || TerminatingOrDeleted(artifactUid))
+        // Empty-handed: call it back.
+        if (artifact is not { } artifactUid)
         {
             _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-none"));
             return;
@@ -214,35 +241,81 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _transformSystem.SetCoordinates(artifactUid, Transform(entity).Coordinates);
-        _handsSystem.PickupOrDrop(entity, artifactUid, checkActionBlocker: false);
-        _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-recalled", ("item", artifactUid)));
+        ReturnArtifact(entity, artifactUid);
+    }
+
+    /// <summary>
+    ///     Throw the artifact at a spot with the force of qi. It hurts only whoever it actually hits (walls stop it), then
+    ///         flies home on its own.
+    /// </summary>
+    private void HurlArtifact(Entity<CultivatorComponent> entity, EntityUid artifactUid, EntityCoordinates target)
+    {
+        var baseDamage = TryComp<MeleeWeaponComponent>(artifactUid, out var meleeComponent) && meleeComponent.Damage.GetTotal() > 0
+            ? meleeComponent.Damage
+            : CultivationSystem.Damage("Blunt", 5f);
+        var multiplier = ArtifactMultiplier(entity.Comp.Realm)
+            * (HasComp<DemonicPathComponent>(entity) ? CultivationSystem.DemonicPowerMultiplier : 1f);
+
+        var flyingComponent = EnsureComp<FlyingArtifactComponent>(artifactUid);
+        flyingComponent.Thrower = entity;
+        flyingComponent.Damage = baseDamage * multiplier;
+        flyingComponent.Hit = false;
+        flyingComponent.ReturnAt = null;
+
+        _visualsSystem.Art(CultivationVisualsSystem.ArtGoldMotes, entity);
+        _throwingSystem.TryThrow(artifactUid, target, baseThrowSpeed: 20f, user: entity, recoil: false);
+        _audioSystem.PlayPvs(SwordDrawSound, entity);
     }
 
     [SubscribeLocalEvent]
-    private void OnArtifactStrike(Entity<CultivatorComponent> entity, ref ArtifactStrikeActionEvent args)
+    private void OnArtifactHit(Entity<FlyingArtifactComponent> entity, ref ThrowDoHitEvent args)
     {
-        if (args.Handled)
+        if (entity.Comp.Hit || args.Target == entity.Comp.Thrower || !HasComp<MobStateComponent>(args.Target))
             return;
 
-        if (!TryComp<ArtifactBearerComponent>(entity, out var bearerComponent) || bearerComponent.Artifact is not { } artifactUid
-            || TerminatingOrDeleted(artifactUid) || !_handsSystem.IsHolding(entity.Owner, artifactUid))
-        {
-            _noticeSystem.Notify(entity, Loc.GetString("cultivation-artifact-must-hold"));
-            return;
-        }
-
-        if (!_cultivationSystem.TryUseTechnique(entity, args.QiCost))
-            return;
-
-        args.Handled = true;
+        entity.Comp.Hit = true;
+        _damageableSystem.TryChangeDamage(args.Target, entity.Comp.Damage, origin: entity.Comp.Thrower);
         _visualsSystem.MetalSparks(args.Target, 4);
-        _visualsSystem.Strike(entity, args.Target, _visualsSystem.ColourOf(entity));
-        _throwingSystem.TryThrow(artifactUid, Transform(args.Target).Coordinates, baseThrowSpeed: 20f, user: entity);
-        _damageableSystem.TryChangeDamage(args.Target, _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Slash", args.BonusDamage)), origin: entity);
         _audioSystem.PlayPvs(MetalHitSound, args.Target);
-        _audioSystem.PlayPvs(SwordDrawSound, entity);
-        _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-artifact-strike", ("user", entity.Owner), ("item", artifactUid), ("target", args.Target)), type: PopupType.MediumCaution);
+        if (entity.Comp.Thrower is { } throwerUid)
+        {
+            _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-artifact-strike", ("user", throwerUid), ("item", entity.Owner),
+                ("target", args.Target)), type: PopupType.MediumCaution);
+        }
+    }
+
+    [SubscribeLocalEvent]
+    private void OnArtifactLanded(Entity<FlyingArtifactComponent> entity, ref StopThrowEvent args)
+    {
+        entity.Comp.ReturnAt = _gameTiming.CurTime + ArtifactReturnDelay;
+    }
+
+    /// <summary>
+    ///     A hurled artifact that has come to rest flies back to its bearer's hand, if they're near enough.
+    /// </summary>
+    private void UpdateFlyingArtifacts(TimeSpan currentTime)
+    {
+        var flyingEnumerator = EntityQueryEnumerator<FlyingArtifactComponent>();
+        while (flyingEnumerator.MoveNext(out var uid, out var flyingComponent))
+        {
+            if (flyingComponent.ReturnAt is not { } returnAt || currentTime < returnAt)
+                continue;
+
+            RemCompDeferred(uid, flyingComponent);
+            if (flyingComponent.Thrower is not { } throwerUid || TerminatingOrDeleted(throwerUid)
+                || _containerSystem.IsEntityInContainer(uid)
+                || !_transformSystem.InRange((uid, null), (throwerUid, null), ArtifactReturnRange))
+                continue;
+
+            ReturnArtifact(throwerUid, uid);
+        }
+    }
+
+    private void ReturnArtifact(EntityUid bearerUid, EntityUid artifactUid)
+    {
+        _transformSystem.SetCoordinates(artifactUid, Transform(bearerUid).Coordinates);
+        _handsSystem.PickupOrDrop(bearerUid, artifactUid, checkActionBlocker: false);
+        _noticeSystem.Notify(bearerUid, Loc.GetString("cultivation-artifact-recalled", ("item", artifactUid)));
     }
 
     [SubscribeLocalEvent]
@@ -716,6 +789,25 @@ public sealed partial class ArtifactBearerComponent : Component
 {
     [DataField]
     public EntityUid? Artifact;
+}
+
+/// <summary>
+///     A bound artifact in flight: whoever it hits first takes this, and once it comes to rest it flies home.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(CultivationLawArtSystem))]
+public sealed partial class FlyingArtifactComponent : Component
+{
+    [DataField]
+    public EntityUid? Thrower;
+
+    [DataField]
+    public Content.Shared.Damage.DamageSpecifier Damage = new();
+
+    [DataField]
+    public bool Hit;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan? ReturnAt;
 }
 
 [RegisterComponent, AutoGenerateComponentPause, Access(typeof(CultivationLawArtSystem))]

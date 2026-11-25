@@ -70,6 +70,8 @@
   name: Imperial Court
   description: Hold court. Proclaim a decree, command the weak to kneel, open the treasury, or choose someone nearby to pardon, appoint, ennoble or punish.
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 1
     itemIconStyle: BigAction

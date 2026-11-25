@@ -6,8 +6,6 @@ namespace Content.Shared._KS14.Cultivation;
 
 public sealed partial class CultivationMeditateActionEvent : InstantActionEvent;
 
-public sealed partial class CultivationBreakthroughActionEvent : InstantActionEvent;
-
 [Serializable, NetSerializable]
 public sealed partial class CultivationMeditateDoAfterEvent : SimpleDoAfterEvent;
 

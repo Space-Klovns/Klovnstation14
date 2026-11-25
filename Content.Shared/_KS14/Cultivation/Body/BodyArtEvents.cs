@@ -8,8 +8,6 @@ namespace Content.Shared._KS14.Cultivation.Body;
 
 public sealed partial class BodyForgeActionEvent : InstantActionEvent;
 
-public sealed partial class BodyTribulationActionEvent : InstantActionEvent;
-
 public sealed partial class BodyBreathOfRenewalActionEvent : InstantActionEvent
 {
     [DataField]
@@ -59,12 +57,13 @@ public enum BodyStance : byte
 }
 
 /// <summary>
-///     Settle into a stance, or out of it if already in it.
+///     Settle into a stance, or out of it if already in it. With no stance given, step to the next one in turn:
+///         none, Thunderclap, Mountain, none.
 /// </summary>
 public sealed partial class BodyStanceActionEvent : InstantActionEvent
 {
-    [DataField(required: true)]
-    public BodyStance Stance;
+    [DataField]
+    public BodyStance? Stance;
 }
 
 public sealed partial class BodyDiscipleActionEvent : EntityTargetActionEvent;

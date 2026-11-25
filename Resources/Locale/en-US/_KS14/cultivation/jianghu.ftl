@@ -29,6 +29,7 @@ jianghu-duel-option-refuse = Refuse
 jianghu-duel-challenge = {CAPITALIZE(THE($user))} bows to {THE($target)} and challenges {OBJECT($target)} to an honor duel!
 jianghu-duel-refused = {CAPITALIZE(THE($user))} refuses {POSS-ADJ($target)} challenge.
 jianghu-duel-unanswered = Your challenge goes unanswered.
+jianghu-duel-ignored = {CAPITALIZE(THE($target))} turns away from your challenge.
 jianghu-duel-stake-laid = {CAPITALIZE(THE($user))} lays down {THE($stake)} as a wager.
 jianghu-duel-begins = {CAPITALIZE(THE($one))} and {THE($two)} bow to each other. An honor duel begins!
 jianghu-duel-draw = The duel between {THE($one)} and {THE($two)} ends in a draw. Both bow with respect.

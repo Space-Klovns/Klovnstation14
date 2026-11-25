@@ -60,6 +60,8 @@
   name: Speak to Bearer
   description: Murmur into your bearer's head. Nobody else can hear you.
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 2
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: ring_speak }
@@ -72,6 +74,8 @@
   name: Lend Qi
   description: Pour some of your ancient qi into your bearer.
   components:
+  - type: CultivationArtCategory
+    category: Utility
   - type: Action
     useDelay: 180
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: lend_qi }

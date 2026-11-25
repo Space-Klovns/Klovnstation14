@@ -56,7 +56,7 @@ body-tribulation-not-ready = Every part of your body must be forged past your st
 body-tribulation-peak = There is no stage beyond the Primordial Chaos Body.
 body-tribulation-mortal-cap = A mortal's training stops at Copper Skin. Going further takes the Body Molding Art.
 body-tribulation-start = {CAPITALIZE(THE($user))} sinks to one knee as a sickening chorus of cracks rings out: bones breaking and resetting!
-body-tribulation-odds = Readiness {$readiness}: a {$chance}% chance. Be fed, rested, unhurt, in the Mountain stance, on a meditation mat and alone; each later stage is tested harder, and the last step hardest of all.
+body-tribulation-odds = Readiness {$readiness}: a {$chance}% chance. Be fed, rested, unhurt, in the Mountain stance, on a meditation mat and alone, and don't fight just before; each later stage is tested harder, and the last step hardest of all.
 body-tribulation-success = Steam pours off {THE($user)}'s body, remade: {SUBJECT($user)} {CONJUGATE-HAVE($user)} reached {$stage}!
 body-tribulation-fail = {CAPITALIZE(THE($user))}'s body fails to hold together and collapses!
 body-eternal-heart-refuses = Your body dies... but your heart refuses. Hold on.
@@ -115,3 +115,12 @@ body-powers-window-progress = {$progress} / {$cost} towards the next level
 body-powers-window-capped = Can't go higher until your next Tribulation of Flesh.
 body-powers-window-perfected = perfected
 body-powers-window-next = next: {$power} (level {$level})
+body-ready-for-tribulation = Every part of you is forged past your stage. Your Forge button has turned gold: press it to begin the Tribulation of Flesh.
+body-guide = [bold]The path of the body, in brief:[/bold]
+    • You earn [bold]tempering[/bold] by fighting, training on walls and rock, taking blows and simply living. It shows at the side of your screen.
+    • Press [bold]Forge the Body[/bold] to pour tempering into your weakest part. Examine yourself to see every part's progress and powers.
+    • When every part is forged past your stage the Forge button turns gold: press it for the [bold]Tribulation of Flesh[/bold]. Be fed, rested, unhurt and alone first.
+    • Your body arts are in the [bold]Offensive, Defensive, Movement and Utility Arts[/bold] menus on your bar. They open at your mouse; pick one to use it.
+    • Put favourites on your bar from Utility → Favourites, then bind them to keys.
+body-powers-window-arts = Arts by stage
+body-powers-window-art-locked = {$art} (stage {$stage})

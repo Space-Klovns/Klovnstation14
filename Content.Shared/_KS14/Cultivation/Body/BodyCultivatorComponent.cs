@@ -46,6 +46,24 @@ public sealed partial class BodyCultivatorComponent : Component
     [DataField, AutoNetworkedField]
     public float Tempering;
 
+    /// <summary>
+    ///     Whether the Forge button is showing that the Tribulation of Flesh is ready.
+    /// </summary>
+    [DataField]
+    public bool ReadyGlow;
+
+    /// <summary>
+    ///     When they last used a body art: the body stays unsettled for a minute after.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan LastArtAt;
+
+    /// <summary>
+    ///     When they last rose a stage: the new body takes a few minutes to steady.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan LastTribulationAt;
+
     [DataField]
     public float TemperingCap = 120f;
 

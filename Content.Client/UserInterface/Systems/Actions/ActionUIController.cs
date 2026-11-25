@@ -222,6 +222,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
     public void OnStateExited(GameplayState state)
     {
+        CloseFloatingActions(); // KS14
+        CancelSlotRebind(); // KS14
+
         if (_actionsSystem != null)
         {
             _actionsSystem.OnActionAdded -= OnActionAdded;
@@ -263,6 +266,10 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             StartTargeting((action, action, target));
 
         // KS14 start: replaces "if (_actions.Contains(action)) return; _actions.Add(action);".
+        // An action that doesn't auto-populate stays attached but off the bar.
+        if (KeepOffBar(action))
+            return;
+
         // A late-granted action returns to its saved position if a saved layout is still pending,
         // otherwise it lands at folder level zero.
         if (TryApplyPendingActionConfiguration())
@@ -285,6 +292,8 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             StopTargeting();
 
         RemoveActionFromFolders(actionId); // KS14: _actions.RemoveAll(x => x == actionId), now also clearing folders
+        ForgetAutoPopulate(actionId); // KS14
+        RemoveFloatingAction(actionId); // KS14
     }
 
     private void OnActionsUpdated()
@@ -294,6 +303,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         // KS14 start: replaces a direct _container.SetActionData. Action components can resolve after
         // the action-set link, and the bar has to keep its folder entries.
         TryApplyPendingActionConfiguration();
+        SyncAutoPopulate();
         RefreshActionBar();
         // KS14 end
     }
@@ -588,6 +598,13 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
         if (args.Function != EngineKeyFunctions.UIClick)
             return;
+
+        // KS14: shift-click a slot to bind it to a key, alt-click to pop it out as a floating button
+        if (TryStartSlotRebind(button) || TryFloatAction(button))
+        {
+            args.Handle();
+            return;
+        }
 
         HandleActionPressed(args, button);
     }

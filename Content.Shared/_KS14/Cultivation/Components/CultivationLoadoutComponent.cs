@@ -33,8 +33,18 @@ public sealed partial class CultivationLoadoutComponent : Component
     [DataField, AutoNetworkedField]
     public List<EntityUid> Pinned = new();
 
-    [DataField]
+    /// <summary>
+    ///     The Techniques menu, for choosing favourites to keep on the bar. Off the bar itself: it's reached from the
+    ///         category menus.
+    /// </summary>
+    [DataField, AutoNetworkedField]
     public EntityUid? MenuAction;
+
+    /// <summary>
+    ///     The four category menu buttons (offensive, defensive, mobility, utility), always on the bar.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public List<EntityUid> CategoryActions = new();
 }
 
 /// <summary>
@@ -44,6 +54,15 @@ public sealed partial class CultivationLoadoutComponent : Component
 public readonly record struct CultivationTechniqueLearnedEvent(EntityUid Action);
 
 public sealed partial class TechniqueMenuActionEvent : InstantActionEvent;
+
+/// <summary>
+///     Opens one category's menu of every art someone knows, at the mouse; picking one uses it. Client-side only.
+/// </summary>
+public sealed partial class CultivationArtsMenuActionEvent : InstantActionEvent
+{
+    [DataField(required: true)]
+    public CultivationArtCategory Category;
+}
 
 [Serializable, NetSerializable]
 public sealed class TechniqueLoadoutToggleMessage(NetEntity action) : BoundUserInterfaceMessage

@@ -118,8 +118,11 @@ public enum CultivationFormation : byte
 
 public sealed partial class InscribeFormationActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
-    [DataField(required: true)]
-    public CultivationFormation Formation;
+    /// <summary>
+    ///     The array to inscribe, or null to ask which.
+    /// </summary>
+    [DataField]
+    public CultivationFormation? Formation;
 
     [DataField]
     public float QiCost { get; set; } = 30f;
@@ -140,25 +143,29 @@ public sealed partial class ReturnToBodyActionEvent : InstantActionEvent;
 
 #region Metal: Returning Iron
 
-public sealed partial class BindArtifactActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
+/// <summary>
+///     Returning Iron, one button. Holding an unbound item: bind it to your soul. Holding your bound artifact: hurl it at
+///         the spot clicked; it hits whoever it strikes and flies home. Empty-handed: call it back.
+/// </summary>
+public sealed partial class BindArtifactActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
+    /// <summary>
+    ///     What binding or calling back costs.
+    /// </summary>
     [DataField]
     public float QiCost { get; set; } = 5f;
+
+    /// <summary>
+    ///     What hurling the artifact costs.
+    /// </summary>
+    [DataField]
+    public float ThrowQiCost = 12f;
 
     /// <summary>
     ///     How far a bound artifact can be called back from at Qi Condensation; three more per realm.
     /// </summary>
     [DataField]
     public float BaseRecallRange = 7f;
-}
-
-public sealed partial class ArtifactStrikeActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
-{
-    [DataField]
-    public float QiCost { get; set; } = 12f;
-
-    [DataField]
-    public float BonusDamage = 10f;
 }
 
 public sealed partial class SwordRidingActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
@@ -351,20 +358,17 @@ public sealed partial class ForgetLawDoAfterEvent : SimpleDoAfterEvent;
 /// <summary>
 ///     Bind a station animal as a spirit beast: it follows its master and fights whoever attacks them.
 /// </summary>
+/// <summary>
+///     Bind a station animal as your spirit beast; or, used on yourself, call the one you have to your side.
+/// </summary>
 public sealed partial class BeastContractActionEvent : EntityTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
 {
     [DataField]
     public float QiCost { get; set; } = 30f;
-}
-
-/// <summary>
-///     Call the contracted spirit beast to your side.
-/// </summary>
-public sealed partial class SummonBeastActionEvent : InstantActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
-{
-    [DataField]
-    public float QiCost { get; set; } = 10f;
 
     [DataField]
-    public float Range = 30f;
+    public float SummonQiCost = 10f;
+
+    [DataField]
+    public float SummonRange = 30f;
 }

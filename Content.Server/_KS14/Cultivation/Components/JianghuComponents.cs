@@ -78,6 +78,18 @@ public sealed partial class DuelChallengeComponent : Component
 
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan ExpiresAt;
+
+    /// <summary>
+    ///     Whether the one challenged has been asked yet (the challenger may first be choosing whether to wager).
+    /// </summary>
+    [DataField]
+    public bool Sent;
+
+    /// <summary>
+    ///     Whether the one challenged has answered, so closing the window afterwards isn't taken as walking away.
+    /// </summary>
+    [DataField]
+    public bool Answered;
 }
 
 /// <summary>

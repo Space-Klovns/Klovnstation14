@@ -27,6 +27,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Cultivation.Body;
 
@@ -50,35 +51,13 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     private static readonly SoundSpecifier HeartSound = new SoundPathSpecifier("/Audio/Effects/thudswoosh.ogg");
 
     /// <summary>
-    ///     The arts each stage opens, as in the original: the forge and tribulation from the start.
+    ///     The arts each stage opens, as in the original: the forge from the start.
     /// </summary>
-    public static readonly (EntProtoId Action, int Stage)[] StageArts =
-    {
-        ("ActionBodyForge", 0),
-        ("ActionBodyTribulation", 0),
-        ("ActionJianghuDuel", 0),
-        ("ActionBodyBreathOfRenewal", 1),
-        ("ActionBodyIronShirt", 2),
-        ("ActionBodyMountainLeap", 2),
-        ("ActionBodyEarthStomp", 2),
-        ("ActionBodyShatteringFist", 3),
-        ("ActionBodyHundredFists", 3),
-        ("ActionBodyBoneSetting", 3),
-        ("ActionBodyStanceThunderclap", 3),
-        ("ActionBodyStanceMountain", 3),
-        ("ActionBodyDisciple", 3),
-        ("ActionBodyRemold", 4),
-        ("ActionBodyBullCharge", 4),
-        ("ActionBodyBloodBoil", 5),
-        ("ActionBodyFallingMountain", 5),
-        ("ActionBodyMountainHurl", 5),
-        ("ActionBodySkySplittingPalm", 6),
-        ("ActionBodyVajra", 7),
-        ("ActionBodyHeavenQuake", 8),
-        ("ActionBodyPrimordialRoar", 9),
-    };
+    public static (EntProtoId Action, int Stage)[] StageArts => CultivationTechniqueLists.BodyStageArts;
 
     [Dependency] private CultivationDurabilitySystem _durabilitySystem = default!;
+    [Dependency] private SacredSiteSystem _sacredSiteSystem = default!;
+    [Dependency] private CultivationReadinessSystem _readinessSystem = default!;
     [Dependency] private Content.Shared._Mono.PhosphorNightVision.SharedPhosphorNightVisionSystem _nightVisionSystem = default!;
     [Dependency] private Content.Server._KS14.Cultivation.Systems.CultivationLoadoutSystem _loadoutSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -124,7 +103,37 @@ public sealed partial class BodyCultivationSystem : EntitySystem
 
             _bodySystem.SetNextTick(bodyComponent, currentTime + TickInterval);
             Tick((uid, bodyComponent), currentTime);
+            RefreshReadyGlow((uid, bodyComponent));
         }
+    }
+
+    public static readonly EntProtoId ForgeAction = "ActionBodyForge";
+    private static readonly SpriteSpecifier ForgeIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "body_forge");
+    private static readonly SpriteSpecifier TribulationIcon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Cultivation/actions.rsi"), "body_tribulation");
+    private static readonly SoundSpecifier ReadySound = new SoundPathSpecifier("/Audio/Effects/chime.ogg");
+
+    /// <summary>
+    ///     Once every part is forged past the stage, the Forge button turns gold into the Tribulation of Flesh, with a chime
+    ///         and a word, once. It turns back after the tribulation.
+    /// </summary>
+    private void RefreshReadyGlow(Entity<BodyCultivatorComponent> entity)
+    {
+        var ready = _bodySystem.ReadyForTribulation(entity.Comp);
+        if (ready == entity.Comp.ReadyGlow)
+            return;
+
+        _bodySystem.SetReadyGlow(entity.Comp, ready);
+        if (_bodySystem.GetTechnique(entity.Comp, ForgeAction) is { } actionUid)
+        {
+            _actionsSystem.SetIcon(actionUid, ready ? TribulationIcon : ForgeIcon);
+            _actionsSystem.SetIconColor(actionUid, ready ? Color.Gold : Color.White);
+        }
+
+        if (!ready)
+            return;
+
+        _audioSystem.PlayGlobal(ReadySound, entity);
+        _noticeSystem.Notify(entity, Loc.GetString("body-ready-for-tribulation"), PopupType.Medium);
     }
 
     private void Tick(Entity<BodyCultivatorComponent> entity, TimeSpan currentTime)
@@ -225,7 +234,8 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         foreach (var (action, stage) in StageArts)
         {
-            if (stage > entity.Comp.Stage || _bodySystem.HasTechnique(entity.Comp, action))
+            if (stage > entity.Comp.Stage || _bodySystem.HasTechnique(entity.Comp, action)
+                || CultivationUpgrades.UpgradeOf(action) is { } upgrade && _bodySystem.HasTechnique(entity.Comp, upgrade))
                 continue;
 
             EntityUid? actionUid = null;
@@ -237,7 +247,18 @@ public sealed partial class BodyCultivationSystem : EntitySystem
                 _bodySystem.RecordBaseCooldown(entity.Comp, action, useDelay);
 
             // Forging and the Tribulation always stay on the bar; the arts go through the Techniques menu.
-            if (action.Id is not ("ActionBodyForge" or "ActionBodyTribulation"))
+            // It grows out of an art they had: it takes that one's place.
+            var replaced = false;
+            foreach (var (chainUpgrade, replaces) in CultivationUpgrades.Chains)
+            {
+                if (chainUpgrade != action || _bodySystem.ForgetTechnique(entity.Comp, replaces) is not { } oldUid)
+                    continue;
+
+                _loadoutSystem.Replace(entity, oldUid, actionUid.Value);
+                replaced = true;
+            }
+
+            if (!replaced && action.Id != ForgeAction.Id)
                 _loadoutSystem.Learned(entity, actionUid.Value);
         }
 
@@ -251,7 +272,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     /// </summary>
     public void EnsureCoreArts(Entity<BodyCultivatorComponent> entity)
     {
-        foreach (var core in new EntProtoId[] { "ActionBodyForge", "ActionBodyTribulation" })
+        foreach (var core in new[] { ForgeAction })
         {
             var actionUid = _bodySystem.GetTechnique(entity.Comp, core) ?? EntityUid.Invalid;
             if (!actionUid.IsValid() || TerminatingOrDeleted(actionUid))
@@ -478,10 +499,17 @@ public sealed partial class BodyCultivationSystem : EntitySystem
             return;
         }
 
+        // One button for both: once every part is forged past the stage, it begins the Tribulation of Flesh instead.
+        if (_bodySystem.ReadyForTribulation(entity.Comp))
+        {
+            StartTribulation(entity);
+            return;
+        }
+
         if (_bodySystem.WeakestGroup(entity.Comp) is not { } group)
         {
-            _noticeSystem.Notify(entity, Loc.GetString(_bodySystem.ReadyForTribulation(entity.Comp)
-                ? "body-forge-ready-for-tribulation"
+            _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= SharedBodyCultivationSystem.StageCap(entity.Comp) && !entity.Comp.Committed
+                ? "body-tribulation-mortal-cap"
                 : "body-forge-all-capped"));
             return;
         }
@@ -500,6 +528,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     {
         // In the wuxia gamemodes, where cultivation is the whole round, forging goes twice as fast.
         var cycle = _wuxiaWorldSystem.WuxiaActive() ? ForgeCycle / 2 : ForgeCycle;
+        cycle /= _sacredSiteSystem.Multiplier(entity);
         var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new BodyForgeDoAfterEvent(), entity)
         {
             BreakOnMove = true,
@@ -557,44 +586,40 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     /// </summary>
     public int TribulationReadiness(Entity<BodyCultivatorComponent> entity)
     {
-        var readiness = 50;
-        if (_hungerQuery.TryComp(entity, out var hungerComponent)
-            && !_hungerSystem.IsHungerBelowState(entity, HungerThreshold.Okay, comp: hungerComponent))
-            readiness += 10;
-
-        if (_bodySystem.GetStance(entity) == BodyStance.Mountain)
-            readiness += 10;
-
-        if (entity.Comp.Exhaustion < 10f)
-            readiness += 10;
-
-        readiness += _siteSystem.BodyReadinessBonus(entity);
-
-        if (_mobThresholdSystem.TryGetThresholdForState(entity, MobState.Critical, out var critical)
-            && _damageableSystem.GetTotalDamage(entity.Owner) > critical.Value * 0.3)
-            readiness -= 20;
-
-        var ev = new BodyTribulationReadinessEvent(readiness);
-        RaiseLocalEvent(entity, ref ev);
-        return ev.Readiness;
+        return TribulationReadiness(entity, out _);
     }
 
-    [SubscribeLocalEvent]
-    private void OnTribulationAction(Entity<BodyCultivatorComponent> entity, ref BodyTribulationActionEvent args)
+    /// <summary>
+    ///     How ready the body is, and what went into it, for the breakdown shown to them.
+    /// </summary>
+    public int TribulationReadiness(Entity<BodyCultivatorComponent> entity, out List<ReadinessFactor> factors)
     {
-        if (args.Handled)
-            return;
+        factors = new List<ReadinessFactor>();
+        if (_hungerQuery.TryComp(entity, out var hungerComponent)
+            && !_hungerSystem.IsHungerBelowState(entity, HungerThreshold.Okay, comp: hungerComponent))
+            factors.Add(new ReadinessFactor("fed", 10));
 
-        args.Handled = true;
-        if (!_bodySystem.ReadyForTribulation(entity.Comp))
-        {
-            _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= SharedBodyCultivationSystem.StageCap(entity.Comp)
-                ? (entity.Comp.Committed ? "body-tribulation-peak" : "body-tribulation-mortal-cap")
-                : "body-tribulation-not-ready"));
-            return;
-        }
+        if (_bodySystem.GetStance(entity) == BodyStance.Mountain)
+            factors.Add(new ReadinessFactor("mountain", 10));
 
-        StartTribulation(entity);
+        if (entity.Comp.Exhaustion < 10f)
+            factors.Add(new ReadinessFactor("rested", 10));
+        else if (entity.Comp.Exhaustion > 50f)
+            factors.Add(new ReadinessFactor("exhausted", -10));
+
+        var siteBonus = _siteSystem.BodyReadinessBonus(entity);
+        if (siteBonus != 0)
+            factors.Add(new ReadinessFactor("site", siteBonus));
+
+        _readinessSystem.AddCommonPenalties(entity, factors, entity.Comp.LastArtAt, entity.Comp.LastTribulationAt);
+
+        var readiness = CultivationReadinessSystem.Total(40, factors);
+        var ev = new BodyTribulationReadinessEvent(readiness);
+        RaiseLocalEvent(entity, ref ev);
+        if (ev.Readiness != readiness)
+            factors.Add(new ReadinessFactor("other", ev.Readiness - readiness));
+
+        return ev.Readiness;
     }
 
     public bool StartTribulation(Entity<BodyCultivatorComponent> entity)
@@ -609,7 +634,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         var duration = 10 + 2 * entity.Comp.Stage;
         var cycles = Math.Max(1, (int)Math.Ceiling((double)duration / TribulationCycle.TotalSeconds));
 
-        var readiness = TribulationReadiness(entity);
+        var readiness = TribulationReadiness(entity, out var readinessFactors);
 
         var cycle = lastStep ? TribulationCycle * WuxiaAscensionRuleSystem.FinalStepSlowdown : TribulationCycle;
         var doAfterArgs = new DoAfterArgs(EntityManager, entity, cycle, new BodyTribulationDoAfterEvent(), entity)
@@ -628,6 +653,11 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         _noticeSystem.Announce(entity, Loc.GetString("body-tribulation-start", ("user", entity.Owner)), type: PopupType.LargeCaution);
         _noticeSystem.Notify(entity, Loc.GetString("body-tribulation-odds",
             ("readiness", readiness - SharedBodyCultivationSystem.TribulationPenalty(entity.Comp.Stage)), ("chance", chance)), type: PopupType.Medium);
+        var stagePenalty = SharedBodyCultivationSystem.TribulationPenalty(entity.Comp.Stage);
+        if (stagePenalty > 0)
+            readinessFactors.Add(new ReadinessFactor("stage", -stagePenalty));
+        _noticeSystem.Notify(entity, Loc.GetString("cultivation-readiness-breakdown", ("base", 40),
+            ("factors", _readinessSystem.Describe(readinessFactors))), type: PopupType.Small, alsoToChat: true);
         var (strikeChance, strikeDamage) = SharedBodyCultivationSystem.TribulationLightning(entity.Comp.Stage);
         if (strikeChance > 0f)
             _noticeSystem.Notify(entity, Loc.GetString(entity.Comp.Stage >= BodyCultivatorComponent.MaxStage - 1 ? "cultivation-storm-warning-final" : "cultivation-storm-warning",
@@ -792,6 +822,9 @@ public sealed partial class BodyCultivationSystem : EntitySystem
         {
             _noticeSystem.Notify(args.User, Loc.GetString("body-manual-primer"), type: PopupType.Medium);
         }
+
+        // How to walk the path, kept in chat.
+        _noticeSystem.Notify(args.User, Loc.GetString("body-guide"), PopupType.Small, alsoToChat: true);
     }
 
     #endregion

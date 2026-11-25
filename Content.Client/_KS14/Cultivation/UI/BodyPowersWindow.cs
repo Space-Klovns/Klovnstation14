@@ -64,6 +64,36 @@ public sealed partial class BodyPowersWindow : FancyWindow
         _parts.RemoveAllChildren();
         foreach (var group in SharedBodyCultivationSystem.AllGroups)
             _parts.AddChild(PartRow(body, group, partCap, powers.Where(p => p.Group == group).OrderBy(p => p.Level).ToList()));
+
+        _parts.AddChild(ArtsByStage(body));
+    }
+
+    /// <summary>
+    ///     The arts each stage opens: those reached in white, those still ahead greyed with the stage that opens them.
+    /// </summary>
+    private Control ArtsByStage(BodyCultivatorComponent body)
+    {
+        var section = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 2 };
+        var title = new RichTextLabel();
+        title.SetMessage(FormattedMessage.FromMarkupOrThrow($"[bold]{Loc.GetString("body-powers-window-arts")}[/bold]"));
+        section.AddChild(title);
+
+        var chips = new GridContainer { Columns = 3, HSeparationOverride = 10, VSeparationOverride = 0, Margin = new Thickness(12, 0, 0, 0) };
+        foreach (var (action, stage) in Content.Shared._KS14.Cultivation.CultivationTechniqueLists.BodyStageArts)
+        {
+            if (!_prototypeManager.TryIndex(action, out var prototype))
+                continue;
+
+            var name = FormattedMessage.EscapeText(prototype.Name);
+            var label = new RichTextLabel { MouseFilter = MouseFilterMode.Stop, ToolTip = prototype.Description };
+            label.SetMessage(FormattedMessage.FromMarkupOrThrow(stage <= body.Stage
+                ? name
+                : $"[color={Locked.ToHex()}]{Loc.GetString("body-powers-window-art-locked", ("art", name), ("stage", stage))}[/color]"));
+            chips.AddChild(label);
+        }
+
+        section.AddChild(chips);
+        return section;
     }
 
     private Control PartRow(BodyCultivatorComponent body, BodyGroup group, int partCap, List<BodyTemperingPowerPrototype> powers)
