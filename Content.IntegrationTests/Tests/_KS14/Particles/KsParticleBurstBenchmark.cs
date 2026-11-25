@@ -27,6 +27,62 @@ public sealed class KsParticleBurstBenchmark : GameTest
         ("KsHeavyHitGibSplatter", 0.15f),
     };
 
+    [Test, Explicit("Sustained headless particle simulation benchmark")]
+    public async Task OverlappingBursts()
+    {
+        var map = await Pair.CreateTestMap();
+        await Client.WaitPost(() =>
+        {
+            var system = CEntMan.System<KsParticlesSystem>();
+            var coordinates = map.CGridCoords;
+            const int framesPerSecond = 120;
+            const int framesPerHit = 6;
+            const int samples = 3600;
+            var hits = new Queue<EntityUid[]>();
+            var times = new double[samples];
+            var peakAlive = 0;
+            for (var frame = -framesPerSecond; frame < samples; frame++)
+            {
+                if (frame % framesPerHit == 0)
+                {
+                    // FrameUpdate runs without advancing engine ticks here. Retire emitter entities after one second.
+                    if (hits.Count == framesPerSecond / framesPerHit)
+                    {
+                        foreach (var uid in hits.Dequeue())
+                            CEntMan.DeleteEntity(uid);
+                    }
+
+                    var entities = new EntityUid[_effects.Length];
+                    for (var i = 0; i < entities.Length; i++)
+                    {
+                        var (prototype, amount) = _effects[i];
+                        var uid = system.SpawnLocal(prototype, coordinates, once: true)!.Value;
+                        entities[i] = uid;
+                        system.SetAmount(uid, amount);
+                    }
+                    hits.Enqueue(entities);
+                }
+
+                var start = Stopwatch.GetTimestamp();
+                system.FrameUpdate(1f / framesPerSecond);
+                if (frame >= 0)
+                {
+                    times[frame] = Stopwatch.GetElapsedTime(start).TotalMicroseconds;
+                    peakAlive = Math.Max(peakAlive, system.TotalAlive);
+                }
+            }
+
+            foreach (var hit in hits)
+            foreach (var uid in hit)
+                CEntMan.DeleteEntity(uid);
+
+            Array.Sort(times);
+            Assert.That(peakAlive, Is.Positive);
+            TestContext.Out.WriteLine($"20 heavy hits/s, 120 frames/s, {peakAlive} peak particles, client simulation only: " +
+                $"median {times[samples / 2]:F1} µs, p95 {times[samples * 95 / 100]:F1} µs.");
+        });
+    }
+
     [Test, Explicit("Headless particle burst allocation and timing benchmark")]
     public async Task HeavyHitBurst()
     {

@@ -250,6 +250,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
             return;
 
         emitterComponent.Prototype = prototype;
+        emitterComponent.FrameScale = float.NaN;
         emitterComponent.Alive = 0;
         emitterComponent.Age = 0f;
         emitterComponent.BurstDone = false;
@@ -302,9 +303,12 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     /// </summary>
     public bool IsHiddenHere(EntityUid uid)
     {
-        if (_emitterQuery.TryComp(uid, out var emitterComponent) && emitterComponent.SupersededByPrediction)
-            return true;
+        return (_emitterQuery.TryComp(uid, out var emitterComponent) && emitterComponent.SupersededByPrediction)
+            || IsPredictingUsersServerCopy(uid);
+    }
 
+    private bool IsPredictingUsersServerCopy(EntityUid uid)
+    {
         return _predictedSpawnQuery.TryComp(uid, out var predictedSpawnComponent) &&
                predictedSpawnComponent.PredictingUser is { } predictingUser &&
                predictingUser == _playerManager.LocalEntity &&
@@ -342,7 +346,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         var query = EntityQueryEnumerator<KsParticlesComponent, KsParticleEmitterComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out var particlesComponent, out var emitterComponent, out var transformComponent))
         {
-            if (emitterComponent.Prototype is not { } prototype || IsHiddenHere(uid))
+            if (emitterComponent.Prototype is not { } prototype || emitterComponent.SupersededByPrediction || IsPredictingUsersServerCopy(uid))
                 continue;
 
             UpdateFrame(particlesComponent, emitterComponent, prototype, transformComponent);
@@ -354,7 +358,11 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
             emitterComponent.TimeAccumulator = Math.Min(emitterComponent.TimeAccumulator - steps * emitterComponent.TickLength, emitterComponent.TickLength);
 
-            UpdateBounds(particlesComponent, emitterComponent, prototype);
+            if (emitterComponent.BoundsDirty)
+            {
+                UpdateBounds(particlesComponent, emitterComponent, prototype);
+                emitterComponent.BoundsDirty = false;
+            }
 
             totalAlive += emitterComponent.Alive;
             if (emitterComponent.Alive > 0)
@@ -379,9 +387,16 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         rotation += particlesComponent.Rotation;
 
         emitterComponent.MapId = transformComponent.MapID;
-        emitterComponent.Rotation = rotation;
-        emitterComponent.Origin = worldPosition + rotation.RotateVec(particlesComponent.Offset) +
+        var origin = worldPosition + rotation.RotateVec(particlesComponent.Offset) +
             worldRotation.RotateVec(particlesComponent.RotatingOffset);
+        if (emitterComponent.Origin == origin && emitterComponent.Rotation.Theta == rotation.Theta &&
+            emitterComponent.FrameScale == particlesComponent.Scale)
+            return;
+
+        emitterComponent.Rotation = rotation;
+        emitterComponent.Origin = origin;
+        emitterComponent.FrameScale = particlesComponent.Scale;
+        emitterComponent.BoundsDirty = true;
         emitterComponent.Matrix = prototype.Space == KsParticleSpace.Local
             ? prototype.Transform * Matrix3Helpers.CreateTransform(emitterComponent.Origin, rotation, new Vector2(particlesComponent.Scale))
             : Matrix3x2.Identity;
@@ -392,6 +407,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     /// </summary>
     public void Step(KsParticlesComponent particlesComponent, KsParticleEmitterComponent emitterComponent, KsParticlesPrototype prototype, float dt)
     {
+        emitterComponent.BoundsDirty = true;
         var maxCount = Math.Max(0, (int)MathF.Ceiling(prototype.Count * _density * particlesComponent.Amount));
 
         if (!emitterComponent.BurstDone)

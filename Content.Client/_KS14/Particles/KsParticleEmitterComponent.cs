@@ -80,6 +80,11 @@ public sealed partial class KsParticleEmitterComponent : Component
     [ViewVariables]
     public KsParticleCollisionCache? Collision;
 
+    // Invalidated on prototype changes so the first frame always builds its transform.
+    public float FrameScale = float.NaN;
+
+    public bool BoundsDirty = true;
+
     #region Per frame, for the overlays
 
     [ViewVariables]
