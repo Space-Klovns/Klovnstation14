@@ -32,6 +32,70 @@
     sprite: _KS14/Cultivation/cracks.rsi
     state: crack4
 
+- type: decal
+  id: KsCrack5
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack5
+
+- type: decal
+  id: KsCrack6
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack6
+
+- type: decal
+  id: KsCrack7
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack7
+
+- type: decal
+  id: KsCrack8
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack8
+
+- type: decal
+  id: KsCrack9
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack9
+
+- type: decal
+  id: KsCrack10
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack10
+
+- type: decal
+  id: KsCrack11
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack11
+
+- type: decal
+  id: KsCrack12
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack12
+
 # Ripples the air out from the impact, using the explosion shockwave shader.
 - type: entity
   id: KsBodyShockwave

@@ -49,7 +49,11 @@ public sealed partial class BodyArtSystem : EntitySystem
     private static readonly ProtoId<TagPrototype> WallTag = "Wall";
     private static readonly EntProtoId ShockwaveEffect = "KsBodyShockwave";
     private static readonly EntProtoId DustEffect = "KsBodyDust";
-    private static readonly string[] CrackDecals = { "KsCrack1", "KsCrack2", "KsCrack3", "KsCrack4" };
+    private static readonly string[] CrackDecals =
+    {
+        "KsCrack1", "KsCrack2", "KsCrack3", "KsCrack4", "KsCrack5", "KsCrack6",
+        "KsCrack7", "KsCrack8", "KsCrack9", "KsCrack10", "KsCrack11", "KsCrack12",
+    };
 
     /// <summary>
     ///     Every body art hits this much harder than its listed base. The arts were tuned too gently.
