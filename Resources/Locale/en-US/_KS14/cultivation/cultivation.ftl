@@ -141,3 +141,4 @@ qi-path-window-header = [bold]{$realm}[/bold]   [color=#8ad0ff]{$qi} qi[/color] 
        *[false] [color=#d8b46a]{$insight} / {$required} insight[/color]
     }
 qi-path-window-hint = Each realm opens new techniques. Greyed ones are still ahead. Hover a technique to see what it does.
+qi-path-window-current = ◀ you are here

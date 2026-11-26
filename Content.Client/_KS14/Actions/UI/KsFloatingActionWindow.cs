@@ -30,6 +30,11 @@ public sealed class KsFloatingActionWindow : BaseWindow
     /// </summary>
     public event Action<KsFloatingActionWindow>? OnDock;
 
+    /// <summary>
+    ///     Raised when the button is shift-clicked (to bind a key to it).
+    /// </summary>
+    public event Action<KsFloatingActionWindow>? OnBind;
+
     public KsFloatingActionWindow(IEntityManager entityManager, ActionsSystem actionsSystem, EntityUid actionUid)
     {
         ActionUid = actionUid;
@@ -46,6 +51,7 @@ public sealed class KsFloatingActionWindow : BaseWindow
 
         Button = new ActionButton(entityManager);
         Button.UpdateData(actionUid, actionsSystem);
+        Button.Label.Text = string.Empty;
         Button.ActionPressed += OnButtonPressed;
         root.AddChild(Button);
         AddChild(root);
@@ -60,11 +66,28 @@ public sealed class KsFloatingActionWindow : BaseWindow
             return;
         }
 
+        // Shift-click arrives as text-select or examine, depending on what's under the cursor.
+        if (args.Function == EngineKeyFunctions.TextCursorSelect || args.Function == Content.Shared.Input.ContentKeyFunctions.ExamineEntity)
+        {
+            args.Handle();
+            OnBind?.Invoke(this);
+            return;
+        }
+
         if (args.Function != EngineKeyFunctions.UIClick)
             return;
 
         args.Handle();
         OnUse?.Invoke(ActionUid);
+    }
+
+    /// <summary>
+    ///     Show the key bound to this button, or nothing.
+    /// </summary>
+    public void SetKeyLabel(string text)
+    {
+        Button.Label.Text = text;
+        Button.Label.Visible = text.Length > 0;
     }
 
     protected override DragMode GetDragModeFor(Vector2 relativeMousePos)

@@ -291,6 +291,8 @@ public sealed partial class ActionUIController
     {
         if (_actionsSystem != null)
             _container?.SetActionData(_actionsSystem, _actions.ToArray());
+
+        RefreshSlotKeyLabels();
     }
 
     /// <summary>

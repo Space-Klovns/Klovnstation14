@@ -9,8 +9,9 @@ namespace Content.Client.UserInterface.Systems.Actions;
 
 /// <summary>
 ///     Alt-click a slot on the action bar to pop its action off the bar as a floating button you can drag anywhere on
-///         screen. Right-click the floating button to put it back. Floating buttons last until you dock them or
-///         reconnect.
+///         screen. Right-click the floating button to put it back; shift-click it to give its art a key (see the rebind
+///         partial: the key belongs to the art, so it works the same on the bar or off it). Floating buttons last
+///         until you dock them or reconnect.
 /// </summary>
 public sealed partial class ActionUIController
 {
@@ -29,6 +30,7 @@ public sealed partial class ActionUIController
         var window = new KsFloatingActionWindow(EntityManager, _actionsSystem, action.Owner);
         window.OnUse += KsUseAction;
         window.OnDock += DockFloatingAction;
+        window.OnBind += StartFloatingRebind;
         UIManager.WindowRoot.AddChild(window);
         LayoutContainer.SetPosition(window, _input.MouseScreenPosition.Position / UIManager.WindowRoot.UIScale);
         _floatingActions.Add(window);
@@ -41,6 +43,9 @@ public sealed partial class ActionUIController
 
     private void DockFloatingAction(KsFloatingActionWindow window)
     {
+        if (_rebindingAction == window.ActionUid)
+            CancelSlotRebind();
+
         _floatingActions.Remove(window);
         window.Close();
         if (_actionsSystem?.GetAction(window.ActionUid) is { } action && action.Comp.AttachedEntity != null)

@@ -136,6 +136,119 @@
     tags:
     - HideContextMenu
 
+# More shapes of the same fire, so a fire art isn't one flame repeated: a forked lick, a curling wisp, a low
+# spread along the floor, a cluster of small tongues, and a tall white-hot spire.
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameLick
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_lick
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8a2a"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameWisp
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_wisp
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.6
+  - type: TimedDespawn
+    lifetime: 1.6
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameLow
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_low
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1e"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2.2
+  - type: TimedDespawn
+    lifetime: 2.2
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameCluster
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_cluster
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.8
+  - type: TimedDespawn
+    lifetime: 1.8
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameSpire
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames_big.rsi
+    drawdepth: Effects
+    noRot: true
+    offset: 0, 0.25
+    layers:
+    - state: flame_spire
+      shader: unshaded
+  - type: PointLight
+    color: "#ffb040"
+    radius: 4
+    energy: 4
+    netsync: false
+  - type: LightFade
+    duration: 2.4
+  - type: TimedDespawn
+    lifetime: 2.4
+
 # Bend the picture around a point for a moment, like the air round a singularity.
 - type: entity
   id: KsFxDistortionPush

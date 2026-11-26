@@ -34,6 +34,14 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
     private static readonly EntProtoId FlameEffect = "KsFxFlame";
     private static readonly EntProtoId FlameBigEffect = "KsFxFlameBig";
     private static readonly EntProtoId FlameSmallEffect = "KsFxFlameSmall";
+
+    /// <summary>
+    ///     Flames of the same fire in different shapes, picked at random so a fire art isn't one flame repeated.
+    /// </summary>
+    private static readonly EntProtoId[] MediumFlames =
+        { FlameEffect, "KsFxFlameLick", "KsFxFlameWisp", "KsFxFlameLow", "KsFxFlameCluster" };
+    private static readonly EntProtoId[] BigFlames = { FlameBigEffect, "KsFxFlameSpire", "KsFxFlameLick" };
+    private static readonly EntProtoId[] SmallFlames = { FlameSmallEffect, "KsFxFlameWisp", "KsFxFlameCluster" };
     private static readonly EntProtoId WaterSprayEffect = "KsFxWaterSpray";
     private static readonly EntProtoId WaterPuffEffect = "KsFxWaterPuff";
     private static readonly EntProtoId WaterSwirlEffect = "KsFxWaterSwirl";
@@ -420,7 +428,7 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         for (var flame = 0; flame < count; flame++)
         {
             var offset = radius <= 0f ? Vector2.Zero : _robustRandom.NextAngle().ToVec() * _robustRandom.NextFloat(radius * 0.3f, radius);
-            Spawn(FlameEffect, centre.Offset(offset));
+            Spawn(_robustRandom.Pick(MediumFlames), centre.Offset(offset));
         }
     }
 
@@ -532,9 +540,9 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
             return;
 
         var centre = _transformSystem.GetMapCoordinates(atUid);
-        Spawn(FlameBigEffect, centre);
+        Spawn(_robustRandom.Pick(BigFlames), centre);
         for (var flame = 0; flame < count; flame++)
-            Spawn(_robustRandom.Prob(0.5f) ? FlameEffect : FlameSmallEffect, centre.Offset(_robustRandom.NextVector2(0.7f)));
+            Spawn(_robustRandom.Pick(_robustRandom.Prob(0.5f) ? MediumFlames : SmallFlames), centre.Offset(_robustRandom.NextVector2(0.7f)));
     }
 
     /// <summary>
@@ -551,13 +559,13 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         {
             var angle = start + flame * MathF.Tau / ringFlames;
             var offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius * _robustRandom.NextFloat(0.85f, 1.05f);
-            Spawn(FlameBigEffect, centre.Offset(offset));
+            Spawn(_robustRandom.Pick(BigFlames), centre.Offset(offset));
         }
 
         for (var flame = 0; flame < innerFlames; flame++)
         {
             var offset = _robustRandom.NextAngle().ToVec() * _robustRandom.NextFloat(0.6f, radius * 0.85f);
-            Spawn(_robustRandom.Prob(0.5f) ? FlameEffect : FlameSmallEffect, centre.Offset(offset));
+            Spawn(_robustRandom.Pick(_robustRandom.Prob(0.5f) ? MediumFlames : SmallFlames), centre.Offset(offset));
         }
     }
 

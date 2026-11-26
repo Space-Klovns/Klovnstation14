@@ -3,6 +3,7 @@ using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Prototypes;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
@@ -31,15 +32,15 @@ public sealed partial class QiPathWindow : FancyWindow
     {
         IoCManager.InjectDependencies(this);
         Title = Loc.GetString("qi-path-window-title");
-        MinSize = new Vector2(470, 380);
-        SetSize = new Vector2(520, 520);
+        MinSize = new Vector2(530, 400);
+        SetSize = new Vector2(540, 560);
 
         var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(10, 6), SeparationOverride = 6 };
         _header = new RichTextLabel();
         root.AddChild(_header);
         root.AddChild(new RichTextLabel { Text = Loc.GetString("qi-path-window-hint"), Modulate = Muted });
 
-        _realms = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 12 };
+        _realms = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 14 };
         var scroll = new ScrollContainer { VerticalExpand = true, HScrollEnabled = false };
         scroll.AddChild(_realms);
         root.AddChild(scroll);
@@ -77,24 +78,41 @@ public sealed partial class QiPathWindow : FancyWindow
         foreach (var realm in Enum.GetValues<CultivationRealm>())
         {
             var reached = realm <= cultivator.Realm;
-            var section = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 2 };
-            section.AddChild(new Label
+            var current = realm == cultivator.Realm;
+            var section = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 4 };
+
+            var heading = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 8 };
+            heading.AddChild(new Label
             {
                 Text = Loc.GetString($"cultivation-realm-{realm}"),
                 FontColorOverride = reached ? Gold : Locked,
-                StyleClasses = { "LabelSubText" },
+                StyleClasses = { "LabelHeading" },
             });
+            if (current)
+                heading.AddChild(new Label { Text = Loc.GetString("qi-path-window-current"), FontColorOverride = Muted, VAlign = Label.VAlignMode.Center });
+            section.AddChild(heading);
 
-            var chips = new GridContainer { Columns = 3, HSeparationOverride = 12, VSeparationOverride = 2, Margin = new Thickness(12, 0, 0, 0) };
-            foreach (var action in byRealm.GetValueOrDefault(realm) ?? new List<EntProtoId>())
-                chips.AddChild(Chip(action, reached));
+            // Techniques as fixed-size pills, three to a row, so long names never run into each other.
+            var actions = byRealm.GetValueOrDefault(realm) ?? new List<EntProtoId>();
+            BoxContainer? row = null;
+            for (var k = 0; k < actions.Count; k++)
+            {
+                if (k % PillsPerRow == 0)
+                {
+                    row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 6, Margin = new Thickness(6, 0, 0, 0) };
+                    section.AddChild(row);
+                }
 
-            if (chips.ChildCount > 0)
-                section.AddChild(chips);
+                row!.AddChild(Pill(actions[k], reached, current));
+            }
 
             _realms.AddChild(section);
         }
     }
+
+    private const int PillsPerRow = 3;
+    private const float PillWidth = 156f;
+    private const float PillHeight = 24f;
 
     private static void Add(Dictionary<CultivationRealm, List<EntProtoId>> byRealm, CultivationRealm realm, EntProtoId action)
     {
@@ -105,17 +123,31 @@ public sealed partial class QiPathWindow : FancyWindow
             list.Add(action);
     }
 
-    private Control Chip(EntProtoId action, bool unlocked)
+    private Control Pill(EntProtoId action, bool unlocked, bool current)
     {
         var name = _prototypeManager.TryIndex(action, out var prototype) ? prototype.Name : action.Id;
-        return new Label
+        var pill = new PanelContainer
         {
-            Text = name,
-            MinWidth = 140,
-            ClipText = true,
+            SetSize = new Vector2(PillWidth, PillHeight),
             MouseFilter = MouseFilterMode.Stop,
             ToolTip = prototype?.Description ?? string.Empty,
-            FontColorOverride = unlocked ? Color.White : Locked,
+            PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = unlocked ? Color.FromHex("#2a2d33") : Color.FromHex("#1c1d21"),
+                BorderColor = unlocked ? (current ? Gold : Gold.WithAlpha(0.45f)) : Color.FromHex("#303236"),
+                BorderThickness = new Thickness(1),
+                ContentMarginLeftOverride = 6,
+                ContentMarginRightOverride = 6,
+            },
         };
+        pill.AddChild(new Label
+        {
+            Text = name,
+            ClipText = true,
+            HorizontalExpand = true,
+            VAlign = Label.VAlignMode.Center,
+            FontColorOverride = unlocked ? Color.White : Locked,
+        });
+        return pill;
     }
 }

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.Cultivation.Body;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
@@ -78,24 +79,46 @@ public sealed partial class BodyPowersWindow : FancyWindow
         title.SetMessage(FormattedMessage.FromMarkupOrThrow($"[bold]{Loc.GetString("body-powers-window-arts")}[/bold]"));
         section.AddChild(title);
 
-        var chips = new GridContainer { Columns = 3, HSeparationOverride = 12, VSeparationOverride = 2, Margin = new Thickness(12, 0, 0, 0) };
+        // Fixed-size pills, three to a row, so long names never run into each other.
+        BoxContainer? row = null;
+        var count = 0;
         foreach (var (action, stage) in Content.Shared._KS14.Cultivation.CultivationTechniqueLists.BodyStageArts)
         {
             if (!_prototypeManager.TryIndex(action, out var prototype))
                 continue;
 
-            chips.AddChild(new Label
+            if (count++ % 3 == 0)
             {
-                Text = stage <= body.Stage ? prototype.Name : Loc.GetString("body-powers-window-art-locked", ("art", prototype.Name), ("stage", stage)),
-                MinWidth = 140,
-                ClipText = true,
+                row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 6, Margin = new Thickness(6, 0, 0, 0) };
+                section.AddChild(row);
+            }
+
+            var reached = stage <= body.Stage;
+            var pill = new PanelContainer
+            {
+                SetSize = new Vector2(156, 24),
                 MouseFilter = MouseFilterMode.Stop,
                 ToolTip = prototype.Description,
-                FontColorOverride = stage <= body.Stage ? Color.White : Locked,
+                PanelOverride = new StyleBoxFlat
+                {
+                    BackgroundColor = reached ? Color.FromHex("#2a2d33") : Color.FromHex("#1c1d21"),
+                    BorderColor = reached ? Gold.WithAlpha(0.45f) : Color.FromHex("#303236"),
+                    BorderThickness = new Thickness(1),
+                    ContentMarginLeftOverride = 6,
+                    ContentMarginRightOverride = 6,
+                },
+            };
+            pill.AddChild(new Label
+            {
+                Text = reached ? prototype.Name : Loc.GetString("body-powers-window-art-locked", ("art", prototype.Name), ("stage", stage)),
+                ClipText = true,
+                HorizontalExpand = true,
+                VAlign = Label.VAlignMode.Center,
+                FontColorOverride = reached ? Color.White : Locked,
             });
+            row!.AddChild(pill);
         }
 
-        section.AddChild(chips);
         return section;
     }
 

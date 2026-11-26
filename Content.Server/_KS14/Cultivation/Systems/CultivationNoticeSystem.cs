@@ -19,9 +19,13 @@ namespace Content.Server._KS14.Cultivation.Systems;
 public sealed partial class CultivationNoticeSystem : EntitySystem
 {
     /// <summary>
-    ///     How long each message gets before the next one shows.
+    ///     How long a message gets before the next one shows: long enough to have floated clear, longer for a long line
+    ///         (which is wide, so it overlaps whatever comes next for longer).
     /// </summary>
-    private static readonly TimeSpan NoticeSpacing = TimeSpan.FromSeconds(1.2);
+    private static TimeSpan NoticeSpacing(string message)
+    {
+        return TimeSpan.FromSeconds(Math.Clamp(1.6 + message.Length * 0.02, 1.6, 3.2));
+    }
 
     private static readonly Color NoticeColor = Color.FromHex("#9fd4b8");
 
@@ -111,7 +115,7 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
         if (!_pending.ContainsKey(uid) && _nextNotice.GetValueOrDefault(uid) <= now)
         {
             Show(uid, message, type, isPublic);
-            _nextNotice[uid] = now + NoticeSpacing;
+            _nextNotice[uid] = now + NoticeSpacing(message);
             return;
         }
 
@@ -151,7 +155,7 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
 
             var (message, type, isPublic) = queue.Dequeue();
             Show(uid, message, type, isPublic);
-            _nextNotice[uid] = now + NoticeSpacing;
+            _nextNotice[uid] = now + NoticeSpacing(message);
             if (queue.Count == 0)
                 _finished.Add(uid);
         }
