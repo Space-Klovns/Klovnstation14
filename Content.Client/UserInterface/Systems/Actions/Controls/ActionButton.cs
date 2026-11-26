@@ -51,6 +51,28 @@ public sealed partial class ActionButton : Control, IEntityControl
     private readonly TextureRect _bigActionIcon;
     private readonly TextureRect _smallActionIcon;
     public readonly Label Label;
+
+    // KS14 start: a blue outline while the art is set to quick-cast
+    private readonly PanelContainer _ksQuickCastOutline = new()
+    {
+        Visible = false,
+        MouseFilter = MouseFilterMode.Ignore,
+        PanelOverride = new StyleBoxFlat
+        {
+            BackgroundColor = Color.Transparent,
+            BorderColor = Color.FromHex("#4aa8ff"),
+            BorderThickness = new Thickness(2),
+        },
+    };
+
+    /// <summary>
+    ///     Show or hide the quick-cast outline.
+    /// </summary>
+    public void SetKsQuickCast(bool quickCast)
+    {
+        _ksQuickCastOutline.Visible = quickCast;
+    }
+    // KS14 end
     public readonly CooldownGraphic Cooldown;
     private readonly SpriteView _smallItemSpriteView;
     private readonly SpriteView _bigItemSpriteView;
@@ -150,6 +172,7 @@ public sealed partial class ActionButton : Control, IEntityControl
         AddChild(_bigActionIcon);
         AddChild(_bigItemSpriteView);
         AddChild(HighlightRect);
+        AddChild(_ksQuickCastOutline); // KS14
         AddChild(Label);
         AddChild(Cooldown);
         AddChild(paddingBoxItemIcon);
@@ -173,10 +196,13 @@ public sealed partial class ActionButton : Control, IEntityControl
 
     private void OnPressed(GUIBoundKeyEventArgs args)
     {
-        // KS14 start: shift-click (examine) and alt-click (alt-use) reach the bar too, to bind a key or float the button
+        // KS14 start: shift-click (examine), alt-click (alt-use) and ctrl-click (pull) reach the bar too, to bind a key,
+        //     float the button or toggle quick-cast
         if (args.Function == EngineKeyFunctions.TextCursorSelect
             || args.Function == Content.Shared.Input.ContentKeyFunctions.ExamineEntity
-            || args.Function == Content.Shared.Input.ContentKeyFunctions.AltActivateItemInWorld)
+            || args.Function == Content.Shared.Input.ContentKeyFunctions.AltActivateItemInWorld
+            || args.Function == Content.Shared.Input.ContentKeyFunctions.TryPullObject
+            || args.Function == EngineKeyFunctions.EditorGridPlace)
         {
             ActionPressed?.Invoke(args, this);
             return;

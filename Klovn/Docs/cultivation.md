@@ -488,5 +488,9 @@ three tiles of it goes twice as fast.
 
 Keys belong to arts, not to bar slots (`ActionUIController.Klovn.Rebind.cs`): shift-click an art on the bar or a
 floating button and press a key; it shows on that art's icon wherever it sits and is saved by prototype in the user's
-data (`ks_action_keys.txt`). Pressing its own key again clears it. When a contender is told where to take the last step
+data (`ks_action_keys.txt`). Pressing its own key again clears it. Mouse buttons other than left and right (the
+middle and side buttons) can be bound too. Ctrl-click an aimed art to set it to quick-cast (a blue outline, saved in
+`ks_action_quickcast.txt`): its key then casts at the cursor without the second click (`ActionsSystem.KsQuickCast`),
+says "Too far" and spends nothing if the cursor is out of reach, and falls back to aiming if a person-targeted art has
+nobody under the cursor. When a contender is told where to take the last step
 to the peak, `KsPointArrowEvent` shows them a gold arrow toward the place for six seconds; trying again shows it again.

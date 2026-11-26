@@ -31,6 +31,7 @@ public sealed partial class ActionUIController
         window.OnUse += KsUseAction;
         window.OnDock += DockFloatingAction;
         window.OnBind += StartFloatingRebind;
+        window.OnQuickCastToggle += w => ToggleQuickCast(w.ActionUid);
         UIManager.WindowRoot.AddChild(window);
         LayoutContainer.SetPosition(window, _input.MouseScreenPosition.Position / UIManager.WindowRoot.UIScale);
         _floatingActions.Add(window);

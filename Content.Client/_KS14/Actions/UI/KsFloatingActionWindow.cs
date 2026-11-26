@@ -35,6 +35,11 @@ public sealed class KsFloatingActionWindow : BaseWindow
     /// </summary>
     public event Action<KsFloatingActionWindow>? OnBind;
 
+    /// <summary>
+    ///     Raised when the button is ctrl-clicked (to toggle quick-cast).
+    /// </summary>
+    public event Action<KsFloatingActionWindow>? OnQuickCastToggle;
+
     public KsFloatingActionWindow(IEntityManager entityManager, ActionsSystem actionsSystem, EntityUid actionUid)
     {
         ActionUid = actionUid;
@@ -71,6 +76,13 @@ public sealed class KsFloatingActionWindow : BaseWindow
         {
             args.Handle();
             OnBind?.Invoke(this);
+            return;
+        }
+
+        if (args.Function == Content.Shared.Input.ContentKeyFunctions.TryPullObject || args.Function == EngineKeyFunctions.EditorGridPlace)
+        {
+            args.Handle();
+            OnQuickCastToggle?.Invoke(this);
             return;
         }
 

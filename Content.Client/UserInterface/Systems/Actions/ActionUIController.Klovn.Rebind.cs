@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using Content.Client._KS14.Actions.UI;
 using Content.Client.UserInterface.Systems.Actions.Controls;
+using Content.Shared.Actions.Components;
 using Content.Shared.Input;
 using Content.Shared.Popups;
 using Robust.Client.Input;
@@ -22,11 +23,19 @@ public readonly record struct KsActionKey(Keyboard.Key Key, bool Control, bool S
 ///         reordered, and the key is shown on its icon. Pressing the art's own key again clears it; a key given to one
 ///         art leaves any other. Escape cancels. Keys are saved by the art's prototype, so they last between rounds.
 ///         The bar's ordinary slot keys (1 to 0) still work on whatever sits in a slot, unless an art has claimed that
-///         key.
+///         key. Mouse buttons other than left and right (the middle and side buttons) can be bound too. Ctrl-click an
+///         aimed art to set it to quick-cast (outlined in blue): its key then casts at the cursor without the second
+///         click, falling back to aiming if there's nothing under the cursor to cast it on.
 /// </summary>
 public sealed partial class ActionUIController
 {
     private static readonly ResPath ActionKeysPath = new("/ks_action_keys.txt");
+    private static readonly ResPath QuickCastPath = new("/ks_action_quickcast.txt");
+
+    /// <summary>
+    ///     Arts (by prototype) whose key casts at the cursor straight away instead of starting to aim.
+    /// </summary>
+    private readonly HashSet<string> _quickCast = new();
 
 
     /// <summary>
@@ -80,8 +89,9 @@ public sealed partial class ActionUIController
             return;
 
         var key = keyEvent.Key;
-        // The click that started this, and the modifiers on their own, are not the key being bound.
-        if (key is Keyboard.Key.MouseLeft or Keyboard.Key.MouseRight or Keyboard.Key.MouseMiddle
+        // The click that started this, and the modifiers on their own, are not the key being bound. Left and right
+        //     click stay clicks; the middle button and the side buttons (4 to 9) can be bound like any key.
+        if (key is Keyboard.Key.MouseLeft or Keyboard.Key.MouseRight
             or Keyboard.Key.Shift or Keyboard.Key.Control or Keyboard.Key.Alt or Keyboard.Key.LSystem or Keyboard.Key.RSystem)
             return;
 
@@ -143,8 +153,73 @@ public sealed partial class ActionUIController
 
             keyEvent.Handle();
             if (type == KeyEventType.Down && !keyEvent.IsRepeat)
-                KsUseAction(actionUid);
+            {
+                if (_quickCast.Contains(proto))
+                    KsQuickCastAction(actionUid);
+                else
+                    KsUseAction(actionUid);
+            }
             return;
+        }
+    }
+
+    /// <returns>True if this click toggled quick-cast on the slot's art.</returns>
+    private bool TryToggleQuickCast(ActionButton button)
+    {
+        if (button.Action is not { } action || IsFolderAction(button))
+            return false;
+
+        ToggleQuickCast(action.Owner);
+        return true;
+    }
+
+    private void ToggleQuickCast(EntityUid actionUid)
+    {
+        EnsureActionKeys();
+        if (ProtoOf(actionUid) is not { } proto)
+            return;
+
+        // Only aimed arts have anything to skip.
+        if (!EntityManager.HasComponent<TargetActionComponent>(actionUid))
+        {
+            Popup(Loc.GetString("ks-action-quickcast-not-aimed"));
+            return;
+        }
+
+        var on = _quickCast.Add(proto);
+        if (!on)
+            _quickCast.Remove(proto);
+
+        Popup(Loc.GetString(on ? "ks-action-quickcast-on" : "ks-action-quickcast-off"));
+        SaveActionKeys();
+        RefreshSlotKeyLabels();
+    }
+
+    /// <summary>
+    ///     Cast an art at the cursor at once; if there's nothing there to cast it on, aim it the usual way instead.
+    /// </summary>
+    private void KsQuickCastAction(EntityUid actionUid)
+    {
+        if (_actionsSystem?.GetAction(actionUid) is not { } action)
+            return;
+
+        var eyeManager = IoCManager.Resolve<Robust.Client.Graphics.IEyeManager>();
+        var mouseScreen = _input.MouseScreenPosition;
+        var mouse = mouseScreen.Window == Robust.Shared.Map.WindowId.Invalid
+            ? Robust.Shared.Map.MapCoordinates.Nullspace
+            : eyeManager.PixelToMap(mouseScreen);
+        var underMouse = IoCManager.Resolve<Robust.Client.State.IStateManager>().CurrentState is Content.Client.Gameplay.GameplayStateBase state
+            ? state.GetClickedEntity(mouse)
+            : null;
+
+        switch (_actionsSystem.KsQuickCast(action, mouse, underMouse))
+        {
+            case Content.Client.Actions.ActionsSystem.KsQuickCastResult.TooFar:
+                Popup(Loc.GetString("ks-action-quickcast-too-far"));
+                break;
+            case Content.Client.Actions.ActionsSystem.KsQuickCastResult.NeedsAim:
+                KsUseAction(actionUid);
+                break;
         }
     }
 
@@ -218,12 +293,16 @@ public sealed partial class ActionUIController
                     text = binding.GetKeyString();
 
                 button.Label.Text = text;
+                button.SetKsQuickCast(button.Action is { } shown && ProtoOf(shown.Owner) is { } shownProto && _quickCast.Contains(shownProto));
                 index++;
             }
         }
 
         foreach (var window in _floatingActions)
+        {
             window.SetKeyLabel(KeyOf(window.ActionUid) is { } key ? KeyName(key) : string.Empty);
+            window.Button.SetKsQuickCast(ProtoOf(window.ActionUid) is { } floatingProto && _quickCast.Contains(floatingProto));
+        }
     }
 
     private void EnsureActionKeys()
@@ -233,6 +312,12 @@ public sealed partial class ActionUIController
 
         _actionKeysLoaded = true;
         _input.FirstChanceOnKeyEvent += OnActionKey;
+        if (_resourceManager.UserData.TryReadAllText(QuickCastPath, out var quickText))
+        {
+            foreach (var line in quickText.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                _quickCast.Add(line);
+        }
+
         if (!_resourceManager.UserData.TryReadAllText(ActionKeysPath, out var text))
             return;
 
@@ -254,6 +339,7 @@ public sealed partial class ActionUIController
             text.Append($"{proto}|{combo.Key}|{(combo.Control ? 1 : 0)}|{(combo.Shift ? 1 : 0)}|{(combo.Alt ? 1 : 0)}\n");
 
         _resourceManager.UserData.WriteAllText(ActionKeysPath, text.ToString());
+        _resourceManager.UserData.WriteAllText(QuickCastPath, string.Join("\n", _quickCast));
     }
 
     private void Popup(string message)

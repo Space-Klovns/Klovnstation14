@@ -615,6 +615,14 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
                 args.Handle();
             return;
         }
+
+        // ctrl-click: quick-cast on or off
+        if (args.Function == ContentKeyFunctions.TryPullObject || args.Function == EngineKeyFunctions.EditorGridPlace)
+        {
+            if (TryToggleQuickCast(button))
+                args.Handle();
+            return;
+        }
         // KS14 end
 
         if (args.Function != EngineKeyFunctions.UIClick)
