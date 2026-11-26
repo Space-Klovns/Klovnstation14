@@ -20,15 +20,18 @@ public static class CultivationTechniqueLists
         ("ActionCultivationRealmPressure", CultivationRealm.FoundationEstablishment),
         ("ActionJianghuFoundSect", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationAcupointSealing", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationTransmitLaw", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationConcealment", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationForcedCirculation", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationForgetLaw", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationArrays", CultivationRealm.FoundationEstablishment),
-        ("ActionCultivationBeastContract", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationVoidStep", CultivationRealm.GoldenCore),
         ("ActionCultivationBodyOutsideBody", CultivationRealm.GoldenCore),
     };
+
+    /// <summary>
+    ///     Left out in Wuxia: Ascension, where hiding one's cultivation would only stall the race to the peak.
+    /// </summary>
+    public static readonly EntProtoId Concealment = "ActionCultivationConcealment";
 
     /// <summary>
     ///     The body arts each stage opens, the forge from the start.

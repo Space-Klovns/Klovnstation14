@@ -47,7 +47,7 @@ and injury alerts stay in step.
 
 Besides each law's techniques, every cultivator comes to the universal techniques
 (`CultivationSystem.UniversalTechniques`: Spiritual Sense, Qinggong, Acupoint Sealing, talismans, formations,
-spirit beasts, Body Outside the Body and more), and two laws together can resonate into a combination technique
+Body Outside the Body and more; Concealment Art everywhere but Ascension. Spirit Beast and Transmit Law were scrapped), and two laws together can resonate into a combination technique
 (`cultivationCombo` prototypes). Techniques grow with the realm: area techniques reach one tile further for every
 realm above Qi Condensation (`CultivationSystem.AreaRange`), knockbacks throw one tile further (`ThrowReach`), and
 aimed techniques can be aimed two tiles further (`RefreshReach`, which sets each aimed action's range from its
@@ -469,7 +469,7 @@ shift-click a slot then press a key to bind it, and alt-click a slot to pop it o
 (`ActionUIController.Klovn.Rebind/Floating`).
 
 Merged buttons: Meditate/Break Through, Forge/Tribulation, one Stance button cycling Thunderclap, Mountain, none,
-one Arrays button asking which array, one Spirit Beast button (on an animal: contract; on yourself: summon), and
+one Arrays button asking which array, and
 Returning Iron for the bound artifact (holding an unbound item: bind; holding the artifact: hurl it where clicked,
 hurting only whoever it hits for 1.5x its own blow plus 0.75x per realm, then it flies home; empty-handed: recall).
 Spring Mending grows into Myriad Spring (`CultivationUpgrades`): a targeted heal on someone and every friend around them.

@@ -243,6 +243,10 @@ public sealed partial class CultivationSystem : EntitySystem
     {
         foreach (var (action, realm) in UniversalTechniques)
         {
+            // No Concealment Art in Ascension.
+            if (action == CultivationTechniqueLists.Concealment && _ascensionRuleSystem.Active())
+                continue;
+
             if (realm <= entity.Comp.Realm)
                 GrantTechnique(entity, action);
         }
