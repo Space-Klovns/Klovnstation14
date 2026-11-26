@@ -2,7 +2,6 @@ ks-action-rebind-prompt = Press a key for {$art} (its own key again clears it, E
 ks-action-rebind-cancelled = Key binding cancelled.
 ks-action-rebind-done = Bound to {$key}.
 ks-action-rebind-cleared = Key cleared.
-ks-floating-action-grip = Drag to move. Right-click the button to put it back on your bar.
 ks-action-quickcast-on = Quick-cast on: its key casts at your cursor.
 ks-action-quickcast-off = Quick-cast off.
 ks-action-quickcast-not-aimed = This art isn't aimed, so its key already casts at once.
