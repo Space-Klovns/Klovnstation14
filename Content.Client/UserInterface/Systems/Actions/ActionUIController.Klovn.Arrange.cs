@@ -209,12 +209,21 @@ public sealed partial class ActionUIController
         // The bin clears the empty slot a drag opens at the end of the bar; the padlock only has to clear the actions.
         var bar = BarRect(container, filledOnly: false);
         var filled = BarRect(container, filledOnly: true);
-        LayoutContainer.SetPosition(_trashSlot, new Vector2(bar.Right + ArrangeOverlayGap, bar.Top) - screen.GlobalPosition);
-        LayoutContainer.SetPosition(_arrangeLockButton, new Vector2(filled.Right + ArrangeOverlayGap, filled.Top) - screen.GlobalPosition);
+        MoveIfMoved(_trashSlot, new Vector2(bar.Right + ArrangeOverlayGap, bar.Top) - screen.GlobalPosition);
+        MoveIfMoved(_arrangeLockButton, new Vector2(filled.Right + ArrangeOverlayGap, filled.Top) - screen.GlobalPosition);
 
         var dragging = _menuDragHelper.IsDragging;
         _arrangeLockButton.Visible = !dragging;
         _trashSlot.Visible = dragging;
+    }
+
+    /// <summary>
+    ///     Runs every frame, so it only touches the layout when the bar has actually moved.
+    /// </summary>
+    private static void MoveIfMoved(Control control, Vector2 position)
+    {
+        if ((control.Position - position).LengthSquared() > 0.01f)
+            LayoutContainer.SetPosition(control, position);
     }
 
     /// <summary>
