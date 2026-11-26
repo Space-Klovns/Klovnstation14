@@ -1,0 +1,6 @@
+- type: !PartialOnly entityTable
+  id: AllPlushiesTable
+  table: !type:GroupSelector
+    children:
+    - id: KsPlushieMelstroy
+    - id: KsPlushieMusorDrop

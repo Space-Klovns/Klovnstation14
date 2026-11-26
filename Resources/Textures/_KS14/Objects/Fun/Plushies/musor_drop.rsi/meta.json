@@ -1,0 +1,15 @@
+{
+    "version": 1,
+    "license": "Custom",
+    "copyright": "User-supplied musor_drop.png (Musor Drop artwork); original author and license not specified. Taken from Black Space at https://github.com/Mr-Molodec/Project-Mr.-Molodec/blob/69518d611a65f2cc938e061de4599ac0a9ab94c2/Resources/Textures/_BS/_BS/Objects/Fun/Toys/musor_drop.rsi/musor_drop.png",
+    "size": {
+        "x": 420,
+        "y": 420
+    },
+    "states": [
+        {
+            "name": "musor_drop"
+        }
+    ],
+    "metaAtlas": false
+}
