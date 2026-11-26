@@ -221,7 +221,7 @@ public sealed partial class CultivationBubblePrisonActionEvent : WorldTargetActi
     public Robust.Shared.Prototypes.EntProtoId Projectile = "ProjectileCultivationBubble";
 
     [DataField]
-    public float Speed = 4f;
+    public float Speed = 6f;
 
     [DataField]
     public TimeSpan TrapTime = TimeSpan.FromSeconds(2.5);

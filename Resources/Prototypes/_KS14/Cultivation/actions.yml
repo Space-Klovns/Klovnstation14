@@ -130,7 +130,7 @@
   - type: CultivationArtCategory
     category: Offensive
   - type: Action
-    useDelay: 10
+    useDelay: 15
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: bubble_prison }
   - type: TargetAction
     checkCanAccess: false

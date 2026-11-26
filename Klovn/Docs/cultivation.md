@@ -31,7 +31,7 @@ and injury alerts stay in step.
   A heart demon goes down at 60 + 30 per realm (or per three body stages) and dies at 100 + 40, and hunts its host
   for as long as it lives.
 - **The water law** (`WaterLawSystem` for its own arts): Still Water Ward halves incoming damage and mends 2 a second
-  for 10 s plus 2 s per realm; Bubble Prison looses a slow, glowing bubble that holds whoever it catches for 2.5 s
+  for 10 s plus 2 s per realm; Bubble Prison looses a glowing bubble (6 tiles a second, 15 s cooldown) that holds whoever it catches for 2.5 s
   and drowns them (4 asphyxiation a second, times realm power); Riding the Current glides 6 tiles plus 1 per realm,
   spilling water along the way; Tidal Surge hits for 18 blunt (times realm power) as it throws.
 - **Returning Iron** aims only when the bound artifact is in hand (to throw it): otherwise binding and recalling go

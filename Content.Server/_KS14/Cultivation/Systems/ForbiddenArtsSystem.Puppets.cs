@@ -153,6 +153,24 @@ public sealed partial class ForbiddenArtsSystem
     }
 
     /// <summary>
+    ///     The master strikes someone: their puppet goes for them too (not for the master's friends).
+    /// </summary>
+    public void MasterStruck(EntityUid masterUid, IReadOnlyList<EntityUid> struck)
+    {
+        if (!TryComp<JiangshiMasterComponent>(masterUid, out var masterComponent) || masterComponent.Puppet is not { } puppetUid
+            || TerminatingOrDeleted(puppetUid) || !TryComp<NPCRetaliationComponent>(puppetUid, out var retaliationComponent))
+            return;
+
+        foreach (var targetUid in struck)
+        {
+            if (targetUid == puppetUid || targetUid == masterUid || _sharedCultivationSystem.IsAlly(masterUid, targetUid))
+                continue;
+
+            _npcRetaliationSystem.TryRetaliate((puppetUid, retaliationComponent), targetUid);
+        }
+    }
+
+    /// <summary>
     ///     A sealing talisman pressed to a jiangshi's brow drops it at once.
     /// </summary>
     public bool TrySealPuppet(EntityUid puppetUid)

@@ -72,7 +72,7 @@
   - type: Sprite
     sprite: _KS14/Cultivation/wuxia_64.rsi
     noRot: true
-    scale: 0.6,0.6
+    scale: 0.45,0.45
     layers:
     - state: water_bubble
       shader: unshaded
@@ -87,7 +87,7 @@
       types:
         Blunt: 2
   - type: TimedDespawn
-    lifetime: 3
+    lifetime: 2
 
 - type: entity
   parent: BaseBullet

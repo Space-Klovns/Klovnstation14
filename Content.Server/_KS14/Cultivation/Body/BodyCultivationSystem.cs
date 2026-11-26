@@ -56,6 +56,7 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     public static (EntProtoId Action, int Stage)[] StageArts => CultivationTechniqueLists.BodyStageArts;
 
     [Dependency] private CultivationDurabilitySystem _durabilitySystem = default!;
+    [Dependency] private Content.Server._KS14.Cultivation.Systems.ForbiddenArtsSystem _forbiddenArtsSystem = default!;
     [Dependency] private SacredSiteSystem _sacredSiteSystem = default!;
     [Dependency] private CultivationReadinessSystem _readinessSystem = default!;
     [Dependency] private Content.Shared._Mono.PhosphorNightVision.SharedPhosphorNightVisionSystem _nightVisionSystem = default!;
@@ -359,6 +360,10 @@ public sealed partial class BodyCultivationSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnWeaponHit(Entity<MeleeWeaponComponent> weapon, ref MeleeHitEvent args)
     {
+        // A jiangshi master's puppet goes for whoever they strike, armed or not. (Every melee hit comes through here.)
+        if (args.IsHit && args.HitEntities.Count > 0)
+            _forbiddenArtsSystem.MasterStruck(args.User, args.HitEntities);
+
         if (args.Weapon == args.User || !args.IsHit || args.HitEntities.Count == 0
             || !TryComp<BodyCultivatorComponent>(args.User, out var bodyComponent))
             return;
