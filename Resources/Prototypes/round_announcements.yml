@@ -1,4 +1,4 @@
 - type: roundAnnouncement # KS14: not played in scenarios, see GameTicker.AnnounceRound
   id: Welcome
-  sound:
-    collection: KS14RoundStart # KS14
+  sound: # KS14
+    collection: KsRoundStart
