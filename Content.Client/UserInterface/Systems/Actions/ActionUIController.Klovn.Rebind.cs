@@ -110,7 +110,13 @@ public sealed partial class ActionUIController
             return;
 
         var combo = new KsActionKey(key, keyEvent.Control, keyEvent.Shift, keyEvent.Alt);
-        if (_actionKeys.TryGetValue(proto, out var current) && current == combo)
+        if (key is Keyboard.Key.BackSpace or Keyboard.Key.Delete)
+        {
+            // Back to the default: no key of its own, so the slot it sits in uses its ordinary number key again.
+            _actionKeys.Remove(proto);
+            Popup(Loc.GetString("ks-action-rebind-reset"));
+        }
+        else if (_actionKeys.TryGetValue(proto, out var current) && current == combo)
         {
             // Its own key again: clear it.
             _actionKeys.Remove(proto);

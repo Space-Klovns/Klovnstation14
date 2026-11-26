@@ -304,14 +304,28 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         QueueWindowUpdate();
 
-        // KS14 start: replaces a direct _container.SetActionData. Action components can resolve after
-        // the action-set link, and the bar has to keep its folder entries.
+        // KS14: replaces a direct _container.SetActionData. This fires on every change to any of the player's actions
+        //     (a cooldown, greying out for want of qi), often many times a frame, so the bar is rebuilt once per frame
+        //     instead - see ApplyActionsUpdate.
+        _ksActionsUpdatePending = true;
+    }
+
+    // KS14 start
+    private bool _ksActionsUpdatePending;
+
+    private void ApplyActionsUpdate()
+    {
+        if (!_ksActionsUpdatePending)
+            return;
+
+        _ksActionsUpdatePending = false;
+        // Action components can resolve after the action-set link, and the bar has to keep its folder entries.
         TryApplyPendingActionConfiguration();
         SyncAutoPopulate();
         RestoreFloatingActions();
         RefreshActionBar();
-        // KS14 end
     }
+    // KS14 end
 
     private void ActionButtonPressed(ButtonEventArgs args)
     {
@@ -886,6 +900,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (_window is { UpdateNeeded: true })
             SearchAndDisplay();
 
+        ApplyActionsUpdate(); // KS14: batch bar rebuilds to one per frame
         FlushPendingActionConfigurationSave(); // KS14: batch layout writes to one per frame
         UpdateArrangeOverlays(); // KS14: keep the padlock and the bin beside the bar
     }
@@ -907,6 +922,11 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         EndLinkedActionConfiguration(); // KS14: flush any pending save, then drop the linked action set
         ResetActionFolders(); // KS14: discard folders tied to the previous action set
+        // KS14: the old body's floating buttons go too (their places are remembered, so they come back for whoever
+        //     has those arts next), and a half-done rebind is dropped rather than eating the next key.
+        CloseFloatingActions();
+        CancelSlotRebind();
+        _ksActionsUpdatePending = false;
         _container?.ClearActionData();
         QueueWindowUpdate();
         StopTargeting();
