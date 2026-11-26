@@ -480,6 +480,13 @@ the arts by stage. Reading a first law or the body primer writes a short guide t
 ## The Sacred Site
 
 In the wuxia gamemodes (`SacredSiteSystem`) heaven and earth's qi wells up at a random station nav beacon from three
-minutes in, moving every three minutes, and the station is told where each time. Meditating or forging the body within
+minutes in, lasting two minutes, then gone for three to eight before welling up at another beacon; the station is told each time it appears and ebbs. Meditating or forging the body within
 three tiles of it goes twice as fast.
 
+
+### Keys and the final-step arrow
+
+Keys belong to arts, not to bar slots (`ActionUIController.Klovn.Rebind.cs`): shift-click an art on the bar or a
+floating button and press a key; it shows on that art's icon wherever it sits and is saved by prototype in the user's
+data (`ks_action_keys.txt`). Pressing its own key again clears it. When a contender is told where to take the last step
+to the peak, `KsPointArrowEvent` shows them a gold arrow toward the place for six seconds; trying again shows it again.

@@ -248,6 +248,7 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
                 return true;
 
             _noticeSystem.Notify(uid, Loc.GetString("ascension-site-chosen", ("place", site.Name)), PopupType.Large, alsoToChat: true);
+            PointTo(uid, site);
             return false;
         }
 
@@ -257,7 +258,25 @@ public sealed partial class WuxiaAscensionRuleSystem : GameRuleSystem<WuxiaAscen
             return true;
 
         _noticeSystem.Notify(uid, Loc.GetString("ascension-site-far", ("place", site.Name)), PopupType.Medium, alsoToChat: true);
+        PointTo(uid, site);
         return false;
+    }
+
+    /// <summary>
+    ///     How long the arrow to the site shows; press the button again to see it again.
+    /// </summary>
+    private const float SiteArrowSeconds = 6f;
+
+    /// <summary>
+    ///     Show the contender an arrow to their site for a few seconds.
+    /// </summary>
+    private void PointTo(EntityUid uid, AscensionSiteComponent site)
+    {
+        if (site.Beacon is not { } beacon || !TryComp<ActorComponent>(uid, out var actor))
+            return;
+
+        RaiseNetworkEvent(new KsPointArrowEvent(_transformSystem.GetMapCoordinates(beacon), SiteArrowSeconds, site.Name),
+            actor.PlayerSession);
     }
 
     /// <summary>

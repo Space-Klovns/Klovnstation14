@@ -9,14 +9,17 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.Cultivation.Systems;
 
 /// <summary>
-///     In the wuxia gamemodes heaven and earth's qi wells up at one place on the station at a time: a Sacred Site, at a
-///         random nav beacon, moving every three minutes. The whole station is told where. Meditating or forging the body
-///         within three tiles of it goes twice as fast, so it's worth holding, and worth fighting for.
+///     In the wuxia gamemodes heaven and earth's qi wells up at one place on the station now and then: a Sacred Site, at
+///         a random nav beacon, for two minutes, then nothing for three to eight minutes before it wells up somewhere
+///         else. The whole station is told where, and when it ebbs. Meditating or forging the body within three tiles of
+///         it goes twice as fast, so it's worth racing to, and worth fighting for.
 /// </summary>
 public sealed partial class SacredSiteSystem : EntitySystem
 {
     private static readonly EntProtoId SitePrototype = "KsSacredSite";
-    private static readonly TimeSpan MoveInterval = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan SiteLifetime = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan MinGap = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan MaxGap = TimeSpan.FromMinutes(8);
 
     /// <summary>
     ///     How long into the round before the first site appears, so people have their bearings first.
@@ -47,16 +50,17 @@ public sealed partial class SacredSiteSystem : EntitySystem
             if (now < siteComponent.MovesAt)
                 continue;
 
-            // Time to move on: heaven and earth's qi wells up somewhere else.
+            // It ebbs; after a while it wells up somewhere else.
             QueueDel(siteUid);
-            if (_wuxiaWorldSystem.WuxiaActive())
-                TrySpawnSite(now);
+            _noticeSystem.Proclaim(null, Loc.GetString("cultivation-sacred-site-ebbs", ("place", siteComponent.Name)),
+                Loc.GetString("cultivation-heavenly-omen"), colorOverride: Color.Gold, playSound: false);
+            _nextFirstSite = now + MinGap + (MaxGap - MinGap) * _robustRandom.NextDouble();
         }
 
         if (hasSite || !_wuxiaWorldSystem.WuxiaActive())
             return;
 
-        // The first site waits a few minutes into the round.
+        // The first site waits a few minutes into the round; each later one a while after the last ebbed.
         if (_nextFirstSite is not { } firstAt)
         {
             _nextFirstSite = now + FirstSiteDelay;
@@ -94,7 +98,7 @@ public sealed partial class SacredSiteSystem : EntitySystem
         var chosen = _robustRandom.Pick(candidates);
         var siteUid = Spawn(SitePrototype, Transform(chosen).Coordinates);
         var siteComponent = EnsureComp<SacredSiteComponent>(siteUid);
-        siteComponent.MovesAt = now + MoveInterval;
+        siteComponent.MovesAt = now + SiteLifetime;
         siteComponent.Name = _navMapSystem.GetNearestBeaconString(chosen, onlyName: true);
 
         _noticeSystem.Proclaim(null, Loc.GetString("cultivation-sacred-site-appears", ("place", siteComponent.Name)),

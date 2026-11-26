@@ -194,7 +194,7 @@
   objectType: Item
 
 # Where heaven and earth's qi wells up for a while in the wuxia gamemodes (SacredSiteSystem): meditating or forging
-# within three tiles goes twice as fast. It moves every three minutes.
+# within three tiles goes twice as fast. It lasts two minutes, then another wells up somewhere after three to eight.
 - type: entity
   id: KsSacredSite
   categories: [ HideSpawnMenu ]
