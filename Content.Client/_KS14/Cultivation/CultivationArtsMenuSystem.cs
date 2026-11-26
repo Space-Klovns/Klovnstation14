@@ -64,6 +64,9 @@ public sealed partial class CultivationArtsMenuSystem : EntitySystem
                 ? Loc.GetString("cultivation-arts-menu-cooling", ("technique", metaData.EntityName),
                     ("seconds", (int)Math.Ceiling((cd.End - now).TotalSeconds)), ("description", metaData.EntityDescription))
                 : Loc.GetString("cultivation-arts-menu-tip", ("technique", metaData.EntityName), ("description", metaData.EntityDescription));
+            if (action.Comp.UseDelay is { } useDelay && useDelay > TimeSpan.Zero)
+                tip += "\n" + Loc.GetString("ks-action-tooltip-cooldown-plain",
+                    ("seconds", Content.Client.UserInterface.Systems.Actions.Controls.ActionButton.KsCooldownText(useDelay)));
 
             buttons.Add(new RadialMenuActionOption<EntityUid>(Use, action.Owner)
             {

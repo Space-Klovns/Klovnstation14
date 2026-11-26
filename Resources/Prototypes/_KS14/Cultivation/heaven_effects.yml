@@ -94,12 +94,13 @@
   categories: [ HideSpawnMenu ]
   name: crackling lightning
   components:
+  # Arcs crawling along the body's outline (the Thunderclap stance, or someone heaven has just struck).
   - type: Sprite
-    sprite: _KS14/Cultivation/heaven.rsi
+    sprite: _KS14/Cultivation/wuxia_64.rsi
     drawdepth: Effects
     noRot: true
     layers:
-    - state: crackle
+    - state: body_arcs
       shader: unshaded
   - type: PointLight
     color: "#a9c2ff"

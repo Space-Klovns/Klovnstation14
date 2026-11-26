@@ -245,8 +245,27 @@ public sealed partial class ActionButton : Control, IEntityControl
 
         var newDesc = ev.GetTotalMessage();
 
+        // KS14 start: every action's tooltip says how long it takes to come back, from its actual cooldown
+        if (Action.Value.Comp.UseDelay is { } useDelay && useDelay > TimeSpan.Zero)
+        {
+            newDesc.PushNewline();
+            newDesc.AddMarkupPermissive(Loc.GetString("ks-action-tooltip-cooldown", ("seconds", KsCooldownText(useDelay))));
+        }
+        // KS14 end
+
         return new ActionAlertTooltip(name, newDesc);
     }
+
+    // KS14 start
+    /// <summary>
+    ///     A cooldown in seconds, or minutes and seconds once it's a minute or more: "8", "1:15".
+    /// </summary>
+    public static string KsCooldownText(TimeSpan delay)
+    {
+        var seconds = (int)Math.Ceiling(delay.TotalSeconds);
+        return seconds < 60 ? $"{seconds}s" : $"{seconds / 60}:{seconds % 60:00}";
+    }
+    // KS14 end
 
     protected override void ControlFocusExited()
     {
