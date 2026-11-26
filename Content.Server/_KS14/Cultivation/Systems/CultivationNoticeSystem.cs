@@ -87,11 +87,17 @@ public sealed partial class CultivationNoticeSystem : EntitySystem
         var filter = Filter.Broadcast();
         if (source is { } sourceUid)
         {
-            if (_stationSystem.GetOwningStation(sourceUid) is not { } station
-                || !TryComp<StationDataComponent>(station, out var stationData))
-                return;
-
-            filter = _stationSystem.GetInStation(stationData);
+            if (_stationSystem.GetOwningStation(sourceUid) is { } station
+                && TryComp<StationDataComponent>(station, out var stationData))
+            {
+                filter = _stationSystem.GetInStation(stationData);
+            }
+            else
+            {
+                // Not on a station's own grids (on Saltern, out on the planet around it): everyone on the same map
+                //     hears it instead, rather than no one.
+                filter = Filter.BroadcastMap(Transform(sourceUid).MapID);
+            }
         }
 
         var wrapped = Loc.GetString("cultivation-proclamation-wrap", ("sender", sender ?? Loc.GetString("mandate-omen-sender")),

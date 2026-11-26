@@ -84,11 +84,26 @@ public sealed partial class SacredSiteSystem : EntitySystem
 
     private void TrySpawnSite(TimeSpan now)
     {
+        // Any beacon on a map a station is on, not only on the station's own grids: on Saltern the station is a grid of
+        //     its own on a planet map, and the beacons there don't count as the station's.
+        var stationMaps = new HashSet<EntityUid>();
+        foreach (var stationUid in _stationSystem.GetStations())
+        {
+            if (!TryComp<Content.Shared.Station.Components.StationDataComponent>(stationUid, out var stationData))
+                continue;
+
+            foreach (var gridUid in stationData.Grids)
+            {
+                if (Transform(gridUid).MapUid is { } mapUid)
+                    stationMaps.Add(mapUid);
+            }
+        }
+
         var candidates = new List<EntityUid>();
         var beaconQuery = EntityQueryEnumerator<NavMapBeaconComponent, TransformComponent>();
         while (beaconQuery.MoveNext(out var beaconUid, out var beacon, out var xform))
         {
-            if (beacon.Enabled && xform.Anchored && xform.GridUid != null && _stationSystem.GetOwningStation(beaconUid, xform) != null)
+            if (beacon.Enabled && xform.Anchored && xform.GridUid != null && xform.MapUid is { } beaconMap && stationMaps.Contains(beaconMap))
                 candidates.Add(beaconUid);
         }
 
