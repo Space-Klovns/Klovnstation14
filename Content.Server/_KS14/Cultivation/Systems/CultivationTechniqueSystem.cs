@@ -190,7 +190,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         args.Handled = true;
         _visualsSystem.FireRing(entity, 3f, 16, 22);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
-        foreach (var victimUid in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if (!_sharedCultivationSystem.IsAlly(entity, victimUid))
                 _flammableSystem.AdjustFireStacks(victimUid, args.FireStacks * _cultivationSystem.Power(entity), ignite: true);
@@ -214,7 +214,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _visualsSystem.Mist(entity, CultivationVisualsSystem.MistWaterEffect);
         _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         var releaseWave = _sharedCultivationSystem.HasRoot(entity, CultivationElement.Water);
-        _cultivationStanceSystem.ApplyWard(entity, args.Duration, args.DamageMultiplier, releaseWave);
+        _cultivationStanceSystem.ApplyWard(entity, args.Duration + args.DurationPerRealm * (int)entity.Comp.Realm, args.DamageMultiplier, releaseWave);
 
         _audioSystem.PlayPvs(SloshSound, entity);
         _noticeSystem.Announce(entity, Loc.GetString("cultivation-still-water", ("user", entity.Owner)), type: PopupType.Medium);
@@ -248,16 +248,16 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
 
         args.Handled = true;
         _visualsSystem.Wave(entity, FxColour.Water, big: true);
-        _visualsSystem.WaterRing(entity, args.Range, 14);
+        _visualsSystem.WaterRing(entity, _cultivationSystem.AreaRange(entity, args.Range), 14);
         SpawnAttachedTo(TideEffect, new EntityCoordinates(entity, Vector2.Zero));
-        foreach (var victimUid in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;
 
-            ThrowAway(victimUid, entity, args.ThrowDistance, entity);
+            ThrowAway(victimUid, entity, _cultivationSystem.ThrowReach(entity, args.ThrowDistance), entity);
             _stunSystem.TryKnockdown(victimUid, args.Knockdown * MathF.Sqrt(_cultivationSystem.Power(entity)));
-            _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Blunt", 8f)), origin: entity);
+            _damageableSystem.TryChangeDamage(victimUid, _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Blunt", args.Damage)), origin: entity);
         }
 
         _audioSystem.PlayPvs(WaterSound, entity);
@@ -309,7 +309,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         // The one chosen, then every friend around them (the caster too, if they're close enough).
         var healed = new HashSet<EntityUid> { args.Target };
         _damageableSystem.HealEvenly(args.Target, heal, origin: entity);
-        foreach (var friendUid in MobsAround(args.Target, args.Range))
+        foreach (var friendUid in MobsAround(args.Target, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if ((friendUid == entity.Owner || _sharedCultivationSystem.IsAlly(entity, friendUid)) && healed.Add(friendUid))
                 _damageableSystem.HealEvenly(friendUid, heal, origin: entity);
@@ -356,7 +356,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 2f);
         _visualsSystem.Play(CultivationVisualsSystem.MountainFallSound, entity);
         var damage = _cultivationSystem.Empowered(entity, CultivationSystem.Damage("Blunt", args.BluntDamage));
-        foreach (var victimUid in MobsAround(entity, args.Range))
+        foreach (var victimUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if (_sharedCultivationSystem.IsAlly(entity, victimUid))
                 continue;

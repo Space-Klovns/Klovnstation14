@@ -8,6 +8,7 @@ using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Prototypes;
 using Content.Shared._KS14.Cultivation.Systems;
 using Content.Shared.Actions;
+using Content.Shared.Actions.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
 using Content.Shared.DoAfter;
@@ -287,6 +288,8 @@ public sealed partial class CultivationSystem : EntitySystem
                     ("two", Loc.GetString($"cultivation-element-{combo.ElementTwo}"))), type: PopupType.Medium);
             }
         }
+
+        RefreshReach(entity);
     }
 
     /// <returns>True if the technique was newly granted.</returns>
@@ -447,6 +450,47 @@ public sealed partial class CultivationSystem : EntitySystem
     {
         if (TryComp<ProjectileComponent>(projectileUid, out var projectileComponent))
             projectileComponent.Damage = Empowered(casterUid, projectileComponent.Damage);
+    }
+
+    /// <summary>
+    ///     Realms above Qi Condensation; 0 for anyone who isn't a qi cultivator.
+    /// </summary>
+    public int RealmSteps(EntityUid? casterUid)
+    {
+        return casterUid is { } uid && _cultivatorQuery.TryComp(uid, out var cultivatorComponent) ? (int)cultivatorComponent.Realm : 0;
+    }
+
+    /// <summary>
+    ///     An area technique's radius: one tile wider for every realm above Qi Condensation.
+    /// </summary>
+    public float AreaRange(EntityUid? casterUid, float baseRange) => baseRange + RealmSteps(casterUid);
+
+    /// <summary>
+    ///     How far a technique flings someone: one tile further for every realm above Qi Condensation.
+    /// </summary>
+    public float ThrowReach(EntityUid? casterUid, float baseDistance) => baseDistance + RealmSteps(casterUid);
+
+    /// <summary>
+    ///     How much further a targeted technique can be aimed for every realm above Qi Condensation.
+    /// </summary>
+    public const float ReachPerRealm = 2f;
+
+    /// <summary>
+    ///     Every aimed technique the cultivator knows reaches as far as their realm allows.
+    /// </summary>
+    public void RefreshReach(Entity<CultivatorComponent> entity)
+    {
+        var extra = ReachPerRealm * (int)entity.Comp.Realm;
+        foreach (var actionUid in entity.Comp.TechniqueActions.Values)
+        {
+            if (!TryComp<TargetActionComponent>(actionUid, out var targetComponent)
+                || MetaData(actionUid).EntityPrototype is not { } prototype
+                || !prototype.TryGetComponent<TargetActionComponent>(out var baseComponent, EntityManager.ComponentFactory)
+                || baseComponent.Range <= 0f)
+                continue;
+
+            _actionsSystem.SetTargetRange((actionUid, targetComponent), baseComponent.Range + extra);
+        }
     }
 
     public static DamageSpecifier Damage(string type, float amount)

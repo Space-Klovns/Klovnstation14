@@ -215,7 +215,7 @@
   - type: CultivationArtCategory
     category: Mobility
   - type: Action
-    useDelay: 40
+    useDelay: 25
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_falling_mountain }
   - type: TargetAction
     checkCanAccess: false
@@ -266,7 +266,7 @@
   - type: CultivationArtCategory
     category: Defensive
   - type: Action
-    useDelay: 120
+    useDelay: 75
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_vajra }
   - type: InstantAction
     event: !type:BodyVajraActionEvent
@@ -280,7 +280,7 @@
   - type: CultivationArtCategory
     category: Offensive
   - type: Action
-    useDelay: 90
+    useDelay: 55
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: body_quake }
   - type: InstantAction
     event: !type:BodyHeavenQuakeActionEvent

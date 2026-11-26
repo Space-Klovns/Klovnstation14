@@ -309,6 +309,12 @@
         },
         {
             "name": "category_utility"
+        },
+        {
+            "name": "bubble_prison"
+        },
+        {
+            "name": "riding_current"
         }
     ]
 }

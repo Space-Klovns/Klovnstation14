@@ -98,6 +98,12 @@ public sealed partial class CultivationStillWaterWardActionEvent : InstantAction
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    ///     How much longer it holds for every realm above Qi Condensation.
+    /// </summary>
+    [DataField]
+    public TimeSpan DurationPerRealm = TimeSpan.FromSeconds(2);
+
     [DataField]
     public float DamageMultiplier = 0.5f;
 }
@@ -109,6 +115,12 @@ public sealed partial class CultivationTidalSurgeActionEvent : InstantActionEven
 {
     [DataField]
     public float QiCost { get; set; } = 40f;
+
+    /// <summary>
+    ///     Blunt damage to everyone it sweeps away, before realm power.
+    /// </summary>
+    [DataField]
+    public float Damage = 18f;
 
     [DataField]
     public float Range = 3f;
@@ -195,3 +207,43 @@ public sealed partial class CultivationMountainCollapseActionEvent : InstantActi
 }
 
 #endregion
+
+/// <summary>
+///     Water: loose a slow, shimmering bubble. Whoever it catches is held inside it for a moment, unable to move, and
+///         can't draw breath.
+/// </summary>
+public sealed partial class CultivationBubblePrisonActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
+{
+    [DataField]
+    public float QiCost { get; set; } = 20f;
+
+    [DataField]
+    public Robust.Shared.Prototypes.EntProtoId Projectile = "ProjectileCultivationBubble";
+
+    [DataField]
+    public float Speed = 4f;
+
+    [DataField]
+    public TimeSpan TrapTime = TimeSpan.FromSeconds(2.5);
+
+    /// <summary>
+    ///     Suffocation each second inside, before realm power.
+    /// </summary>
+    [DataField]
+    public float DrownPerSecond = 4f;
+}
+
+/// <summary>
+///     Water: glide along a current of qi, leaving a slick of water behind for anyone following.
+/// </summary>
+public sealed partial class CultivationRidingCurrentActionEvent : WorldTargetActionEvent, Content.Shared._KS14.Cultivation.IQiCostEvent
+{
+    [DataField]
+    public float QiCost { get; set; } = 25f;
+
+    /// <summary>
+    ///     How far at Qi Condensation; one tile more per realm.
+    /// </summary>
+    [DataField]
+    public float BaseDistance = 6f;
+}

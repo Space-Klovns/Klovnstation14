@@ -48,7 +48,7 @@
   - type: CultivationArtCategory
     category: Offensive
   - type: Action
-    useDelay: 20
+    useDelay: 12
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: sword_rain }
   - type: TargetAction
     checkCanAccess: false
@@ -97,7 +97,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationStillWaterWard
   name: Still Water Ward
-  description: Wrap yourself in still water for ten seconds, halving incoming damage. 20 qi. Water Root releases the soaked-up force as a wave when it ends.
+  description: Wrap yourself in still water for ten seconds, two more per realm, halving incoming damage and mending two damage a second. 20 qi. Water Root releases the soaked-up force as a wave when it ends.
   components:
   - type: CultivationArtCategory
     category: Defensive
@@ -111,7 +111,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationTidalSurge
   name: Tidal Surge
-  description: A surge of water throws everyone around you who isn't a friend away and off their feet. 40 qi.
+  description: A surge of water batters everyone around you who isn't a friend and throws them away and off their feet. Reaches three tiles and throws four, one more of each per realm. 40 qi.
   components:
   - type: CultivationArtCategory
     category: Offensive
@@ -120,6 +120,40 @@
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: tidal_surge }
   - type: InstantAction
     event: !type:CultivationTidalSurgeActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationBubblePrison
+  name: Bubble Prison
+  description: Loose a slow, shimmering bubble of water. Whoever it catches is held inside for a few seconds, unable to move or draw breath. Easy to see coming, so aim it where they can't step aside. 20 qi.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: bubble_prison }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 12
+  - type: WorldTargetAction
+    event: !type:CultivationBubblePrisonActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionCultivationRidingCurrent
+  name: Riding the Current
+  description: Glide along a current of qi, up to six tiles plus one per realm, leaving a slick of water behind for anyone who follows. 25 qi.
+  components:
+  - type: CultivationArtCategory
+    category: Mobility
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: riding_current }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:CultivationRidingCurrentActionEvent
 
 # Wood
 
@@ -151,7 +185,7 @@
   - type: CultivationArtCategory
     category: Defensive
   - type: Action
-    useDelay: 12
+    useDelay: 8
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: myriad_spring }
   - type: TargetAction
   - type: EntityTargetAction

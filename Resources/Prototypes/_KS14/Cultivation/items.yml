@@ -64,6 +64,33 @@
 
 - type: entity
   parent: BaseBullet
+  id: ProjectileCultivationBubble
+  categories: [ HideSpawnMenu ]
+  name: water bubble
+  description: A wobbling bubble of water, drifting slowly. Don't let it catch you.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_64.rsi
+    noRot: true
+    scale: 0.6,0.6
+    layers:
+    - state: water_bubble
+      shader: unshaded
+      color: "#ffffffdd"
+  - type: PointLight
+    color: "#5ab8ff"
+    radius: 2.5
+    energy: 1.5
+  - type: Projectile
+    impactEffect: KsFxSwordQiImpact
+    damage:
+      types:
+        Blunt: 2
+  - type: TimedDespawn
+    lifetime: 3
+
+- type: entity
+  parent: BaseBullet
   id: ProjectileCultivationSwordQi
   categories: [ HideSpawnMenu ]
   name: sword qi

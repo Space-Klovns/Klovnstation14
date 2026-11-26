@@ -44,6 +44,10 @@
   techniques:
   - realm: QiCondensation
     action: ActionCultivationStillWaterWard
+  - realm: QiCondensation
+    action: ActionCultivationBubblePrison
+  - realm: FoundationEstablishment
+    action: ActionCultivationRidingCurrent
   - realm: GoldenCore
     action: ActionCultivationTidalSurge
   - realm: QiCondensation

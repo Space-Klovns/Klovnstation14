@@ -16,4 +16,16 @@ public abstract partial class SharedActionsSystem
         ent.Comp.AutoPopulate = autoPopulate;
         DirtyField(ent, ent.Comp, nameof(ActionComponent.AutoPopulate));
     }
+
+    /// <summary>
+    ///     How far away a targeted action can be aimed.
+    /// </summary>
+    public void SetTargetRange(Entity<TargetActionComponent?> ent, float range)
+    {
+        if (!Resolve(ent, ref ent.Comp, false) || ent.Comp.Range.Equals(range))
+            return;
+
+        ent.Comp.Range = range;
+        Dirty(ent, ent.Comp);
+    }
 }

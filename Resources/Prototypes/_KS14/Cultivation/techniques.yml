@@ -59,7 +59,7 @@
   - type: CultivationArtCategory
     category: Mobility
   - type: Action
-    useDelay: 12
+    useDelay: 8
     icon: { sprite: _KS14/Cultivation/actions.rsi, state: void_step }
   - type: TargetAction
     checkCanAccess: false
@@ -214,7 +214,7 @@
   parent: BaseActionCultivation
   id: ActionCultivationBindArtifact
   name: Returning Iron
-  description: 'One art for your bound artifact. Holding an item that isn''t bound: bind it to your soul (5 qi). Holding your bound artifact: hurl it where you click (12 qi). It hurts only whoever it actually hits, for half again its own blow at Qi Condensation and three quarters more per realm, then flies back to your hand. Empty-handed: call it back from seven tiles, three more per realm (5 qi).'
+  description: 'One art for your bound artifact. Holding an item that isn''t bound: bind it to your soul (5 qi). Holding your bound artifact: hurl it where you click (12 qi). It hurts only whoever it actually hits, for half again its own blow at Qi Condensation and three quarters more per realm, then flies back to your hand. Empty-handed: call it back from seven tiles, three more per realm (5 qi). Only the throw needs aiming; binding and recalling happen at once.'
   components:
   - type: CultivationArtCategory
     category: Offensive
@@ -224,6 +224,8 @@
   - type: TargetAction
     checkCanAccess: false
     range: 10
+  - type: KsSkipTargeting
+    skip: true
   - type: WorldTargetAction
     event: !type:BindArtifactActionEvent
 

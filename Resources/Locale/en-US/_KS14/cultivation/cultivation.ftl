@@ -77,6 +77,7 @@ cultivation-sea-of-flames = A sea of flames bursts out around {THE($user)}!
 cultivation-still-water = Still water closes around {THE($user)}.
 cultivation-ward-wave = The still water around {THE($user)} heaves and crashes outward!
 cultivation-tidal-surge = A tidal surge bursts out from {THE($user)}!
+cultivation-bubble-trapped = {CAPITALIZE(THE($target))} is caught in a bubble of water, unable to move or breathe!
 cultivation-spring-mending = Warm green qi flows from {THE($user)} into {THE($target)}.
 cultivation-myriad-spring = Springs well up around {THE($target)} as {THE($user)} pours out spring qi.
 cultivation-rooted-stance = {CAPITALIZE(THE($user))} sinks into a rooted stance, immovable as a mountain.

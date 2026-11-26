@@ -93,6 +93,14 @@ public sealed partial class SharedCultivationSystem : EntitySystem
         return ProtoMan.TryIndex(root, out var law) && law.Element == element;
     }
 
+    /// <summary>
+    ///     The action of a technique the cultivator knows, if they know it.
+    /// </summary>
+    public EntityUid? TechniqueAction(CultivatorComponent cultivator, EntProtoId actionProto)
+    {
+        return cultivator.TechniqueActions.TryGetValue(actionProto, out var actionUid) ? actionUid : null;
+    }
+
     public bool HasTechnique(CultivatorComponent cultivator, EntProtoId actionProto)
     {
         return cultivator.TechniqueActions.ContainsKey(actionProto);

@@ -249,6 +249,10 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         // KS14 end
 
         // TODO: probably should have a clientside event raised for flexibility
+        // KS14 start: some targeted actions need no aiming right now
+        if (_actionsSystem?.KsTryUseWithoutAiming(action) == true)
+            return;
+        // KS14 end
         if (EntityManager.TryGetComponent<TargetActionComponent>(action, out var target))
             ToggleTargeting((action, action, target));
         else
@@ -673,6 +677,11 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             _actionsSystem?.TriggerAction(action);
             return;
         }
+
+        // KS14 start: some targeted actions need no aiming right now
+        if (_actionsSystem?.KsTryUseWithoutAiming(action) == true)
+            return;
+        // KS14 end
 
         // for target actions, we go into "select target" mode, we don't
         // message the server until we actually pick our target.

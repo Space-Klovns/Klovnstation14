@@ -28,6 +28,14 @@ and injury alerts stay in step.
   storm are told to the cultivator when it starts. Anything else can add to it through
   `CultivationBreakthroughReadinessEvent`. A failure (a qi deviation) halves insight, injures, and may tear loose a
   heart demon (`HeartDemonSystem`): kill it close by and the Dao heart is tempered, let it go and it costs more.
+  A heart demon goes down at 60 + 30 per realm (or per three body stages) and dies at 100 + 40, and hunts its host
+  for as long as it lives.
+- **The water law** (`WaterLawSystem` for its own arts): Still Water Ward halves incoming damage and mends 2 a second
+  for 10 s plus 2 s per realm; Bubble Prison looses a slow, glowing bubble that holds whoever it catches for 2.5 s
+  and drowns them (4 asphyxiation a second, times realm power); Riding the Current glides 6 tiles plus 1 per realm,
+  spilling water along the way; Tidal Surge hits for 18 blunt (times realm power) as it throws.
+- **Returning Iron** aims only when the bound artifact is in hand (to throw it): otherwise binding and recalling go
+  off at once (`KsSkipTargetingComponent`, which the client honours by using the action on the player's own spot).
 - **One button:** Meditate becomes Break Through (gold, with a chime) once insight is full.
 - **Ascension:** at Nascent Soul with full insight, the breakthrough action begins a 20-cycle tribulation. Surviving
   it leaves the round as an immortal.
@@ -40,7 +48,10 @@ and injury alerts stay in step.
 Besides each law's techniques, every cultivator comes to the universal techniques
 (`CultivationSystem.UniversalTechniques`: Spiritual Sense, Qinggong, Acupoint Sealing, talismans, formations,
 spirit beasts, Body Outside the Body and more), and two laws together can resonate into a combination technique
-(`cultivationCombo` prototypes). Spiritual Sense raises `CultivationSensedEvent` on everyone it sweeps, so any system
+(`cultivationCombo` prototypes). Techniques grow with the realm: area techniques reach one tile further for every
+realm above Qi Condensation (`CultivationSystem.AreaRange`), knockbacks throw one tile further (`ThrowReach`), and
+aimed techniques can be aimed two tiles further (`RefreshReach`, which sets each aimed action's range from its
+prototype's). Spiritual Sense raises `CultivationSensedEvent` on everyone it sweeps, so any system
 can add what it notices; meditation raises `CultivationMeditatedEvent` after each cycle.
 
 The antagonist is `KsCultivator` (rule `KsCultivators`): one to three cultivators, each starting with a random
@@ -469,6 +480,6 @@ the arts by stage. Reading a first law or the body primer writes a short guide t
 ## The Sacred Site
 
 In the wuxia gamemodes (`SacredSiteSystem`) heaven and earth's qi wells up at a random station nav beacon from three
-minutes in, moving every ten minutes, and the station is told where each time. Meditating or forging the body within
+minutes in, moving every three minutes, and the station is told where each time. Meditating or forging the body within
 three tiles of it goes twice as fast.
 

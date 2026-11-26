@@ -10,13 +10,13 @@ namespace Content.Server._KS14.Cultivation.Systems;
 
 /// <summary>
 ///     In the wuxia gamemodes heaven and earth's qi wells up at one place on the station at a time: a Sacred Site, at a
-///         random nav beacon, moving every ten minutes. The whole station is told where. Meditating or forging the body
+///         random nav beacon, moving every three minutes. The whole station is told where. Meditating or forging the body
 ///         within three tiles of it goes twice as fast, so it's worth holding, and worth fighting for.
 /// </summary>
 public sealed partial class SacredSiteSystem : EntitySystem
 {
     private static readonly EntProtoId SitePrototype = "KsSacredSite";
-    private static readonly TimeSpan MoveInterval = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan MoveInterval = TimeSpan.FromMinutes(3);
 
     /// <summary>
     ///     How long into the round before the first site appears, so people have their bearings first.

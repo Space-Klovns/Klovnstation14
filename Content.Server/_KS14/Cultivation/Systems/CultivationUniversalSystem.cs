@@ -143,7 +143,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         _visualsSystem.Play(CultivationVisualsSystem.WindChimesSound, entity);
         _visualsSystem.Wave(entity, FxColour.Sense, big: true);
         var found = 0;
-        foreach (var otherUid in MobsAround(entity, args.Range))
+        foreach (var otherUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if (HasComp<CultivationConcealedComponent>(otherUid))
                 continue;
@@ -168,7 +168,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         }
 
         _manuals.Clear();
-        _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, args.Range, _manuals);
+        _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, _cultivationSystem.AreaRange(entity, args.Range), _manuals);
         foreach (var manualEntity in _manuals)
             _popupSystem.PopupEntity(Loc.GetString("cultivation-sense-manual"), manualEntity, entity);
 
@@ -198,7 +198,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         if (direction.LengthSquared() < 0.0001f)
             direction = new Vector2(0f, 1f);
 
-        _throwingSystem.TryThrow(args.Target, Vector2.Normalize(direction) * args.Distance * MathF.Sqrt(_cultivationSystem.Power(entity)), baseThrowSpeed: 10f, user: entity, recoil: false);
+        _throwingSystem.TryThrow(args.Target, Vector2.Normalize(direction) * _cultivationSystem.ThrowReach(entity, args.Distance) * MathF.Sqrt(_cultivationSystem.Power(entity)), baseThrowSpeed: 10f, user: entity, recoil: false);
         _staminaSystem.TakeStaminaDamage(args.Target, args.StaminaDamage * _cultivationSystem.Power(entity), source: entity);
         _audioSystem.PlayPvs(PalmSound, args.Target);
         _noticeSystem.Announce(args.Target, Loc.GetString("cultivation-empty-palm", ("user", entity.Owner), ("target", args.Target)), type: PopupType.MediumCaution);
@@ -235,7 +235,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         //     have no access to. Only a spot inside something solid, or off the station, is refused.
         var targetMap = _transformSystem.ToMapCoordinates(args.Target);
         var here = _transformSystem.GetMapCoordinates(entity);
-        if (targetMap.MapId != here.MapId || (targetMap.Position - here.Position).Length() > args.MaxDistance
+        if (targetMap.MapId != here.MapId || (targetMap.Position - here.Position).Length() > args.MaxDistance + CultivationSystem.ReachPerRealm * (float)entity.Comp.Realm
             || !_turfSystem.TryGetTileRef(args.Target, out var tile) || _turfSystem.IsSpace(tile.Value)
             || _turfSystem.IsTileBlocked(tile.Value, CollisionGroup.Impassable))
         {
@@ -270,7 +270,7 @@ public sealed partial class CultivationUniversalSystem : EntitySystem
         _visualsSystem.ArtOn(CultivationVisualsSystem.ArtRoarGold, entity);
         _visualsSystem.Distort(_transformSystem.GetMapCoordinates(entity), FxDistortion.Pulse);
         var power = PathPower(entity);
-        foreach (var otherUid in MobsAround(entity, args.Range))
+        foreach (var otherUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {
             if (PathPower(otherUid) >= power || _sharedCultivationSystem.IsAlly(entity, otherUid))
                 continue;

@@ -63,6 +63,9 @@ public sealed partial class ActionUIController
         if (_actionsSystem?.GetAction(actionUid) is not { } action)
             return;
 
+        if (_actionsSystem.KsTryUseWithoutAiming(action))
+            return;
+
         if (EntityManager.TryGetComponent<TargetActionComponent>(action, out var target))
             ToggleTargeting((action, action, target));
         else

@@ -4,6 +4,7 @@ using Content.Server._KS14.Cultivation.Body;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Botany.Components;
 using Content.Server.Weapons.Ranged.Systems;
+using Content.Shared._KS14.Actions;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
@@ -99,6 +100,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         var currentTime = _gameTiming.CurTime;
 
         UpdateFlyingArtifacts(currentTime);
+        UpdateArtifactAiming(currentTime);
 
         var ridingEnumerator = EntityQueryEnumerator<SwordRidingComponent>();
         while (ridingEnumerator.MoveNext(out var uid, out var ridingComponent))
@@ -295,6 +297,38 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     /// <summary>
     ///     A hurled artifact that has come to rest flies back to its bearer's hand, if they're near enough.
     /// </summary>
+    private static readonly EntProtoId BindArtifactAction = "ActionCultivationBindArtifact";
+    private static readonly TimeSpan AimingRefresh = TimeSpan.FromSeconds(0.25);
+    private TimeSpan _nextAimingRefresh;
+
+    /// <summary>
+    ///     Returning Iron needs aiming only for a throw, so it's instant (bind or recall) unless the bound artifact is in
+    ///         hand.
+    /// </summary>
+    private void UpdateArtifactAiming(TimeSpan currentTime)
+    {
+        if (currentTime < _nextAimingRefresh)
+            return;
+
+        _nextAimingRefresh = currentTime + AimingRefresh;
+        var cultivatorEnumerator = EntityQueryEnumerator<CultivatorComponent>();
+        while (cultivatorEnumerator.MoveNext(out var uid, out var cultivatorComponent))
+        {
+            if (_sharedCultivationSystem.TechniqueAction(cultivatorComponent, BindArtifactAction) is not { } actionUid
+                || !TryComp<KsSkipTargetingComponent>(actionUid, out var skipComponent))
+                continue;
+
+            var throwing = TryComp<ArtifactBearerComponent>(uid, out var bearerComponent)
+                && bearerComponent.Artifact is { } artifactUid && !TerminatingOrDeleted(artifactUid)
+                && _handsSystem.IsHolding(uid, artifactUid);
+            if (skipComponent.Skip == !throwing)
+                continue;
+
+            skipComponent.Skip = !throwing;
+            Dirty(actionUid, skipComponent);
+        }
+    }
+
     private void UpdateFlyingArtifacts(TimeSpan currentTime)
     {
         var flyingEnumerator = EntityQueryEnumerator<FlyingArtifactComponent>();
@@ -454,10 +488,11 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.FireRing(entity, args.Range, 12, 12);
+        var range = _cultivationSystem.AreaRange(entity, args.Range);
+        _visualsSystem.FireRing(entity, range, 12, 12);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         _visualsSystem.Shockwave(_transformSystem.GetMapCoordinates(entity), strength: 1.5f);
-        foreach (var victimUid in Hostiles(entity, args.Range))
+        foreach (var victimUid in Hostiles(entity, range))
             _flammableSystem.AdjustFireStacks(victimUid, 2f * _cultivationSystem.Power(entity), ignite: true);
 
         // It's hot for you too.
@@ -645,7 +680,7 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
         args.Handled = true;
         _visualsSystem.WoodBloom(entity, 1.2f, 8);
         _plants.Clear();
-        _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, args.Range, _plants);
+        _entityLookupSystem.GetEntitiesInRange(Transform(entity).Coordinates, _cultivationSystem.AreaRange(entity, args.Range), _plants);
         foreach (var plantEntity in _plants)
         {
             // Weeds and pests wither; the plants drink the qi in.

@@ -27,7 +27,7 @@ public static class CultivationTechniqueLists
         ("ActionCultivationArrays", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationBeastContract", CultivationRealm.FoundationEstablishment),
         ("ActionCultivationVoidStep", CultivationRealm.GoldenCore),
-        ("ActionCultivationBodyOutsideBody", CultivationRealm.NascentSoul),
+        ("ActionCultivationBodyOutsideBody", CultivationRealm.GoldenCore),
     };
 
     /// <summary>

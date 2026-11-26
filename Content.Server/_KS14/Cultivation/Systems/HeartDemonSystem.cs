@@ -92,8 +92,8 @@ public sealed partial class HeartDemonSystem : EntitySystem
             tier = hostBody.Stage / 3;
 
         demonComponent.BonusDamage = 6f + 8f * tier;
-        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(100 + 60 * tier), MobState.Critical);
-        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(200 + 60 * tier), MobState.Dead);
+        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(60 + 30 * tier), MobState.Critical);
+        _mobThresholdSystem.SetMobStateThreshold(demonUid, FixedPoint2.New(100 + 40 * tier), MobState.Dead);
         // It hunts its host for as long as it lives: a lasting grudge, not retaliation that wears off.
         _npcFactionSystem.AggroEntity(demonUid, hostUid);
         if (TryComp<NPCRetaliationComponent>(demonUid, out var retaliationComponent))
