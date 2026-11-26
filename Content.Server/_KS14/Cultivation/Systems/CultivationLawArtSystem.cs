@@ -5,7 +5,6 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.Botany.Components;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared._KS14.Actions;
-using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Cultivation;
 using Content.Shared._KS14.Cultivation.Components;
 using Content.Shared._KS14.Cultivation.Systems;
@@ -64,7 +63,6 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan PalmFallTime = TimeSpan.FromSeconds(1.2);
     private static readonly EntProtoId SteamPrototype = "KsSteamVeil";
-    private static readonly EntProtoId ChemicalFirePrototype = "ChemicalFire";
 
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
@@ -75,7 +73,6 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private FlammableSystem _flammableSystem = default!;
     [Dependency] private GunSystem _gunSystem = default!;
-    [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private SharedCultivationSystem _sharedCultivationSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
@@ -158,6 +155,8 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
             LeaveMagma((uid, moltenComponent));
         }
+
+        UpdateMoltenTrails(currentTime);
     }
 
     #region Helpers
@@ -784,9 +783,47 @@ public sealed partial class CultivationLawArtSystem : EntitySystem
 
         var behind = entity.Comp.LastPosition;
         entity.Comp.LastPosition = here;
-        // Real fire where they stepped, and a scorch of embers glowing as it dies down.
-        _chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, _transformSystem.ToCoordinates(behind), duration: TimeSpan.FromSeconds(4));
-        Spawn(MoltenStepEffect, behind);
+        // A footprint of low flame and embers that burns whoever steps into it while it's still alight.
+        var trailUid = Spawn(MoltenStepEffect, behind);
+        var trail = EnsureComp<MoltenTrailComponent>(trailUid);
+        trail.Caster = entity;
+        trail.BurnUntil = _gameTiming.CurTime + MoltenTrailBurnTime;
+        trail.Power = _cultivationSystem.Power(entity);
+    }
+
+    private static readonly TimeSpan MoltenTrailBurnTime = TimeSpan.FromSeconds(4);
+    private static readonly TimeSpan MoltenTrailTick = TimeSpan.FromSeconds(0.5);
+    private TimeSpan _nextMoltenTrailTick;
+
+    /// <summary>
+    ///     Anyone (but the one who left it, and their friends) standing in a burning footprint catches fire and is burned.
+    /// </summary>
+    private void UpdateMoltenTrails(TimeSpan currentTime)
+    {
+        if (currentTime < _nextMoltenTrailTick)
+            return;
+
+        _nextMoltenTrailTick = currentTime + MoltenTrailTick;
+        var trailQuery = EntityQueryEnumerator<MoltenTrailComponent, TransformComponent>();
+        while (trailQuery.MoveNext(out var trailUid, out var trail, out var xform))
+        {
+            if (currentTime >= trail.BurnUntil)
+            {
+                RemCompDeferred<MoltenTrailComponent>(trailUid);
+                continue;
+            }
+
+            _mobs.Clear();
+            _entityLookupSystem.GetEntitiesInRange(xform.Coordinates, 0.6f, _mobs);
+            foreach (var victim in _mobs)
+            {
+                if (victim.Owner == trail.Caster || trail.Caster is { } caster && _sharedCultivationSystem.IsAlly(caster, victim))
+                    continue;
+
+                _flammableSystem.AdjustFireStacks(victim, 0.6f * trail.Power, ignite: true);
+                _damageableSystem.TryChangeDamage(victim.Owner, CultivationSystem.Damage("Heat", 2.5f * trail.Power), origin: trail.Caster);
+            }
+        }
     }
 
     [SubscribeLocalEvent]
@@ -897,6 +934,22 @@ public sealed partial class BuddhaPalmShadowComponent : Component
 
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan SlamAt;
+}
+
+/// <summary>
+///     A Molten Step footprint that still burns whoever steps into it.
+/// </summary>
+[RegisterComponent, AutoGenerateComponentPause, Access(typeof(CultivationLawArtSystem))]
+public sealed partial class MoltenTrailComponent : Component
+{
+    [DataField]
+    public EntityUid? Caster;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan BurnUntil;
+
+    [DataField]
+    public float Power = 1f;
 }
 
 [RegisterComponent, AutoGenerateComponentPause, Access(typeof(CultivationLawArtSystem))]

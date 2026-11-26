@@ -188,7 +188,7 @@ public sealed partial class CultivationTechniqueSystem : EntitySystem
             return;
 
         args.Handled = true;
-        _visualsSystem.FireRing(entity, 3f, 16, 22);
+        _visualsSystem.FireRing(entity, _cultivationSystem.AreaRange(entity, args.Range), 16, 22);
         _visualsSystem.Wave(entity, FxColour.Fire, big: true);
         foreach (var victimUid in MobsAround(entity, _cultivationSystem.AreaRange(entity, args.Range)))
         {

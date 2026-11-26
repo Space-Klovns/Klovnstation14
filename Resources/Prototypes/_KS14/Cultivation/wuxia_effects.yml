@@ -257,12 +257,15 @@
     drawdepth: FloorObjects
     noRot: true
     layers:
+    - state: flame_low
+      shader: unshaded
+      map: [ "flame" ]
     - state: embers
       shader: unshaded
   - type: PointLight
     color: "#ff6a1c"
-    radius: 1.6
-    energy: 1.6
+    radius: 1.8
+    energy: 2
     netsync: false
   - type: LightFade
     duration: 6

@@ -553,6 +553,11 @@ public sealed partial class CultivationVisualsSystem : EntitySystem
         if (TerminatingOrDeleted(atUid))
             return;
 
+        // As many flames as the size needs: one every ~0.6 tiles round the edge, about one per square tile inside (at
+        //     least what was asked), capped so a huge ring doesn't flood the area with entities.
+        ringFlames = Math.Clamp((int)MathF.Ceiling(MathF.Tau * radius / 0.6f), ringFlames, 64);
+        innerFlames = Math.Clamp((int)MathF.Ceiling(MathF.PI * radius * radius * 0.9f), innerFlames, 80);
+
         var centre = _transformSystem.GetMapCoordinates(atUid);
         var start = _robustRandom.NextFloat(0f, MathF.Tau);
         for (var flame = 0; flame < ringFlames; flame++)
