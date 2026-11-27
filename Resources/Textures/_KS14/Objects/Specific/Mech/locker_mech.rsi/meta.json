@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Locker mech sprites from SurfShack13 at https://github.com/peppyrmynt/SurfShack13/blob/3050977f6a2cd9874df761e168c8a8c932fbd2ec/surfshack13/icons/mob/rideables/long_mechs.dmi",
+  "size": {
+    "x": 32,
+    "y": 48
+  },
+  "states": [
+    {
+      "name": "lockermech",
+      "directions": 4
+    },
+    {
+      "name": "lockermech-open"
+    }
+  ]
+}

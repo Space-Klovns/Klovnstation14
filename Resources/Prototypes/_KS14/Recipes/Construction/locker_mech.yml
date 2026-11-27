@@ -1,0 +1,28 @@
+- type: construction
+  id: KsLockerMech
+  graph: KsLockerMech
+  startNode: start
+  targetNode: done
+  category: construction-category-storage
+  objectType: Structure
+
+- type: constructionGraph
+  id: KsLockerMech
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: done
+      steps:
+      - material: Steel
+        amount: 20
+      - material: Cable
+        amount: 20
+      - material: MetalRod
+        amount: 5
+      - material: Cloth
+        amount: 5
+      - tool: Screwing
+        doAfter: 4
+  - node: done
+    entity: KsMechLocker

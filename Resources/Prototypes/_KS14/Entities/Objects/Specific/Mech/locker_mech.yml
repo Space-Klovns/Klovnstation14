@@ -1,0 +1,64 @@
+- type: entity
+  id: KsMechLocker
+  parent: MechRipley
+  name: locker mech
+  description: A locker held upright by scavenged struts, airlock servos, and a tension belt.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Specific/Mech/locker_mech.rsi
+    layers:
+    - map: [ "enum.MechVisualLayers.Base" ]
+      state: lockermech
+  - type: KsLockerMech
+  - type: Mech
+    # Reuse the native pilot action slot. The belt takes the place of swappable equipment.
+    baseState: lockermech
+    openState: lockermech-open
+    # The source sprite sheet has no separate wreck state.
+    brokenState: lockermech-open
+    mechCycleAction: KsActionLockerMechTip
+    maxEquipmentAmount: 0
+    maxIntegrity: 125
+    mechToPilotDamageMultiplier: 1
+    airtight: true
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 1.75
+    baseSprintSpeed: 2.75
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 12
+  - type: Construction
+    graph: KsLockerMech
+    node: done
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 125
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          LockerSteel:
+            min: 1
+            max: 1
+      - !type:DoActsBehavior
+        acts: [Destruction]
+
+- type: entity
+  id: KsActionLockerMechTip
+  parent: BaseMechAction
+  name: Tension belt
+  description: Rock the locker, then topple onto a nearby tile.
+  components:
+  - type: Action
+    useDelay: 8
+    checkCanInteract: false
+    icon:
+      sprite: Interface/Actions/actions_mecha.rsi
+      state: mech_cycle_equip_on
+  - type: TargetAction
+    range: 1.5
+    checkCanAccess: false
+  - type: WorldTargetAction
+    event: !type:KsLockerTipActionEvent
