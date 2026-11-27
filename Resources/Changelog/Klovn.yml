@@ -3179,3 +3179,11 @@ Entries:
       message: Added the Melstroy and Thing sound plushies from Black Space.
   id: 281
   time: '2026-11-27T19:13:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Your own bullets no longer appear to fly through enemies when your shots
+        pass through your own side.
+  id: 282
+  time: '2026-11-27T19:18:35.0000000+00:00'
