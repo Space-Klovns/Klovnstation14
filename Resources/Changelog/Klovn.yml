@@ -3173,3 +3173,9 @@ Entries:
       message: Mech pilots no longer take damage the mech itself is immune to.
   id: 280
   time: '2026-11-24T10:09:26.0000000+00:00'
+- author: Camish101
+  changes:
+    - type: Add
+      message: Added the Melstroy and Thing sound plushies from Black Space.
+  id: 281
+  time: '2026-11-27T19:13:49.0000000+00:00'
