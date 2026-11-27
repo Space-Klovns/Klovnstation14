@@ -25,6 +25,7 @@
         - MobMask
   - type: Clickable
   - type: InteractionOutline
+  - type: Airtight
   - type: Sprite
     sprite: Structures/Walls/rock.rsi
     state: rock
