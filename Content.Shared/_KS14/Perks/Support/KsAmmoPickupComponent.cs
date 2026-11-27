@@ -11,15 +11,13 @@ namespace Content.Shared._KS14.Perks.Support;
 ///         comes within <see cref="Radius"/> has the gun in their active hand refilled, with its magazine's own
 ///         rounds, or its battery recharged, and the pickup is used up. With nothing to refill it stays. Despawning is
 ///         left to <c>TimedDespawn</c> on the prototype. Taken in shared code (<see cref="KsAmmoPickupSystem"/>): by the
-///         server for everyone, and predicted by a player's own client for that player.
+///         server for everyone, and predicted by a player's own client for that player, which is sent whether its
+///         player may take it (<see cref="KsAmmoPickupComponentState"/>).
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [Access(typeof(KsAmmoPickupSystem))]
 public sealed partial class KsAmmoPickupComponent : Component
 {
-    // Each player is sent whether they themselves may take it (KsAmmoPickupComponentState).
-    public override bool SessionSpecific => true;
-
     [DataField]
     public float Radius = 0.6f;
 

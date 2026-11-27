@@ -355,6 +355,58 @@ Everything under `Robust.{Shared,Client,Server}/GameObjects/`, subfolders includ
 
 **Engine version**: the `RobustToolbox` submodule is pinned, currently v295.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every version in between and check whether upstream SS14 already shipped the content-side fix (porting it is cheaper and keeps merges clean). Bumps bring new debug assertions, so run the tests in Debug as well as building Release (§5).
 
+### Component state that differs per player
+
+A networked component's state goes to every player who can see the entity, and a modified client can read all of it. When that is wrong (private data, a hidden role, an answer that is different for each player), there are three tools. Pick the first that fits:
+
+| You want | Use | Cost |
+| --- | --- | --- |
+| Only the player controlling this entity gets it | `SendOnlyToOwner` | One comparison per send |
+| Some players get the component and others don't | `SessionSpecific` and a `ComponentGetStateAttemptEvent` handler | An event per player per send |
+| Everyone gets it, saying something different to each | A `ComponentGetState` handler that reads `args.Player` | Building a state per player |
+
+**`SendOnlyToOwner`**: an override on the component, nothing else. For what only the player in that body should know (`AlertsComponent`, `ChangelingIdentityComponent`).
+
+```csharp
+[RegisterComponent, NetworkedComponent]
+public sealed partial class AlertsComponent : Component
+{
+    public override bool SendOnlyToOwner => true;
+}
+```
+
+**`SessionSpecific`**: makes the engine ask, for each player, whether to send the component at all. The override only turns the question on; the handler answers it, and without one everybody is sent it as before. All or nothing: for hiding a whole component (`RevolutionaryComponent`, `FollowedComponent`).
+
+```csharp
+public override bool SessionSpecific => true; // on the component
+
+[SubscribeLocalEvent]
+private void OnGetStateAttempt(Entity<RevolutionaryComponent> entity, ref ComponentGetStateAttemptEvent args)
+{
+    args.Cancelled = !CanGetState(args.Player); // SharedRevolutionarySystem: revs, and whoever sees antag icons
+}
+```
+
+**A per-player state**: a hand-written `ComponentGetState` handler, with neither override. For one answer about the receiving player, where the data behind it must stay on the server: whether *their* shots pass through this mob, without sending anyone's factions (`KsFactionCollisionSystem`, `KsAmmoPickupSystem`).
+
+```csharp
+[SubscribeLocalEvent]
+private void OnGetState(Entity<NpcFactionMemberComponent> entity, ref ComponentGetState args)
+{
+    var shotsPass = args.Player?.AttachedEntity is { } playerUid && ShotsPass(playerUid, entity);
+    args.State = new KsNpcFactionMemberComponentState(shotsPass);
+}
+```
+
+`[AutoGenerateComponentState]` builds one state for everyone, so this needs its own `[Serializable, NetSerializable]` state class and a `ComponentHandleState` handler too.
+
+Traps, all silent:
+
+- **Stale answers.** A state is only sent again when the component is dirtied, and what the answer depends on is usually somewhere else: the receiving player's side, role or body. The engine re-sends a `SendOnlyToOwner` or `SessionSpecific` component only when a player attaches to *that* entity (`ServerMetaDataSystem.OnActorPlayerAttach`). Everything else is yours: `Dirty` every affected component when the thing it depends on changes (`SharedRevolutionarySystem.DirtyRevComps`; `KsFactionCollisionSystem` on a change of side or body). Forgotten, a client keeps an answer that was true once. Test the change, not just the first send (`KsFactionCollisionPredictionTest`).
+- **`args.Player` is null** when the state is for a replay. Treat it as nobody.
+- **Refusing is not removing.** A refused player is sent nothing; a copy their client already has, from an earlier send or from the entity's prototype, stays as it was. Don't read `HasComp` on a client as "I was allowed to see this" unless the component is only ever added at runtime.
+- **A client's own copy of unsent data is the prototype's.** Shared code that reads it on a client decides wrongly, the same way every time: NPC factions are the standing example (the `prediction` skill).
+
 ### Events
 
 A system that owns state raises; any system that cares subscribes. A new behaviour adds a subscription and changes nothing in the raiser.

@@ -39,6 +39,13 @@ namespace Content.Shared._KS14.RayCollision;
 ///             hit before hits it again.
 ///     </para>
 ///     <para>
+///         What an entity was aimed at (<see cref="SetAimedAt"/>) is collided with even while its collision is switched
+///             off: a corpse is given <see cref="CollisionWakeComponent"/>, which switches a body's collision off
+///             while it is asleep on a grid and touching nothing, and no ray or contact finds it then. Each side
+///             decides that from its own contacts, of which a client has few, so a corpse the server's shot hit, lying
+///             in its own blood, was one the client's copy of the shot flew through.
+///     </para>
+///     <para>
 ///         A ray down the middle, not the shape: it is for what would be stepped over. What it only grazes, physics finds
 ///             itself, as ever. Allocates only for a hit.
 ///     </para>
@@ -64,6 +71,7 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
 
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<CollisionWakeComponent> _collisionWakeQuery = default!;
 
     /// <summary>
     ///     How far short of what it hits the entity is put, along its way, so it is touching and not inside.
@@ -115,6 +123,17 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
         component.Fixture = fixtureId;
         component.SweptHits.Clear();
         component.Flying = false;
+    }
+
+    /// <summary>
+    ///     Has <paramref name="uid"/> collide with <paramref name="targetUid"/>, which it was aimed at, even while that
+    ///         has its collision switched off for being asleep. Nothing else about the collision changes: it is still
+    ///         by layer and mask, and still for a <see cref="PreventCollideEvent"/> to prevent.
+    /// </summary>
+    public void SetAimedAt(EntityUid uid, EntityUid? targetUid)
+    {
+        if (TryComp<KsRayCollisionComponent>(uid, out var component))
+            component.AimedAt = targetUid;
     }
 
     /// <summary>
@@ -296,16 +315,26 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
                     IsIgnored = _isIgnored,
                 });
 
-            if (!result.Hit)
+            // What it was aimed at, if that is nearer and no ray could find it.
+            var fraction = result.Hit ? result.Results[0].Fraction : float.PositiveInfinity;
+            if (TryGetAimedAtFraction(rayCollisionComponent, transformComponent.MapID, origin, step, out var aimedAtFraction) &&
+                aimedAtFraction < fraction)
+            {
+                hitUid = rayCollisionComponent.AimedAt!.Value;
+                fraction = aimedAtFraction;
+            }
+            else if (result.Hit)
+            {
+                hitUid = result.Results[0].Entity;
+            }
+            else
             {
                 _sweeping = null;
                 _sweepingFixture = null;
                 return false;
             }
 
-            var hit = result.Results[0];
-            hitUid = hit.Entity;
-            point = origin + step * MathF.Max(0f, hit.Fraction - ContactMargin / step.Length());
+            point = origin + step * MathF.Max(0f, fraction - ContactMargin / step.Length());
         }
 
         _sweeping = null;
@@ -348,10 +377,77 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
     }
 
     /// <summary>
+    ///     How far along <paramref name="step"/> from <paramref name="origin"/>, as a fraction of it, the entity being swept
+    ///         meets what it was aimed at, if that has its collision switched off for being asleep and would be collided
+    ///         with otherwise. One whose collision is on is the ray's to find.
+    /// </summary>
+    private bool TryGetAimedAtFraction(KsRayCollisionComponent component, MapId mapId, Vector2 origin, Vector2 step, out float fraction)
+    {
+        fraction = default;
+
+        if (component.AimedAt is not { } aimedAtUid ||
+            !_physicsQuery.TryComp(aimedAtUid, out var aimedAtBody) ||
+            aimedAtBody.CanCollide ||
+            !_collisionWakeQuery.TryComp(aimedAtUid, out var collisionWakeComponent) ||
+            !collisionWakeComponent.Enabled ||
+            _sweepingFixture is not { } fixture ||
+            GetHardFixture(aimedAtUid, fixture) is not { } aimedAtFixture)
+            return false;
+
+        var aimedAtTransform = Transform(aimedAtUid);
+        if (aimedAtTransform.MapID != mapId)
+            return false;
+
+        // Its bounds stand in for its shape: near enough for something aimed at it.
+        var (aimedAtPosition, aimedAtRotation) = _transformSystem.GetWorldPositionRotation(aimedAtTransform);
+        var bounds = aimedAtFixture.Shape.ComputeAABB(new Robust.Shared.Physics.Transform(aimedAtPosition, (float)aimedAtRotation.Theta), 0);
+        if (!TryGetSegmentBoxFraction(origin, step, bounds, out fraction))
+            return false;
+
+        return !IsIgnored(aimedAtUid, evenWithCollisionOff: true);
+    }
+
+    /// <summary>
+    ///     How far along <paramref name="step"/> from <paramref name="origin"/>, as a fraction of it, the segment enters
+    ///         <paramref name="box"/>: zero if it starts inside.
+    /// </summary>
+    private static bool TryGetSegmentBoxFraction(Vector2 origin, Vector2 step, Box2 box, out float fraction)
+    {
+        var enter = 0f;
+        var exit = 1f;
+        fraction = 0f;
+
+        if (!ClipAxis(origin.X, step.X, box.Left, box.Right, ref enter, ref exit) ||
+            !ClipAxis(origin.Y, step.Y, box.Bottom, box.Top, ref enter, ref exit))
+            return false;
+
+        fraction = enter;
+        return true;
+    }
+
+    private static bool ClipAxis(float origin, float step, float min, float max, ref float enter, ref float exit)
+    {
+        if (MathF.Abs(step) < 1e-6f)
+            return origin >= min && origin <= max;
+
+        var first = (min - origin) / step;
+        var second = (max - origin) / step;
+        if (first > second)
+            (first, second) = (second, first);
+
+        enter = MathF.Max(enter, first);
+        exit = MathF.Min(exit, second);
+        return enter <= exit;
+    }
+
+    private bool IsIgnored(EntityUid otherUid) => IsIgnored(otherUid, evenWithCollisionOff: false);
+
+    /// <summary>
     ///     What the entity being swept would not collide with: itself, what it already has, and anything a
     ///         <see cref="PreventCollideEvent"/> either way cancels, raised as physics raises it.
     /// </summary>
-    private bool IsIgnored(EntityUid otherUid)
+    /// <param name="evenWithCollisionOff">Whether one with its collision switched off is still collided with.</param>
+    private bool IsIgnored(EntityUid otherUid, bool evenWithCollisionOff)
     {
         if (_sweeping is not { } sweeping || _sweepingFixture is not { } fixture)
             return true;
@@ -360,7 +456,7 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
             return true;
 
         if (!_physicsQuery.TryComp(otherUid, out var otherBody) ||
-            !otherBody.CanCollide ||
+            !otherBody.CanCollide && !evenWithCollisionOff ||
             GetHardFixture(otherUid, fixture) is not { } otherFixture)
             return true;
 

@@ -49,6 +49,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
     [Dependency] private _KS14.FarSound.FarSoundSystem _farsoundSystem = default!;// KS14
     [Dependency] protected _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
+    [Dependency] private _KS14.RayCollision.KsRayCollisionSystem _ksRayCollisionSystem = default!; // KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private INetManager _netManager = default!;

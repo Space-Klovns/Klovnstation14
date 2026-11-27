@@ -19,6 +19,6 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         return uid;
     }
 
-    public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source)
+    public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source, bool once = false)
         => SpawnPvs(prototype, coordinates);
 }

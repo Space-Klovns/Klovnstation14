@@ -36,6 +36,14 @@ public sealed partial class KsRayCollisionComponent : Component
     /// </summary>
     [ViewVariables]
     public bool Flying;
+
+    /// <summary>
+    ///     What it was aimed at, if anything: collided with even while that has its collision switched off for being
+    ///         asleep (<c>CollisionWakeComponent</c>), when no ray finds it. See
+    ///         <see cref="KsRayCollisionSystem.SetAimedAt"/>.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? AimedAt;
 }
 
 /// <summary>

@@ -121,6 +121,17 @@ Whatever a predicted path writes, it dirties, and what it reads back next time (
 `KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` and
 `KsPredictedSpillTest.SprayLaysPuddlesThatLastUntilTheServersArrive` fail with engine spawns or without the handover.
 
+## NPC factions are not on the client
+
+`NpcFactionMemberComponent.Factions` is never sent: sent, it would tell a client who is on a hidden side. A client has
+each entity's prototype factions, which for humanoids are all alike, so predicted code that compares factions decides
+wrongly, and the same way every time: a defender's own bullet went through every enemy the server's then hit. Send each
+player the answer about themselves instead, in a per-player state (`ComponentGetState.Player`):
+`NpcFactionMemberComponent.KsLocalPlayerShotsPass` for whose shots pass through whom (`KsFactionCollisionSystem`),
+`KsAmmoPickupComponent.LocalPlayerMayTake` for a pickup. What the answer depends on changing (the player's side or
+body) means sending it again. `KsFactionCollisionPredictionTest`. `SendOnlyToOwner`, `SessionSpecific` and
+per-player states are compared in CONTRIBUTING §4, *Component state that differs per player*.
+
 ## Vapors and tile reactions
 
 Vapors are shared code (`SharedVaporSystem`). A player's own spray (`SharedSpraySystem`) or solution gun shot is a kept

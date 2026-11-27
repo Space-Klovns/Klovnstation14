@@ -38,7 +38,7 @@ public sealed partial class GunSystem
                     //      client asks for each, and when that request is late this fires it first: outside the scope its
                     //      round was not hidden from them, and they saw it beside their own.
                     using (_ksPredictedSpawnSystem.BeginUserPrediction(HasComp<Robust.Shared.Player.ActorComponent>(parent) ? (EntityUid?)parent : null))
-                        AttemptShoot(parent, (uid, gun), gun.ShootCoordinates ?? new EntityCoordinates(uid, gun.DefaultDirection));
+                        AttemptShoot(parent, (uid, gun), gun.ShootCoordinates ?? new EntityCoordinates(uid, gun.DefaultDirection), gun.Target /* KS14: added arg, the rest of a burst flew over someone down whom its first shot was aimed at */);
                     // KS14 end
                 }
                 else

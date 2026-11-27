@@ -19,6 +19,16 @@ transformSystem.SetCoordinates(mobUid, outsideCoordinates);
 physicsSystem.WakeBody(mobUid);
 ```
 
+## A sleeping corpse has no collision, and each side decides that itself
+
+The dead are given `CollisionWakeComponent` (`MobStateSystem`, as items have): while the body is asleep, on a grid, with
+no contacts and no joints, its `CanCollide` is off. Its fixtures leave the broadphase, so no ray, lookup (bar
+`LookupFlags.Sundries`) or contact finds it. `CollisionWakeSystem` works that out locally on every sleep and wake, from
+that side's own contacts, without dirtying: a client has few contacts, so a corpse lying in its blood collides on the
+server and not on the client. A bullet aimed at one hits it regardless (`KsRayCollisionSystem.SetAimedAt`, set where the
+gun's target is); anything else that must reach a corpse has to look for it some other way than a ray.
+`KsDownedTargetPredictionTest.ShotHitsACorpseClickedOnWhoseBodyIsAsleep`.
+
 ## An item lying on a puddle isn't touching it
 
 An item's fixture has mask `ItemMask` and no layer; a puddle's `slipFixture` is on `SlipLayer` with mask `ItemMask`.
