@@ -1,0 +1,4 @@
+- type: soundCollection # doesnt work btw, round start sound can only be a path not a collection, if you see this remind me to fix it later
+  id: KsRoundStart
+  files:
+  - /Audio/Announcements/welcome.ogg
