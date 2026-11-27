@@ -5,13 +5,9 @@ using Robust.Shared.Prototypes;
 namespace Content.Client._KS14.ZLevel.Light;
 
 /// <summary>
-///     Attached to a light that is currently shining down onto the z-levels below it, holding the stand-in
-///         lights that do the shining and the gaps in the floor they shine through.
+///     Caches a light's search for gaps in the floor and owns the stand-in lights illuminating lower levels.
+///     An empty search result is cached until the next refresh.
 /// </summary>
-/// <remarks>
-///     Client-side only, and added and removed by <see cref="KsZLevelLightLeakSystem"/> alone: its presence
-///         means "this light has stand-ins that need cleaning up", which is the only reason it exists.
-/// </remarks>
 [RegisterComponent]
 [Access(typeof(KsZLevelLightLeakSystem))]
 public sealed partial class KsZLevelLightLeakComponent : Component

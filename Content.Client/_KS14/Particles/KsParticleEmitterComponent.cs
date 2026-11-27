@@ -70,7 +70,8 @@ public sealed partial class KsParticleEmitterComponent : Component
     [ViewVariables]
     public bool UsesZ;
 
-    public System.Random Random = new();
+    // Seeded when a visible prototype is configured, before its first simulation step.
+    public System.Random Random = default!;
 
     /// <summary>
     ///     The walls near the emitter, for a prototype with <see cref="KsParticlesPrototype.Collision"/>. Null for
@@ -78,6 +79,11 @@ public sealed partial class KsParticleEmitterComponent : Component
     /// </summary>
     [ViewVariables]
     public KsParticleCollisionCache? Collision;
+
+    // Invalidated on prototype changes so the first frame always builds its transform.
+    public float FrameScale = float.NaN;
+
+    public bool BoundsDirty = true;
 
     #region Per frame, for the overlays
 

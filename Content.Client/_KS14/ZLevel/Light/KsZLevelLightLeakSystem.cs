@@ -174,23 +174,19 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
 
     private void UpdateLight(Entity<PointLightComponent, TransformComponent> light)
     {
-        // Wanted before the component is ensured, so that a light with nowhere to shine never grows one.
-        var leakComponent = _leakQuery.CompOrNull(light.Owner);
-        GetWantedStandIns(light, ref leakComponent);
-
-        if (_wantedStandIns.Count == 0)
+        _levelsBelow.Clear();
+        if (_maximumLevels <= 0 || _maximumHoles <= 0 || !light.Comp1.Enabled || light.Comp1.ContainerOccluded ||
+            light.Comp2.MapUid is not { } mapUid || !_zLevelQuery.HasComponent(mapUid) ||
+            !_zLevelSystem.TryGetZLevelsBelow(mapUid, _levelsBelow) || _levelsBelow.Count == 0)
         {
-            // Switched off, pocketed, carried off the stack, turned down too far to reach, or simply standing
-            //      on a floor with no gaps in it - all of which end the same way.
-            // Taken now rather than deferred: deferred removals are flushed on the tick, and a light that has
-            //      gone out should not keep lighting the z-level below it until the next one.
-            if (leakComponent != null)
+            if (_leakQuery.HasComponent(light.Owner))
                 RemComp<KsZLevelLightLeakComponent>(light.Owner);
-
             return;
         }
 
-        leakComponent ??= EnsureComp<KsZLevelLightLeakComponent>(light.Owner);
+        // An empty tile search is valid until the same refresh conditions as a search that found gaps.
+        var leakComponent = EnsureComp<KsZLevelLightLeakComponent>(light.Owner);
+        GetWantedStandIns(light, leakComponent);
         var standIns = leakComponent.StandIns;
 
         // Trim the gaps it no longer reaches, from the end - the ones it lost are always the far ones.
@@ -203,6 +199,9 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
             if (!TerminatingOrDeleted(trimmedUid))
                 Del(trimmedUid);
         }
+
+        if (_wantedStandIns.Count == 0)
+            return;
 
         // The stand-ins carry no mask rotation of their own, so the source's is folded into the rotation of
         //      the entity itself - which comes to the same thing, since they auto-rotate.
@@ -243,19 +242,9 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     /// </summary>
     private void GetWantedStandIns(
         Entity<PointLightComponent, TransformComponent> light,
-        ref KsZLevelLightLeakComponent? leakComponent)
+        KsZLevelLightLeakComponent leakComponent)
     {
         _wantedStandIns.Clear();
-
-        if (_maximumLevels <= 0 || _maximumHoles <= 0 || !light.Comp1.Enabled || light.Comp1.ContainerOccluded)
-            return;
-
-        if (light.Comp2.MapUid is not { } mapUid || !_zLevelQuery.HasComponent(mapUid))
-            return;
-
-        _levelsBelow.Clear();
-        if (!_zLevelSystem.TryGetZLevelsBelow(mapUid, _levelsBelow) || _levelsBelow.Count == 0)
-            return;
 
         var radius = light.Comp1.Radius;
         var falloff = light.Comp1.Falloff;
@@ -263,9 +252,6 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
         var worldPosition = _transformSystem.GetWorldPosition(light.Comp2);
         var mapId = light.Comp2.MapID;
 
-        // Ensured only once it is known there is somewhere for the light to go, so that a lamp in a sealed
-        //      room never carries one.
-        leakComponent ??= EnsureComp<KsZLevelLightLeakComponent>(light.Owner);
         RefreshHoles(leakComponent, mapId, worldPosition, radius);
 
         if (leakComponent.Holes.Count == 0)

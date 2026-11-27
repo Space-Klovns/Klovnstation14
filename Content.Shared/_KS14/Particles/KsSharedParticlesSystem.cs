@@ -151,6 +151,24 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
     {
     }
 
+    /// <summary>
+    ///     Configures a freshly spawned effect with one component lookup and one state change.
+    /// </summary>
+    public void ConfigureBurst(Entity<KsParticlesComponent?> entity, Color color, float speed, float amount, float scale, Angle? rotation)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        entity.Comp.Color = color;
+        entity.Comp.Speed = speed;
+        entity.Comp.Amount = amount;
+        entity.Comp.Scale = scale;
+        if (rotation is { } angle)
+            entity.Comp.Rotation = angle;
+
+        Dirty(entity);
+    }
+
     public void SetEmitting(Entity<KsParticlesComponent?> entity, bool emitting)
     {
         if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Emitting == emitting)

@@ -389,6 +389,26 @@ public sealed class KsParticleEmitterTest : GameTest
     }
 
     [Test]
+    public async Task DrawBoundsFollowEmitterBetweenSimulationSteps()
+    {
+        var emitter = await SpawnLocalAsync(_burst);
+        await Client.WaitAssertion(() =>
+        {
+            ClientSystem.FrameUpdate(Dt);
+            var before = emitter.Comp2.WorldBounds;
+            var age = emitter.Comp2.Age;
+            CEntMan.System<SharedTransformSystem>().SetLocalPosition(emitter.Owner, new Vector2(20, 30));
+            ClientSystem.FrameUpdate(0f);
+            Assert.That(emitter.Comp2.WorldBounds.Center, Is.EqualTo(before.Center + new Vector2(20, 30)));
+
+            ClientSystem.SetScale(emitter.Owner, 2f);
+            ClientSystem.FrameUpdate(0f);
+            Assert.That(emitter.Comp2.WorldBounds.Width, Is.EqualTo(before.Width * 2).Within(0.0001f));
+            Assert.That(emitter.Comp2.Age, Is.EqualTo(age));
+        });
+    }
+
+    [Test]
     public async Task DensityZeroSpawnsNothingAndDisablingListsNothing()
     {
         await OverrideCVar(Side.Client, KsCCVars.ParticlesDensity, 0f);
@@ -397,6 +417,7 @@ public sealed class KsParticleEmitterTest : GameTest
         await Client.WaitAssertion(() =>
         {
             Steps(starved, 5);
+            Assert.That(starved.Comp2.Particles, Is.Empty, "no particle storage is needed at zero density");
             Assert.That(starved.Comp2.Alive, Is.EqualTo(0), "at density 0 nothing spawns");
         });
 

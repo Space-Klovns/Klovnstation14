@@ -441,15 +441,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
         if (_particlesSystem.SpawnPredictedEffect(prototype, coordinates, sourceUid, once: _keptHit) is not { } emitterUid)
             return;
 
-        _particlesSystem.SetColor(emitterUid, bloodColor);
-        _particlesSystem.SetSpeed(emitterUid, speed);
-        _particlesSystem.SetAmount(emitterUid, amount);
-        _particlesSystem.SetScale(emitterUid, scale);
-        if (localRotation is not { } rotation)
-            return;
-
-        // The emitter is square to its grid (the prototypes leave followRotation off). Its parent is that grid, or
-        //      the map in space, so a rotation in the parent's frame is already in the emitter's.
-        _particlesSystem.SetRotation(emitterUid, rotation);
+        // Its parent is the grid (or map), so the supplied rotation is already in the emitter's frame.
+        _particlesSystem.ConfigureBurst(emitterUid, bloodColor, speed, amount, scale, localRotation);
     }
 }
