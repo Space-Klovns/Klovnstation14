@@ -1,0 +1,25 @@
+- type: soundCollection
+  id: KsPlushieSoundsMelstroy
+  files:
+  - /Audio/_KS14/Items/Toys/Melstroy/1.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/2.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/3.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/4.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/5.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/6.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/7.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/8.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/9.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/10.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/11.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/12.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/13.ogg
+  - /Audio/_KS14/Items/Toys/Melstroy/14.ogg
+
+- type: soundCollection
+  id: KsPlushieSoundsMusorDrop
+  files:
+  - /Audio/_KS14/Items/Toys/MusorDrop/drop.ogg
+  - /Audio/_KS14/Items/Toys/MusorDrop/musor-drop.ogg
+  - /Audio/_KS14/Items/Toys/MusorDrop/musor-drop-all.ogg
+  - /Audio/_KS14/Items/Toys/MusorDrop/musor.ogg

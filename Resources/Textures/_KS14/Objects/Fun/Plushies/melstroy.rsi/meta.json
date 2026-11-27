@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "license": "Custom",
+    "copyright": "Credited to Melstroy in Black Space. The source labels its license \"Melstroy\" without specifying terms. Taken from Black Space at https://github.com/Mr-Molodec/Project-Mr.-Molodec/blob/0b5ee558e5b168db7ad5366ca9bdbb2065e354c9/Resources/Textures/_BS/_SIN/Entities/melstroy.rsi/melstroy.png",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "melstroy"
+        }
+    ]
+}

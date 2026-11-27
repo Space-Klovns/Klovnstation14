@@ -1,0 +1,58 @@
+- type: entity
+  parent: BasePlushie
+  id: KsPlushieMelstroy
+  name: Melstroy
+  description: The real Melstroy.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Fun/Plushies/melstroy.rsi
+    state: melstroy
+  - type: EmitSoundOnUse
+    sound:
+      collection: KsPlushieSoundsMelstroy
+  - type: EmitSoundOnActivate
+    sound:
+      collection: KsPlushieSoundsMelstroy
+  - type: EmitSoundOnLand
+    sound:
+      collection: KsPlushieSoundsMelstroy
+  - type: EmitSoundOnTrigger
+    sound:
+      collection: KsPlushieSoundsMelstroy
+  - type: MeleeWeapon
+    soundHit:
+      collection: KsPlushieSoundsMelstroy
+  - type: UseDelay
+    delay: 5.0
+
+- type: entity
+  parent: BasePlushie
+  id: KsPlushieMusorDrop
+  name: Thing
+  description: Thing
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Fun/Plushies/musor_drop.rsi
+    state: musor_drop
+    # Display the original 420px sprite at one tile (32px).
+    scale: 0.07619048, 0.07619048
+  - type: EmitSoundOnUse
+    sound:
+      collection: KsPlushieSoundsMusorDrop
+  - type: EmitSoundOnActivate
+    sound:
+      collection: KsPlushieSoundsMusorDrop
+  - type: EmitSoundOnLand
+    sound:
+      collection: KsPlushieSoundsMusorDrop
+  - type: EmitSoundOnCollide
+    sound:
+      collection: KsPlushieSoundsMusorDrop
+  - type: EmitSoundOnTrigger
+    sound:
+      collection: KsPlushieSoundsMusorDrop
+  - type: MeleeWeapon
+    soundHit:
+      collection: KsPlushieSoundsMusorDrop
+  - type: UseDelay
+    delay: 0.1
