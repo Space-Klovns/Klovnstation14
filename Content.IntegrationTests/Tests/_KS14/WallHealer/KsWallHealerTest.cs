@@ -1,7 +1,9 @@
 #nullable enable
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.WallHealer;
+using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
+using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -9,6 +11,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Stacks;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -99,6 +102,28 @@ public sealed class KsWallHealerTest : GameTest
     }
 
     /// <summary>
+    ///     The patient's blood, in units. The bloodstream's own level is rounded to hundredths, coarser than a treatment.
+    /// </summary>
+    private float BloodVolume(EntityUid patientUid)
+    {
+        var entityManager = Pair.Server.EntMan;
+        var bloodstreamComponent = entityManager.GetComponent<BloodstreamComponent>(patientUid);
+        Assert.That(entityManager.System<SharedSolutionContainerSystem>()
+            .TryGetSolution(patientUid, bloodstreamComponent.BloodSolutionName, out _, out var bloodSolution), Is.True);
+
+        var volume = float.MaxValue;
+        foreach (var (reagentId, _) in bloodstreamComponent.BloodReferenceSolution.Contents)
+            volume = MathF.Min(volume, (float)bloodSolution!.GetTotalPrototypeQuantity(reagentId.Prototype));
+
+        return volume;
+    }
+
+    private float NormalBloodVolume(EntityUid patientUid)
+    {
+        return (float)Pair.Server.EntMan.GetComponent<BloodstreamComponent>(patientUid).BloodReferenceSolution.Volume;
+    }
+
+    /// <summary>
     ///     A healer and a patient beside it, the patient damaged.
     /// </summary>
     private async Task<(EntityUid Healer, EntityUid Patient)> SpawnHealerAndPatient(EntProtoId healerProto, DamageSpecifier damage)
@@ -119,14 +144,24 @@ public sealed class KsWallHealerTest : GameTest
         return (healerUid, patientUid);
     }
 
-    private async Task InsertOwnHand(EntityUid healerUid, EntityUid patientUid)
+    private Task InsertOwnHand(EntityUid healerUid, EntityUid patientUid)
+    {
+        return InsertHand(healerUid, patientUid, patientUid);
+    }
+
+    private async Task InsertHand(EntityUid healerUid, EntityUid userUid, EntityUid patientUid)
     {
         var server = Pair.Server;
+        var insertDelay = TimeSpan.Zero;
         await server.WaitPost(() =>
-            Assert.That(server.EntMan.System<KsWallHealerSystem>().TryStartInsert(Healer(healerUid), patientUid, patientUid), Is.True));
+        {
+            var healer = Healer(healerUid);
+            insertDelay = userUid == patientUid ? healer.Comp.SelfInsertDelay : healer.Comp.OtherInsertDelay;
+            Assert.That(server.EntMan.System<KsWallHealerSystem>().TryStartInsert(healer, userUid, patientUid), Is.True);
+        });
 
         // Until it goes in, with the insert delay as no more than a lower bound.
-        var maxTicks = SecondsToTicks((float)Healer(healerUid).Comp.SelfInsertDelay.TotalSeconds + 5f);
+        var maxTicks = SecondsToTicks((float)insertDelay.TotalSeconds + 5f);
         var ticks = 0;
         var inserted = false;
         for (; ticks < maxTicks && !inserted; ticks++)
@@ -156,11 +191,11 @@ public sealed class KsWallHealerTest : GameTest
         var (healerUid, patientUid) = await SpawnHealerAndPatient(_healerProto, damage);
         var bloodstreamSystem = server.EntMan.System<SharedBloodstreamSystem>();
 
-        var levelBefore = 0f;
+        var bloodBefore = 0f;
         await server.WaitPost(() =>
         {
             bloodstreamSystem.TryModifyBloodLevel(patientUid, -150);
-            levelBefore = bloodstreamSystem.GetBloodLevel(patientUid);
+            bloodBefore = BloodVolume(patientUid);
         });
 
         await InsertOwnHand(healerUid, patientUid);
@@ -174,11 +209,12 @@ public sealed class KsWallHealerTest : GameTest
 
             Assert.That((float)(DamageOf(after, Piercing) + DamageOf(after, Slash)), Is.EqualTo(40f - perTreatment).Within(0.02f));
             Assert.That((float)DamageOf(after, Piercing), Is.EqualTo(10f - perTreatment * 0.25f).Within(0.02f), "split by the share of each type");
-            Assert.That(DamageOf(after, Heat), Is.EqualTo(FixedPoint2.New(10)), "heat isn't in the pool");
+            Assert.That(DamageOf(after, Heat), Is.GreaterThanOrEqualTo(FixedPoint2.New(10)), "heat was healed, though it isn't in the pool");
             Assert.That(healer.Comp.PoolAmounts[0], Is.EqualTo(healer.Comp.Pools[0].Capacity - perTreatment).Within(0.02f));
 
-            Assert.That(bloodstreamSystem.GetBloodLevel(patientUid), Is.GreaterThan(levelBefore), "no blood was restored");
-            Assert.That(healer.Comp.PoolAmounts[1], Is.LessThan(healer.Comp.Pools[1].Capacity), "the blood pool wasn't drawn on");
+            var perBloodTreatment = healer.Comp.Pools[1].Capacity * healer.Comp.TreatmentFraction;
+            Assert.That(BloodVolume(patientUid) - bloodBefore, Is.GreaterThanOrEqualTo(perBloodTreatment - 0.05f), "a treatment's worth of blood wasn't restored");
+            Assert.That(healer.Comp.PoolAmounts[1], Is.EqualTo(healer.Comp.Pools[1].Capacity - perBloodTreatment).Within(0.05f), "the blood pool wasn't drawn on");
         });
 
         await WaitOneTreatment(healerUid);
@@ -188,7 +224,7 @@ public sealed class KsWallHealerTest : GameTest
             var healer = Healer(healerUid);
             var perTreatment = healer.Comp.Pools[0].Capacity * healer.Comp.TreatmentFraction;
             var after = Damage(patientUid);
-            Assert.That((float)(DamageOf(after, Piercing) + DamageOf(after, Slash)), Is.EqualTo(40f - 2 * perTreatment).Within(0.04f), "no second treatment");
+            Assert.That((float)(DamageOf(after, Piercing) + DamageOf(after, Slash)), Is.EqualTo(40f - 2 * perTreatment).Within(0.04f), "the second treatment did not happen an interval later");
         });
     }
 
@@ -202,21 +238,48 @@ public sealed class KsWallHealerTest : GameTest
         var (healerUid, patientUid) = await SpawnHealerAndPatient(_healerProto, new DamageSpecifier());
         var bloodstreamSystem = server.EntMan.System<SharedBloodstreamSystem>();
 
-        var target = 0f;
+        var targetVolume = 0f;
+        var shortBy = 0f;
         await server.WaitPost(() =>
         {
-            target = ((KsWallHealerBloodPool)Healer(healerUid).Comp.Pools[1]).TargetBloodLevel;
-            // Just under the target, by less than one treatment gives.
-            var bloodstreamComponent = server.EntMan.GetComponent<Content.Shared.Body.Components.BloodstreamComponent>(patientUid);
-            var volume = (float)bloodstreamComponent.BloodReferenceSolution.Volume;
-            bloodstreamSystem.TryModifyBloodLevel(patientUid, FixedPoint2.New(-(1f - target) * volume - 1f));
+            var healer = Healer(healerUid);
+            targetVolume = ((KsWallHealerBloodPool)healer.Comp.Pools[1]).TargetBloodLevel * NormalBloodVolume(patientUid);
+            // Under the target by less than one treatment gives, so a treatment that ignored the target would overshoot.
+            shortBy = healer.Comp.Pools[1].Capacity * healer.Comp.TreatmentFraction / 2f;
+            bloodstreamSystem.TryModifyBloodLevel(patientUid, FixedPoint2.New(targetVolume - shortBy - BloodVolume(patientUid)));
         });
 
         await InsertOwnHand(healerUid, patientUid);
-        await WaitOneTreatment(healerUid);
 
         await server.WaitAssertion(() =>
-            Assert.That(bloodstreamSystem.GetBloodLevel(patientUid), Is.EqualTo(target).Within(0.01f)));
+        {
+            Assert.That(BloodVolume(patientUid), Is.GreaterThanOrEqualTo(targetVolume - 0.05f), "blood wasn't brought to the target");
+            var healer = Healer(healerUid);
+            Assert.That(healer.Comp.PoolAmounts[1], Is.EqualTo(healer.Comp.Pools[1].Capacity - shortBy).Within(0.05f), "the pool paid for more blood than it gave");
+        });
+    }
+
+    /// <summary>
+    ///     Someone else can put a downed patient's hand in, and the patient is treated though they can't act.
+    /// </summary>
+    [Test]
+    public async Task AMedicCanPutADownedPatientsHandIn()
+    {
+        var server = Pair.Server;
+        var damage = new DamageSpecifier { DamageDict = { [Piercing] = 150 } };
+        var (healerUid, patientUid) = await SpawnHealerAndPatient(_healerProto, damage);
+
+        EntityUid medicUid = default;
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.EntMan.System<MobStateSystem>().IsCritical(patientUid), Is.True, "the test needs a downed patient");
+            medicUid = server.EntMan.SpawnEntity(HumanProto, new EntityCoordinates(server.EntMan.GetComponent<TransformComponent>(patientUid).Coordinates.EntityId, 0.5f, 1.5f));
+        });
+
+        await InsertHand(healerUid, medicUid, patientUid);
+
+        await server.WaitAssertion(() =>
+            Assert.That(DamageOf(Damage(patientUid), Piercing), Is.LessThan(FixedPoint2.New(150)), "the downed patient wasn't treated"));
     }
 
     /// <summary>

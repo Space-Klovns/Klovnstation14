@@ -87,25 +87,25 @@ public sealed partial class KsWallHealerComponent : Component
     /// <summary>
     ///     Whose hand is in the station now.
     /// </summary>
-    [ViewVariables, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public EntityUid? Patient;
 
     /// <summary>
     ///     The index of the patient's treatment do-after, which runs for as long as their hand is in.
     /// </summary>
-    [ViewVariables, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public ushort? TreatmentDoAfter;
 
     /// <summary>
     ///     Whose hand was in the station last, while nobody's is.
     /// </summary>
-    [ViewVariables, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public EntityUid? LastPatient;
 
     /// <summary>
     ///     Treatments attempted on the current patient, so feedback is only shown every so often.
     /// </summary>
-    [ViewVariables, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public int TreatmentCount;
 
     /// <summary>

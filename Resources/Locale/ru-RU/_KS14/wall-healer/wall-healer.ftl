@@ -33,6 +33,7 @@ ks-wall-healer-insert-other-others = { $powered ->
 ks-wall-healer-remove-self = Вы вынимаете руку из { $healer }.
 ks-wall-healer-remove-self-others = { CAPITALIZE($patient) } вынимает руку из { $healer }.
 ks-wall-healer-remove-other = Вы вытаскиваете руку { $patient } из { $healer }.
+ks-wall-healer-insert-failed = { CAPITALIZE($patient) } сейчас не может держать руку в { $healer }.
 
 ## Treatment
 

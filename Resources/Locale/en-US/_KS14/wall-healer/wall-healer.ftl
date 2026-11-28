@@ -33,6 +33,7 @@ ks-wall-healer-insert-other-others = { $powered ->
 ks-wall-healer-remove-self = You remove your hand from { THE($healer) }.
 ks-wall-healer-remove-self-others = { CAPITALIZE(THE($patient)) } removes { POSS-ADJ($patient) } hand from { THE($healer) }.
 ks-wall-healer-remove-other = You pull { THE($patient) }'s hand out of { THE($healer) }.
+ks-wall-healer-insert-failed = { CAPITALIZE(THE($patient)) } can't keep a hand in { THE($healer) } right now.
 
 ## Treatment
 
