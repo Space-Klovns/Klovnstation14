@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Generated for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "bamboo_staff"
+    },
+    {
+      "name": "blood_slip"
+    },
+    {
+      "name": "butterfly_sword"
+    },
+    {
+      "name": "flying_dagger"
+    },
+    {
+      "name": "incense"
+    },
+    {
+      "name": "incense_lit"
+    },
+    {
+      "name": "iron_fan"
+    },
+    {
+      "name": "jade_slip"
+    },
+    {
+      "name": "meteor_hammer"
+    },
+    {
+      "name": "needles"
+    },
+    {
+      "name": "qi_wall"
+    },
+    {
+      "name": "rope_dart"
+    },
+    {
+      "name": "sect_jian"
+    },
+    {
+      "name": "sect_plaque"
+    },
+    {
+      "name": "smoke_pellet"
+    },
+    {
+      "name": "talisman"
+    }
+  ]
+}

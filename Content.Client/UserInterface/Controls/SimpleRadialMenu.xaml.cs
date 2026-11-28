@@ -15,6 +15,13 @@ namespace Content.Client.UserInterface.Controls;
 [GenerateTypedNameReferences]
 public sealed partial class SimpleRadialMenu : RadialMenu
 {
+    // KS14 start
+    /// <summary>
+    /// Whether picking an option closes the menu. Off for menus where several options are toggled in a row.
+    /// </summary>
+    public bool CloseOnSelect = true;
+    // KS14 end
+
     private EntityUid? _attachMenuToEntity;
 
     [Dependency] private IClyde _clyde = default!;
@@ -142,7 +149,7 @@ public sealed partial class SimpleRadialMenu : RadialMenu
             button.OnPressed += _ =>
             {
                 actionOption.OnPressed?.Invoke();
-                if (!haveNested)
+                if (!haveNested && CloseOnSelect) // KS14: CloseOnSelect
                     Close();
             };
         }

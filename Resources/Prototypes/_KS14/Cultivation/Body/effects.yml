@@ -1,0 +1,357 @@
+# What a body art leaves behind: cracked floors, a shockwave rippling the air, and dust.
+
+- type: decal
+  id: KsCrack1
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack1
+
+- type: decal
+  id: KsCrack2
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack2
+
+- type: decal
+  id: KsCrack3
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack3
+
+- type: decal
+  id: KsCrack4
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack4
+
+- type: decal
+  id: KsCrack5
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack5
+
+- type: decal
+  id: KsCrack6
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack6
+
+- type: decal
+  id: KsCrack7
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack7
+
+- type: decal
+  id: KsCrack8
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack8
+
+- type: decal
+  id: KsCrack9
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack9
+
+- type: decal
+  id: KsCrack10
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack10
+
+- type: decal
+  id: KsCrack11
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack11
+
+- type: decal
+  id: KsCrack12
+  tags: [ "cracks" ]
+  defaultCleanable: true
+  sprite:
+    sprite: _KS14/Cultivation/cracks.rsi
+    state: crack12
+
+# Ripples the air out from the impact, using the explosion shockwave shader.
+- type: entity
+  id: KsBodyShockwave
+  categories: [ HideSpawnMenu ]
+  name: shockwave
+  components:
+  - type: KsShockwave
+    falloffPower: 30
+    sharpness: 8
+    width: 0.9
+  - type: TimedDespawn
+    lifetime: 1.5
+
+- type: entity
+  id: KsBodyDust
+  categories: [ HideSpawnMenu ]
+  name: dust
+  description: A cloud of pulverised floor.
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    state: chemsmoke
+    color: "#8a7f72aa"
+    drawdepth: Effects
+  - type: TimedDespawn
+    lifetime: 1.2
+
+# Fire for show: it lights the room and flickers out. What actually burns is up to the technique.
+# Real fire, the same flames a burning room shows, in three sizes; fire techniques are built from these.
+- type: entity
+  id: KsFxFlameBig
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames_big.rsi
+    drawdepth: Effects
+    noRot: true
+    offset: 0, 0.25
+    layers:
+    - state: flame_big
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1e"
+    radius: 4
+    energy: 4
+    netsync: false
+  - type: LightFade
+    duration: 2.4
+  - type: TimedDespawn
+    lifetime: 2.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxFlameSmall
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_small
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.6
+  - type: TimedDespawn
+    lifetime: 1.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxFlame
+  categories: [ HideSpawnMenu ]
+  name: flame
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    layers:
+    - state: flame
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8a2a"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2
+  - type: TimedDespawn
+    lifetime: 2
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# More shapes of the same fire, so a fire art isn't one flame repeated: a forked lick, a curling wisp, a low
+# spread along the floor, a cluster of small tongues, and a tall white-hot spire.
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameLick
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_lick
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8a2a"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2.0
+  - type: TimedDespawn
+    lifetime: 2.0
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameWisp
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_wisp
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.6
+  - type: TimedDespawn
+    lifetime: 1.6
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameLow
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_low
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1e"
+    radius: 3
+    energy: 3
+    netsync: false
+  - type: LightFade
+    duration: 2.2
+  - type: TimedDespawn
+    lifetime: 2.2
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameCluster
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: flame_cluster
+      shader: unshaded
+  - type: PointLight
+    color: "#ff9a3a"
+    radius: 2
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 1.8
+  - type: TimedDespawn
+    lifetime: 1.8
+
+- type: entity
+  parent: KsFxFlame
+  id: KsFxFlameSpire
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/flames_big.rsi
+    drawdepth: Effects
+    noRot: true
+    offset: 0, 0.25
+    layers:
+    - state: flame_spire
+      shader: unshaded
+  - type: PointLight
+    color: "#ffb040"
+    radius: 4
+    energy: 4
+    netsync: false
+  - type: LightFade
+    duration: 2.4
+  - type: TimedDespawn
+    lifetime: 2.4
+
+# Bend the picture around a point for a moment, like the air round a singularity.
+- type: entity
+  id: KsFxDistortionPush
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -60
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDistortionPulse
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: 40
+    falloffPower: 2.2
+  - type: TimedDespawn
+    lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDistortionRoar
+  categories: [ HideSpawnMenu ]
+  name: distortion
+  components:
+  - type: SingularityDistortion
+    intensity: -400
+    falloffPower: 1.8
+  - type: TimedDespawn
+    lifetime: 1.2
+  - type: Tag
+    tags:
+    - HideContextMenu

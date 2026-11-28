@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Generated for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "crack1"
+    },
+    {
+      "name": "crack2"
+    },
+    {
+      "name": "crack3"
+    },
+    {
+      "name": "crack4"
+    },
+    {
+      "name": "crack5"
+    },
+    {
+      "name": "crack6"
+    },
+    {
+      "name": "crack7"
+    },
+    {
+      "name": "crack8"
+    },
+    {
+      "name": "crack9"
+    },
+    {
+      "name": "crack10"
+    },
+    {
+      "name": "crack11"
+    },
+    {
+      "name": "crack12"
+    }
+  ]
+}

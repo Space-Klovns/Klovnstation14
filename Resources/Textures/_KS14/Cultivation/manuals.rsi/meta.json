@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Generated for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "art_dragon_palm"
+    },
+    {
+      "name": "art_drunken_fist"
+    },
+    {
+      "name": "art_dugu"
+    },
+    {
+      "name": "art_eagle_claw"
+    },
+    {
+      "name": "art_golden_bell"
+    },
+    {
+      "name": "art_graceful_steps"
+    },
+    {
+      "name": "art_great_shift"
+    },
+    {
+      "name": "art_ladder_cloud"
+    },
+    {
+      "name": "art_muscle_tendon"
+    },
+    {
+      "name": "art_nine_yang"
+    },
+    {
+      "name": "art_nine_yin"
+    },
+    {
+      "name": "art_northern_darkness"
+    },
+    {
+      "name": "art_six_meridians"
+    },
+    {
+      "name": "art_star_absorbing"
+    },
+    {
+      "name": "art_wing_chun"
+    },
+    {
+      "name": "art_wumu"
+    },
+    {
+      "name": "body_molding_art"
+    },
+    {
+      "name": "body_primer"
+    },
+    {
+      "name": "manual_demonic"
+    },
+    {
+      "name": "manual_earth"
+    },
+    {
+      "name": "manual_fire"
+    },
+    {
+      "name": "manual_metal"
+    },
+    {
+      "name": "manual_water"
+    },
+    {
+      "name": "manual_wood"
+    },
+    {
+      "name": "path_choice"
+    }
+  ]
+}

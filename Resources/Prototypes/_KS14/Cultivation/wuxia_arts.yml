@@ -1,0 +1,788 @@
+# Each art's own animation (wuxia_arts.rsi), despawning as its run ends.
+
+- type: entity
+  id: KsFxArtPalmQi
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: palm_qi
+      shader: unshaded
+  - type: PointLight
+    color: "#78c8ff"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.66
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtPalmFire
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: palm_fire
+      shader: unshaded
+  - type: PointLight
+    color: "#ff8228"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.66
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtPalmBlood
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: palm_blood
+      shader: unshaded
+  - type: PointLight
+    color: "#c82846"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.66
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtPalmGold
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: palm_gold
+      shader: unshaded
+      scale: 1.4, 1.4
+  - type: PointLight
+    color: "#ffd250"
+    radius: 4.1
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.66
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtSwordRain
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sword_rain
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.83
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtSwordOrbit
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sword_orbit
+      shader: unshaded
+  - type: PointLight
+    color: "#d8f0ff"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.95
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtTalismanFlare
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: talisman_flare
+      shader: unshaded
+  - type: PointLight
+    color: "#ffb347"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.69
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtEmbers
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: embers
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1f"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtPetals
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: petals
+      shader: unshaded
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtPetalsBig
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: petals
+      shader: unshaded
+      scale: 2.0, 2.0
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtGoldMotes
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: gold_motes
+      shader: unshaded
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtVoidMotes
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: void_motes
+      shader: unshaded
+  - type: PointLight
+    color: "#8a5cff"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFistGold
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: fist_burst
+      shader: unshaded
+      color: "#ffd96a"
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.39
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFistEarth
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: fist_burst
+      shader: unshaded
+      color: "#e0b070"
+      scale: 1.3, 1.3
+  - type: PointLight
+    color: "#c8a060"
+    radius: 4.0
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.39
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFistQi
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: fist_burst
+      shader: unshaded
+      color: "#a8dcff"
+      scale: 0.7, 0.7
+  - type: PointLight
+    color: "#78c8ff"
+    radius: 3.0
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.39
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtBarrage
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: barrage
+      shader: unshaded
+      color: "#ffe8a0"
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.63
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFireRing
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: fire_ring
+      shader: unshaded
+  - type: PointLight
+    color: "#ff7a1f"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.59
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFireRingBig
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: fire_ring
+      shader: unshaded
+      scale: 2.2, 2.2
+  - type: PointLight
+    color: "#ff7a1f"
+    radius: 5.3
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.59
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtBloodVortex
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: blood_vortex
+      shader: unshaded
+  - type: PointLight
+    color: "#aa1428"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.83
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtRoarBlood
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: roar_rings
+      shader: unshaded
+      color: "#ff9a9a"
+      scale: 3.0, 3.0
+  - type: PointLight
+    color: "#c82846"
+    radius: 6.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.71
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtRoarGold
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: roar_rings
+      shader: unshaded
+      color: "#ffe27a"
+      scale: 2.0, 2.0
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 5.0
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.71
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtRoarSense
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: roar_rings
+      shader: unshaded
+      color: "#d0c0ff"
+      scale: 2.5, 2.5
+  - type: PointLight
+    color: "#b49cff"
+    radius: 5.8
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.71
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFissures
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: fissures
+      shader: unshaded
+      scale: 1.5, 1.5
+  - type: PointLight
+    color: "#ff8c28"
+    radius: 4.2
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.71
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFissuresBig
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: fissures
+      shader: unshaded
+      scale: 3.0, 3.0
+  - type: PointLight
+    color: "#ff8c28"
+    radius: 6.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.71
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtFallingStar
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: falling_star
+      shader: unshaded
+      scale: 1.5, 1.5
+  - type: PointLight
+    color: "#ffb450"
+    radius: 4.2
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.49
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtSheenIron
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sheen
+      shader: unshaded
+      color: "#c8d2dc"
+  - type: PointLight
+    color: "#c8d2dc"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.49
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtSheenGold
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: sheen
+      shader: unshaded
+      color: "#ffd96a"
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.49
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMendWood
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mend_glow
+      shader: unshaded
+      color: "#8af08a"
+  - type: PointLight
+    color: "#6fd06f"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMendBone
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mend_glow
+      shader: unshaded
+      color: "#fff6e0"
+  - type: PointLight
+    color: "#fff0c8"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMendWater
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mend_glow
+      shader: unshaded
+      color: "#a8dcff"
+  - type: PointLight
+    color: "#5ab8ff"
+    radius: 3.5
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.97
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMistBlood
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mist
+      shader: unshaded
+      color: "#c0283c"
+      scale: 1.2, 1.2
+  - type: PointLight
+    color: "#aa1428"
+    radius: 3.8
+    energy: 2
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 0.95
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMistSteam
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mist
+      shader: unshaded
+      color: "#f0f0f0"
+      scale: 1.2, 1.2
+  - type: TimedDespawn
+    lifetime: 0.95
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMistDust
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: mist
+      shader: unshaded
+      color: "#a09078"
+  - type: TimedDespawn
+    lifetime: 0.95
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxArtMistShadow
+  categories: [ HideSpawnMenu ]
+  name: technique
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/wuxia_arts.rsi
+    drawdepth: Overdoors
+    noRot: true
+    layers:
+    - state: mist
+      shader: unshaded
+      color: "#3c2850"
+      scale: 1.2, 1.2
+  - type: TimedDespawn
+    lifetime: 0.95
+  - type: Tag
+    tags:
+    - HideContextMenu

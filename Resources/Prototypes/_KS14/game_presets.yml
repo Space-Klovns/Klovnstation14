@@ -57,3 +57,36 @@
   - KsFieldCommanderWeather
   - KsFieldCommanderLitterDespawn
   - KsFieldCommanderBloodEvaporation
+
+# The wuxia gamemode: cultivators among the crew, cultivation manuals and a legendary artifact hidden about the station,
+# spirit herbs blooming and heaven's omens. Cultivation appears in no other mode unless an admin brings it in.
+- type: gamePreset
+  id: KsWuxia
+  alias:
+  - wuxia
+  - cultivation
+  - jianghu
+  name: wuxia-title
+  description: wuxia-description
+  minPlayers: 10
+  showInVote: true
+  rules:
+  - KsCultivators
+  - KsWuxiaWorld
+  - BasicStationEventScheduler
+  - BasicRoundstartVariation
+
+# Wuxia: Ascension. Everyone may take up cultivation; the first to the peak is Supreme Sovereign and has until the
+# shuttle comes to settle every score.
+- type: gamePreset
+  id: KsWuxiaAscension
+  alias:
+  - ascension
+  - wuxiaascension
+  name: wuxia-ascension-title
+  description: wuxia-ascension-description
+  showInVote: true
+  rules:
+  - KsWuxiaAscension
+  - KsWuxiaWorld
+  - BasicRoundstartVariation

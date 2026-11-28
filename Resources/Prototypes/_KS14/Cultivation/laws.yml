@@ -1,0 +1,122 @@
+- type: cultivationLaw
+  id: KsMetal
+  name: cultivation-law-metal-name
+  description: cultivation-law-metal-desc
+  rootDescription: cultivation-law-metal-root
+  element: Metal
+  color: "#ced4e2"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationFlyingSword
+  - realm: GoldenCore
+    action: ActionCultivationSwordRain
+  - realm: QiCondensation
+    action: ActionCultivationBindArtifact
+  - realm: GoldenCore
+    action: ActionCultivationSwordRiding
+  - realm: NascentSoul
+    action: ActionCultivationSwordFormation
+
+- type: cultivationLaw
+  id: KsWood
+  name: cultivation-law-wood-name
+  description: cultivation-law-wood-desc
+  rootDescription: cultivation-law-wood-root
+  element: Wood
+  color: "#6ec460"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationSpringMending
+  - realm: GoldenCore
+    action: ActionCultivationMyriadSpring
+  - realm: QiCondensation
+    action: ActionCultivationVerdantGrowth
+  - realm: GoldenCore
+    action: ActionCultivationBindingVines
+
+- type: cultivationLaw
+  id: KsWater
+  name: cultivation-law-water-name
+  description: cultivation-law-water-desc
+  rootDescription: cultivation-law-water-root
+  element: Water
+  color: "#5496e2"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationStillWaterWard
+  - realm: QiCondensation
+    action: ActionCultivationBubblePrison
+  - realm: FoundationEstablishment
+    action: ActionCultivationRidingCurrent
+  - realm: GoldenCore
+    action: ActionCultivationTidalSurge
+  - realm: QiCondensation
+    action: ActionCultivationCalmHeart
+  - realm: GoldenCore
+    action: ActionCultivationTurtleBreathing
+  - realm: NascentSoul
+    action: ActionCultivationMirrorLake
+
+- type: cultivationLaw
+  id: KsFire
+  name: cultivation-law-fire-name
+  description: cultivation-law-fire-desc
+  rootDescription: cultivation-law-fire-root
+  element: Fire
+  color: "#de5436"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationBurningPalm
+  - realm: GoldenCore
+    action: ActionCultivationSeaOfFlames
+  - realm: QiCondensation
+    action: ActionCultivationKindle
+  - realm: QiCondensation
+    action: ActionCultivationFurnaceBurst
+  - realm: GoldenCore
+    action: ActionCultivationBurningBlood
+
+- type: cultivationLaw
+  id: KsEarth
+  name: cultivation-law-earth-name
+  description: cultivation-law-earth-desc
+  rootDescription: cultivation-law-earth-root
+  element: Earth
+  color: "#b0804e"
+  techniques:
+  - realm: QiCondensation
+    action: ActionCultivationRootedStance
+  - realm: GoldenCore
+    action: ActionCultivationMountainCollapse
+  - realm: QiCondensation
+    action: ActionCultivationGoldenBellQi
+  - realm: GoldenCore
+    action: ActionCultivationDharmaIdol
+  - realm: NascentSoul
+    action: ActionCultivationBuddhaPalm
+
+# Two laws' qi resonating opens a technique of its own.
+
+- type: cultivationCombo
+  id: KsComboSteamVeil
+  elementOne: Fire
+  elementTwo: Water
+  action: ActionCultivationSteamVeil
+
+- type: cultivationCombo
+  id: KsComboThousandThorns
+  elementOne: Metal
+  elementTwo: Wood
+  action: ActionCultivationThousandThorns
+
+- type: cultivationCombo
+  id: KsComboMoltenStep
+  elementOne: Earth
+  elementTwo: Fire
+  action: ActionCultivationMoltenStep
+
+- type: cultivationCombo
+  id: KsComboMudPrison
+  elementOne: Water
+  elementTwo: Earth
+  action: ActionCultivationMudPrison

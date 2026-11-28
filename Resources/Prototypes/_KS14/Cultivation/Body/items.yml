@@ -1,0 +1,25 @@
+- type: entity
+  parent: BaseItem
+  id: BodyManualCopperSkinPrimer
+  name: Copper Skin Primer
+  description: A grubby, much-thumbed pamphlet of stances, breathing drills and alarming advice about hitting yourself with sticks. Anyone can follow it.
+  components:
+  - type: Item
+    size: Small
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: body_primer
+  - type: BodyManual
+    readTime: 3
+
+- type: entity
+  parent: BodyManualCopperSkinPrimer
+  id: BodyManualMoldingArt
+  name: Body Molding Art
+  description: A heavy book bound between two bronze plates. Its diagrams show a body broken down and rebuilt nine times, each time into something harder. Committing to it means never cultivating qi.
+  components:
+  - type: Sprite
+    state: body_molding_art
+  - type: BodyManual
+    commits: true
+    readTime: 4

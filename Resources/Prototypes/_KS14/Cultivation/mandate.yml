@@ -1,0 +1,80 @@
+# The Mandate of Heaven, ported from SurfShack13. See MandateSystem.
+
+- type: entity
+  parent: BaseItem
+  id: KsJadeSeal
+  name: jade seal
+  description: A heavy seal of green jade topped with a coiled dragon. The characters on its face read "Having received the Mandate from Heaven, may the reign be long and prosperous."
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/mandate.rsi
+    state: jade_seal
+  - type: Item
+    size: Small
+  - type: JadeSeal
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 2
+    energy: 1.5
+
+# The Son of Heaven's golden dragon, coiling around them and chasing its flaming pearl. Two halves share the frames: the
+# coils behind the ruler draw under them, the coils in front (and the head) over them.
+- type: entity
+  id: KsFxDragonAura
+  categories: [ HideSpawnMenu ]
+  name: imperial dragon
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/temple.rsi
+    drawdepth: SmallMobs
+    noRot: true
+    scale: 0.7, 0.7
+    layers:
+    - state: dragon_back
+      shader: unshaded
+      # Auras are attached a little above the feet, and the coil sits high in its sprite: bring it down onto the body.
+      offset: 0, -0.4
+  - type: PointLight
+    color: "#ffd55a"
+    radius: 3
+    energy: 2
+    netsync: false
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxDragonAuraFront
+  categories: [ HideSpawnMenu ]
+  name: imperial dragon
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/temple.rsi
+    drawdepth: Effects
+    noRot: true
+    scale: 0.7, 0.7
+    layers:
+    - state: dragon_front
+      shader: unshaded
+      # Auras are attached a little above the feet, and the coil sits high in its sprite: bring it down onto the body.
+      offset: 0, -0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Every power of the Mandate in one button: a radial menu of the powers, and for those used on someone, the people
+# nearby. Cooldowns are kept per power by MandateSystem.
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsImperialCourt
+  name: Imperial Court
+  description: Hold court. Proclaim a decree, command the weak to kneel, open the treasury, or choose someone nearby to pardon, appoint, ennoble or punish.
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 1
+    itemIconStyle: BigAction
+    icon: { sprite: _KS14/Cultivation/mandate.rsi, state: imperial_decree }
+  - type: InstantAction
+    event: !type:ImperialCourtActionEvent

@@ -258,6 +258,17 @@ public sealed partial class ActionUIController
     }
 
     /// <summary>
+    ///     Whether right-clicking this button would dissolve a folder: a folder on the root bar, not the back entry.
+    /// </summary>
+    private bool IsDissolvableFolder(ActionButton button)
+    {
+        return _openActionFolder == null &&
+               button.Action is { } action &&
+               EntityManager.TryGetComponent<KsActionFolderComponent>(action, out var folderComponent) &&
+               !folderComponent.IsExit;
+    }
+
+    /// <summary>
     ///     Whether this button holds a folder or the back entry, neither of which can be dragged.
     /// </summary>
     private bool IsFolderAction(ActionButton button)
@@ -291,6 +302,8 @@ public sealed partial class ActionUIController
     {
         if (_actionsSystem != null)
             _container?.SetActionData(_actionsSystem, _actions.ToArray());
+
+        RefreshSlotKeyLabels();
     }
 
     /// <summary>

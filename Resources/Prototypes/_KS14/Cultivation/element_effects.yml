@@ -1,0 +1,220 @@
+# Element effects built from the game's own sprites (the extinguisher's spray, chemical puffs and smoke, gas, sparks),
+# tinted for each element. See CultivationVisualsSystem.WaterSplash, WoodBloom, MetalSparks and Mist.
+
+- type: entity
+  id: KsFxWaterSpray
+  categories: [ HideSpawnMenu ]
+  name: water
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: splash
+      shader: unshaded
+  - type: PointLight
+    color: "#6fc0ff"
+    radius: 1.5
+    energy: 1.2
+    netsync: false
+  - type: LightFade
+    duration: 0.64
+  - type: TimedDespawn
+    lifetime: 0.64
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaterPuff
+  categories: [ HideSpawnMenu ]
+  name: spray
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: FloorObjects
+    noRot: true
+    layers:
+    - state: ripple
+      shader: unshaded
+  - type: TimedDespawn
+    lifetime: 0.72
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMistWater
+  categories: [ HideSpawnMenu ]
+  name: mist
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    drawdepth: Effects
+    noRot: true
+    scale: 0.6, 0.6
+    layers:
+    - state: chemsmoke_white
+      shader: unshaded
+      color: "#cfe9ffbb"
+  - type: TimedDespawn
+    lifetime: 0.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMistBloodReal
+  categories: [ HideSpawnMenu ]
+  name: blood mist
+  components:
+  - type: Sprite
+    sprite: Effects/chemsmoke.rsi
+    drawdepth: Effects
+    noRot: true
+    scale: 0.6, 0.6
+    layers:
+    - state: chemsmoke_white
+      shader: unshaded
+      color: "#b0202ccc"
+  - type: TimedDespawn
+    lifetime: 0.6
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxLeafPuff
+  categories: [ HideSpawnMenu ]
+  name: leaves
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/nature.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: leaves
+      shader: unshaded
+  - type: PointLight
+    color: "#7fe07a"
+    radius: 1
+    energy: 0.8
+    netsync: false
+  - type: TimedDespawn
+    lifetime: 1.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxBlossomPuff
+  categories: [ HideSpawnMenu ]
+  name: blossoms
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/nature.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: petals
+      shader: unshaded
+  - type: TimedDespawn
+    lifetime: 1.0
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxPollen
+  categories: [ HideSpawnMenu ]
+  name: pollen
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/nature.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: pollen
+      shader: unshaded
+  - type: PointLight
+    color: "#9be07a"
+    radius: 2
+    energy: 1
+    netsync: false
+  - type: LightFade
+    duration: 1.2
+  - type: TimedDespawn
+    lifetime: 1.2
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxMetalSpark
+  categories: [ HideSpawnMenu ]
+  name: sparks
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: steel_sparks
+      shader: unshaded
+      color: "#fff1c4ff"
+  - type: PointLight
+    color: "#ffe2a0"
+    radius: 1.5
+    energy: 2
+    netsync: false
+  - type: LightFade
+    duration: 0.4
+  - type: TimedDespawn
+    lifetime: 0.4
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+- type: entity
+  id: KsFxWaterSwirl
+  categories: [ HideSpawnMenu ]
+  name: water
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/elements.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: water_swirl
+      shader: unshaded
+  - type: PointLight
+    color: "#6fc0ff"
+    radius: 1.5
+    energy: 1
+    netsync: false
+  - type: LightFade
+    duration: 0.8
+  - type: TimedDespawn
+    lifetime: 0.8
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+# Element sounds: water sloshing and splashing, leaves and vines rustling.
+- type: soundCollection
+  id: KsCultivationSlosh
+  files:
+  - /Audio/_KS14/Handling/reagent_containers/default/default_liquid_slosh1.ogg
+  - /Audio/_KS14/Handling/reagent_containers/default/default_liquid_slosh2.ogg
+  - /Audio/_KS14/Handling/reagent_containers/default/default_liquid_slosh3.ogg
+  - /Audio/_KS14/Handling/reagent_containers/default/default_liquid_slosh4.ogg
+  - /Audio/_KS14/Handling/reagent_containers/default/default_liquid_slosh5.ogg
+
+- type: soundCollection
+  id: KsCultivationRustle
+  files:
+  - /Audio/Voice/Diona/diona_rustle1.ogg
+  - /Audio/Voice/Diona/diona_rustle2.ogg
+  - /Audio/Voice/Diona/diona_rustle3.ogg
+  - /Audio/Effects/plant_rustle.ogg

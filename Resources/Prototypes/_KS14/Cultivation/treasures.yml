@@ -1,0 +1,83 @@
+# Heavenly treasures and the ancestral ring, ported from SurfShack13.
+
+# A spirit herb in bloom. Every cultivator on the station feels it; the first to dig it up claims it.
+- type: entity
+  id: KsSpiritHerbPlant
+  name: spirit herb
+  description: A small plant with pale jade leaves and a single glowing blossom. The air around it shimmers with qi.
+  components:
+  - type: Transform
+    anchored: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: spirit_herb_plant
+    drawdepth: Objects
+  - type: PointLight
+    color: "#c8ffd8"
+    radius: 2
+    energy: 1
+  - type: SpiritHerbPlant
+  - type: TimedDespawn
+    lifetime: 360
+
+- type: entity
+  parent: BaseItem
+  id: KsSpiritHerb
+  name: spirit herb
+  description: A glowing herb steeped in heavenly qi. Eat it to claim its power. It fills a cultivator's foundation, tempers a body cultivator's flesh, and heals anyone.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: spirit_herb
+  - type: Item
+    size: Tiny
+  - type: PointLight
+    color: "#c8ffd8"
+    radius: 1.5
+    energy: 0.8
+  - type: SpiritHerb
+
+# An ancient master asleep in a ring. A cultivator can wake them; a ghost takes the role.
+- type: entity
+  parent: BaseItem
+  id: KsAncestralRing
+  name: ancestral ring
+  description: A heavy, tarnished ring with a dull black stone. It feels like it's watching you.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: ring
+  - type: Item
+    size: Tiny
+  - type: Eye
+  - type: AncestralRing
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsRingElderSpeak
+  name: Speak to Bearer
+  description: Murmur into your bearer's head. Nobody else can hear you.
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 2
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: ring_speak }
+  - type: InstantAction
+    event: !type:RingElderSpeakActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsRingElderLendQi
+  name: Lend Qi
+  description: Pour some of your ancient qi into your bearer.
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 180
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: lend_qi }
+  - type: InstantAction
+    event: !type:RingElderLendQiActionEvent

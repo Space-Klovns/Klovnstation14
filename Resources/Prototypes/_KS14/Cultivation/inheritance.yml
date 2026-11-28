@@ -1,0 +1,23 @@
+# Inheritance, ported from SurfShack13: a master names an heir among their disciples or sworn siblings, and half their
+# cultivation flies to them the moment the master dies. See InheritanceSystem.
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsNameHeir
+  name: Name Your Heir
+  description: Point at one of your disciples or sworn siblings to name them your heir. The moment you die, half your cultivation flies to them, their foundation fills and their next breakthrough cannot fail. Point at yourself to name no heir.
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 10
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: name_heir }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 30
+  - type: EntityTargetAction
+    canTargetSelf: true
+    whitelist:
+      components:
+      - MobState
+    event: !type:NameHeirActionEvent

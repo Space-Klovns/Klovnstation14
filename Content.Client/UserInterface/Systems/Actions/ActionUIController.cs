@@ -222,6 +222,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
     public void OnStateExited(GameplayState state)
     {
+        CloseFloatingActions(); // KS14
+        CancelSlotRebind(); // KS14
+
         if (_actionsSystem != null)
         {
             _actionsSystem.OnActionAdded -= OnActionAdded;
@@ -246,6 +249,10 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         // KS14 end
 
         // TODO: probably should have a clientside event raised for flexibility
+        // KS14 start: some targeted actions need no aiming right now
+        if (_actionsSystem?.KsTryUseWithoutAiming(action) == true)
+            return;
+        // KS14 end
         if (EntityManager.TryGetComponent<TargetActionComponent>(action, out var target))
             ToggleTargeting((action, action, target));
         else
@@ -263,6 +270,10 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             StartTargeting((action, action, target));
 
         // KS14 start: replaces "if (_actions.Contains(action)) return; _actions.Add(action);".
+        // An action that doesn't auto-populate stays attached but off the bar.
+        if (KeepOffBar(action))
+            return;
+
         // A late-granted action returns to its saved position if a saved layout is still pending,
         // otherwise it lands at folder level zero.
         if (TryApplyPendingActionConfiguration())
@@ -285,18 +296,36 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             StopTargeting();
 
         RemoveActionFromFolders(actionId); // KS14: _actions.RemoveAll(x => x == actionId), now also clearing folders
+        ForgetAutoPopulate(actionId); // KS14
+        RemoveFloatingAction(actionId); // KS14
     }
 
     private void OnActionsUpdated()
     {
         QueueWindowUpdate();
 
-        // KS14 start: replaces a direct _container.SetActionData. Action components can resolve after
-        // the action-set link, and the bar has to keep its folder entries.
-        TryApplyPendingActionConfiguration();
-        RefreshActionBar();
-        // KS14 end
+        // KS14: replaces a direct _container.SetActionData. This fires on every change to any of the player's actions
+        //     (a cooldown, greying out for want of qi), often many times a frame, so the bar is rebuilt once per frame
+        //     instead - see ApplyActionsUpdate.
+        _ksActionsUpdatePending = true;
     }
+
+    // KS14 start
+    private bool _ksActionsUpdatePending;
+
+    private void ApplyActionsUpdate()
+    {
+        if (!_ksActionsUpdatePending)
+            return;
+
+        _ksActionsUpdatePending = false;
+        // Action components can resolve after the action-set link, and the bar has to keep its folder entries.
+        TryApplyPendingActionConfiguration();
+        SyncAutoPopulate();
+        RestoreFloatingActions();
+        RefreshActionBar();
+    }
+    // KS14 end
 
     private void ActionButtonPressed(ButtonEventArgs args)
     {
@@ -495,6 +524,20 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
         EntityUid? swapAction = null;
         var currentlyHovered = UIManager.MouseGetControl(_input.MouseScreenPosition);
+        // KS14 start: a drop on the bin, into the actions menu or anywhere off the bar is handled in the arrange
+        // partial (upstream cleared the slot of anything dropped off the bar). An action coming onto the bar from the
+        // menu or from a floating button is taken from wherever else it sits first, so it is never in two places.
+        if (TryDropOffBar(dragged, currentlyHovered) ||
+            currentlyHovered is ActionButton exitSlot && IsExitFolderSlot(exitSlot))
+        {
+            _menuDragHelper.EndDrag();
+            return;
+        }
+
+        var floatingPosition = FloatingWindowOf(dragged)?.Position;
+        dragged = PrepareDropOntoBar(dragged);
+        // KS14 end
+
         // KS14 start: dropping onto an action or a folder groups them, rather than swapping slots.
         // The back entry's slot refuses drops outright - see IsExitFolderSlot.
         if (currentlyHovered is ActionButton targetButton &&
@@ -515,6 +558,8 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
         if (dragged.Parent is ActionButtonContainer)
             SetAction(dragged, swapAction, false);
+        else
+            PlaceDisplacedAction(swapAction, action.Owner, floatingPosition); // KS14: never drop the pushed-out action
 
         // KS14 start: replaces a direct _container.SetActionData, to include client-only folder
         // entries and commit the completed drag.
@@ -573,7 +618,13 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (args.Function == EngineKeyFunctions.UIRightClick)
         {
             // KS14 start: right-clicking a folder dissolves it and returns its members to the bar;
-            // the back entry ignores it entirely.
+            // the back entry ignores it entirely. While the layout is locked it does nothing.
+            if (IsDissolvableFolder(button) && !KsCheckArrangeUnlocked())
+            {
+                args.Handle();
+                return;
+            }
+
             if (TryHandleFolderRightClick(button))
             {
                 args.Handle();
@@ -581,10 +632,36 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             }
             // KS14 end
 
-            SetAction(button, null);
+            // KS14: upstream cleared the slot here ("SetAction(button, null);"). An action now leaves the bar only
+            // through the bin or the actions menu, so a stray right-click can't lose one.
             args.Handle();
             return;
         }
+
+        // KS14 start: shift-click a slot to bind it to a key, alt-click to pop it out as a floating button. Those
+        // clicks arrive as examine and alt-use, never as a plain UIClick.
+        if (args.Function == EngineKeyFunctions.TextCursorSelect || args.Function == ContentKeyFunctions.ExamineEntity)
+        {
+            if (TryStartSlotRebind(button))
+                args.Handle();
+            return;
+        }
+
+        if (args.Function == ContentKeyFunctions.AltActivateItemInWorld)
+        {
+            if (TryFloatAction(button))
+                args.Handle();
+            return;
+        }
+
+        // ctrl-click: quick-cast on or off
+        if (args.Function == ContentKeyFunctions.TryPullObject || args.Function == EngineKeyFunctions.EditorGridPlace)
+        {
+            if (TryToggleQuickCast(button))
+                args.Handle();
+            return;
+        }
+        // KS14 end
 
         if (args.Function != EngineKeyFunctions.UIClick)
             return;
@@ -597,6 +674,10 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         args.Handle();
         // KS14 start: folders and the back entry cannot be dragged
         if (IsFolderAction(button))
+            return;
+
+        // a locked layout only uses actions (the actions menu still drags)
+        if (!KsCanStartDrag(button))
             return;
         // KS14 end
 
@@ -647,6 +728,11 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             return;
         }
 
+        // KS14 start: some targeted actions need no aiming right now
+        if (_actionsSystem?.KsTryUseWithoutAiming(action) == true)
+            return;
+        // KS14 end
+
         // for target actions, we go into "select target" mode, we don't
         // message the server until we actually pick our target.
 
@@ -678,6 +764,11 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         }
 
         LayoutContainer.SetPosition(_dragShadow, UIManager.MousePositionScaled.Position - new Vector2(32, 32));
+
+        // KS14 start: a floating button being moved fades where it was until it's dropped
+        if (_menuDragHelper.Dragged is { } draggedButton && FloatingWindowOf(draggedButton) is { } floating)
+            floating.Modulate = Color.White.WithAlpha(0.35f);
+        // KS14 end
         return true;
     }
 
@@ -685,6 +776,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         LayoutContainer.SetPosition(_dragShadow, UIManager.MousePositionScaled.Position - new Vector2(32, 32));
         _dragShadow.Visible = true;
+        UpdateTrashHover(); // KS14
         return true;
     }
 
@@ -692,11 +784,20 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         _dragShadow.Texture = null;
         _dragShadow.Visible = false;
+
+        // KS14 start
+        foreach (var floating in _floatingActions)
+            floating.Modulate = Color.White;
+
+        _trashSlot?.SetHovered(false);
+        _dragShadow.Modulate = Color.White;
+        // KS14 end
     }
 
     private void UnloadGui()
     {
         _actionsSystem?.UnlinkAllActions();
+        DetachArrangeOverlays(); // KS14
 
         if (ActionsBar == null)
         {
@@ -734,6 +835,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         }
 
         RegisterActionContainer(ActionsBar.ActionsContainer);
+        AttachArrangeOverlays(); // KS14: the padlock and the bin beside the bar
 
         _actionsSystem?.LinkAllActions();
     }
@@ -798,7 +900,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (_window is { UpdateNeeded: true })
             SearchAndDisplay();
 
+        ApplyActionsUpdate(); // KS14: batch bar rebuilds to one per frame
         FlushPendingActionConfigurationSave(); // KS14: batch layout writes to one per frame
+        UpdateArrangeOverlays(); // KS14: keep the padlock and the bin beside the bar
     }
 
     private void OnComponentLinked(ActionsComponent component)
@@ -809,6 +913,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         ResetActionFolders(); // KS14: folders belong to the currently linked action set
         LoadDefaultActions();
         BeginLinkedActionConfiguration(); // KS14: restore stable action and folder assignments
+        RestoreFloatingActions(); // KS14: and the floating buttons
         RefreshActionBar(); // KS14: route rendering through folder-aware path
         QueueWindowUpdate();
     }
@@ -817,6 +922,11 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         EndLinkedActionConfiguration(); // KS14: flush any pending save, then drop the linked action set
         ResetActionFolders(); // KS14: discard folders tied to the previous action set
+        // KS14: the old body's floating buttons go too (their places are remembered, so they come back for whoever
+        //     has those arts next), and a half-done rebind is dropped rather than eating the next key.
+        CloseFloatingActions();
+        CancelSlotRebind();
+        _ksActionsUpdatePending = false;
         _container?.ClearActionData();
         QueueWindowUpdate();
         StopTargeting();

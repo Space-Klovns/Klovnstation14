@@ -1,0 +1,320 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "Generated for Klovnstation 14",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "acupoint"
+        },
+        {
+            "name": "alarm_array"
+        },
+        {
+            "name": "artifact_strike"
+        },
+        {
+            "name": "barrier_array"
+        },
+        {
+            "name": "beast_contract"
+        },
+        {
+            "name": "bind_artifact"
+        },
+        {
+            "name": "binding_vines"
+        },
+        {
+            "name": "blood_escape"
+        },
+        {
+            "name": "body_blood_boil"
+        },
+        {
+            "name": "body_bone_setting"
+        },
+        {
+            "name": "body_breath"
+        },
+        {
+            "name": "body_bull_charge"
+        },
+        {
+            "name": "body_disciple"
+        },
+        {
+            "name": "body_falling_mountain"
+        },
+        {
+            "name": "body_fist"
+        },
+        {
+            "name": "body_forge"
+        },
+        {
+            "name": "body_hundred_fists"
+        },
+        {
+            "name": "body_hurl"
+        },
+        {
+            "name": "body_iron_shirt"
+        },
+        {
+            "name": "body_leap"
+        },
+        {
+            "name": "body_mountain"
+        },
+        {
+            "name": "body_outside_body"
+        },
+        {
+            "name": "body_quake"
+        },
+        {
+            "name": "body_remold"
+        },
+        {
+            "name": "body_roar"
+        },
+        {
+            "name": "body_sky_palm"
+        },
+        {
+            "name": "body_stomp"
+        },
+        {
+            "name": "body_thunderclap"
+        },
+        {
+            "name": "body_tribulation"
+        },
+        {
+            "name": "body_vajra"
+        },
+        {
+            "name": "breakthrough"
+        },
+        {
+            "name": "buddha_palm"
+        },
+        {
+            "name": "burning_blood"
+        },
+        {
+            "name": "burning_palm"
+        },
+        {
+            "name": "calm_heart"
+        },
+        {
+            "name": "concealment"
+        },
+        {
+            "name": "corpse_puppet"
+        },
+        {
+            "name": "declare_rivalry"
+        },
+        {
+            "name": "devouring_art"
+        },
+        {
+            "name": "dharma_idol"
+        },
+        {
+            "name": "dragon_palm"
+        },
+        {
+            "name": "duel"
+        },
+        {
+            "name": "dugu_counter"
+        },
+        {
+            "name": "empty_palm"
+        },
+        {
+            "name": "exploding_heart"
+        },
+        {
+            "name": "flying_sword"
+        },
+        {
+            "name": "forced_circulation"
+        },
+        {
+            "name": "forget_law"
+        },
+        {
+            "name": "found_sect"
+        },
+        {
+            "name": "furnace_burst"
+        },
+        {
+            "name": "gathering_array"
+        },
+        {
+            "name": "golden_bell"
+        },
+        {
+            "name": "golden_bell_qi"
+        },
+        {
+            "name": "graceful_steps"
+        },
+        {
+            "name": "great_shift"
+        },
+        {
+            "name": "gu_worm"
+        },
+        {
+            "name": "kindle"
+        },
+        {
+            "name": "ladder_cloud"
+        },
+        {
+            "name": "lend_qi"
+        },
+        {
+            "name": "meditate"
+        },
+        {
+            "name": "mirror_lake"
+        },
+        {
+            "name": "molten_step"
+        },
+        {
+            "name": "mountain_collapse"
+        },
+        {
+            "name": "mud_prison"
+        },
+        {
+            "name": "myriad_spring"
+        },
+        {
+            "name": "name_heir"
+        },
+        {
+            "name": "nine_yin_claw"
+        },
+        {
+            "name": "northern_darkness"
+        },
+        {
+            "name": "qinggong"
+        },
+        {
+            "name": "realm_pressure"
+        },
+        {
+            "name": "recall_teachings"
+        },
+        {
+            "name": "return_to_body"
+        },
+        {
+            "name": "ring_speak"
+        },
+        {
+            "name": "rooted_stance"
+        },
+        {
+            "name": "sea_of_flames"
+        },
+        {
+            "name": "sect_transmission"
+        },
+        {
+            "name": "six_meridians"
+        },
+        {
+            "name": "soul_search"
+        },
+        {
+            "name": "spiritual_sense"
+        },
+        {
+            "name": "spring_mending"
+        },
+        {
+            "name": "star_absorbing"
+        },
+        {
+            "name": "steam_veil"
+        },
+        {
+            "name": "still_water"
+        },
+        {
+            "name": "stir_gu"
+        },
+        {
+            "name": "summon_beast"
+        },
+        {
+            "name": "sword_formation"
+        },
+        {
+            "name": "sword_rain"
+        },
+        {
+            "name": "sword_riding"
+        },
+        {
+            "name": "thousand_thorns"
+        },
+        {
+            "name": "tidal_surge"
+        },
+        {
+            "name": "transmit_demonic"
+        },
+        {
+            "name": "transmit_law"
+        },
+        {
+            "name": "turtle_breathing"
+        },
+        {
+            "name": "verdant_growth"
+        },
+        {
+            "name": "void_step"
+        },
+        {
+            "name": "write_talisman"
+        },
+        {
+            "name": "wumu_command"
+        },
+        {
+            "name": "category_offensive"
+        },
+        {
+            "name": "category_defensive"
+        },
+        {
+            "name": "category_mobility"
+        },
+        {
+            "name": "category_utility"
+        },
+        {
+            "name": "bubble_prison"
+        },
+        {
+            "name": "riding_current"
+        }
+    ]
+}

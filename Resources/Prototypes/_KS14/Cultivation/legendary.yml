@@ -1,0 +1,773 @@
+# Legendary weapons and treasures from Chinese legend and the martial novels, ported from SurfShack13. One turns up in
+# maintenance each round. Every blow from one is true damage; see LegendarySystem.
+
+- type: entity
+  parent: BaseItem
+  id: KsLegendaryBase
+  abstract: true
+  components:
+  - type: Item
+    size: Normal
+
+# ---------------------------------------------------------------- Ganjiang and Moye
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsGanjiang
+  name: Ganjiang
+  description: A dark blue-black jian, the male sword of the legendary pair.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: ganjiang
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/katana.rsi
+  - type: MeleeWeapon
+    attackRate: 1.25
+    angle: 80
+    wideAnimationRotation: -135
+    swingBeverage: false
+    animation: KsWeaponArcGanjiangThrust
+    wideAnimation: KsWeaponArcGanjiang
+    damage:
+      types:
+        Slash: 18
+    soundSwing:
+      path: /Audio/Weapons/eblademiss.ogg
+      params:
+        volume: -4
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashGanjiang
+  - type: LegendaryArtifact
+    traits: WearsDown
+    hitDamage: 5
+    legend: legendary-twin-legend
+    power: legendary-twin-power
+    controls: legendary-twin-controls
+  - type: TwinSword
+    partner: KsMoye
+
+- type: entity
+  parent: KsGanjiang
+  id: KsMoye
+  name: Moye
+  description: A pale silver jian with a red tassel, the female sword of the legendary pair.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: moye
+  - type: TwinSword
+    partner: KsGanjiang
+  # The female sword cuts from the other side: wielded together, the pair's arcs cross.
+  - type: MeleeWeapon
+    attackRate: 1.25
+    angle: 80
+    wideAnimationRotation: -135
+    swingLeft: true
+    swingBeverage: false
+    animation: KsWeaponArcMoyeThrust
+    wideAnimation: KsWeaponArcMoye
+    damage:
+      types:
+        Slash: 18
+    soundSwing:
+      path: /Audio/Weapons/eblademiss.ogg
+      params:
+        volume: -4
+        pitch: 1.15
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashMoye
+
+# ---------------------------------------------------------------- Heaven Reliant Sword and Dragon Slaying Saber
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsHeavenReliantSword
+  name: Heaven Reliant Sword
+  description: A long, impossibly keen sword of pale jade-white steel. It cuts iron like mud.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: heaven_reliant
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/katana.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 25
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendaryArtifact
+    traits: BreaksDefence
+    hitDamage: 12
+    legend: legendary-reliant-legend
+    power: legendary-reliant-power
+    controls: legendary-reliant-controls
+  - type: HeavenReliant
+  - type: ActionGrant
+    actions:
+    - ActionKsHeavenCleavingStroke
+  - type: ItemActionGrant
+    actions:
+    - ActionKsHeavenCleavingStroke
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsDragonSlayingSaber
+  name: Dragon Slaying Saber
+  description: A massive black dao with a golden dragon coiled along the blade. Every blow lands like a falling mountain.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: dragon_saber
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/claymore.rsi
+  - type: MeleeWeapon
+    attackRate: 0.75
+    damage:
+      types:
+        Slash: 28
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendaryArtifact
+    traits: CrushesTempered
+    hitDamage: 15
+    hitKnockdown: 1
+    hitThrow: 4
+    legend: legendary-saber-legend
+    power: legendary-saber-power
+    controls: legendary-saber-controls
+  - type: DragonSaber
+
+# ---------------------------------------------------------------- Ruyi Jingu Bang
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsRuyiJinguBang
+  name: Ruyi Jingu Bang
+  description: The Monkey King's staff. Use it in hand to make it grow, or shrink back to a needle.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    layers:
+    - state: ruyi_needle
+      map: [ "enum.RuyiVisualLayers.Base" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.RuyiVisuals.Extended:
+        enum.RuyiVisualLayers.Base:
+          True: { state: ruyi_staff }
+          False: { state: ruyi_needle }
+  - type: Item
+    size: Tiny
+    sprite: Objects/Weapons/Melee/spear.rsi
+  - type: MeleeWeapon
+    range: 1.5
+    angle: 100
+    wideAnimationRotation: -135
+    animation: KsWeaponArcRuyiThrust
+    wideAnimation: KsWeaponArcRuyi
+    damage:
+      types:
+        Blunt: 1
+    soundSwing:
+      path: /Audio/Effects/thudswoosh.ogg
+      params:
+        pitch: 0.85
+  - type: LegendarySwing
+    hitEffect: KsFxImpactRuyi
+  - type: LegendaryArtifact
+    hitDamage: 10
+    hitThrow: 5
+    legend: legendary-ruyi-legend
+    power: legendary-ruyi-power
+    controls: legendary-ruyi-controls
+  - type: RuyiStaff
+  - type: ActionGrant
+    actions:
+    - ActionKsRuyiSlam
+    - ActionKsRuyiPluckHairs
+  - type: ItemActionGrant
+    actions:
+    - ActionKsRuyiSlam
+    - ActionKsRuyiPluckHairs
+
+# Two copies of the Great Sage, plucked from a few hairs. They fight for ten seconds and vanish.
+- type: entity
+  parent: MobHuman
+  id: KsSageClone
+  categories: [ HideSpawnMenu ]
+  name: clone
+  description: A copy of someone, blown out of a few plucked hairs. It looks a little too eager.
+  components:
+  - type: Sprite
+    color: "#ffe9b0dd"
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: KsSpiritBeastCompound
+  - type: NpcFactionMember
+    factions:
+    - SimpleNeutral
+  - type: NPCRetaliation
+  - type: TimedDespawn
+    lifetime: 10
+
+# ---------------------------------------------------------------- Purple-Gold Gourd
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsPurpleGoldGourd
+  name: Purple-Gold Gourd
+  description: A purple calabash with a gold band and a red cork. Point it at someone and call their name. If they answer to it, they're inside.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: purple_gold_gourd
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-gourd-legend
+    power: legendary-gourd-power
+    controls: legendary-gourd-controls
+  - type: PurpleGoldGourd
+  - type: ActionGrant
+    actions:
+    - ActionKsGourdCall
+  - type: ItemActionGrant
+    actions:
+    - ActionKsGourdCall
+  - type: ContainerContainer
+    containers:
+      ks-gourd: !type:ContainerSlot
+
+- type: entity
+  parent: BaseItem
+  id: KsGourdElixir
+  name: Purple-Gold Elixir
+  description: A glowing violet pill that smells of wine. You'd rather not think about what it was made from. Use it in hand to swallow it.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/treasures.rsi
+    state: spirit_herb
+    color: "#c890ff"
+  - type: Item
+    size: Tiny
+  - type: PointLight
+    color: "#c890ff"
+    radius: 1.2
+    energy: 0.8
+  - type: GourdElixir
+
+# ---------------------------------------------------------------- Plantain Fan
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsPlantainFan
+  name: Plantain Fan
+  description: A huge fan woven from a single leaf. One wave sends a hurricane in front of you.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: plantain_fan
+  - type: LegendaryArtifact
+    legend: legendary-fan-legend
+    power: legendary-fan-power
+    controls: legendary-fan-controls
+  - type: PlantainFan
+  - type: ActionGrant
+    actions:
+    - ActionKsPlantainGust
+    - ActionKsPlantainFirestorm
+  - type: ItemActionGrant
+    actions:
+    - ActionKsPlantainGust
+    - ActionKsPlantainFirestorm
+
+# ---------------------------------------------------------------- Bagua Mirror
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsBaguaMirror
+  name: Bagua Mirror
+  description: A bronze octagonal mirror ringed with the eight trigrams. Held up, it flashes with a light evil can't stand, and it turns aside shots.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: bagua_mirror
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-mirror-legend
+    power: legendary-mirror-power
+    controls: legendary-mirror-controls
+  - type: BaguaMirror
+  - type: Reflect
+    reflectProb: 0.5
+
+# ---------------------------------------------------------------- Qiankun Pouch
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsQiankunPouch
+  name: Qiankun Pouch
+  description: A small embroidered pouch that holds a whole world inside. It fits far more than it should, even huge things.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: qiankun_pouch
+  - type: Item
+    size: Small
+  - type: Storage
+    maxItemSize: Huge
+    # Any item at all: a whole world in a small pouch is the point of it.
+    whitelist:
+      components:
+      - Item
+    grid:
+    - 0,0,15,9
+  - type: UserInterface
+    interfaces:
+      enum.StorageUiKey.Key:
+        type: StorageBoundUserInterface
+  - type: LegendaryArtifact
+    legend: legendary-pouch-legend
+    power: legendary-pouch-power
+    controls: legendary-pouch-controls
+  - type: QiankunPouch
+  - type: ActionGrant
+    actions:
+    - ActionKsQiankunRelease
+  - type: ItemActionGrant
+    actions:
+    - ActionKsQiankunRelease
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+      ks-qiankun-world: !type:ContainerSlot
+
+# ---------------------------------------------------------------- actions
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsHeavenCleavingStroke
+  name: Heaven-Cleaving Stroke
+  description: Loose a blade of pale light fourteen tiles long and three wide that slices through people, doors and even reinforced walls.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: heaven_reliant }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:HeavenCleavingStrokeActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsRuyiSlam
+  name: Thirteen Thousand Jin
+  description: Grown, stretch the staff to the heavens and bring it down on a spot up to ten tiles away, smashing a three-wide path through everything, walls included.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 25
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: ruyi_staff }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:RuyiSlamActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsRuyiPluckHairs
+  name: Pluck Hairs
+  description: Pluck a few hairs and blow on them. Two copies of you leap out and fight someone for ten seconds.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 45
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: ruyi_needle }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 9
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:RuyiPluckHairsActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsGourdCall
+  name: Call Their Name
+  description: Point the gourd at someone up to nine tiles away and call their name. If they answer within a few seconds, they're inside.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 60
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: purple_gold_gourd }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 9
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:GourdCallActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsPlantainGust
+  name: Hurricane
+  description: Loose a hurricane nine tiles deep that hurls everyone ten tiles away, snuffs out fire and shatters glass.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: plantain_fan }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:PlantainGustActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsPlantainFirestorm
+  name: Firestorm
+  description: Fan the flames the other way. Every fire in front of you roars into a firestorm racing away from you.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 15
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: plantain_fan }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 20
+  - type: WorldTargetAction
+    event: !type:PlantainFirestormActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsQiankunRelease
+  name: Heaven and Earth
+  description: 'Click at your own feet to swallow heaven and earth: every loose item within five tiles flies into the pouch. Click anywhere else and everything in the pouch comes flying out at that spot.'
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: qiankun_pouch }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 15
+  - type: WorldTargetAction
+    event: !type:QiankunReleaseActionEvent
+
+# ---------------------------------------------------------------- the secret of the saber and the sword
+
+- type: entity
+  parent: BaseItem
+  id: KsNineYinManual
+  name: Nine Yin Manual
+  description: A silk-bound manual that fell out of the shattered Heaven Reliant Sword. Its pages are cold to the touch. Use it in hand to study it.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_nine_yin
+  - type: InheritanceManual
+    action: ActionKsNineYinClaw
+    learned: legendary-nine-yin-learned
+
+- type: entity
+  parent: BaseItem
+  id: KsWumuYishu
+  name: Wumu Yishu
+  description: General Yue Fei's lost book of war, which fell out of the shattered Dragon Slaying Saber. Every page is a battle plan. Use it in hand to study it.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/manuals.rsi
+    state: art_wumu
+  - type: InheritanceManual
+    action: ActionKsWumuCommand
+    learned: legendary-wumu-learned
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsNineYinClaw
+  name: Nine Yin White Bone Claw
+  description: Rake someone beside you with five bone-white fingers. Heavy damage, tears a cultivator's meridians, and leaves them reeling.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 20
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: nine_yin_claw }
+  - type: TargetAction
+    range: 1.5
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+    event: !type:NineYinClawActionEvent
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsWumuCommand
+  name: Command of the Wumu Yishu
+  description: Rally yourself and the three people nearest you into a battle formation for 30 seconds. They move faster and take half the stamina damage.
+  components:
+  - type: CultivationArtCategory
+    category: Utility
+  - type: Action
+    useDelay: 120
+    icon: { sprite: _KS14/Cultivation/actions.rsi, state: wumu_command }
+  - type: InstantAction
+    event: !type:WumuCommandActionEvent
+
+# ---------------------------------------------------------------- six more treasures
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsXuanyuanSword
+  name: Xuanyuan Sword
+  description: A broad golden jian engraved with the sun, moon and stars on one face and mountains and rivers on the other. It is unbearably heavy with authority.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: xuanyuan_sword
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/claymore.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 18
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendaryArtifact
+    traits: BreaksDefence
+    legend: legendary-xuanyuan-legend
+    power: legendary-xuanyuan-power
+    controls: legendary-xuanyuan-controls
+  - type: LegendaryTreasureHit
+  - type: XuanyuanSword
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsGreenDragonBlade
+  name: Green Dragon Crescent Blade
+  description: A towering guandao with a crescent blade and a green dragon coiled at its base. It weighs eighty-two jin and it is not for the dishonourable.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: green_dragon_blade
+  - type: Item
+    size: Huge
+    sprite: Objects/Weapons/Melee/spear.rsi
+  - type: MeleeWeapon
+    range: 1.6
+    attackRate: 0.75
+    angle: 150
+    animationOffset: 1.3
+    wideAnimationRotation: -135
+    animation: KsWeaponArcGuandao
+    wideAnimation: KsWeaponArcGuandao
+    damage:
+      types:
+        Slash: 10
+    soundSwing:
+      path: /Audio/Effects/thudswoosh.ogg
+      params:
+        pitch: 0.7
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: LegendarySwing
+    hitEffect: KsFxSlashGuandao
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Slash: 14
+  - type: LegendaryArtifact
+    traits: WearsDown
+    legend: legendary-dragon-blade-legend
+    power: legendary-dragon-blade-power
+    controls: legendary-dragon-blade-controls
+  - type: LegendaryTreasureHit
+  - type: GreenDragonBlade
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsSevenStarSword
+  name: Seven-Star Sword
+  description: A dark jian inlaid with seven golden studs in the shape of the Northern Dipper. Each one glows a little brighter with every blow.
+  components:
+  - type: Clothing
+    # Carried like a sword: at the hip, slung across the back, or in a vest's storage slot. Too long for a backpack.
+    sprite: _KS14/Cultivation/sword_worn.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - Back
+    - suitStorage
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: seven_star_sword
+  - type: Item
+    size: Large
+    sprite: Objects/Weapons/Melee/katana.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 20
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: PointLight
+    color: "#ffe27a"
+    radius: 1.5
+    energy: 0
+  - type: LegendaryArtifact
+    legend: legendary-seven-star-legend
+    power: legendary-seven-star-power
+    controls: legendary-seven-star-controls
+  - type: LegendaryTreasureHit
+  - type: SevenStarSword
+  - type: ActionGrant
+    actions:
+    - ActionKsSevenStars
+  - type: ItemActionGrant
+    actions:
+    - ActionKsSevenStars
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsLinglongPagoda
+  name: Linglong Pagoda
+  description: A small golden pagoda of seven exquisite tiers, cool and heavy in the hand. Something about its doors makes you not want to look too closely.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: linglong_pagoda
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-pagoda-legend
+    power: legendary-pagoda-power
+    controls: legendary-pagoda-controls
+  - type: LinglongPagoda
+  - type: ContainerContainer
+    containers:
+      ks-pagoda: !type:ContainerSlot
+
+- type: entity
+  parent: KsLegendaryBase
+  id: KsUniverseRing
+  name: Universe Ring
+  description: A heavy golden bracelet, as wide as a palm. It hums when it's thrown, and it always knows its way home.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: universe_ring
+  - type: Item
+    size: Small
+  - type: LegendaryArtifact
+    legend: legendary-universe-ring-legend
+    power: legendary-universe-ring-power
+    controls: legendary-universe-ring-controls
+  - type: UniverseRing
+
+- type: entity
+  parent: ClothingShoesBase
+  id: KsWindFireWheels
+  name: Wind Fire Wheels
+  description: A pair of spinning wheels wreathed in flame, worn on the feet. They want to go fast. They do not want to stop.
+  components:
+  - type: Sprite
+    sprite: _KS14/Cultivation/legendary.rsi
+    state: wind_fire_wheels
+  - type: Clothing
+    sprite: Clothing/Shoes/Boots/combatboots.rsi
+  - type: ClothingSpeedModifier
+    walkModifier: 1.5
+    sprintModifier: 1.5
+  - type: NoSlip
+  - type: PointLight
+    color: "#ff7a2c"
+    radius: 1.5
+    energy: 1
+  - type: LegendaryArtifact
+    legend: legendary-wheels-legend
+    power: legendary-wheels-power
+    controls: legendary-wheels-controls
+  - type: WindFireWheels
+
+- type: entity
+  parent: BaseActionCultivation
+  id: ActionKsSevenStars
+  name: Seven Stars of the Northern Dipper
+  description: Release the lit stars (three or more) to fall in the shape of the Northern Dipper where you aim. With all seven, the last is a great star that knocks everyone around it down.
+  components:
+  - type: CultivationArtCategory
+    category: Offensive
+  - type: Action
+    useDelay: 2
+    icon: { sprite: _KS14/Cultivation/legendary.rsi, state: seven_star_sword }
+  - type: TargetAction
+    checkCanAccess: false
+    range: 10
+  - type: WorldTargetAction
+    event: !type:SevenStarsActionEvent
