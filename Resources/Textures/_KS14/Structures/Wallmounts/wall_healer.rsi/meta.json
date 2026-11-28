@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/blob/6f89788b07b6d163a15293bc7883682b46e003bb/icons/obj/machines/wall_healer.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "wall_healer"
+    },
+    {
+      "name": "bar_shadow"
+    },
+    {
+      "name": "bar0"
+    },
+    {
+      "name": "bar1"
+    },
+    {
+      "name": "bar2"
+    },
+    {
+      "name": "bar3"
+    },
+    {
+      "name": "bar4"
+    },
+    {
+      "name": "bar5"
+    },
+    {
+      "name": "bar6"
+    },
+    {
+      "name": "bar7"
+    },
+    {
+      "name": "bar_emissive"
+    },
+    {
+      "name": "open"
+    }
+  ]
+}
