@@ -33,3 +33,17 @@
   mirror: MolarMixer
   conditions:
     - !type:NoUnstackableInTile
+
+# MEDICAL
+- type: construction
+  id: KsWallHealer
+  graph: KsWallHealer
+  startNode: start
+  targetNode: healer
+  category: construction-category-structures
+  placementMode: SnapgridCenter
+  objectType: Structure
+  canRotate: true
+  canBuildInImpassable: true
+  conditions:
+  - !type:WallmountCondition {}

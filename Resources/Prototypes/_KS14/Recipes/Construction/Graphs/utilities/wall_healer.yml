@@ -1,0 +1,129 @@
+- type: constructionGraph
+  id: KsWallHealer
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: frame
+      steps:
+      - material: Steel
+        amount: 2
+        doAfter: 2
+
+  - node: frame
+    entity: KsWallHealerFrame
+    edges:
+    - to: start
+      completed:
+      - !type:EmptyAllContainers {}
+      - !type:GivePrototype
+        prototype: SheetSteel1
+        amount: 2
+      - !type:DeleteEntity {}
+      steps:
+      - tool: Welding
+        doAfter: 2
+    - to: healer
+      steps:
+      - tag: KsWallHealerElectronics
+        store: board
+        name: construction-graph-tag-ks-wall-healer-electronics
+        icon:
+          sprite: Objects/Misc/module.rsi
+          state: medical
+        doAfter: 1
+      - component: HealthAnalyzer
+        store: parts
+        name: construction-graph-component-ks-health-analyzer
+        icon:
+          sprite: Objects/Specific/Medical/healthanalyzer.rsi
+          state: icon
+      - tag: Syringe
+        store: parts
+        name: construction-graph-tag-ks-syringe
+        icon:
+          sprite: Objects/Specific/Chemistry/syringe.rsi
+          state: syringe_base0
+      - tag: SurgeryTool
+        store: parts
+        name: construction-graph-tag-ks-surgery-tool
+        icon:
+          sprite: Objects/Specific/Medical/Surgery/scalpel.rsi
+          state: scalpel
+      - tag: SurgeryTool
+        store: parts
+        name: construction-graph-tag-ks-surgery-tool
+        icon:
+          sprite: Objects/Specific/Medical/Surgery/scalpel.rsi
+          state: scalpel
+      - tool: Screwing
+        doAfter: 2
+    - to: emergencyHealer
+      steps:
+      - tag: KsWallHealerEmergencyElectronics
+        store: board
+        name: construction-graph-tag-ks-wall-healer-emergency-electronics
+        icon:
+          sprite: Objects/Misc/module.rsi
+          state: medical
+        doAfter: 1
+      - component: HealthAnalyzer
+        store: parts
+        name: construction-graph-component-ks-health-analyzer
+        icon:
+          sprite: Objects/Specific/Medical/healthanalyzer.rsi
+          state: icon
+      - tag: Syringe
+        store: parts
+        name: construction-graph-tag-ks-syringe
+        icon:
+          sprite: Objects/Specific/Chemistry/syringe.rsi
+          state: syringe_base0
+      - tag: SurgeryTool
+        store: parts
+        name: construction-graph-tag-ks-surgery-tool
+        icon:
+          sprite: Objects/Specific/Medical/Surgery/scalpel.rsi
+          state: scalpel
+      - tag: SurgeryTool
+        store: parts
+        name: construction-graph-tag-ks-surgery-tool
+        icon:
+          sprite: Objects/Specific/Medical/Surgery/scalpel.rsi
+          state: scalpel
+      - tool: Screwing
+        doAfter: 2
+
+  - node: healer
+    entity: KsWallHealerUnstocked
+    edges:
+    - to: frame
+      conditions:
+      - !type:WirePanel {}
+      completed:
+      - !type:EmptyContainer
+        container: supplies
+      - !type:EmptyContainer
+        container: parts
+      - !type:EmptyContainer
+        container: board
+      steps:
+      - tool: Prying
+        doAfter: 2
+
+  - node: emergencyHealer
+    entity: KsWallHealerEmergencyUnstocked
+    edges:
+    - to: frame
+      conditions:
+      - !type:WirePanel {}
+      completed:
+      - !type:EmptyContainer
+        container: supplies
+      - !type:EmptyContainer
+        container: parts
+      - !type:EmptyContainer
+        container: board
+      steps:
+      - tool: Prying
+        doAfter: 2

@@ -1,0 +1,5 @@
+- type: Tag
+  id: KsWallHealerElectronics # ConstructionGraph: KsWallHealer
+
+- type: Tag
+  id: KsWallHealerEmergencyElectronics # ConstructionGraph: KsWallHealer
