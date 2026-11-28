@@ -1,0 +1,24 @@
+- type: entity
+  parent: BaseElectronics
+  id: KsWallHealerElectronics
+  name: first aid station electronics
+  description: An electronics board used in DeForest first aid stations.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/module.rsi
+    state: medical
+  - type: Tag
+    tags:
+    - KsWallHealerElectronics
+  - type: StaticPrice
+    price: 150
+
+- type: entity
+  parent: KsWallHealerElectronics
+  id: KsWallHealerEmergencyElectronics
+  name: emergency first aid station electronics
+  description: An electronics board used in DeForest emergency first aid stations.
+  components:
+  - type: Tag
+    tags:
+    - KsWallHealerEmergencyElectronics

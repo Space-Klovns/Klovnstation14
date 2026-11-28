@@ -1,0 +1,9 @@
+- type: cargoProduct
+  id: KsCargoMedicalWallHealerBoard
+  icon:
+    sprite: _KS14/Structures/Wallmounts/wall_healer.rsi
+    state: wall_healer
+  product: KsCrateMedicalWallHealerBoard
+  cost: 1200
+  category: cargoproduct-category-name-medical
+  group: market

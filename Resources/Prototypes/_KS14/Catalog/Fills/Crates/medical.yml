@@ -1,0 +1,9 @@
+- type: entity
+  parent: CrateMedical
+  id: KsCrateMedicalWallHealerBoard
+  name: first aid station board crate
+  description: A crate holding the electronics for a DeForest first aid station. Casing and instruments not included.
+  components:
+  - type: StorageFill
+    contents:
+    - id: KsWallHealerElectronics

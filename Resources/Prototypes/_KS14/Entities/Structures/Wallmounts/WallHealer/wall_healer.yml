@@ -1,0 +1,186 @@
+- type: entity
+  abstract: true
+  parent: BaseWallmountMachine
+  id: KsBaseWallHealer
+  name: DeForest first aid station
+  description: A wall-mounted first aid station, designed to treat minor injuries - just stick your hand in and try to relax.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Wallmounts/wall_healer.rsi
+    layers:
+    - state: wall_healer
+    - state: open
+      map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
+    - state: bar0
+      map: [ "bruteFill" ]
+      color: "#ECEC8D"
+    - state: bar0
+      map: [ "burnFill" ]
+      color: "#8C93FF"
+      offset: 0.125,0
+    - state: bar0
+      map: [ "toxinFill" ]
+      color: "#8CDF24"
+      offset: 0.25,0
+    - state: bar0
+      map: [ "bloodFill" ]
+      color: "#C80000"
+      offset: 0.375,0
+    - state: bar_shadow
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    intensity: 1
+    layers:
+    - bruteFill
+    - burnFill
+    - toxinFill
+    - bloodFill
+  - type: KsEmissiveAppearanceToggle # the bars stay visible when unpowered, but don't glow
+    key: enum.PowerDeviceVisuals.Powered
+  - type: Appearance
+  - type: WiresPanel
+  - type: WiresVisuals
+  - type: KsWallHealer
+    pools:
+    - !type:KsWallHealerDamagePool
+      capacity: 40
+      layer: bruteFill
+      damageTypes:
+      - Blunt
+      - Slash
+      - Piercing
+    - !type:KsWallHealerDamagePool
+      capacity: 40
+      layer: burnFill
+      damageTypes:
+      - Heat
+      - Cold
+      - Shock
+      - Caustic
+    - !type:KsWallHealerDamagePool
+      capacity: 30
+      layer: toxinFill
+      damageTypes:
+      - Poison
+      - Radiation
+    - !type:KsWallHealerBloodPool
+      capacity: 60
+      layer: bloodFill
+    initialFill: 0
+    requiresIdCard: true
+  - type: ContainerContainer
+    containers:
+      board: !type:Container
+      parts: !type:Container
+      supplies: !type:Container
+  - type: Construction
+    graph: KsWallHealer
+    node: healer
+    containers:
+    - board
+    - parts
+    - supplies
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          SheetSteel1:
+            min: 1
+            max: 2
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: StationAiWhitelist
+
+# Built ones start with their pools empty and nothing stocked, and fill up over time.
+- type: entity
+  parent: KsBaseWallHealer
+  id: KsWallHealerUnstocked
+  suffix: Unstocked
+
+- type: entity
+  parent: KsBaseWallHealer
+  id: KsWallHealer
+  components:
+  - type: KsWallHealer
+    initialFill: 1
+  - type: ContainerFill
+    containers:
+      board: [ KsWallHealerElectronics ]
+      parts: [ HandheldHealthAnalyzer, Syringe, Hemostat, Scalpel ]
+      supplies: [ Gauze1, Gauze1, Gauze1, Gauze1, Gauze1 ]
+
+# Free for anyone, ID or no, but slower to recharge.
+- type: entity
+  abstract: true
+  parent: KsBaseWallHealer
+  id: KsBaseWallHealerEmergency
+  name: DeForest emergency first aid station
+  components:
+  - type: KsWallHealer
+    treatmentInterval: 2
+    rechargeInterval: 60
+    requiresIdCard: false
+    usesIdAllowance: false
+  - type: Construction
+    node: emergencyHealer
+
+- type: entity
+  parent: KsBaseWallHealerEmergency
+  id: KsWallHealerEmergencyUnstocked
+  suffix: Unstocked
+
+- type: entity
+  parent: KsBaseWallHealerEmergency
+  id: KsWallHealerEmergency
+  components:
+  - type: KsWallHealer
+    initialFill: 1
+  - type: ContainerFill
+    containers:
+      board: [ KsWallHealerEmergencyElectronics ]
+      parts: [ HandheldHealthAnalyzer, Syringe, Hemostat, Scalpel ]
+      supplies: [ Gauze1, Gauze1, Gauze1, Gauze1, Gauze1 ]
+
+- type: entity
+  parent: BaseWallmountMetallic
+  id: KsWallHealerFrame
+  name: first aid station frame
+  description: The casing of a first aid station, waiting for its electronics and instruments.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Wallmounts/wall_healer.rsi
+    layers:
+    - state: wall_healer
+    - state: open
+  - type: ContainerContainer
+    containers:
+      board: !type:Container
+      parts: !type:Container
+  - type: Construction
+    graph: KsWallHealer
+    node: frame
+    containers:
+    - board
+    - parts
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
